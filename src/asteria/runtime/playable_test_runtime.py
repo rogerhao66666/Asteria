@@ -754,6 +754,39 @@ class PlayableTestRuntime:
         self.screen.blit(surf, rect)
         return rect
 
+    def _menu_font(self, size):
+        f = self._fonts.get(int(size))
+        if f is None:
+            f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
+        return f
+
+    def menu_mark_room(self, size):
+        """Room a menu row keeps before its label for the cursor (pixels): every row's label
+        starts at the same place, the selected one or not."""
+        return round(int(size) * 0.75)
+
+    def menu_mark(self, x, y, *, size=20, color=(255, 226, 129)):
+        """A menu cursor at ``x``, centred on the capitals of ``size`` text drawn from ``y``
+        (its top): a drawn arrow, so it sits level with the row whatever the font (a ``>``
+        sat low beside the letters)."""
+        font = self._menu_font(size)
+        metrics = font.metrics("H")
+        if metrics and metrics[0] is not None:
+            _, _, low, high, _ = metrics[0]
+            centre, height = y + font.get_ascent() - (high + low) / 2, max(4, high - low)
+        else:
+            centre, height = y + font.get_height() / 2, max(4, font.get_height() // 2)
+        width = max(3, round(height * 0.7))
+        half = height / 2
+        points = ((x, centre - half), (x + width, centre), (x, centre + half))
+        self.pg.draw.polygon(self.screen, color, [(round(a), round(b)) for a, b in points])
+
+    def menu_row(self, label, x, y, *, selected, size=20, color=(245, 245, 250)):
+        """One menu row: the cursor when ``selected``, the label after the cursor's room."""
+        if selected:
+            self.menu_mark(x, y, size=size, color=color)
+        return self.text(label, x + self.menu_mark_room(size), y, size=size, color=color)
+
     def _skin_theme(self):
         """The project's battle UI theme (its skin also frames the host's own menus)."""
         library = self.project.battle_presentation_library
@@ -3357,7 +3390,7 @@ class PlayableTestRuntime:
             y = 92 + i * 30
             selected = i == menu.row
             color = (255, 226, 129) if selected else (235, 238, 245)
-            self.text(("> " if selected else "   ") + action, 90, y, size=21, color=color)
+            self.menu_row(action, 90, y, selected=selected, size=21, color=color)
             self.text(bindings, self.width / 2, y, size=21, color=(170, 210, 240))
         hint = menu.message or "Enter: rebind   Backspace: reset action   Esc: save and back"
         self.text(
@@ -3389,12 +3422,8 @@ class PlayableTestRuntime:
                 if row.craftable
                 else (130, 135, 150)
             )
-            self.text(
-                ("> " if selected else "   ") + f"{row.name}  ->  {row.outputs}",
-                90,
-                y,
-                size=22,
-                color=color,
+            self.menu_row(
+                f"{row.name}  ->  {row.outputs}", 90, y, selected=selected, size=22, color=color
             )
             y += 26
             materials = "   ".join(f"{name} {have}/{need}" for name, need, have in row.materials)
@@ -3541,13 +3570,7 @@ class PlayableTestRuntime:
         for i, (key, label) in enumerate(cursor.options):
             selected = i == cursor.index
             color = (255, 226, 129) if selected else (235, 238, 245)
-            self.text(
-                ("> " if selected else "   ") + label,
-                x + 40,
-                y + 76 + i * 38,
-                size=24,
-                color=color,
-            )
+            self.menu_row(label, x + 40, y + 76 + i * 38, selected=selected, size=24, color=color)
             value = self._language_name() if key == "language" else self.settings.value_text(key)
             if value:
                 self.text(
@@ -3586,10 +3609,11 @@ class PlayableTestRuntime:
             selected = i == cursor.index
             if option_id in cursor.icons:
                 self._draw_icon(cursor.icons[option_id], round(x + 36), round(y + 68 + i * 34), 26)
-            self.text(
-                ("> " if selected else "   ") + label,
+            self.menu_row(
+                label,
                 x + 40 + shift,
                 y + 70 + i * 34,
+                selected=selected,
                 size=24,
                 color=(255, 226, 129) if selected else (235, 238, 245),
             )
@@ -3688,7 +3712,8 @@ class PlayableTestRuntime:
                 if row.available
                 else (120, 125, 140)
             )
-            self.text("> " if i == screen.index else "", 72, y, size=22, color=color)
+            if i == screen.index:
+                self.menu_mark(72, y, size=22, color=color)
             self._draw_icon(icons[i], 90, y - 2)
             self.text(row.name, name_x, y, size=22, color=color)
             self.text(row.price, 420, y, size=22, color=color)

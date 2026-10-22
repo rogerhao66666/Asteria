@@ -340,6 +340,7 @@ class CanonicalBattleAdapter:
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions = self._compositions(combatants)
         self.screen.member_heights = {v.member_id: self._body_height(v) for v in combatants}
+        self.screen.member_extents = {v.member_id: self._body_extents(v) for v in combatants}
         self._hide_unlisted_hud(combatants)
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
@@ -578,6 +579,65 @@ class CanonicalBattleAdapter:
             meta, sheet.frames[0].height, visual.source_pixels_per_logical_pixel
         )
 
+    def _body_extents(self, visual):
+        """``(left, top, right, bottom)`` of the figure's visible pixels in its idle pose (every
+        frame of the idle clip), in logical units round its feet (the anchor): what a name or
+        caption must keep clear of. Names are hidden while a figure acts (see ``update``), so
+        attack poses need no room. ``None`` when the picture cannot be read."""
+        from asteria.presentation.battle_runtime import _mirrored
+
+        try:
+            sheet = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id)
+            asset_id = sheet.texture.asset_id
+            lookup = getattr(self.resolver, "generated_image", None)
+            image = lookup(asset_id) if lookup is not None else None
+            if image is None:
+                image = self.host.load_image(self.resolver.source_uri(asset_id))
+        except Exception:  # noqa: BLE001 - no picture: the estimate from the height is used
+            return None
+        cache = self.__dict__.setdefault("_extent_cache", {})
+        mirrored = _mirrored(visual)
+        ratio = float(visual.source_pixels_per_logical_pixel) or 1.0
+        key = (asset_id, mirrored, ratio, id(image))
+        if key in cache:
+            return cache[key]
+        bounds = image.get_rect()
+        found = None
+        idle = dict(visual.animation_roles).get("idle", "idle")
+        try:
+            clip = self.resolver.clip_set(visual.sprite_sheet_asset_id).clips.get(idle)
+        except Exception:  # noqa: BLE001 - no clips: the first frame stands for the pose
+            clip = None
+        indices = {k.frame_index for k in clip.keyframes} if clip is not None else {0}
+        for index in sorted(indices):
+            if not 0 <= index < len(sheet.frames):
+                continue
+            frame = sheet.frames[index]
+            rect = self.host.pg.Rect(frame.x, frame.y, frame.width, frame.height)
+            if not bounds.contains(rect):
+                continue
+            seen = image.subsurface(rect).get_bounding_rect()
+            if not seen.width or not seen.height:
+                continue
+            x0, x1 = seen.left, seen.right
+            if mirrored:  # the picture is turned round inside its frame
+                x0, x1 = frame.width - seen.right, frame.width - seen.left
+            px, py = frame.width * frame.pivot_x, frame.height * frame.pivot_y
+            part = ((x0 - px) / ratio, (seen.top - py) / ratio)
+            part += ((x1 - px) / ratio, (seen.bottom - py) / ratio)
+            found = (
+                part
+                if found is None
+                else (
+                    min(found[0], part[0]),
+                    min(found[1], part[1]),
+                    max(found[2], part[2]),
+                    max(found[3], part[3]),
+                )
+            )
+        cache[key] = found
+        return found
+
     def _silhouette(self, member_id, side):
         pg = self.host.pg
         image = pg.Surface((64, 96), pg.SRCALPHA)
@@ -657,6 +717,7 @@ class CanonicalBattleAdapter:
         for visual in added:
             self.screen.add_combatant(visual)
             self.screen.member_heights[visual.member_id] = self._body_height(visual)
+            self.screen.member_extents[visual.member_id] = self._body_extents(visual)
         self._hide_unlisted_hud(added)
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions.update(self._compositions(added))
@@ -1139,6 +1200,11 @@ class CanonicalBattleAdapter:
             self._camera_view = self._clamped_view(
                 director, director.update(dt, (*self._camera_center, 1.0))
             )
+
+        # names and captions over heads wait while the camera is zoomed in (a boss intro, a
+        # close-up) and while actions play: a growing or lunging figure would run under them
+        view = getattr(self, "_camera_view", None)
+        self.screen.overhead_hidden = (view is not None and view[2] > 1.001) or self.busy()
         if game.battle is not None:
             self._show_new_combatants(game)
             self.screen.sync_battle(game.battle, current_member_id=self.host._battle_actor())

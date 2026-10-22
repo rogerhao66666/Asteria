@@ -387,7 +387,53 @@ class PygameBattleUiBackend:
 
     TEXT_IMAGES = 1024  # drawn lines kept; the HUD redraws the same few dozen every frame
 
+    # a row mark drawn as a shape: no font has to have the symbol, and it sits on the label
+    ARROWS = frozenset("▶►▸⯈")
+    CHEVRONS = frozenset(">›»→")
+    TICKS = frozenset("✓✔")
+
+    def _draw_mark(self, text, color, size):
+        """A row's cursor or tick, centred on the capital letters of the label beside it."""
+        font = self._font(size)
+        metrics = font.metrics("H")
+        top = self._s(text.y)
+        if metrics and metrics[0] is not None:
+            _, _, low, high, _ = metrics[0]
+            centre = top + font.get_ascent() - (high + low) / 2
+            height = max(3, high - low)
+        else:  # a font without capitals: the middle of its line
+            centre, height = top + font.get_height() / 2, max(3, font.get_height() // 2)
+        x, c = self._s(text.x), self._rgb(color)
+        half = height / 2
+        glyph = text.text.strip()
+        line = max(1, round(height / 5))
+        if glyph in self.ARROWS:
+            width = max(3, round(height * 0.7))
+            points = ((x, centre - half), (x + width, centre), (x, centre + half))
+            self.pg.draw.polygon(self.screen, c, [(round(a), round(b)) for a, b in points])
+        elif glyph in self.CHEVRONS:
+            width = max(3, round(height * 0.55))
+            points = ((x, centre - half), (x + width, centre), (x, centre + half))
+            self.pg.draw.lines(
+                self.screen, c, False, [(round(a), round(b)) for a, b in points], line + 1
+            )
+        elif glyph in self.TICKS:
+            points = (
+                (x, centre),
+                (x + height * 0.35, centre + half),
+                (x + height * 0.9, centre - half),
+            )
+            self.pg.draw.lines(
+                self.screen, c, False, [(round(a), round(b)) for a, b in points], line + 1
+            )
+        else:  # any other mark is text: in the label's own font, on the label's line
+            image = font.render(self._renderable(font, glyph), True, c)
+            self.screen.blit(image, (x, top))
+
     def draw_text(self, text, *, color, size):
+        if str(text.role).endswith(":mark"):
+            self._draw_mark(text, color, size)
+            return
         key = (size, text.text, self._rgb(color))
         image = self._text_images.get(key)
         if image is None:

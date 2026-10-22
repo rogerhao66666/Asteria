@@ -249,9 +249,7 @@ class AbilitySlotsScreen(_Screen):
             color = GOOD if on else ((255, 255, 255) if current else (190, 196, 210))
             y = 140 + row * 32
             shown = rt._draw_icon(getattr(definition, "icon_id", ""), 36, y - 3, 28)
-            rt.text(
-                ("> " if current else "  ") + label, 72 if shown else 36, y, size=24, color=color
-            )
+            rt.menu_row(label, 72 if shown else 36, y, selected=current, size=24, color=color)
             rt.text("EQUIPPED" if on else "", rt.width - 200, y, size=20, color=GOOD)
         if self.message_left > 0:
             rt.text(

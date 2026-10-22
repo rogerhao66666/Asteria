@@ -115,7 +115,7 @@ def test_composer_renders_generic_action_view_without_gameplay_resolution():
         action_menu=runtime.view,
     )
     assert any(x.panel_id == "action_menu" for x in frame.panels)
-    assert any(x.text.startswith("▶ ") for x in frame.texts)
+    assert any(x.text == "▶" and x.role.endswith(":mark") for x in frame.texts)
     assert any(
         x.text == "Requires Overdrive" and x.role == "action_disabled_reason" for x in frame.texts
     )

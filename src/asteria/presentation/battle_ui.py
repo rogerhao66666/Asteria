@@ -197,6 +197,58 @@ class BattleUiFrame:
     screen_fx: tuple
 
 
+MARK_ROLE = ":mark"  # a row's cursor or tick, drawn by the backend level with its label
+
+
+def _mark_gutter(*prefixes):
+    """Room before a row's label for its mark, in layout units: the widest mark and a small gap
+    (what its trailing spaces gave before). Every row's label starts at the same place, marked
+    or not."""
+    widest = max(len(p.strip()) for p in prefixes)
+    return widest * 3.8 + 2.0 if widest else 0.0
+
+
+def _gap(a, b):
+    """How far apart two ``(x, y, w, h)`` boxes are (0 when they touch or overlap)."""
+    dx = max(b[0] - (a[0] + a[2]), a[0] - (b[0] + b[2]), 0.0)
+    dy = max(b[1] - (a[1] + a[3]), a[1] - (b[1] + b[3]), 0.0)
+    return max(dx, dy)
+
+
+def _category_strip(categories, active, room):
+    """``Attack  [Skills]  Combo`` within ``room`` layout units: the active category and as
+    many of its neighbours as fit, ``‹`` / ``›`` where more lie past the edge (the whole row ran
+    out of the menu, under the panels beside it)."""
+    names = list(categories)
+    at = names.index(active) if active in names else 0
+
+    def text(lo, hi):
+        shown = "  ".join(f"[{v}]" if i == at else v for i, v in enumerate(names) if lo <= i < hi)
+        return ("< " if lo > 0 else "") + shown + (" >" if hi < len(names) else "")
+
+    lo, hi = at, at + 1
+    while True:
+        grown = False
+        for candidate in ((lo, hi + 1), (lo - 1, hi)):  # the next one first, then the one before
+            a, b = candidate
+            if 0 <= a and b <= len(names) and len(text(a, b)) * 3.8 <= room:
+                lo, hi, grown = a, b, True
+        if not grown:
+            return text(lo, hi)
+
+
+def _marked(prefix, label, left, gutter, y, role):
+    """A row's label and, apart from it, its mark (``▶``, ``✓``...): the backend draws the mark
+    centred on the label's letters, whatever font each is drawn in (a symbol the pixel font
+    lacked came from another font and sat crooked beside the name)."""
+    texts = []
+    mark = prefix.strip()
+    if mark:
+        texts.append(BattleUiText(mark, left, y, role + MARK_ROLE, "left"))
+    texts.append(BattleUiText(label, left + gutter, y, role, "left"))
+    return texts
+
+
 class BattleUiComposer:
     """Composes existing Battle Presentation view-state into adapter-ready UI.
 
@@ -274,6 +326,9 @@ class BattleUiComposer:
             self._member_heights,
             anchors,
             L,
+            self._member_extents,
+            self._overhead_hidden,
+            None if self._camera is None else self._camera.zoom,
             self.party_layout,
             self.polish,
         )
@@ -318,7 +373,10 @@ class BattleUiComposer:
 
         members = [m for m in members if zone_by_member[m.member_id] not in L.hidden_zones]
         overhead = [m for m in members if zone_by_member[m.member_id] in L.overhead_zones]
-        if overhead:
+        if overhead and self._overhead_hidden:  # the camera is zoomed in: names wait
+            self.overhead_labels = {}
+            members = [m for m in members if zone_by_member[m.member_id] not in L.overhead_zones]
+        elif overhead:
             o_panels, o_texts, o_gauges = self._overhead_commands(overhead)
             panels.extend(o_panels)
             texts.extend(o_texts)
@@ -597,6 +655,7 @@ class BattleUiComposer:
         """``member_id: (x, y, w, h)`` of every combatant's figure on screen (virtual pixels),
         with the strip under the feet where shield and weakness tiles stand."""
         boxes = {}
+        zoom = 1.0 if self._camera is None else float(self._camera.zoom)
         for visual in self.scene.combatants:
             pos = (
                 None
@@ -605,15 +664,23 @@ class BattleUiComposer:
             )
             if pos is None:
                 continue
-            body = float(self._member_heights.get(visual.member_id, 32.0))
+            extent = self._member_extents.get(visual.member_id)
+            if extent is not None:  # the figure's visible pixels, every frame of it, as drawn
+                left, top, right, bottom = (v * zoom for v in extent)
+                bottom = max(bottom, 0.0) + 9.0
+                boxes[visual.member_id] = (pos[0] + left, pos[1] + top, right - left, bottom - top)
+                continue
+            body = float(self._member_heights.get(visual.member_id, 32.0)) * zoom
             half = max(8.0, body * 0.32)
             boxes[visual.member_id] = (pos[0] - half, pos[1] - body, 2 * half, body + 9.0)
         return boxes
 
     def _overhead_commands(self, members):
         """Name (and, with ``overhead_bars``, the top-priority bar) over each member's sprite.
-        A label never covers another combatant, another label or the turn bar: it moves up until
-        it is clear, else below the feet row. ``overhead_labels`` keeps where each one went."""
+        A label never covers a combatant (its own too), another label or the turn bar, and it
+        stays by its owner: just over the head, a little higher or to the side, else just under
+        the feet row, else beside the head. Where none of those is clear the name is not shown -
+        never somewhere far from its owner. ``overhead_labels`` keeps where each shown one went."""
         panels, texts, gauges = [], [], []
         L = self.layout
         camera = self._camera
@@ -627,7 +694,12 @@ class BattleUiComposer:
             if anchor is None:
                 continue
             ax, ay = anchor
-            top = ay - float(self._member_heights.get(member.member_id, 32.0))
+            own = boxes.get(member.member_id)
+            top = (
+                own[1]
+                if own is not None
+                else ay - float(self._member_heights.get(member.member_id, 32.0))
+            )
             name = self._fit(self._name(member.member_id), 14)
             ranked = self._ranked_gauges(member, 1) if L.overhead_bars else ()
             states = " ".join(str(st.label or st.state_id) for st in member.statuses)[:30]
@@ -640,35 +712,45 @@ class BattleUiComposer:
             home_x = ax - width / 2
             # (y, cost): over the head first, a little higher, else under the feet row (close to
             # its owner beats far above someone else's head)
-            below = [(ay + 10.0 + i * 3.0, 24.0 + i * 3.0) for i in range(8)]
+            feet = own[1] + own[3] if own is not None else ay + 9.0
+            below = [(feet + 1.0 + i * 3.0, 24.0 + i * 3.0) for i in range(4)]
             if L.overhead_below:
                 ys = [(cy, cost - 24.0) for cy, cost in below]
             else:
                 base = top - height - 1.0
-                ys = [(base - i * 3.0, i * 3.0) for i in range(30)] + below
+                ys = [(base - i * 3.0, i * 3.0) for i in range(5)] + below
             shifts = [0.0]
-            reach = max(width, 36.0)  # a short name still steps clear of a whole figure
-            for step in (0.35, 0.7, 1.05, 1.4):
-                shifts += [-step * reach, step * reach]
-            tries = sorted(
-                ((cy, home_x + dx, cost + 1.2 * abs(dx)) for cy, cost in ys for dx in shifts),
-                key=lambda t: t[2],
-            )
+            for step in (0.25, 0.5):  # a little to the side, still over its owner
+                shifts += [-step * width, step * width]
+            spots = [(cy, home_x + dx, cost + 1.2 * abs(dx)) for cy, cost in ys for dx in shifts]
+            if own is not None:  # beside the head, touching the figure's side, last
+                bx, by, bw, bh = own
+                for i in range(4):
+                    cy = by + i * 3.0
+                    if cy + height > by + bh / 2:
+                        break
+                    spots += [(cy, bx - width - 2.0, 40.0 + i), (cy, bx + bw + 2.0, 41.0 + i)]
+            tries = sorted(spots, key=lambda t: t[2])
             right = L.virtual_width - L.margin - width
-            # the first (cheapest) spot that is on screen and covers no other figure or label
-            others = [b for k, b in boxes.items() if k != member.member_id] + placed
+            # the first (cheapest) spot that is on screen, by its owner, and covers no figure
+            # (its own too) and no other label
+            others = list(boxes.values()) + placed
             spot = None
             for cy, cx, _cost in tries:
                 if cy < floor or cy + height > L.virtual_height:
                     continue
                 cx = max(margin, min(right, cx))
+                if own is not None and _gap((cx, cy, width, height), own) > 12.0:
+                    continue  # pushed along by the screen edge, away from its owner
                 if all(
                     cx + width <= bx or bx + bw <= cx or cy + height <= by or by + bh <= cy
                     for bx, by, bw, bh in others
                 ):
                     spot = (cy, cx)
                     break
-            y, x = spot or (ys[0][0], max(margin, min(right, home_x)))
+            if spot is None:
+                continue  # no clear place by its owner: no name rather than one far away
+            y, x = spot
             placed.append((x, y, width, height))
             name_y = y + self.OVERHEAD_CAPTION
             self.overhead_labels[member.member_id] = (x, y, width, height)
@@ -1057,9 +1139,8 @@ class BattleUiComposer:
 
         ty = y + P.interaction_padding
         if menu.categories:
-            category_text = "  ".join(
-                f"[{value}]" if value == menu.active_category else value
-                for value in menu.categories
+            category_text = _category_strip(
+                menu.categories, menu.active_category, width - 2 * P.interaction_padding
             )
             texts.append(
                 BattleUiText(
@@ -1105,22 +1186,16 @@ class BattleUiComposer:
                     else ("action_entry" if entry.enabled else "action_disabled")
                 )
                 prefix = P.selected_prefix if selected else P.idle_prefix
+                gutter = _mark_gutter(P.selected_prefix, P.idle_prefix)
                 label = entry.label
                 if icon_pad:  # the icon took room from the name: never run into the cost
                     cost_room = (len(entry.cost_text) + 2) * 3.8 if entry.cost_text else 0.0
                     fit = int((width - 2 * P.interaction_padding - icon_pad - cost_room) / 3.8)
-                    fit -= len(prefix)
+                    fit -= round(gutter / 3.8)
                     if fit >= 4 and len(label) > fit:
                         label = label[: fit - 2].rstrip() + ".."
-                texts.append(
-                    BattleUiText(
-                        prefix + label,
-                        x + P.interaction_padding + 2 + icon_pad,
-                        ty,
-                        role,
-                        "left",
-                    )
-                )
+                left = x + P.interaction_padding + 2 + icon_pad
+                texts.extend(_marked(prefix, label, left, gutter, ty, role))
                 if entry.cost_text:
                     texts.append(
                         BattleUiText(
@@ -1132,11 +1207,13 @@ class BattleUiComposer:
                         )
                     )
                 if entry.icon_asset_id:
+                    # inside the row's frame, clear of its border and level in the row (on the
+                    # border, the selection frame ran through the icon)
                     icons.append(
                         BattleUiIcon(
                             entry.icon_asset_id,
-                            x + P.interaction_padding - 4,
-                            ty - 1,
+                            x + P.interaction_padding - 1,
+                            ty - 2 + (P.interaction_row_height - 8.0) / 2,
                             "action",
                             "",
                             entry.label,
@@ -1280,6 +1357,7 @@ class BattleUiComposer:
                 selected.update(value.option_ids)
 
         oy = step_y + P.interaction_header_height
+        gutter = _mark_gutter(P.selected_option_prefix, P.idle_prefix)
         for option in workflow.options:
             is_selected = option.option_id in selected
             mark = P.selected_option_prefix if is_selected else P.idle_prefix
@@ -1287,9 +1365,8 @@ class BattleUiComposer:
                 role = "workflow_option_selected"
             else:
                 role = "workflow_option" if option.enabled else "workflow_option_disabled"
-            texts.append(
-                BattleUiText(mark + option.label, x + P.interaction_padding + 3, oy, role, "left")
-            )
+            left = x + P.interaction_padding + 3
+            texts.extend(_marked(mark, option.label, left, gutter, oy, role))
             if option.icon_asset_id:
                 icons.append(
                     BattleUiIcon(
@@ -1478,12 +1555,18 @@ class BattleUiComposer:
         focus_member_id=None,
         display_names=None,
         member_heights=None,
+        member_extents=None,
+        overhead_hidden=False,
     ):
         """``display_names`` maps member ids to the labels shown in HUD and timeline;
         ``member_heights`` (logical sprite heights) positions overhead bars and the
         actor-anchored action menu."""
         self._display_names = {str(k): str(v) for k, v in dict(display_names or {}).items()}
         self._member_heights = {str(k): float(v) for k, v in dict(member_heights or {}).items()}
+        self._member_extents = {
+            str(k): tuple(float(x) for x in v) for k, v in dict(member_extents or {}).items()
+        }
+        self._overhead_hidden = bool(overhead_hidden)
         self._camera = camera
         self._focus = None if focus_member_id is None else str(focus_member_id)
         if not isinstance(camera, Camera2D):

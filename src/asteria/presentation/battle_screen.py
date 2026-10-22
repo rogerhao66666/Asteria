@@ -111,6 +111,10 @@ class BattleScreenRuntime:
         self.current_member_id: str | None = None
         self.display_names: dict[str, str] = {}
         self.member_heights: dict[str, float] = {}
+        # (left, top, right, bottom) of each figure's visible pixels round its feet, logical
+        # units: labels keep clear of the figure as it is drawn, not of a guess at it
+        self.member_extents: dict[str, tuple] = {}
+        self.overhead_hidden = False  # names over heads wait while the camera is zoomed in
         # members whose combatant profile has hud_visible off (a summon, a pet): no party panel
         self.hud_hidden: set[str] = set()
         self.time = 0.0
@@ -238,6 +242,8 @@ class BattleScreenRuntime:
             focus_member_id=self.current_member_id,
             display_names=self.display_names,
             member_heights=self.member_heights,
+            member_extents=self.member_extents,
+            overhead_hidden=self.overhead_hidden,
         )
 
     def render(self, base_camera, *, ui_renderer: BattleUiRenderer, texture_renderer=None):

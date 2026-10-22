@@ -69,9 +69,13 @@ def test_overhead_names_never_cover_a_combatant_or_each_other(monkeypatch):
         runtime.game.start_encounter("woods_boss")  # a big boss and two slingers close together
         runtime._battle_presentation.begin()
         runtime._advance_to_hero_turn()
-        for _ in range(120):
+        adapter = runtime._battle_presentation
+        # names wait while the boss intro and queued actions play: check them once shown
+        for _ in range(900):
             runtime._frame([], 1 / 60)
-        screen = runtime._battle_presentation.screen
+            if not adapter.busy() and not adapter.screen.overhead_hidden:
+                break
+        screen = adapter.screen
         layout = screen.composer.layout
         assert not layout.overhead_bars  # health stays hidden
         frame = screen.build_frame(

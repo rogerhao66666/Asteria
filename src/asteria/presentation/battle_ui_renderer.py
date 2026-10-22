@@ -132,7 +132,7 @@ class BattleUiTheme:
         return self.panel_fill, self.panel_border
 
     def text_color(self, role):
-        role = str(role)
+        role = str(role).removesuffix(":mark")  # a row's cursor: its label's colour
         if role == "result_headline":
             return self.text_emphasis
         if (
@@ -171,7 +171,7 @@ class BattleUiTheme:
         return self.text_primary
 
     def text_size(self, role):
-        role = str(role)
+        role = str(role).removesuffix(":mark")
         if role == "result_headline":
             return self.headline_font_size
         if role in {"workflow_title", "action_selected"} or role.endswith(":focus"):

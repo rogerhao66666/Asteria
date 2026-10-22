@@ -1,3 +1,5 @@
+import pytest
+
 from asteria.presentation import (
     BattleActionEntry,
     BattleActionMenuPolicy,
@@ -79,8 +81,11 @@ def test_action_menu_uses_interaction_surface_and_selected_hierarchy():
     disabled = next(x for x in ui.texts if x.role == "action_disabled")
     assert panel.role == "interaction:action_menu"
     assert panel.width == 170
-    assert selected.text.startswith("▶ ")
+    # the cursor is its own element, on the label's row, ahead of it (drawn level by the backend)
+    mark = next(x for x in ui.texts if x.role == "action_selected:mark")
+    assert mark.text == "▶" and mark.y == selected.y and mark.x < selected.x
     assert disabled.text.strip() == "Limit"
+    assert disabled.x == selected.x  # every row's label starts in the same column
 
     backend = HeadlessBattleUiBackend()
     theme = BattleUiTheme()
@@ -112,7 +117,8 @@ def test_workflow_selected_option_has_clear_visual_role():
     panel = next(x for x in ui.panels if x.panel_id == "action_workflow")
     selected = next(x for x in ui.texts if x.role == "workflow_option_selected")
     assert panel.role == "interaction:workflow"
-    assert selected.text.startswith("✓ ")
+    mark = next(x for x in ui.texts if x.role == "workflow_option_selected:mark")
+    assert selected.text == "Herb" and mark.text == "✓" and mark.y == selected.y
 
 
 def test_polish_profile_is_project_owned_and_roundtrips():
@@ -137,3 +143,33 @@ def test_theme_new_hierarchy_fields_roundtrip():
     restored = BattleUiTheme.from_data(theme.to_data())
     assert restored == theme
     assert restored.panel_style("interaction:action_menu")[1] == theme.interaction_border
+
+
+def test_the_cursor_is_drawn_centred_on_its_labels_capitals_in_any_font():
+    """The cursor was a text symbol the pixel font lacked: drawn by another font it sat low
+    and to the side. It is now a shape centred on the label's capital letters."""
+    pygame = pytest.importorskip("pygame")
+    from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
+    from asteria.presentation.battle_ui import BattleUiText
+
+    pygame.init()
+    for scale in (1.0, 2.0, 3.0):
+        screen = pygame.Surface((400, 200), pygame.SRCALPHA)
+        backend = PygameBattleUiBackend(screen, scale=scale)
+        label = BattleUiText("HUGE", 20, 10, "action_selected", "left")
+        mark = BattleUiText("▶", 10, 10, "action_selected:mark", "left")
+        backend.draw_text(label, color=(255, 255, 255, 255), size=9)
+        backend.draw_text(mark, color=(255, 0, 0, 255), size=9)
+
+        def rows(color, screen=screen):
+            return [
+                y
+                for y in range(200)
+                if any(screen.get_at((x, y))[:3] == color for x in range(400))
+            ]
+
+        text_rows, mark_rows = rows((255, 255, 255)), rows((255, 0, 0))
+        text_mid = (text_rows[0] + text_rows[-1]) / 2
+        mark_mid = (mark_rows[0] + mark_rows[-1]) / 2
+        assert abs(text_mid - mark_mid) <= 1.0, (scale, text_rows, mark_rows)
+        assert mark_rows[-1] - mark_rows[0] <= text_rows[-1] - text_rows[0] + 1
