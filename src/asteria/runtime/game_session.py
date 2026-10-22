@@ -10,6 +10,7 @@ from asteria.core.scene_transition import carry_persistent_entities
 from asteria.events import EventRunner, EventScheduler, SceneEventRuntime, WorldCommandRouter
 from asteria.events.timers import EventTimers
 from asteria.gameplay import AbilityRegistry, AbilityRuntime, GameplaySubject
+from asteria.gameplay.conditions import GameplayConditionContext
 from asteria.presentation.message_codes import MessageContext, expand_message, plain_message
 from asteria.rpg import (
     ActorAbilityState,
@@ -3360,8 +3361,6 @@ class GameSessionRuntime:
         battle costs (boost points...), resource costs, unmet conditions (e.g. weapons it needs),
         or no
         ingredients to concoct. Menus show this as the disabled reason."""
-        from asteria.gameplay.conditions import GameplayConditionContext
-
         battle = self.battle
         if battle is None:
             return "Not in battle"

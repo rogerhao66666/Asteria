@@ -110,11 +110,16 @@ class BattlePresentationAdapter(Protocol):
 class PygameTextureDrawer:
     """Draws ``TextureDraw`` commands (virtual coordinates) onto the host's pygame screen."""
 
+    # Scaled sprite frames kept, in pixels (4 bytes each); past it the cache starts over.
+    SPRITE_PIXELS = 6_000_000
+
     def __init__(self, host, resolver, scale):
         self.host = host
         self.resolver = resolver
         self.scale = float(scale)
         self.draw_count = 0
+        self._sprites = {}  # (asset, source, size, flip) -> (sheet, visible part, its offset)
+        self._sprite_pixels = 0
 
     def surface(self, asset_id):
         lookup = getattr(self.resolver, "generated_image", None)
@@ -139,8 +144,11 @@ class PygameTextureDrawer:
         tint=None,
     ):
         pg = self.host.pg
-        image = self.surface(asset_id).subsurface(pg.Rect(*source))
         size = (max(1, round(width * self.scale)), max(1, round(height * self.scale)))
+        if blend != "add" and not rotation_deg:
+            self._blit_visible(asset_id, source, x, y, size, flip_x, opacity, tint)
+            return
+        image = self.surface(asset_id).subsurface(pg.Rect(*source))
         if image.get_size() != size:
             image = pg.transform.scale(image, size)
         if flip_x:
@@ -168,6 +176,43 @@ class PygameTextureDrawer:
         flags = pg.BLEND_RGB_ADD if blend == "add" else 0
         self.host.screen.blit(image, position, special_flags=flags)
         self.draw_count += 1
+
+    def _blit_visible(self, asset_id, source, x, y, size, flip_x, opacity, tint):
+        """A normal (alpha) blit without rotation: the frame is scaled and flipped once, and only
+        its visible part is drawn. Fully transparent pixels leave the screen as it was, so the
+        picture is the same as blitting the whole frame."""
+        pg = self.host.pg
+        sheet = self.surface(asset_id)
+        key = (asset_id, tuple(source), size, bool(flip_x))
+        known = self._sprites.get(key)
+        if known is None or known[0] is not sheet:
+            image = sheet.subsurface(pg.Rect(*source))
+            if image.get_size() != size:
+                image = pg.transform.scale(image, size)
+            if flip_x:
+                image = pg.transform.flip(image, True, False)
+            box = image.get_bounding_rect()
+            visible, pixels = image.subsurface(box), 0
+            if image.get_parent() is None:  # a scaled copy: keep only the part that shows
+                visible, pixels = visible.copy(), box.width * box.height
+            if known is not None:  # the picture under this id was replaced
+                self._sprite_pixels -= known[3]
+            if self._sprite_pixels + pixels > self.SPRITE_PIXELS:
+                self._sprites.clear()  # a zooming camera: every size is new, start over
+                self._sprite_pixels = 0
+            self._sprite_pixels += pixels
+            known = self._sprites[key] = (sheet, visible, box.topleft, pixels)
+        _, image, (dx, dy), _ = known
+        self.draw_count += 1
+        if not image.get_width() or not image.get_height():
+            return  # an empty frame
+        if tint:
+            image = image.copy()
+            image.fill((*tint, 255), special_flags=pg.BLEND_RGBA_MULT)
+        if opacity < 1.0:
+            image = image.copy()
+            image.set_alpha(max(0, min(255, int(opacity * 255))))
+        self.host.screen.blit(image, (round(x * self.scale) + dx, round(y * self.scale) + dy))
 
     def render(self, draws):
         for draw in draws:

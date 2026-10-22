@@ -203,6 +203,7 @@ class PygameBattleUiBackend:
         self._glyph_cache = {}
         self._cjk_fonts = {}
         self._text_images = {}  # (size, text, colour) -> the drawn line, reused frame to frame
+        self._panel_layers = {}  # (size, colours, radius, border) -> the drawn panel, reused
 
     def _s(self, value):
         return round(float(value) * self.scale)
@@ -234,6 +235,8 @@ class PygameBattleUiBackend:
         if self.screen is None:
             raise RuntimeError("pygame battle UI screen is not configured")
 
+    PANEL_LAYERS = 256  # drawn panels kept; the HUD and the menu redraw the same few
+
     def draw_panel(self, panel, *, fill, border, radius, border_width, skin=None):
         rect = self._rect(panel.x, panel.y, panel.width, panel.height)
         if skin is not None and self.resolve_skin is not None:
@@ -243,18 +246,19 @@ class PygameBattleUiBackend:
 
                 draw_nine_patch(self.pg, self.screen, image, tuple(rect), skin, scale=self.scale)
                 return
-        layer = self.pg.Surface(rect.size, self.pg.SRCALPHA)
-        local = layer.get_rect()
         alpha = lambda c: (*self._rgb(c), int(c[3]) if len(c) > 3 else 255)  # noqa: E731
-        self.pg.draw.rect(layer, alpha(fill), local, border_radius=self._s(radius))
-        if border_width:
-            self.pg.draw.rect(
-                layer,
-                alpha(border),
-                local,
-                width=max(1, self._s(border_width)),
-                border_radius=self._s(radius),
-            )
+        width = max(1, self._s(border_width)) if border_width else 0
+        key = (rect.size, alpha(fill), alpha(border) if width else None, self._s(radius), width)
+        layer = self._panel_layers.get(key)
+        if layer is None:  # the same panel is drawn again on every frame
+            layer = self.pg.Surface(rect.size, self.pg.SRCALPHA)
+            local = layer.get_rect()
+            self.pg.draw.rect(layer, key[1], local, border_radius=key[3])
+            if width:
+                self.pg.draw.rect(layer, key[2], local, width=width, border_radius=key[3])
+            if len(self._panel_layers) >= self.PANEL_LAYERS:
+                self._panel_layers.clear()  # panels that change size: start over
+            self._panel_layers[key] = layer
         self.screen.blit(layer, rect.topleft)
 
     def _draw_pips(self, rect, count, filled, track, fill):
