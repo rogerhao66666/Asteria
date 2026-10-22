@@ -1,7 +1,7 @@
 # Asteria 引擎手冊（功能、範本、demo、規則、下一步）
 
-**更新：** 2026-10-16（D32；D27–D32 的內容看 DECISION_LOG 與 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
-[`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D26），規格在
+**更新：** 2026-10-22（D51；D42–D51 的內容看 DECISION_LOG，缺口對照表見 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
+[`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D51），規格在
 [`ASTERIA_SPEC.md`](../ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
 不代表現狀。
 
@@ -28,8 +28,8 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 
 .venv/bin/asteria-editor                       # 編輯器（File > New from Template… 從範本開新專案）
 .venv/bin/asteria-preview PROJECT.json         # 直接玩專案
-.venv/bin/python -m pytest -q                  # 全部測試（約 1 分鐘）
-.venv/bin/python -m asteria.kernels.build_native   # 編譯 C++ kernel（每台機器一次）
+.venv/bin/python -m pytest -q                  # 全部測試（約 3,100 項，約 5 分鐘）
+.venv/bin/python -m asteria.kernels.build_native   # 編譯 C++ kernel（開發機一次；ABI 改了要重編）
 ```
 
 提交前（專案規則）：
@@ -77,10 +77,18 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 ### 3.1 核心與效能
 
 - ECS，欄位用 `array.array` 欄位存放（`'d'`／`'q'`／`'b'`），系統直接讀寫欄位。
-- **kernel**（`docs/NATIVE_KERNELS.md`）：廣域碰撞、投射物、粒子、天氣、角色移動、場景 AI；`ASTERIA_KERNELS=
-  native|numpy|python`，預設取最快可用的；沒編譯 C++ 也不會壞（退回 numpy／python）。
-- 量測：300 隻敵人 + 500 顆投射物每幀 python 25.7 ms／numpy 14.5 ms／native 11.6 ms；全螢幕技能的大場面
-  30 → 11.5 ms；640×640 的大地圖 < 0.5 秒載入（區塊懶惰繪製，只付鏡頭看得到的）；真實視窗 60 fps。
+- **kernel**（`docs/NATIVE_KERNELS.md`）：廣域碰撞、牆擋移動（`blocked_boxes`）、投射物、粒子、天氣、角色移動、
+  場景 AI（沒有角色控制器的怪一次走完：`fieldai_free_step`、`points_blocked`）；`ASTERIA_KERNELS=
+  native|numpy|python`，預設取最快可用的；沒編譯 C++ 也不會壞（退回 numpy／python）。C++ 版不需要 numpy
+  （緩衝區用 `array.array`），macOS 編成 arm64＋x86_64、最低 macOS 11；ABI 5；匯出一定帶著通過檢查的程式庫。
+- 量測（2026-10-20 起不開 tracemalloc；之前的數字被 heap 追蹤放大）：300 隻敵人 + 500 顆投射物每幀約
+  native 1.8／numpy 2.4／python 3.1 ms；640×640 的大地圖 < 0.5 秒載入（區塊懶惰繪製，只付鏡頭看得到的）；
+  真實視窗 60 fps。
+- 同樣的東西只做一次（D48）：九宮格面板、HUD 文字、戰場背景的縮放、戰鬥角色每一格的縮放與可見範圍、
+  戰鬥 UI 面板都有快取；HUD 與指令列只在內容變了才重排；場上的碰撞世界跟著場景就地更新
+  （`CollisionWorld.follow`，做不到完全一致就重建）。
+- 下一場戰鬥的圖在場上就先解碼（只在真實視窗；manifest `battle.preload_mb`，預設 64，0 關閉），開戰那一幀
+  10–18 ms；換音樂不會因為淡出而凍住。
 
 ### 3.2 玩法資料（`gameplay`）
 
@@ -127,10 +135,11 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 工作區：**Scene、Database（RPG）、Battle、Presentation（UI）、Events、Code、Multiplayer**；面板：Project／Tiles／Layers、
 Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
-- **File > New from Template…（Ctrl+N）**：Party RPG（八方旅人式）、Action RPG（暗黑式）兩個範本，
-  複製整個專案資料夾（含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則
-  在編輯器哪裡改）。範本隨套件發布（`src/asteria/templates/`）；改了 demo 之後執行
-  `scripts/sync_templates.py`，測試會檢查兩邊一致。
+- **File > New from Template…（Ctrl+N）**：Full Verification（推薦：完整的遊戲，也是編輯器預設開的起始專案）、
+  Basic RPG（小）、Party RPG（八方旅人式）、Action RPG（暗黑式）、Completely Empty；複製整個專案資料夾
+  （含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則在編輯器哪裡改）。
+  Party 與 Action 範本隨套件發布（`src/asteria/templates/`），改了 demo 之後執行 `scripts/sync_templates.py`，
+  測試會檢查兩邊一致；Full Verification 與 Basic RPG 從原始碼裡的 `reference_projects/` 複製。
 - **紀錄表單（`editor/record_form.py`，2026-10-19）**：Game Data、Battle Rules、Battle Screen、Runtime UI
   的每一筆紀錄不再是 Field／Value 樹，而是表單：名稱與圖示在上方，ID 固定顯示；數字框（機率以 %
   顯示）、開關、**下拉選單挑參照**（技能、狀態、職業、物品、資源、能力值…附圖示，從專案讀出，
@@ -140,12 +149,21 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   「Show N more fields」／「More fields」；內部欄位收在 Advanced。每個欄位有說明（ⓘ 與灰字）。
   **改了就套用**（停止輸入 0.35 秒後經可復原指令套用，Ctrl+Z 復原），錯誤以紅字顯示且不套用；
   左側清單顯示名稱與圖示，篩選也找名稱。Game Systems 與 Game Start 也改為自動套用、鍵值從清單選。
+- **介面語言**（D50）：English（預設）／繁體中文，View ▸ Language 即時切換，記在 QSettings `editor/language`
+  （`editor/i18n.py`、`editor/translations/zh_TW.json`）；只翻介面文字，名稱、id、描述等作者的資料不翻。
+- **畫地圖**（D42）：Tiles 面板顯示整張圖塊集，點一格或拖曳選一塊來畫（整塊無縫重複）；筆刷大小 `[`／`]`、
+  右鍵從地圖吸取、B／G／R／E／S 切換工具；按住時就畫在地圖上，放開算一步復原。
+- **素材庫**（D44）：File > Import from Asset Library… 從 `asset_library/`（CC0 的 Foozle 包與弓）挑圖匯入
+  專案，顯示授權，一步復原。
+- **技能樹**：Game Data > Skill Trees 先顯示圖（圖示卡片加箭頭，可存版面），表單到切到資料檢視才建（D46）。
+- 場景視圖的攻擊／受擊框預設不畫，View > Show Hit & Hurt Boxes 才畫（D43）。
 - **Inspector**：選取實體即顯示全部元件，每個元件一個區塊（數字兩兩並排、下拉、開關），可直接改名與開關。
 - Real-Time Combat 工作區（攻擊、投射物、稀有度、詞綴，即時預覽與判定框疊圖）；Enemy AI；技能與狀態
   可編輯 `display_name`、`icon_id`（圖示挑選）；Capture Rules 可設 `Joins As Actor`、`Becomes Pet Item`。
 - 窄視窗：最小視窗 1000×640；預覽在窄頁自動收起；表格欄寬與下拉選單依內容。
 - 稽核腳本 `scripts/editor_ui_audit.py` 逐工作區截圖並找：文字被截斷、溢出、過小控制項、停靠面板的分頁掉出
-  分頁列；兩個專案在 1600×1000／1280×800／1100×700 皆 0 缺陷。
+  分頁列。2026-10-22 在 Full Verification 專案（56 頁，英文與中文，1600×1000 與 1100×700）：每次被截的文字
+  0–1 處（Map Rule Sets 的圖片路徑、窄視窗 Battle 頁的一個選項；見 DECISION_LOG D51）。
 - Code 工作區：寫 Python 腳本直接操作專案，有自動完成。
 - Multiplayer 工作區：本機 server、Guest ID、SQLite、專案規則模板及獨立 Diablo 多人副本。副本使用 project-backed adapter 同步原 ECS 戰鬥、技能、怪物、NPC、商店、製作、背包、裝備與角色存檔；四人 Cocoa 驗收通過。Boss 有正傷害者各得完整 100 XP，每項原掉落隨機保留給一位參與者。使用方式見 [遊戲模板](audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md)。
 - Scene 視圖操作：**滑鼠滾輪以游標為中心縮放**（一格 ×1.15）；方向鍵平移視圖（有選取實體時改為移動實體，
@@ -222,6 +240,15 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   鍛造與商店。
 - 存檔往返、被擊敗的 Boss 保持倒下。
 
+### 4.3 Full Verification（`reference_projects/full_verification_demo`，回合制壓力測試）
+
+驗證引擎回合制部分的專案，也是推薦範本：主角 Aldric（勇者／大魔導師）一人出發，在 Hearthfold 的公會雇用
+Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四種風格的技能樹、STR／DEX／INT／LUK 與能力值
+公式、元素、弱點／護盾／破防、精煉與鑲嵌、製作、任務、寵物、地圖區域、新遊戲＋、翻譯、音樂室，編輯器每一頁
+都有資料。每個系統用在哪裡：[`audits/FULL_VERIFICATION_COVERAGE.md`](audits/FULL_VERIFICATION_COVERAGE.md)。
+驗證：`tests/test_full_verification_campaign.py`（整段劇情）與 `scripts/full_verification_campaign_live_check.py`
+（Cocoa 視窗；圖在 `audits/evidence/full_verification_campaign/`）。
+
 ---
 
 ## 5. 資料格式的變更（都向下相容：沒設定就不寫入）
@@ -238,6 +265,15 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/progression_graph.py` |
 | 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/localization.py`、`runtime/playable_test_runtime.py`、`editor/dialogue_command_dialog.py` |
 | 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle_ui.py`、`presentation/library.py`、`editor/integrated_authoring.py` |
+| 戰鬥版面 `command_counts`（頂層指令旁的數量，預設關，D42）；戰鬥 HUD 資源樣式 `color`（空白＝主題色，D47） | `presentation/battle_ui.py`、`presentation/battle_hud.py` |
+| `InventoryRules.equip_offer`（never／empty_slot／always）與世界指令 `GIVE_EQUIPMENT`（D44） | `rpg/items.py`、`runtime/game_session.py` |
+| `ClassDefinition.resource_growth`（每級加資源）；`EquipmentDefinition.rarity`（選填，背包依它上色與命名） | `rpg/actors.py`、`rpg/items.py` |
+| `DerivedStatRule`（Game Systems > Stat Formulas：stat += base + Σ 係數×stat，順序、下限、上限、對象）；`CharacterScreenProfile.stat_order`、`resource_order`（沒設時倒地資源 HP 排第一，D51） | `rpg/derived_stats.py`、`presentation/rpg_character_screen.py` |
+| `InteractionRule.multiplier_source_terms`／`multiplier_target_terms`；`OutcomeCheckDefinition.blocked_source_tags`／`blocked_target_tags` | `rpg/interactions.py` |
+| `AbilityDefinition.description`（戰鬥選單上方的說明）；技能進化 `AbilityEvolutionRule.required_tags` | `gameplay/abilities.py`、`rpg/ability_build.py` |
+| `RefineRules.materials`、`protect_item`；裝備相關世界指令可寫 `slot:<部位>` | `rpg/refine.py`、`runtime/world_command_handlers.py` |
+| 世界指令 `LEARN_ABILITY`、`NEW_GAME_PLUS`、`SET_LOCALE`；技能可用 `BATTLE_SEQUENCE` 叫出序列 | `runtime/world_command_handlers.py`、`runtime/game_session.py` |
+| manifest `battle.preload_mb`（預先解碼戰鬥圖的記憶體上限，預設 64，0 關閉） | `runtime/playable_test_runtime.py`、`runtime/image_preloader.py` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的
 降防禦從來沒生效）。
@@ -250,6 +286,9 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   `tests/test_octopath_style_battle.py`（機制本身的單元測試）；ARPG 在 `tests/test_arpg_demo.py`、
   `test_arpg_save_load.py`、`test_native_kernels.py`、`test_frame_limiter.py`；範本在
   `test_project_templates.py`。
+- Full Verification：`tests/test_full_verification_campaign.py` 打完整段劇情；
+  `scripts/full_verification_campaign_live_check.py OUT` 在 Cocoa 視窗先用真的按鍵走路與對話，再跑完劇情，
+  每個里程碑存一張圖，另存 `results.json`。
 - **實機驗證** `scripts/real_machine_validation.py OUT`：66 項真實視窗檢查（GPU、輸入、音訊、戰鬥、相機、
   選單、特效、匯入、打包 App、記憶體…）。有 4 項需要真人或手把，標示為未執行，不算通過。
 - `scripts/arpg_demo_live_check.py <職業> OUT`：真實視窗，用腳本按鍵走完城鎮、轉職、技能樹、野外、Boss、
@@ -257,7 +296,8 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - `scripts/editor_ui_audit.py`：編輯器版面稽核（可 `--project`、`--also 1100x700`）。
 - `scripts/built_in_text_live_check.py OUT`：Cocoa 視窗把 Full Verification 切成 zh-TW，用真的按鍵走過標題、
   野外、暫停、設定、存檔、狀態、戰鬥指令、勝利與遊戲結束，存圖並記下每個畫面畫出的字（D52）。
-- 量測：`scripts/arpg_stress.py`、`arpg_demo_measure.py`、`runtime_benchmark.py`。
+- 量測：`scripts/arpg_stress.py`、`arpg_demo_measure.py`、`runtime_benchmark.py`。ARPG 壓力與執行期基準
+  不開 heap 追蹤（tracemalloc 會讓每次 Python 配置慢約 40 倍，熱點也會看錯）。
 
 ---
 
@@ -266,8 +306,11 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 項目 | 狀態 |
 | --- | --- |
 | 圖示與美術 | 所有 demo（Full Verification、Octopath、reference、Diablo 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：Diablo 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
-| 原生 kernel 要在開發機編譯一次 | `python -m asteria.kernels.build_native`（macOS 編成 arm64 + x86_64 通用檔）；匯出會帶著它，玩家的 Python 沒有 numpy 也能用；沒編譯會退回 numpy／python |
-| `CollisionWorld.from_scene` 沒有快取 | 2026-10-16 量測：100／500／2000 個碰撞器建一次 0.05／0.22／0.85 ms，每幀約一次，不是瓶頸；失效模型（啟用狀態、增刪、換場景、移動）的風險大於收益，**決定不做** |
+| 原生 kernel 要在開發機編譯一次 | `python -m asteria.kernels.build_native`（macOS 編成 arm64 + x86_64 通用檔，ABI 5）；匯出會先檢查、必要時重編並帶著它，玩家的 Python 沒有 numpy 也能用；沒編譯會退回 numpy／python |
+| 輕量電腦 | 效能只在本機（Apple silicon、沒開低耗電模式）量過；真的輕量電腦或低耗電模式要有人實際跑 |
+| 頭上名字的縮寫 | 名字超過 14 字會縮成縮寫（「Goblin Slinger 2」→「GS2」），要怎麼顯示待使用者決定。2026-10-22 發現的其他戰鬥畫面問題（拉近時的狀態文字、技能列名稱黏花費、狀態畫面 HP／MP 順序）已修（DECISION_LOG D51 補充） |
+| 編輯器 | 中文模式下，顯示的字就是存檔值的固定選項（Enemy AI 的條件／動作／目標、事件觸發、VFX 錨點）還是英文；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充） |
+| 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；還不能翻的是專案資料的名稱與說明（角色、技能、道具、狀態、敵人…）和開發用的錯誤訊息；中文用系統字型，匯出不附中文字型；寵物改名不支援中文輸入法組字 |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
 | 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整。Diablo 的九個流派用 `scripts/arpg_balance.py` 對齊（同等級、同技能點下的輸出加存活的綜合分數，差距在 ±20% 內）；沒有裝備、沒有真人操作，只能比流派之間 |
@@ -306,11 +349,23 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 反擊與戰鬥表現 | `ReactionDefinition.reactor_tags`（要求反應者自己帶標籤，如反擊姿態）；可玩戰鬥現在會觸發專案的反應並記入戰鬥記錄；敵人技能也走逐下流程（爆擊／即死／反應）；`EQUIP_ITEM`（戰鬥中換武器，技能跟著變）、`DISASSEMBLE`；失去開場（先制／偷襲）的一方在時間軸排程下只讓出第一輪 |
 | Demo | `reference_projects/full_verification_demo/`：單一主角打 Boss，`run_trial_smoke.py` 腳本化驗證、`scripts/full_verification_live_check.py` 真實視窗驗證 |
 
+### D42–D51 新增（2026-10-18～22；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 編輯器 | 紀錄表單與邊改邊套用（D45）、RPG Maker 式畫地圖（D42）、素材庫匯入（D44）、技能樹圖（D43）、繁體中文介面（D50）、逐頁排版與偶發當機修正（D47） |
+| 戰鬥與角色 | 能力值公式、元素攻擊與抗性、弱點與爆擊倍率、新裝備先問、裝備稀有度、精煉材料與保級（D43–D44）；HP 在 MP 上面、BP 金色圓點、HUD 資源顏色（D47）；選單游標自動對齊、頭上名字不蓋人（D49） |
+| 效能 | 碰撞世界就地更新、C++ kernel 不需 numpy、繪製快取、戰鬥圖預先解碼、HUD 與指令列只在變化時重排、場上 AI 批次、換音樂不凍住（D48） |
+| Demo | Full Verification（原 Boss Trial）補滿所有系統，成為推薦範本（D43） |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
-1. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
-2. Web 匯出——使用者 2026-10-16 說先不用；要先做依賴盤點。
-3. 技能圖示換成美術師手繪（現在是程式畫的 32 px 原創圖示，D35）。
+1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
+2. 編輯器剩下的英文：顯示＝存檔值的固定選項，要把顯示和值分開。
+3. 專案資料的翻譯（角色、技能、道具、狀態、敵人的名稱與說明可依語系不同）；內建字詞已可翻（D52）。
+4. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
+5. Web 匯出——使用者 2026-10-16 說先不用；要先做依賴盤點。
+6. 技能圖示換成美術師手繪（現在是程式畫的 32 px 原創圖示，D35）。
 
 ---
 
@@ -322,3 +377,12 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - 每一批的結果寫進 `docs/audits/DECISION_LOG.md`（中文，六段式：做了什麼、證據、限制）。
 - UI 和實機的東西一定在 Cocoa 真實視窗驗證，附截圖，放 `docs/audits/evidence/real_machine/`。
 - 編輯器要好看：有顏色、有圖示、版面密但不擠；稽核腳本要乾淨。
+- 編輯器的新介面文字要在 `src/asteria/editor/translations/zh_TW.json` 加翻譯（或樣板）；依標題挑圖示、樣式或
+  面板的程式碼比對 `i18n.english(text)`，不要比對畫面上的字。
+- 遊戲畫面的新文字要寫成 `game.tr("<鍵>", "<英文>")`，並在 `rpg/built_in_text.py` 的 `GROUPS` 與
+  `rpg/built_in_text/zh-TW.json` 各加一條，再跑 `scripts/built_in_text_keys.py`（測試會抓漏）；版面量字寬用
+  `presentation/text_cells.cells`（全形字算 2 格），不要用 `len()`。
+- 效能量測不開 tracemalloc（`RuntimeProfiler(track_python_heap=False)`）；真實視窗的時間會被合成器的 vsync
+  吃掉，比較新舊要在同一個程序裡交替跑。
+- 同一個資料夾有其他 session 在改時，實機截圖從 HEAD 的乾淨副本拍（`git archive HEAD`，再把編好的
+  `libasteria_kernels.dylib` 複製進去），才不會拍到別人沒提交的改動。

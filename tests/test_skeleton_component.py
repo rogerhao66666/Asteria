@@ -228,7 +228,12 @@ def test_editor_scene_viewport_advances_attached_skeleton_preview(app, tmp_path)
     widget.resize(320, 240)
     widget.show()
     try:
-        app.processEvents()
+        # the timer starts at the first paint; a first window of a fresh application can take
+        # a few event rounds to be exposed (the test failed when it ran on its own)
+        for _ in range(200):
+            if widget._skeleton_timer.isActive():
+                break
+            QTest.qWait(10)
         assert widget._skeleton_timer.isActive()
         draws = widget.skeleton_runtime.draw_commands(
             scene, widget.camera, document.asset_views.sprite_sheet

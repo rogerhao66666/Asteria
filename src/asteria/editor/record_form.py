@@ -39,6 +39,8 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
+    QStyle,
+    QStyleOptionComboBox,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -249,6 +251,7 @@ class Picker(QComboBox):
     typed value that is not in the list."""
 
     picked = Signal()
+    _widest = None  # Qt asks for a size hint while the box is still being built
 
     def __init__(self, choices, value, *, icons=None, allow_none=True, allow_other=True):
         super().__init__()
@@ -262,6 +265,10 @@ class Picker(QComboBox):
         self.setMinimumContentsLength(16)
         self.allow_other = allow_other
         self._values = []
+        self._widest = None  # the longest choice's width, measured once (see sizeHint)
+        model = self.model()  # any change of the choices measures again
+        for signal in (model.rowsInserted, model.rowsRemoved, model.dataChanged):
+            signal.connect(self._forget_width)
         if allow_none:
             self.addItem("(none)", "")
             self._values.append("")
@@ -284,6 +291,37 @@ class Picker(QComboBox):
         self.set_value(value)
         self.activated.connect(lambda _i: self.picked.emit())
         self.lineEdit().editingFinished.connect(self._typed)
+
+    def sizeHint(self):  # noqa: N802 - Qt API
+        """As wide as the longest choice (up to 280 px) where the form has the room, so a
+        chosen name shows whole; the minimum is unchanged, so a narrow window still fits."""
+        hint = super().sizeHint()
+        return QSize(max(hint.width(), self.choice_width(280)), hint.height())
+
+    def choice_width(self, cap):
+        """The width that shows the longest choice whole (up to ``cap``)."""
+        if self._widest is None:
+            self._widest = self._choice_width()
+        return min(cap, self._widest)
+
+    def _forget_width(self, *_args):
+        self._widest = None
+
+    def _choice_width(self):
+        self.ensurePolished()  # the themed font and padding, not the system ones
+        option = QStyleOptionComboBox()
+        self.initStyleOption(option)
+        field = self.style().subControlRect(
+            QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxEditField, self
+        )
+        metrics = self.fontMetrics()
+        widest = max(
+            (metrics.horizontalAdvance(self.itemText(i)) for i in range(self.count())),
+            default=0,
+        )
+        if any(not self.itemIcon(i).isNull() for i in range(self.count())):
+            widest += self.iconSize().width() + 6
+        return widest + self.width() - field.width() + 2
 
     def set_value(self, value):
         value = "" if value is None else str(value)
@@ -795,6 +833,8 @@ class Section(QFrame):
             self.form.addLayout(holder, row, 0, 1, self.columns)
             self._cell = (row + 1, 0)
         else:
+            if isinstance(widget, Picker):  # equal columns still show its longest choice
+                widget.setMinimumWidth(max(widget.minimumWidth(), widget.choice_width(220)))
             self.form.addLayout(holder, row, column, Qt.AlignTop)
             column += 1
             self._cell = (row + 1, 0) if column >= self.columns else (row, column)

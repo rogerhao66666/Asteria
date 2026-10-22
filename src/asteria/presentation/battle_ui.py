@@ -201,6 +201,9 @@ class BattleUiFrame:
 MARK_ROLE = ":mark"  # a row's cursor or tick, drawn by the backend level with its label
 
 
+MENU_COST_GAP = 4.0  # layout units kept between a menu row's name and its cost
+
+
 def _mark_gutter(*prefixes):
     """Room before a row's label for its mark, in layout units: the widest mark and a small gap
     (what its trailing spaces gave before). Every row's label starts at the same place, marked
@@ -283,6 +286,9 @@ class BattleUiComposer:
         self.overhead_labels = {}  # member_id: (x, y, w, h) of its overhead label, last frame
         self._hud_cache = None  # (inputs, commands, overhead_labels) of the last HUD layout
         self._menu_cache = None  # (inputs, commands) of the last command menu layout
+        # (text, role) -> layout units as the backend draws it (an adapter sets it), so
+        # a menu row's name and cost are fitted by their real widths
+        self.text_width = None
         self._category_names = {}  # a menu category (id) -> the name drawn for it
         self._translate = None  # (key, english, **params) -> text: the screen's own words
 
@@ -294,6 +300,32 @@ class BattleUiComposer:
         if self._translate is not None:
             return self._translate(key, english, **params)
         return english.format(**params) if params else english
+
+    def _drawn_width(self, text, role):
+        """How wide ``text`` is drawn in ``role``, in layout units (``text_width`` measures it,
+        else about 3.8 a character)."""
+        if self.text_width is None:
+            return cells(text) * 3.8
+        return float(self.text_width(text, role))
+
+    def _row_units(self, entry):
+        """A menu row's name as the selected row draws it (a size larger) and its cost, with
+        the space kept between them."""
+        units = self._drawn_width(entry.label, "action_selected")
+        if entry.cost_text:
+            units += MENU_COST_GAP + self._drawn_width(entry.cost_text, "action_cost")
+        return units
+
+    def _fit_width(self, label, room):
+        """``label`` as the selected row draws it, inside ``room`` layout units: shortened with
+        ".." where it is wider (a crowded row keeps at least a letter)."""
+        if self._drawn_width(label, "action_selected") <= room:
+            return label
+        for keep in range(cells(label) - 1, 0, -1):
+            short = cut(label, keep).rstrip() + ".."
+            if self._drawn_width(short, "action_selected") <= room:
+                return short
+        return cut(label, 1).rstrip() + ".."
 
     @staticmethod
     def _fit(text, max_chars):
@@ -933,6 +965,7 @@ class BattleUiComposer:
             self.polish,
             self._category_names,
             self._tr("battle.menu.filter", "Filter: {query}"),  # the language of its own words
+            self.text_width,
         )
         cached = self._menu_cache
         if cached is not None and cached[0] == key:
@@ -960,19 +993,23 @@ class BattleUiComposer:
                 ),
             )
         width = min(P.interaction_width, L.virtual_width - 2 * L.margin)
-        # as wide as the longest row (name + cost) needs, so costs never run into names
-        chars = max(
-            (
-                cells(e.label) + 2 + (cells(e.cost_text) + 2 if e.cost_text else 0)
-                for e in menu.entries
-            ),
-            default=0,
-        )
+        # as wide as the longest row (name + cost) needs, so costs never run into names:
+        # measured as the backend draws them, else estimated
+        gutter = _mark_gutter(P.selected_prefix, P.idle_prefix)
+        if self.text_width is not None:
+            units = max((self._row_units(e) + 2 + gutter for e in menu.entries), default=0)
+        else:
+            chars = max(
+                (
+                    cells(e.label) + 2 + (cells(e.cost_text) + 2 if e.cost_text else 0)
+                    for e in menu.entries
+                ),
+                default=0,
+            )
+            units = chars * 3.8
         # rows with an icon (a skill's ``icon_id``) start 8 layout units further right
         icon_pad = 8.0 if any(e.icon_asset_id for e in menu.entries) else 0.0
-        wanted = min(
-            width, max(88.0, min(150.0, chars * 3.8 + 2 * P.interaction_padding + icon_pad))
-        )
+        wanted = min(width, max(88.0, min(150.0, units + 2 * P.interaction_padding + icon_pad)))
         # Keep the menu between left/right HUD columns when there is room for it.
         hud_gap = L.virtual_width - 2 * (L.margin + L.hud_panel_width) - 2 * L.margin
         if hud_gap >= self.MIN_MENU_WIDTH:
@@ -1210,12 +1247,17 @@ class BattleUiComposer:
                 prefix = P.selected_prefix if selected else P.idle_prefix
                 gutter = _mark_gutter(P.selected_prefix, P.idle_prefix)
                 label = entry.label
-                if icon_pad:  # the icon took room from the name: never run into the cost
+                if self.text_width is not None:  # measured: never into the cost
+                    room = width - 2 * P.interaction_padding - 2 - icon_pad - gutter
+                    if entry.cost_text:
+                        room -= MENU_COST_GAP + self._drawn_width(entry.cost_text, "action_cost")
+                    label = self._fit_width(label, room)
+                elif icon_pad:  # the icon took room from the name: never run into the cost
                     cost_room = (cells(entry.cost_text) + 2) * 3.8 if entry.cost_text else 0.0
                     fit = int((width - 2 * P.interaction_padding - icon_pad - cost_room) / 3.8)
                     fit -= round(gutter / 3.8)
-                    if fit >= 4 and cells(label) > fit:
-                        label = cut(label, fit - 2).rstrip() + ".."
+                    if cells(label) > fit:  # a crowded row keeps a letter and ".."
+                        label = cut(label, max(1, fit - 2)).rstrip() + ".."
                 left = x + P.interaction_padding + 2 + icon_pad
                 texts.extend(_marked(prefix, label, left, gutter, ty, role))
                 if entry.cost_text:

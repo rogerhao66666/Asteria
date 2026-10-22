@@ -2068,6 +2068,276 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **還沒做：** 輕量的地圖執行器（`runtime/tilemap_field.py`，MV 匯入試玩用）的文字框不畫肖像；MV 匯入的 Show Text 臉圖還沒轉成肖像；文字不會自動換行（和之前一樣，用換行字元）。
 
 
+## D42 — 戰鬥指令數字預設關閉、主角像其他角色一樣擺放、攝影機跟著主角、RPG Maker 式畫地圖（2026-10-18）
+
+**要求：** 使用者問「行動旁邊的數字是什麼意思」後說「都沒必要 通通關掉 預設就是關掉 然後所有 demo 都拿掉」；「主角也是一個角色 應該就是跟其他角色一樣」（腳底要有位置可以自由放置）→「要 幫我加上」；「做地圖時 有類似 rpg maker 可以直接用潑的…類似小畫家…壓著滑鼠滑動就可以直接畫」→「好幫我加上」。
+
+**做了什麼：**
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 指令數字 | 頂層戰鬥指令只顯示名稱；版面 `command_counts` 打開才顯示數量（技能花費照常顯示）；所有 demo 都關掉 | `presentation/battle_ui.py`、`presentation/library.py` |
+| Game Start | 起始場景用名稱挑（存的仍是 id）；隊伍清單顯示名字；起始位置的勾選框寫「Set position」；新場景自動取不重複的名稱（Scene、Scene 2…）；還原版面後左側面板仍回到 Project 頁 | `editor/game_start_authoring.py`、`editor/game_systems_widget.py`、`editor/scenes.py`、`editor/shell.py` |
+| 主角與攝影機 | 每個 `Camera2D` 跟著起始玩家，站在玩家所在或抵達的位置；只是重複 Player 位置的起始座標會清掉，所以在編輯器移動 Player 就是移動遊戲起點；主角用和其他角色一樣的腳底碰撞框；Octopath、complex reference、party 範本每個場景都有一台跟著主角的 Camera；沒有圖塊地圖的「圖片場景」照作者設定的 Camera 取景（manifest 的攝影機設定仍優先） | `editor/scene_cameras.py`、`scripts/center_cameras.py`、`runtime/field_camera.py`、`runtime/playable_test_runtime.py` |
+| 畫地圖 | Tiles 面板顯示整張圖塊集：點一格或拖曳選一塊，就用整塊畫（拖曳時無縫重複，矩形與填滿從起點對齊）；筆刷大小（`[`／`]`）放大單格的 Paint 與 Erase；右鍵從地圖吸取一格或一塊；B／G／R／E／S 切換工具；Paint 與 Erase 按住時就畫在地圖上，放開算一個復原步驟 | `editor/tile_palette.py`、`editor/tile_palette_widget.py`、`editor/tile_edit.py`、`editor/viewport_widget.py` |
+
+**測試：** `tests/test_tile_brushes.py`（新增）、`tests/test_editor_startup.py`、`tests/test_viewport_framing.py`、`tests/test_bestiary_and_labels.py`。
+
+**實機證據：** `d42_game_start.png`（起始場景用名稱、Set position、隊伍名稱晶片）、`d42_tiles_panel.png`（整張圖塊集、筆刷大小、快捷鍵說明）。兩張都是 2026-10-22 在 HEAD 的乾淨副本上，用 Cocoa 視窗重拍（見 D51）。
+
+**限制：** 拖曳畫圖的手感沒有真人試過；要看指令數量得在版面打開 `command_counts`。
+
+**狀態：** 7de1c030、ab4c3605、d3e88c2b、8b21ac9f、80851fe9。
+
+
+## D43 — Boss Trial 補滿所有空的系統，改名 Full Verification（2026-10-18～19）
+
+**要求：** 「我發現壓力測試很多東西沒做」「load json file 從引擎看很多都是空的」「之前排除的先不要，只補其他空的」→ 照五階段計畫做、每階段報告；「順便看到引擎有缺什麼就直接補」；「技能動畫 招式動畫好像都會偏離目標」；「我的技能樹都不見了…技能樹要連 icon 都要顯示在 graph」；「那四個也補上：Map Areas、New Game Plus、Translations、Music Room，都要設計並在遊戲裡用到」；「人物不要重複」；「為何現在關 gui 都會壞掉 會需要強制關掉」；「camera 中間的紅框跟綠色框是啥…不用吧」；「這裡有些看起來是畫錯…深綠色塊跟灰色的」。
+
+**做了什麼：** 逐項內容見 [`FULL_VERIFICATION_COVERAGE.md`](FULL_VERIFICATION_COVERAGE.md)。
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 1 空的區塊 | 戰鬥表現編排、動畫時間與通道、訊息巨集與記錄、製作人員名單、戰鬥選項、Make Camp 暫停選單項目、場景擺設、公共事件與戰鬥事件，都設計好並在劇情裡用到；導演改成依序列順序放出延遲的事件（原本延遲會讓戰鬥畫面當掉）；同伴有主副職，在 Job Master 進階（Cleric／Priest／Bishop、Necromancer／Lich／Death Lord、Cultist／Zealot／Heretic）：六個新職業、24 個技能、九棵同伴技能樹 | `presentation/battle_presentation_director.py`、demo 的 build 腳本 |
+| 2 技能樹四種風格 | 共用的天賦網 Atlas of Fate（六區、名人節點、關鍵天賦、橋接、作者指定位置）；每職業三個互斥專精；每職業三個符文（換掉符文技能的變體；進化可要求標籤，編輯器可改）；每職業十級技能書（花技能點）；共 554 個節點、54 個符文技能 | `rpg/ability_build.py`、`rpg/actors.py`、`rpg/resolved_build.py`、`editor/rpg_progression_authoring.py` |
+| 3 裝備與製作 | 40 件可鑲寶石與卡片的裝備；每位同伴一套（武器附魔）；七種寶石合成完美寶石；十張怪物卡；武器與防具精煉，用礦石材料、保級用 Blessed Scroll（`RefineRules.materials`、`protect_item`；裝備指令可寫 `slot:<部位>`）；更多詞條、調和、煉金與分解；每筆紀錄都有 Lucifer 包的圖示 | `rpg/refine.py`、`runtime/game_session.py`、`runtime/world_command_handlers.py` |
+| 4 戰鬥類別 | 資源、格擋檢查、時間軸、序列、超限、掩護與追擊、侍僧守夜；達成目標就結束戰鬥；技能可用 `BATTLE_SEQUENCE` 叫出序列；遭遇依標籤選逃跑與場次規則；對已倒下目標的反應跳過 | `rpg/reactions.py`、`runtime/game_session.py` |
+| 5 表現、技能槽、場上攻擊 | 四種戰鬥表現類別（站位範本、指令分頁、輸入步驟、絕招）在執行期讀取；技能特效的圖畫置中在目標上（修正「偏離目標」）；技能槽規則保留進化後的技能；`LEARN_ABILITY` 教技能；場上先制攻擊 | `presentation/battle*.py`、`runtime/battle_visuals.py`、`runtime/field_ai.py`、`rpg/ability_loadout.py` |
+| 四個系統 | 地圖區域（在遊戲的圖塊視圖與行為樹視線裡生效）、`NEW_GAME_PLUS`、`SET_LOCALE` 與設定裡的 Language、音樂室圖示 | `runtime/map_rules_field.py`、`runtime/tile_scene_view.py`、`runtime/behavior_tree.py`、`runtime/extras_screens.py` |
+| 改名與編輯器 | Boss Trial 改名 Full Verification（腳本、測試、證據資料夾一起改）；開同 id 的新專案時重建 Game Data；技能樹畫成圖示卡片加箭頭 | `editor/authoring_hub_widget.py`、`editor/image_tools.py` |
+| 鎮民與家 | 鎮民各有自己的外觀（Ninja Adventure 人物，CC0），紀念碑改成雕像與靈體，寶庫改成袋子與寶箱；遊戲從 Aldric 家門口開始，進屋睡床會淡出、全隊回復再淡入 | demo 的 build 腳本 |
+| 關閉時卡住 | 置中的停靠頁籤樣式包住了共用的應用程式樣式，而 `QProxyStyle` 會擁有它包住的樣式：視窗刪掉了應用程式樣式，QApplication 結束時當機，pygame 的當機處理又在那裡死結（只能強制結束）。現在代理樣式有自己的底層樣式；延後執行的編輯器呼叫綁在元件上，元件不在了就不執行 | `editor/scrolling_tabs.py`、`editor/shell.py` |
+| 紅框與綠框 | 那是即時戰鬥的攻擊與受擊框，屬除錯檢視：場景視圖預設不畫，View > Show Hit & Hurt Boxes 打開才畫（碰撞框與攝影機框照常顯示） | `editor/viewport_widget.py` |
+| 切半的擺設 | 樹與石頭散在 Aldric 的地上，不再事後切掉；松樹叢與十字墓碑的印章不再帶到隔壁的圖；沼澤蓋住樹下的地面 | demo 的 build 腳本 |
+
+**測試：** `tests/test_full_verification_campaign.py`（整段劇情）、`test_full_verification_b11.py`、`test_full_verification_b12.py`、`test_refine_materials.py`、`test_battle_rules_choice.py`、`test_battle_presentation_wiring.py`、`test_town_people_and_home.py`、`test_editor_quit.py`、`test_viewport_combat_boxes.py`、`test_map_prop_stamps.py`（每個擺設印章都是完整的圖）、`test_vfx_tool.py`。
+
+**實機證據：** [`evidence/full_verification_campaign/`](evidence/full_verification_campaign/)：整段劇情在 Cocoa 視窗跑完，先用真的按鍵走路與對話，再跑完 4 張地圖、9 場戰鬥；2026-10-22 重新產生（D51）。`d43_skill_tree_graph.png`：編輯器裡勇者技能樹的圖示卡片與箭頭。
+
+**限制：** demo 的數值與流程是驗證用，沒有真人調過平衡；地圖區域等四個系統目前只在這個 demo 裡用到。
+
+**狀態：** efcd352c、8c85e05d、7eb6340e、abaede66、9d415b84、71f67036、22122742、297403a7、7ae09277、6439fb23。
+
+
+## D44 — 主角勇者／大魔導師、感受得到的戰鬥機制、能力值公式、武器稀有度、素材庫（2026-10-19）
+
+**要求：** 「主角的職業改成勇者 副職業改成大魔導師…勇者可使用全部武器 大魔導師可以用所有屬性的魔法…物魔雙修…創造最複雜 最適合 最強的技能樹」；「繼續做完」；「命中應該不用 用閃避代替就好」→「物防魔防都可寫 然後還是給命中率 只是 命中迴避爆擊等等所有能力值的計算公式要寫好」；「Twin Arts 這個不要 太複雜」；武器改用 Lucifer Equipment 的武器圖與稀有度；「可以新增那個武器…把這些素材讀進去…如果沒有弓 那就另外找可以用的」。
+
+**做了什麼：**
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 勇者／大魔導師 | 勇者可用所有武器，力量與魔力一起成長；大魔導師可用所有屬性；兩棵樹結合技能、武器專精與元素學派、互斥的誓約與路線、專精、符文、技能書；Demon Ring 可鑲卡片、寶石與新護符，攻擊五次；怪物血量三倍、力量大幅提高 | demo 的 build 腳本 |
+| 新裝備先問 | `InventoryRules.equip_offer`（never／empty_slot／always）、`GIVE_EQUIPMENT` 與詢問視窗；Aldric 起始只有 Sunbrand，寶箱裡的 Demon Ring 會問要不要戴在空著的手 | `rpg/items.py`、`runtime/game_session.py`、`runtime/playable_test_runtime.py` |
+| 感受得到的機制 | 弱點 ×1.8、抗性 ×0.4、爆擊 ×2.5（有軟上限）；Boss 有 7–10 個弱點，藏在 16／24／36 層護盾後，破防 ×2.5 持續三回合；怪物會防禦與閃避，攻擊會附狀態；毒、燒、流血扣最大生命的比例；畫面顯示 WEAK、CRITICAL、BREAK、GUARD、MISS。引擎：`ClassDefinition.resource_growth`（每級加生命，在職業表單）；狀態的每回合效果與施加／移除／到期效果有公式環境（可讀最大生命比例）；`OutcomeCheckDefinition` 可依來源／目標標籤擋掉檢查（破防的敵人不能防禦）；`Battle.apply_state` 與 `resolve_targets` 用戰鬥的種子骰；浮動數字 10 以上取整 | `gameplay/states.py`、`rpg/interactions.py`、`rpg/battle.py`、`rpg/actors.py` |
+| 能力值公式 | `DerivedStatRule`（Game Systems > Stat Formulas：stat += base + Σ(係數 × stat)，可設順序、下限、上限、適用對象；每次組裝最後執行）；`InteractionRule.multiplier_source_terms`／`multiplier_target_terms`（爆傷、元素）；`AbilityDefinition.description` 顯示在戰鬥選單上方。demo：命中 95% + 0.3%×命中 − 0.3%×迴避；爆擊 5% + 0.3%×爆擊，傷害 ×(2 + 1%×爆傷)；格擋只擋物理；魔法對魔防；七種元素攻擊與抗性；STR／DEX／INT／LUK／VIT 由玩家分配（Twin Arts 依使用者要求拿掉） | `rpg/derived_stats.py`、`rpg/interactions.py`、`presentation/rpg_character_screen.py`、`runtime/skill_tree_screen.py` |
+| 修正 | 戰鬥把英雄算好的能力值與生命存成基礎值，所以每打完一場，成長、技能樹、裝備、被動又重加一次（數值越打越膨脹）：快照現在保留基礎值；沒人能行動的回合不再卡住；怪物在自己的回合死掉時直接勝利 | `rpg/resolved_build.py`、`rpg/battle.py` |
+| 武器圖與稀有度 | `EquipmentDefinition.rarity`（選填），背包依它上色與命名；每把武器對上一張完整的 32×16 Lucifer 武器圖（原本有八張被當成動畫條帶，只切了左半）；Common／Rare／Legendary 依圖決定，另加 Mythic（不會隨機出現）給 Godhammer 與 Demon Ring；Aldric 的 Sunbrand 是 Rare Greatsword | `rpg/items.py`、`runtime/bag_screen.py` |
+| 素材庫 | `asset_library/foozle`：35 個 CC0 Foozle 像素包（11 MB；Old Castle 圖塊集的授權不是 CC0，不收；音樂、向量、金礦、寶箱、機器人包也不收）；`asset_library/opengameart`：HomoHikka 與 Falco276 的 CC0 弓；`asteria.assets.library`（包、圖、授權、匯入專案成為資產紀錄）；File > Import from Asset Library…（縮圖、篩選、授權，一個復原步驟）；Titan Cleaver（Mythic 斧，Ancient Skeleton 必掉）；Hunter's Bow 與 Longbow 用 HomoHikka 的弓加稀有度外框 | `assets/library.py`、`assets/registry.py`、`editor/asset_library_dialog.py` |
+
+**測試：** `test_brave_archmage.py`、`test_equip_offers.py`、`test_rpg_interactions_blocked_checks.py`、`test_derived_stats.py`、`test_full_verification_stats.py`、`test_full_verification_weapons.py`、`test_asset_library.py`、`test_gameplay_states.py`、`test_battle_ui_renderer.py`。
+
+**實機證據：** 劇情在 Cocoa 視窗跑完時計到 39 次爆擊、70 次閃避、40 次防禦、3 次破防、78 次狀態扣血、2 次裝備詢問（`evidence/full_verification_campaign/results.json`）；`d44_stat_formulas.png`（Accuracy = DEX×1 + LUK×0.5）、`d44_status_screen.png`（遊戲內狀態畫面：STR／DEX／INT／LUK 與各項衍生能力值）、`d44_asset_library.png`（素材庫視窗，授權 CC0 1.0）。
+
+**限制：** 平衡只針對這個 demo，沒有真人調過；Mythic 不會隨機掉落；素材庫只收 CC0；遊戲內狀態畫面把 MP 排在 HP 上面（和 HUD 相反，見 D51）。
+
+**狀態：** 2eb11637、6b37995a、c5fd5b3d、0147e26b、940bbeca、794c2ca6。
+
+
+## D45 — 編輯器表單全面改寫（2026-10-19～20）
+
+**要求：** 「先幫我 gui 都改好 現在全部的這種表格都根本太難懂…可以用列表 以及排版好一點…能自動就自動填寫…不只 database 全部…改成比 rpg maker 簡單」；「gui 很多描述都幫我改清楚一點…預設直接改成 full_verification…ability evo 太難懂…商店這個為何要有 item:」；「jobs 那邊排版很爛…整體幫我檢查」；「再幫我重新檢視一次所有的 gui 操作 全部 仔細的…不要我在自己看」。
+
+**做了什麼：**
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 紀錄表單 | `record_form.py` 取代 Game Data、Battle Rules、Battle Screen、Runtime UI 原本的欄位／值樹：名稱與圖示標頭、分區、數字框（機率以 % 顯示）、每個參照都是附圖示的下拉選單、標籤晶片附建議、兩欄的能力值表、條目卡片（新增、複製、移動、刪除，自動填 id）、空的選填欄位收起來、內部欄位放在 Advanced、每個欄位都有提示 | `editor/record_form.py` |
+| 詞彙 | `record_vocabulary.py`：欄位指向什麼、專案裡用到的能力值、資源、標籤與值；固定值的欄位讀引擎自己的檢查 | `editor/record_vocabulary.py` |
+| 邊改邊套用 | 停止輸入 0.35 秒後透過可復原的指令套用；錯的值顯示紅色且不套用；紀錄清單顯示名稱與圖示、可依名稱篩選；Game Systems 與 Game Start 也邊改邊套用 | `editor/game_systems_widget.py`、`editor/game_start_widget.py` |
+| Inspector | 顯示實體的名稱、開關與每個元件，都可以編輯 | `editor/widgets.py` |
+| 白話 | 標籤、觸發、技能進化用文字表達；商店的「Sold Only When」與「Price Changes」改成條件列（不用再寫 `item:`／`switch:`）；參照挑選器顯示名稱；Full Verification 成為第一個範本，也是編輯器預設開啟的起始專案；Sprite Animation 依「畫的是誰」命名，有縮圖與搜尋，片段寫成「Standing, facing left (5 frames, loops)」；角色依大部分方向都有的條帶走路 | `editor/record_form.py`、`editor/project_templates.py`、`editor/animation_editor_widget.py` |
+| 整齊 | 清單卡片的欄位並排、以名稱為標題，空的與技術欄位收進一個「More」；勾選框帶著自己的標籤；縮寫用大寫；商店條件、價格規則與任務目標都是卡片；表格與群組不再被高度擠壓（Add 按鈕與框線不再重疊） | `editor/responsive_form.py`、`editor/theme.py` |
+| 全編輯器檢查 | 每個清單（Game Data、Game Systems、Enemy AI、Ability Timelines、Behavior Trees、Controls、Real-Time Combat、精靈表）顯示名稱，id 放在提示；指名貨幣、資源、能力值、敵人、開關或資產的文字欄位改成挑選器；固定選項與數字用文字和一般數字（1，不是 1.000）；「+ Add item／skill／quest」說出新增的是什麼；語言用自己的名稱列出；空白狀態說明要做什麼；New／Duplicate 建議 id；捕捉規則可複製到其他敵人；Game Systems 的 Duplicate 對 Battle Extras、Refine、Translations、Message Settings 不再失敗（有回歸測試）；每個動作錯誤都會回報；退役的表單頁留到 Qt 刪除為止（不在處理點擊時釋放） | 多個 `editor/*_widget.py` |
+
+**測試：** `test_record_form.py`（新增）、`test_game_systems_duplicate.py`（新增）、`test_game_systems_editors.py`、`test_shops_and_quests.py`、`test_project_templates.py`、`test_generic_character_inspector.py`、`test_animation_and_timeline_editors_gui.py`、`test_character_composition.py`、`test_event_flow_integration.py`、`test_editor_icons_and_decor.py`。
+
+**實機證據：** `d45_game_data_form.png`（Aldric 的紀錄表單：標頭、分區、兩欄的 Base Stats、標籤與技能晶片）；2026-10-22 在 HEAD 重跑的整份編輯器稽核見 D51。
+
+**限制：** 少數進階欄位仍在 Advanced 裡以原始值編輯；當時的「SP」名稱在 D47 改成 MP。
+
+**狀態：** e9ff4bdf、638d86e1、8523806f、fdf37c2d。
+
+
+## D46 — 編輯器與技能樹不再卡（2026-10-19～20）
+
+**要求：** 「技能樹都會卡卡」；「為何這個圖大小會偏掉 然後…gui 都會卡卡的 尤其在切換大項目 data、battle 這需要處理」；「技能樹很卡」。
+
+**做了什麼與量測：**
+
+| 項目 | 做法 | 量測 |
+|---|---|---|
+| 遊戲內技能樹 | 沒有存位置的樹，原本每畫一個節點、每條線都重算一次佈局（每幀走遍所有前置）；現在每張圖只算一次，改過才重算 | Full Verification 職業樹每幀 15–23 ms → 約 2 ms |
+| 切換工作區 | 專案自上次顯示後有改才重建；`refresh_all` 只重建畫面上的那一個，其他打開時再建（切換專案仍全部重建）；圖片快取跨重新整理保留（檔案變了才重讀）；圖示清單每份文件共用；下拉詞彙每個專案版本共用；表單拿到同一筆紀錄就保留自己 | 切到 Game Data／Presentation 350–550 ms → 80–95 ms；編輯後重新整理約 950 ms → 50–220 ms |
+| Skill Trees 頁 | 技能樹先開圖，表單（50 個節點的樹有上千個欄位）到切到資料檢視才建；超過 8 項的清單一次展開一項；圖示挑選器在打開或搜尋前只放自己的圖示 | 打開 24 s → 0.25 s；選一棵樹 20–30 s → 0.1–0.3 s；切到資料檢視 33 s → 0.2 s |
+| 預覽偏掉 | Character Composition 的預覽在顯示或改變大小時重新對準 | — |
+
+**測試：** `test_record_form.py`、`test_arpg_builds.py`。
+
+**實機證據：** 編輯器的量測在 offscreen 平台上做，沒有另外在 Cocoa 視窗量；遊戲內技能樹的量測在遊戲執行期。
+
+**限制：** 第一次開專案仍要建 Game Data、Battle、Presentation（啟動後就先建好）。
+
+**狀態：** 218aef5a、23335f05、73c75a1f。
+
+
+## D47 — 編輯器逐頁排版、HP 在 MP 上面、BP 金色圓點（2026-10-20）
+
+**要求：** 「rolled value 排版有問題 start pets 排版有問題 文字壓到邊框」；「這邊排版還是跟其他地方不同」；「還是一樣啊 格子都重疊了」；「排版都歪掉了 base status 跟右邊的能力值都歪歪的…type 跟下方框框也太近…每個介面 都檢查一次」；「這個 icon 文字不明所以」，並要做一個顯示框；「幫我把 HPSP 上下順序反向 然後戰鬥的 BP icon 可以改成金色圓圈嗎」「全部的 SP 都換成 MP」。
+
+**做了什麼：**
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 表格 | Real-Time Combat 的列表每列依最高的欄位決定高度（原本 30 px 會切到數字框與清單），勾選框置中；格子裡的清單不比欄寬（Op 清單原本溢到下一欄）；窄格顯示完整數字（不放箭頭） | `editor/combat_workspace.py` |
+| 群組與勾選框 | 群組標題畫在框線上方；Game Systems 的表格與群組（Starting Pets、Stock、Reward、Objectives…）用和其他欄位一樣的標題；所有勾選框用編輯器的顏色；macOS 的版面用較窄的 layout rect 擺勾選框，文字跑進旁邊的數字框（Start X／Y 的 Set position）→ 改用實際大小，框與字距 8 px、到數字框 12 px | `editor/theme.py`、`editor/decor.py`、`editor/game_systems_widget.py` |
+| 對齊 | 數字框 26 px，和文字框、下拉選單一樣高（箭頭較小）；表格標題（Base Stats）和提示同一行；欄位上方的標題離框 4 px（y、g 不再碰到框）；刪除鈕和框一樣高；可輸入的清單文字和標籤對齊；Game Adapter 框與標題對齊、示範按鈕在下方；標頭與種類清單寬到放得下最長的名稱與圖示；Region id 框 26 px | `editor/record_form.py`、`editor/ui_fit.py`、`editor/multiplayer_workspace.py`、`editor/tile_palette_widget.py`、`editor/authoring_hub_widget.py` |
+| 偶發當機 | 頁面裝飾每次顯示頁面都用 `QLayout.itemAt` 走版面，每次留下一個版面項目的 Python 包裝；Qt 刪掉那個項目後（表單重建、復原），過期的包裝會在之後隨機的地方讓編輯器 segfault。改成不用 `itemAt` 讀版面（`ui_fit.layout_widgets`／`layout_children`）。原本 6 次有 3–4 次當掉的種子，現在每次都通過 | `editor/decor.py`、`editor/ui_fit.py` |
+| 圖示欄位 | 「Icon」標題和清單同一行；圖放在有框的方塊裡（沒有圖示時寫 None）；圖示資料夾外的圖片（`playable_assets/...`）也顯示；不是圖示資產的 id 回傳 None，不會出錯 | `editor/game_systems_widget.py`、`editor/image_tools.py` |
+| HP／MP／BP | 紀錄的資源 HP 排在 MP 前；technique 資源在編輯器與每個附帶的專案都叫 MP（戰鬥 HUD、角色畫面、技能說明）；戰鬥 HUD 的資源樣式有 `color` 欄位（空白＝主題色，HUD 表單可改）；pips 畫成圓點，空的是暗圈；demo 的 BP 是金色；空的顏色欄位寫「Theme colour」 | `presentation/battle_hud.py`、`presentation/battle_ui.py`、`presentation/battle_ui_renderer.py`、`platform/pygame_battle_ui.py`、`editor/record_vocabulary.py` |
+| 程式碼整理 | 全 repo `ruff check` 與 `ruff format` 乾淨（demo 腳本 7 個舊問題，9 個檔案重新格式化；行為不變） | — |
+
+**測試：** `test_editor_icons_and_decor.py`（版面走訪的回歸測試）、`test_full_verification_stats.py`；排版用像素量測與 Cocoa 截圖檢查。
+
+**實機證據：** `d42_game_start.png`（Set position 勾選框與數字框）、`d45_game_data_form.png`（Base Stats 和提示同一行）、`evidence/full_verification_campaign/battle_*.png`（HP 在 MP 上面、BP 金色圓點）。
+
+**限制：** 只在 macOS 看過；2026-10-22 的稽核還有兩處文字被截（見 D51）。
+
+**狀態：** e5e3beb0、56834267、9c7d96ec、ac1b264f、7a78784a、6d24f364、948fb8d6、e6099873、a8b82da5。
+
+
+## D48 — 執行期效能：給 MacBook Air 與輕量電腦（2026-10-20～22）
+
+**要求：** 「你覺得現在還有什麼地方需要優化嗎 然後 kernel 部分需要增加嗎 多用一些 c++ 提升性能」→「先做第 1 步：碰撞世界改成只更新有動的物件（Python），量測前後差異」；「然後繼續優化 kernel」；「能改就改 因為我是用 macbook air 跑 而且我也打算給輕量化電腦用…處理在底層 保留上層簡單的 python coding 給使用者」。
+
+**決定變更：** D34 決定不替 `CollisionWorld.from_scene` 做快取；使用者 2026-10-20 核准改做。做法是「跟著場景就地更新，做不到完全一致就重建」，測試確認跟著更新的世界對每個點與方框查詢的答案，都和重新建的一樣。
+
+**做了什麼與量測：**
+
+| 項目 | 做法 | 量測 |
+|---|---|---|
+| 碰撞世界 | `CollisionWorld.follow(scene)`：移動或改大小的碰撞器就地更新（只動自己的格子）；換場景、增刪、啟用或停用、掛父物件、圖層／遮罩／種類／旗標改變時拒絕並重建；`field_update` 跟著世界，不再每幀重建兩次；點與方框查詢直接讀欄位，不再替每個候選建形狀物件 | 場上基準（50 個 AI 怪）每幀 7.3–8.0 → 6.1 ms（AI 4.8–5.0 → 3.4、碰撞 0.72–0.79 → 0.42） |
+| 基準本身 | ARPG 壓力與執行期基準原本開著 tracemalloc，每次 Python 配置慢約 40 倍（300 敵、500 投射物的一幀讀成 12 ms，實際約 2 ms），熱點也會看錯；現在不追蹤 heap | — |
+| 牆擋移動 | `blocked_boxes` 一次做完寬相位與阻擋測試（C++ 一次完成） | ARPG 壓力的碰撞 1.02 → 0.91 ms |
+| 少做重複繪製 | 九宮格面板每個大小組一次再整張貼；HUD 文字每個字串、大小、顏色畫一次；戰場背景在攝影機不動時只縮放一次；沒有視差背景時，最底層圖塊畫在填了背景色的不透明畫布上 | 戰鬥繪製約 3.5 → 3.0 ms；圖塊 1.73 → 0.93 ms；逐像素比對相同 |
+| 換音樂 | pygame 的 `music.load` 會等淡出的音樂靜音，每次換音樂就凍住淡出的時間（量到 540 ms）；改成排在後面，舊的一停就開始，交接中停止會取消 | 凍結消失 |
+| C++ kernel 不需 numpy | 緩衝區用 `array.array` 進 C++；沒移植的退回 numpy（有裝）或 python；macOS 編成 arm64＋x86_64、最低 macOS 11（原本標成編譯機的版本，舊 Mac 載不進來）；匯出的 .pyz 解開後載入 | 只裝 pygame 的機器：ARPG 壓力每幀約 1.9 ms（python 版 3.3 ms） |
+| 戰鬥圖預先解碼 | 工作執行緒在場上時解碼下一場戰鬥可能用到的圖（隊伍、背景、這張地圖的怪、特效，再來其餘），主執行緒每幀轉換約 1 ms；上限 manifest `battle.preload_mb`（預設 64，0 關閉），只在真實視窗執行 | 開戰那一幀 36–48 → 10–18 ms；第二場不用再解碼；戰鬥畫面逐像素相同 |
+| HUD 只在變化時排版 | `_hud_commands`、`_action_menu_commands` 保留上次的結果，輸入（成員、陣營、站位、焦點、名字、高度、版面，以及有頭上標籤時每個角色的螢幕位置）變了才重排 | 組 HUD 每幀 0.134 → 0.037 ms；900 幀錄製戰鬥逐像素相同 |
+| 場上 AI 批次 | 沒有 `CharacterController2D` 的怪一次走完：新 kernel `fieldai_free_step`、`points_blocked`（python／numpy／C++）；C++ 移植 CPython 的 `math.hypot`，結果逐位元相同；亂數順序不變 | 50 隻史萊姆的場上 AI 0.45 → 0.13 ms（native） |
+| 匯出必帶 kernel | `build_native.problem()`／`ensure()` 在新的程序裡檢查程式庫（已編、載得進來、ABI 對、比原始碼新），不行就重編，編好再換上；匯出只帶通過檢查的，不能編時警告（CLI 與編輯器）但不失敗 | — |
+| 首幀 | `PlayableTestRuntime.open()` 先載入 kernel 與場上模組 | 第一個場上幀 55–68 → 18–24 ms |
+| 指令列 | 戰鬥指令選單原本在英雄回合每幀重建；行動者、選單、花費與負擔得起的都沒變就保留 | `_show_commands` 0.97 → 0.15 ms；技能清單開著時 1.53 → 0.65 ms；900／2400 幀戰鬥逐幀相同 |
+| 戰鬥圖與面板 | 戰鬥角色的每一格依大小與翻轉只縮放一次，只貼看得見的部分（加法與旋轉繪製走原路；上限約 24 MB）；一般戰鬥 UI 面板依大小、顏色、圓角、邊框畫一次 | 技能清單開著：幀中位數約 2.5 → 1.6 ms，繪製 1.5 → 0.85 ms；與舊繪製逐像素相同 |
+
+Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5），升級後要跑 `python -m asteria.kernels.build_native`；三套 kernel（python／numpy／native）在壓力測試給出相同的狀態摘要。
+
+**測試：** `test_collision.py`、`test_native_kernels.py`、`test_kernels.py`、`test_ui_skin.py`、`test_skeleton_component.py`、`test_audio_mixer.py`、`test_image_preloader.py`、`test_battle_ui_layout_cache.py`、`test_field_ai_batch.py`、`test_migration_and_export.py`、`test_battle_command_rows.py`、`test_battle_sprite_blits.py`。
+
+**實機證據：** 量測是 headless，或在同一個程序裡交替跑新舊程式碼（真實視窗的時間會被合成器的 vsync 吃掉，看不出差別）；整段劇情在 Cocoa 視窗跑完（D51）。
+
+**限制：** 沒有在真的輕量電腦或低耗電模式下量過（本機 `pmset` 的 lowpowermode 是 0）；不透明畫布在 macOS 截圖裡留下透明的地面，2026-10-22 修正（D51）。
+
+**狀態：** 72bf87ee、5ba59175、84d01ecb、3069284a、6661c299、aa94ee8a、4175570f、0cc71d83、f6d8f0fa、4ba13ab4、8c6fcab4。
+
+
+## D49 — 選單游標自動對齊、頭上名字不蓋到任何角色（2026-10-20～22）
+
+**要求：** 「這個選取箭頭會歪掉 command 要修正 要能夠自動對準」；「在 command 選取技能時 可能因為字太大加上 icon 會讓選取框框直接蓋到文字 icon…那個箭頭是全部 command 都要改 都不能是偏掉的…進入戰鬥會有一個 zoom in 怪物的 這時候怪物名字會因為 zoom in 疊在怪物身上…我不要有任何文字跟怪物重疊」；「不是為了不要擋到怪物圖 就放在超奇怪的地方 不然就不要放」。
+
+**做了什麼：**
+
+| 項目 | 做法 | 位置 |
+|---|---|---|
+| 游標 | 所有選單游標改成畫出來的三角形，置中在該列文字大寫字母的高度（原本是像素字型沒有的符號，改由別的字型畫，就偏低又偏旁）：戰鬥指令與流程選單、場上選單（設定、按鍵、製作、商店、技能槽）；每列標籤從同一欄開始，不論有沒有游標 | `platform/pygame_battle_ui.py`、`presentation/battle_ui.py`、`runtime/playable_test_runtime.py`、`runtime/extras_screens.py` |
+| 技能圖示 | 圖示放在選取框裡，在列中垂直置中 | `presentation/battle_ui.py` |
+| 類別列 | 指令選單的類別列顯示目前的類別與放得下的鄰居，超出邊緣用 < 與 >，不再跑到 HUD 底下 | `presentation/battle_ui.py` |
+| 頭上名字 | 依角色待機姿勢看得見的像素與攝影機縮放量出外框，名字不蓋到任何角色（包括自己）；只放在主人附近（頭上、腳下那一排、頭旁），放不下就不顯示；攝影機拉近時（Boss 開場）與動作播放時先不顯示 | `presentation/battle_ui.py`、`presentation/battle_screen.py`、`runtime/battle_presentation_adapters.py` |
+
+**測試：** `test_battle_overhead_labels.py`（新增 6 項：名字不蓋人且在主人附近、沒有位置就不顯示、拉近時等待、拉近時角色外框跟著變大、類別列在選單裡、場上游標與文字同高）、`test_battle_premium_adaptive_ui.py`（scale 1／2／3 游標置中）、`test_battle_action_menu_presentation.py`、`test_bestiary_and_labels.py`。
+
+**實機證據：** `evidence/full_verification_campaign/battle_*.png`（指令選單游標、頭上名字）；`d49_skill_menu.png`（技能清單：圖示在選取框裡、游標）；`d49_settings_menu.png`（場上設定選單的游標與文字同高）；`d49_intro_zoom.png`（Boss 開場拉近時名字先不顯示）。
+
+**限制（2026-10-22 重拍時發現，還沒修）：**
+- `d49_intro_zoom.png`：拉近時名字有等，但頭上的狀態文字（Stance Bulwark Ward）還是顯示，而且壓在 Boss 身上，違反「不要有任何文字跟怪物重疊」。
+- `d49_skill_menu.png`：選中那一列的名稱和花費黏在一起（「Guard Stance6MP」）；原因還沒查（選單用字數估算寬度，可能是像素字型的大寫字比估計的寬）。
+- 名字超過 14 個字會縮成縮寫（「Goblin Slinger 2」→「GS2」、「Skeleton Acolyte」→「SAcolyte」），要怎麼顯示等使用者決定。
+
+**狀態：** 351ecc26。
+
+
+## D50 — 編輯器繁體中文（2026-10-20～22）
+
+**要求：** 使用者問「要做中文版嗎」並指定「編譯器介面」（編輯器的介面）；之後「繼續做編輯器中文化」。
+
+**做了什麼：**
+- English 仍是預設，也是程式碼裡寫的文字；View ▸ Language 即時切換，記在 QSettings `editor/language`。
+- `editor/i18n.py` 在元件顯示文字的地方翻譯：標籤、按鈕、標題、頁籤、選單、提示、placeholder、表頭、訊息框、固定選項。英文原文存在元件的動態屬性裡，所以可以切回英文、不用重開。`english()` 反查讓依標題挑圖示、按鈕樣式或停靠面板的程式碼仍比對英文。
+- `editor/translations/zh_TW.json`：約 2,500 條完全比對，加 31 條正規式樣板，處理執行時才組出來的文字（例如「Actors · 5 records」→「角色 · 5 筆資料」、「+ Add stat」→「+ 新增屬性」）；CJK 旁用全形標點，選單助記鍵保留「(&F)」。
+- 作者輸入的東西絕不翻譯：名稱、id、描述、文字框、資料的清單與表格。
+- UI 稽核（`scripts/editor_ui_audit.py`）在任何語言下都用英文命名頁面。
+
+**測試：** `test_editor_i18n.py`（5 項：比對與樣板、元件即時切換與切回、固定選項會翻而資料不翻、儲存的語言與回退、整個編輯器視窗即時切換）。
+
+**實機證據：** `d50_zh_game_data.png`（中文介面的 Game Data：選單、工具列、頁籤與欄位標題是中文，Aldric、STR、技能名稱等資料保持英文）；中文稽核的數字見 D51。
+
+**限制：** 顯示的字就是存檔值的固定選項還是英文（Enemy AI 的條件、動作、目標，事件觸發 Action／Autorun／Parallel，VFX 的錨點與混合模式），要改程式把顯示與值分開；遊戲內玩家看到的文字不在這一批，另開 session 處理。
+
+**狀態：** 088d0127。
+
+
+## D51 — 文件補齊、實機截圖歸檔、截圖透明的修正（2026-10-22）
+
+**要求：** 「都 commit 然後還有什麼要做」→「先在這裡補文件：DECISION_LOG、ENGINE_HANDBOOK、NEXT_STEPS，還有實機截圖歸檔」。
+
+**做了什麼：**
+- D42–D50 補進本檔（D40 之後的 50 個 commit）；`ENGINE_HANDBOOK.md` 與 `NEXT_STEPS.md` 更新到現況；`FULL_VERIFICATION_COVERAGE.md` 開頭的「範圍外」更正（地圖區域、New Game Plus、翻譯、音樂室在 2026-10-18 已經補上）。
+- **截圖：** 這個資料夾同時有其他 session 未提交的改動，所以不用工作目錄，而是把 HEAD（8c6fcab）匯出成乾淨副本、加上下面的修正，在 Cocoa 視窗重拍。新增 `evidence/real_machine/d42_*`–`d50_*`；整段劇情的證據 `evidence/full_verification_campaign/` 重新產生。舊的 `battle_crypt_patrol.png` 是 10/19 以前的流程留下的，目前的劇情不會拍它，所以移除。
+- **修正：** 重拍時，地圖截圖的地面是透明的（看圖程式顯示成白色）。原因是 D48 的不透明圖塊畫布：在 macOS 視窗的像素格式（有 alpha 位元組）下，有透明度的圖塊貼到畫布上會把 alpha 寫成 0。視窗畫面本身正常（不看 alpha），但 `capture()` 存下的截圖地面是透明的；headless 的畫面格式沒有 alpha，所以測試沒抓到。現在畫布畫完後，用一次 `BLEND_RGBA_MAX` 把 alpha 補成 255：RGB 不變，每幀約多 0.01 ms，只在有 alpha 位元組的格式才做（`runtime/tile_scene_view.py`）。
+- **確定性：** 同一場腳本戰鬥（boss_room，900 幀）固定精煉的亂數後，連跑 6 次逐幀相同。先前看到的差異來自戰鬥前的精煉：戰鬥外的精煉每次用新的亂數，這是設計；測試與重播可以設 `game.refine_rng`。
+
+**測試：** `tests/test_tile_layer_alpha.py`（新增：有 alpha 位元組的畫面，在不透明圖層之後仍然全部不透明，顏色和沒有 alpha 的格式相同；修正前失敗 `{0} == {255}`）。修正前 HEAD 的完整測試 3096 通過、1 略過。修正後在乾淨副本（HEAD＋修正）跑完整測試：3058 通過、40 略過、0 失敗；其中 39 項需要 git 忽略的 `local_reference/` RPG Maker MV 素材，這 9 個測試檔另外在工作目錄跑，54 項全過；剩下 1 項是本來就略過的「這個平台沒有鍵盤焦點」。
+
+**實機證據：**
+- 劇情：Cocoa 視窗 PASS（真的按鍵走路與對話、4 張地圖、9 場戰鬥），21 張圖全部不透明。
+- 編輯器稽核（Full Verification 專案、Cocoa、56 頁）：`d51_editor_audit.json`。英文 1600×1000：1 處文字被截、38 頁要上下捲、1 個表格要橫捲；英文 1100×700：1 處被截、49 頁要上下捲、2 個表格要橫捲；中文 1600×1000：1 處被截、38 頁要上下捲；中文 1100×700：0 處被截、49 頁要上下捲、1 頁要橫捲、2 個表格要橫捲。
+
+**限制（發現但還沒修）：**
+- 編輯器：Map Rule Sets 的背景圖路徑（`playable_assets/battle_bog.png`）少約 20 px 被截；1100×700 時 Battle 頁的「When its turn comes」少 4 px。
+- 戰鬥：拉近時狀態文字壓在 Boss 身上、選中技能列名稱和花費黏在一起（見 D49）。
+- 遊戲內狀態畫面 MP 排在 HP 上面（`d44_status_screen.png`），和 HUD 與編輯器相反。
+- `tests/test_skeleton_component.py::test_editor_scene_viewport_advances_attached_skeleton_preview` 單獨跑會失敗，先跑 `test_editor_startup.py` 就通過（完整測試也通過），是既有的測試順序依賴。
+
+**狀態：** 這一批的 commit（使用者同意後提交）。
+
+
+**D51 補充（同日，使用者要求「修 D51 發現的問題」）：**
+
+| 問題 | 做法 | 位置 |
+|---|---|---|
+| 拉近時狀態文字壓在 Boss 身上 | 名字畫在頭上的成員，狀態文字只跟著名字出現：名字在等（攝影機拉近、動作播放）或找不到位置時，狀態文字也不畫。哪些成員的名字在頭上，由 `placement_by_member` 與版面的 `overhead_zones` 算出；其他版面的狀態文字位置不變 | `runtime/battle_extras.py`（`caption_follows`）、`runtime/playable_test_runtime.py` |
+| 選中的技能列名稱黏花費 | 選中的列字型大一號，花費的數字與大寫也比平均字寬（每格 3.8）寬，原本的估算沒算到。現在依畫出來的樣子估：名稱每格 4.2、花費每格 4.6，中間留一格；選單寬度也照這樣算，放不下才截短 | `presentation/battle_ui.py`（`_row_units`） |
+| 狀態畫面 MP 在 HP 上面 | `CharacterScreenProfile.resource_order`（選填，編輯器的表單可改，沒設就不寫入）；沒設定時，遊戲的倒地資源（`knockout_resource_id`，HP）排第一，其餘照名稱 | `presentation/rpg_character_screen.py`、`runtime/status_menu.py` |
+| 編輯器兩處被截 | 下拉選單的建議寬度放得下最長的選項（上限 280 px），卡片等寬格子裡的下拉選單最小寬度也放得下（上限 220 px）；手打的檔案路徑只顯示檔名，完整路徑在提示裡 | `editor/record_form.py`、`editor/game_systems_widget.py` |
+| 測試順序依賴 | 骨骼預覽的計時器在第一次繪製時才啟動；新的 QApplication 的第一個視窗要多幾輪事件才會畫，測試只等了一輪。改成最多等 2 秒到計時器啟動（功能本身沒問題） | `tests/test_skeleton_component.py` |
+
+**測試：** `tests/test_battle_text_room.py`（新增：拉近時狀態文字跟著名字一起等；Aldric 的 21 頁技能清單，每一列的名稱都不碰到花費，用戰鬥字型實際量、以選中列的大一號計算）、`tests/test_character_screen_resource_order.py`（新增：順序規則、只在有設定時寫入、Full Verification 狀態畫面 HP 在 MP 上面）、`tests/test_skeleton_component.py`（單獨跑連續 3 次都通過）；`tests/test_battle_ui_layout_cache.py` 的對照組也複製 `text_width`。同一個工作目錄裡還有另一個 session（遊戲內建字詞，D52）未提交的改動，所以在「工作目錄快照＋這些修正」的副本跑完整測試：3096 通過、40 略過（39 項 RPG Maker MV 需要 `local_reference/`，1 項沒有鍵盤焦點）、0 失敗；套回工作目錄後再跑一次完整測試（含 MV 素材）：3135 通過、1 略過。
+
+**實機證據：** `d51_intro_zoom_fixed.png`（拉近時 Boss 身上沒有任何字）、`d51_skill_menu_fixed.png`（每一列名稱和花費之間都有空隙）、`d51_status_screen_fixed.png`（HP 第一、MP 第二）；編輯器稽核 `d51_editor_audit_fixed.json`：英文與中文、1600×1000 與 1100×700，被截的文字 0 處，其餘提示和修正前相同。
+
+**限制：** 頭上名字超過 14 字的縮寫（GS2）等使用者決定；選單太窄時名稱仍會截成「..」（至少留一個字）。
+
+
 ## D52 — 遊戲內建字可翻譯：繁體中文（2026-10-22）
 
 **要求：** D50 做了編輯器中文；這一批是玩家看到的那一半：引擎自己畫的每個字都要能透過專案的翻譯表翻譯（也能改名），讓 Asteria 做的遊戲可以用繁體中文顯示；沒有翻譯表的專案畫面不能變；中文要放得下、游標要對齊；驗證放在原本的 Full Verification demo（使用者選擇）。
@@ -2099,4 +2369,4 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 寵物改名的輸入只收 KEYDOWN 字元，中文輸入法的組字還不能用。
 - 既有、與翻譯無關：勝利時戰鬥畫面自己的結果面板在 VictoryScreen 後面、最後的指令選單停在畫面上；選中技能列名稱和花費會黏在一起（D49／D51 已記）。
 
-**狀態：** 這一批的 commit。
+**狀態：** b5021e83。

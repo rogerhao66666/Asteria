@@ -1,0 +1,63 @@
+{
+  "what": "scripts/editor_ui_audit.py on the Full Verification project, real Cocoa window",
+  "checkout": "18130b68 plus the D51 tile, picker and character screen fixes (clean copy of HEAD)",
+  "date": "2026-10-22",
+  "runs": [
+    {
+      "language": "en",
+      "size": [
+        1600,
+        1000
+      ],
+      "dpr": 2.0,
+      "pages": 56,
+      "counts": {
+        "columns_scroll_x": 1,
+        "page_scroll_y": 38
+      },
+      "defects": []
+    },
+    {
+      "language": "en",
+      "size": [
+        1100,
+        700
+      ],
+      "dpr": 2.0,
+      "pages": 56,
+      "counts": {
+        "columns_scroll_x": 2,
+        "page_scroll_y": 49
+      },
+      "defects": []
+    },
+    {
+      "language": "zh_TW",
+      "size": [
+        1600,
+        1000
+      ],
+      "dpr": 2.0,
+      "pages": 56,
+      "counts": {
+        "page_scroll_y": 38
+      },
+      "defects": []
+    },
+    {
+      "language": "zh_TW",
+      "size": [
+        1100,
+        700
+      ],
+      "dpr": 2.0,
+      "pages": 56,
+      "counts": {
+        "columns_scroll_x": 2,
+        "page_scroll_x": 1,
+        "page_scroll_y": 49
+      },
+      "defects": []
+    }
+  ]
+}

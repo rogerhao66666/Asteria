@@ -48,8 +48,10 @@ class StatusMenu:
         self.actor_index = 0
         self.row = 0
         self.message = ""
+        rules = getattr(game, "rules", None)
+        lead = (getattr(rules, "knockout_resource_id", ""),)  # HP first, as in the HUD
         self.screens = {
-            "status": CharacterScreenRuntime(_profile(game, "status")),
+            "status": CharacterScreenRuntime(_profile(game, "status"), lead_resources=lead),
             "items": InventoryScreenRuntime(_profile(game, "items")),
             "equipment": EquipmentScreenRuntime(_profile(game, "equipment")),
             "skills": AbilityScreenRuntime(_profile(game, "skills")),

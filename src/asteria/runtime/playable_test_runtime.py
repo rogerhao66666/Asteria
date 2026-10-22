@@ -3082,7 +3082,11 @@ class PlayableTestRuntime:
             member_id: ((x + w / 2) * scale, (y + 8.0) * scale)
             for member_id, (x, y, w, _h) in labels.items()
         }
-        blocks = extras_layout(game, box, scale, self.width, drop, head_gap, caption_at)
+        zones = getattr(getattr(adapter, "screen", None), "placement_by_member", None) or {}
+        follows = {m for m, zone in zones.items() if zone in shown}  # names over heads
+        blocks = extras_layout(
+            game, box, scale, self.width, drop, head_gap, caption_at, caption_follows=follows
+        )
         draw_blocks(self, blocks, scale)
         self.battle_extras_blocks = blocks  # what was drawn (tests check it for overlaps)
         bp = game.rules.boost_resource_id if game.rules.boost_enabled else ""

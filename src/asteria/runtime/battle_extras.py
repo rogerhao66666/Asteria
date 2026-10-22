@@ -122,7 +122,9 @@ def draw_glyph(pg, surface, kind, rect):
         pg.draw.circle(surface, color, (round(cx), round(cy)), round(4 * u), 1)
 
 
-def extras_layout(game, box, scale, width, drop=0.0, head_gap=None, caption_at=None):
+def extras_layout(
+    game, box, scale, width, drop=0.0, head_gap=None, caption_at=None, caption_follows=()
+):
     """``[Block]`` for the enemies (shield + weaknesses + held state under their feet).
 
     ``box(member_id)`` is the adapter's ``(centre_x, top_y, feet_y)``; ``scale`` the window pixels
@@ -130,7 +132,8 @@ def extras_layout(game, box, scale, width, drop=0.0, head_gap=None, caption_at=N
     blocks further down (below an overhead name and bar that stand under the feet); the state
     names stand ``head_gap`` pixels above the head (right on it by default), or at
     ``caption_at[member_id]`` = ``(centre_x, bottom_y)`` (the space an overhead label kept for
-    them, over the name)."""
+    them, over the name). A member in ``caption_follows`` has its name over its head: its
+    state names show only with that name (not while the name waits or finds no room)."""
     battle = game.battle
     shield = game.shield_resource()
     tile = max(15, round(5.4 * scale))
@@ -178,9 +181,10 @@ def extras_layout(game, box, scale, width, drop=0.0, head_gap=None, caption_at=N
                 names.append(shown.replace("_", " "))
         if broken and "broken" in held:  # what Break does, in words
             names.insert(0, game.tr("battle.break_caption", "Damage up - loses a turn"))
-        if names:
+        at = (caption_at or {}).get(member.member_id)
+        if names and (at is not None or member.member_id not in caption_follows):
+            # never over a figure: with a zoomed-in camera they fell on the boss
             gap_above = 3 * scale if head_gap is None else head_gap
-            at = (caption_at or {}).get(member.member_id)
             cx, cy = at if at is not None else (x, top - gap_above)
             block.caption = (cut(" ".join(names), 30), cx, cy)
         blocks.append(block)

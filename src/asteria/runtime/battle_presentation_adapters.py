@@ -407,6 +407,8 @@ class CanonicalBattleAdapter:
         )
         self._ui_backend.vfx_drawer = self._draw_vfx
         self.renderer = BattleUiRenderer(self._ui_backend, theme)
+        # the command menu fits names and costs by the widths this backend draws
+        self.screen.composer.text_width = self._text_width
         self.textures = PygameTextureDrawer(self.host, self.resolver, scale)
         self.audio_cues.clear()
         self._cursor = self._clock = self._last_impact = 0.0
@@ -414,6 +416,13 @@ class CanonicalBattleAdapter:
         self._shown_down = {}
         self._warm_textures(combatants)
         self._start_boss_intro(game, layout)
+
+    def _text_width(self, text, role):
+        """``text`` in ``role`` as the battle UI backend draws it, in layout units."""
+        backend = self._ui_backend
+        drawn = backend._text_image(text, (255, 255, 255), self.renderer.theme.text_size(role))
+        image = drawn[0] if isinstance(drawn, tuple) else drawn
+        return image.get_width() / backend.scale
 
     def _warm_textures(self, combatants):
         """Load every picture the fight can show now, not in the middle of an animation: the

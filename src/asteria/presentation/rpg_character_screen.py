@@ -114,10 +114,13 @@ class CharacterScreenProfile:
     progression_labels: tuple[tuple[str, str], ...] = ()
     # stats listed first, in this order (the rest follow by name); written only when set
     stat_order: tuple[str, ...] = ()
+    # resources listed first, in this order (the rest follow by name); written only when set.
+    # Unset, the game's own lead resource (the one that knocks a member out: HP) is first.
+    resource_order: tuple[str, ...] = ()
 
     SCHEMA = "asteria.character_screen_profile"
     VERSION = 1
-    OPTIONAL_DATA = {"stat_order": []}
+    OPTIONAL_DATA = {"stat_order": [], "resource_order": []}
 
     def __init__(
         self,
@@ -132,9 +135,15 @@ class CharacterScreenProfile:
         ability_labels=None,
         progression_labels=None,
         stat_order=(),
+        resource_order=(),
     ):
         object.__setattr__(
             self, "stat_order", tuple(dict.fromkeys(str(x).strip() for x in stat_order if x))
+        )
+        object.__setattr__(
+            self,
+            "resource_order",
+            tuple(dict.fromkeys(str(x).strip() for x in resource_order if x)),
         )
         section_order = tuple(
             dict.fromkeys(str(x).strip() for x in section_order if str(x).strip())
@@ -166,6 +175,13 @@ class CharacterScreenProfile:
         """``names`` with the profile's ``stat_order`` first, then the rest by name."""
         names = set(names)
         first = [x for x in self.stat_order if x in names]
+        return (*first, *sorted(names - set(first)))
+
+    def ordered_resources(self, names, lead=()):
+        """``names`` with the profile's ``resource_order`` first (unset: ``lead``, the game's
+        knockout resource), then the rest by name."""
+        names = set(names)
+        first = [x for x in (self.resource_order or tuple(lead)) if x in names]
         return (*first, *sorted(names - set(first)))
 
     def stat_label(self, key):
@@ -203,6 +219,7 @@ class CharacterScreenProfile:
             "ability_labels": dict(self.ability_labels),
             "progression_labels": dict(self.progression_labels),
             **({"stat_order": list(self.stat_order)} if self.stat_order else {}),
+            **({"resource_order": list(self.resource_order)} if self.resource_order else {}),
         }
 
     @classmethod
@@ -220,6 +237,7 @@ class CharacterScreenProfile:
             ability_labels=data.get("ability_labels", {}),
             progression_labels=data.get("progression_labels", {}),
             stat_order=data.get("stat_order", ()),
+            resource_order=data.get("resource_order", ()),
         )
 
 
@@ -233,10 +251,12 @@ class CharacterScreenRuntime:
     SCHEMA = "asteria.character_screen_runtime"
     VERSION = 1
 
-    def __init__(self, profile=None):
+    def __init__(self, profile=None, *, lead_resources=()):
         self.profile = profile or CharacterScreenProfile()
         if not isinstance(self.profile, CharacterScreenProfile):
             raise TypeError("profile must be CharacterScreenProfile")
+        # listed first when the profile sets no resource order (the game's knockout resource)
+        self.lead_resources = tuple(str(x) for x in lead_resources if x)
         self.revision = 0
         self.selected_section_id = ""
         self._view = None
@@ -272,7 +292,8 @@ class CharacterScreenRuntime:
         )
 
         resources = []
-        for name in sorted(resolved_build.resources.names()):
+        names = resolved_build.resources.names()
+        for name in self.profile.ordered_resources(names, self.lead_resources):
             value = resolved_build.resources.get(name)
             resources.append(
                 CharacterScreenResourceView(

@@ -288,7 +288,12 @@ class _TextPicker(Picker):
     def set_value(self, value):
         value = "" if value is None else str(value)
         if value not in self._values:  # a name typed by hand stays as it is
-            self.addItem(value, value)
+            name = value.rsplit("/", 1)[-1]
+            if "/" in value and "." in name:  # a file path: its name, the path in the tip
+                self.addItem(name, value)
+                self.setItemData(self.count() - 1, value, Qt.ToolTipRole)
+            else:
+                self.addItem(value, value)
             self._values.append(value)
         self.setCurrentIndex(self._values.index(value))
 

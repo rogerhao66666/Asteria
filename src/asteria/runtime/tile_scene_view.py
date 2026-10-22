@@ -470,6 +470,10 @@ class TileSceneView:
                     drawn = True
         if not drawn:
             return
+        if opaque and canvas.get_masks()[3]:
+            # A screen format with an alpha byte (a macOS window) gets 0 there from these blits:
+            # the window still looks right, but a saved screenshot showed the map see-through.
+            canvas.fill((0, 0, 0, 255), special_flags=self.pg.BLEND_RGBA_MAX)
         size = (round(w * cam.zoom), round(h * cam.zoom))
         sx, sy = cam.world_to_screen(x0, y0)
         scaled = self._scaled_canvas.get((size, opaque))

@@ -25,9 +25,11 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 
 def _cold(composer):
     """A composer like ``composer`` with nothing kept from earlier frames."""
-    return BattleUiComposer(
+    cold = BattleUiComposer(
         composer.scene, composer.layout, composer.party_layout, composer.polish
     )
+    cold.text_width = composer.text_width  # it measures text the same way
+    return cold
 
 
 def _counting(monkeypatch):

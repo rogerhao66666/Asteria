@@ -2,8 +2,9 @@
 
 The Full Verification demo (`reference_projects/full_verification_demo`) is a stress test of the turn-based part of
 the engine. This file lists every system on the "not covered yet" list the user asked for, and
-where each one is exercised. Out of scope by decision: real-time (action) combat, multiplayer, new
-game plus, localization, music room, map rules, loose loot on the ground.
+where each one is exercised. Out of scope by decision: real-time (action) combat, multiplayer, loose
+loot on the ground. (New Game Plus, translations, the music room and map areas were out of scope at
+first; the user asked for them on 2026-10-18 and they are covered below.)
 
 How it is verified:
 
