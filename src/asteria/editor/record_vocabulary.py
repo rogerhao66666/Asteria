@@ -352,6 +352,10 @@ LABELS = {
 HELP = {
     "display_name": "What players see.",
     "icon_id": "The picture in menus and lists. Pick one, or Browse for your own file.",
+    "portrait_style": "Face: a dialogue line's portrait sits inside the message window. "
+    "Bust: the figure stands above the window.",
+    "portrait_size": "Face: its width and height in pixels. Bust: its height. 0 = fit the "
+    "window (face) or 55% of the screen height (bust).",
     "class_assignments": "The jobs this character has; the first is the main job.",
     "base_stats": "Starting numbers before jobs, levels, gear and points.",
     "base_resources": "HP, MP and other pools at the start.",

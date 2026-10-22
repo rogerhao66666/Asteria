@@ -148,7 +148,12 @@ def describe_instruction(instruction):
     if op == "DIALOGUE":
         speaker = str(a.get("speaker", "")).strip()
         text = str(a.get("text", ""))
-        return f'Dialogue  {speaker + ": " if speaker else ""}"{text}"'
+        portrait = str(a.get("portrait_asset_id", "")).strip()
+        if portrait:  # the picture's name, and its side when it is not the usual left
+            name = portrait.rsplit("/", 1)[-1]
+            side = ", right" if str(a.get("portrait_side", "")).lower() == "right" else ""
+            portrait = f"  [portrait: {name}{side}]"
+        return f'Dialogue  {speaker + ": " if speaker else ""}"{text}"{portrait}'
     if op == "CHOICE":
         return f"Choice  {a.get('prompt', '')}"
     if op in {"JUMP_IF", "IF_FALSE_SKIP"}:

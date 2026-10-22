@@ -161,6 +161,7 @@ class PlayableTestRuntime:
         self._defeat = False
         self._loaded = {}
         self._icon_cache = {}  # (icon id, size) -> scaled menu icon
+        self._portrait_cache = {}  # (portrait id, width, height) -> fitted dialogue portrait
         # Resource lifetime (ENG-10): images first loaded during a battle belong to
         # the "battle" scope and are released when play returns to the field.
         self._image_scope = {}
@@ -366,6 +367,7 @@ class PlayableTestRuntime:
     def release_resource_scope(self, scope):
         """Drop every cached image owned by ``scope``; returns how many were released."""
         self._icon_cache.clear()  # icons are cut from cached images: rebuild them on demand
+        self._portrait_cache.clear()
         names = [rel for rel, owner in self._image_scope.items() if owner == scope]
         for rel in names:
             image = self._loaded.pop(rel, None)
@@ -1966,6 +1968,77 @@ class PlayableTestRuntime:
             self.screen.blit(shadow, (at[0] + 2, at[1] + 2))
             self.screen.blit(image, at)
 
+    def dialogue_portrait(self, portrait_id, width, height):
+        """The picture ``portrait_id`` names (an image asset, a sheet cell or a project path)
+        fitted inside ``width`` x ``height`` with its proportions kept, or ``None``. A picture
+        made larger keeps sharp pixels (pixel-art faces); one made smaller is smoothed."""
+        from .menu_icons import icon_source
+
+        key = (str(portrait_id or ""), int(width), int(height))
+        cache = self._portrait_cache
+        if key in cache:
+            return cache[key]
+        picture = None
+        source = icon_source(self.project, portrait_id) if portrait_id else None
+        if source is not None:
+            uri, region = source
+            try:
+                image = self.load_image(uri)
+                if region is not None:
+                    image = image.subsurface(self.pg.Rect(region).clip(image.get_rect()))
+                w, h = image.get_size()
+                scale = min(width / max(1, w), height / max(1, h))
+                size = (max(1, round(w * scale)), max(1, round(h * scale)))
+                fit = self.pg.transform.scale if scale >= 1 else self.pg.transform.smoothscale
+                picture = fit(image, size)
+            except (OSError, ValueError, self.pg.error):
+                picture = None  # a missing portrait: the line shows without one
+        if len(cache) > 32:
+            cache.clear()
+        cache[key] = picture
+        return picture
+
+    PORTRAIT_BUST_SHARE = 0.55  # a bust's height on screen when Portrait Size is 0
+    DIALOGUE_BOX_HEIGHT = 130
+
+    def _dialogue_layout(self, line):
+        """The message window ``(x, y, w, h)`` for ``line`` and its portrait as ``(picture,
+        (x, y), style, room)`` or ``None``; ``room`` is the rect the portrait keeps. A face sits
+        centred in a square at the window's left or right end (the window grows to hold a big
+        one); a bust stands on the window's bottom edge."""
+        settings = self.game.message_settings
+        style = settings.portrait_style if settings is not None else "face"
+        size = settings.portrait_size if settings is not None else 0
+        height = self.DIALOGUE_BOX_HEIGHT
+        box = (60, self.height - 100 - height, self.width - 120, height)
+        portrait_id = getattr(line, "portrait_asset_id", "") if line is not None else ""
+        if not portrait_id:
+            return box, None
+        left = line.portrait_side == "left"
+        if style == "bust":
+            x, y, w, h = box
+            tall = size or round(self.height * self.PORTRAIT_BUST_SHARE)
+            picture = self.dialogue_portrait(portrait_id, w // 2, tall)
+            if picture is None:
+                return box, None
+            at = (
+                x + 24 if left else x + w - 24 - picture.get_width(),
+                y + h - picture.get_height(),
+            )
+            return box, (picture, at, style, (*at, *picture.get_size()))
+        side = size or height - 24
+        picture = self.dialogue_portrait(portrait_id, side, side)
+        if picture is None:
+            return box, None
+        height = max(height, side + 24)  # a big face: the window grows upwards to hold it
+        box = x, y, w, h = (60, self.height - 100 - height, self.width - 120, height)
+        room = (x + 12 if left else x + w - 12 - side, y + (h - side) // 2, side, side)
+        at = (
+            room[0] + (side - picture.get_width()) // 2,
+            room[1] + (side - picture.get_height()) // 2,
+        )
+        return box, (picture, at, style, room)
+
     def _draw_dialogue(self):
         request = (
             getattr(self, "_network_dialogue", None)
@@ -1974,23 +2047,33 @@ class PlayableTestRuntime:
         )
         if request is None:
             return
-        self.panel(
-            (60, self.height - 230, self.width - 120, 130),
-            fill=(10, 14, 24, 235),
-            border=(240, 201, 93),
-        )
         line = getattr(request, "line", None)
+        box, portrait = self._dialogue_layout(line)
+        if portrait is not None and portrait[2] == "bust":  # stands behind the window
+            self.screen.blit(portrait[0], portrait[1])
+        self.panel(box, fill=(10, 14, 24, 235), border=(240, 201, 93))
+        x, y, w, h = box
         if line is not None:
+            text_x = x + 24
+            hint_x, hint_anchor = self.width - 250, None
+            if portrait is not None and portrait[2] == "face":
+                picture, at, _, room = portrait
+                self.screen.blit(picture, at)
+                if line.portrait_side == "left":
+                    text_x = room[0] + room[2] + 18  # the text starts after the face's square
+                else:  # the hint ends before the face
+                    hint_x, hint_anchor = room[0] - 14, "topright"
             if line.speaker:
                 speaker = self.game.expand_message(line.speaker, plain=True)
-                self.text(speaker, 84, self.height - 218, size=24, color=(255, 220, 124))
-            self._draw_message(self.game.expand_message(line.text), 84, self.height - 184)
+                self.text(speaker, text_x, y + 12, size=24, color=(255, 220, 124))
+            self._draw_message(self.game.expand_message(line.text), text_x, y + 46)
             self.text(
                 "Enter / E: continue",
-                self.width - 250,
-                self.height - 128,
+                hint_x,
+                y + h - 28,
                 size=18,
                 color=(170, 210, 240),
+                anchor=hint_anchor,
             )
             return
         self.text(

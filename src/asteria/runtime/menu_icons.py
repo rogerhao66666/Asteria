@@ -65,7 +65,7 @@ def icon_source(project, icon_id):
     record = assets.get(icon_id)
     if record is not None:
         return str(record.source_path), None
-    if icon_id.lower().endswith(".png"):
+    if icon_id.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):  # a picture file by path
         return icon_id, None
     return None
 

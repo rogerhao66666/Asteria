@@ -2053,3 +2053,16 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **D39 戰鬥 UI 統一（同日）：** 所有回合制 demo 與範本（Boss Trial、Octopath、complex reference、party 範本、Basic RPG 起始專案）都用八方旅人版面：隊伍 HP 一人一格排在右邊緣（`party_hud=side_list`）、指令選單貼在行動角色旁（`action_menu_placement=actor`）且透明、怪物名字與血條在頭上。選單只可能蓋到「非行動中的隊友」，不會蓋到行動角色或任何怪物（`menu_over_stage` 不再讓選單蓋怪物）。Boss Trial 的怪物不再隱藏血條，Basic RPG 起始專案不再覆寫站位與怪物縮放。`tests/test_lucifer_art_rules.py::test_every_turn_based_demo_uses_the_octopath_battle_ui` 守住這組設定。
 
 **D40 Boss Trial 重整與戰鬥資訊（2026-10-18）：** 依使用者要求：起始只有主角一人；城裡加冒險者公會，Mira 一開始就在，Vesper／Cael 打完各自的 Boss 後到公會等，對話即加入；公會長可讓同伴回公會等候（LEAVE_PARTY，之前 demo 沒用到）。可操作角色的美術互不重複，鎮民改成同造型的棕褐色調；召喚獸改用 Goblin Rider。怪物縮到三個 Boss 加三種小怪（刪掉 Goblin Berserker、Skeleton Grunt 兩種）。戰鬥畫面：指令選單一律貼在行動角色右下角並畫在最上層（可蓋住其他角色、怪物或血量面板）；怪物頭上只顯示名字、不顯示血條（`overhead_bars=False`），名字會往上或左右挪開，不蓋到任何角色或其他名字；怪物圖鑑打倒一次後才顯示弱點與血量，掉落物只列真的掉過的。引擎新增：`action_menu_placement="actor_bottom_right"`、`overhead_bars`、`NpcIdentity2D.starts_hidden`、bestiary 記錄 `drop:<id>`。
+
+## D41 — 對話肖像（2026-10-22，使用者要求「對話框改成會畫頭像，事件編輯器的對話指令也加上選頭像的欄位」）
+
+對話資料原本就有 `portrait_asset_id`，但遊戲的對話框和編輯器都沒用到。現在：
+
+- **遊戲**（`PlayableTestRuntime._draw_dialogue`，場景、過場、即時動作與戰鬥共用）：台詞有肖像就畫出來。專案的 Message Settings 決定樣式：`portrait_style = face`（預設，肖像在訊息框左端或右端的正方形裡，文字往旁邊讓；尺寸大於訊息框時訊息框往上長）或 `bust`（人物站在訊息框上，下半身被訊息框蓋住）。`portrait_size` 是像素（face 是邊長、bust 是高度，0 = 自動：配合訊息框／畫面高度的 55%）。放大用最近鄰（像素臉不糊），縮小用平滑。縮放結果有快取。
+- **台詞**：`DialogueLine.portrait_side`（`left`／`right`），DIALOGUE 指令的 `portrait_side` 只在是 `right` 時寫入；`portrait_asset_id` 可以是圖片素材、圖集的格子或專案裡的圖片路徑（png／jpg／webp）。
+- **編輯器**：事件編輯器的「Dialogue」按鈕改開對話視窗（說話者、多行文字、肖像清單＋預覽＋Browse…、左右），雙擊既有的對話指令也開同一個視窗；右邊是依專案 Message Settings 畫的訊息框預覽。清單列出專案的 `portrait` 素材和任何 `portraits`／`faces`／`facesets` 資料夾裡的圖；Browse… 會把專案外的圖複製到 `<專案>/portraits/`。序列（Sequence）的對話步驟多了 `portrait_asset_id`、`portrait_side` 兩欄。指令清單會顯示用了哪張肖像。Message Settings 表單多了 Portrait Style、Portrait Size。
+- **腳本**：`AuthoringEvent.dialogue(..., portrait=, side=)`、`say(..., portrait=, side=)`。
+
+**相容：** 舊資料照常讀；沒設定就不寫入。
+
+**還沒做：** 輕量的地圖執行器（`runtime/tilemap_field.py`，MV 匯入試玩用）的文字框不畫肖像；MV 匯入的 Show Text 臉圖還沒轉成肖像；文字不會自動換行（和之前一樣，用換行字元）。

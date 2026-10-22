@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from .call_stack import EventCallFrame
 from .context import EventContext
 from .dialogue import (
+    PORTRAIT_SIDES,
     ChoiceRequest,
     DialogueChoice,
     DialogueLine,
@@ -344,10 +345,12 @@ class EventRunner:
         text = instruction.args.get("text")
         if text is None:
             raise EventRunnerError("DIALOGUE requires text")
+        side = str(instruction.args.get("portrait_side") or "left").strip().lower()
         line = DialogueLine(
             text=str(text),
             speaker=str(instruction.args.get("speaker", "")),
             portrait_asset_id=str(instruction.args.get("portrait_asset_id", "")),
+            portrait_side=side if side in PORTRAIT_SIDES else "left",  # unknown: the default
         )
         self.dialogue.dialogue = DialogueRequest(line)
 

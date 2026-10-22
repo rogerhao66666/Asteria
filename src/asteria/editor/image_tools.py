@@ -209,9 +209,12 @@ _SKIPPED_FOLDERS = {
 }
 
 
-def _icon_files(root, limit=600, depth=4, folder_budget=1500):
-    """PNG files in folders named ``icons`` under ``root`` (a bounded walk: hidden and build
-    folders are skipped, so a project opened from a big folder still lists quickly)."""
+def _icon_files(
+    root, limit=600, depth=4, folder_budget=1500, *, folders=("icons",), suffixes=(".png",)
+):
+    """Picture files in folders named in ``folders`` (``icons``) under ``root`` (a bounded walk:
+    hidden and build folders are skipped, so a project opened from a big folder still lists
+    quickly)."""
     import os
 
     found = []
@@ -226,11 +229,15 @@ def _icon_files(root, limit=600, depth=4, folder_budget=1500):
             and n not in _SKIPPED_FOLDERS
             and len(Path(folder, n).parts) - base_depth <= depth
         )
-        if Path(folder).name == "icons":
-            found.extend(Path(folder, f) for f in sorted(files) if f.lower().endswith(".png"))
+        if Path(folder).name.lower() in folders:
+            found.extend(Path(folder, f) for f in sorted(files) if f.lower().endswith(suffixes))
         if len(found) >= limit:
             break
     return found[:limit]
+
+
+PORTRAIT_FOLDERS = ("portraits", "faces", "facesets")  # folders whose pictures are portraits
+PORTRAIT_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 
 
 def icon_pixmap(document, icon_id, size=32):
@@ -310,16 +317,57 @@ def icon_choices(document):
     return tuple(choices)
 
 
+def portrait_choices(document):
+    """Every picture a dialogue portrait field can take, as ``((id, QIcon or None), ...)``: the
+    project's ``portrait`` assets, then the picture files in its ``portraits`` / ``faces`` /
+    ``facesets`` folders (ids are paths relative to the project folder)."""
+    from PySide6.QtGui import QIcon
+
+    from asteria.runtime.menu_icons import icon_source
+
+    project = getattr(document, "project", None)
+    if project is None:
+        return ()
+    root = project_root(document)
+
+    def thumbnail(path, region=None):
+        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
+        if pixmap.isNull():
+            return None
+        if region:
+            pixmap = pixmap.copy(*region)
+        return QIcon(pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+    choices, seen = [], set()
+    for asset in sorted(project.assets.query(kind="portrait"), key=lambda a: a.asset_id):
+        uri, region = icon_source(project, asset.asset_id)
+        path = Path(uri) if Path(uri).is_absolute() else root / uri
+        choices.append((asset.asset_id, thumbnail(path, region)))
+        seen.add(asset.asset_id)
+    if root.is_dir():
+        for path in _icon_files(root, folders=PORTRAIT_FOLDERS, suffixes=PORTRAIT_SUFFIXES):
+            rel = path.relative_to(root).as_posix()
+            if rel not in seen:
+                seen.add(rel)
+                choices.append((rel, thumbnail(path)))
+    return tuple(choices)
+
+
 class IconLibrary:
     """The icons a project's ``icon_id`` fields can use: ``choices()`` for pickers and
     ``import_file(path)`` to bring a picture of the author's own into the project."""
 
     FOLDER = "icons"
+    KIND = "icon"  # the asset kind listed
+    CACHE = "_icon_choices_cache"  # where the document keeps the list
 
     def __init__(self, document):
         self.document = document
 
     FILES_SECONDS = 30.0  # picture files added outside the editor show up within this
+
+    def _build(self):
+        return icon_choices(self.document)
 
     def choices(self):
         """The list, built again only when the project's icons change (another project, an
@@ -328,16 +376,16 @@ class IconLibrary:
         import time
 
         project = getattr(self.document, "project", None)
-        icons = () if project is None else project.assets.query(kind="icon")
+        icons = () if project is None else project.assets.query(kind=self.KIND)
         stamp = (id(project), tuple(sorted(a.asset_id for a in icons)))
         now = time.monotonic()
         # kept on the document: every library made for it (one per page) shares the list
         holder = self.document if self.document is not None else self
-        cached = getattr(holder, "_icon_choices_cache", None)
+        cached = getattr(holder, self.CACHE, None)
         if cached is not None and cached[0] == stamp and now - cached[1] < self.FILES_SECONDS:
             return cached[2]
-        choices = icon_choices(self.document)
-        holder._icon_choices_cache = (stamp, now, choices)
+        choices = self._build()
+        setattr(holder, self.CACHE, (stamp, now, choices))
         return choices
 
     def import_file(self, path):
@@ -345,7 +393,7 @@ class IconLibrary:
         place; any other is copied to ``<project>/icons/``. Returns the ``icon_id`` (a path
         relative to the project folder)."""
         holder = self.document if self.document is not None else self
-        holder._icon_choices_cache = None  # the new picture joins the list
+        setattr(holder, self.CACHE, None)  # the new picture joins the list
         import shutil
 
         source = Path(path).resolve()
@@ -364,3 +412,15 @@ class IconLibrary:
         if not target.exists():
             shutil.copyfile(source, target)
         return target.relative_to(root).as_posix()
+
+
+class PortraitLibrary(IconLibrary):
+    """The pictures a dialogue line's portrait can use (``portrait_choices``); Browse… copies
+    a picture from outside the project to ``<project>/portraits/``."""
+
+    FOLDER = "portraits"
+    KIND = "portrait"
+    CACHE = "_portrait_choices_cache"
+
+    def _build(self):
+        return portrait_choices(self.document)

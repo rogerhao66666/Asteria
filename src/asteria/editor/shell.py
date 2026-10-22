@@ -1401,8 +1401,16 @@ class AsteriaEditorWindow(QMainWindow):
         dialog = SequenceEditorDialog(args, self)
         return dialog.result_args() if dialog.exec() == SequenceEditorDialog.Accepted else None
 
+    def _dialogue_dialog(self, args=None):
+        """Modal Dialogue editor (speaker, text, portrait); returns DIALOGUE args or None
+        (tests replace this)."""
+        from .dialogue_command_dialog import DialogueCommandDialog
+
+        dialog = DialogueCommandDialog(args, document=self.document, parent=self)
+        return dialog.result_args() if dialog.exec() == DialogueCommandDialog.Accepted else None
+
     def _event_edit_command(self, index):
-        """Open the specialized editor for sequence and picture instructions."""
+        """Open the specialized editor for dialogue, sequence and picture instructions."""
         from .event_flow_authoring import EventFlowAuthoring
         from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
 
@@ -1420,6 +1428,20 @@ class AsteriaEditorWindow(QMainWindow):
                 return False
             EventFlowAuthoring(self.document).replace_sequence(
                 binding.program_id, index, **_sequence_kwargs(args)
+            )
+        elif instruction.opcode == "DIALOGUE":
+            args = self._dialogue_dialog(instruction.args)
+            if args is None:
+                return False
+            rows = list(program.instructions)
+            rows[index] = EventInstruction("DIALOGUE", args)
+            self.document.execute(
+                ReplaceEventProgramCommand(
+                    project.event_programs,
+                    binding.program_id,
+                    EventProgram(rows, name=program.name),
+                    program,
+                )
             )
         elif (
             instruction.opcode == "WORLD"
@@ -1458,13 +1480,8 @@ class AsteriaEditorWindow(QMainWindow):
             args = self._sequence_dialog()
             return None if args is None else EventInstruction("SEQUENCE", args)
         if kind == "dialogue":
-            text, ok = QInputDialog.getText(self, "Dialogue", "Text:")
-            if not ok:
-                return None
-            speaker, ok = QInputDialog.getText(self, "Dialogue", "Speaker:")
-            if not ok:
-                return None
-            return EventInstruction("DIALOGUE", {"speaker": speaker, "text": text})
+            args = self._dialogue_dialog()
+            return None if args is None else EventInstruction("DIALOGUE", args)
         if kind == "choice":
             prompt, ok = QInputDialog.getText(self, "Choice", "Prompt:")
             if not ok:

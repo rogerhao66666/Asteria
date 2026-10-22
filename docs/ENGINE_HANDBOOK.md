@@ -204,6 +204,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | `ActionCombat` 綁定替代、`item:<id>` 消耗；`CombatantComponent.defeat_switch`；`ClassAppearance`；`ParallaxBackground2D` | `runtime/` |
 | `ActionCombat` 綁定 `slot:N`（技能欄第 N 格）、`vfx` 提示（世界裡的圖片特效：`effect` 精靈表 id、位移、縮放、`rotate`、`follow`）；技能欄規則 `AbilityLoadoutRules.limited_sources` 可含 `allocation`（技能樹給的技能），技能樹學到新技能會自動放進空格 | `runtime/action_combat.py`、`runtime/action_play.py`、`runtime/game_session.py` |
 | 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/progression_graph.py` |
+| 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/localization.py`、`runtime/playable_test_runtime.py`、`editor/dialogue_command_dialog.py` |
 | 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle_ui.py`、`presentation/library.py`、`editor/integrated_authoring.py` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的

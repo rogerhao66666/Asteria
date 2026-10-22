@@ -638,6 +638,9 @@ D26_FORMS = {
         F("currency_label", "Currency Label", "text", default=""),
         F("backlog_limit", "Message Log Size (0 = no log)", "int", default=0),
         F("default_locale", "Default Locale", "text", default=""),
+        # how a dialogue line's portrait shows: a face inside the window or a figure above it
+        F("portrait_style", "Portrait Style", "choice", choices=("face", "bust"), default="face"),
+        F("portrait_size", "Portrait Size (px, 0 = automatic)", "int", default=0),
         F(
             "icons",
             "Icons for \\I[n]",

@@ -82,9 +82,14 @@ class Localizer:
             return text  # a bad placeholder must not break a message
 
 
+PORTRAIT_STYLES = ("face", "bust")  # a face inside the message window / a figure above it
+
+
 @dataclass(frozen=True, slots=True)
 class MessageSettings:
-    """Project-wide message options: macros (``\\M[name]``), currency label and the log size."""
+    """Project-wide message options: macros (``\\M[name]``), currency label, the log size and
+    how a dialogue line's portrait shows (``portrait_style``: ``face`` inside the message window,
+    ``bust`` standing above it; ``portrait_size`` in pixels, 0 = fit the window / the screen)."""
 
     settings_id: str
     macros: tuple[tuple[str, str], ...] = ()
@@ -93,6 +98,8 @@ class MessageSettings:
     backlog_limit: int = 0  # 0 = no message log screen
     default_locale: str = ""
     icons: tuple[tuple[str, str], ...] = ()  # \\I[n] number -> project icon id
+    portrait_style: str = "face"
+    portrait_size: int = 0
 
     def __init__(
         self,
@@ -104,12 +111,21 @@ class MessageSettings:
         backlog_limit=0,
         default_locale="",
         icons=None,
+        portrait_style="face",
+        portrait_size=0,
     ):
         settings_id = _text(settings_id)
         if not settings_id:
             raise ValueError("settings_id is required")
         if int(backlog_limit) < 0:
             raise ValueError("backlog_limit must be >= 0")
+        portrait_style = _text(portrait_style) or "face"
+        if portrait_style not in PORTRAIT_STYLES:
+            raise ValueError(f"portrait_style must be one of {PORTRAIT_STYLES}")
+        if int(portrait_size) < 0:
+            raise ValueError("portrait_size must be >= 0")
+        object.__setattr__(self, "portrait_style", portrait_style)
+        object.__setattr__(self, "portrait_size", int(portrait_size))
         object.__setattr__(self, "settings_id", settings_id)
         object.__setattr__(
             self,
@@ -135,6 +151,9 @@ class MessageSettings:
             "backlog_limit": self.backlog_limit,
             "default_locale": self.default_locale,
             **({"icons": dict(self.icons)} if self.icons else {}),
+            # portrait options are written only when set: older projects read the same
+            **({"portrait_style": self.portrait_style} if self.portrait_style != "face" else {}),
+            **({"portrait_size": self.portrait_size} if self.portrait_size else {}),
         }
 
     @classmethod

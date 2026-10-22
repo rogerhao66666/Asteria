@@ -12,6 +12,7 @@ from asteria.events import (
     EventTriggerKind,
     SceneEventBindings,
 )
+from asteria.events.dialogue import PORTRAIT_SIDES
 from asteria.gameplay import (
     Effect,
     GameplayAttributesComponent,
@@ -354,11 +355,13 @@ class AuthoringEvent:
         )
         return self
 
-    def dialogue(self, speaker, text=None) -> AuthoringEvent:
+    def dialogue(self, speaker, text=None, *, portrait="", side="left") -> AuthoringEvent:
+        """A dialogue line; ``portrait`` is a picture id (an image asset or a project path)
+        shown in the message window, ``side`` is ``"left"`` or ``"right"``."""
         if text is None:
             text = speaker
             speaker = ""
-        return self.append("DIALOGUE", speaker=str(speaker), text=str(text))
+        return self.append("DIALOGUE", **say(speaker, text, portrait=portrait, side=side)[1])
 
     def set_switch(self, name, value=True) -> AuthoringEvent:
         return self.append("SET_SWITCH", name=str(name), value=bool(value))
@@ -636,8 +639,15 @@ def animate(entity, clip):
     return ("ANIMATE", {"entity": str(entity), "clip": str(clip)})
 
 
-def say(speaker, text):
-    return ("DIALOGUE", {"speaker": str(speaker), "text": str(text)})
+def say(speaker, text, *, portrait="", side="left"):
+    if str(side) not in PORTRAIT_SIDES:
+        raise ValueError(f"side must be one of {PORTRAIT_SIDES}")
+    data = {"speaker": str(speaker), "text": str(text)}
+    if portrait:  # portrait keys are written only when set
+        data["portrait_asset_id"] = str(portrait)
+    if str(side) != "left":
+        data["portrait_side"] = str(side)
+    return ("DIALOGUE", data)
 
 
 def world(command, *, wait=0.0, **args):

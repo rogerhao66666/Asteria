@@ -365,7 +365,12 @@ class SequenceEditorDialog(QDialog):
         ),
         "FACE": (("entity", "player"), ("facing", "down")),
         "ANIMATE": (("entity", "player"), ("clip", "idle")),
-        "DIALOGUE": (("speaker", ""), ("text", "")),
+        "DIALOGUE": (
+            ("speaker", ""),
+            ("text", ""),
+            ("portrait_asset_id", ""),
+            ("portrait_side", "left"),
+        ),
         "WORLD": (("command", "CAMERA_FOCUS"), ("args", "entity=player, zoom=1.5"), ("wait", "0")),
         "WAIT": (("seconds", "0.5"),),
     }
@@ -507,10 +512,15 @@ class SequenceEditorDialog(QDialog):
             if float(values["wait"] or 0) > 0:
                 args["wait"] = float(values["wait"])
             return {"opcode": "WORLD", "args": args}
-        args = {
-            k: (_coerce(v) if k not in ("entity", "text", "speaker", "clip", "facing") else v)
-            for k, v in values.items()
-        }
+        plain = ("entity", "text", "speaker", "clip", "facing", "portrait_asset_id")
+        args = {k: (_coerce(v) if k not in plain else v) for k, v in values.items()}
+        if opcode == "DIALOGUE":  # the portrait keys are kept only when set
+            args["portrait_asset_id"] = str(args.get("portrait_asset_id", "")).strip()
+            args["portrait_side"] = str(args.get("portrait_side", "")).strip().lower()
+            if not args["portrait_asset_id"]:
+                del args["portrait_asset_id"]
+            if args["portrait_side"] in ("", "left"):
+                del args["portrait_side"]
         return {"opcode": opcode, "args": args}
 
     def add_step(self, step):

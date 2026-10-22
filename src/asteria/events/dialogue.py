@@ -3,32 +3,43 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+PORTRAIT_SIDES = ("left", "right")  # where a line's portrait sits in the message window
+
 
 @dataclass(frozen=True, slots=True)
 class DialogueLine:
     text: str
     speaker: str = ""
     portrait_asset_id: str = ""
+    portrait_side: str = "left"
 
     def __post_init__(self):
         if not str(self.text):
             raise ValueError("dialogue text is required")
+        if self.portrait_side not in PORTRAIT_SIDES:
+            raise ValueError(f"portrait side must be one of {PORTRAIT_SIDES}")
 
     def to_data(self):
-        return {
+        data = {
             "text": str(self.text),
             "speaker": str(self.speaker),
             "portrait_asset_id": str(self.portrait_asset_id),
         }
+        if self.portrait_side != "left":  # written only when set: older data reads the same
+            data["portrait_side"] = self.portrait_side
+        return data
 
     @classmethod
     def from_data(cls, data):
-        if set(data) != {"text", "speaker", "portrait_asset_id"}:
+        keys = set(data)
+        required = {"text", "speaker", "portrait_asset_id"}
+        if not required <= keys or keys - required - {"portrait_side"}:
             raise ValueError("invalid dialogue line")
         return cls(
             text=str(data["text"]),
             speaker=str(data["speaker"]),
             portrait_asset_id=str(data["portrait_asset_id"]),
+            portrait_side=str(data.get("portrait_side", "left")),
         )
 
 
