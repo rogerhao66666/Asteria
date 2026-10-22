@@ -26,6 +26,7 @@ COLORS = {
     "available": (58, 92, 150),
     "locked": (44, 48, 60),
 }
+STATUS_WORDS = {status: f"skill_tree.status.{status}" for status in COLORS}  # drawn words
 
 
 def actor_graphs(database, progression, allocation):
@@ -74,19 +75,27 @@ def layout(graph):
     return positions
 
 
-def describe_reward(reward, labels, names=None):
-    """Reward lines; ``names`` maps stat / resource ids to the project's names (STR, HP)."""
+def _english(key, english, **params):
+    return english.format(**params) if params else english
+
+
+def describe_reward(reward, labels, names=None, tr=None):
+    """Reward lines; ``names`` maps stat / resource ids to the project's names (STR, HP);
+    ``tr`` (``GameSessionRuntime.tr``) words them in the player's language."""
     names = names or {}
+    tr = tr or _english
     parts = []
     for stat, value in sorted(reward.stat_bonuses.items()):
         parts.append(f"{names.get(stat, stat)} +{value:g}")
     for name, value in sorted(reward.resource_bonuses.items()):
-        parts.append(f"max {names.get(name, name)} +{value:g}")
+        label = names.get(name, name)
+        parts.append(tr("skill_tree.max", "max {name} +{value}", name=label, value=f"{value:g}"))
     for ability in reward.granted_abilities:
-        parts.append("Skill: " + (labels.get(ability, {}).get("label") or ability))
+        label = labels.get(ability, {}).get("label") or ability
+        parts.append(tr("skill_tree.skill", "Skill: {name}", name=label))
     for passive in reward.unlocked_passives:
-        parts.append(f"Passive: {passive}")
-    parts += [f"Tag: {t}" for t in reward.granted_tags]
+        parts.append(tr("skill_tree.passive", "Passive: {name}", name=passive))
+    parts += [tr("skill_tree.tag", "Tag: {name}", name=t) for t in reward.granted_tags]
     return parts
 
 
@@ -301,14 +310,30 @@ class SkillTreeScreen:
         preview = allocation.preview_allocate(graph.graph_id, self.node_id, 1)
         node = graph.node(self.node_id)
         if not preview.allowed:
-            reason = (preview.reasons or ("requirements not met",))[0]
+            unmet = game.tr("skill_tree.unmet", "requirements not met")
+            reason = (preview.reasons or (unmet,))[0]
             for other in sorted(graph.nodes, key=lambda x: -len(x.node_id)):
                 reason = reason.replace(other.node_id, other.display_name)  # ids -> names
-            self._say(f"Cannot learn {node.display_name}: {reason}")
+            self._say(
+                game.tr(
+                    "skill_tree.cannot_learn",
+                    "Cannot learn {name}: {reason}",
+                    name=node.display_name,
+                    reason=reason,
+                )
+            )
             return False
         game.allocate_progression(self.actor_id, graph.graph_id, self.node_id)
         rank = allocation.rank(graph.graph_id, self.node_id)
-        self._say(f"Learned {node.display_name} (rank {rank}/{node.max_rank})")
+        self._say(
+            game.tr(
+                "skill_tree.learned",
+                "Learned {name} (rank {rank}/{max})",
+                name=node.display_name,
+                rank=rank,
+                max=node.max_rank,
+            )
+        )
         return True
 
     def _say(self, text):
@@ -354,9 +379,10 @@ class SkillTreeScreen:
         graph = self.graph()
         actor_id = self.actor_id
         game = rt.game
-        rt.text("Skill Tree", 36, 22, size=34, color=(255, 220, 124))
+        tr = game.tr
+        rt.text(tr("skill_tree.title", "Skill Tree"), 36, 22, size=34, color=(255, 220, 124))
         if graph is None or actor_id is None:
-            rt.text("No skill tree for this character.", 36, 80, size=22)
+            rt.text(tr("skill_tree.none", "No skill tree for this character."), 36, 80, size=22)
             return
         allocation = self._allocation()
         progression = game.ensure_actor_progression(actor_id)
@@ -372,7 +398,13 @@ class SkillTreeScreen:
             if c in game.project.rpg_database.classes
         )
         rt.text(
-            f"{graph.display_name}   ·   {classes or '—'}   ·   Lv {progression.level}",
+            tr(
+                "skill_tree.header",
+                "{tree}   ·   {classes}   ·   Lv {level}",
+                tree=graph.display_name,
+                classes=classes or "—",
+                level=progression.level,
+            ),
             36,
             62,
             size=21,
@@ -382,7 +414,12 @@ class SkillTreeScreen:
         count = len(self.graphs())
         if count > 1:
             rt.text(
-                f"Tree {self.graph_index % count + 1}/{count}  (O: next tree)",
+                tr(
+                    "skill_tree.trees",
+                    "Tree {index}/{count}  (O: next tree)",
+                    index=self.graph_index % count + 1,
+                    count=count,
+                ),
                 rt.width - 336,
                 62,
                 size=18,
@@ -444,8 +481,11 @@ class SkillTreeScreen:
         screen.set_clip(previous_clip)
         self._draw_details(graph, allocation)
         rt.text(
-            "Arrows: choose   Enter: learn   Wheel / + -: zoom   Drag: move   R: fit   "
-            "O: next tree   C: back",
+            tr(
+                "skill_tree.hint",
+                "Arrows: choose   Enter: learn   Wheel / + -: zoom   Drag: move   R: fit   "
+                "O: next tree   C: back",
+            ),
             rt.width / 2,
             rt.height - 24,
             size=18,
@@ -486,14 +526,22 @@ class SkillTreeScreen:
             return
         labels = rt.manifest.get("battle", {}).get("skills", {})
         names = stat_names(rt.game.project)
+        tr = rt.game.tr
         rank = allocation.rank(graph.graph_id, node.node_id)
         icon = rt._draw_icon(self.node_icon(node), x + 16, y + 10, 36)
         rt.text(
             node.display_name, x + (60 if icon else 16), y + 14, size=24, color=(255, 220, 124)
         )
         status = self.status(graph, node)
+        status = tr(STATUS_WORDS[status], status)  # the status is an id: its word is drawn
         rt.text(
-            f"Rank {rank}/{node.max_rank}   ·   {status}",
+            tr(
+                "skill_tree.rank",
+                "Rank {rank}/{max}   ·   {status}",
+                rank=rank,
+                max=node.max_rank,
+                status=status,
+            ),
             x + 16,
             y + 44,
             size=18,
@@ -502,21 +550,26 @@ class SkillTreeScreen:
         row = y + 78
         if rank < node.max_rank:
             cost = node.cost_for_rank(rank + 1)
-            text = ", ".join(f"{v:g} {k.upper()}" for k, v in sorted(cost.items())) or "free"
-            rt.text(f"Next rank costs {text}", x + 16, row, size=18)
+            text = ", ".join(f"{v:g} {k.upper()}" for k, v in sorted(cost.items()))
+            text = text or tr("skill_tree.free", "free")
+            rt.text(
+                tr("skill_tree.cost", "Next rank costs {cost}", cost=text), x + 16, row, size=18
+            )
             row += 28
-            rt.text("Next rank gives:", x + 16, row, size=18, color=(140, 230, 170))
+            gives = tr("skill_tree.gives", "Next rank gives:")
+            rt.text(gives, x + 16, row, size=18, color=(140, 230, 170))
             row += 24
-            for line in describe_reward(node.reward_for_rank(rank + 1), labels, names)[:6]:
+            for line in describe_reward(node.reward_for_rank(rank + 1), labels, names, tr)[:6]:
                 rt.text("  " + line, x + 16, row, size=18)
                 row += 22
         if rank:
             row += 8
-            rt.text("Learned so far:", x + 16, row, size=18, color=(140, 230, 170))
+            so_far = tr("skill_tree.so_far", "Learned so far:")
+            rt.text(so_far, x + 16, row, size=18, color=(140, 230, 170))
             row += 24
             totals = {}
             for r in range(1, rank + 1):
-                for line in describe_reward(node.reward_for_rank(r), labels, names):
+                for line in describe_reward(node.reward_for_rank(r), labels, names, tr):
                     totals[line] = totals.get(line, 0) + 1
             for line in list(totals)[:5]:
                 rt.text("  " + line, x + 16, row, size=18)
@@ -524,7 +577,7 @@ class SkillTreeScreen:
         reqs = node.prerequisites + node.any_prerequisites
         if reqs:
             row += 8
-            rt.text("Needs:", x + 16, row, size=18, color=(255, 190, 150))
+            rt.text(tr("skill_tree.needs", "Needs:"), x + 16, row, size=18, color=(255, 190, 150))
             row += 24
             for req in reqs:
                 have = allocation.rank(graph.graph_id, req.node_id)

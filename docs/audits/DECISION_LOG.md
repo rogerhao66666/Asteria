@@ -2066,3 +2066,37 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **相容：** 舊資料照常讀；沒設定就不寫入。
 
 **還沒做：** 輕量的地圖執行器（`runtime/tilemap_field.py`，MV 匯入試玩用）的文字框不畫肖像；MV 匯入的 Show Text 臉圖還沒轉成肖像；文字不會自動換行（和之前一樣，用換行字元）。
+
+
+## D52 — 遊戲內建字可翻譯：繁體中文（2026-10-22）
+
+**要求：** D50 做了編輯器中文；這一批是玩家看到的那一半：引擎自己畫的每個字都要能透過專案的翻譯表翻譯（也能改名），讓 Asteria 做的遊戲可以用繁體中文顯示；沒有翻譯表的專案畫面不能變；中文要放得下、游標要對齊；驗證放在原本的 Full Verification demo（使用者選擇）。
+
+**做了什麼：**
+- **鍵值表**（`rpg/built_in_text.py`）：337 個鍵、依畫面分 27 組（標題、野外、對話、暫停、遊戲結束、設定、按鍵設定、存檔、狀態、任務、商店、製作、成就與圖鑑、訊息紀錄／音樂室／製作人員、技能欄、寵物、戰鬥指令、指令不能用的原因、戰鬥、捕獲、勝利、裝備背包、技能樹、動作 HUD、角色養成與工坊（測試用畫面）、連線合作），每個鍵附它畫出的英文。完整清單 `docs/BUILT_IN_TEXT_KEYS.md`（`scripts/built_in_text_keys.py` 產生）。
+- **畫面**：`playable_test_runtime.py` 與它的畫面模組（`game_menus`、`battle_commands`、`battle_presentation_adapters`、`battle_extras`、`extras_screens`、`pets_screen`、`bag_screen`、`skill_tree_screen`、`status_menu`、`save_slots`、`input_rebinding`、`hud_bottom`、`action_play`、`network_bag_screen`、`victory_screen`）、`rpg/victory.py` 的結算頁、`presentation/battle_ui.py`（篩選、Ready、階級）、`presentation/battle_result.py`（勝利／戰敗標題）、`game_session.py`（指令不能用的原因、逃跑原因、壞掉／撿到的通知、過量擊殺）都改成 `game.tr(鍵, 英文)`。內部 id 不變：戰鬥分類「Attack／Skills／Items」仍是 id，只有畫出來的名字經過翻譯（`BattleCommands.category_label`）。勝利頁的金色行改用 `AftermathPage.highlights`，不再比對「Level」「Learned」開頭的英文。
+- **專案自己的名稱**：Command Menu Pages 的名稱（`battle.layer.<指令 id>`）、技能分組（`battle.group.<名稱>`）、暫停選單自訂項目（`pause.entry.<id>`）、按鍵設定的動作名稱（`controls.action.<id>`）也能翻，沒寫就照專案寫的。
+- **規則拒絕的訊息**：`Words`（帶著鍵的訊息）；商店的買不起／庫存不足／背包放不下／不夠賣改用它丟出，`str()` 仍是原本的英文，畫面用 `translated()` 顯示譯文。
+- **引擎附的繁體中文**：`rpg/built_in_text/zh-TW.json`（337 個鍵全有，`{...}` 與英文一致；隨套件發布）。
+- **編輯器**：Game Systems ▸ Translations 的表單改成翻譯頁（`editor/translation_table.py`）：依畫面分組列出全部內建字與英文，加上專案自己的名稱與自訂鍵；可搜尋、篩選（全部／未翻譯／已翻譯／引擎／專案）、「填入空白列」（引擎的繁中）、新增／移除鍵；空的文字不會存進表（存了會讓遊戲畫出空白）。窄視窗時按鈕換行、三欄依比例分寬。介面字串都有 zh_TW。
+- **中文排版**：`presentation/text_cells.py`：全形字算 2 格、ASCII 長度不變；戰鬥選單寬度、名稱縮寫、頭上名稱、分類列、側欄狀態縮寫、回合條、說明框換行（中文字與字之間可換行，句讀不放行首）、破防格子與狀態字都改用格數。字型：戰鬥畫面的中文字級 = UI 字型實際的 em（`point_size`，以前沒乘 skin 的 `font_scale`，demo 的像素字型下中文大了 1.6 倍）；選單等主畫面 = 英文字型行高的 1.25 倍（以前同字級時中文大了約 45%）；中文垂直置中在英文大寫字母的中線（`glyph_shift`），選單游標與中文同高（置中擺放的標題與提示不超出英文那一行的上緣，不貼邊框）；`text_width` 改用實際畫中文的字型量寬度；野外浮動文字也會用中文字型；skin 字型本身有中文時直接用它。
+- **效能**：`Localizer` 的語系鏈快取起來、`GameSessionRuntime.localizer` 只建立一次。Full Verification Boss 戰 129 列指令每幀 0.47 → 0.50 ms。
+- **Demo**：Full Verification 的 zh-TW 表加入引擎的繁中與 demo 自己的指令名稱、技能分組、暫停選單項目與按鍵動作（`trial_world.py` 的 `MENU_ZH`，`project.asteria.json` 只改了 zh-TW 表）；預設仍是英文，學者 Lin 或 設定 ▸ 語言 可以切換。
+
+**測試：** `tests/test_built_in_text.py`（21 項）：掃描原始碼，畫面用的每個鍵都在清單裡且英文一致、清單裡的每個鍵都有畫面在用；引擎繁中涵蓋每個鍵且佔位符一致；沒有翻譯表時戰鬥指令、提示與逃跑原因是英文；翻譯表一個鍵就改掉畫出的字（id 不變、沒寫的鍵維持英文）；預設語系的表可改名；指令頁名稱與技能分組；勝利頁與設定的開／關；商店拒絕訊息；暫停、設定、標題、遊戲結束畫面畫出中文；全形字寬、切字與換行（英文換行和舊算法逐字相同）；中文戰鬥選單列的寬度等於兩倍字母；主畫面與戰鬥畫面的中文和游標同高、字級；skin 字型有中文時自己畫；編輯器翻譯頁列出全部鍵、編輯、清空、填入引擎繁中、專案名稱、介面翻譯；demo 的 zh-TW 表完整；鍵清單文件是最新的。完整測試 3132 通過、1 略過、0 失敗（`pytest -q`，約 3 分鐘）；`ruff check`、`ruff format --check` 乾淨。
+
+**實機證據：**
+- 截圖從乾淨副本拍（`git archive HEAD` 加上這一批的檔案與編好的 kernel；工作目錄有其他 session 未提交的改動）。
+- `scripts/built_in_text_live_check.py`（Cocoa 視窗，真的按鍵）PASS，21 項檢查全過：`d52_zh_title.png`、`d52_zh_field.png`、`d52_zh_pause.png`、`d52_zh_settings.png`、`d52_zh_slots.png`、`d52_zh_status.png`、`d52_zh_battle_menu.png`、`d52_zh_battle_skills.png`、`d52_zh_battle_skill_help.png`、`d52_zh_battle_disabled.png`、`d52_zh_battle_target.png`、`d52_zh_victory.png`、`d52_zh_victory_hero.png`、`d52_zh_game_over.png`，英文對照 `d52_en_pause.png`、`d52_en_battle_menu.png`；每個畫面畫出的字記在 `d52_built_in_text_results.json`。
+- 編輯器（Cocoa）：`d52_editor_translations.png`（中文介面的翻譯頁：專案自訂的鍵與標題畫面的內建字）、`d52_editor_translations_menu_names.png`（Command Menu Pages 的名稱與中文）；`editor_ui_audit.py` 的 Translations 頁在英文與中文介面、1600×1000 與 1100×700 都 0 缺陷（只有整頁要上下捲）。
+- **沒有翻譯表的畫面不變**：新舊引擎（舊的＝HEAD 版本的這批檔案＋工作目錄其他檔案）各畫 12 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、遊戲結束、存檔、狀態、戰鬥指令、技能清單），Octopath、Complex Reference（都沒有表）與英文的 Full Verification 共 36 張逐像素相同。
+
+**限制：**
+- 專案資料的名稱和說明（角色、技能、道具、狀態、敵人、任務、商店、勝利頁的敵人與貨幣 id、技能說明）照作者寫的顯示；要多語系得另做「資料翻譯」。
+- 開發用的錯誤維持英文：`unknown …`、資料設定錯誤、技能樹的條件原因（`insufficient ap: requires …`）、工坊（測試用畫面）的精煉錯誤、捕獲拒絕裡的 id。
+- 破防以外的「失去回合」狀態格（例如 SLEEP）還是狀態 id 的大寫。
+- 中文用系統字型（macOS STHeiti、Windows 微軟正黑體、Linux Noto）；沒有 CJK 字型的機器會顯示方框，匯出不附中文字型（skin 字型本身有中文就沒問題）。
+- 寵物改名的輸入只收 KEYDOWN 字元，中文輸入法的組字還不能用。
+- 既有、與翻譯無關：勝利時戰鬥畫面自己的結果面板在 VictoryScreen 後面、最後的指令選單停在畫面上；選中技能列名稱和花費會黏在一起（D49／D51 已記）。
+
+**狀態：** 這一批的 commit。

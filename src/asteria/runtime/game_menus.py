@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.rpg.built_in_text import translated
+
 PAUSE_OPTIONS = (
     ("resume", "Resume"),
     ("status", "Status / Items / Equipment / Skills"),
@@ -26,6 +28,12 @@ PAUSE_OPTIONS = (
 GAME_OVER_OPTIONS = (("load", "Load Last Save"), ("title", "Return to Title"))
 
 
+def text_keys(prefix, options):
+    """The translation key of each fixed menu option: ``pause.resume`` for ("resume", ...)
+    (``rpg.built_in_text``); the option's own label is the English shown without one."""
+    return {option_id: f"{prefix}.{option_id}" for option_id, _ in options}
+
+
 def _price_text(prices):
     return (
         " + ".join(f"{amount:g} {currency}" for currency, amount in sorted(prices.items())) or "—"
@@ -33,10 +41,19 @@ def _price_text(prices):
 
 
 class MenuCursor:
-    def __init__(self, options, icons=None):
+    def __init__(self, options, icons=None, keys=None):
         self.options = tuple(options)
         self.index = 0
         self.icons = dict(icons or {})  # option id -> icon id: rows that show a picture
+        self.keys = dict(keys or {})  # option id -> translation key (a built-in label)
+
+    def labels(self, tr):
+        """``(option id, label)`` as the player reads them: built-in labels through ``tr``
+        (``GameSessionRuntime.tr``), a project's own (menu entries) as written."""
+        return tuple(
+            (key, tr(self.keys[key], label) if key in self.keys else label)
+            for key, label in self.options
+        )
 
     def move(self, delta):
         if self.options:
@@ -127,9 +144,12 @@ class ShopScreen:
         try:
             result = (self.game.buy if self.tab == "buy" else self.game.sell)(row.item_id)
         except ShopError as exc:
-            self.message = str(exc)
+            self.message = translated(exc, self.game.tr)
             return None
-        self.message = f"{'Bought' if self.tab == 'buy' else 'Sold'} {row.name}"
+        if self.tab == "buy":
+            self.message = self.game.tr("shop.bought", "Bought {name}", name=row.name)
+        else:
+            self.message = self.game.tr("shop.sold", "Sold {name}", name=row.name)
         self.index = min(self.index, max(0, len(self.rows()) - 1))
         return result
 
@@ -240,13 +260,22 @@ class CraftingScreen:
         try:
             result = self.game.craft(payload, station=self.station, rng=rng)
         except ValueError as exc:
-            self.message = str(exc)
+            self.message = translated(exc, self.game.tr)
             return None
-        made = ", ".join(f"{self._name(k)} x{n}" for k, n in result.produced) or "nothing"
-        if result.success:
-            self.message = f"Crafted {made}" + (f" ({result.quality})" if result.quality else "")
+        tr = self.game.tr
+        made = ", ".join(f"{self._name(k)} x{n}" for k, n in result.produced)
+        made = made or tr("crafting.nothing", "nothing")
+        if result.success and result.quality:
+            self.message = tr(
+                "crafting.crafted_quality",
+                "Crafted {items} ({quality})",
+                items=made,
+                quality=result.quality,
+            )
+        elif result.success:
+            self.message = tr("crafting.crafted", "Crafted {items}", items=made)
         else:
-            self.message = f"Crafting failed — got {made}"
+            self.message = tr("crafting.failed", "Crafting failed — got {items}", items=made)
         return result
 
     def close(self):
@@ -260,7 +289,13 @@ def achievement_rows(game):
     for key, achievement in sorted(game.project.rpg_database.achievements.items()):
         done = key in unlocked
         if achievement.hidden and not done:
-            rows.append(("???", "Hidden achievement", False))
+            rows.append(
+                (
+                    game.tr("achievements.hidden_name", "???"),
+                    game.tr("achievements.hidden", "Hidden achievement"),
+                    False,
+                )
+            )
         else:
             rows.append((achievement.display_name, achievement.description, done))
     return tuple(rows)
@@ -276,7 +311,7 @@ def bestiary_rows(game):
     for enemy_id, enemy in sorted(db.enemies.items()):
         entry = game.world.bestiary.get(enemy_id)
         if not entry or not entry.get("seen"):
-            rows.append(("???", 0, 0, 0, (), (), ()))
+            rows.append((game.tr("bestiary.unseen", "???"), 0, 0, 0, (), (), ()))
             continue
         known = entry.get("defeated", 0) > 0
         drops = []
@@ -330,11 +365,16 @@ class GameSettings:
             self.show_battle_log = not self.show_battle_log
         return self
 
-    def value_text(self, key):
+    def value_text(self, key, tr=None):
+        """The value shown beside an option; ``tr`` (``GameSessionRuntime.tr``) words On / Off
+        in the player's language."""
         if key in ("music_volume", "effects_volume"):
             return f"{round(getattr(self, key) * 100):d}%"
         if key == "show_battle_log":
-            return "On" if self.show_battle_log else "Off"
+            on = self.show_battle_log
+            if tr is None:
+                return "On" if on else "Off"
+            return tr("settings.on", "On") if on else tr("settings.off", "Off")
         return ""
 
     def apply(self, mixer):

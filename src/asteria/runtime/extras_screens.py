@@ -6,6 +6,8 @@ ends it. They read the session and the project's data and know no game.
 
 from __future__ import annotations
 
+from asteria.rpg.built_in_text import translated
+
 MUTED, TITLE, GOOD = (150, 160, 180), (255, 220, 124), (130, 230, 150)
 
 
@@ -18,6 +20,10 @@ class _Screen:
     @property
     def game(self):
         return self.rt.game
+
+    def tr(self, key, english, **params):
+        """The screen's own words in the player's language (``rpg.built_in_text``)."""
+        return self.rt.game.tr(key, english, **params)
 
     def _move(self, count):
         inp = self.rt.input
@@ -50,11 +56,13 @@ class BacklogScreen(_Screen):
     def draw(self):
         rt = self.rt
         rt.screen.fill((10, 12, 20))
-        rt.text("Message Log", 36, 22, size=34, color=TITLE)
-        rt.text("Up / Down: scroll   Esc: back", 36, 62, size=18, color=MUTED)
+        rt.text(self.tr("backlog.title", "Message Log"), 36, 22, size=34, color=TITLE)
+        hint = self.tr("backlog.hint", "Up / Down: scroll   Esc: back")
+        rt.text(hint, 36, 62, size=18, color=MUTED)
         top, entries = self.visible()
         if not entries:
-            rt.text("Nothing has been said yet.", 36, 110, size=22, color=MUTED)
+            empty = self.tr("backlog.empty", "Nothing has been said yet.")
+            rt.text(empty, 36, 110, size=22, color=MUTED)
             return
         y = 100
         for offset, entry in enumerate(entries):
@@ -103,24 +111,26 @@ class MusicRoomScreen(_Screen):
     def draw(self):
         rt = self.rt
         rt.screen.fill((10, 12, 20))
-        rt.text("Music Room", 36, 22, size=34, color=TITLE)
-        rt.text("Up / Down: choose   Enter: play   Esc: back", 36, 62, size=18, color=MUTED)
+        rt.text(self.tr("music.title", "Music Room"), 36, 22, size=34, color=TITLE)
+        hint = self.tr("music.hint", "Up / Down: choose   Enter: play   Esc: back")
+        rt.text(hint, 36, 62, size=18, color=MUTED)
         rows = self.tracks()
         if not rows:
-            rt.text("There are no tracks.", 36, 110, size=22, color=MUTED)
+            rt.text(self.tr("music.empty", "There are no tracks."), 36, 110, size=22, color=MUTED)
             return
         for i, (track, _) in enumerate(rows):
             open_ = self.unlocked(track)
             y = 100 + i * 36
             selected = i == min(self.index, len(rows) - 1)
-            name = track.name if open_ else "? ? ?"
+            name = track.name if open_ else self.tr("music.locked", "? ? ?")
             color = (255, 255, 255) if selected else ((190, 196, 210) if open_ else (96, 102, 120))
             rt.text(">" if selected else "", 22, y, size=26, color=color)
             # an opened track shows its picture; a closed one keeps it secret
             shown = open_ and rt._draw_icon(track.icon_id, 36, y - 3, 28)
             rt.text(name, 72 if shown else 44, y, size=26, color=color)
             if track.track_id == self.playing:
-                rt.text("PLAYING", rt.width - 140, y + 4, size=20, color=GOOD)
+                playing = self.tr("music.playing", "PLAYING")
+                rt.text(playing, rt.width - 140, y + 4, size=20, color=GOOD)
             elif open_ and track.note:
                 rt.text(track.note, rt.width - 360, y + 6, size=18, color=MUTED)
 
@@ -150,17 +160,23 @@ class CreditsScreen(_Screen):
         rt = self.rt
         rt.screen.fill((10, 12, 20))
         pages = self.pages()
+        title = self.tr("credits.title", "Credits")
         if not pages:
-            rt.text("Credits", 36, 22, size=34, color=TITLE)
+            rt.text(title, 36, 22, size=34, color=TITLE)
             return
         page = pages[min(self.index, len(pages) - 1)]
-        rt.text(page.title or "Credits", rt.width / 2, 60, size=40, color=TITLE, center=True)
+        rt.text(page.title or title, rt.width / 2, 60, size=40, color=TITLE, center=True)
         for row, line in enumerate(page.lines):
             rt.text(
                 line, rt.width / 2, 130 + row * 30, size=24, color=(230, 232, 240), center=True
             )
         rt.text(
-            f"Left / Right: page   {self.index + 1}/{len(pages)}   Esc: back",
+            self.tr(
+                "credits.hint",
+                "Left / Right: page   {page}/{pages}   Esc: back",
+                page=self.index + 1,
+                pages=len(pages),
+            ),
             rt.width / 2,
             rt.height - 36,
             size=18,
@@ -214,14 +230,17 @@ class AbilitySlotsScreen(_Screen):
             else:
                 self.game.equip_ability(actor_id, ability_id)
         except GameSessionError as exc:
-            self.message, self.message_left = str(exc), 2.5
+            self.message, self.message_left = translated(exc, self.game.tr), 2.5
 
     def draw(self):
         rt = self.rt
         rt.screen.fill((10, 12, 20))
-        rt.text("Skill Slots", 36, 22, size=34, color=TITLE)
+        rt.text(self.tr("skill_slots.title", "Skill Slots"), 36, 22, size=34, color=TITLE)
         rt.text(
-            "Up / Down: choose   Enter: equip / remove   Left / Right: member   Esc: back",
+            self.tr(
+                "skill_slots.hint",
+                "Up / Down: choose   Enter: equip / remove   Left / Right: member   Esc: back",
+            ),
             36,
             62,
             size=18,
@@ -229,17 +248,24 @@ class AbilitySlotsScreen(_Screen):
         )
         actor_id = self.actor_id()
         if actor_id is None:
-            rt.text("No party members.", 36, 110, size=22, color=MUTED)
+            empty = self.tr("skill_slots.no_party", "No party members.")
+            rt.text(empty, 36, 110, size=22, color=MUTED)
             return
         actor = self.game.project.rpg_database.actors.get(actor_id)
         equipped, capacity = self.game.ability_slots(actor_id)
         name = actor.display_name if actor is not None else actor_id
-        rt.text(
-            f"{name}   Slots {len(equipped)}/{capacity}", 36, 96, size=24, color=(255, 255, 255)
+        slots = self.tr(
+            "skill_slots.count",
+            "{name}   Slots {used}/{capacity}",
+            name=name,
+            used=len(equipped),
+            capacity=capacity,
         )
+        rt.text(slots, 36, 96, size=24, color=(255, 255, 255))
         learned = self.learned(actor_id)
         if not learned:
-            rt.text("Nothing learned yet.", 36, 140, size=22, color=MUTED)
+            empty = self.tr("skill_slots.nothing", "Nothing learned yet.")
+            rt.text(empty, 36, 140, size=22, color=MUTED)
         library = self.game.project.gameplay_library.abilities
         for row, ability_id in enumerate(learned):
             definition = library.get(ability_id)
@@ -250,7 +276,8 @@ class AbilitySlotsScreen(_Screen):
             y = 140 + row * 32
             shown = rt._draw_icon(getattr(definition, "icon_id", ""), 36, y - 3, 28)
             rt.menu_row(label, 72 if shown else 36, y, selected=current, size=24, color=color)
-            rt.text("EQUIPPED" if on else "", rt.width - 200, y, size=20, color=GOOD)
+            mark = self.tr("skill_slots.equipped", "EQUIPPED") if on else ""
+            rt.text(mark, rt.width - 200, y, size=20, color=GOOD)
         if self.message_left > 0:
             rt.text(
                 self.message,

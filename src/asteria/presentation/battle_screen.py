@@ -110,6 +110,11 @@ class BattleScreenRuntime:
         self.placement_by_member: dict[str, str] = {}
         self.current_member_id: str | None = None
         self.display_names: dict[str, str] = {}
+        # a menu category (an id) -> the name drawn for it (a translated built-in one)
+        self.category_names: dict[str, str] = {}
+        # (key, english, **params) -> the text drawn: the game's translations of the screen's
+        # own words ("Ready", "Filter: ..."); None keeps the English
+        self.translate = None
         self.member_heights: dict[str, float] = {}
         # (left, top, right, bottom) of each figure's visible pixels round its feet, logical
         # units: labels keep clear of the figure as it is drawn, not of a guess at it
@@ -244,6 +249,8 @@ class BattleScreenRuntime:
             member_heights=self.member_heights,
             member_extents=self.member_extents,
             overhead_hidden=self.overhead_hidden,
+            category_names=self.category_names,
+            translate=self.translate,
         )
 
     def render(self, base_camera, *, ui_renderer: BattleUiRenderer, texture_renderer=None):

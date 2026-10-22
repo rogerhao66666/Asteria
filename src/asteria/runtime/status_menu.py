@@ -17,6 +17,12 @@ from asteria.presentation.rpg_equipment_screen import EquipmentScreenRuntime
 from asteria.presentation.rpg_inventory_screen import InventoryScreenRuntime
 
 TABS = ("status", "items", "equipment", "skills")
+TAB_WORDS = {tab: f"status.tab.{tab}" for tab in TABS}  # the words drawn for the tabs
+# why an item was not used (``ItemUseResult.reason`` codes): the words drawn for them
+USE_REASONS = {
+    "not_in_inventory": "status.reason.not_in_inventory",
+    "effect_rejected": "status.reason.effect_rejected",
+}
 PROFILE_CATEGORY = {
     "status": "rpg_character_screen",
     "items": "rpg_inventory_screen",
@@ -108,8 +114,10 @@ class StatusMenu:
         view = self.view()
         if view is None:
             return []
+        tr = self.game.tr
         if self.tab == "items":
             equipment = self.game.project.rpg_database.equipment
+            usable = "  " + tr("status.usable", "(use)")
             return [
                 (
                     "item",
@@ -117,7 +125,7 @@ class StatusMenu:
                     equipment[i.item_id].display_name
                     if i.label == i.item_id and i.item_id in equipment
                     else i.label,
-                    f"x{i.count}" + ("  (use)" if i.usable else ""),
+                    f"x{i.count}" + (usable if i.usable else ""),
                 )
                 for i in view.items
                 if i.count > 0
@@ -138,13 +146,14 @@ class StatusMenu:
                 ("candidate", c.equipment_id, c.label, f"→ {c.slot_id}") for c in view.candidates
             ]
             return rows
+        learned, active = tr("status.learned", "learned"), tr("status.active", "active")
         rows = [
-            ("ability", a.ability_id, a.label, "learned" if a.learned else "")
+            ("ability", a.ability_id, a.label, learned if a.learned else "")
             for a in view.abilities
             if a.learned or a.resolved
         ]
         rows += [
-            ("passive", p.passive_id, p.label, "active" if p.active else "") for p in view.passives
+            ("passive", p.passive_id, p.label, active if p.active else "") for p in view.passives
         ]
         return rows
 
@@ -176,18 +185,30 @@ class StatusMenu:
         if not rows:
             return None
         kind, key, label, _ = rows[self.row % len(rows)]
+        tr = self.game.tr
         if kind == "item":
             result = self.game.use_item(self.actor_id, key)
-            self.message = (
-                f"Used {label}" if result.used else f"{label} can't be used ({result.reason})"
-            )
+            if result.used:
+                self.message = tr("status.used", "Used {name}", name=label)
+            else:
+                code = str(result.reason)
+                reason = tr(USE_REASONS[code], code) if code in USE_REASONS else code
+                self.message = tr(
+                    "status.cannot_use",
+                    "{name} can't be used ({reason})",
+                    name=label,
+                    reason=reason,
+                )
             return result
         if kind == "candidate":
             self.game.equip_from_inventory(self.actor_id, key)
-            self.message = f"Equipped {label}"
+            self.message = tr("status.equipped", "Equipped {name}", name=label)
             return key
         if kind == "slot":
             removed = self.game.unequip_to_inventory(self.actor_id, key)
-            self.message = f"Unequipped {removed}" if removed else "Nothing to unequip"
+            if removed:
+                self.message = tr("status.unequipped", "Unequipped {name}", name=removed)
+            else:
+                self.message = tr("status.nothing_to_unequip", "Nothing to unequip")
             return removed
         return None

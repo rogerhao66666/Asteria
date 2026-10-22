@@ -97,6 +97,38 @@ def font_for_text(pg, font, value, cache, size):
     return cache[key]
 
 
+def cjk_size(font):
+    """The size to draw Chinese, Japanese or Korean text at beside ``font`` (a face that has
+    no CJK characters): a quarter taller than the face's line. Asked for the same size, a system
+    CJK face came out 45 % larger than pygame's built-in face (which draws smaller than asked)
+    and towered over the Latin text beside it."""
+    return max(1, round(font.get_height() * 1.25))
+
+
+def _centre(font, char, cache):
+    """How far below the top of ``font``'s line the middle of ``char`` stands, in pixels."""
+    key = (id(font), "centre", char)
+    value = cache.get(key)
+    if value is None:
+        metrics = font.metrics(char)
+        if metrics and metrics[0] is not None:
+            _, _, low, high, _ = metrics[0]
+            value = font.get_ascent() - (high + low) / 2
+        else:  # a face without the character: the middle of its line
+            value = font.get_height() / 2
+        cache[key] = value
+    return value
+
+
+def glyph_shift(pg, font, cjk_font, cache):
+    """Pixels to move a line drawn in ``cjk_font`` down (negative: up) so its characters stand
+    level with the capitals of ``font`` drawn from the same top: a cursor centred on the
+    capitals then sits level with a Chinese label too. ``cache`` keeps what was measured."""
+    if cjk_font is font:
+        return 0
+    return round(_centre(font, "H", cache) - _centre(cjk_font, "中", cache))
+
+
 def renderable_text(pg, font, value, cache):
     """``value`` with characters ``font`` cannot draw (empty boxes) replaced by ASCII fallbacks.
 
@@ -439,13 +471,14 @@ class PygameBattleUiBackend:
             self._draw_mark(text, color, size)
             return
         key = (size, text.text, self._rgb(color))
-        image = self._text_images.get(key)
-        if image is None:
-            image = self._text_image(text.text, color, size)
+        drawn = self._text_images.get(key)
+        if drawn is None:
+            drawn = self._text_image(text.text, color, size)
             if len(self._text_images) >= self.TEXT_IMAGES:
                 self._text_images.clear()  # changing numbers: start over, no slow bookkeeping
-            self._text_images[key] = image
-        x, y = self._s(text.x), self._s(text.y)
+            self._text_images[key] = drawn
+        image, shift = drawn
+        x, y = self._s(text.x), self._s(text.y) + shift
         if text.align == "center":
             x -= image.get_width() // 2
         elif text.align == "right":
@@ -453,14 +486,28 @@ class PygameBattleUiBackend:
         self.screen.blit(image, (x, y))
 
     def _text_image(self, value, color, size):
-        font = self._font(size)
-        font = font_for_text(self.pg, font, value, self._cjk_fonts, self._s(size))
+        """The drawn line and how far to move it down: Chinese, Japanese and Korean text is
+        drawn in a system CJK face at the size the UI face really has (``point_size``: the
+        built-in face is drawn smaller than asked, a skin's face by its ``font_scale``), level
+        with the capitals of that face - so it takes the room the layout counted for it and a
+        row's cursor sits level with it. A skin's face that has the characters itself (a Chinese
+        pixel font) draws them."""
+        face = self._font(size)
+        em = getattr(face, "point_size", None) or self._s(size)
+        own = self.font_name is not None and all(
+            char_in_font(self.pg, face, c, self._glyph_cache)
+            for c in set(value)
+            if contains_cjk(c)
+        )
+        font = face if own else font_for_text(self.pg, face, value, self._cjk_fonts, em)
+        shift = glyph_shift(self.pg, face, font, self._glyph_cache)
         if self.font_name is None:
-            return font.render(self._renderable(font, value), True, self._rgb(color))
+            return font.render(self._renderable(font, value), True, self._rgb(color)), shift
         # a skin's own face: the built-in one fills in what it cannot draw
-        return render_with_fallback(
+        image = render_with_fallback(
             self.pg, font, value, self._rgb(color), self._glyph_cache, self._fallback_font
         )
+        return image, shift
 
     # Set by the battle presentation adapter: draws one VFX cue (sprite sheet playback).
     vfx_drawer = None

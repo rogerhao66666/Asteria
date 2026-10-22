@@ -24,23 +24,29 @@ class NetworkBagScreen:
             (p for p in state.get("players", []) if p["player_id"] == bridge.player_id), {}
         )
         x, y = 24, 80
+        tr = rt.game.tr
         rt.panel((x, y, rt.width - 48, rt.height - 110))
-        rt.text("Co-op Inventory", x + 18, y + 14, size=28, color=(255, 220, 124))
-        rt.text(f"Experience: {local.get('experience', 0)}", x + 18, y + 52, size=20)
+        rt.text(
+            tr("coop.bag_title", "Co-op Inventory"), x + 18, y + 14, size=28, color=(255, 220, 124)
+        )
+        experience = tr(
+            "coop.experience", "Experience: {amount}", amount=local.get("experience", 0)
+        )
+        rt.text(experience, x + 18, y + 52, size=20)
         inventory = local.get("inventory", {})
         lines = [
             f"{item.replace('_', ' ').title()} x {quantity}"
             for item, quantity in sorted(inventory.items())
-        ] or ["No items yet"]
+        ] or [tr("coop.no_items", "No items yet")]
         for index, line in enumerate(lines[:6]):
             rt.text(line, x + 18, y + 86 + index * 26, size=20)
         rt.text(
-            "Boss reward: full XP to contributors; loot to one contributor",
+            tr("coop.boss_rule", "Boss reward: full XP to contributors; loot to one contributor"),
             x + 18,
             rt.height - 76,
             size=14,
         )
-        rt.text("B / Esc: close", x + 18, rt.height - 52, size=16)
+        rt.text(tr("coop.close", "B / Esc: close"), x + 18, rt.height - 52, size=16)
 
 
 class NetworkCraftingScreen(CraftingScreen):
@@ -58,7 +64,7 @@ class NetworkCraftingScreen(CraftingScreen):
         recipe = self.game.project.rpg_database.composition_recipes[row.recipe_id]
         payload = {step.step_id: list(step.item_ids) for step in recipe.selections}
         command_id = self.game.craft(payload, station=self.station)
-        self.message = "Craft requested from server"
+        self.message = self.game.tr("coop.craft_requested", "Craft requested from server")
         return command_id
 
     def close(self):
@@ -73,7 +79,7 @@ class NetworkSkillTreeScreen(SkillTreeScreen):
         if graph is None or self.node_id is None:
             return False
         self.rt.game.allocate_progression(self.actor_id, graph.graph_id, self.node_id)
-        self._say("Learning requested from server")
+        self._say(self.rt.game.tr("coop.learn_requested", "Learning requested from server"))
         return True
 
     def handle(self, dt=0.0, events=()):
@@ -96,12 +102,18 @@ class NetworkSkillTreeScreen(SkillTreeScreen):
                 self.rt.multiplayer_bridge.send_command(
                     "bind_skill", {"action": action, "ability_id": abilities[-1]}
                 )
-                self._say(f"Slot {number} binding requested from server")
+                self._say(
+                    self.rt.game.tr(
+                        "coop.bind_requested",
+                        "Slot {slot} binding requested from server",
+                        slot=number,
+                    )
+                )
 
     def draw(self):
         super().draw()
         self.rt.text(
-            "1–4: bind learned skill to slot",
+            self.rt.game.tr("coop.bind_hint", "1–4: bind learned skill to slot"),
             36,
             self.rt.height - 48,
             size=16,

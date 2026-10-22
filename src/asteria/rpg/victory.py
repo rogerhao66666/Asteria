@@ -13,6 +13,11 @@ def _round(value):
     return round(float(value), 4)
 
 
+def _english(key, english, **params):
+    """The English of a line (no translations): what ``pages`` shows without a ``tr``."""
+    return english.format(**params) if params else english
+
+
 @dataclass(frozen=True, slots=True)
 class ActorAftermath:
     actor_id: str
@@ -45,6 +50,8 @@ class AftermathPage:
     title: str
     lines: tuple[str, ...] = ()
     actor_id: str = ""
+    # indexes of the lines that stand out (a level gained, a skill learned)
+    highlights: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,8 +62,11 @@ class VictoryAftermath:
     defeated: tuple[str, ...] = ()
     bonus_notes: tuple[str, ...] = ()  # e.g. "Overkill x1.5"
 
-    def pages(self, *, item_names=None, currency_names=None, stat_names=None):
-        """Pages in display order: rewards, one per hero that gained experience, then drops."""
+    def pages(self, *, item_names=None, currency_names=None, stat_names=None, tr=None):
+        """Pages in display order: rewards, one per hero that gained experience, then drops.
+        ``tr(key, english, **params)`` (``GameSessionRuntime.tr``) words the pages' own text in
+        the player's language; without it they are English."""
+        tr = tr or _english
         item_names = item_names or {}
         currency_names = currency_names or {}
         stat_names = stat_names or {}
@@ -64,24 +74,43 @@ class VictoryAftermath:
         lines = [f"{currency_names.get(k, k)}  +{v:g}" for k, v in self.currencies if v]
         lines += list(self.bonus_notes)
         if self.defeated:
-            lines.insert(0, "Defeated: " + ", ".join(self.defeated))
-        pages.append(AftermathPage("rewards", "Victory", tuple(lines)))
+            lines.insert(
+                0, tr("victory.defeated", "Defeated: {names}", names=", ".join(self.defeated))
+            )
+        pages.append(AftermathPage("rewards", tr("victory.title", "Victory"), tuple(lines)))
         for actor in self.actors:
             if not (actor.experience_gained or actor.leveled_up):
                 continue
-            lines = [f"EXP  +{actor.experience_gained:g}"]
+            lines = [tr("victory.exp", "EXP  +{amount}", amount=f"{actor.experience_gained:g}")]
+            highlights = []
             if actor.leveled_up:
-                lines.append(f"Level {actor.level_before} -> {actor.level_after}")
+                highlights.append(len(lines))
+                lines.append(
+                    tr(
+                        "victory.level",
+                        "Level {before} -> {after}",
+                        before=actor.level_before,
+                        after=actor.level_after,
+                    )
+                )
                 for stat, before, after in actor.stat_changes:
                     label = stat_names.get(stat, stat)
                     lines.append(f"{label}  {before:g} -> {after:g}")
-                lines += [f"Learned {a}" for a in actor.new_abilities]
+                for ability in actor.new_abilities:
+                    highlights.append(len(lines))
+                    lines.append(tr("victory.learned", "Learned {name}", name=ability))
             pages.append(
-                AftermathPage("actor", actor.name or actor.actor_id, tuple(lines), actor.actor_id)
+                AftermathPage(
+                    "actor",
+                    actor.name or actor.actor_id,
+                    tuple(lines),
+                    actor.actor_id,
+                    tuple(highlights),
+                )
             )
         if self.items:
             lines = tuple(f"{item_names.get(k, k)}  x{n}" for k, n in self.items)
-            pages.append(AftermathPage("drops", "Spoils", lines))
+            pages.append(AftermathPage("drops", tr("victory.spoils", "Spoils"), lines))
         return tuple(pages)
 
     def to_data(self):

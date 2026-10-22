@@ -26,10 +26,24 @@ returns
 from __future__ import annotations
 
 from asteria.presentation.battle_action_menu import BattleActionEntry
+from asteria.rpg.built_in_text import translated
 from asteria.rpg.targeting import TargetRelation
 
 CATEGORIES = ("Skills", "Items")
 ROOT_CATEGORIES = ("Attack", "Skills", "Items")
+# The built-in command and menu names are also their ids (the menu's categories, ``root:<name>``
+# rows); only what is drawn is translated, by these keys (``rpg.built_in_text``)
+COMMAND_WORDS = {
+    "Attack": "battle.command.attack",
+    "Skills": "battle.command.skills",
+    "Items": "battle.command.items",
+    "Escape": "battle.command.escape",
+    "More": "battle.command.more",
+    "Back": "battle.command.back",
+    "Command": "battle.menu.command",
+    "Target": "battle.menu.target",
+    "Form": "battle.menu.form",
+}
 
 
 def _constant(formula):
@@ -49,6 +63,7 @@ class BattleCommands:
         # top-level commands (layer_id = the command); past max_primary_layers they move to a
         # More page
         self.pages = pages
+        self._groups_seen = set()  # the project's own skill groups met so far (menu_category)
         self.reset()
 
     @property
@@ -66,6 +81,7 @@ class BattleCommands:
             name = getattr(definition, "menu_category", "") if definition is not None else ""
             if name and name not in self.BUILT_IN and name not in found:
                 found.append(name)
+        self._groups_seen.update(found)  # their names are drawn by battle.group.<name>
         return tuple(found)
 
     def categories_for(self, actor_id):
@@ -108,6 +124,26 @@ class BattleCommands:
         self.choices = {}  # step id -> chosen option ids (Command Input Steps)
 
     # -- what the menu shows ----------------------------------------------------------------------
+    def category_label(self, name):
+        """A command or menu name as the player reads it: a built-in one through the project's
+        translations (``COMMAND_WORDS``), a skill group of the project's own (``menu_category``)
+        by ``battle.group.<name>``; anything else (a recipe or input step) as written."""
+        key = COMMAND_WORDS.get(name)
+        if key:
+            return self.game.tr(key, name)
+        if name in self._groups_seen:
+            return self.game.tr(f"battle.group.{name}", name)
+        return name
+
+    def command_label(self, name):
+        """A top-level command's name: the Command Menu Pages layer's own label (a project's
+        rename, ``Fight``) through ``battle.layer.<layer id>`` when the pages name it, else the
+        command's name as ``category_label`` words it."""
+        layer = self._layer(name)
+        if layer is None:
+            return self.category_label(name)
+        return self.game.tr(f"battle.layer.{name}", layer.label)
+
     def _name(self, ability_id):
         meta = self.labels.get(ability_id) or {}
         return meta.get("label") or ability_id.replace("_", " ").title()
@@ -197,38 +233,45 @@ class BattleCommands:
         skills += 1 if self.game.capture_targets() else 0
         items = sum(1 for _ in self._usable_items())
         rows = []
-        groups = [("Attack", weapons, "Choose a weapon")]
-        groups.append(("Skills", skills, "Abilities, concoct, capture"))
+        tr = self.game.tr
+        groups = [("Attack", weapons, tr("battle.hint.attack", "Choose a weapon"))]
+        groups.append(("Skills", skills, tr("battle.hint.skills", "Abilities, concoct, capture")))
         for name in self.custom_categories(actor_id):
-            groups.append((name, len(abilities.get(name, ())), "Abilities"))
-        groups.append(("Items", items, "Use an item from the bag"))
+            groups.append(
+                (name, len(abilities.get(name, ())), tr("battle.hint.group", "Abilities"))
+            )
+        groups.append(("Items", items, tr("battle.hint.items", "Use an item from the bag")))
         run = self.game.escape_chance()
         if run is not None:
-            groups.append(("Escape", 1, f"{round(run * 100)}% to get away"))
+            hint = tr("battle.hint.escape", "{chance}% to get away", chance=round(run * 100))
+            groups.append(("Escape", 1, hint))
         if self.pages is not None:
             by_name = {g[0]: g for g in groups}
             groups = [by_name[name] for name in self._paged(by_name)]
             top = self.pages.max_primary_layers
             if len(groups) > top:  # the rest wait on a More page
                 if self.more:
-                    groups = groups[top - 1 :] + [("Back", 1, "The first commands")]
+                    back = tr("battle.hint.back", "The first commands")
+                    groups = groups[top - 1 :] + [("Back", 1, back)]
                 else:
                     rest = len(groups) - (top - 1)
-                    groups = groups[: top - 1] + [("More", rest, "More commands")]
+                    more = tr("battle.hint.more", "More commands")
+                    groups = groups[: top - 1] + [("More", rest, more)]
         for category, count, hint in groups:
             # the number beside a command: how many choices it opens; Escape shows its chance
             shown = (
                 f"{round(run * 100)}%" if category == "Escape" else (str(count) if count else "")
             )
-            layer = self._layer(category)
             rows.append(
                 BattleActionEntry(
                     f"root:{category}",
-                    layer.label if layer is not None else category,
+                    self.command_label(category),
                     category="Command",
                     cost_text=shown,
                     enabled=count > 0,
-                    disabled_reason="Nothing to use" if not count else "",
+                    disabled_reason=tr("battle.nothing_to_use", "Nothing to use")
+                    if not count
+                    else "",
                     detail=hint,
                     order=len(rows),
                 )
@@ -282,7 +325,7 @@ class BattleCommands:
                     enabled=not reason,
                     disabled_reason=reason,
                     detail=(
-                        "Pick ingredients"
+                        game.tr("battle.hint.concoct", "Pick ingredients")
                         if definition.concoct_station
                         else getattr(definition, "description", "")
                     ),
@@ -297,7 +340,9 @@ class BattleCommands:
             rows.append(
                 BattleActionEntry(
                     "capture",
-                    f"X  Capture ({best * 100:.0f}%)",
+                    game.tr(
+                        "battle.capture_row", "X  Capture ({chance}%)", chance=f"{best * 100:.0f}"
+                    ),
                     category="Skills",
                     order=len(rows),
                 )
@@ -309,10 +354,13 @@ class BattleCommands:
             rows.append(
                 BattleActionEntry(
                     "boost",
-                    f"Boost x{self.boost + 1}",
+                    game.tr("battle.boost_row", "Boost x{level}", level=self.boost + 1),
                     category="Skills",
                     cost_text=f"{name} {amount:g}",
-                    detail="Left / Right (or Enter here) set the boost for the next action",
+                    detail=game.tr(
+                        "battle.hint.boost",
+                        "Left / Right (or Enter here) set the boost for the next action",
+                    ),
                     order=len(rows),
                 )
             )
@@ -443,7 +491,11 @@ class BattleCommands:
                     category=step.label,
                     cost_text=f"{len(picked)}/{step.maximum_selections}",
                     enabled=enough,
-                    disabled_reason="" if enough else f"Pick {step.minimum_selections}",
+                    disabled_reason=""
+                    if enough
+                    else self.game.tr(
+                        "battle.pick_count", "Pick {count}", count=step.minimum_selections
+                    ),
                     order=len(rows),
                 )
             )
@@ -723,7 +775,9 @@ class BattleCommands:
             if len(self.ingredients) < len(self._steps()):
                 return False
             if self._concoct_product_ability() is None:
-                self.message = "These ingredients make nothing"
+                self.message = self.game.tr(
+                    "battle.concoct_nothing", "These ingredients make nothing"
+                )
                 self.ingredients.popitem()
                 return False
             return self._choose_target_or_act(actor_id)
@@ -759,7 +813,7 @@ class BattleCommands:
                     choices=self.choices or None,
                 )
         except Exception as exc:  # shown in the menu footer; the turn is not used
-            self.message = str(exc)
+            self.message = translated(exc, game.tr)
             self.mode, self.cursor = ("root" if self.style == "root" else "command"), 0
             self.pending, self.ingredients, self.choices = None, {}, {}
             return False

@@ -9,7 +9,9 @@ last four Game Systems categories, each designed and used by the game.
   skills, gear, the bag, pets and the bestiary; half the gold; levels capped at 40.
 * **Translations**: English and Traditional Chinese tables; Scholar Lin in Hearthfold (or
   Settings > Language) switches; area messages, the plaque, the banner and the scholar speak
-  through ``\\T[key]``.
+  through ``\\T[key]``. The Chinese table also holds the engine's own words (menus, battle,
+  victory: ``rpg.built_in_text``, filled from the engine's translation) and this game's own
+  menu names (its Command Menu Pages labels, skill groups and controls).
 * **Music Room**: the five themes, each opened by hearing it in the game (the battle theme by
   beating the Goblin Beast), each with a picture.
 """
@@ -17,6 +19,7 @@ last four Game Systems categories, each designed and used by the game.
 from __future__ import annotations
 
 from asteria.events.program import EventInstruction, EventProgram
+from asteria.rpg.built_in_text import engine_translations
 from asteria.rpg.extras import MusicTrack
 from asteria.rpg.localization import LocaleTable
 from asteria.rpg.map_rules import AreaRule, MapRuleSet
@@ -61,6 +64,32 @@ TEXT = {  # key: (English, 繁體中文)
         "Begin the Trial again with all your strength? (New Game+)",
         "要帶著現在的力量重新挑戰試煉嗎？（二周目）",
     ),
+}
+MENU_ZH = {  # this game's own menu names in Chinese (the English is the project's data)
+    "battle.layer.Attack": "攻擊",  # Command Menu Pages "trial_commands": Fight
+    "battle.layer.Skills": "技能",
+    "battle.layer.Arts": "戰技",
+    "battle.layer.Limit": "極限技",
+    "battle.layer.Combo": "連段",  # Combos
+    "battle.layer.Rites": "儀式",
+    "battle.layer.Beast": "野獸",
+    "battle.layer.Items": "道具",  # Bag
+    "battle.layer.Escape": "逃跑",  # Run
+    "battle.group.Arts": "戰技",  # skill groups (menu_category)
+    "battle.group.Limit": "極限技",
+    "battle.group.Combo": "連段",
+    "battle.group.Rites": "儀式",
+    "battle.group.Beast": "野獸",
+    "controls.action.move_up": "向上",  # input actions on the Controls screen
+    "controls.action.move_down": "向下",
+    "controls.action.move_left": "向左",
+    "controls.action.move_right": "向右",
+    "controls.action.confirm": "確定",
+    "controls.action.cancel": "取消",
+    "controls.action.interact": "互動",
+    "controls.action.menu": "選單",
+    "controls.action.reset_all": "全部重設",
+    "pause.entry.camp": "紮營",  # the pause menu entry "Make Camp"
 }
 TRACKS = (  # id (the manifest's music name), title, icon, opened by
     ("town_theme", "Hearthfold", "a_warden_charm", ""),
@@ -123,9 +152,10 @@ def data(c):
         keep_currency_share=0.5,
     )
     for index, locale in enumerate(("en", "zh-TW")):
-        db.locale_tables[locale] = LocaleTable(
-            locale, {key: texts[index] for key, texts in TEXT.items()}
-        )
+        entries = {key: texts[index] for key, texts in TEXT.items()}
+        if locale == "zh-TW":  # the engine's own words and this game's menu names too
+            entries = {**engine_translations("zh-TW"), **MENU_ZH, **entries}
+        db.locale_tables[locale] = LocaleTable(locale, entries)
     db.music_tracks.clear()
     for track_id, name, icon, opened_by in TRACKS:
         db.music_tracks[track_id] = MusicTrack(

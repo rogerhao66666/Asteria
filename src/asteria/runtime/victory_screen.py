@@ -8,10 +8,13 @@ from __future__ import annotations
 
 
 class VictoryScreen:
-    def __init__(self, aftermath, *, item_names=None, currency_names=None, stat_names=None):
+    def __init__(
+        self, aftermath, *, item_names=None, currency_names=None, stat_names=None, tr=None
+    ):
         self.aftermath = aftermath
+        self.tr = tr  # GameSessionRuntime.tr: the screen's own words in the player's language
         self.pages = aftermath.pages(
-            item_names=item_names, currency_names=currency_names, stat_names=stat_names
+            item_names=item_names, currency_names=currency_names, stat_names=stat_names, tr=tr
         )
         self.index = 0
         self.age = 0.0
@@ -45,10 +48,13 @@ class VictoryScreen:
         host.panel((x, y, box_w, box_h), fill=(12, 16, 30, 232), border=(214, 188, 110))
         host.text(page.title, x + box_w // 2, y + 30, size=34, color=(255, 226, 140), center=True)
         for i, line in enumerate(page.lines):
-            color = (255, 226, 140) if line.startswith(("Level", "Learned")) else (236, 240, 250)
+            color = (255, 226, 140) if i in page.highlights else (236, 240, 250)
             host.text(line, x + 36, y + 70 + i * 30, size=26, color=color)
         more = self.index + 1 < len(self.pages)
-        hint = "Enter: next" if more else "Enter: continue"
+        tr = self.tr or (lambda key, english: english)
+        hint = (
+            tr("victory.next", "Enter: next") if more else tr("victory.close", "Enter: continue")
+        )
         host.text(
             f"{hint}   ({self.index + 1}/{len(self.pages)})",
             x + box_w - 18,

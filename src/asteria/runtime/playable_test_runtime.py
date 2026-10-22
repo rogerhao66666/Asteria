@@ -6,6 +6,7 @@ from pathlib import Path
 
 from asteria.core import Transform
 from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
+from asteria.rpg.built_in_text import translated
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.battle_commands import BattleCommands
 from asteria.runtime.battle_extras import draw_blocks, extras_layout
@@ -33,6 +34,7 @@ from asteria.runtime.game_menus import (
     achievement_rows,
     bestiary_rows,
     quest_rows,
+    text_keys,
 )
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
@@ -43,6 +45,9 @@ from asteria.runtime.skeleton_component import SkeletonSceneRuntime
 
 WALK_ROW_BY_FACING = {"down": 0, "left": 1, "right": 2, "up": 3}
 WALK_PATTERN_SEQUENCE = (0, 1, 2, 1)
+# enemy tag kinds the bestiary groups by (``weak.fire``): the word drawn for each is a built-in
+# text (``bestiary.tag.<kind>``); any other kind shows as written
+BESTIARY_TAG_KINDS = ("weak", "resist", "immune", "absorb", "reflect", "trait")
 
 
 def walking_row_index(facing: str) -> int:
@@ -204,10 +209,16 @@ class PlayableTestRuntime:
         icons = {
             f"entry:{e.entry_id}": e.icon_id for e in db.menu_entries.values() if e.icon_id
         }  # project-defined entries may carry an icon
-        self._pause_menu = MenuCursor(options, icons)
+        built_in = [o for o in options if not o[0].startswith("entry:")]
+        keys = text_keys("pause", built_in)
+        # the project's own entries keep their label unless a table words it (pause.entry.<id>)
+        keys.update({f"entry:{e}": f"pause.entry.{e}" for e in db.menu_entries})
+        self._pause_menu = MenuCursor(options, icons, keys=keys)
         self._extra_screen = None
         self._pets_screen = None
-        self._game_over_menu = MenuCursor(GAME_OVER_OPTIONS)
+        self._game_over_menu = MenuCursor(
+            GAME_OVER_OPTIONS, keys=text_keys("game_over", GAME_OVER_OPTIONS)
+        )
         self._shop_screen = None
         self._quest_return = "field"
         self._capture_menu = False
@@ -217,7 +228,9 @@ class PlayableTestRuntime:
         settings_options = list(GameSettings.OPTIONS)
         if len(self.game.localizer.locales()) > 1:  # a translated game: the player picks one
             settings_options.insert(-2, ("language", "Language"))
-        self._settings_menu = MenuCursor(settings_options)
+        self._settings_menu = MenuCursor(
+            settings_options, keys=text_keys("settings", settings_options)
+        )
 
     def path(self, rel):
         return self.resource_root / str(rel)
@@ -506,14 +519,22 @@ class PlayableTestRuntime:
                     {"move_x": 0.0, "move_y": 0.0, "attack": False}, force=True
                 )
                 self.message = (
-                    "Co-op connected · WASD / arrows · J attack · F pickup"
+                    self.game.tr(
+                        "coop.connected_project",
+                        "Co-op connected · WASD / arrows · J attack · F pickup",
+                    )
                     if self._authoritative_project_mode
-                    else "Co-op connected · move with WASD / arrows · attack with F"
+                    else self.game.tr(
+                        "coop.connected",
+                        "Co-op connected · move with WASD / arrows · attack with F",
+                    )
                 )
                 self.message_until = self.pg.time.get_ticks() + 6000
             else:
                 self._multiplayer_error = self.multiplayer_bridge.error
-                self.message = f"Co-op offline: {self.multiplayer_bridge.error}"
+                self.message = self.game.tr(
+                    "coop.offline", "Co-op offline: {error}", error=self.multiplayer_bridge.error
+                )
                 self.message_until = self.pg.time.get_ticks() + 8000
         self._warm_start()
         return self
@@ -721,38 +742,65 @@ class PlayableTestRuntime:
 
     def text_width(self, value, size=20):
         """The width in pixels of ``value`` drawn at ``size`` (the face ``text`` uses)."""
-        f = self._fonts.get(int(size))
-        if f is None:
-            f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
-        return f.size(str(value))[0]
+        return self.text_size(value, size)[0]
+
+    def text_size(self, value, size=20):
+        """``(width, height)`` in pixels of ``value`` drawn at ``size``, in the face ``text``
+        draws it with (a system CJK face for Chinese, Japanese or Korean)."""
+        from asteria.platform.pygame_battle_ui import cjk_size, font_for_text
+
+        f = self._menu_font(size)
+        return font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f)).size(str(value))
 
     def text(self, value, x, y, *, size=20, color=(245, 245, 250), center=False, anchor=None):
         """Draw text at ``(x, y)``: top-left by default, ``center=True`` centres it, ``anchor`` is
         any pygame rect attribute (``"midleft"``, ``"midright"``, ``"bottomright"``...) placed at
-        the point - so a label can sit on the same horizontal line as a bar."""
+        the point - so a label can sit on the same horizontal line as a bar. Text drawn in the
+        CJK face (Chinese...) is placed where the built-in face's line would be, centred on the
+        same height as its capitals, so menu cursors and mixed rows stay level."""
         f = self._fonts.get(int(size))
         if f is None:
             f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
-        from asteria.platform.pygame_battle_ui import font_for_text, renderable_text
+        from asteria.platform.pygame_battle_ui import (
+            cjk_size,
+            font_for_text,
+            glyph_shift,
+            renderable_text,
+        )
 
         # rendered text is cached: HUD labels and damage numbers repeat every frame
         key = (str(value), int(size), tuple(color))
         cache = self.__dict__.setdefault("_text_cache", {})
-        surf = cache.get(key)
-        if surf is None:
+        entry = cache.get(key)
+        if entry is None:
             if len(cache) > 2048:
                 cache.clear()
-            text_font = font_for_text(self.pg, f, value, self._cjk_fonts, size)
-            surf = cache[key] = text_font.render(
+            text_font = font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f))
+            surf = text_font.render(
                 renderable_text(self.pg, text_font, value, self._glyphs), True, color
             )
+            shift = None  # the built-in face: placed as it is
+            if text_font is not f:
+                metrics = text_font.metrics("中")
+                ink = text_font.get_ascent() - metrics[0][3] if metrics and metrics[0] else 0
+                level = glyph_shift(self.pg, f, text_font, self._glyphs)
+                shift = (f.get_height(), level, ink)  # line, move to level, top of the ink
+            entry = cache[key] = (surf, shift)
+        surf, shift = entry
         rect = surf.get_rect()
+        if shift is not None:  # where the built-in face's line would go, then level with it
+            rect.height = shift[0]
         if anchor:
             setattr(rect, anchor, (int(x), int(y)))
         elif center:
             rect.center = (int(x), int(y))
         else:
             rect.topleft = (int(x), int(y))
+        if shift is not None:
+            top = rect.y + shift[1]
+            if anchor or center:  # a title or hint keeps inside its line (no cursor beside it)
+                top = max(top, rect.y - shift[2])
+            rect = self.pg.Rect(rect.x, top, *surf.get_size())
         self.screen.blit(surf, rect)
         return rect
 
@@ -929,7 +977,7 @@ class PlayableTestRuntime:
             self.pg.draw.rect(self.screen, (0, 0, 0), (0, self.height - bar, self.width, bar))
             if self.game.cutscene_skippable:
                 self.text(
-                    "Esc: skip",
+                    self.game.tr("field.skip_cutscene", "Esc: skip"),
                     self.width - 130,
                     self.height - bar + 8,
                     size=18,
@@ -1322,9 +1370,9 @@ class PlayableTestRuntime:
     def _server_save_command(self, command):
         self.multiplayer_bridge.send_command(command, {})
         self.message = (
-            f"Server {command} requested"
+            self.game.tr("coop.requested", "Server {command} requested", command=command)
             if self._multiplayer_connected()
-            else "Server connection required · F3 to retry"
+            else self.game.tr("coop.required", "Server connection required · F3 to retry")
         )
         self.message_until = self.pg.time.get_ticks() + 2500
 
@@ -1353,9 +1401,15 @@ class PlayableTestRuntime:
             self._network_input_prediction_sequences = mappings
         if sent and not self.message:
             self.message = (
-                "Co-op connected · WASD / arrows · J attack · F pickup"
+                self.game.tr(
+                    "coop.connected_project",
+                    "Co-op connected · WASD / arrows · J attack · F pickup",
+                )
                 if self._authoritative_project_mode
-                else "Co-op connected · move with WASD / arrows · attack with F"
+                else self.game.tr(
+                    "coop.connected",
+                    "Co-op connected · move with WASD / arrows · attack with F",
+                )
             )
             self.message_until = self.pg.time.get_ticks() + 6000
         return sent
@@ -1512,10 +1566,14 @@ class PlayableTestRuntime:
                     continue
                 if event.get("type") == "experience_awarded":
                     amount = int(event.get("amount", 0))
-                    self.message = f"Boss defeated · +{amount} XP"
+                    self.message = self.game.tr(
+                        "coop.boss_defeated", "Boss defeated · +{amount} XP", amount=amount
+                    )
                     self.message_until = self.pg.time.get_ticks() + 6000
                 elif event.get("type") == "loot_awarded":
-                    self.message = f"Boss loot: {event.get('item_id', 'item')}"
+                    self.message = self.game.tr(
+                        "coop.boss_loot", "Boss loot: {item}", item=event.get("item_id", "item")
+                    )
                     self.message_until = self.pg.time.get_ticks() + 6000
 
     def _draw_multiplayer_world(self):
@@ -1524,7 +1582,11 @@ class PlayableTestRuntime:
             if self.multiplayer_profile_error:
                 self.panel((12, 12, self.width - 24, 48))
                 self.text(
-                    f"Co-op profile error: {self.multiplayer_profile_error}",
+                    self.game.tr(
+                        "coop.profile_error",
+                        "Co-op profile error: {error}",
+                        error=self.multiplayer_profile_error,
+                    ),
                     24,
                     25,
                     size=18,
@@ -1532,10 +1594,14 @@ class PlayableTestRuntime:
                 )
             return
         if not bridge.connected:
-            status = self._multiplayer_error or "Start the local server in Multiplayer first"
+            status = self._multiplayer_error or self.game.tr(
+                "coop.start_server", "Start the local server in Multiplayer first"
+            )
             self.panel((12, 12, self.width - 24, 48))
             self.text(
-                f"Co-op offline · {status} · F3 to retry",
+                self.game.tr(
+                    "coop.retry", "Co-op offline · {status} · F3 to retry", status=status
+                ),
                 24,
                 25,
                 size=18,
@@ -1548,7 +1614,9 @@ class PlayableTestRuntime:
         state = bridge.state
         if state.get("schema") == "asteria.multiplayer.project_state":
             self.text(
-                f"Co-op · {len(state.get('players', ()))} players",
+                self.game.tr(
+                    "coop.players", "Co-op · {count} players", count=len(state.get("players", ()))
+                ),
                 16,
                 12,
                 size=18,
@@ -1596,7 +1664,7 @@ class PlayableTestRuntime:
             ),
         )
         self.text(
-            f"Co-op Boss · {hp}/{max_hp}",
+            self.game.tr("coop.boss", "Co-op Boss · {hp}/{max_hp}", hp=hp, max_hp=max_hp),
             boss_x,
             bar_y - 22,
             size=20,
@@ -1610,9 +1678,8 @@ class PlayableTestRuntime:
             world = map_network_position(drop, boss, origin=origin, scale=self._network_scale)
             sx, sy = self._field_screen_xy(*world)
             self.pg.draw.circle(self.screen, (249, 214, 106), (round(sx), round(sy)), 7)
-            self.text(
-                "G: claim treasure", sx, sy + 12, size=16, color=(249, 214, 106), center=True
-            )
+            claim = self.game.tr("coop.claim", "G: claim treasure")
+            self.text(claim, sx, sy + 12, size=16, color=(249, 214, 106), center=True)
 
         local_id = bridge.player_id
         local = next(
@@ -1626,7 +1693,12 @@ class PlayableTestRuntime:
         local_xp = int(local.get("experience", 0)) if local is not None else 0
         self.panel((12, 66, min(330, self.width - 24), 48))
         self.text(
-            f"Co-op · {len(players)} players · XP {local_xp} · B: bag / G: loot",
+            self.game.tr(
+                "coop.status",
+                "Co-op · {count} players · XP {xp} · B: bag / G: loot",
+                count=len(players),
+                xp=local_xp,
+            ),
             24,
             80,
             size=20,
@@ -1664,9 +1736,11 @@ class PlayableTestRuntime:
             self.screen.blit(frame, position)
             color = ((84, 196, 211), (160, 132, 234), (226, 174, 78), (106, 194, 133))[index % 4]
             self.pg.draw.circle(self.screen, color, ground, max(4, round(5 * zoom)), 2)
-            label = str(player.get("display_name", "Player"))
+            label = str(player.get("display_name", self.game.tr("coop.player", "Player")))
             self.text(
-                f"{label} · {player.get('hp', 0)} HP",
+                self.game.tr(
+                    "coop.player_hp", "{name} · {hp} HP", name=label, hp=player.get("hp", 0)
+                ),
                 screen_x,
                 position[1] - 20,
                 size=18,
@@ -1699,10 +1773,16 @@ class PlayableTestRuntime:
             self._draw_dialogue()
             return
 
+        tr = self.game.tr
         self.panel((18, self.height - 92, self.width - 36, 72))
-        self.text("Field Test", 34, self.height - 82, size=24, color=(255, 220, 124))
         self.text(
-            "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
+            tr("field.title", "Field Test"), 34, self.height - 82, size=24, color=(255, 220, 124)
+        )
+        self.text(
+            tr(
+                "field.controls",
+                "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
+            ),
             34,
             self.height - 52,
             size=19,
@@ -1710,7 +1790,7 @@ class PlayableTestRuntime:
         candidate = self._interaction_candidate()
         if candidate is not None and not self.game.event_busy:
             self.text(
-                f"E  Interact — {candidate.entity.name}",
+                tr("field.interact", "E  Interact — {name}", name=candidate.entity.name),
                 self.width / 2,
                 55,
                 size=26,
@@ -1739,8 +1819,24 @@ class PlayableTestRuntime:
                 None,
             )
             old = worn.equipment.display_name if worn is not None else offer.replaces
-            return f"New: {name}", f"{who}: wear it instead of {old}?"
-        return f"New: {name}", f"{who} has a free {offer.slot_id} place. Wear it now?"
+            return (
+                self.game.tr("equip_offer.new", "New: {name}", name=name),
+                self.game.tr(
+                    "equip_offer.instead",
+                    "{who}: wear it instead of {old}?",
+                    who=who,
+                    old=old,
+                ),
+            )
+        return (
+            self.game.tr("equip_offer.new", "New: {name}", name=name),
+            self.game.tr(
+                "equip_offer.free",
+                "{who} has a free {slot} place. Wear it now?",
+                who=who,
+                slot=offer.slot_id,
+            ),
+        )
 
     def _draw_equip_offer(self):
         """New gear asks whether to wear it (InventoryRules.equip_offer)."""
@@ -1753,7 +1849,7 @@ class PlayableTestRuntime:
         self.text(title, self.width / 2, box[1] + 26, size=26, color=(255, 220, 124), center=True)
         self.text(question, self.width / 2, box[1] + 64, size=21, center=True)
         self.text(
-            "1 / Enter: wear it     2 / Esc: keep it in the bag",
+            self.game.tr("equip_offer.keys", "1 / Enter: wear it     2 / Esc: keep it in the bag"),
             self.width / 2,
             box[1] + 108,
             size=18,
@@ -1879,8 +1975,10 @@ class PlayableTestRuntime:
                     )
         if not lines:
             return
-        row_h = 22
-        width = min(420, max(160, 14 + 9 * max(len(text) for text, _ in lines)))
+        from asteria.presentation.text_cells import cells
+
+        row_h = 22  # a full-width (Chinese) character takes the room of two
+        width = min(420, max(160, 14 + 9 * max(cells(text) for text, _ in lines)))
         self.panel((14, 14, width, 12 + row_h * len(lines)))
         for row, (text, color) in enumerate(lines):
             self.text(text, 24, 20 + row * row_h, size=18, color=color)
@@ -1948,9 +2046,13 @@ class PlayableTestRuntime:
                 packets.extend(composer.compose((item,)))
             except ValueError:
                 continue  # the anchor left the scene
-        font = self.pg.font.Font(None, 30)
+        from asteria.platform.pygame_battle_ui import cjk_size, font_for_text
+
+        latin = self.pg.font.Font(None, 30)
         for packet in packets:
             color = self.POPUP_COLORS.get(packet.metadata.get("kind"), self.POPUP_COLORS["info"])
+            # Chinese, Japanese or Korean words come from a system face that has them
+            font = font_for_text(self.pg, latin, packet.text, self._cjk_fonts, cjk_size(latin))
             image = font.render(packet.text, True, color)
             if packet.scale != 1.0:
                 size = (
@@ -2068,7 +2170,7 @@ class PlayableTestRuntime:
                 self.text(speaker, text_x, y + 12, size=24, color=(255, 220, 124))
             self._draw_message(self.game.expand_message(line.text), text_x, y + 46)
             self.text(
-                "Enter / E: continue",
+                self.game.tr("dialogue.continue", "Enter / E: continue"),
                 hint_x,
                 y + h - 28,
                 size=18,
@@ -2077,7 +2179,11 @@ class PlayableTestRuntime:
             )
             return
         self.text(
-            request.prompt or "Choose", 84, self.height - 218, size=22, color=(255, 220, 124)
+            request.prompt or self.game.tr("dialogue.choose", "Choose"),
+            84,
+            self.height - 218,
+            size=22,
+            color=(255, 220, 124),
         )
         for i, choice in enumerate(request.choices[:9], 1):
             self.text(
@@ -2333,24 +2439,26 @@ class PlayableTestRuntime:
         shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
         shade.fill((5, 8, 16, 150))
         self.screen.blit(shade, (0, 0))
-        self.text("ASTERIA", self.width / 2, 120, size=64, color=(255, 220, 120), center=True)
+        tr = self.game.tr
+        name = tr("title.name", "ASTERIA")
+        self.text(name, self.width / 2, 120, size=64, color=(255, 220, 120), center=True)
         # the game's own name (manifest "subtitle"); the reference project keeps its old text
-        subtitle = self.manifest.get("subtitle") or "Complex Reference RPG"
+        subtitle = self.manifest.get("subtitle") or tr("title.subtitle", "Complex Reference RPG")
         self.text(subtitle, self.width / 2, 180, size=36, center=True)
         self.panel((280, 250, 400, 150))
         if self._multiplayer_connected() or self._network_gameplay_frozen():
-            self.text("N   Enter Server Session", 310, 282, size=25)
-            self.text("L   Reload Server Save", 310, 330, size=25)
+            self.text(tr("title.server_session", "N   Enter Server Session"), 310, 282, size=25)
+            self.text(tr("title.server_save", "L   Reload Server Save"), 310, 330, size=25)
             self.text(
-                f"Guest: {self.multiplayer_bridge.player_id}",
+                tr("title.guest", "Guest: {player}", player=self.multiplayer_bridge.player_id),
                 310,
                 372,
                 size=16,
                 color=(170, 210, 240),
             )
             return
-        self.text("N   New Game", 330, 282, size=28)
-        self.text("L   Load Game", 330, 330, size=28)
+        self.text(tr("title.new_game", "N   New Game"), 330, 282, size=28)
+        self.text(tr("title.load_game", "L   Load Game"), 330, 330, size=28)
         from asteria.runtime.save_slots import SaveSlots
 
         used = sum(
@@ -2359,7 +2467,9 @@ class PlayableTestRuntime:
             if self._slot_exists(s)
         )
         self.text(
-            f"{used} save(s) found" if used else "No saves yet",
+            tr("title.saves", "{count} save(s) found", count=used)
+            if used
+            else tr("title.no_saves", "No saves yet"),
             330,
             372,
             size=18,
@@ -2373,7 +2483,7 @@ class PlayableTestRuntime:
             return True
         path = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
         if not path.exists():
-            self.message = "No player save exists yet"
+            self.message = self.game.tr("title.no_player_save", "No player save exists yet")
             self.message_until = self.pg.time.get_ticks() + 1800
             return False
         loaded = GameRuntimeSave.load_json(path, self.project)
@@ -2382,7 +2492,7 @@ class PlayableTestRuntime:
         self._victory = False
         self._defeat = False
         self._ui_mode = "field"
-        self.message = "Loaded player save"
+        self.message = self.game.tr("title.loaded", "Loaded player save")
         self.message_until = self.pg.time.get_ticks() + 1800
         return True
 
@@ -2396,7 +2506,7 @@ class PlayableTestRuntime:
         self.game = GameSessionRuntime(self.project, fresh)
         self._victory = self._defeat = False
         self._ui_mode = "field"
-        self.message = "New Game+"
+        self.message = self.game.tr("title.new_game_plus", "New Game+")
         self.message_until = self.pg.time.get_ticks() + 2400
         return True
 
@@ -2429,39 +2539,47 @@ class PlayableTestRuntime:
         weapon = self._current_weapon(actor_id)
         allocation = self.save.rpg_state.progression_allocations[actor_id]
         self.panel((24, 22, 912, 496), fill=(11, 15, 25, 242))
-        self.text("Character / Build Acceptance Menu", 44, 38, size=30, color=(255, 220, 120))
-        self.text(f"Q/E Actor   C Close     Current: {actor_id}", 44, 76, size=19)
+        tr = self.game.tr
+        title = tr("build.title", "Character / Build Acceptance Menu")
+        self.text(title, 44, 38, size=30, color=(255, 220, 120))
+        keys = tr("build.keys", "Q/E Actor   C Close     Current: {actor}", actor=actor_id)
+        self.text(keys, 44, 76, size=19)
         self.text(
-            f"Level {state.level}   EXP {int(state.experience)}   AP "
-            f"{int(allocation.balance('ap'))}"
-            f"   Ability Pts {int(state.points.get('ability_points', 0))}",
+            tr(
+                "build.points",
+                "Level {level}   EXP {exp}   AP {ap}   Ability Pts {ability_points}",
+                level=state.level,
+                exp=int(state.experience),
+                ap=int(allocation.balance("ap")),
+                ability_points=int(state.points.get("ability_points", 0)),
+            ),
             44,
             106,
             size=20,
             color=(170, 220, 255),
         )
         classes = " + ".join(state.active_class_ids) or "—"
-        self.text(f"1 Secondary Class: {classes}", 44, 148, size=20)
-        self.text(f"3 Passives: {', '.join(ability.active_passives[:4]) or '—'}", 44, 178, size=20)
-        self.text(
-            f"4 Weapon: {weapon.equipment.display_name if weapon else '—'}", 44, 208, size=20
-        )
+        self.text(tr("build.class", "1 Secondary Class: {value}", value=classes), 44, 148, size=20)
+        passives = ", ".join(ability.active_passives[:4]) or "—"
+        self.text(tr("build.passives", "3 Passives: {value}", value=passives), 44, 178, size=20)
+        held = weapon.equipment.display_name if weapon else "—"
+        self.text(tr("build.weapon", "4 Weapon: {value}", value=held), 44, 208, size=20)
         growth = (
             "—"
             if weapon is None or weapon.growth is None
-            else ", ".join(f"{k}:{v}" for k, v in sorted(weapon.growth.ranks.items())) or "base"
+            else ", ".join(f"{k}:{v}" for k, v in sorted(weapon.growth.ranks.items()))
+            or tr("build.base", "base")
         )
-        self.text(f"5 Weapon Upgrade: {growth}", 44, 238, size=20)
+        self.text(tr("build.upgrade", "5 Weapon Upgrade: {value}", value=growth), 44, 238, size=20)
         accessories = self.save.rpg_state.loadouts[actor_id].equipped("accessory")
+        worn = ", ".join(x.equipment.display_name for x in accessories) or "—"
+        self.text(tr("build.accessories", "6 Accessories: {value}", value=worn), 44, 268, size=20)
+        active = ", ".join(self.save.rpg_state.party_active_actor_ids)
         self.text(
-            f"6 Accessories: {', '.join(x.equipment.display_name for x in accessories) or '—'}",
-            44,
-            268,
-            size=20,
+            tr("build.party", "7 Party / Formation: {value}", value=active), 44, 298, size=20
         )
-        active = self.save.rpg_state.party_active_actor_ids
-        self.text(f"7 Party / Formation: {', '.join(active)}", 44, 298, size=20)
-        self.text("2 Skill Tree: allocate next available node", 44, 328, size=20)
+        tree = tr("build.tree", "2 Skill Tree: allocate next available node")
+        self.text(tree, 44, 328, size=20)
         graph_id = (
             state.active_class_ids[-1] if state.active_class_ids else next(iter(db.classes))
         ) + "_tree"
@@ -2510,7 +2628,10 @@ class PlayableTestRuntime:
                         size=18,
                     )
         self.text(
-            "All changes are Runtime State and are verified again after Save/Load.",
+            tr(
+                "build.note",
+                "All changes are Runtime State and are verified again after Save/Load.",
+            ),
             44,
             480,
             size=18,
@@ -2538,10 +2659,12 @@ class PlayableTestRuntime:
             preview = allocation.preview_allocate(graph_id, node.node_id, 1)
             if preview.allowed:
                 self.game.allocate_progression(actor_id, graph_id, node.node_id, 1)
-                self.message = f"Learned {node.display_name}"
+                self.message = self.game.tr(
+                    "build.learned", "Learned {name}", name=node.display_name
+                )
                 self.message_until = self.pg.time.get_ticks() + 1400
                 return
-        self.message = "No affordable/unlocked node"
+        self.message = self.game.tr("build.no_node", "No affordable/unlocked node")
         self.message_until = self.pg.time.get_ticks() + 1400
 
     def _cycle_passive(self, actor_id):
@@ -2576,10 +2699,12 @@ class PlayableTestRuntime:
                     )
                     return
                 growth.unlock(node.node_id)
-                self.message = f"Weapon upgraded: {node.display_name}"
+                self.message = self.game.tr(
+                    "build.upgraded", "Weapon upgraded: {name}", name=node.display_name
+                )
                 self.message_until = self.pg.time.get_ticks() + 1400
                 return
-        self.message = "Weapon growth maxed or blocked"
+        self.message = self.game.tr("build.no_upgrade", "Weapon growth maxed or blocked")
         self.message_until = self.pg.time.get_ticks() + 1400
 
     def _cycle_accessory(self, actor_id):
@@ -2652,18 +2777,25 @@ class PlayableTestRuntime:
                     self._ui_mode = "build"
                 elif weapon is not None and event.key == self.pg.K_r:
                     result = game.refine_equipment(actor, weapon.instance_id)
-                    self._workshop_message = f"Refine: {result.outcome}"
+                    self._workshop_message = game.tr(
+                        "workshop.refined", "Refine: {outcome}", outcome=result.outcome
+                    )
                 elif weapon is not None and event.key == self.pg.K_s:
                     self._workshop_message = self._socket_next(actor, weapon)
                 elif weapon is not None and event.key == self.pg.K_x:
                     for socket_id, attached in weapon.attachments.items():
                         game.unsocket_item(actor, weapon.instance_id, socket_id)
-                        self._workshop_message = f"Took {attached.display_name} out of {socket_id}"
+                        self._workshop_message = game.tr(
+                            "workshop.took_out",
+                            "Took {name} out of {socket}",
+                            name=attached.display_name,
+                            socket=socket_id,
+                        )
                         break
                 elif event.key == self.pg.K_a:
                     self._workshop_message = self._spend_attribute_point(actor)
             except Exception as exc:  # noqa: BLE001 - shown on the screen, the game goes on
-                self._workshop_message = str(exc)
+                self._workshop_message = translated(exc, game.tr)
 
     def _socket_next(self, actor, weapon):
         game, db = self.game, self.project.rpg_database
@@ -2678,22 +2810,30 @@ class PlayableTestRuntime:
                     game.socket_item(actor, weapon.instance_id, socket.socket_id, item.item_id)
                 except Exception:  # noqa: BLE001 - a gem that does not fit this socket
                     continue
-                return f"Socketed {item.display_name} into {socket.socket_id}"
-        return "Nothing to socket (no free socket or no fitting item in the bag)"
+                return game.tr(
+                    "workshop.socketed",
+                    "Socketed {name} into {socket}",
+                    name=item.display_name,
+                    socket=socket.socket_id,
+                )
+        return game.tr(
+            "workshop.nothing_to_socket",
+            "Nothing to socket (no free socket or no fitting item in the bag)",
+        )
 
     def _spend_attribute_point(self, actor):
         allocation = self.save.rpg_state.progression_allocations[actor]
         graph = allocation.definitions.get("attributes")
         if graph is None:
-            return "This project has no attribute graph"
+            return self.game.tr("workshop.no_attributes", "This project has no attribute graph")
         for node in graph.nodes:
             try:
                 allocation.allocate("attributes", node.node_id)
             except ValueError:
                 continue
             self.game.refresh_actor_combatants(actor)
-            return f"+1 {node.display_name}"
-        return "No attribute points left"
+            return self.game.tr("workshop.point_spent", "+1 {name}", name=node.display_name)
+        return self.game.tr("workshop.no_points", "No attribute points left")
 
     def _draw_workshop(self):
         self._draw_field(False)
@@ -2708,25 +2848,37 @@ class PlayableTestRuntime:
         allocation = self.save.rpg_state.progression_allocations[actor]
         rules = game.refine_rules
         self.panel((24, 22, 912, 496), fill=(11, 15, 25, 242))
-        self.text("Workshop", 44, 38, size=30, color=(255, 220, 120))
+        tr = game.tr
+        self.text(tr("workshop.title", "Workshop"), 44, 38, size=30, color=(255, 220, 120))
         self.text(
-            f"R Refine   S Socket   X Take out   A Attribute point   C Back  [{actor}]",
+            tr(
+                "workshop.keys",
+                "R Refine   S Socket   X Take out   A Attribute point   C Back  [{actor}]",
+                actor=actor,
+            ),
             44,
             76,
             size=18,
         )
         gold = self.save.rpg_state.currencies.get("gold", 0)
-        self.text(f"Gold {int(gold)}", 760, 40, size=20, color=(255, 214, 120))
+        gold = tr("workshop.gold", "Gold {amount}", amount=int(gold))
+        self.text(gold, 760, 40, size=20, color=(255, 214, 120))
         y = 120
         if weapon is None:
-            self.text("No weapon equipped", 44, y, size=22)
+            self.text(tr("workshop.no_weapon", "No weapon equipped"), 44, y, size=22)
         else:
             self.text(f"{weapon.equipment.display_name}  +{weapon.refine_level}", 44, y, size=26)
             if rules is not None and weapon.refine_level < rules.max_level:
                 chance = round(rules.chance(weapon.refine_level) * 100)
                 self.text(
-                    f"Next +{weapon.refine_level + 1}: {chance}% "
-                    f"for {int(rules.cost(weapon.refine_level))} {rules.currency}",
+                    tr(
+                        "workshop.next",
+                        "Next +{level}: {chance}% for {cost} {currency}",
+                        level=weapon.refine_level + 1,
+                        chance=chance,
+                        cost=int(rules.cost(weapon.refine_level)),
+                        currency=rules.currency,
+                    ),
                     44,
                     y + 34,
                     size=18,
@@ -2735,9 +2887,19 @@ class PlayableTestRuntime:
             y += 80
             for socket in weapon.equipment.sockets:
                 attached = weapon.attachments.get(socket.socket_id)
-                label = "locked" if socket.locked and attached is None else "empty"
+                if attached is not None:
+                    label = attached.display_name
+                elif socket.locked:
+                    label = tr("workshop.locked", "locked")
+                else:
+                    label = tr("workshop.empty", "empty")
                 self.text(
-                    f"Socket {socket.socket_id}: {attached.display_name if attached else label}",
+                    tr(
+                        "workshop.socket",
+                        "Socket {socket}: {value}",
+                        socket=socket.socket_id,
+                        value=label,
+                    ),
                     64,
                     y,
                     size=20,
@@ -2746,7 +2908,11 @@ class PlayableTestRuntime:
         graph = allocation.definitions.get("attributes")
         if graph is not None:
             self.text(
-                f"Attribute points: {int(allocation.balance('stat_points'))}",
+                tr(
+                    "workshop.points",
+                    "Attribute points: {count}",
+                    count=int(allocation.balance("stat_points")),
+                ),
                 520,
                 120,
                 size=22,
@@ -2952,7 +3118,9 @@ class PlayableTestRuntime:
                 shown = getattr(definition, "display_name", "") or active.state_id
                 names.append(shown.replace("_", " "))
             if names and not panel_has_bp:  # the side panel shows them as chips
-                label = " ".join(names)[:28]
+                from asteria.presentation.text_cells import cut
+
+                label = cut(" ".join(names), 28)  # a Chinese name takes the room of two letters
                 self.text(label, x, y + 20, size=15, color=(220, 180, 255), center=True)
         actor = self._battle_actor()
         commands = getattr(self, "_battle_commands", None)
@@ -2960,7 +3128,7 @@ class PlayableTestRuntime:
             where = box(actor)
             if where is not None and commands.boost:
                 self.text(
-                    f"BOOST x{commands.boost + 1}",
+                    game.tr("battle.boost_level", "BOOST x{level}", level=commands.boost + 1),
                     where[0],
                     where[1] - 22,
                     size=22,
@@ -3038,6 +3206,7 @@ class PlayableTestRuntime:
         return VictoryScreen(
             aftermath,
             item_names={k: v.display_name for k, v in {**db.items, **db.equipment}.items()},
+            tr=self.game.tr,
         )
 
     def _battle_input(self, events):
@@ -3148,26 +3317,28 @@ class PlayableTestRuntime:
                 try:
                     menu.activate()
                 except Exception as exc:  # noqa: BLE001 - shown to the player, play goes on
-                    menu.message = str(exc)
+                    menu.message = translated(exc, self.game.tr)
 
     def _draw_status_menu(self):
-        from asteria.runtime.status_menu import TABS
+        from asteria.runtime.status_menu import TAB_WORDS, TABS
 
         self._draw_field(False)
         shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
         shade.fill((6, 9, 18, 215))
         self.screen.blit(shade, (0, 0))
         menu = self.status_menu
+        tr = self.game.tr
         self.panel((24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
         x = 44
         for tab in TABS:
-            label = tab.title()
+            label = tr(TAB_WORDS[tab], tab.title())
             active = tab == menu.tab
             self.text(label, x, 36, size=24, color=(255, 220, 120) if active else (150, 160, 180))
             x += 150
         actor = menu.actor_id or "—"
         name = getattr(self.project.rpg_database.actors.get(actor), "display_name", actor)
-        self.text(f"Q / E  {name}", self.width - 330, 40, size=20, color=(170, 220, 255))
+        member = tr("status.member", "Q / E  {name}", name=name)
+        self.text(member, self.width - 330, 40, size=20, color=(170, 220, 255))
         rows = menu.rows()
         icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
         label_x = 56 + (30 if any(icons) else 0)
@@ -3185,8 +3356,12 @@ class PlayableTestRuntime:
             )
             self.text(detail, self.width - 420, y, size=20, color=(170, 210, 240))
         if not rows:
-            self.text("Nothing here yet.", 56, 92, size=20, color=(150, 160, 180))
-        hint = "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back"
+            empty = tr("status.empty", "Nothing here yet.")
+            self.text(empty, 56, 92, size=20, color=(150, 160, 180))
+        hint = tr(
+            "status.hint",
+            "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
+        )
         self.text(hint, 44, self.height - 60, size=18, color=(170, 210, 240))
         if menu.message:
             self.text(menu.message, 44, self.height - 88, size=19, color=(255, 226, 129))
@@ -3337,7 +3512,7 @@ class PlayableTestRuntime:
                 from asteria.runtime.input_rebinding import ControlsMenu
 
                 self.controls_menu = ControlsMenu(
-                    self.project.input_map, self.settings.input_overrides
+                    self.project.input_map, self.settings.input_overrides, tr=self.game.tr
                 )
                 self._ui_mode = "controls"
             return
@@ -3369,7 +3544,9 @@ class PlayableTestRuntime:
             return
         from asteria.runtime.save_slots import SaveSlots, SlotMenu
 
-        self.slot_menu = SlotMenu(SaveSlots(self.resource_root / "saves", self.project), mode)
+        self.slot_menu = SlotMenu(
+            SaveSlots(self.resource_root / "saves", self.project), mode, tr=self.game.tr
+        )
         self._slots_back = back
         self._ui_mode = "slots"
 
@@ -3393,7 +3570,9 @@ class PlayableTestRuntime:
                     self.game = GameSessionRuntime(self.project, value)
                     self._victory = self._defeat = False
                     self._ui_mode = "field"
-                    self.message = f"Loaded slot {menu.slot}"
+                    self.message = self.game.tr(
+                        "slots.loaded", "Loaded slot {slot}", slot=menu.slot
+                    )
                     self.message_until = self.pg.time.get_ticks() + 1800
                 elif outcome == "saved":
                     self.message = menu.message
@@ -3403,7 +3582,10 @@ class PlayableTestRuntime:
         self._draw_backdrop()
         menu = self.slot_menu
         self.panel((100, 60, self.width - 200, self.height - 120))
-        title = "Save Game" if menu.mode == "save" else "Load Game"
+        tr = self.game.tr  # the slot screens' titles are the pause menu's own words
+        title = (
+            tr("pause.save", "Save Game") if menu.mode == "save" else tr("pause.load", "Load Game")
+        )
         self.text(title, self.width / 2, 76, size=32, color=(255, 220, 124), center=True)
         for i, info in enumerate(menu.rows()):
             y = 140 + i * 64
@@ -3412,12 +3594,15 @@ class PlayableTestRuntime:
                 self.pg.draw.rect(
                     self.screen, (40, 52, 78), (120, y - 8, self.width - 240, 54), border_radius=6
                 )
-            name = "Autosave (F5)" if info.slot == "autosave" else f"Slot {info.slot}"
+            if info.slot == "autosave":
+                name = tr("slots.autosave", "Autosave (F5)")
+            else:
+                name = tr("slots.slot", "Slot {slot}", slot=info.slot)
             self.text(
                 name, 140, y, size=24, color=(255, 226, 129) if selected else (235, 238, 245)
             )
-            self.text(info.summary, 140, y + 24, size=18, color=(170, 210, 240))
-        hint = menu.message or "Enter: choose   Delete: erase   Esc: back"
+            self.text(info.summary_text(tr), 140, y + 24, size=18, color=(170, 210, 240))
+        hint = menu.message or tr("slots.hint", "Enter: choose   Delete: erase   Esc: back")
         self.text(
             hint, self.width / 2, self.height - 96, size=19, color=(255, 226, 129), center=True
         )
@@ -3468,14 +3653,18 @@ class PlayableTestRuntime:
         self._draw_backdrop()
         menu = self.controls_menu
         self.panel((60, 30, self.width - 120, self.height - 60))
-        self.text("Controls", self.width / 2, 44, size=32, color=(255, 220, 124), center=True)
+        tr = self.game.tr
+        title = tr("controls.title", "Controls")
+        self.text(title, self.width / 2, 44, size=32, color=(255, 220, 124), center=True)
         for i, (action, bindings) in enumerate(menu.rows()):
             y = 92 + i * 30
             selected = i == menu.row
             color = (255, 226, 129) if selected else (235, 238, 245)
-            self.menu_row(action, 90, y, selected=selected, size=21, color=color)
+            self.menu_row(menu.action_name(action), 90, y, selected=selected, size=21, color=color)
             self.text(bindings, self.width / 2, y, size=21, color=(170, 210, 240))
-        hint = menu.message or "Enter: rebind   Backspace: reset action   Esc: save and back"
+        hint = menu.message or tr(
+            "controls.hint", "Enter: rebind   Backspace: reset action   Esc: save and back"
+        )
         self.text(
             hint, self.width / 2, self.height - 58, size=19, color=(255, 226, 129), center=True
         )
@@ -3486,13 +3675,15 @@ class PlayableTestRuntime:
         if screen is None:
             return
         self.panel((60, 40, self.width - 120, self.height - 80))
-        title = "Crafting" + (
+        tr = self.game.tr
+        title = tr("pause.crafting", "Crafting") + (
             f" — {screen.station.replace('_', ' ').title()}" if screen.station else ""
         )
         self.text(title, 90, 54, size=30, color=(255, 220, 124))
         rows = screen.rows()
         if not rows:
-            self.text("No known recipes here.", 90, 110, size=22, color=(170, 210, 240))
+            empty = tr("crafting.none", "No known recipes here.")
+            self.text(empty, 90, 110, size=22, color=(170, 210, 240))
         y = 104
         for i, row in enumerate(rows):
             if y > self.height - 150:
@@ -3521,7 +3712,7 @@ class PlayableTestRuntime:
         hidden = screen.undiscovered()
         if hidden:
             self.text(
-                f"??? {hidden} recipe(s) not yet discovered",
+                tr("crafting.hidden", "??? {count} recipe(s) not yet discovered", count=hidden),
                 90,
                 self.height - 128,
                 size=18,
@@ -3530,7 +3721,7 @@ class PlayableTestRuntime:
         if screen.message:
             self.text(screen.message, 90, self.height - 100, size=20, color=(255, 220, 124))
         self.text(
-            "Up/Down: select   Enter: craft   Esc: back",
+            tr("crafting.hint", "Up/Down: select   Enter: craft   Esc: back"),
             90,
             self.height - 72,
             size=18,
@@ -3540,6 +3731,7 @@ class PlayableTestRuntime:
     def _draw_list_screen(self, kind):
         self._draw_backdrop()
         self.panel((60, 40, self.width - 120, self.height - 80))
+        tr = self.game.tr
         line_icons = []  # an icon per line (achievements may carry one)
         if kind == "achievements":
             rows = achievement_rows(self.game)
@@ -3549,7 +3741,12 @@ class PlayableTestRuntime:
             line_icons = [by_name.get(name, "") for name, _description, _unlocked in rows]
             done = sum(1 for r in rows if r[2])
             self.text(
-                f"Achievements  {done}/{len(rows)}",
+                tr(
+                    "achievements.title",
+                    "Achievements  {done}/{count}",
+                    done=done,
+                    count=len(rows),
+                ),
                 self.width / 2,
                 56,
                 size=30,
@@ -3568,7 +3765,7 @@ class PlayableTestRuntime:
             rows = bestiary_rows(self.game)
             seen = sum(1 for r in rows if r[1])
             self.text(
-                f"Bestiary  {seen}/{len(rows)} seen",
+                tr("bestiary.title", "Bestiary  {seen}/{count} seen", seen=seen, count=len(rows)),
                 self.width / 2,
                 56,
                 size=30,
@@ -3581,7 +3778,9 @@ class PlayableTestRuntime:
                 for name in (row[0],)
             ]
         if not lines:
-            self.text("Nothing here yet.", 90, 110, size=22, color=(170, 210, 240))
+            self.text(
+                tr("status.empty", "Nothing here yet."), 90, 110, size=22, color=(170, 210, 240)
+            )
         self._list_scroll = min(self._list_scroll, max(0, len(lines) - 1))
         y = 104
         shift = 30 if any(line_icons) else 0
@@ -3598,7 +3797,7 @@ class PlayableTestRuntime:
                 y += 22
             y += 6
         self.text(
-            "Up/Down: scroll   Enter / Esc: back",
+            tr("list.hint", "Up/Down: scroll   Enter / Esc: back"),
             self.width - 360,
             self.height - 72,
             size=18,
@@ -3620,7 +3819,16 @@ class PlayableTestRuntime:
         _name, seen, defeated, captured, tags, resources, drops = row
         if not seen:
             return ""
-        lines = [f"seen {seen}   defeated {defeated}   captured {captured}"]
+        tr = self.game.tr
+        lines = [
+            tr(
+                "bestiary.counts",
+                "seen {seen}   defeated {defeated}   captured {captured}",
+                seen=seen,
+                defeated=defeated,
+                captured=captured,
+            )
+        ]
         if defeated:
             labels = self._resource_labels()
             known = [f"{labels.get(r, r)} {v:,.0f}" for r, v in resources]
@@ -3628,14 +3836,17 @@ class PlayableTestRuntime:
             for tag in tags:
                 kind, _, what = tag.partition(".")
                 groups.setdefault(kind, []).append(what.replace("_", " "))
-            known += [f"{kind}: {', '.join(names)}" for kind, names in sorted(groups.items())]
-            lines.append("   ".join(known) or "nothing special")
+            for kind, names in sorted(groups.items()):  # weak / resist...: the kind is drawn
+                word = tr(f"bestiary.tag.{kind}", kind) if kind in BESTIARY_TAG_KINDS else kind
+                known.append(f"{word}: {', '.join(names)}")
+            lines.append("   ".join(known) or tr("bestiary.nothing_special", "nothing special"))
         else:
-            lines.append("Defeat one to learn its weaknesses and health.")
+            lines.append(tr("bestiary.unknown", "Defeat one to learn its weaknesses and health."))
         if drops:
-            lines.append("Drops: " + ", ".join(f"{n} x{t}" for n, t in drops))
+            found = ", ".join(f"{n} x{t}" for n, t in drops)
+            lines.append(tr("bestiary.drops", "Drops: {items}", items=found))
         else:
-            lines.append("Drops: none seen yet")
+            lines.append(tr("bestiary.no_drops", "Drops: none seen yet"))
         return "\n".join(lines)
 
     def _language_name(self):
@@ -3649,12 +3860,17 @@ class PlayableTestRuntime:
         tall = max(260, 120 + len(cursor.options) * 38)  # every row inside the panel
         x, y = self.width / 2 - 220, self.height / 2 - tall / 2
         self.panel((x, y, 440, tall))
-        self.text("Settings", self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
-        for i, (key, label) in enumerate(cursor.options):
+        tr = self.game.tr
+        title = tr("pause.settings", "Settings")
+        self.text(title, self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
+        for i, (key, label) in enumerate(cursor.labels(tr)):
             selected = i == cursor.index
             color = (255, 226, 129) if selected else (235, 238, 245)
             self.menu_row(label, x + 40, y + 76 + i * 38, selected=selected, size=24, color=color)
-            value = self._language_name() if key == "language" else self.settings.value_text(key)
+            if key == "language":
+                value = self._language_name()
+            else:
+                value = self.settings.value_text(key, tr)
             if value:
                 self.text(
                     f"< {value} >" if selected else value,
@@ -3664,7 +3880,7 @@ class PlayableTestRuntime:
                     color=color,
                 )
         self.text(
-            "Left/Right: change   Esc: save and back",
+            tr("settings.hint", "Left/Right: change   Esc: save and back"),
             self.width / 2,
             y + tall - 24,
             size=16,
@@ -3688,7 +3904,7 @@ class PlayableTestRuntime:
         x, y = self.width / 2 - 170 - shift / 2, self.height / 2 - height / 2
         self.panel((x, y, 340 + shift, height))
         self.text(title, self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
-        for i, (option_id, label) in enumerate(cursor.options):
+        for i, (option_id, label) in enumerate(cursor.labels(self.game.tr)):
             selected = i == cursor.index
             if option_id in cursor.icons:
                 self._draw_icon(cursor.icons[option_id], round(x + 36), round(y + 68 + i * 34), 26)
@@ -3713,10 +3929,12 @@ class PlayableTestRuntime:
     def _draw_quests(self):
         self._draw_backdrop()
         self.panel((60, 40, self.width - 120, self.height - 80))
-        self.text("Quest Log", self.width / 2, 56, size=32, color=(255, 220, 124), center=True)
+        tr = self.game.tr
+        title = tr("pause.quests", "Quest Log")
+        self.text(title, self.width / 2, 56, size=32, color=(255, 220, 124), center=True)
         rows = quest_rows(self.game)
         if not rows:
-            self.text("No quests yet.", 90, 110, size=22, color=(170, 210, 240))
+            self.text(tr("quests.none", "No quests yet."), 90, 110, size=22, color=(170, 210, 240))
         y = 104
         colors = {
             "active": (235, 238, 245),
@@ -3729,8 +3947,9 @@ class PlayableTestRuntime:
             icon = self.project.rpg_database.quests[row.quest_id].icon_id
             if icon:
                 self._draw_icon(icon, 90, y - 2, 24)
+            status = tr(f"quests.status.{row.status}", row.status)  # the status is an id
             self.text(
-                f"{row.name}  [{row.status}]",
+                f"{row.name}  [{status}]",
                 90 + (30 if icon else 0),
                 y,
                 size=24,
@@ -3748,7 +3967,11 @@ class PlayableTestRuntime:
                 y += 24
             y += 8
         self.text(
-            "Enter / Esc: back", self.width - 260, self.height - 72, size=18, color=(170, 210, 240)
+            tr("quests.hint", "Enter / Esc: back"),
+            self.width - 260,
+            self.height - 72,
+            size=18,
+            color=(170, 210, 240),
         )
 
     def _draw_shop(self):
@@ -3767,18 +3990,19 @@ class PlayableTestRuntime:
             size=30,
             color=(255, 220, 124),
         )
+        tr = self.game.tr
         for i, tab in enumerate(("buy", "sell")):
             self.text(
-                tab.title(),
+                tr(f"shop.{tab}", tab.title()),
                 self.width - 300 + i * 100,
                 60,
                 size=24,
                 color=(255, 226, 129) if screen.tab == tab else (130, 140, 160),
             )
-        self.text("Item", 90, 104, size=19, color=(170, 210, 240))
-        self.text("Price", 420, 104, size=19, color=(170, 210, 240))
-        self.text("Stock", 640, 104, size=19, color=(170, 210, 240))
-        self.text("Owned", 740, 104, size=19, color=(170, 210, 240))
+        self.text(tr("shop.item", "Item"), 90, 104, size=19, color=(170, 210, 240))
+        self.text(tr("shop.price", "Price"), 420, 104, size=19, color=(170, 210, 240))
+        self.text(tr("shop.stock", "Stock"), 640, 104, size=19, color=(170, 210, 240))
+        self.text(tr("shop.owned", "Owned"), 740, 104, size=19, color=(170, 210, 240))
         from .menu_icons import record_icon_id
 
         rows = screen.rows()
@@ -3808,7 +4032,10 @@ class PlayableTestRuntime:
                 screen.message, self.width / 2, self.height - 100, size=20, color=(255, 220, 124)
             )
         self.text(
-            "Up/Down: select   Left/Right: buy/sell   Enter: confirm   Esc: leave",
+            tr(
+                "shop.hint",
+                "Up/Down: select   Left/Right: buy/sell   Enter: confirm   Esc: leave",
+            ),
             90,
             self.height - 72,
             size=18,
@@ -3835,12 +4062,19 @@ class PlayableTestRuntime:
         if actor is None:
             return False
         name = target_id.split(":", 1)[0].replace("_", " ").title()
+        tr = self.game.tr
         try:
             captured = self.game.attempt_capture(actor, target_id)
         except Exception as exc:
-            self._last_action_name = f"Capture failed: {exc}"
+            reason = translated(exc, tr)
+            self._last_action_name = tr(
+                "capture.failed", "Capture failed: {reason}", reason=reason
+            )
             return False
-        self._last_action_name = f"Captured {name}!" if captured else f"{name} broke free"
+        if captured:
+            self._last_action_name = tr("capture.caught", "Captured {name}!", name=name)
+        else:
+            self._last_action_name = tr("capture.broke_free", "{name} broke free", name=name)
         self._sound(self.manifest.get("dialogue_confirm_sfx") if captured else None)
         self._after_hero_action()
         return captured
@@ -3849,14 +4083,28 @@ class PlayableTestRuntime:
         targets = self.game.capture_targets()
         height = 70 + 30 * max(1, len(targets))
         self.panel((300, 190, 360, height), fill=(12, 18, 28, 240), border=(130, 200, 255))
-        self.text("Capture", 480, 200, size=28, color=(175, 235, 255), center=True)
+        tr = self.game.tr
+        title = tr("capture.title", "Capture")
+        self.text(title, 480, 200, size=28, color=(175, 235, 255), center=True)
         inventory = self.save.rpg_state.inventory
         for i, (member_id, chance, item_id) in enumerate(targets, 1):
             name = member_id.split(":", 1)[0].replace("_", " ").title()
-            need = f"  (uses {item_id}: {inventory.count(item_id)})" if item_id else ""
+            need = ""
+            if item_id:
+                need = "  " + tr(
+                    "capture.uses",
+                    "(uses {item}: {count})",
+                    item=item_id,
+                    count=inventory.count(item_id),
+                )
             self.text(f"{i}. {name}  {chance * 100:.0f}%{need}", 320, 236 + (i - 1) * 30, size=20)
         self.text(
-            "Esc: cancel", 480, 190 + height - 24, size=16, color=(170, 210, 240), center=True
+            tr("capture.cancel", "Esc: cancel"),
+            480,
+            190 + height - 24,
+            size=16,
+            color=(170, 210, 240),
+            center=True,
         )
 
     def save_playtest(self):
@@ -3867,7 +4115,7 @@ class PlayableTestRuntime:
         out = self.resource_root / "saves" / "playtest_autosave.asteria-save.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         self.save.save_json(out)
-        self.message = f"Saved: {out.name}"
+        self.message = self.game.tr("field.saved", "Saved: {file}", file=out.name)
         self.message_until = self.pg.time.get_ticks() + 1800
         self._last_action_name = self.message
         return out
@@ -3954,7 +4202,7 @@ class PlayableTestRuntime:
                     self._draw_field(False)
                 self.panel((100, self.height / 2 - 32, self.width - 200, 64))
                 self.text(
-                    "Server connection paused · F3 to retry",
+                    self.game.tr("coop.paused", "Server connection paused · F3 to retry"),
                     self.width / 2,
                     self.height / 2 - 10,
                     size=22,
@@ -3966,9 +4214,15 @@ class PlayableTestRuntime:
             self._sync_multiplayer_player()
             for result in self.multiplayer_bridge.command_results(self._network_revision):
                 self.message = (
-                    f"Server {result.get('command', 'command')} confirmed"
+                    self.game.tr(
+                        "coop.confirmed",
+                        "Server {command} confirmed",
+                        command=result.get("command", "command"),
+                    )
                     if result["accepted"]
-                    else result.get("reason", "Server rejected command")
+                    else result.get(
+                        "reason", self.game.tr("coop.rejected", "Server rejected command")
+                    )
                 )
                 self.message_until = self.pg.time.get_ticks() + 2500
             if self._ui_mode != "field":
@@ -4028,7 +4282,7 @@ class PlayableTestRuntime:
             self._draw_workshop()
         elif self._ui_mode == "pause":
             self._pause_input()
-            self._draw_overlay_menu("Paused", self._pause_menu)
+            self._draw_overlay_menu(self.game.tr("pause.heading", "Paused"), self._pause_menu)
         elif self._ui_mode == "slots":
             self._slots_input(events)
             self._draw_slots()
@@ -4079,7 +4333,8 @@ class PlayableTestRuntime:
                 self._skill_tree.draw()
         elif self._ui_mode == "game_over":
             self._game_over_input()
-            self._draw_overlay_menu("Game Over", self._game_over_menu, base="battle")
+            title = self.game.tr("game_over.heading", "Game Over")
+            self._draw_overlay_menu(title, self._game_over_menu, base="battle")
         elif self.game.mode == "battle" or self._victory:
             if self.game.mode == "battle":
                 with self.profiler.section("events"):

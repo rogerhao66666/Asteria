@@ -493,7 +493,7 @@ class BottomHud:
                 border_radius=4,
             )
             rt.text(
-                f"Lv {progress.level}",
+                game.tr("hud.level", "Lv {level}", level=progress.level),
                 strip.centerx,
                 strip.centery,
                 size=14,
@@ -524,13 +524,22 @@ class BottomHud:
         # the controls, top centre, on a dark strip, fading out
         if self.hint_left > 0:
             alpha = min(1.0, self.hint_left / 2.0)
-            skills = f"Skills 1-{len(numbered)}" if len(numbered) > 1 else "Skill 1"
-            text = (
-                f"Move WASD   Attack J   Dodge K   {skills}   Lock L   Pick up F   "
-                "Bag B   Skill tree C   Pause Esc"
+            if len(numbered) > 1:
+                skills = game.tr("hud.skills", "Skills 1-{last}", last=len(numbered))
+            else:
+                skills = game.tr("hud.skill", "Skill 1")
+            text = game.tr(
+                "hud.controls",
+                "Move WASD   Attack J   Dodge K   {skills}   Lock L   Pick up F   "
+                "Bag B   Skill tree C   Pause Esc",
+                skills=skills,
             )
-            font = rt._fonts.get(17) or rt._fonts.setdefault(17, pg.font.Font(None, 17))
-            w, h = font.size(text)
+            measure = getattr(rt, "text_size", None)
+            if measure is not None:  # the face the line is drawn in (a CJK one for Chinese)
+                w, h = measure(text, 17)
+            else:
+                font = rt._fonts.get(17) or rt._fonts.setdefault(17, pg.font.Font(None, 17))
+                w, h = font.size(text)
             strip = pg.Surface((w + 24, h + 10), pg.SRCALPHA)
             pg.draw.rect(strip, (8, 10, 18, int(190 * alpha)), strip.get_rect(), border_radius=8)
             screen.blit(strip, (width / 2 - (w + 24) / 2, 8))

@@ -89,7 +89,8 @@ class FormField:
     the id,
     ``string_list``, ``amounts`` (``{key: number}``, keys from ``source`` when
     given), ``group`` (nested ``fields``), ``table`` (list of nested
-    ``fields`` records), ``pairs`` (list of ``[number, text]``).
+    ``fields`` records), ``pairs`` (list of ``[number, text]``), ``translations`` (a locale
+    table's key / text rows, listed with every built-in word of the engine).
     """
 
     key: str
@@ -617,10 +618,12 @@ D26_FORMS = {
     ),
     "locale_tables": (
         F("locale", "Locale (fr, zh-TW ...)", "id"),
+        # key / text rows: the engine's built-in words are listed with their English
+        # (editor/translation_table.py), and any key of the project's own can be added
         F(
             "entries",
             "Translations",
-            "table",
+            "translations",
             default=(),
             fields=(F("key", "Key", "text", default=""), F("text", "Text", "text", default="")),
         ),

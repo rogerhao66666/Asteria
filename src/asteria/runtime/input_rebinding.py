@@ -21,22 +21,36 @@ def effective_input_map(base, overrides):
     return result
 
 
-def describe_binding(binding):
+def _english(key, english, **params):
+    return english.format(**params) if params else english
+
+
+def describe_binding(binding, tr=None):
+    """A binding as the Controls screen shows it; ``tr`` (``GameSessionRuntime.tr``) words
+    the pad in the player's language."""
+    tr = tr or _english
     if binding.device == "key":
         return binding.code.upper() if len(binding.code) == 1 else binding.code.title()
     if binding.device == "gamepad_button":
-        return f"Pad {binding.code}"
+        return tr("controls.pad_button", "Pad {button}", button=binding.code)
     sign = "+" if binding.direction > 0 else "−"
-    return f"Pad {binding.device.removeprefix('gamepad_')} {binding.code}{sign}"
+    axis = f"{binding.device.removeprefix('gamepad_')} {binding.code}{sign}"
+    return tr("controls.pad_axis", "Pad {axis}", axis=axis)
 
 
 class ControlsMenu:
-    def __init__(self, base_map, overrides=None):
+    def __init__(self, base_map, overrides=None, *, tr=None):
         self.base = base_map
         self.overrides = {k: list(v) for k, v in dict(overrides or {}).items()}
         self.row = 0
         self.capturing = None  # action id waiting for an input
         self.message = ""
+        self.tr = tr or _english  # GameSessionRuntime.tr: the screen's words
+
+    def action_name(self, action):
+        """An input action as the player reads it: ``controls.action.<id>`` in the project's
+        translations, else its id."""
+        return self.tr(f"controls.action.{action}", action)
 
     @property
     def input_map(self):
@@ -45,10 +59,13 @@ class ControlsMenu:
     def rows(self):
         current = self.input_map
         rows = [
-            (action, ", ".join(describe_binding(b) for b in current.bindings(action)) or "—")
+            (
+                action,
+                ", ".join(describe_binding(b, self.tr) for b in current.bindings(action)) or "—",
+            )
             for action in current.actions()
         ]
-        return [*rows, ("reset_all", "Reset all to defaults")]
+        return [*rows, ("reset_all", self.tr("controls.reset_all", "Reset all to defaults"))]
 
     def move(self, step):
         self.row = (self.row + step) % len(self.rows())
@@ -57,10 +74,14 @@ class ControlsMenu:
         action = self.rows()[self.row][0]
         if action == "reset_all":
             self.overrides = {}
-            self.message = "All controls reset"
+            self.message = self.tr("controls.all_reset", "All controls reset")
             return None
         self.capturing = action
-        self.message = f"Press a key or pad button for {action} (Esc cancels)"
+        self.message = self.tr(
+            "controls.press",
+            "Press a key or pad button for {action} (Esc cancels)",
+            action=self.action_name(action),
+        )
         return action
 
     def cancel_capture(self):
@@ -85,7 +106,7 @@ class ControlsMenu:
             else:
                 self.overrides.pop(other, None)
         self.capturing = None
-        self.message = f"{action} → {describe_binding(binding)}"
+        self.message = f"{self.action_name(action)} → {describe_binding(binding, self.tr)}"
         return True
 
     def reset(self, action):

@@ -590,7 +590,7 @@ class RecordForm(QWidget):
             widget = self._build(f)
             self._watch(f, widget)
             self.widgets[f.key] = widget
-            if f.kind in ("group", "table"):  # a caption like any field's, the box below it
+            if f.kind in ("group", "table", "translations"):  # a caption, the box below it
                 self.grid.add_row(f.label, widget, span=True)
             else:
                 self.grid.add_row(
@@ -622,6 +622,7 @@ class RecordForm(QWidget):
             "amounts": "edited",
             "group": None,
             "table": "changed",
+            "translations": "changed",
         }
         if f.kind == "optional_int":
             widget.check.toggled.connect(self._edited)
@@ -796,6 +797,11 @@ class RecordForm(QWidget):
         if f.kind == "table":
             kind = _InlineTable if _flat(f.fields) else _TableField
             return kind(f.label, f.fields, self.references, icons=self.icons)
+        if f.kind == "translations":
+            from .translation_table import TranslationTable
+
+            document = self.document or getattr(self.icons, "document", None)
+            return TranslationTable(document)
         raise ValueError(f"unknown form field kind: {f.kind}")
 
     def set_data(self, data):
@@ -847,6 +853,8 @@ class RecordForm(QWidget):
                 widget.form.set_data(value or {})
             elif f.kind == "table":
                 widget.set_rows(value or ())
+            elif f.kind == "translations":  # the locale picks the engine's translation to offer
+                widget.set_rows(value or (), locale=data.get("locale", ""))
 
     def data(self):
         out = copy.deepcopy(self._original)
@@ -876,7 +884,7 @@ class RecordForm(QWidget):
                 out[f.key] = [[_number(t, n), n] for t, n in widget.rows()]
             elif f.kind == "group":
                 out[f.key] = widget.form.data()
-            elif f.kind == "table":
+            elif f.kind in ("table", "translations"):
                 out[f.key] = widget.values()
         return out
 

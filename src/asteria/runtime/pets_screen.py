@@ -57,7 +57,8 @@ class PetsScreen:
             return
         if inp.just_pressed("confirm") or inp.just_pressed("interact"):
             self.game.set_active_pet(pet.instance_id)
-            self._say(f"{pet.name(self.game.pet_species(pet))} will be sent out")
+            name = pet.name(self.game.pet_species(pet))
+            self._say(self.game.tr("pets.sent_out", "{name} will be sent out", name=name))
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
                 self.renaming = pet.nickname
@@ -76,9 +77,9 @@ class PetsScreen:
                 continue
             if game.pet_evolution(pet.instance_id, item_id=evolution.item_id) is evolution:
                 game.evolve_pet(pet.instance_id, item_id=evolution.item_id)
-                self._say(f"{pet.name(species)} evolved!")
+                self._say(game.tr("pets.evolved", "{name} evolved!", name=pet.name(species)))
                 return
-        self._say("Not ready to evolve")
+        self._say(game.tr("pets.not_ready", "Not ready to evolve"))
 
     def _typing(self, events):
         pg = self.rt.pg
@@ -91,7 +92,7 @@ class PetsScreen:
             elif event.key in (pg.K_RETURN, pg.K_KP_ENTER):
                 self.game.rename_pet(pet.instance_id, self.renaming)
                 self.renaming = None
-                self._say("Renamed")
+                self._say(self.game.tr("pets.renamed", "Renamed"))
             elif event.key == pg.K_BACKSPACE:
                 self.renaming = self.renaming[:-1]
             elif getattr(event, "unicode", "") and event.unicode.isprintable():
@@ -104,12 +105,15 @@ class PetsScreen:
         pg, screen = rt.pg, rt.screen
         game = self.game
         screen.fill((10, 12, 20))
-        rt.text("Pets", 36, 22, size=34, color=TITLE)
-        hint = "Up / Down: choose   Enter: send this one out   R: rename   Esc: back"
+        tr = game.tr
+        rt.text(tr("pets.title", "Pets"), 36, 22, size=34, color=TITLE)
+        hint = tr(
+            "pets.hint", "Up / Down: choose   Enter: send this one out   R: rename   Esc: back"
+        )
         rt.text(hint, 36, 62, size=18, color=MUTED)
         pets = self.pets()
         if not pets:
-            rt.text("You have no pets yet.", 36, 110, size=22, color=MUTED)
+            rt.text(tr("pets.none", "You have no pets yet."), 36, 110, size=22, color=MUTED)
             return
         active = game.active_pet()
         row_h = 64
@@ -136,12 +140,12 @@ class PetsScreen:
                 name = self.renaming + "_"
             rt.text(name, 112, y + 8, size=24, color=(255, 255, 255))
             kind = species.display_name if species else pet.species_id
-            line = f"{kind}   Lv {pet.level}"
+            line = tr("pets.level", "{kind}   Lv {level}", kind=kind, level=pet.level)
             if species is not None and pet.affinity:
-                line += f"   Bond {pet.affinity:g}"
+                line += "   " + tr("pets.bond", "Bond {bond}", bond=f"{pet.affinity:g}")
             rt.text(line, 112, y + 36, size=18, color=MUTED)
             if pet is active:
-                rt.text("ACTIVE", rect.right - 100, y + 10, size=20, color=GOOD)
+                rt.text(tr("pets.active", "ACTIVE"), rect.right - 100, y + 10, size=20, color=GOOD)
             need = species.exp_to_next(pet.level) if species else 1.0
             full = species is not None and pet.level >= species.max_level
             fraction = 1.0 if full else max(0.0, min(1.0, pet.experience / need))
@@ -158,7 +162,7 @@ class PetsScreen:
                 rt.text(stats, rect.right - 560, y + 12, size=18, color=(170, 210, 240))
         if self.renaming is not None:
             rt.text(
-                "Type a name, Enter keeps it, Esc cancels",
+                tr("pets.rename_hint", "Type a name, Enter keeps it, Esc cancels"),
                 rt.width / 2,
                 rt.height - 60,
                 size=20,

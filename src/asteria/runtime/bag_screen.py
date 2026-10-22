@@ -11,6 +11,8 @@ slots, rarities, affixes and sets all come from the project's data.
 
 from __future__ import annotations
 
+from asteria.rpg.built_in_text import translated
+
 COLUMNS = 8
 CELL = 54
 GAP = 6
@@ -116,8 +118,11 @@ class BagScreen:
                         f"{m.stat} {format_value(m.value, m.operation.value)}"
                         for m in bonus.modifiers
                     ]
-                    parts += [f"tag {t}" for t in bonus.tags]
-                    bonuses.append((bonus.pieces, ", ".join(parts) or "bonus"))
+                    tr = self.game.tr
+                    parts += [tr("bag.set_tag", "tag {tag}", tag=t) for t in bonus.tags]
+                    bonuses.append(
+                        (bonus.pieces, ", ".join(parts) or tr("bag.set_bonus", "bonus"))
+                    )
                 return definition, have, bonuses
         return None, 0, []
 
@@ -153,13 +158,14 @@ class BagScreen:
         try:
             if worn:
                 game.unequip_to_bag(self.actor_id, slot_id)
-                self._say(f"Unequipped {self._name(item)}")
+                self._say(game.tr("bag.unequipped", "Unequipped {name}", name=self._name(item)))
             else:
                 game.equip_from_bag(self.actor_id, self.index)
-                self._say(f"Equipped {self._name(item)}")
+                self._say(game.tr("bag.equipped", "Equipped {name}", name=self._name(item)))
                 self.index = max(0, min(self.index, len(self.bag()) - 1))
         except Exception as exc:  # requirements not met: say why
-            self._say(f"Cannot equip: {exc}")
+            reason = translated(exc, game.tr)
+            self._say(game.tr("bag.cannot_equip", "Cannot equip: {reason}", reason=reason))
 
     def _name(self, item):
         from asteria.rpg.loot import item_display_name
@@ -215,16 +221,17 @@ class BagScreen:
         db = game.project.rpg_database
         rarities = db.loot_rarities()
         screen.fill((10, 12, 20))
-        rt.text("Equipment", 36, 22, size=34, color=TITLE)
+        tr = game.tr
+        rt.text(tr("bag.title", "Equipment"), 36, 22, size=34, color=TITLE)
         rt.text(
-            "Arrows: choose   Enter: equip / unequip   B / Esc: close",
+            tr("bag.hint", "Arrows: choose   Enter: equip / unequip   B / Esc: close"),
             36,
             62,
             size=18,
             color=MUTED,
         )
         left, top = 36, 100
-        rt.text("Worn", left, top, size=22, color=TITLE)
+        rt.text(tr("bag.worn", "Worn"), left, top, size=22, color=TITLE)
         slots = self.worn_slots()
         for k, (slot_id, item) in enumerate(slots):
             x = left + k * (CELL + GAP)
@@ -238,7 +245,13 @@ class BagScreen:
             )
         bag = self.bag()
         grid_top = top + 28 + CELL + 54
-        rt.text(f"Bag  ({len(bag)})", left, grid_top - 28, size=22, color=TITLE)
+        rt.text(
+            tr("bag.count", "Bag  ({count})", count=len(bag)),
+            left,
+            grid_top - 28,
+            size=22,
+            color=TITLE,
+        )
         rows = max(4, -(-len(bag) // COLUMNS))
         for r in range(rows):
             for c in range(COLUMNS):
@@ -265,18 +278,26 @@ class BagScreen:
     def _tooltip(self, rarities):
         rt = self.rt
         game = self.game
+        tr = game.tr
         item, slot_id, worn = self.selected()
         x, y, w = rt.width - 380, 100, 344
         rt.panel((x, y, w, rt.height - 100 - 56), fill=(16, 20, 32, 240))
         if item is None:
-            rt.text("Nothing here.", x + 16, y + 16, size=20, color=MUTED)
+            rt.text(tr("bag.empty", "Nothing here."), x + 16, y + 16, size=20, color=MUTED)
             return
         rarity = rarities.get(_rarity(item))
         color = rarity.rgb() if rarity is not None else (230, 230, 230)
         rt.text(self._name(item), x + 16, y + 14, size=26, color=color)
-        kind = rarity.display_name if rarity is not None else _rarity(item) or "Common"
+        kind = rarity.display_name if rarity is not None else _rarity(item)
+        kind = kind or tr("bag.common", "Common")
         rt.text(
-            f"{kind}  ·  item level {item.item_level}  ·  {_label(item.equipment.slot)}",
+            tr(
+                "bag.item_line",
+                "{rarity}  ·  item level {level}  ·  {slot}",
+                rarity=kind,
+                level=item.item_level,
+                slot=_label(item.equipment.slot),
+            ),
             x + 16,
             y + 46,
             size=18,
@@ -284,7 +305,12 @@ class BagScreen:
         )
         row = y + 80
         other = None if worn else self.worn_in(slot_id)
-        header = "Worn" if worn else ("Compared with the worn piece" if other else "Stats")
+        if worn:
+            header = tr("bag.worn", "Worn")
+        elif other:
+            header = tr("bag.compared", "Compared with the worn piece")
+        else:
+            header = tr("bag.stats", "Stats")
         rt.text(header, x + 16, row, size=18, color=TITLE)
         row += 26
         for stat, value, delta, operation in compare(item, other):
@@ -299,7 +325,8 @@ class BagScreen:
                 )
             row += 24
         if other is not None:
-            rt.text(f"(replaces {self._name(other)})", x + 16, row + 2, size=16, color=MUTED)
+            replaces = tr("bag.replaces", "(replaces {name})", name=self._name(other))
+            rt.text(replaces, x + 16, row + 2, size=16, color=MUTED)
             row += 26
         affixes = db.affixes if (db := game.project.rpg_database) else {}
         names = [
@@ -307,7 +334,7 @@ class BagScreen:
         ]
         if names:
             row += 8
-            rt.text("Affixes", x + 16, row, size=18, color=TITLE)
+            rt.text(tr("bag.affixes", "Affixes"), x + 16, row, size=18, color=TITLE)
             row += 24
             rt.text(", ".join(names), x + 16, row, size=18)
             row += 26

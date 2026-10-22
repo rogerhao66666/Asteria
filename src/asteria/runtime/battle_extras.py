@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from asteria.presentation.text_cells import cells, cut
+
 ELEMENT_COLORS = {
     "fire": (232, 90, 50),
     "ice": (120, 200, 255),
@@ -52,7 +54,7 @@ class Block:
         if self.caption is None:
             return None
         text, cx, cy = self.caption
-        half = len(text) * 3.6
+        half = cells(text) * 3.6
         return (cx - half, cy - 14, 2 * half, 14)
 
 
@@ -146,15 +148,18 @@ def extras_layout(game, box, scale, width, drop=0.0, head_gap=None, caption_at=N
         held = game.turn_prevented(member.member_id)
         broken = bool(held)
         if broken:  # Break (or sleep...): the state that holds it
-            word = "break" if held[0] == "broken" else held[0].replace("_", " ")
-            entries.append(("state", word.upper()[:7], True, held[0]))
+            if held[0] == "broken":
+                word = game.tr("battle.tile.break", "BREAK")
+            else:
+                word = held[0].replace("_", " ").upper()
+            entries.append(("state", cut(word, 7), True, held[0]))
         elif shield and battle.battle_resources.get(member.member_id, shield) is not None:
             value = battle.battle_resources.current(member.member_id, shield)
             entries.append(("shield", f"{value:g}", True, "shield"))
         for label, revealed in game.weaknesses(member.member_id):
             entries.append(("weak", label if revealed else "?", revealed, label))
         widths = [
-            max(tile * 3, round(len(e[1]) * 0.9 * tile)) if e[0] == "state" else tile
+            max(tile * 3, round(cells(e[1]) * 0.9 * tile)) if e[0] == "state" else tile
             for e in entries
         ]
         total = sum(widths) + gap * (len(entries) - 1)
@@ -172,12 +177,12 @@ def extras_layout(game, box, scale, width, drop=0.0, head_gap=None, caption_at=N
             if active.state_id not in held:  # the held state is already the red tile
                 names.append(shown.replace("_", " "))
         if broken and "broken" in held:  # what Break does, in words
-            names.insert(0, "Damage up - loses a turn")
+            names.insert(0, game.tr("battle.break_caption", "Damage up - loses a turn"))
         if names:
             gap_above = 3 * scale if head_gap is None else head_gap
             at = (caption_at or {}).get(member.member_id)
             cx, cy = at if at is not None else (x, top - gap_above)
-            block.caption = (" ".join(names)[:30], cx, cy)
+            block.caption = (cut(" ".join(names), 30), cx, cy)
         blocks.append(block)
     return blocks
 

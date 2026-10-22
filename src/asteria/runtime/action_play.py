@@ -211,11 +211,16 @@ class ActionHud:
         for event in game.loot.events:
             if event.kind == "picked" and event.looter_id == game.player.id:
                 x, y = world_position(game.player)
-                label = event.label if event.amount == 1 else f"+{event.amount} {event.label}"
+                label = event.label
+                if event.amount != 1:
+                    label = game.tr(
+                        "notice.gained", "+{count} {name}", count=event.amount, name=event.label
+                    )
                 self.floats.append(_Float(x, y - 30, label, (170, 240, 170), life=1.2))
         for result in game.progression_events:
             if result.get("levels_gained"):
-                self.banner = (f"Level {result['new_level']}!", 2.0)
+                level = result["new_level"]
+                self.banner = (game.tr("action.level_up", "Level {level}!", level=level), 2.0)
 
     def _spawn_effects(self, game):
         """Start the ``vfx`` cues of this frame's actions (payload: ``effect`` sprite sheet id,
@@ -478,7 +483,7 @@ class ActionHud:
             shade.fill((20, 0, 0, 120))
             rt.screen.blit(shade, (0, 0))
             rt.text(
-                f"You fell — back in {down:.1f}s",
+                game.tr("action.fell", "You fell — back in {seconds}s", seconds=f"{down:.1f}"),
                 rt.width / 2,
                 rt.height / 2,
                 size=36,

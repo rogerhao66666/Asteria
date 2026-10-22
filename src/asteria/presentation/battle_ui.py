@@ -16,6 +16,7 @@ from .battle_result import BattleResultView
 from .battle_runtime import BattlePresentationFrame
 from .battle_turn_timeline import BattleTurnTimelineView
 from .battle_ui_polish import BattleUiPolishProfile
+from .text_cells import cells, cut, wrap
 
 # what the command menu's layout reads: every field of the menu view but its revision count
 # (the adapter sets the same entries again each frame, and each set counts)
@@ -215,12 +216,13 @@ def _gap(a, b):
     return max(dx, dy)
 
 
-def _category_strip(categories, active, room):
+def _category_strip(categories, active, room, shown_as=None):
     """``Attack  [Skills]  Combo`` within ``room`` layout units: the active category and as
     many of its neighbours as fit, ``‹`` / ``›`` where more lie past the edge (the whole row ran
-    out of the menu, under the panels beside it)."""
-    names = list(categories)
-    at = names.index(active) if active in names else 0
+    out of the menu, under the panels beside it). ``shown_as`` maps a category (an id) to the
+    name drawn for it."""
+    at = list(categories).index(active) if active in categories else 0
+    names = [(shown_as or {}).get(c, c) for c in categories]
 
     def text(lo, hi):
         shown = "  ".join(f"[{v}]" if i == at else v for i, v in enumerate(names) if lo <= i < hi)
@@ -231,7 +233,7 @@ def _category_strip(categories, active, room):
         grown = False
         for candidate in ((lo, hi + 1), (lo - 1, hi)):  # the next one first, then the one before
             a, b = candidate
-            if 0 <= a and b <= len(names) and len(text(a, b)) * 3.8 <= room:
+            if 0 <= a and b <= len(names) and cells(text(a, b)) * 3.8 <= room:
                 lo, hi, grown = a, b, True
         if not grown:
             return text(lo, hi)
@@ -281,22 +283,31 @@ class BattleUiComposer:
         self.overhead_labels = {}  # member_id: (x, y, w, h) of its overhead label, last frame
         self._hud_cache = None  # (inputs, commands, overhead_labels) of the last HUD layout
         self._menu_cache = None  # (inputs, commands) of the last command menu layout
+        self._category_names = {}  # a menu category (id) -> the name drawn for it
+        self._translate = None  # (key, english, **params) -> text: the screen's own words
 
     def _name(self, member_id):
         return self._display_names.get(str(member_id), str(member_id))
 
+    def _tr(self, key, english, **params):
+        """One of the screen's own words in the game's language (``rpg.built_in_text``)."""
+        if self._translate is not None:
+            return self._translate(key, english, **params)
+        return english.format(**params) if params else english
+
     @staticmethod
     def _fit(text, max_chars):
-        """Shorten to ``max_chars``, keeping the last word (e.g. "Hero 06" -> "H06")."""
+        """Shorten to ``max_chars`` cells (a full-width character takes two), keeping the last
+        word (e.g. "Hero 06" -> "H06")."""
         text = str(text)
-        if len(text) <= max_chars:
+        if cells(text) <= max_chars:
             return text
         words = text.split()
         if len(words) > 1:
             short = "".join(w[0] for w in words[:-1]) + words[-1]
-            if len(short) <= max_chars:
+            if cells(short) <= max_chars:
                 return short
-        return text[: max(1, max_chars - 1)] + "."
+        return (cut(text, max(1, max_chars - 1)) or text[:1]) + "."
 
     def _anchor_screen(self, camera, member_id):
         try:
@@ -702,11 +713,11 @@ class BattleUiComposer:
             )
             name = self._fit(self._name(member.member_id), 14)
             ranked = self._ranked_gauges(member, 1) if L.overhead_bars else ()
-            states = " ".join(str(st.label or st.state_id) for st in member.statuses)[:30]
+            states = cut(" ".join(str(st.label or st.state_id) for st in member.statuses), 30)
             width = max(
                 44.0 if ranked else 0.0,
-                len(name) * self.OVERHEAD_CHAR + 4.0,
-                len(states) * 1.9,  # the state names over it (small type)
+                cells(name) * self.OVERHEAD_CHAR + 4.0,
+                cells(states) * 1.9,  # the state names over it (small type)
             )
             height = self.OVERHEAD_CAPTION + 9.0 + (5.0 if ranked else 0.0)
             home_x = ax - width / 2
@@ -766,11 +777,13 @@ class BattleUiComposer:
 
     @staticmethod
     def _chip(label):
-        """A short status label: initials of a multi-word name, else the first three letters."""
+        """A short status label: initials of a multi-word name, else the first three letters
+        (the first two characters of a Chinese or Japanese name)."""
         words = str(label).replace(".", " ").replace("_", " ").split()
         if len(words) > 1:
-            return "".join(w[0] for w in words[:3]).upper()
-        return (words[0] if words else "?")[:3].upper()
+            return cut("".join(w[0] for w in words[:3]).upper(), 4)
+        word = words[0] if words else "?"
+        return word[:3].upper() if word.isascii() else cut(word, 4)
 
     def _side_list_commands(self, members, focus_member_id):
         """One panel per member down the party's edge, under the turn bar: name and status chips
@@ -812,7 +825,7 @@ class BattleUiComposer:
                 )
             )
             chips = " ".join(self._chip(s.label or s.state_id) for s in member.statuses[:4])
-            name_room = max(6, int((width - 8 - 4 * len(chips)) // 4.4))
+            name_room = max(6, int((width - 8 - 4 * cells(chips)) // 4.4))
             texts.append(
                 BattleUiText(
                     self._fit(self._name(member.member_id), name_room),
@@ -918,6 +931,8 @@ class BattleUiComposer:
             stage,
             self.layout,
             self.polish,
+            self._category_names,
+            self._tr("battle.menu.filter", "Filter: {query}"),  # the language of its own words
         )
         cached = self._menu_cache
         if cached is not None and cached[0] == key:
@@ -948,7 +963,7 @@ class BattleUiComposer:
         # as wide as the longest row (name + cost) needs, so costs never run into names
         chars = max(
             (
-                len(e.label) + 2 + (len(e.cost_text) + 2 if e.cost_text else 0)
+                cells(e.label) + 2 + (cells(e.cost_text) + 2 if e.cost_text else 0)
                 for e in menu.entries
             ),
             default=0,
@@ -1140,7 +1155,10 @@ class BattleUiComposer:
         ty = y + P.interaction_padding
         if menu.categories:
             category_text = _category_strip(
-                menu.categories, menu.active_category, width - 2 * P.interaction_padding
+                menu.categories,
+                menu.active_category,
+                width - 2 * P.interaction_padding,
+                self._category_names,
             )
             texts.append(
                 BattleUiText(
@@ -1152,7 +1170,11 @@ class BattleUiComposer:
         if menu.query:
             texts.append(
                 BattleUiText(
-                    f"Filter: {menu.query}", x + P.interaction_padding, ty, "action_filter", "left"
+                    self._tr("battle.menu.filter", "Filter: {query}", query=menu.query),
+                    x + P.interaction_padding,
+                    ty,
+                    "action_filter",
+                    "left",
                 )
             )
             ty += P.interaction_header_height
@@ -1189,11 +1211,11 @@ class BattleUiComposer:
                 gutter = _mark_gutter(P.selected_prefix, P.idle_prefix)
                 label = entry.label
                 if icon_pad:  # the icon took room from the name: never run into the cost
-                    cost_room = (len(entry.cost_text) + 2) * 3.8 if entry.cost_text else 0.0
+                    cost_room = (cells(entry.cost_text) + 2) * 3.8 if entry.cost_text else 0.0
                     fit = int((width - 2 * P.interaction_padding - icon_pad - cost_room) / 3.8)
                     fit -= round(gutter / 3.8)
-                    if fit >= 4 and len(label) > fit:
-                        label = label[: fit - 2].rstrip() + ".."
+                    if fit >= 4 and cells(label) > fit:
+                        label = cut(label, fit - 2).rstrip() + ".."
                 left = x + P.interaction_padding + 2 + icon_pad
                 texts.extend(_marked(prefix, label, left, gutter, ty, role))
                 if entry.cost_text:
@@ -1231,15 +1253,15 @@ class BattleUiComposer:
                 room = width - 2 * P.interaction_padding - (14.0 if menu.page_count > 1 else 0)
                 fit = max(4, int(room // 4.4))
                 skill_text = footer_role == "action_detail" and selected.category != "Command"
-                if footer and len(footer) > fit and skill_text:
+                if footer and cells(footer) > fit and skill_text:
                     # a skill's whole description: a help box over the menu, words wrapped
                     help_panels, help_texts = self._help_box(footer, x, y, width, role)
                     panels += help_panels
                     texts += help_texts
                     footer = ""
                 if footer:
-                    if len(footer) > fit:  # never wider than the menu
-                        footer = footer[: fit - 2].rstrip() + ".."
+                    if cells(footer) > fit:  # never wider than the menu
+                        footer = cut(footer, fit - 2).rstrip() + ".."
                     texts.append(
                         BattleUiText(
                             footer,
@@ -1268,17 +1290,10 @@ class BattleUiComposer:
         L, P = self.layout, self.polish
         width = min(L.virtual_width - 2 * L.margin, max(menu_width * 1.7, menu_width + 60.0))
         per_line = max(8, int((width - 2 * P.interaction_padding) // 3.4))
-        lines, line = [], ""
-        for word in text.split():
-            if line and len(line) + 1 + len(word) > per_line:
-                lines.append(line)
-                line = word
-            else:
-                line = f"{line} {word}".strip()
-        lines.append(line)
+        lines = wrap(text, per_line)  # at spaces, and between Chinese / Japanese characters
         if len(lines) > 3:
             lines = lines[:3]
-            lines[2] = lines[2][: per_line - 2].rstrip() + ".."
+            lines[2] = cut(lines[2], per_line - 2).rstrip() + ".."
         height = 2 * P.interaction_padding + len(lines) * P.interaction_header_height
         x = max(L.margin, min(menu_x + menu_width - width, L.virtual_width - L.margin - width))
         y = max(L.margin, menu_y - height - 3.0)
@@ -1331,7 +1346,7 @@ class BattleUiComposer:
         if workflow.complete:
             texts.append(
                 BattleUiText(
-                    "Ready",
+                    self._tr("battle.workflow.ready", "Ready"),
                     x + width / 2,
                     y + P.interaction_padding + P.interaction_header_height + 4,
                     "workflow_complete",
@@ -1521,8 +1536,9 @@ class BattleUiComposer:
             )
             line_y += 9
         for reward in result.progression:
+            rank = "battle.result.rank", "Rank {old} → {new}"
             suffix = (
-                f"  Rank {reward.old_rank} → {reward.new_rank}"
+                "  " + self._tr(*rank, old=reward.old_rank, new=reward.new_rank)
                 if reward.new_rank != reward.old_rank
                 else ""
             )
@@ -1557,11 +1573,16 @@ class BattleUiComposer:
         member_heights=None,
         member_extents=None,
         overhead_hidden=False,
+        category_names=None,
+        translate=None,
     ):
         """``display_names`` maps member ids to the labels shown in HUD and timeline;
         ``member_heights`` (logical sprite heights) positions overhead bars and the
-        actor-anchored action menu."""
+        actor-anchored action menu; ``category_names`` maps menu categories (ids) to the names
+        drawn; ``translate(key, english, **params)`` words the screen's own text."""
         self._display_names = {str(k): str(v) for k, v in dict(display_names or {}).items()}
+        self._category_names = {str(k): str(v) for k, v in dict(category_names or {}).items()}
+        self._translate = translate
         self._member_heights = {str(k): float(v) for k, v in dict(member_heights or {}).items()}
         self._member_extents = {
             str(k): tuple(float(x) for x in v) for k, v in dict(member_extents or {}).items()

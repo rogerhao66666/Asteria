@@ -49,29 +49,38 @@ class Localizer:
         self.tables = {t.locale: dict(t.entries) for t in tables}
         self.default_locale = _text(default_locale)
         self.locale = _text(locale) or self.default_locale
+        self._known_chain = None  # ((locale, default locale), tables to look in)
 
     def locales(self):
         return tuple(sorted(self.tables))
 
     def _chain(self):
+        """The tables to look in, best first: worked out again only when the locale changes
+        (the game's screens look up their words every frame)."""
+        known = self._known_chain
+        if known is not None and known[0] == (self.locale, self.default_locale):
+            return known[1]
         chain, locale = [], self.locale
         while locale:
             chain.append(locale)
             locale = locale.rsplit("-", 1)[0] if "-" in locale else ""
         if self.default_locale and self.default_locale not in chain:
             chain.append(self.default_locale)
-        return chain
+        tables = tuple(self.tables[x] for x in chain if x in self.tables)
+        self._known_chain = ((self.locale, self.default_locale), tables)
+        return tables
 
     def lookup(self, key):
         """The text for ``key`` in the best available locale, or ``None``."""
-        for locale in self._chain():
-            text = self.tables.get(locale, {}).get(str(key))
+        key = str(key)
+        for table in self._chain():
+            text = table.get(key)
             if text is not None:
                 return text
         return None
 
     def tr(self, key, default=None, **params):
-        text = self.lookup(key)
+        text = self.lookup(key) if self.tables else None
         if text is None:
             text = str(key) if default is None else str(default)
         if not params:

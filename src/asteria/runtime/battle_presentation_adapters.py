@@ -28,6 +28,7 @@ from asteria.presentation.battle_action_menu import BattleActionEntry
 from asteria.presentation.character_composition import CharacterComposition
 from asteria.presentation.particles import ParticleSystem, effect_definition
 from asteria.rpg import BattleOutcome
+from asteria.runtime.battle_commands import COMMAND_WORDS
 from asteria.runtime.battle_visuals import (
     SPRITE_SHEET_KIND,
     BattleVisualError,
@@ -383,6 +384,8 @@ class CanonicalBattleAdapter:
             **kwargs,
         )
         self.screen.display_names = self._display_names(game)
+        self.screen.translate = game.tr  # the screen's own words in the player's language
+        self.screen.result.translate = game.tr  # and the result headline (Victory...)
         self.screen.animation.compositions = self._compositions(combatants)
         self.screen.member_heights = {v.member_id: self._body_height(v) for v in combatants}
         self.screen.member_extents = {v.member_id: self._body_extents(v) for v in combatants}
@@ -1269,7 +1272,11 @@ class CanonicalBattleAdapter:
                 label = f"{i + 1}  {meta.get('label', ability_id)}" + (
                     f"  ({wait})" if wait else ""
                 )
-                reason = f"Ready in {wait} turn" + ("" if wait == 1 else "s") if wait else ""
+                reason = ""
+                if wait:
+                    key = "battle.reason.cooldown_one" if wait == 1 else "battle.reason.cooldown"
+                    english = "Ready in {turns} turn" + ("" if wait == 1 else "s")
+                    reason = game.tr(key, english, turns=wait)
                 entries.append(
                     BattleActionEntry(
                         ability_id, label, order=i, enabled=not wait, disabled_reason=reason
@@ -1278,22 +1285,22 @@ class CanonicalBattleAdapter:
             capture = game.capture_targets() if skills else ()
             if capture:
                 best = max(chance for _, chance, _ in capture)
-                entries.append(
-                    BattleActionEntry(
-                        "capture", f"X  Capture ({best * 100:.0f}%)", order=len(entries)
-                    )
+                label = game.tr(
+                    "battle.capture_row", "X  Capture ({chance}%)", chance=f"{best * 100:.0f}"
                 )
+                entries.append(BattleActionEntry("capture", label, order=len(entries)))
             if skills and game.rules.boost_enabled and game.max_boost_level(actor) > 0:
                 amount = game.battle.battle_resources.current(actor, game.rules.boost_resource_id)
                 label = game.rules.boost_resource_id.replace("_", " ").title()
                 level = getattr(self.host, "_boost_level", 0)
-                entries.append(
-                    BattleActionEntry(
-                        "boost",
-                        f"B  Boost x{level + 1} ({label} {int(amount)})",
-                        order=len(entries),
-                    )
+                label = game.tr(
+                    "battle.boost_key_row",
+                    "B  Boost x{level} ({points} {amount})",
+                    level=level + 1,
+                    points=label,
+                    amount=int(amount),
                 )
+                entries.append(BattleActionEntry("boost", label, order=len(entries)))
             self.screen.set_action_entries(entries)
         self.screen.update(dt)
 
@@ -1324,6 +1331,13 @@ class CanonicalBattleAdapter:
             menu.policy = replace(menu.policy, include_all_category=False)
         pages = self._command_pages()
         commands.pages = pages
+        # the built-in command and menu names as the player reads them (the ids stay English)
+        names = {name: commands.category_label(name) for name in COMMAND_WORDS}
+        if actor is not None:  # the project's own skill groups (battle.group.<name>)
+            names.update(
+                {n: commands.category_label(n) for n in commands.custom_categories(actor)}
+            )
+        self.screen.category_names = names
         if pages is not None and menu.policy.page_size != pages.page_size:
             from dataclasses import replace
 

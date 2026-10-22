@@ -1467,7 +1467,7 @@ class GameSessionRuntime:
         broke = rules.apply_wear(loadout, str(event))
         for item in broke:
             name = item.nickname or item.equipment.display_name
-            self.notify(f"{name} broke!", kind="warning")
+            self.notify(self.tr("notice.broke", "{name} broke!", name=name), kind="warning")
         if broke and in_battle:
             self._apply_break_to_battle(str(actor_id), before)
         return broke
@@ -1777,18 +1777,18 @@ class GameSessionRuntime:
     @property
     def localizer(self):
         """The project's translations (``rpg.localization``) at the player's chosen locale."""
-        from asteria.rpg.localization import Localizer
+        localizer = self._localizer
+        if localizer is None:  # made once: the screens ask for their words every frame
+            from asteria.rpg.localization import Localizer
 
-        db = self.project.rpg_database
-        settings = self.message_settings
-        chosen = self.save.event_context.get_variable(self.LOCALE_VARIABLE, "")
-        if self._localizer is None:
-            self._localizer = Localizer(
-                db.locale_tables.values(),
+            settings = self.message_settings
+            localizer = self._localizer = Localizer(
+                self.project.rpg_database.locale_tables.values(),
                 default_locale=settings.default_locale if settings else "",
             )
-        self._localizer.locale = str(chosen or self._localizer.default_locale)
-        return self._localizer
+        chosen = self.save.event_context.get_variable(self.LOCALE_VARIABLE, "")
+        localizer.locale = str(chosen or localizer.default_locale)
+        return localizer
 
     def set_locale(self, locale):
         if str(locale) not in self.localizer.locales():
@@ -3254,11 +3254,22 @@ class GameSessionRuntime:
         resources = self.battle.member(actor_id).subject.resources
         for resource, amount in form.get("resource_costs", {}).items():
             if not resources.contains(resource) or resources.current(resource) < amount:
-                return f"needs {amount:g} {resource}"
+                return self.tr(
+                    "battle.reason.form_needs",
+                    "needs {amount} {resource}",
+                    amount=f"{amount:g}",
+                    resource=resource,
+                )
         for resource, amount in form.get("battle_costs", {}).items():
             have = self.battle.battle_resources.current(actor_id, resource)
             if have < amount:
-                return f"needs {amount:g} {resource} ({have:g})"
+                return self.tr(
+                    "battle.reason.form_short",
+                    "needs {amount} {resource} ({have})",
+                    amount=f"{amount:g}",
+                    resource=resource,
+                    have=f"{have:g}",
+                )
         return ""
 
     def _pay_form_costs(self, actor_id, form):
@@ -3368,49 +3379,67 @@ class GameSessionRuntime:
         if definition is None:
             return f"Unknown ability {ability_id}"
         member = battle.member(actor_id)
+        tr = self.tr  # the reasons are drawn: in the player's language (rpg.built_in_text)
         availability = battle.ability_availability(actor_id, ability_id)
         if not availability.allowed:
-            return "Blocked by " + ", ".join(availability.blocking_states)
+            states = ", ".join(availability.blocking_states)
+            return tr("battle.reason.blocked", "Blocked by {states}", states=states)
         wait = battle.cooldown_remaining(actor_id, ability_id)
         if wait:
-            return f"Ready in {wait} turn" + ("" if wait == 1 else "s")
+            key = "battle.reason.cooldown_one" if wait == 1 else "battle.reason.cooldown"
+            return tr(key, "Ready in {turns} turn" + ("" if wait == 1 else "s"), turns=wait)
+        short = "battle.reason.short", "Needs {amount} {resource} (has {have})"
         for resource_id, amount in definition.battle_costs.items():
             have = battle.battle_resources.current(actor_id, resource_id)
             if have < amount:
-                return f"Needs {amount:g} {resource_id.replace('_', ' ')} (has {have:g})"
+                name = resource_id.replace("_", " ")
+                return tr(*short, amount=f"{amount:g}", resource=name, have=f"{have:g}")
         if (
             battle.extensions is not None
             and battle.extensions.uses_left(actor_id, ability_id) == 0
         ):
-            return "No uses left this battle"
+            return tr("battle.reason.no_uses", "No uses left this battle")
         wanted = getattr(definition, "requires_pet", "")
         if wanted:
             pet = self.active_pet()
             if pet is None or wanted not in ("any", pet.species_id):
                 species = self.project.rpg_database.pet_species.get(wanted)
-                return "Needs " + (species.display_name if species else "a pet")
+                name = species.display_name if species else tr("battle.reason.a_pet", "a pet")
+                return tr("battle.reason.needs", "Needs {what}", what=name)
         pet_move = self._pet_move_missing(ability_id)
         if pet_move:
             return pet_move
         items = self.save.rpg_state.inventory
-        for item_id, count in (getattr(definition, "requires_items", None) or {}).items():
+        needs_items = (
+            *(getattr(definition, "requires_items", None) or {}).items(),
+            *(getattr(definition, "item_costs", None) or {}).items(),
+        )
+        for item_id, count in needs_items:
             if items.count(item_id) < count:
                 record = self.project.rpg_database.items.get(item_id)
                 name = record.display_name if record is not None else item_id
-                return f"Needs {name}" + (f" x{count}" if count > 1 else "")
-        for item_id, count in (getattr(definition, "item_costs", None) or {}).items():
-            if items.count(item_id) < count:
-                record = self.project.rpg_database.items.get(item_id)
-                name = record.display_name if record is not None else item_id
-                return f"Needs {name}" + (f" x{count}" if count > 1 else "")
+                if count > 1:
+                    return tr(
+                        "battle.reason.needs_items",
+                        "Needs {what} x{count}",
+                        what=name,
+                        count=count,
+                    )
+                return tr("battle.reason.needs", "Needs {what}", what=name)
         funds = self.save.rpg_state.currencies
         for currency, amount in (getattr(definition, "currency_costs", None) or {}).items():
             if funds.get(currency, 0.0) < amount:
-                return f"Needs {amount:g} {currency}"
+                return tr(
+                    "battle.reason.needs_amount",
+                    "Needs {amount} {resource}",
+                    amount=f"{amount:g}",
+                    resource=currency,
+                )
         for gauge_id, amount in (getattr(definition, "gauge_costs", None) or {}).items():
             have = self.party_gauge(gauge_id)
             if have < amount:
-                return f"Needs {amount:g} {gauge_id.replace('_', ' ')} (has {have:g})"
+                name = gauge_id.replace("_", " ")
+                return tr(*short, amount=f"{amount:g}", resource=name, have=f"{have:g}")
         resources = member.subject.resources
         for cost in definition.costs:
             terms = cost.amount.terms
@@ -3418,15 +3447,21 @@ class GameSessionRuntime:
                 continue  # formulas reading stats: the action itself checks them
             amount = sum(t.coefficient for t in terms)
             if resources.contains(cost.resource) and resources.current(cost.resource) < amount:
-                return f"Needs {amount:g} {cost.resource.replace('_', ' ')}"
+                return tr(
+                    "battle.reason.needs_amount",
+                    "Needs {amount} {resource}",
+                    amount=f"{amount:g}",
+                    resource=cost.resource.replace("_", " "),
+                )
         try:
             met = definition.conditions.evaluate(GameplayConditionContext(member.subject, None))
         except Exception:  # conditions about a target are checked against the chosen target
             met = True
         if not met:
-            return "Needs " + describe_condition(definition.conditions)
+            what = describe_condition(definition.conditions, tr)
+            return tr("battle.reason.needs", "Needs {what}", what=what)
         if definition.concoct_station and not self.concoct_ingredients(definition.concoct_station):
-            return "No ingredients"
+            return tr("battle.reason.no_ingredients", "No ingredients")
         return ""
 
     def concoct_ingredients(self, station):
@@ -3493,7 +3528,9 @@ class GameSessionRuntime:
             raise GameSessionError(f"unknown item {item_id}")
         inventory = self.save.rpg_state.inventory
         if inventory.count(item.item_id) < 1:
-            raise GameSessionError(f"no {item.display_name} left")
+            raise GameSessionError(
+                self.tr("battle.item_none_left", "no {name} left", name=item.display_name)
+            )
         battle = self.battle
         if item.battle_ability:
             targets = (
@@ -3588,7 +3625,9 @@ class GameSessionRuntime:
             return ""
         if species.knows(ability_id, pet.level, pet.affinity):
             return ""
-        return f"{pet.name(species)} has not learned this"
+        return self.tr(
+            "battle.reason.pet_unlearned", "{pet} has not learned this", pet=pet.name(species)
+        )
 
     def pet_name(self, instance_id):
         """A pet's nickname (else its species' name) by instance id; ``""`` when unknown."""
@@ -3915,10 +3954,12 @@ class GameSessionRuntime:
         if self.battle is None:
             return "Not in battle"
         if self._escape_rule() is None:
-            return "The project defines no escape rule"
+            return self.tr("battle.escape.no_rule", "The project defines no escape rule")
         encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
         if encounter is not None and "no_escape" in encounter.tags:
-            return "This battle has no_escape: there is no running away"
+            return self.tr(
+                "battle.escape.blocked", "This battle has no_escape: there is no running away"
+            )
         return ""
 
     def escape_chance(self):
@@ -4512,7 +4553,9 @@ class GameSessionRuntime:
             raise GameSessionError(f"{enemy_id} cannot be captured")
         state = self.save.rpg_state
         if rule.item_id and not state.inventory.remove(rule.item_id, 1):
-            raise GameSessionError(f"capturing needs {rule.item_id}")
+            raise GameSessionError(
+                self.tr("battle.capture.needs", "capturing needs {item}", item=rule.item_id)
+            )
         roll = (rng or self.battle.rng).random()
         success = roll < self.capture_chance(target_id)
         self._log(
@@ -4590,7 +4633,9 @@ class GameSessionRuntime:
             for member_id in sorted(extensions.overkill):
                 scale = extensions.overkill_scale(self.battle, member_id)
                 if scale > 1.0:
-                    notes.append(f"Overkill x{scale:.2g}")
+                    notes.append(
+                        self.tr("victory.overkill", "Overkill x{scale}", scale=f"{scale:.2g}")
+                    )
         return build_aftermath(
             applied,
             before,
@@ -4729,7 +4774,7 @@ class GameSessionRuntime:
         return self.save
 
 
-def describe_condition(condition):
+def describe_condition(condition, tr=None):
     """Plain words for an ability condition (menus: why it cannot be used)."""
     from asteria.gameplay.conditions import (
         ConditionGroup,
@@ -4738,24 +4783,29 @@ def describe_condition(condition):
         TagCondition,
     )
 
+    if tr is None:  # no game: English (``GameSessionRuntime.tr`` words it in the player's)
+
+        def tr(key, english, **params):
+            return english.format(**params) if params else english
+
     if isinstance(condition, TagCondition):
         text = (
             condition.tag.split(".", 1)[-1].replace("_", " ")
             if condition.tag.startswith("equip.")
             else condition.tag
         )
-        return text if condition.present else f"no {text}"
+        return text if condition.present else tr("battle.condition.not", "no {what}", what=text)
     if isinstance(condition, ConditionGroup):
-        parts = [describe_condition(c) for c in condition.conditions]
-        joiner = (
-            " or " if str(getattr(condition.mode, "value", condition.mode)) == "any" else " + "
-        )
-        return joiner.join(parts) if parts else "conditions"
+        parts = [describe_condition(c, tr) for c in condition.conditions]
+        any_of = str(getattr(condition.mode, "value", condition.mode)) == "any"
+        joiner = tr("battle.condition.or", " or ") if any_of else " + "
+        return joiner.join(parts) if parts else tr("battle.condition.some", "conditions")
     if isinstance(condition, StateCondition):
-        return f"state {getattr(condition, 'state_id', '')}"
+        state = getattr(condition, "state_id", "")
+        return tr("battle.condition.state", "state {state}", state=state)
     if isinstance(condition, NumericCondition):
         return f"{condition.key} {condition.operator} {condition.value:g}"
-    return "conditions"
+    return tr("battle.condition.some", "conditions")
 
 
 def _base_relative(battle_pool, base_pool):

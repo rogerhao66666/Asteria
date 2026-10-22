@@ -150,6 +150,9 @@ class BattleResultPresentationRuntime:
         self.profile = profile or BattleResultProfile()
         if not isinstance(self.profile, BattleResultProfile):
             raise TypeError("profile must be BattleResultProfile")
+        # (key, english) -> the headline drawn: the game's translations (the playable host sets
+        # GameSessionRuntime.tr); a key no table has keeps the profile's own label
+        self.translate = None
         self.revision = 0
         self._view = BattleResultView(False, "", (), (), (), (), (), (), (), 0)
 
@@ -158,35 +161,42 @@ class BattleResultPresentationRuntime:
         return self._view
 
     def _headline(self, outcome, *, perspective_side_ids=None, disposition=None):
+        """The headline for ``outcome``: the profile's label for it, through ``translate`` by
+        ``battle.result.<victory | defeat | escape | complete>``."""
         if not outcome.finished:
             return ""
+        labels = {
+            "victory": self.profile.victory_label,
+            "defeat": self.profile.defeat_label,
+            "escape": self.profile.escape_label,
+            "complete": self.profile.complete_label,
+        }
+
+        def word(kind):
+            if self.translate is None:
+                return labels[kind]
+            return self.translate(f"battle.result.{kind}", labels[kind])
 
         if disposition is not None:
             disposition = str(disposition).strip().lower()
-            labels = {
-                "victory": self.profile.victory_label,
-                "defeat": self.profile.defeat_label,
-                "escape": self.profile.escape_label,
-                "complete": self.profile.complete_label,
-            }
             if disposition not in labels:
                 raise ValueError("unsupported battle result presentation disposition")
-            return labels[disposition]
+            return word(disposition)
 
         if perspective_side_ids is None:
             # A canonical outcome may contain winners/defeated sides but without a
             # viewer perspective presentation cannot truthfully call that Victory
             # or Defeat. Neutral completion is the only generic default.
-            return self.profile.complete_label
+            return word("complete")
 
         perspective = {str(x) for x in perspective_side_ids}
         if perspective.intersection(map(str, outcome.winning_sides)):
-            return self.profile.victory_label
+            return word("victory")
         if perspective.intersection(map(str, outcome.escaped_sides)):
-            return self.profile.escape_label
+            return word("escape")
         if perspective.intersection(map(str, outcome.defeated_sides)):
-            return self.profile.defeat_label
-        return self.profile.complete_label
+            return word("defeat")
+        return word("complete")
 
     def present(self, outcome, reward_result=None, *, perspective_side_ids=None, disposition=None):
         if not isinstance(outcome, BattleOutcome):

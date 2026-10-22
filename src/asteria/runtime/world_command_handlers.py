@@ -193,9 +193,12 @@ def register_standard_world_commands(router, session):
         inventory.add(item_id, int(_amount(command, "quantity", 1)))
         name = session.project.rpg_database.items[item_id].display_name
         if inventory.count(item_id) > before:
-            session.notify(f"+{inventory.count(item_id) - before} {name}", kind="item")
+            gained = inventory.count(item_id) - before
+            text = session.tr("notice.gained", "+{count} {name}", count=gained, name=name)
+            session.notify(text, kind="item")
         if len(inventory.overflow) > lost:
-            session.notify(f"No room for {name}", kind="warning")
+            text = session.tr("notice.no_room", "No room for {name}", name=name)
+            session.notify(text, kind="warning")
         session.refresh_quests()
         return inventory.count(item_id)
 

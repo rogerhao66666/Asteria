@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+from asteria.rpg.built_in_text import Words
+
 
 def _id(value, label):
     value = str(value).strip()
@@ -24,7 +26,8 @@ def _prices(raw, label):
 
 
 class ShopError(ValueError):
-    pass
+    """A refused deal; the ones a player can meet carry ``Words`` (their text is translatable
+    where a shop screen shows it, ``str()`` stays English)."""
 
 
 _CONDITION_OPERATORS = ("==", "!=", "<=", ">=", "<", ">")  # two-character ones first
@@ -276,19 +279,49 @@ class ShopRuntime:
             raise ShopError(f"{shop.shop_id} does not sell {entry.item_id}")
         remaining = self.remaining(shop.shop_id, entry.item_id)
         if remaining is not None and remaining < quantity:
-            raise ShopError(f"{shop.shop_id} has only {remaining} {entry.item_id}")
+            raise ShopError(
+                Words(
+                    "shop.error.stock",
+                    "{shop} has only {count} {item}",
+                    shop=shop.shop_id,
+                    count=remaining,
+                    item=entry.item_id,
+                )
+            )
         if not self.visible(shop.shop_id, entry.item_id):
-            raise ShopError(f"{shop.shop_id} is not offering {entry.item_id} now")
+            raise ShopError(
+                Words(
+                    "shop.error.not_now",
+                    "{shop} is not offering {item} now",
+                    shop=shop.shop_id,
+                    item=entry.item_id,
+                )
+            )
         buy_prices = self.prices(shop.shop_id, entry.item_id, "buy")
         if not self.can_afford(buy_prices, quantity):
-            raise ShopError(f"cannot afford {quantity} {entry.item_id}")
+            raise ShopError(
+                Words(
+                    "shop.error.afford",
+                    "cannot afford {count} {item}",
+                    count=quantity,
+                    item=entry.item_id,
+                )
+            )
         room = (
             self.inventory.room_for(entry.item_id) if hasattr(self.inventory, "room_for") else None
         )
         if (
             room is not None and room < quantity
         ):  # never charge for items the bag cannot hold (RPG-01 rules)
-            raise ShopError(f"no room for {quantity} {entry.item_id} (room for {room})")
+            raise ShopError(
+                Words(
+                    "shop.error.no_room",
+                    "no room for {count} {item} (room for {room})",
+                    count=quantity,
+                    item=entry.item_id,
+                    room=room,
+                )
+            )
         change = {k: -v * quantity for k, v in buy_prices.items()}
         for key, delta in change.items():
             self.currencies[key] = self.currencies.get(key, 0.0) + delta
@@ -306,7 +339,9 @@ class ShopRuntime:
         if not entry.sell_prices:
             raise ShopError(f"{shop.shop_id} does not buy {entry.item_id}")
         if not self.inventory.remove(entry.item_id, quantity):
-            raise ShopError(f"not enough {entry.item_id} to sell")
+            raise ShopError(
+                Words("shop.error.sell", "not enough {item} to sell", item=entry.item_id)
+            )
         change = {
             k: v * quantity for k, v in self.prices(shop.shop_id, entry.item_id, "sell").items()
         }

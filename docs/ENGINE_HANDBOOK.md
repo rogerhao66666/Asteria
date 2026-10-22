@@ -151,6 +151,38 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - Scene 視圖操作：**滑鼠滾輪以游標為中心縮放**（一格 ×1.15）；方向鍵平移視圖（有選取實體時改為移動實體，
   Shift 加大步距）；**觸控板**雙指捲動平移、捏合縮放（維持原樣）。
 
+### 3.7 遊戲內建字的翻譯（D52）
+
+- **遊戲自己畫的字都能翻、也能改名**：標題、野外提示、對話提示、暫停／設定／按鍵設定／存檔／狀態／
+  任務／商店／製作／成就／圖鑑／訊息紀錄／音樂室／製作人員／技能欄／寵物選單、背包與技能樹（動作遊戲）、
+  動作 HUD、戰鬥指令與提示、指令不能用的原因、破防與捕獲、勝利結算與標題、遊戲結束、連線合作的訊息。
+  畫的時候都經過 `GameSessionRuntime.tr(鍵, 英文)`。
+- **鍵的清單**：`src/asteria/rpg/built_in_text.py`（`GROUPS`：337 個鍵、依畫面分 27 組，每個鍵附畫出的英文），
+  逐條列在 [`BUILT_IN_TEXT_KEYS.md`](BUILT_IN_TEXT_KEYS.md)（`scripts/built_in_text_keys.py` 產生）。
+  `tests/test_built_in_text.py` 掃描原始碼：畫面用到的每個鍵都在清單裡、英文一致，清單裡的鍵都有畫面在用。
+- **翻譯表**：Database ▸ Game Systems ▸ Translations。每個 locale 一張表，頁面列出全部內建字（英文在旁邊），
+  可搜尋、只看未翻譯；文字留空就用英文（輸入一個空白可隱藏那個字）。表在它是 Message Settings 的
+  Default Locale、或玩家在 設定 ▸ 語言 選了它時使用（有兩個以上 locale 才出現語言選項）。
+  在預設語系的表裡寫英文就是改名，例如 en 表 `battle.command.attack` = `Fight`。
+- **沒有翻譯表的專案畫面完全不變**：新舊引擎各畫 12 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、
+  遊戲結束、存檔、狀態、戰鬥指令、技能清單），Octopath、Complex Reference（沒有表）與英文的 Full
+  Verification 共 36 張逐像素相同。
+- **引擎附的繁體中文**：`rpg/built_in_text/zh-TW.json`（每個鍵都有，`{...}` 與英文一致）。Translations 頁的
+  「填入空白列」把它填進 zh-TW 表（專案名稱剛好是內建字的，例如指令頁的「Skills」，也一起填）。
+- **專案自己的名稱也能翻**（頁面依專案列出，沒寫就照專案寫的顯示）：`battle.layer.<指令 id>`（Command
+  Menu Pages 的名稱，例如 Fight）、`battle.group.<分組>`（技能的 `menu_category`）、`pause.entry.<id>`
+  （暫停選單自訂項目）、`controls.action.<動作 id>`（按鍵設定畫面的動作名稱）。
+- **規則拒絕的訊息**（買不起、庫存不夠、背包放不下）用 `Words` 帶著鍵丟出：`str(錯誤)` 還是英文，商店畫面用
+  `translated(錯誤, game.tr)` 顯示譯文。
+- **中文排版**：戰鬥版面用 `presentation/text_cells.py` 算寬度：中日韓全形字算 2 格，ASCII 長度不變
+  （所以英文版面和以前一樣）；技能說明在字與字之間換行、句讀不放行首。中文用系統的 CJK 字型畫
+  （macOS 的 STHeiti）：戰鬥畫面的字級等於 UI 字型實際的 em（`point_size`，含 skin 的 `font_scale`），
+  選單等主畫面是英文字型行高的 1.25 倍（以前同字級時中文大了約 45%）；並且垂直置中在英文大寫字母的
+  中線（`glyph_shift`），選單游標和中文標籤同高；置中的標題與提示不超出英文那一行的上緣。skin 字型本身有
+  中文字時直接用它。
+- **還不能翻的**：專案資料的名稱和說明（角色、技能、道具、狀態、敵人、任務、商店、貨幣 id）照作者寫的顯示；
+  開發用的錯誤訊息（`unknown …`、資料設定錯誤）維持英文。細節見 DECISION_LOG D52。
+
 ---
 
 ## 4. 範本專案
@@ -223,6 +255,8 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - `scripts/arpg_demo_live_check.py <職業> OUT`：真實視窗，用腳本按鍵走完城鎮、轉職、技能樹、野外、Boss、
   礦坑，輸出截圖與 fps。
 - `scripts/editor_ui_audit.py`：編輯器版面稽核（可 `--project`、`--also 1100x700`）。
+- `scripts/built_in_text_live_check.py OUT`：Cocoa 視窗把 Full Verification 切成 zh-TW，用真的按鍵走過標題、
+  野外、暫停、設定、存檔、狀態、戰鬥指令、勝利與遊戲結束，存圖並記下每個畫面畫出的字（D52）。
 - 量測：`scripts/arpg_stress.py`、`arpg_demo_measure.py`、`runtime_benchmark.py`。
 
 ---

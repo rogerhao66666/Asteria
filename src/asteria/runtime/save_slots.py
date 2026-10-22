@@ -20,6 +20,11 @@ SLOT_COUNT = 3
 AUTOSAVE = "autosave"
 
 
+def _english(key, english, **params):
+    """A message's English (no translations): ``tr``'s stand-in."""
+    return english.format(**params) if params else english
+
+
 @dataclass(frozen=True, slots=True)
 class SlotInfo:
     slot: str
@@ -32,11 +37,24 @@ class SlotInfo:
 
     @property
     def summary(self):
+        return self.summary_text()
+
+    def summary_text(self, tr=None):
+        """The slot's line under its name; ``tr`` (``GameSessionRuntime.tr``) words it in the
+        player's language."""
+        tr = tr or _english
         if self.error:
-            return f"damaged save ({self.error})"
+            return tr("slots.damaged", "damaged save ({error})", error=self.error)
         if not self.exists:
-            return "— empty —"
-        return f"{self.scene} · {self.leader} Lv {self.level} · {self.saved_at}"
+            return tr("slots.empty_slot", "— empty —")
+        return tr(
+            "slots.summary",
+            "{scene} · {leader} Lv {level} · {saved_at}",
+            scene=self.scene,
+            leader=self.leader,
+            level=self.level,
+            saved_at=self.saved_at,
+        )
 
 
 class SaveSlots:
@@ -102,11 +120,12 @@ class SaveSlots:
 class SlotMenu:
     """Save or load screen logic: choose a slot; overwrite / delete need a second press."""
 
-    def __init__(self, slots, mode):
+    def __init__(self, slots, mode, *, tr=None):
         if mode not in ("save", "load"):
             raise ValueError("mode must be save or load")
         self.slots = slots
         self.mode = mode
+        self.tr = tr or _english  # GameSessionRuntime.tr: messages in the player's language
         self.row = 0 if mode == "load" else 1  # saving starts on slot 1, not the autosave
         self.pending = None  # ("overwrite" | "delete", slot) awaiting confirmation
         self.message = ""
@@ -126,18 +145,24 @@ class SlotMenu:
         """Enter: ``("saved", path)``, ``("loaded", save)``, ``("confirm", slot)`` or ``("refused",
         reason)``."""
         info = self.slots.info(self.slot)
+        tr = self.tr
         if self.mode == "load":
             if not info.exists or info.error:
-                self.message = "That slot is empty" if not info.exists else "That save is damaged"
+                if not info.exists:
+                    self.message = tr("slots.is_empty", "That slot is empty")
+                else:
+                    self.message = tr("slots.is_damaged", "That save is damaged")
                 return ("refused", self.message)
             return ("loaded", self.slots.load(self.slot))
         if info.exists and self.pending != ("overwrite", self.slot):
             self.pending = ("overwrite", self.slot)
-            self.message = f"Overwrite slot {self.slot}? Press Enter again"
+            self.message = tr(
+                "slots.overwrite", "Overwrite slot {slot}? Press Enter again", slot=self.slot
+            )
             return ("confirm", self.slot)
         self.pending = None
         path = self.slots.save(self.slot, game)
-        self.message = f"Saved to slot {self.slot}"
+        self.message = tr("slots.saved", "Saved to slot {slot}", slot=self.slot)
         return ("saved", path)
 
     def delete(self):
@@ -145,9 +170,11 @@ class SlotMenu:
             return False
         if self.pending != ("delete", self.slot):
             self.pending = ("delete", self.slot)
-            self.message = f"Delete slot {self.slot}? Press Delete again"
+            self.message = self.tr(
+                "slots.delete", "Delete slot {slot}? Press Delete again", slot=self.slot
+            )
             return False
         self.pending = None
         self.slots.delete(self.slot)
-        self.message = f"Deleted slot {self.slot}"
+        self.message = self.tr("slots.deleted", "Deleted slot {slot}", slot=self.slot)
         return True
