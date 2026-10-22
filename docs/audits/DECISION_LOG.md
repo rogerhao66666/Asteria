@@ -2370,3 +2370,34 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 既有、與翻譯無關：勝利時戰鬥畫面自己的結果面板在 VictoryScreen 後面、最後的指令選單停在畫面上；選中技能列名稱和花費會黏在一起（D49／D51 已記）。
 
 **狀態：** b5021e83。
+
+
+## D53 — 戰鬥 HUD 的隊伍肖像（2026-10-23）
+
+**要求：** 想用動漫風的圖做 Dragon Quest／Persona 式的戰鬥（隊伍用肖像放在 HUD、敵人正面、攻擊用特效表現），因為可散布的動漫戰鬥行走圖找不到，可用的 CC0 動漫肖像倒是有。戰鬥角色圖（Combatant Sprites，`combatant_visuals`）早就有 `portrait_asset_id`、`small_portrait_asset_id`，Portrait Party Layout 也會把隊伍留在 HUD，但戰鬥畫面從沒畫過肖像（`BattleUiAssemblyRuntime`／`BattleUiMemberCard` 帶著這兩個 id，但只是匯出，實際戰鬥流程沒有用到它）。
+
+**做了什麼：**
+- **畫面**（`presentation/battle_ui.py`）：隊伍卡片有肖像就畫出來，三種隊伍 HUD（`column`、`side_list`、`bottom_row`）都支援。肖像放在卡片的左端或右端（名字、血條、數字往旁邊讓並變窄，血條至少留 24 版面單位），或放在列的上方（卡片變高）。放旁邊的肖像不會比卡片的列高，所以卡片大小不變；放上方的只用清單或欄位剩下的空間（不會擠掉別人的列，空間不夠就縮小，再不夠就不畫），底列（bottom row）往上長，戰場的腳底線也跟著上移（`bottom_row_height`，`runtime/battle_visuals.py`）。同一個清單或欄位裡的肖像一樣大（取最小的），小於 10 單位就不畫。
+- **大小肖像**：肖像方格 32 單位以上用 `portrait_asset_id`，以下用 `small_portrait_asset_id`，缺一個就用另一個。
+- **不會被蓋住**：卡片自己的名字、血條、數字、狀態圖示都排在肖像旁邊或下方；指令選單、技能說明框、目標選擇框碰到肖像時，先變窄（說明框重新換行），不行再移開（`_clear_of_portraits`），沒擋到就完全不動。原本 Vigil 的指令選單會蓋到側欄左緣（截圖裡的「Vesper」），現在停在側欄前面。
+- **載入與繪製**：用 D41 的 `PlayableTestRuntime.dialogue_portrait()`（`icon_source` 解析 id，放大用最近鄰、縮小用平滑，結果有快取）。adapter 開戰時用 `skin_image` 確認圖讀得到，讀不到就當作沒有肖像（卡片照舊）。`PygameBattleUiBackend(resolve_portrait=…)` 把肖像以原比例置中畫在方格裡；`BattleUiRenderer` 在面板之後、血條與文字之前畫（沒有 `draw_portrait` 的後端照常畫卡片，只是沒有肖像）。
+- **資料**：`BattleUiLayoutProfile.hud_portraits`（`left` 預設／`right`／`above`／`off`）、`hud_portrait_size`（0 = 和卡片的列一樣高），都只在有設定時寫入；新的繪製指令 `BattleUiPortrait` 與 `BattleUiFrame.portraits`（預設空）。
+- **編輯器**：Battle Presentation ▸ HUD & Interaction ▸ Battle UI Layout 的表單多出 HUD Portraits（下拉：Above／Left／Off／Right）與 HUD Portrait Size，都有說明；Combatant Sprites 表單的 Portrait、Small portrait 改用對話視窗的肖像選擇器（清單＋預覽＋Browse…，沒選就是 null）。介面字串都有 zh_TW。
+
+**相容：** 沒有設定肖像的專案（目前所有範本與參考專案都沒有）畫面完全不變；舊資料照常讀，新選項沒設定就不寫入。
+
+**測試：** `tests/test_battle_hud_portraits.py`（46 項）：選項只在有設定時寫入、舊資料照讀、錯的值會擋下；編輯器的下拉與中英文、肖像選擇器；三種 HUD × 左／右／上方：肖像在自己的卡片裡，不碰到自己的名字、血條、狀態圖示，卡片大小（放旁邊不變、放上方剛好長高肖像＋2），卡片不重疊、不出畫面；沒有肖像的卡片樣子完全一樣（放旁邊時連位置都一樣）；`off` 和沒有肖像的畫面相同；同一清單或欄位一樣大；大小肖像的選擇與互補；大小選項與極限（滿的側欄只用剩下的空間、太窄的卡片不畫）；四種版面 × 三個行動角色，指令選單、說明框、目標框都不蓋肖像，沒擋到時位置不變；快取（肖像改了才重排）；Headless 後端的繪製順序；pygame 後端的縮放與置中；Octopath demo 的真實戰鬥（肖像畫在方格裡、圖不存在的不畫、`off` 不畫）。完整測試 3181 通過、1 略過、0 失敗（`pytest -q`，約 5 分鐘）；`ruff check`、`ruff format --check` 乾淨。
+
+**實機證據：**
+- `scripts/battle_portraits_live_check.py`（Cocoa 視窗，真的跑 frame 到第一位主角的回合、指令選單開著）PASS：五場戰鬥每張肖像都和縮放後的圖逐像素相同（0 個像素不同），沒有字、血條或選單蓋到。肖像用 Ninja Adventure 的 CC0 facesets（Hunter、SorcererBlack、Vampire、SamuraiBlue，取自 `local_reference/`）代替動漫臉，專案只在記憶體裡改。截圖：`d53_vigil_side_list.png`（Portrait Party Layout：身體隱藏、側欄、肖像在左）、`d53_vigil_side_list_right.png`（肖像在右）、`d53_octopath_side_list.png`（側視戰鬥、身體顯示）、`d53_octopath_column.png`（引擎預設的欄位 HUD）、`d53_octopath_bottom_row_above.png`（底列、肖像在上方 30 單位）；結果在 `d53_battle_portraits_results.json`。
+- 編輯器（Cocoa，`--editor`）：`d53_editor_battle_ui_layout.png`／`_zh.png`（Battle Screen ▸ Battle UI Layout 的 HUD Portraits 下拉與 HUD Portrait Size，含說明）、`d53_editor_combatant_portraits.png`／`_zh.png`（Combatant Sprites 的 Portrait 肖像選擇器：預覽、清單、Browse…）；英文與繁體中文都畫出（語言只對這個視窗切換，沒有存設定），結果在 `d53_editor_results.json`。
+- **沒有肖像的畫面不變**：舊引擎（改之前的 src，HEAD 03558c5f）與新引擎各畫 Octopath（boss_room、slime_pit、samurai_duel）、Full Verification（acolyte_vigil、boss_room）、Complex Reference（boss_room）六場戰鬥，每場五個時刻（主角回合後第 1、60、240 幀，按下、再按確定之後），共 30 張逐像素相同。
+
+**限制：**
+- 肖像只在 HUD 卡片上；`BattleUiAssemblyRuntime` 仍沒有接到實際戰鬥流程（和之前一樣）。
+- 頭頂資訊（overhead）的成員沒有卡片，所以不畫肖像。
+- 「上方」在滿的側欄（例如 Vigil 4 人 × 4 列）沒有剩下的空間，肖像不會出現；側欄建議用左或右。
+- 肖像不會依狀態換臉（受傷、倒地），也沒有外框樣式可選。
+- 既有、與肖像無關：欄位 HUD 的數字在 Octopath 字型下 4 位數時會壓到血條右端；Battle UI Layout 表單的 Command Counts、Stage Front Right 兩個欄位名還沒有中文。
+
+**狀態：** 已提交（2026-10-23，使用者要求）。

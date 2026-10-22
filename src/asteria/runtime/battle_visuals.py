@@ -284,7 +284,9 @@ class BattleVisualResolver:
     def missing_profiles(self, member_ids):
         return tuple(m for m in member_ids if self.profile_for(m) is None)
 
-    def combatant_visuals(self, sides, placement, layout, template=None, party_sides=()):
+    def combatant_visuals(
+        self, sides, placement, layout, template=None, party_sides=(), hud_portraits=()
+    ):
         """``sides``: ``{side_id: [member_id, ...]}``; ``placement``: ``{side_id:
         "left"|"right"}``.
 
@@ -295,6 +297,8 @@ class BattleVisualResolver:
 
         ``template`` (a Side-View Positions or Portrait Party Layout record) then moves them to
         its zones; ``party_sides`` are the sides a portrait layout keeps in the HUD.
+        ``hud_portraits`` are the members whose party cards show a portrait (a bottom-row HUD
+        with portraits over its cells stands taller).
         """
         width = float(getattr(layout, "virtual_width", 320))
         height = float(getattr(layout, "virtual_height", 180))
@@ -311,6 +315,8 @@ class BattleVisualResolver:
             )
             bottom = height - margin - 6.0
         elif hud_mode == "bottom_row":
+            from asteria.presentation.battle_ui import bottom_row_height
+
             # Side-view staging: the whole width is stage; feet stand on the
             # ground band between ``stage_top`` and the bottom HUD row.
             left_edge, right_edge = margin, width - margin
@@ -318,7 +324,17 @@ class BattleVisualResolver:
                 float(getattr(layout, "timeline_y", 7.0)) + 30.0,
                 height * float(getattr(layout, "stage_top", 0.0)),
             )
-            bottom = height - margin - 24.0 - 6.0
+            off_row = {  # zones whose members have no card in the row
+                *getattr(layout, "overhead_zones", ()),
+                *getattr(layout, "hidden_zones", ()),
+            }
+            framed = any(  # a card in the row shows a portrait
+                member_id in hud_portraits
+                for side_id, members in sides.items()
+                if placement.get(side_id, "left") not in off_row
+                for member_id in members
+            )
+            bottom = height - margin - bottom_row_height(layout, framed) - 6.0
         else:
             left_edge, right_edge = margin + panel, width - margin - panel
             top = float(getattr(layout, "timeline_y", 7.0)) + 52.0

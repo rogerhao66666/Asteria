@@ -217,6 +217,7 @@ class PygameBattleUiBackend:
         scale=1.0,
         resolve_skin=None,
         font_scale=1.0,
+        resolve_portrait=None,
     ):
         try:
             import pygame
@@ -226,6 +227,8 @@ class PygameBattleUiBackend:
         self.screen = screen
         self.resolve_icon = resolve_icon
         self.resolve_skin = resolve_skin  # asset id -> the picture at its own size, or None
+        # (asset id, width, height) -> the picture fitted inside that many pixels, or None
+        self.resolve_portrait = resolve_portrait
         self.font_scale = float(font_scale)
         self.font_name = font_name
         self.scale = float(scale)
@@ -405,6 +408,17 @@ class PygameBattleUiBackend:
         else:
             self.pg.draw.rect(self.screen, (116, 130, 154), target, border_radius=2)
             self.pg.draw.rect(self.screen, (202, 211, 226), target, width=1, border_radius=2)
+
+    def draw_portrait(self, portrait):
+        """A party card's portrait, fitted inside its box in screen pixels (``resolve_portrait``
+        keeps the proportions: sharp pixels when enlarged, smooth when shrunk) and centred in
+        it; nothing when the picture cannot be drawn."""
+        if self.resolve_portrait is None:
+            return
+        box = self._rect(portrait.x, portrait.y, portrait.width, portrait.height)
+        picture = self.resolve_portrait(portrait.asset_id, box.width, box.height)
+        if picture is not None:
+            self.screen.blit(picture, picture.get_rect(center=box.center))
 
     def draw_marker(self, marker, *, color):
         cx, cy = self._s(marker.x), self._s(marker.y)

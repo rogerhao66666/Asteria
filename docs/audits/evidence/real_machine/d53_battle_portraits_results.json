@@ -1,0 +1,462 @@
+{
+ "check": "D53 party portraits on the battle HUD cards",
+ "stand_in_faces": "Ninja Adventure facesets (CC0): Hunter, SorcererBlack, Vampire, SamuraiBlue",
+ "battles": [
+  {
+   "battle": "vigil_side_list",
+   "demo": "full_verification",
+   "encounter": "acolyte_vigil",
+   "layout": {
+    "party_hud": "side_list",
+    "hud_portraits": "left",
+    "hud_portrait_size": 0.0
+   },
+   "video_driver": "cocoa",
+   "frames": 224,
+   "screenshot": "d53_vigil_side_list.png",
+   "members_with_portraits": [
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04"
+   ],
+   "portraits": [
+    {
+     "member": "hero_01",
+     "asset": "Hunter",
+     "box": [
+      366.0,
+      39.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_02",
+     "asset": "SorcererBlack",
+     "box": [
+      366.0,
+      93.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_03",
+     "asset": "Vampire",
+     "box": [
+      366.0,
+      147.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_04",
+     "asset": "SamuraiBlue",
+     "box": [
+      366.0,
+      201.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    }
+   ],
+   "menus": [
+    [
+     277.0,
+     158.2,
+     88.0,
+     96.0
+    ]
+   ],
+   "problems": [],
+   "pass": true
+  },
+  {
+   "battle": "vigil_side_list_right",
+   "demo": "full_verification",
+   "encounter": "acolyte_vigil",
+   "layout": {
+    "party_hud": "side_list",
+    "hud_portraits": "right",
+    "hud_portrait_size": 0.0
+   },
+   "video_driver": "cocoa",
+   "frames": 224,
+   "screenshot": "d53_vigil_side_list_right.png",
+   "members_with_portraits": [
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04"
+   ],
+   "portraits": [
+    {
+     "member": "hero_01",
+     "asset": "Hunter",
+     "box": [
+      435.5,
+      39.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_02",
+     "asset": "SorcererBlack",
+     "box": [
+      435.5,
+      93.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_03",
+     "asset": "Vampire",
+     "box": [
+      435.5,
+      147.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_04",
+     "asset": "SamuraiBlue",
+     "box": [
+      435.5,
+      201.8,
+      34.5,
+      34.5
+     ],
+     "pixels": [
+      92,
+      92
+     ],
+     "pixels_differing": 0
+    }
+   ],
+   "menus": [
+    [
+     282.2,
+     158.2,
+     88.0,
+     96.0
+    ]
+   ],
+   "problems": [],
+   "pass": true
+  },
+  {
+   "battle": "octopath_side_list",
+   "demo": "octopath",
+   "encounter": "boss_room",
+   "layout": {
+    "party_hud": "side_list",
+    "hud_portraits": "left",
+    "hud_portrait_size": 0.0
+   },
+   "video_driver": "cocoa",
+   "frames": 224,
+   "screenshot": "d53_octopath_side_list.png",
+   "members_with_portraits": [
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04"
+   ],
+   "portraits": [
+    {
+     "member": "hero_01",
+     "asset": "Hunter",
+     "box": [
+      366.0,
+      33.0,
+      38.0,
+      38.0
+     ],
+     "pixels": [
+      101,
+      101
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_02",
+     "asset": "SorcererBlack",
+     "box": [
+      366.0,
+      77.0,
+      38.0,
+      38.0
+     ],
+     "pixels": [
+      101,
+      101
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_03",
+     "asset": "Vampire",
+     "box": [
+      366.0,
+      121.0,
+      38.0,
+      38.0
+     ],
+     "pixels": [
+      101,
+      101
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_04",
+     "asset": "SamuraiBlue",
+     "box": [
+      366.0,
+      165.0,
+      38.0,
+      38.0
+     ],
+     "pixels": [
+      101,
+      101
+     ],
+     "pixels_differing": 0
+    }
+   ],
+   "menus": [
+    [
+     277.0,
+     168.7,
+     88.0,
+     84.0
+    ]
+   ],
+   "problems": [],
+   "pass": true
+  },
+  {
+   "battle": "octopath_column",
+   "demo": "octopath",
+   "encounter": "boss_room",
+   "layout": {
+    "party_hud": "column",
+    "hud_portraits": "left",
+    "hud_portrait_size": 0.0
+   },
+   "video_driver": "cocoa",
+   "frames": 225,
+   "screenshot": "d53_octopath_column.png",
+   "members_with_portraits": [
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04"
+   ],
+   "portraits": [
+    {
+     "member": "hero_01",
+     "asset": "Hunter",
+     "box": [
+      366.0,
+      217.0,
+      26.0,
+      26.0
+     ],
+     "pixels": [
+      69,
+      69
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_02",
+     "asset": "SorcererBlack",
+     "box": [
+      366.0,
+      167.0,
+      26.0,
+      26.0
+     ],
+     "pixels": [
+      69,
+      69
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_03",
+     "asset": "Vampire",
+     "box": [
+      366.0,
+      117.0,
+      26.0,
+      26.0
+     ],
+     "pixels": [
+      69,
+      69
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_04",
+     "asset": "SamuraiBlue",
+     "box": [
+      366.0,
+      67.0,
+      26.0,
+      26.0
+     ],
+     "pixels": [
+      69,
+      69
+     ],
+     "pixels_differing": 0
+    }
+   ],
+   "menus": [
+    [
+     162.0,
+     170.0,
+     156.0,
+     84.0
+    ]
+   ],
+   "problems": [],
+   "pass": true
+  },
+  {
+   "battle": "octopath_bottom_row_above",
+   "demo": "octopath",
+   "encounter": "boss_room",
+   "layout": {
+    "party_hud": "bottom_row",
+    "hud_portraits": "above",
+    "hud_portrait_size": 30.0
+   },
+   "video_driver": "cocoa",
+   "frames": 223,
+   "screenshot": "d53_octopath_bottom_row_above.png",
+   "members_with_portraits": [
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04"
+   ],
+   "portraits": [
+    {
+     "member": "hero_01",
+     "asset": "Hunter",
+     "box": [
+      144.4,
+      208.0,
+      30.0,
+      30.0
+     ],
+     "pixels": [
+      80,
+      80
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_02",
+     "asset": "SorcererBlack",
+     "box": [
+      211.1,
+      208.0,
+      30.0,
+      30.0
+     ],
+     "pixels": [
+      80,
+      80
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_03",
+     "asset": "Vampire",
+     "box": [
+      277.9,
+      208.0,
+      30.0,
+      30.0
+     ],
+     "pixels": [
+      80,
+      80
+     ],
+     "pixels_differing": 0
+    },
+    {
+     "member": "hero_04",
+     "asset": "SamuraiBlue",
+     "box": [
+      344.6,
+      208.0,
+      30.0,
+      30.0
+     ],
+     "pixels": [
+      80,
+      80
+     ],
+     "pixels_differing": 0
+    }
+   ],
+   "menus": [
+    [
+     282.5,
+     35.0,
+     88.0,
+     84.0
+    ]
+   ],
+   "problems": [],
+   "pass": true
+  }
+ ],
+ "pass": true
+}

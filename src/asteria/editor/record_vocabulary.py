@@ -356,6 +356,13 @@ HELP = {
     "Bust: the figure stands above the window.",
     "portrait_size": "Face: its width and height in pixels. Bust: its height. 0 = fit the "
     "window (face) or 55% of the screen height (bust).",
+    "hud_portraits": "Where a party card in battle shows its member's portrait (set on the "
+    "member's Combatant Sprites record): left or right of the name and bars, above them (the "
+    "card grows taller, into the room a full list or column has left), or off. A card without "
+    "a portrait looks the same either way.",
+    "hud_portrait_size": "The portrait's square in layout units. 0 = as tall as the card's "
+    "rows. Beside the rows it is never taller than they are, and the name and bars always keep "
+    "their room.",
     "class_assignments": "The jobs this character has; the first is the main job.",
     "base_stats": "Starting numbers before jobs, levels, gear and points.",
     "base_resources": "HP, MP and other pools at the start.",

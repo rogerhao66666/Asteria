@@ -124,6 +124,7 @@ from .battle_ui import (
     BattleUiLayoutProfile,
     BattleUiMarker,
     BattleUiPanel,
+    BattleUiPortrait,
     BattleUiText,
 )
 
@@ -136,6 +137,7 @@ __all__.extend(
         "BattleUiLayoutProfile",
         "BattleUiMarker",
         "BattleUiPanel",
+        "BattleUiPortrait",
         "BattleUiText",
     ]
 )

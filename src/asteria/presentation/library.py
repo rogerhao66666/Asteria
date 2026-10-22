@@ -329,6 +329,10 @@ class BattlePresentationLibrary:
             for key in ("stage_template", "command_pages"):
                 if not data.get(key):
                     data.pop(key, None)
+            if data.get("hud_portraits") == "left":
+                data.pop("hud_portraits")
+            if not data.get("hud_portrait_size"):
+                data.pop("hud_portrait_size", None)
             return data
         return self._plain(value)
 

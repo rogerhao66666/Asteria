@@ -122,6 +122,8 @@ class BattleScreenRuntime:
         self.overhead_hidden = False  # names over heads wait while the camera is zoomed in
         # members whose combatant profile has hud_visible off (a summon, a pet): no party panel
         self.hud_hidden: set[str] = set()
+        # member_id -> (portrait, small portrait) asset ids its party card shows
+        self.member_portraits: dict[str, tuple] = {}
         self.time = 0.0
 
     def add_combatant(self, visual):
@@ -251,6 +253,7 @@ class BattleScreenRuntime:
             overhead_hidden=self.overhead_hidden,
             category_names=self.category_names,
             translate=self.translate,
+            portraits=self.member_portraits,
         )
 
     def render(self, base_camera, *, ui_renderer: BattleUiRenderer, texture_renderer=None):

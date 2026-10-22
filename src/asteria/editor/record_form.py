@@ -1154,6 +1154,16 @@ class RecordForm(QScrollArea):
             picker.setText(str(value or ""))
             picker.changed.connect(lambda p=picker: self._set(data, key, p.text()))
             return picker
+        if skey in _PORTRAIT_KEYS and self.icon_library is not None:
+            # a fighter's portrait (its party card in battle): the portrait pictures, as the
+            # Dialogue window offers them; none chosen stays empty (null)
+            from .dialogue_command_dialog import _PortraitPicker
+            from .image_tools import PortraitLibrary
+
+            picker = _PortraitPicker(PortraitLibrary(self.document))
+            picker.setText(str(value or ""))
+            picker.changed.connect(lambda p=picker: self._set(data, key, p.text() or None))
+            return picker
         if (isinstance(value, str) or value is None) and skey in _CLIP_KEYS.get(self.category, ()):
             # a pose names one of the sheet's animations: offer them, in words
             picker = Picker(self.vocabulary.choices("clips"), value or "", allow_none=True)
@@ -1540,6 +1550,7 @@ def _numbers(text):
 
 
 _CLIP_KEYS = {"combatant_visuals": ("clip_role", "state_id", "fallback_state_id")}
+_PORTRAIT_KEYS = ("portrait_asset_id", "small_portrait_asset_id")  # pictures a fighter shows
 
 
 def _noun(key):

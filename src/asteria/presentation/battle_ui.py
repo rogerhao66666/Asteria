@@ -22,6 +22,13 @@ from .text_cells import cells, cut, wrap
 # (the adapter sets the same entries again each frame, and each set counts)
 _MENU_LAYOUT_FIELDS = tuple(f.name for f in fields(BattleActionMenuView) if f.name != "revision")
 
+# where a party card shows its member's portrait (``BattleUiLayoutProfile.hud_portraits``)
+HUD_PORTRAITS = ("left", "right", "above", "off")
+PORTRAIT_MIN = 10.0  # layout units: a card with less room than this for a portrait shows none
+PORTRAIT_LARGE = 32.0  # a portrait this large or larger shows the large picture, else the small
+BAR_MIN = 24.0  # the narrowest a card's bars get to make room for its portrait
+BOTTOM_ROW_HEIGHT = 24.0  # a bottom-row party cell without a portrait
+
 
 def _value_text(value):
     """A floating number: whole from 10 up (a share of health is not 604.444, a million is
@@ -93,6 +100,14 @@ class BattleUiLayoutProfile:
     # command_pages: the Command Menu Pages record that orders, renames and hides the top-level
     # commands and sets how many rows one page of a list shows ("" = every command and row)
     command_pages: str = ""
+    # hud_portraits: where a party card shows its member's portrait (set on the member's
+    # Combatant Sprites record): "left" or "right" of the name and bars, "above" them (the card
+    # grows taller) or "off"; a card without a portrait is drawn as it always was
+    hud_portraits: str = "left"
+    # hud_portrait_size: the side of the portrait's square, layout units (0 = as tall as the
+    # card's rows); never more than leaves the name and bars their room, and beside them never
+    # taller than they are (a larger one needs "above")
+    hud_portrait_size: float = 0.0
 
     def __post_init__(self):
         if self.virtual_width <= 0 or self.virtual_height <= 0:
@@ -110,6 +125,9 @@ class BattleUiLayoutProfile:
             raise ValueError(
                 "action_menu_placement must be 'bottom', 'actor' or 'actor_bottom_right'"
             )
+        hud_portraits = self.hud_portraits
+        if hud_portraits not in HUD_PORTRAITS:  # the editor offers these values (engine_enums)
+            raise ValueError("hud_portraits must be 'left', 'right', 'above' or 'off'")
         if not 0.0 <= float(self.stage_top) < 1.0:
             raise ValueError("stage_top must be in [0, 1)")
         if self.stage_front_right is not None and not 0.0 <= float(self.stage_front_right) <= 0.5:
@@ -122,6 +140,7 @@ class BattleUiLayoutProfile:
             "hud_row_height",
             "result_panel_width",
             "result_panel_height",
+            "hud_portrait_size",
         ):
             if _finite(getattr(self, name), name) < 0:
                 raise ValueError(f"{name} must be >= 0")
@@ -185,6 +204,19 @@ class BattleUiMarker:
 
 
 @dataclass(frozen=True, slots=True)
+class BattleUiPortrait:
+    """A party card's portrait: the picture ``asset_id`` fitted inside the box with its
+    proportions kept."""
+
+    member_id: str
+    asset_id: str
+    x: float
+    y: float
+    width: float
+    height: float
+
+
+@dataclass(frozen=True, slots=True)
 class BattleUiFrame:
     scene_id: str
     background_asset_id: str
@@ -196,6 +228,7 @@ class BattleUiFrame:
     markers: tuple[BattleUiMarker, ...]
     vfx: tuple
     screen_fx: tuple
+    portraits: tuple[BattleUiPortrait, ...] = ()  # drawn over the party cards' panels
 
 
 MARK_ROLE = ":mark"  # a row's cursor or tick, drawn by the backend level with its label
@@ -217,6 +250,28 @@ def _gap(a, b):
     dx = max(b[0] - (a[0] + a[2]), a[0] - (b[0] + b[2]), 0.0)
     dy = max(b[1] - (a[1] + a[3]), a[1] - (b[1] + b[3]), 0.0)
     return max(dx, dy)
+
+
+def _portrait_side(layout, rows, room):
+    """The side of a party card's portrait square: ``hud_portrait_size``, else as tall as the
+    card's ``rows`` less their padding; never more than ``room``, and beside the rows never
+    taller than they are. 0 when that is less than PORTRAIT_MIN (the card shows none)."""
+    side = min(float(layout.hud_portrait_size) or rows - 4.0, room)
+    if layout.hud_portraits != "above":
+        side = min(side, rows - 4.0)
+    return side if side >= PORTRAIT_MIN else 0.0
+
+
+def bottom_row_height(layout, portraits=False):
+    """How tall the bottom-row party HUD (``party_hud="bottom_row"``) stands, layout units: its
+    cells, and the portraits over them when they show ``portraits`` (``hud_portraits=
+    "above"``; beside the rows a portrait never makes a cell taller). The stage keeps the
+    combatants' feet above it."""
+    if not portraits or getattr(layout, "hud_portraits", "left") != "above":
+        return BOTTOM_ROW_HEIGHT
+    side = float(getattr(layout, "hud_portrait_size", 0.0)) or BOTTOM_ROW_HEIGHT - 4.0
+    side = min(side, float(getattr(layout, "virtual_height", 180)) / 2 - BOTTOM_ROW_HEIGHT - 2.0)
+    return BOTTOM_ROW_HEIGHT + side + 2.0 if side >= PORTRAIT_MIN else BOTTOM_ROW_HEIGHT
 
 
 def _category_strip(categories, active, room, shown_as=None):
@@ -291,9 +346,45 @@ class BattleUiComposer:
         self.text_width = None
         self._category_names = {}  # a menu category (id) -> the name drawn for it
         self._translate = None  # (key, english, **params) -> text: the screen's own words
+        self._portraits = {}  # member_id: (portrait, small portrait) its party card may show
+        self.portrait_boxes = {}  # member_id: (x, y, w, h) of its card's portrait, this frame
 
     def _name(self, member_id):
         return self._display_names.get(str(member_id), str(member_id))
+
+    def _card_portrait(self, member_id, rows, room):
+        """``(side, picture)`` of the portrait a party card shows: its square's side in layout
+        units (``_portrait_side``) and the asset - the large portrait from PORTRAIT_LARGE up,
+        else the small one, each standing in for the other - or ``(0.0, "")`` for none."""
+        large, small = self._portraits.get(str(member_id), ("", ""))
+        if self.layout.hud_portraits == "off" or not (large or small):
+            return 0.0, ""
+        side = _portrait_side(self.layout, rows, room)
+        if not side:
+            return 0.0, ""
+        return side, (large or small) if side >= PORTRAIT_LARGE else (small or large)
+
+    def _portrait_rows(self, side, x, width, height):
+        """How a party card ``width`` x ``height`` at ``x`` makes room for a ``side`` portrait:
+        ``(x, width, lift, height)`` of its rows - where they start, how wide they are, how far
+        down they move - and the card's new height (beside the rows it is at least as tall as
+        the portrait; over them it grows by it). No portrait: the card as it was."""
+        place = self.layout.hud_portraits
+        if not side:
+            return x, width, 0.0, height
+        if place == "above":
+            return x, width, side + 2.0, height + side + 2.0
+        shift = side + 2.0
+        return (x + shift if place == "left" else x), width - shift, 0.0, max(height, side + 4.0)
+
+    def _portrait(self, member_id, picture, side, card, inset):
+        """The portrait of a party card ``(x, y, width, height)``: at its left or right end,
+        centred on its height, or over its rows where the name starts (``inset`` in)."""
+        x, y, width, height = card
+        if self.layout.hud_portraits == "above":
+            return BattleUiPortrait(member_id, picture, x + inset, y + 2.0, side, side)
+        px = x + 2.0 if self.layout.hud_portraits == "left" else x + width - 2.0 - side
+        return BattleUiPortrait(member_id, picture, px, y + (height - side) / 2, side, side)
 
     def _tr(self, key, english, **params):
         """One of the screen's own words in the game's language (``rpg.built_in_text``)."""
@@ -374,6 +465,7 @@ class BattleUiComposer:
             None if self._camera is None else self._camera.zoom,
             self.party_layout,
             self.polish,
+            self._portraits,
         )
         cached = self._hud_cache
         if cached is not None and cached[0] == key:
@@ -384,7 +476,7 @@ class BattleUiComposer:
         return out
 
     def _hud_layout(self, members, side_by_member, placement_by_member, focus_member_id):
-        panels, texts, gauges, icons = [], [], [], []
+        panels, texts, gauges, icons, portraits = [], [], [], [], []
         L = self.layout
 
         # Explicit presentation placement wins. Legacy side metadata remains only
@@ -426,17 +518,21 @@ class BattleUiComposer:
             gauges.extend(o_gauges)
             members = [m for m in members if zone_by_member[m.member_id] not in L.overhead_zones]
         if L.party_hud == "bottom_row":
-            b_panels, b_texts, b_gauges = self._bottom_row_commands(members, focus_member_id)
+            b_panels, b_texts, b_gauges, b_portraits = self._bottom_row_commands(
+                members, focus_member_id
+            )
             panels.extend(b_panels)
             texts.extend(b_texts)
             gauges.extend(b_gauges)
-            return panels, texts, gauges, icons
+            return panels, texts, gauges, icons, b_portraits
         if L.party_hud == "side_list":
-            s_panels, s_texts, s_gauges = self._side_list_commands(members, focus_member_id)
+            s_panels, s_texts, s_gauges, s_portraits = self._side_list_commands(
+                members, focus_member_id
+            )
             panels.extend(s_panels)
             texts.extend(s_texts)
             gauges.extend(s_gauges)
-            return panels, texts, gauges, icons
+            return panels, texts, gauges, icons, s_portraits
 
         available_height = max(1.0, L.virtual_height - L.timeline_y - 42.0 - L.margin)
         layout = self.party_layout.resolve(
@@ -453,6 +549,7 @@ class BattleUiComposer:
             right = zone_layout.zone == "right"
             center = zone_layout.zone == "center"
             stacked = 0.0
+            shared = self._column_portrait_side(zone_layout, member_by_id, available_height)
             for member_id in zone_layout.visible_member_ids:
                 member = member_by_id[member_id]
                 if center:
@@ -467,31 +564,25 @@ class BattleUiComposer:
                 base_y = L.virtual_height - L.margin - 8.0
                 y = base_y - stacked
 
-                resource_limit = self.party_layout.resource_limit(density)
-                ordered_gauges = sorted(
-                    member.gauges,
-                    key=lambda g: (-int(getattr(g, "priority", 0)), g.order, g.resource_id),
-                )
-                selected = (
-                    ordered_gauges if resource_limit is None else ordered_gauges[:resource_limit]
-                )
-                selected_ids = {g.resource_id for g in selected}
-                selected = [g for g in member.gauges if g.resource_id in selected_ids]
+                selected = self._column_gauges(member, density)
 
                 status_limit = self.party_layout.status_limit(density)
                 selected_statuses = list(member.statuses)
                 if status_limit is not None:
                     selected_statuses = selected_statuses[:status_limit]
 
-                if density == "expanded":
-                    height = max(24.0, 18.0 + len(selected) * L.hud_row_height)
-                elif density == "compact":
-                    height = max(20.0, 14.0 + len(selected) * 8.0)
-                else:
-                    height = 16.0
+                height = self._column_height(len(selected), density)
+                # the member's portrait, one size down the column: beside the rows (they move
+                # aside and narrow, never under BAR_MIN) or over them (the card grows taller)
+                room = min(self._column_room(selected, density), shared)
+                side, picture = self._card_portrait(member.member_id, height, room)
+                cx, cw, lift, height = self._portrait_rows(side, x, L.hud_panel_width, height)
 
                 panel_y = y - height
                 stacked += max(row_height, height + 2.0)
+                if side:
+                    card = (x, panel_y, L.hud_panel_width, height)
+                    portraits.append(self._portrait(member.member_id, picture, side, card, 4.0))
                 focused = (
                     self.polish.focus_member_emphasis
                     and focus_member_id is not None
@@ -510,18 +601,21 @@ class BattleUiComposer:
                         member.member_id,
                     )
                 )
+                name = self._name(member.member_id)
+                if side:  # the rows are narrower: the name keeps within them
+                    name = self._fit(name, max(4, int((cw - 8) // 4.4)))
                 texts.append(
                     BattleUiText(
-                        self._name(member.member_id),
-                        x + 4,
-                        panel_y + 3,
+                        name,
+                        cx + 4,
+                        panel_y + lift + 3,
                         name_role,
                         "left",
                         member.member_id,
                     )
                 )
 
-                gy = panel_y + (13 if density != "minimal" else 9)
+                gy = panel_y + lift + (13 if density != "minimal" else 9)
                 for gauge in selected:
                     mode = str(gauge.presentation)
                     if density == "minimal":
@@ -532,8 +626,8 @@ class BattleUiComposer:
                             texts.append(
                                 BattleUiText(
                                     f"{gauge.current:g}",
-                                    x + L.hud_panel_width - 4,
-                                    panel_y + 3,
+                                    cx + cw - 4,
+                                    panel_y + lift + 3,
                                     f"resource_value:{mode}",
                                     "right",
                                     member.member_id,
@@ -545,9 +639,9 @@ class BattleUiComposer:
                                     member.member_id,
                                     gauge.resource_id,
                                     gauge.label,
-                                    x + 38,
-                                    panel_y + 6,
-                                    max(8.0, L.hud_panel_width - 44),
+                                    cx + 38,
+                                    panel_y + lift + 6,
+                                    max(8.0, cw - 44),
                                     4.0,
                                     max(0.0, min(1.0, float(gauge.normalized))),
                                     float(gauge.current),
@@ -564,7 +658,7 @@ class BattleUiComposer:
                         texts.append(
                             BattleUiText(
                                 self._fit(gauge.label, 5),
-                                x + 4,
+                                cx + 4,
                                 gy,
                                 "gauge_label",
                                 "left",
@@ -577,7 +671,7 @@ class BattleUiComposer:
                             texts.append(
                                 BattleUiText(
                                     f"{gauge.current:g}",
-                                    x + L.hud_panel_width - 4,
+                                    cx + cw - 4,
                                     gy,
                                     f"resource_value:{mode}",
                                     "right",
@@ -585,14 +679,10 @@ class BattleUiComposer:
                                 )
                             )
                     else:
-                        label_space = 30 if (gauge.show_label and density == "expanded") else 4
-                        value_space = (
-                            26
-                            if (gauge.show_value and not gauge.compact and density == "expanded")
-                            else 8
-                        )
-                        bar_x = x + label_space
-                        bar_w = max(8.0, L.hud_panel_width - label_space - value_space)
+                        label_space = self._label_space(gauge, density)
+                        value_space = self._value_space(gauge, density)
+                        bar_x = cx + label_space
+                        bar_w = max(8.0, cw - label_space - value_space)
                         gauges.append(
                             BattleUiGaugeBar(
                                 member.member_id,
@@ -615,7 +705,7 @@ class BattleUiComposer:
                             texts.append(
                                 BattleUiText(
                                     f"{gauge.current:g}/{gauge.maximum:g}",
-                                    x + L.hud_panel_width - 4,
+                                    cx + cw - 4,
                                     gy,
                                     "gauge_value",
                                     "right",
@@ -625,7 +715,7 @@ class BattleUiComposer:
                     gy += L.hud_row_height if density == "expanded" else 8.0
 
                 if density != "minimal":
-                    ix = x + 4
+                    ix = cx + 4
                     iy = y - 8
                     for status in selected_statuses:
                         if status.icon_asset_id:
@@ -661,7 +751,74 @@ class BattleUiComposer:
                         "",
                     )
                 )
-        return panels, texts, gauges, icons
+        return panels, texts, gauges, icons, portraits
+
+    def _column_height(self, rows, density):
+        """A column HUD card's height for ``rows`` resource rows at ``density``."""
+        if density == "expanded":
+            return max(24.0, 18.0 + rows * self.layout.hud_row_height)
+        if density == "compact":
+            return max(20.0, 14.0 + rows * 8.0)
+        return 16.0
+
+    @staticmethod
+    def _label_space(gauge, density):
+        """Room a column card keeps before a resource's bar (for its label when it shows one)."""
+        return 30 if (gauge.show_label and density == "expanded") else 4
+
+    @staticmethod
+    def _value_space(gauge, density):
+        """Room a column card keeps after a resource's bar (for its numbers when it shows
+        them)."""
+        return 26 if (gauge.show_value and not gauge.compact and density == "expanded") else 8
+
+    def _column_gauges(self, member, density):
+        """The resources a column card shows at ``density``: those of highest priority, in the
+        member's own order."""
+        limit = self.party_layout.resource_limit(density)
+        ordered = sorted(
+            member.gauges,
+            key=lambda g: (-int(getattr(g, "priority", 0)), g.order, g.resource_id),
+        )
+        chosen = {g.resource_id for g in (ordered if limit is None else ordered[:limit])}
+        return [g for g in member.gauges if g.resource_id in chosen]
+
+    def _column_room(self, selected, density):
+        """The most a portrait may take of a column card's width: beside the rows, what leaves
+        their labels, numbers and a BAR_MIN bar; over them, the card's width inside."""
+        if self.layout.hud_portraits == "above":
+            return self.layout.hud_panel_width - 8.0
+        widest = 44.0  # a minimal card: its one bar starts 38 in and ends 6 short
+        if selected and density != "minimal":
+            widest = max(
+                self._label_space(g, density) + self._value_space(g, density) for g in selected
+            )
+        return self.layout.hud_panel_width - 2.0 - BAR_MIN - widest
+
+    def _column_portrait_side(self, zone_layout, member_by_id, available):
+        """The side the portraits of one HUD column share: the smallest any of its cards has
+        room for - over the rows, out of the height the column has left in ``available``,
+        shared. 0 when none shows one."""
+        density = zone_layout.density
+        ids = zone_layout.visible_member_ids
+        owners = [m for m in ids if self._portraits.get(m)]
+        if not owners or self.layout.hud_portraits == "off":
+            return 0.0
+        share = float("inf")
+        if self.layout.hud_portraits == "above":
+            row_height = self.party_layout.row_height(density)
+            used = 0.0
+            for member_id in ids:
+                rows = len(self._column_gauges(member_by_id[member_id], density))
+                used += max(row_height, self._column_height(rows, density) + 2.0)
+            share = (available - used) / len(owners) - 2.0
+        sides = []
+        for member_id in owners:
+            selected = self._column_gauges(member_by_id[member_id], density)
+            height = self._column_height(len(selected), density)
+            room = min(self._column_room(selected, density), share)
+            sides.append(self._card_portrait(member_id, height, room)[0])
+        return min((side for side in sides if side), default=0.0)
 
     @staticmethod
     def _ranked_gauges(member, limit):
@@ -821,29 +978,57 @@ class BattleUiComposer:
         """One panel per member down the party's edge, under the turn bar: name and status chips
         on top, then a ``label  current / maximum`` line with a thin bar per resource (pips
         resources, like boost points, draw as dots). Panels shrink their row count, never
-        overlap, and never leave the screen."""
-        panels, texts, gauges = [], [], []
+        overlap, and never leave the screen. A member's portrait stands at its panel's left or
+        right end (the rows narrow) or over its rows (the panel grows into the room the list has
+        left; the row count is what it would be without portraits)."""
+        panels, texts, gauges, portraits = [], [], [], []
         L = self.layout
         if not members:
-            return panels, texts, gauges
+            return panels, texts, gauges, portraits
         width = float(L.hud_panel_width)
         x = L.virtual_width - L.margin - width
         top = L.timeline_y + 24.0
         available = L.virtual_height - L.margin - top
         gap, header, row, pad = 2.0, 9.0, 10.0, 3.0
         ranked = {m.member_id: self._ranked_gauges(m, 4) for m in members}
-        rows = 4
-        while (
-            rows > 1
-            and sum(pad + header + row * min(rows, len(ranked[m.member_id])) for m in members)
-            + gap * (len(members) - 1)
-            > available
-        ):
+
+        def plan(rows, cap=None):
+            """``(height, side, picture)`` of each member's panel with ``rows`` resource rows
+            and a portrait of at most ``cap``."""
+            out = []
+            for member in members:
+                shown = ranked[member.member_id][:rows]
+                base = pad + header + row * len(shown)
+                side, picture = 0.0, ""
+                if self._portraits.get(member.member_id):  # rows measured only for a portrait
+                    if L.hud_portraits == "above":
+                        room = width - 6.0
+                    else:
+                        room = width - 2.0 - self._side_rows_need(shown)
+                    side, picture = self._card_portrait(
+                        member.member_id, base, room if cap is None else min(room, cap)
+                    )
+                out.append((self._portrait_rows(side, x, width, base)[3], side, picture))
+            return out
+
+        def total(cards):
+            return sum(c[0] for c in cards) + gap * (len(members) - 1)
+
+        rows = 4  # as many as fit without portraits: a portrait never takes another's rows
+        while rows > 1 and total(plan(rows, 0.0)) > available:
             rows -= 1
+        cap = None  # beside the rows a portrait never makes its panel taller
+        if L.hud_portraits == "above":  # over them: the room the list has left, shared
+            owners = sum(1 for m in members if self._portraits.get(m.member_id))
+            cap = (available - total(plan(rows, 0.0))) / max(1, owners) - 2.0
+        cards = plan(rows, cap)
+        sides = [c[1] for c in cards if c[1]]
+        if sides and min(sides) < max(sides):  # one size down the list: the smallest any has
+            cards = plan(rows, min(sides))
         y = top
-        for member in members:
+        for member, (height, side, picture) in zip(members, cards):
             shown = ranked[member.member_id][:rows]
-            height = pad + header + row * len(shown)
+            cx, cw, lift, _ = self._portrait_rows(side, x, width, pad + header + row * len(shown))
             focused = focus_member_id is not None and member.member_id == str(focus_member_id)
             panels.append(
                 BattleUiPanel(
@@ -856,13 +1041,16 @@ class BattleUiComposer:
                     member.member_id,
                 )
             )
+            if side:
+                card = (x, y, width, height)
+                portraits.append(self._portrait(member.member_id, picture, side, card, 3.0))
             chips = " ".join(self._chip(s.label or s.state_id) for s in member.statuses[:4])
-            name_room = max(6, int((width - 8 - 4 * cells(chips)) // 4.4))
+            name_room = max(6, int((cw - 8 - 4 * cells(chips)) // 4.4))
             texts.append(
                 BattleUiText(
                     self._fit(self._name(member.member_id), name_room),
-                    x + 3,
-                    y + 2,
+                    cx + 3,
+                    y + lift + 2,
                     "member_name:side:focus" if focused else "member_name:side",
                     "left",
                     member.member_id,
@@ -871,48 +1059,69 @@ class BattleUiComposer:
             if chips:
                 texts.append(
                     BattleUiText(
-                        chips, x + width - 3, y + 2, "status_chip", "right", member.member_id
+                        chips, cx + cw - 3, y + lift + 2, "status_chip", "right", member.member_id
                     )
                 )
-            gy = y + pad + header
+            gy = y + lift + pad + header
             for gauge in shown:
                 label = self._fit(gauge.label, 3)
                 texts.append(
-                    BattleUiText(label, x + 3, gy, "gauge_label", "left", member.member_id)
+                    BattleUiText(label, cx + 3, gy, "gauge_label", "left", member.member_id)
                 )
                 if str(gauge.presentation) in {"pips", "segmented_bar", "icon_stack"}:
                     gauges.append(
-                        self._bar(member.member_id, gauge, x + 22, gy + 1.5, width - 28, 4.0)
+                        self._bar(member.member_id, gauge, cx + 22, gy + 1.5, cw - 28, 4.0)
                     )
                 else:
                     value = f"{gauge.current:,.0f} / {gauge.maximum:,.0f}"
                     texts.append(
                         BattleUiText(
-                            value, x + width - 3, gy, "side_value", "right", member.member_id
+                            value, cx + cw - 3, gy, "side_value", "right", member.member_id
                         )
                     )
                     gauges.append(
-                        self._bar(member.member_id, gauge, x + 3, gy + row - 3.0, width - 6, 1.6)
+                        self._bar(member.member_id, gauge, cx + 3, gy + row - 3.0, cw - 6, 1.6)
                     )
                 gy += row
             y += height + gap
-        return panels, texts, gauges
+        return panels, texts, gauges, portraits
+
+    def _side_rows_need(self, shown):
+        """How wide a side-list panel's rows must stay beside a portrait: six letters of the
+        name, and each resource line's label with its numbers at their maximum (so the portrait
+        keeps its size while they change) or with its pips."""
+        need = 6 + 6 * 4.4
+        for gauge in shown:
+            label = self._drawn_width(self._fit(gauge.label, 3), "gauge_label")
+            if str(gauge.presentation) in {"pips", "segmented_bar", "icon_stack"}:
+                need = max(need, 28 + BAR_MIN)
+            else:
+                value = f"{gauge.maximum:,.0f} / {gauge.maximum:,.0f}"
+                need = max(need, 10 + label + self._drawn_width(value, "side_value"))
+        return need
 
     def _bottom_row_commands(self, members, focus_member_id):
-        """Compact party cells in one row along the bottom (name + up to two bars)."""
-        panels, texts, gauges = [], [], []
+        """Compact party cells in one row along the bottom (name + up to two bars). A member's
+        portrait stands at its cell's left or right end, or over its rows (the cell grows up,
+        ``bottom_row_height``)."""
+        panels, texts, gauges, portraits = [], [], [], []
         L = self.layout
         if not members:
-            return panels, texts, gauges
+            return panels, texts, gauges, portraits
         gap = 3.0
         count = len(members)
         width = min(120.0, (L.virtual_width - 2 * L.margin - gap * (count - 1)) / count)
-        height = 24.0
         total = count * width + gap * (count - 1)
         x0 = L.virtual_width - L.margin - total  # anchored to the party's side (right)
-        y = L.virtual_height - L.margin - height
+        if L.hud_portraits == "above":  # as wide as the cell; the row stays in the lower half
+            room = min(width - 6.0, L.virtual_height / 2 - BOTTOM_ROW_HEIGHT - 2.0)
+        else:
+            room = width - 8.0 - BAR_MIN
         for index, member in enumerate(members):
             x = x0 + index * (width + gap)
+            side, picture = self._card_portrait(member.member_id, BOTTOM_ROW_HEIGHT, room)
+            cx, cw, lift, height = self._portrait_rows(side, x, width, BOTTOM_ROW_HEIGHT)
+            y = L.virtual_height - L.margin - height
             focused = focus_member_id is not None and member.member_id == str(focus_member_id)
             panels.append(
                 BattleUiPanel(
@@ -925,11 +1134,14 @@ class BattleUiComposer:
                     member.member_id,
                 )
             )
+            if side:
+                card = (x, y, width, height)
+                portraits.append(self._portrait(member.member_id, picture, side, card, 3.0))
             texts.append(
                 BattleUiText(
-                    self._fit(self._name(member.member_id), int(width // 5)),
-                    x + 3,
-                    y + 2,
+                    self._fit(self._name(member.member_id), int(cw // 5)),
+                    cx + 3,
+                    y + lift + 2,
                     "member_name:compact:focus" if focused else "member_name:compact",
                     "left",
                     member.member_id,
@@ -937,9 +1149,51 @@ class BattleUiComposer:
             )
             for row, gauge in enumerate(self._ranked_gauges(member, 2)):
                 gauges.append(
-                    self._bar(member.member_id, gauge, x + 3, y + 12 + row * 6, width - 6, 3.0)
+                    self._bar(
+                        member.member_id, gauge, cx + 3, y + lift + 12 + row * 6, cw - 6, 3.0
+                    )
                 )
-        return panels, texts, gauges
+        return panels, texts, gauges, portraits
+
+    def _clear_of_portraits(self, x, y, width, height, least):
+        """``(x, y, width)`` for a ``width`` x ``height`` panel wanted at ``(x, y)`` (the command
+        menu, its help box, the action workflow) that covers no party card's portrait: where it
+        was when it covers none, else the nearest clear place - narrower on the portraits' side
+        (down to ``least`` wide) rather than moved far. Where no place is clear it stays."""
+        boxes = list(self.portrait_boxes.values())
+
+        def clear(cx, cy, w):
+            return all(
+                cx + w <= bx - 1 or bx + bw + 1 <= cx or cy + height <= by - 1 or by + bh + 1 <= cy
+                for bx, by, bw, bh in boxes
+            )
+
+        if clear(x, y, width):
+            return x, y, width
+        L = self.layout
+        ys = {y}
+        for _bx, by, _bw, bh in boxes:  # just above or just below a portrait
+            ys.update((by - 1.0 - height, by + bh + 1.0))
+        spots = []  # (cost, x, y, width)
+        for cy in ys:
+            if cy < L.timeline_y + 24.0 or cy + height > L.virtual_height - 2.0:
+                continue
+            fits = [(x, width)]
+            for bx, _by, bw, _bh in boxes:
+                fits += [
+                    (x, bx - 1.0 - x),  # ends before the portrait
+                    (bx + bw + 1.0, x + width - bx - bw - 1.0),  # starts after it
+                    (bx - 1.0 - width, width),  # moved to its left
+                    (bx + bw + 1.0, width),  # moved to its right
+                ]
+            for cx, w in fits:
+                if least <= w <= width and cx >= 2.0 and cx + w <= L.virtual_width - 2.0:
+                    if clear(cx, cy, w):
+                        spots.append((2.0 * abs(cy - y) + abs(cx - x) + width - w, cx, cy, w))
+        if not spots:
+            return x, y, width
+        _, cx, cy, w = min(spots)
+        return cx, cy, w
 
     def _action_menu_commands(self, menu):
         """The command menu: laid out again only when the menu, the stage or a label it keeps
@@ -966,6 +1220,7 @@ class BattleUiComposer:
             self._category_names,
             self._tr("battle.menu.filter", "Filter: {query}"),  # the language of its own words
             self.text_width,
+            self.portrait_boxes,  # a new dict each frame: the kept key is never changed in place
         )
         cached = self._menu_cache
         if cached is not None and cached[0] == key:
@@ -1186,6 +1441,8 @@ class BattleUiComposer:
                 y = spot[1] - body * 0.5
                 x = max(L.margin, min(L.virtual_width - 2.0 - width, x))
                 y = max(L.timeline_y + 24.0, min(L.virtual_height - 2.0 - height, y))
+        # it may cover a HUD panel, never a portrait on one
+        x, y, width = self._clear_of_portraits(x, y, width, height, min(width, 80.0))
         role = "interaction:float" if L.party_hud == "side_list" else "interaction:action_menu"
         panels.append(BattleUiPanel("action_menu", x, y, width, height, role))
 
@@ -1326,19 +1583,31 @@ class BattleUiComposer:
             )
         return panels, texts, icons
 
-    def _help_box(self, text, menu_x, menu_y, menu_width, role):
-        """A panel over the action menu holding ``text`` word-wrapped (three lines at most),
-        its right edge on the menu's."""
-        L, P = self.layout, self.polish
-        width = min(L.virtual_width - 2 * L.margin, max(menu_width * 1.7, menu_width + 60.0))
+    def _help_lines(self, text, width):
+        """``text`` wrapped for a help box ``width`` wide (three lines at most), and the box's
+        height."""
+        P = self.polish
         per_line = max(8, int((width - 2 * P.interaction_padding) // 3.4))
         lines = wrap(text, per_line)  # at spaces, and between Chinese / Japanese characters
         if len(lines) > 3:
             lines = lines[:3]
             lines[2] = cut(lines[2], per_line - 2).rstrip() + ".."
-        height = 2 * P.interaction_padding + len(lines) * P.interaction_header_height
+        return lines, 2 * P.interaction_padding + len(lines) * P.interaction_header_height
+
+    def _help_box(self, text, menu_x, menu_y, menu_width, role):
+        """A panel over the action menu holding ``text`` word-wrapped (three lines at most),
+        its right edge on the menu's."""
+        L, P = self.layout, self.polish
+        width = min(L.virtual_width - 2 * L.margin, max(menu_width * 1.7, menu_width + 60.0))
+        lines, height = self._help_lines(text, width)
         x = max(L.margin, min(menu_x + menu_width - width, L.virtual_width - L.margin - width))
         y = max(L.margin, menu_y - height - 3.0)
+        x, y, narrow = self._clear_of_portraits(x, y, width, height, min(width, menu_width))
+        if narrow != width:  # narrower beside a portrait: the words wrap again
+            width = narrow
+            lines, height = self._help_lines(text, width)
+            y = max(L.margin, menu_y - height - 3.0)
+            x, y, _ = self._clear_of_portraits(x, y, width, height, width)
         panels = [BattleUiPanel("action_help", x, y, width, height, role)]
         texts = [
             BattleUiText(
@@ -1372,6 +1641,7 @@ class BattleUiComposer:
             L.timeline_y + 28.0,
             L.virtual_height - L.margin - P.interaction_bottom_gap - height,
         )
+        x, y, width = self._clear_of_portraits(x, y, width, height, min(width, 120.0))
         panels.append(
             BattleUiPanel("action_workflow", x, y, width, height, "interaction:workflow")
         )
@@ -1617,11 +1887,17 @@ class BattleUiComposer:
         overhead_hidden=False,
         category_names=None,
         translate=None,
+        portraits=None,
     ):
         """``display_names`` maps member ids to the labels shown in HUD and timeline;
         ``member_heights`` (logical sprite heights) positions overhead bars and the
         actor-anchored action menu; ``category_names`` maps menu categories (ids) to the names
-        drawn; ``translate(key, english, **params)`` words the screen's own text."""
+        drawn; ``translate(key, english, **params)`` words the screen's own text; ``portraits``
+        maps member ids to the ``(portrait, small portrait)`` asset ids their party cards show
+        (``hud_portraits``; the menus keep clear of them)."""
+        self._portraits = {
+            str(k): (str(v[0] or ""), str(v[1] or "")) for k, v in dict(portraits or {}).items()
+        }
         self._display_names = {str(k): str(v) for k, v in dict(display_names or {}).items()}
         self._category_names = {str(k): str(v) for k, v in dict(category_names or {}).items()}
         self._translate = translate
@@ -1643,9 +1919,10 @@ class BattleUiComposer:
             raise TypeError("hud_members must contain BattleHudMember")
         side_by_member = dict(side_by_member or {})
 
-        panels, texts, gauges, icons = self._hud_commands(
+        panels, texts, gauges, icons, portraits = self._hud_commands(
             hud_members, side_by_member, placement_by_member, focus_member_id
         )
+        self.portrait_boxes = {p.member_id: (p.x, p.y, p.width, p.height) for p in portraits}
         pw, tw, iw = self._workflow_commands(action_workflow)
         panels.extend(pw)
         texts.extend(tw)
@@ -1696,4 +1973,5 @@ class BattleUiComposer:
             markers,
             vfx,
             screen_fx,
+            tuple(portraits),
         )

@@ -1,0 +1,73 @@
+{
+ "check": "D53 editor fields for battle HUD portraits",
+ "shots": [
+  {
+   "shot": "d53_editor_battle_ui_layout.png",
+   "category": "ui_layout",
+   "record": "adaptive",
+   "fields": {
+    "hud_portraits": {
+     "label": "HUD Portraits  ⓘ",
+     "widget": "",
+     "shown": true
+    },
+    "hud_portrait_size": {
+     "label": "HUD Portrait Size  ⓘ",
+     "widget": "NumberBox",
+     "shown": true
+    }
+   }
+  },
+  {
+   "shot": "d53_editor_combatant_portraits.png",
+   "category": "combatant_visuals",
+   "record": "hero_01",
+   "fields": {
+    "portrait_asset_id": {
+     "label": "Portrait",
+     "widget": "_PortraitPicker",
+     "shown": true
+    },
+    "small_portrait_asset_id": {
+     "label": "",
+     "widget": "",
+     "shown": false
+    }
+   }
+  },
+  {
+   "shot": "d53_editor_battle_ui_layout_zh.png",
+   "category": "ui_layout",
+   "record": "adaptive",
+   "fields": {
+    "hud_portraits": {
+     "label": "HUD 肖像  ⓘ",
+     "widget": "",
+     "shown": true
+    },
+    "hud_portrait_size": {
+     "label": "HUD 肖像大小  ⓘ",
+     "widget": "NumberBox",
+     "shown": true
+    }
+   }
+  },
+  {
+   "shot": "d53_editor_combatant_portraits_zh.png",
+   "category": "combatant_visuals",
+   "record": "hero_01",
+   "fields": {
+    "portrait_asset_id": {
+     "label": "肖像",
+     "widget": "_PortraitPicker",
+     "shown": true
+    },
+    "small_portrait_asset_id": {
+     "label": "",
+     "widget": "",
+     "shown": false
+    }
+   }
+  }
+ ]
+}

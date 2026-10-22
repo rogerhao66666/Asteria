@@ -354,6 +354,7 @@ class CanonicalBattleAdapter:
         self.fallback_reason = (
             f"no combatant visual profile for {', '.join(missing)}" if missing else ""
         )
+        portraits = self._portraits(sides)
         if not missing:
             try:
                 combatants = self.resolver.combatant_visuals(
@@ -362,6 +363,7 @@ class CanonicalBattleAdapter:
                     layout,
                     self._stage_template(game, layout),
                     PARTY_SIDES,
+                    hud_portraits=portraits,
                 )
             except (BattleVisualError, OSError) as exc:
                 self.fallback_reason = str(exc)
@@ -390,6 +392,7 @@ class CanonicalBattleAdapter:
         self.screen.member_heights = {v.member_id: self._body_height(v) for v in combatants}
         self.screen.member_extents = {v.member_id: self._body_extents(v) for v in combatants}
         self._hide_unlisted_hud(combatants)
+        self.screen.member_portraits = portraits
         self.screen.coordinator.attach(game.battle.hooks)
         layout = self.screen.composer.layout
         scale = min(
@@ -404,6 +407,8 @@ class CanonicalBattleAdapter:
             resolve_skin=self.host.skin_image,
             font_name=self.host.skin_font(theme.font_asset_id),
             font_scale=theme.font_scale,
+            # party card portraits load, fit and cache like the dialogue box's
+            resolve_portrait=getattr(self.host, "dialogue_portrait", None),
         )
         self._ui_backend.vfx_drawer = self._draw_vfx
         self.renderer = BattleUiRenderer(self._ui_backend, theme)
@@ -763,12 +768,14 @@ class CanonicalBattleAdapter:
         if not any(new.values()):
             return
         self._register_fallback_visuals(new, self._layout)
+        portraits = {**self.screen.member_portraits, **self._portraits(new)}
         visuals = self.resolver.combatant_visuals(
             sides,
             self.placement_by_side,
             self._layout,
             self._stage_template(game, self._layout),
             PARTY_SIDES,
+            hud_portraits=portraits,
         )
         added = [v for v in visuals if v.member_id not in shown]
         for visual in added:
@@ -776,6 +783,7 @@ class CanonicalBattleAdapter:
             self.screen.member_heights[visual.member_id] = self._body_height(visual)
             self.screen.member_extents[visual.member_id] = self._body_extents(visual)
         self._hide_unlisted_hud(added)
+        self.screen.member_portraits = portraits
         self.screen.display_names = self._display_names(game)
         self.screen.animation.compositions.update(self._compositions(added))
 
@@ -785,6 +793,25 @@ class CanonicalBattleAdapter:
             profile = self.resolver.profile_for(visual.member_id)
             if profile is not None and not profile.hud_visible:
                 self.screen.hud_hidden.add(visual.member_id)
+
+    def _portraits(self, sides):
+        """``member_id: (portrait, small portrait)`` of the members of ``sides`` whose combatant
+        profile names a portrait picture that loads: their party cards show it. A picture that
+        is missing counts as none, so its card is drawn as it always was."""
+        loads = getattr(self.host, "skin_image", None)  # the picture at its own size, or None
+        found = {}
+        for members in sides.values():
+            for member_id in members:
+                assets = getattr(self.resolver.profile_for(member_id), "assets", None)
+                if assets is None or loads is None:
+                    continue
+                ids = tuple(
+                    str(asset_id) if asset_id and loads(str(asset_id)) is not None else ""
+                    for asset_id in (assets.portrait_asset_id, assets.small_portrait_asset_id)
+                )
+                if any(ids):
+                    found[member_id] = ids
+        return found
 
     def _register_fallback_visuals(self, sides, layout):
         """Every combatant without a combatant_visuals profile gets a generated one (no legacy

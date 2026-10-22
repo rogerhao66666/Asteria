@@ -271,10 +271,14 @@ class BattleUiRenderer:
                 style["skin"] = skin
             b.draw_panel(item, **style)
 
+        draw_portrait = getattr(b, "draw_portrait", None)  # a backend without one shows none
         for layer in (False, True):
             for item in frame.panels:
                 if on_top(item.role) == layer:
                     panel(item)
+            if not layer and draw_portrait is not None:
+                for portrait in frame.portraits:  # on its card's panel, beside or over the rows
+                    draw_portrait(portrait)
             if not layer:
                 for gauge in frame.gauges:
                     fill = t.gauge_full if gauge.normalized >= 1.0 else t.gauge_fill
@@ -320,6 +324,9 @@ class HeadlessBattleUiBackend:
 
     def draw_icon(self, icon):
         self.ops.append(("icon", icon.asset_id, icon.member_id, icon.role))
+
+    def draw_portrait(self, portrait):
+        self.ops.append(("portrait", portrait.asset_id, portrait.member_id))
 
     def draw_marker(self, marker, **style):
         self.ops.append(("marker", marker.member_id, marker.primary, dict(style)))
