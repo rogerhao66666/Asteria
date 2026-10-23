@@ -2495,3 +2495,26 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
   - 沒涵蓋的：這是逐格畫出，不是完整戰鬥流程（衝刺、時機、命中同步）逐技能播放；fx_heal 最後一格空白（另一個來源，看不出來）。
 
 **狀態：** 未提交（等使用者）。
+
+## D56 — 程式結構：CI、單一縮放路徑、兩個大檔拆成 mixin、風險文件重核（2026-10-23）
+
+**要求：** 使用者問「程式部分還有需要優化的部分嗎」，實測效能沒有瓶頸後，核准把建議的四項都做完：GitHub Actions、統一的縮放與繪製路徑、拆開 `game_session.py` 與 `playable_test_runtime.py`、重新核對 `ARCHITECTURE_PERFORMANCE_RISKS.md`。
+
+**做了什麼（四個 commit）：**
+- **CI**（`.github/workflows/tests.yml`）：每次 push 到 main 與每個 PR 跑 ruff check／format 與全部測試；Ubuntu、Python 3.12 與 3.13、`SDL_VIDEODRIVER=dummy`、`SDL_AUDIODRIVER=dummy`、`QT_QPA_PLATFORM=offscreen`，裝 `.[pygame,editor,mv,dev]` 與 Qt offscreen 需要的系統函式庫。本機用同一組環境變數（另外清掉 HOME 與 `ASTERIA_MUSIC_ASSETS`）跑過 3200 個測試全過；真實視窗的 live check 腳本不在 CI 裡（要桌面），證據照舊提交在 `docs/audits/evidence/`。
+- **一個縮放函式、一個快取**（`graphics/scaling.py`）：`resized(pg, image, size, smooth=False)`（最近鄰或平滑，大小永遠至少 1×1，8 位元圖先轉）與 `ScaledImageCache`（縮好的圖依鍵保留，超過像素預算就整個重來）。戰鬥繪製器、地圖視圖、兩個 pygame 材質後端、可玩 runtime 的特效、骨架、法線、組合、NPC、玩家行走圖、連線玩家、圖片都改走它；NPC 圖與玩家的每一步依大小各縮一次，不再每格縮，釋放資源範圍時一起丟。`tests/test_sprite_resizing.py`（4 項：和 pygame 逐像素相同、快取預算、地圖重用、材質後端）。
+- **可玩 runtime 拆成 `runtime/playtest/`**（14 個 mixin：resources、environment、text_draw、field_view、multiplayer、field_ui、action_scenes、title_build、workshop、battle_flow、menus_input、save_slots、menus_draw、capture；`support.py` 放模組層的函式）：`PlayableTestRuntime` 留在原模組組合它們，只剩建構、frame 迴圈、present／capture／close、存檔與 run（789 行）。每個方法原樣搬、名字不變；原本的 `from .x import` 改成絕對路徑。
+- **遊戲 session 拆成 `runtime/session/`**（18 個 mixin：field_play、action_play、gear、scene_events、npc_state、battle_events、messages、party、inventory_use、builds、encounters、ability_use、pets、strikes、turns、economy、interactions、rewards；`support.py` 放 `GameSessionError`、`BattleLogEntry`、`EquipOffer`、`describe_condition` 等）：`GameSessionRuntime` 留在 `game_session.py` 只剩建構子；模組層名稱照舊可從 `game_session` import。
+- **風險文件**（`docs/audits/ARCHITECTURE_PERFORMANCE_RISKS.md`）重寫成 2026-10-23 的現況：十項風險逐一標狀態與證據（已處理：CI、System 子類別、遷移、profiler、字型快取、draw 快取；降級：規則洩漏、MV、assets 依賴上層；未處理：presentation 模組大），新增 RISK-11（兩個大檔，已處理）與實機基準 PERF-07／PERF-08。
+
+**實測（Apple silicon，真實視窗 1280×720，54 個實體，各 600 格；拆之前／之後）：** 地圖平均 4.9→5.1 ms、p95 7.2→7.6 ms；戰鬥平均 4.6→4.3 ms、p95 6.7→6.4 ms；都在每格 16.7 ms 預算的三分之一內，FPS 被螢幕更新率卡在 56–59。差異在量測雜訊內。專案載入 0.08 s。
+
+**相容：** 行為沒有改變：拆檔前後 3205 個測試、`run_campaign.py` 全部 REQUIRED 事實、真實視窗劇情 live check、戰鬥圖庫 live check 都通過；`PlayableTestRuntime`、`GameSessionRuntime`、`GameSessionError`、`walking_row_index` 等名稱的 import 路徑不變。
+
+**限制：**
+- CI 只在本機用同樣的環境變數驗過，GitHub 上第一次跑的結果（Qt offscreen 的系統函式庫是否齊）要看 Actions 頁；真實視窗的檢查仍是本機手動。
+- mixin 只是把方法搬開，彼此仍透過 `self` 共用狀態；要進一步解耦（各 mixin 自己的狀態與介面）是下一步，不在這次。
+- `platform/pygame_backend.py` 的通用 `draw_texture` 仍每次縮放（沒有量到是熱點，未加快取）。
+- ENGINE_HANDBOOK 裡指到 `runtime/game_session.py`／`runtime/playable_test_runtime.py` 的列仍指原模組（類別還在那裡）；方法本身現在在 `runtime/session/`、`runtime/playtest/` 的對應模組。
+
+**狀態：** 已提交（2026-10-23，使用者要求）。

@@ -1,60 +1,52 @@
 # ARCHITECTURE_PERFORMANCE_RISKS
 
-本文件只做**有證據的風險評估**，不做實作：不加 C++、不替換 renderer。
-每項風險都會標明證據是：
-- **Measured**（本次實測）
-- **Prior-measured**（舊報告）
-- **Code-inspection**（程式碼檢視）
+**2026-10-23 重新核對**（原稿 2026-10-12；D56）。每項都標明證據：
+- **Measured**（實測，寫明日期）
+- **Code-inspection**（程式碼檢視，2026-10-23）
 - **Hypothetical**（推測）
+
+狀態欄：**已處理**（有證據）、**降級**（風險變小但還在）、**未處理**、**新**。
 
 ## 1. 架構風險
 
-| ID | 風險 | 證據類型 | 證據 | 影響 | 建議（對應 Batch） |
-|---|---|---|---|---|---|
-| RISK-01 | **兩條平行的 runtime 路徑**：canonical presentation／events 只有測試在跑，實際遊玩走手刻腳本 | Code-inspection | `runtime/preview.py:88-95` → `playable_test_runtime.py`；`src/` 中 presentation 只有 editor 預覽在 import | Editor 改的東西在遊玩中無效；有長期維護兩套系統的風險（D6 明確禁止） | CB1、CB2、CB3 incremental；以 G-BATTLE gate 判斷舊路徑何時退役 |
-| RISK-02 | **規則洩漏到演出層**：playable runtime 自己決定目標、boost、量表和回合順序 | Code-inspection | `playable_test_runtime.py:503,506-510,515`；`game_session.py:290` | 形成第二套 battle rules（D6 禁止）；資料驅動原則（S§2）失效 | CB3 先把規則搬回資料，再接 presentation |
-| RISK-03 | **MV 語意越界** | Code-inspection | `runtime/rpg_maker_mv_map_render.py`；工作樹的 `graphics/mv_weapon_visual.py`、`presentation/battle_screen.py:178-189`、`battle_runtime.py` `_weapon_visuals` | 違反 `CODEX_HANDOFF.md` 第 4 點和 S§44.1；之後換成免費素材時，會被 MV 格式綁住 | CB0：提案 patch（`docs/audits/proposed/`） |
-| RISK-04 | **大量 commit 中靜默刪除功能** | Code-inspection（git） | `bf4a993` 一次動了 298 個檔案（+22010／−19698），刪掉 ModernGL 和外觀模組，ledger 沒有記錄 | 回歸沒被察覺；ledger 失真 | CB0：ledger 修正；CB13：CI + 刪除檔案要經過審查 |
-| RISK-05 | **Editor／Runtime 分離**：`assets/character_content_pack.py`（未追蹤）在 assets 層 import `editor.create_character_command`；assets 層也 import presentation（`complex_codecs.py`、`monster.py`、`vfx.py`）和 runtime（`rpg_maker_mv_map.py`） | Code-inspection | 上述 import | 打包 runtime 時會被迫帶入 editor（PySide6）依賴 | CB15 移除 content pack；CB12 打包時做 import-boundary 測試 |
-| RISK-06 | **沒有具體 System**：`SystemScheduler` 存在但 0 個子類別；行為散落在 `GameSessionRuntime`／`PlayerRuntime` 的手動呼叫 | Code-inspection | `core/system.py`、`core/scene.py:117` | §7 的 system-oriented 架構沒有被驗證；ARPG 階段會被迫重構 | CB4 |
-| RISK-07 | **大型平坦模組**：`presentation/` 有 82 個檔案、約 1.24 萬行，多數只有測試在用 | Code-inspection | `find src/asteria/presentation -name '*.py'` | 維護成本高、死碼風險 | CB2 完成後，依實際使用度再評估（不先重構） |
-| RISK-08 | **Thread safety** | Code-inspection | `src/` 中沒有任何 threading；runtime 透過子程序和 editor 分離 | 目前低風險；如果之後做背景資產載入，需要所有權規則 | 不需要行動 |
-| RISK-09 | **沒有 CI，環境相依的測試** | Code-inspection | 沒有 `.github/`；部分 MV 測試沒有 `skipif` | 回歸只能靠本機發現 | CB13 |
-| RISK-10 | **存檔／專案沒有遷移** | Code-inspection | `core/serialization.py` 版本不符直接 raise | 引擎一變動，舊專案就打不開（違反 S§39） | CB12 |
+| ID | 風險 | 狀態（2026-10-23） | 證據 |
+|---|---|---|---|
+| RISK-01 | 兩條平行的 runtime 路徑：canonical presentation 只有測試在跑，實際遊玩走手刻腳本 | **已處理**（戰鬥） | 可玩 runtime 的戰鬥走 canonical 的 `BattleScreenRuntime`（`runtime/battle_presentation_adapters.py`，由 `playtest/battle_flow.py` 呼叫）；地圖走 `runtime/tile_scene_view.py`。D26–D53 的戰鬥功能都是在這條路上做的 |
+| RISK-02 | 規則洩漏到演出層：可玩 runtime 自己決定目標、boost、回合順序 | **降級** | 規則在 `GameSessionRuntime`（`runtime/session/ability_use.py`、`turns.py`）和 `runtime/battle_commands.py`；演出層剩選單狀態（`playtest/battle_flow.py` 的 `_boost_level`、`_skills_for_actor`），不含判定 |
+| RISK-03 | MV 語意越界 | **降級** | MV 只剩匯入層（`assets/rpg_maker_mv_*.py`、`runtime/rpg_maker_mv_*.py`）；所有 demo 與範本用免費素材（Lucifer、Critters，D43 起）。`assets/` 仍 import `presentation`／`runtime`（`complex_codecs.py`、`monster.py`、`vfx.py`、`sprite_kinds.py`、`rpg_maker_mv_*.py`），見 RISK-05 |
+| RISK-04 | 大量 commit 中靜默刪除功能 | **已處理** | 每個 commit 都有 DECISION_LOG 條目與證據（D26 起）；CI 從 2026-10-23 起每次 push 跑全部測試（RISK-09） |
+| RISK-05 | Editor／Runtime 分離 | **降級** | `assets/` 不再 import `editor`（`character_content_pack.py` 已移除）；`runtime/` 只有 `preview.py` import editor（編輯器預覽本來就屬於編輯器）。`assets/` 仍 import `presentation`／`runtime`（8 個檔案）：打包 runtime 不會因此帶入 PySide6，但層次仍不乾淨 |
+| RISK-06 | 沒有具體 System | **已處理** | `System` 子類別：`AnimationSystem`、`CameraFollowSystem`（`runtime/systems.py`）、`FieldAISystem`、`SpawnSystem`（`runtime/field_ai.py`）、`EntityActionSystem`（`runtime/entity_actions.py`） |
+| RISK-07 | 大型平坦模組 | **未處理** | `presentation/` 58 個檔案、約 15,700 行（原 82 個、12,400 行：檔案少了、總行數多了，因為戰鬥 UI 長大）。沒有死碼證據；不先重構 |
+| RISK-08 | Thread safety | **不需要行動** | `src/` 仍沒有 threading；音樂切換用子程序（D48） |
+| RISK-09 | 沒有 CI | **已處理** | `.github/workflows/tests.yml`（2026-10-23）：ruff check／format 加全部測試，Ubuntu、Python 3.12 與 3.13、SDL dummy、Qt offscreen。本機用同樣環境變數跑過 3200 個測試全過；GitHub 上的第一次執行結果要看 Actions 頁 |
+| RISK-10 | 存檔／專案沒有遷移 | **已處理** | `core/migration.py`（元件版本遷移，S§33）；D44 起每個新欄位「沒設定就不寫入」，舊專案照常讀（D54、D55 都有相容測試） |
+| RISK-11 | **兩個 4,000 行以上的檔案**：`runtime/game_session.py`（4,825 行、290 個方法）與 `runtime/playable_test_runtime.py`（4,476 行、170 個方法）；改一處容易影響別處，加一個功能要在同一個檔案裡散改多處（D55 的縮放就改了三處） | **已處理**（2026-10-23） | 拆成 mixin：`runtime/session/`（18 個模組）與 `runtime/playtest/`（14 個模組），每個方法原樣搬過去、名字不變，`GameSessionRuntime`／`PlayableTestRuntime` 還在原來的模組裡組合。拆完後 3205 個測試、劇情（無頭與真實視窗）、戰鬥圖庫、效能基準都和拆之前一樣 |
 
 ## 2. 效能發現
 
-| ID | 熱點 | 證據類型 | 數據 | 判斷 |
-|---|---|---|---|---|
-| PERF-01 | `PlayableTestRuntime.text()` **每次呼叫都 new 一個 `pygame.font.Font`**（`runtime/playable_test_runtime.py:102-104`） | **Measured**（本次，`SDL_VIDEODRIVER=dummy`，300 次平均） | 每次建立 font 約 **0.640 ms**，快取 font 約 **0.009 ms**（約 70 倍）。`_draw_battle` 有 15 個 `self.text(` 呼叫點（部分在英雄／敵人／技能迴圈內），`_draw_build_menu` 有 14 個 | **推算**（Derived，不是端到端量測）：每個戰鬥影格約 20–40 次 → **約 13–26 ms**，光 font 建立就可能超過 60 fps 的 16.7 ms 預算。修法很簡單（快取 font），但檔案屬於 legacy adapter，依 D6 只做最小修正 |
-| PERF-02 | `PygameRuntimeBackend.draw_texture` 每次 draw 都做 `subsurface` + `transform.scale` + `flip` + `copy` + `set_alpha` | **Measured** | 最壞路徑（48→64 縮放 + flip + alpha）每次約 **0.021 ms**；1000 個 draw 約 21 ms | 大量 sprite／粒子時會成為瓶頸。正確方向是快取縮放／翻轉結果或用 GPU 批次（D1、CB9），不是 C++ |
-| PERF-03 | 合成 presentation 壓力負載 | **Prior-measured**（`audit/PERFORMANCE_FINDINGS.md`） | 1494 draws、11 batches、平均 13.43 ms、2 個掉幀 | headless 的合成數據，**不是**實際 GPU 或 pygame 的量測 |
-| PERF-04 | `BattlePresentationRuntime.build_frame` 每影格建立新的 draw list 並排序（`battle_runtime.py:471`） | Code-inspection | 只有 O(n log n)，戰鬥場景 n 很小 | 低風險（Hypothetical） |
-| PERF-05 | Tile 繪製有 viewport culling（`runtime/tile_draw.py:41`） | Code-inspection | — | 已處理 |
-| PERF-06 | 沒有 runtime profiler（S§34） | Code-inspection | 只有合成負載工具 | 無法建立實機基準 → CB13 |
+| ID | 熱點 | 狀態 | 證據 |
+|---|---|---|---|
+| PERF-01 | `text()` 每次呼叫都 new 一個 `pygame.font.Font` | **已處理** | `playtest/text_draw.py` 的 `_menu_font` 依大小快取（`self._fonts`） |
+| PERF-02 | 每次 draw 都 `subsurface` + `scale` + `flip` + `copy` + `set_alpha` | **已處理**（戰鬥、地圖） | 戰鬥：`PygameTextureDrawer` 依（圖、來源格、大小、翻轉）快取縮好的圖，只畫可見部分（D48）；地圖：`TileSceneView._sprite` 依格與倍率快取；玩家行走圖與 NPC 圖依大小快取（`graphics/scaling.py` 的 `ScaledImageCache`，2026-10-23）。所有縮放都走同一個 `graphics.scaling.resized`（最近鄰或平滑）。剩下 `platform/pygame_backend.py` 的通用 `draw_texture` 每次仍縮放一次（沒有量到它是熱點） |
+| PERF-03 | 合成 presentation 壓力負載 | **已被實測取代** | 見 PERF-07 |
+| PERF-04 | `build_frame` 每影格建新的 draw list 並排序 | **低風險** | 戰鬥 n 很小；D48 之後 HUD 與指令列只在變化時重排 |
+| PERF-05 | Tile 繪製有 viewport culling | **已處理** | `runtime/tile_draw.py` |
+| PERF-06 | 沒有 runtime profiler | **已處理** | `runtime/profiler.py`（`RuntimeProfiler`：逐段計時、計數器、frame pacing）；`scripts/runtime_benchmark.py` |
+| PERF-07 | **實機基準**（Measured 2026-10-23，Apple silicon，真實視窗 1280×720，54 個實體，各 600 格） | — | 地圖（50 隻 AI 敵人）：平均 5.1 ms、p95 7.4 ms、p99 10.6 ms；戰鬥：平均 4.3 ms、p95 6.4 ms。每格預算 16.7 ms，用不到三分之一；FPS 56–59 被螢幕更新率卡住。分段：地圖 render 2.8、update 0.9、present 0.9、AI 0.6、collision 0.2 ms；戰鬥 render 2.7、animation 0.8、present 0.8 ms。地圖偶發單格 24 ms 尖峰在 present（合成器），不是引擎 |
+| PERF-08 | 專案載入 | **Measured 2026-10-23** | Full Verification 的 `project.asteria.json`（3.8 MB）載入 0.08 s；`import asteria.editor` 0.34 s |
 
-**Benchmark 缺口：**
-- 實機 frame time（pygame field 和 battle）
-- 資產解碼／上傳時間
-- 大型 tilemap
-- 大量 entity 的碰撞（目前還沒有碰撞系統可以量）
-- 存讀檔時間
-- Editor 大專案開啟時間
-
-以上都是 **NE**。
+**Benchmark 仍缺：** 大型 tilemap、存讀檔時間、編輯器開大專案的時間、多 NPC（100 個以上）的地圖。都還是 **NE**。
 
 ## 3. 未來 native（C++）邊界候選
 
-依 `SCOPE_DECISIONS.md`，**只做評估，不納入目前範圍**。
+依 `SCOPE_DECISIONS.md` 只做評估。D21 已把粒子更新與碰撞 broad phase 抽成 `asteria.kernels`（純 Python 參考實作、numpy 實作、D48 的 C++ kernel 不需 numpy），native 實作從這一層加。
 
-| 候選 | 潛在效益 | 遷移複雜度 | 耦合／binding 邊界 | 所有權 | 相容性 | 證據 |
-|---|---|---|---|---|---|---|
-| Sprite 批次渲染 | 高 | 中 | `TextureBackend` Protocol（`platform/backend.py`）已經是乾淨的邊界 | 後端持有 GPU 資源；Python 端持有 `TextureDraw` 值物件 | 可以和 pygame 並存 | PERF-02（Measured）。**但應該先恢復 ModernGL（Python + GPU），它可能已經足夠**（D1） |
-| 碰撞 broad phase | 中到高（大量 entity） | 低（新模組） | 純函式：AABB 陣列進、配對出 | 呼叫端持有資料 | 新功能，沒有相容負擔 | Hypothetical：碰撞系統還不存在（CB5），應該先用 Python + spatial hash 量測 |
-| 動畫取樣／粒子更新 | 中 | 中 | `presentation/vfx_runtime.py`、`property_animation.py` | runtime 持有 | 需要保持 deterministic | Hypothetical |
-| Event VM | 低 | 高 | `events/vm.py` | — | 可恢復性和序列化難以跨語言 | 不建議 |
-| Battle 規則 | 低 | 高 | `rpg/battle*` | — | 確定性 snapshot 與 Python 擴充性 | 不建議：回合制不是 CPU 熱點 |
+| 候選 | 潛在效益 | 判斷（2026-10-23） |
+|---|---|---|
+| Sprite 批次渲染 | 高（大量 sprite／粒子時） | PERF-07 顯示 render 每格 2.7–2.8 ms，沒有必要；要再快先恢復 ModernGL 的 GPU 批次（D1） |
+| 碰撞 broad phase | 中到高 | 已在 `asteria.kernels`；50 個實體時 0.2 ms |
+| 動畫取樣／粒子更新 | 中 | 粒子已在 `asteria.kernels`；動畫 0.8 ms |
+| Event VM、Battle 規則 | 低 | 不建議：不是 CPU 熱點，且要保持確定性與 Python 擴充性 |
 
-**D21 更新：** 粒子更新和碰撞 broad phase 已經抽成 `asteria.kernels`（純 Python 參考實作 + numpy 實作）。之後要加 native 實作時，從這一層加，數據見 DECISION_LOG D21。
-
-**結論：** 目前沒有任何「Measured 且必須用 native 才能解決」的瓶頸。已量到的兩個熱點（PERF-01、PERF-02）都可以在 Python 層解決（快取、GPU 批次）。
+**結論（2026-10-23）：** 沒有任何「Measured 且必須用 native 才能解決」的瓶頸；原稿量到的兩個熱點（PERF-01、PERF-02）都已在 Python 層解決。架構風險裡還開著的是 RISK-07（presentation 模組大）與 RISK-05 的後半（`assets/` 依賴上層）。

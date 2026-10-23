@@ -368,6 +368,15 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 素材 | `asset_library/kaykit/`（KayKit Adventurers 2.0、Character Animations 1.1，CC0）與渲染成品；`scripts/build_kaykit_art.py`（`--render` 用 Blender 拍，否則只組圖）、`scripts/kaykit_render_blender.py` |
 | Demo | Full Verification 隊伍仍是 Lucifer 像素風；建置時 `ASTERIA_FV_PARTY=kaykit` 可換成 KayKit（`trial_kaykit.py`）；`build_kaykit_art.py --style toon` 產生卡通著色＋外框的像素版 |
 
+### D56 新增（2026-10-23；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 工具 | GitHub Actions（`.github/workflows/tests.yml`）：每次 push／PR 跑 ruff 與全部測試（無頭）；`scripts/battle_art_gallery_live_check.py`（D55）、`scripts/runtime_benchmark.py` 仍是本機跑 |
+| 繪製 | `graphics/scaling.py`：所有 pygame 繪製的縮放走 `resized`（最近鄰／平滑），`ScaledImageCache` 保留縮好的圖 |
+| 程式結構 | `runtime/game_session.py` 的 `GameSessionRuntime` 由 `runtime/session/` 的 18 個 mixin 組成；`runtime/playable_test_runtime.py` 的 `PlayableTestRuntime` 由 `runtime/playtest/` 的 14 個 mixin 組成。本手冊其他列寫的 `runtime/game_session.py`／`runtime/playable_test_runtime.py`，方法現在在這兩個資料夾的對應模組裡 |
+| 文件 | `docs/audits/ARCHITECTURE_PERFORMANCE_RISKS.md` 重核為 2026-10-23 現況，含實機基準 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
