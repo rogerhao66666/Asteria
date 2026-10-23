@@ -1,0 +1,626 @@
+"""Field overlays, equip offers, pictures, popups, dialogue and the field input."""
+
+from __future__ import annotations
+
+from asteria.core import Transform
+from asteria.graphics.scaling import resized
+from asteria.runtime.collision import CollisionWorld
+
+from .support import (  # noqa: F401 - the names the moved methods use
+    BESTIARY_TAG_KINDS,
+    FIELD_BODY_HEIGHT,
+    WALK_PATTERN_SEQUENCE,
+    WALK_ROW_BY_FACING,
+    _load_manifest,
+    field_player_render_size,
+    walking_pattern_index,
+    walking_row_index,
+)
+
+
+class FieldUiMixin:
+    def _draw_field_overlays(self):
+        """Everything drawn over the field's world: HUD, effects, popups, dialogue, help."""
+        self._draw_multiplayer_world()
+        if self.game.action_scene:
+            self.action_hud.draw_world(self)
+        elif self._field_abilities():  # field strikes in a turn-based game: its thrown shots
+            self.action_hud.draw_projectiles(self)
+        self._draw_field_effects()
+        self._draw_popups()
+        self._draw_pictures()
+        self._draw_event_timers()
+        self._draw_field_windows()
+        self._draw_entity_icons()
+        if self.game.cutscene_active:
+            self._draw_dialogue()
+            return
+        if self.game.action_scene:
+            self.action_hud.draw_overlay(self)
+            if self.message and self.pg.time.get_ticks() < self.message_until:
+                self.text(
+                    self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
+                )
+            self._draw_dialogue()
+            return
+
+        tr = self.game.tr
+        self.panel((18, self.height - 92, self.width - 36, 72))
+        self.text(
+            tr("field.title", "Field Test"), 34, self.height - 82, size=24, color=(255, 220, 124)
+        )
+        self.text(
+            tr(
+                "field.controls",
+                "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
+            ),
+            34,
+            self.height - 52,
+            size=19,
+        )
+        candidate = self._interaction_candidate()
+        if candidate is not None and not self.game.event_busy:
+            self.text(
+                tr("field.interact", "E  Interact — {name}", name=candidate.entity.name),
+                self.width / 2,
+                55,
+                size=26,
+                color=(255, 226, 129),
+                center=True,
+            )
+        if self.message and self.pg.time.get_ticks() < self.message_until:
+            self.text(
+                self.message, self.width / 2, 92, size=22, color=(175, 235, 255), center=True
+            )
+        self._draw_dialogue()
+        self._draw_equip_offer()
+
+    def _equip_offer_text(self, offer):
+        """("Wear the Demon Ring?", "Aldric - weapon (a free hand)") for an offer."""
+        db = self.project.rpg_database
+        bag = self.game.save.rpg_state.equipment_bag
+        item = next((g for g in bag if g.instance_id == offer.instance_id), None)
+        name = item.equipment.display_name if item is not None else offer.instance_id
+        actor = db.actors.get(offer.actor_id)
+        who = getattr(actor, "display_name", "") or offer.actor_id
+        if offer.replaces:
+            loadout = self.game.save.rpg_state.loadouts[offer.actor_id]
+            worn = next(
+                (g for g in loadout.equipped(offer.slot_id) if g.instance_id == offer.replaces),
+                None,
+            )
+            old = worn.equipment.display_name if worn is not None else offer.replaces
+            return (
+                self.game.tr("equip_offer.new", "New: {name}", name=name),
+                self.game.tr(
+                    "equip_offer.instead",
+                    "{who}: wear it instead of {old}?",
+                    who=who,
+                    old=old,
+                ),
+            )
+        return (
+            self.game.tr("equip_offer.new", "New: {name}", name=name),
+            self.game.tr(
+                "equip_offer.free",
+                "{who} has a free {slot} place. Wear it now?",
+                who=who,
+                slot=offer.slot_id,
+            ),
+        )
+
+    def _draw_equip_offer(self):
+        """New gear asks whether to wear it (InventoryRules.equip_offer)."""
+        offers = self.game.equip_offers
+        if not offers or self.game.pending_dialogue is not None:
+            return
+        title, question = self._equip_offer_text(offers[0])
+        box = (self.width / 2 - 300, self.height - 250, 600, 150)
+        self.panel(box, fill=(10, 14, 24, 240), border=(240, 201, 93))
+        self.text(title, self.width / 2, box[1] + 26, size=26, color=(255, 220, 124), center=True)
+        self.text(question, self.width / 2, box[1] + 64, size=21, center=True)
+        self.text(
+            self.game.tr("equip_offer.keys", "1 / Enter: wear it     2 / Esc: keep it in the bag"),
+            self.width / 2,
+            box[1] + 108,
+            size=18,
+            color=(170, 210, 240),
+            center=True,
+        )
+
+    def _equip_offer_input(self, events):
+        """Keys for a waiting equip offer. Returns True when one is open."""
+        if not self.game.equip_offers or self.game.event_busy:
+            return False
+        wear = self.input.just_pressed("confirm") or any(
+            e.type == self.pg.KEYDOWN and e.key == self.pg.K_1 for e in events
+        )
+        keep = self.input.just_pressed("cancel") or any(
+            e.type == self.pg.KEYDOWN and e.key == self.pg.K_2 for e in events
+        )
+        if wear or keep:
+            self.game.answer_equip_offer(bool(wear))
+        return True
+
+    def _picture_image(self, picture):
+        """The sub-image of a picture's asset for its sprite-sheet cell, or ``None``."""
+        from asteria.runtime.menu_icons import icon_source
+
+        source = icon_source(self.project, picture.asset_id)
+        if source is None:
+            return None
+        try:
+            image = self.load_image(source[0])
+        except (OSError, ValueError, self.pg.error):
+            return None
+        x, y, w, h = picture.cell(*image.get_size())
+        return image.subsurface(self.pg.Rect(x, y, w, h).clip(image.get_rect()))
+
+    def _picture_size(self, picture):
+        image = self._picture_image(picture)
+        if image is None:
+            return None
+        return self.load_image(self._picture_path(picture)).get_size()
+
+    def _picture_path(self, picture):
+        from asteria.runtime.menu_icons import icon_source
+
+        return icon_source(self.project, picture.asset_id)[0]
+
+    def _draw_pictures(self):
+        """Pictures events put on screen (SHOW_PICTURE), bottom layer first."""
+        for picture in self.game.pictures.pictures():
+            image = self._picture_image(picture)
+            if image is None or picture.opacity <= 0:
+                continue
+            w, h = image.get_size()
+            image = resized(self.pg, image, (round(w * picture.scale), round(h * picture.scale)))
+            if picture.opacity < 1.0:
+                image = image.copy()
+                image.set_alpha(round(255 * picture.opacity))
+            self.screen.blit(image, (round(picture.x), round(picture.y)))
+
+    def _click_picture(self, x, y):
+        return self.game.click_picture(x, y, self._picture_size)
+
+    def _draw_event_timers(self):
+        """Visible event timers (TIMER_START) stacked at the top right: ``MM:SS``."""
+        for row, (timer_id, clock) in enumerate(self.game.timers.display()):
+            low = (self.game.timers.remaining(timer_id) or 99) <= 10
+            color = (255, 150, 140) if low else (245, 245, 250)
+            self.panel((self.width - 118, 14 + row * 40, 104, 34))
+            self.text(clock, self.width - 66, 31 + row * 40, size=30, color=color, center=True)
+
+    def battle_option(self, name):
+        """A battle option: the project's ``BattleOptions`` record (first by id) when it has one,
+        else the manifest's ``battle.<name>``; ``False`` / ``0`` when neither says."""
+        values = self.project.rpg_database.battle_options
+        if values:
+            return getattr(values[sorted(values)[0]], name)
+        return self.manifest.get("battle", {}).get(name, 0)
+
+    def _draw_entity_icons(self):
+        """Icons events keep over entities (``SET_ENTITY_ICON``), above their heads."""
+        from asteria.core import Transform
+
+        icons = self.game.entity_icons()
+        for entity_id, icon_id in icons.items():
+            entity = self.game.scene.get_entity(entity_id)
+            if entity is None or not entity.has(Transform):
+                continue
+            transform = entity.get(Transform)
+            x, y = self._field_screen_xy(transform.x, transform.y)
+            self._draw_icon(icon_id, round(x) - 11, round(y) - 64, 22)
+
+    def _draw_field_windows(self):
+        """Optional map windows (manifest ``field.hud``): ``gold`` shows the wallet and
+        ``quest_tracker`` the active quests' objectives, stacked at the top left. Off unless the
+        project asks, so existing games look as they did."""
+        hud = self.manifest.get("field", {}).get("hud", {})
+        if not isinstance(hud, dict) or not (hud.get("gold") or hud.get("quest_tracker")):
+            return
+        lines = []
+        state = self.game.save.rpg_state
+        if hud.get("gold"):
+            wallet = "   ".join(f"{state.currencies[k]:g} {k}" for k in sorted(state.currencies))
+            if wallet:
+                lines.append((wallet, (255, 222, 150)))
+        if hud.get("quest_tracker"):
+            quests = self.project.rpg_database.quests
+            for quest_id, progress in sorted(state.quests.items()):
+                if progress.status != "active" or quest_id not in quests:
+                    continue
+                quest = quests[quest_id]
+                lines.append((quest.display_name, (245, 245, 250)))
+                for objective in quest.objectives:
+                    have = progress.counts.get(objective.objective_id, 0)
+                    done = have >= objective.required
+                    label = objective.description or objective.objective_id
+                    lines.append(
+                        (
+                            f"  {label}  {min(have, objective.required)}/{objective.required}",
+                            (170, 240, 170) if done else (200, 205, 220),
+                        )
+                    )
+        if not lines:
+            return
+        from asteria.presentation.text_cells import cells
+
+        row_h = 22  # a full-width (Chinese) character takes the room of two
+        width = min(420, max(160, 14 + 9 * max(cells(text) for text, _ in lines)))
+        self.panel((14, 14, width, 12 + row_h * len(lines)))
+        for row, (text, color) in enumerate(lines):
+            self.text(text, 24, 20 + row * row_h, size=18, color=color)
+
+    # -- popups (CMP-03: generic animated text above field characters) ----------------------------
+    POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
+
+    def _update_popups(self, dt):
+        from asteria.presentation.animated_text import (
+            AnimatedTextRuntime,
+            AnimatedTextSpec,
+            TextKey,
+            TextTransform,
+        )
+
+        if getattr(self, "popups", None) is None:
+            self.popups, self._popup_serial = AnimatedTextRuntime(), 0
+        for notice in self.game.drain_notices():
+            self._popup_serial += 1
+            rise = TextTransform(y=-34.0, opacity=0.0, scale=1.0)
+            spec = AnimatedTextSpec(
+                notice["text"],
+                duration_ms=notice["duration_ms"],
+                space="world",
+                anchor_id=notice["entity"] or "player",
+                keys=(
+                    TextKey(0.0, TextTransform(y=0.0, opacity=0.0, scale=0.8)),
+                    TextKey(0.15, TextTransform(y=-8.0, opacity=1.0, scale=1.0)),
+                    TextKey(0.7, TextTransform(y=-22.0, opacity=1.0)),
+                    TextKey(1.0, rise),
+                ),
+                metadata={"kind": notice["kind"]},
+            )
+            self.popups.spawn(f"popup.{self._popup_serial}", spec)
+        self.popup_frame = self.popups.update(dt * 1000.0)
+
+    def _popup_anchor(self, anchor_id):
+        if anchor_id == "player":
+            entity = self.game.player
+        else:
+            entity = next(
+                (
+                    e
+                    for e in self.game.scene.entities()
+                    if e.name == anchor_id or e.id == anchor_id
+                ),
+                None,
+            )
+        transform = entity.get(Transform) if entity is not None else None
+        if transform is None:
+            return None
+        x, y = self._field_screen_xy(transform.x, transform.y)
+        return x, y - 48 * self.field_camera.zoom  # above the head
+
+    def _draw_popups(self):
+        from asteria.presentation.text_render_integration import AnimatedTextRenderComposer
+
+        resolved = getattr(self, "popup_frame", ())
+        if not resolved:
+            return
+        composer = AnimatedTextRenderComposer(anchor_resolver=self._popup_anchor)
+        packets = []
+        for item in resolved:
+            try:
+                packets.extend(composer.compose((item,)))
+            except ValueError:
+                continue  # the anchor left the scene
+        from asteria.platform.pygame_battle_ui import cjk_size, font_for_text
+
+        latin = self.pg.font.Font(None, 30)
+        for packet in packets:
+            color = self.POPUP_COLORS.get(packet.metadata.get("kind"), self.POPUP_COLORS["info"])
+            # Chinese, Japanese or Korean words come from a system face that has them
+            font = font_for_text(self.pg, latin, packet.text, self._cjk_fonts, cjk_size(latin))
+            image = font.render(packet.text, True, color)
+            if packet.scale != 1.0:
+                size = (
+                    max(1, round(image.get_width() * packet.scale)),
+                    max(1, round(image.get_height() * packet.scale)),
+                )
+                image = self.pg.transform.smoothscale(image, size)
+            shadow = font.render(packet.text, True, (10, 12, 20))
+            shadow.set_alpha(round(160 * packet.opacity))
+            image.set_alpha(round(255 * packet.opacity))
+            at = (
+                round(packet.x - image.get_width() / 2),
+                round(packet.y - image.get_height() / 2),
+            )
+            self.screen.blit(shadow, (at[0] + 2, at[1] + 2))
+            self.screen.blit(image, at)
+
+    def dialogue_portrait(self, portrait_id, width, height):
+        """The picture ``portrait_id`` names (an image asset, a sheet cell or a project path)
+        fitted inside ``width`` x ``height`` with its proportions kept, or ``None``. A picture
+        made larger keeps sharp pixels (pixel-art faces); one made smaller is smoothed."""
+        from asteria.runtime.menu_icons import icon_source
+
+        key = (str(portrait_id or ""), int(width), int(height))
+        cache = self._portrait_cache
+        if key in cache:
+            return cache[key]
+        picture = None
+        source = icon_source(self.project, portrait_id) if portrait_id else None
+        if source is not None:
+            uri, region = source
+            try:
+                image = self.load_image(uri)
+                if region is not None:
+                    image = image.subsurface(self.pg.Rect(region).clip(image.get_rect()))
+                w, h = image.get_size()
+                scale = min(width / max(1, w), height / max(1, h))
+                size = (max(1, round(w * scale)), max(1, round(h * scale)))
+                fit = self.pg.transform.scale if scale >= 1 else self.pg.transform.smoothscale
+                picture = fit(image, size)
+            except (OSError, ValueError, self.pg.error):
+                picture = None  # a missing portrait: the line shows without one
+        if len(cache) > 32:
+            cache.clear()
+        cache[key] = picture
+        return picture
+
+    PORTRAIT_BUST_SHARE = 0.55  # a bust's height on screen when Portrait Size is 0
+    DIALOGUE_BOX_HEIGHT = 130
+
+    def _dialogue_layout(self, line):
+        """The message window ``(x, y, w, h)`` for ``line`` and its portrait as ``(picture,
+        (x, y), style, room)`` or ``None``; ``room`` is the rect the portrait keeps. A face sits
+        centred in a square at the window's left or right end (the window grows to hold a big
+        one); a bust stands on the window's bottom edge."""
+        settings = self.game.message_settings
+        style = settings.portrait_style if settings is not None else "face"
+        size = settings.portrait_size if settings is not None else 0
+        height = self.DIALOGUE_BOX_HEIGHT
+        box = (60, self.height - 100 - height, self.width - 120, height)
+        portrait_id = getattr(line, "portrait_asset_id", "") if line is not None else ""
+        if not portrait_id:
+            return box, None
+        left = line.portrait_side == "left"
+        if style == "bust":
+            x, y, w, h = box
+            tall = size or round(self.height * self.PORTRAIT_BUST_SHARE)
+            picture = self.dialogue_portrait(portrait_id, w // 2, tall)
+            if picture is None:
+                return box, None
+            at = (
+                x + 24 if left else x + w - 24 - picture.get_width(),
+                y + h - picture.get_height(),
+            )
+            return box, (picture, at, style, (*at, *picture.get_size()))
+        side = size or height - 24
+        picture = self.dialogue_portrait(portrait_id, side, side)
+        if picture is None:
+            return box, None
+        height = max(height, side + 24)  # a big face: the window grows upwards to hold it
+        box = x, y, w, h = (60, self.height - 100 - height, self.width - 120, height)
+        room = (x + 12 if left else x + w - 12 - side, y + (h - side) // 2, side, side)
+        at = (
+            room[0] + (side - picture.get_width()) // 2,
+            room[1] + (side - picture.get_height()) // 2,
+        )
+        return box, (picture, at, style, room)
+
+    def _draw_dialogue(self):
+        request = (
+            getattr(self, "_network_dialogue", None)
+            if self._multiplayer_connected()
+            else self.game.pending_dialogue
+        )
+        if request is None:
+            return
+        line = getattr(request, "line", None)
+        box, portrait = self._dialogue_layout(line)
+        if portrait is not None and portrait[2] == "bust":  # stands behind the window
+            self.screen.blit(portrait[0], portrait[1])
+        self.panel(box, fill=(10, 14, 24, 235), border=(240, 201, 93))
+        x, y, w, h = box
+        if line is not None:
+            text_x = x + 24
+            hint_x, hint_anchor = self.width - 250, None
+            if portrait is not None and portrait[2] == "face":
+                picture, at, _, room = portrait
+                self.screen.blit(picture, at)
+                if line.portrait_side == "left":
+                    text_x = room[0] + room[2] + 18  # the text starts after the face's square
+                else:  # the hint ends before the face
+                    hint_x, hint_anchor = room[0] - 14, "topright"
+            if line.speaker:
+                speaker = self.game.expand_message(line.speaker, plain=True)
+                self.text(speaker, text_x, y + 12, size=24, color=(255, 220, 124))
+            self._draw_message(self.game.expand_message(line.text), text_x, y + 46)
+            self.text(
+                self.game.tr("dialogue.continue", "Enter / E: continue"),
+                hint_x,
+                y + h - 28,
+                size=18,
+                color=(170, 210, 240),
+                anchor=hint_anchor,
+            )
+            return
+        self.text(
+            request.prompt or self.game.tr("dialogue.choose", "Choose"),
+            84,
+            self.height - 218,
+            size=22,
+            color=(255, 220, 124),
+        )
+        for i, choice in enumerate(request.choices[:9], 1):
+            self.text(
+                f"{i}. {choice.text}",
+                84 + ((i - 1) % 3) * 270,
+                self.height - 184 + ((i - 1) // 3) * 26,
+                size=20,
+            )
+
+    def _draw_message(self, text, x, y, *, size=22):
+        """Draw a message whose data codes are expanded: colour and size spans, icons as boxes,
+        ``\\n`` starts a new line."""
+        from asteria.presentation.message_codes import parse_message
+
+        left, top = x, y
+        for span in parse_message(text):
+            if span.icon is not None:
+                icon_id = self.game.message_icon(span.icon)
+                if not (icon_id and self._draw_icon(icon_id, left, top, size)):
+                    box = self.pg.Rect(left, top + 2, size - 4, size - 4)  # no icon: a box
+                    self.pg.draw.rect(self.screen, span.color, box, 2, 3)
+                left += size
+                continue
+            for number, part in enumerate(span.text.split("\n")):
+                if number:
+                    left, top = x, top + size + 6
+                if part:
+                    rect = self.text(
+                        part, left, top, size=size + 6 * span.size_steps, color=span.color
+                    )
+                    left = rect.right
+
+    def _dialogue_input(self, events):
+        """Route keys to a waiting dialogue/choice. Returns True when one is open."""
+        request = (
+            getattr(self, "_network_dialogue", None)
+            if self._multiplayer_connected()
+            else self.game.pending_dialogue
+        )
+        if request is None:
+            return False
+        if getattr(request, "line", None) is not None:
+            if self.input.just_pressed("confirm") or self.input.just_pressed("interact"):
+                self.game.acknowledge_dialogue()
+                self._sound(self.manifest.get("dialogue_confirm_sfx"))
+            return True
+        for event in events:
+            if event.type != self.pg.KEYDOWN:
+                continue
+            if getattr(request, "choices", None) and self.pg.K_1 <= event.key <= self.pg.K_9:
+                index = event.key - self.pg.K_1
+                if index < len(request.choices):
+                    self.game.choose(index)
+                    break
+        return True
+
+    def _field_input(self, events, dt):
+        for event in events:  # clicking a picture that has an event
+            if event.type == self.pg.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
+                if self._click_picture(*event.pos) is not None:
+                    return False
+                if self.game.click_entity(*self._field_world_xy(*event.pos)) is not None:
+                    return False
+        if self.game.cutscene_active:
+            if self.game.cutscene_skippable and self.input.just_pressed("cancel"):
+                self.game.skip_cutscene()
+                return False
+            self._dialogue_input(events)
+            return False
+        if self._equip_offer_input(events):
+            return False
+        if self._dialogue_input(events) or (
+            getattr(self, "_network_event_busy", False)
+            if self._multiplayer_connected()
+            else self.game.event_busy
+        ):
+            if self._multiplayer_connected():
+                self._send_multiplayer_input(0, 0, {})
+            else:
+                self.game.set_field_input(None)
+            return False
+        if (
+            self.multiplayer_bridge is not None
+            and not self.multiplayer_bridge.connected
+            and any(
+                event.type == self.pg.KEYDOWN and event.key == self.pg.K_F3 for event in events
+            )
+        ):
+            if self.multiplayer_bridge.connect():
+                self._network_predictor = None
+                self._network_input_prediction_sequences.clear()
+                self._network_prediction_reconciled_revision = -1
+                self.multiplayer_bridge.send_input(
+                    {"move_x": 0.0, "move_y": 0.0, "attack": False}, force=True
+                )
+                self._multiplayer_error = ""
+                self._network_revision = -1
+            else:
+                self._multiplayer_error = self.multiplayer_bridge.error
+        if self.game.action_scene:
+            return self._action_input(events, dt)
+        # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
+        dx, dy = self.input.current.movement_vector()
+        moving = bool(dx or dy)
+        connected = self._multiplayer_connected()
+        if connected:
+            self._predict_multiplayer_player(dx, dy, dt)
+            self._send_multiplayer_input(dx, dy, dict(self.input.current.actions))
+            self._sync_multiplayer_player()
+        elif moving:
+            mag = max(1.0, (dx * dx + dy * dy) ** 0.5)
+            speed = 36.0
+            pt = self.game.player.get(Transform)
+            blocked = CollisionWorld.from_scene(self.game.scene).blocking_query(
+                exclude={self.game.player.id}
+            )
+            x_range, y_range = (-120.0, 120.0), (-52.0, 52.0)
+            if self.tile_view is not None:
+                # a tile map: its walls block and its edge bounds the walk, the pace is a walk
+                # across a screen in a few seconds
+                from asteria.runtime.collision import CombinedQuery
+
+                walls = self.game._tile_blocking.get(self.game.scene.id)
+                blocked = CombinedQuery(blocked, walls)
+                x0, y0, x1, y1 = self.tile_view.bounds
+                x_range, y_range, speed = (x0 + 6, x1 - 6), (y0 + 6, y1 - 2), 64.0
+            nx = max(x_range[0], min(x_range[1], pt.x + dx / mag * speed * dt))
+            if not blocked.collides_world_point(nx, pt.y):
+                pt.x = nx
+            ny = max(y_range[0], min(y_range[1], pt.y + dy / mag * speed * dt))
+            if not blocked.collides_world_point(pt.x, ny):
+                pt.y = ny
+            self.game.save.player_position = (pt.x, pt.y)
+            if abs(dx) > abs(dy):
+                self.game.set_player_facing("right" if dx > 0 else "left")
+            else:
+                self.game.set_player_facing("down" if dy > 0 else "up")
+            self._field_step += 1
+        if not connected:  # a player with ActionCombat bindings strikes and shoots here too
+            self.game.set_field_input(
+                dict(self.input.current.actions) if self._field_abilities() else None
+            )
+
+        if self.input.just_pressed("menu"):
+            self._ui_mode = "build"
+        if self.input.just_pressed("cancel"):
+            self._pause_menu.index = 0
+            self._ui_mode = "pause"
+            return moving
+        if any(e.type == self.pg.KEYDOWN and e.key == self.pg.K_i for e in events):
+            self.open_status_menu(back="field")
+            return moving
+        if any(e.type == self.pg.KEYDOWN and e.key == self.pg.K_q for e in events):
+            self._quest_return = "field"
+            self._ui_mode = "quests"
+            return moving
+        if moving and not connected and self.game.mode == "field":
+            self.game.field_step({})  # doors and other triggers walked into
+        # GameSessionRuntime interaction is edge-triggered. Emit release after press.
+        if self.input.just_pressed("interact") and not connected:
+            self.game.field_step({"interact": 1.0})
+            if self.game.mode == "field":
+                self.game.field_step({"interact": 0.0})
+        return moving
+
+    def _field_abilities(self):
+        """The player carries ActionCombat bindings (a field attack in a turn-based game)."""
+        from asteria.runtime.action_combat import ActionCombatComponent
+
+        combat = self.game.player.try_get(ActionCombatComponent)
+        return combat is not None and combat.enabled and bool(combat.bindings.strip())

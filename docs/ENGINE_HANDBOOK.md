@@ -263,7 +263,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | `ActionCombat` 綁定替代、`item:<id>` 消耗；`CombatantComponent.defeat_switch`；`ClassAppearance`；`ParallaxBackground2D` | `runtime/` |
 | `ActionCombat` 綁定 `slot:N`（技能欄第 N 格）、`vfx` 提示（世界裡的圖片特效：`effect` 精靈表 id、位移、縮放、`rotate`、`follow`）；技能欄規則 `AbilityLoadoutRules.limited_sources` 可含 `allocation`（技能樹給的技能），技能樹學到新技能會自動放進空格 | `runtime/action_combat.py`、`runtime/action_play.py`、`runtime/game_session.py` |
 | 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/progression_graph.py` |
-| 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/localization.py`、`runtime/playable_test_runtime.py`、`editor/dialogue_command_dialog.py` |
+| 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/localization.py`、`runtime/playtest/field_ui.py`、`editor/dialogue_command_dialog.py` |
 | 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle_ui.py`、`presentation/library.py`、`editor/integrated_authoring.py` |
 | 戰鬥版面 `command_counts`（頂層指令旁的數量，預設關，D42）；戰鬥 HUD 資源樣式 `color`（空白＝主題色，D47） | `presentation/battle_ui.py`、`presentation/battle_hud.py` |
 | 戰鬥 HUD 隊伍肖像（D53）：戰鬥版面 `hud_portraits`（`left` 預設／`right`／`above`／`off`）、`hud_portrait_size`（0 = 和卡片的列一樣高），只在有設定時寫入；肖像取自戰鬥角色圖的 `portrait_asset_id`（32 單位以上）／`small_portrait_asset_id`；繪製指令 `BattleUiPortrait`、`BattleUiFrame.portraits`（預設空）；後端選填 `draw_portrait` | `presentation/battle_ui.py`、`presentation/library.py`、`presentation/battle_ui_renderer.py`、`platform/pygame_battle_ui.py`、`runtime/battle_presentation_adapters.py` |
@@ -275,7 +275,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | `AbilityDefinition.description`（戰鬥選單上方的說明）；技能進化 `AbilityEvolutionRule.required_tags` | `gameplay/abilities.py`、`rpg/ability_build.py` |
 | `RefineRules.materials`、`protect_item`；裝備相關世界指令可寫 `slot:<部位>` | `rpg/refine.py`、`runtime/world_command_handlers.py` |
 | 世界指令 `LEARN_ABILITY`、`NEW_GAME_PLUS`、`SET_LOCALE`；技能可用 `BATTLE_SEQUENCE` 叫出序列 | `runtime/world_command_handlers.py`、`runtime/game_session.py` |
-| manifest `battle.preload_mb`（預先解碼戰鬥圖的記憶體上限，預設 64，0 關閉） | `runtime/playable_test_runtime.py`、`runtime/image_preloader.py` |
+| manifest `battle.preload_mb`（預先解碼戰鬥圖的記憶體上限，預設 64，0 關閉） | `runtime/playtest/resources.py`、`runtime/image_preloader.py` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的
 降防禦從來沒生效）。
