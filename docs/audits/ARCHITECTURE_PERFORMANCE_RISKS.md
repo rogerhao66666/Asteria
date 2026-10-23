@@ -17,7 +17,7 @@
 | RISK-04 | 大量 commit 中靜默刪除功能 | **已處理** | 每個 commit 都有 DECISION_LOG 條目與證據（D26 起）；CI 從 2026-10-23 起每次 push 跑全部測試（RISK-09） |
 | RISK-05 | Editor／Runtime 分離 | **降級** | `assets/` 不再 import `editor`（`character_content_pack.py` 已移除）；`runtime/` 只有 `preview.py` import editor（編輯器預覽本來就屬於編輯器）。`assets/` 仍 import `presentation`／`runtime`（8 個檔案）：打包 runtime 不會因此帶入 PySide6，但層次仍不乾淨 |
 | RISK-06 | 沒有具體 System | **已處理** | `System` 子類別：`AnimationSystem`、`CameraFollowSystem`（`runtime/systems.py`）、`FieldAISystem`、`SpawnSystem`（`runtime/field_ai.py`）、`EntityActionSystem`（`runtime/entity_actions.py`） |
-| RISK-07 | 大型平坦模組 | **未處理** | `presentation/` 58 個檔案、約 15,700 行（原 82 個、12,400 行：檔案少了、總行數多了，因為戰鬥 UI 長大）。沒有死碼證據；不先重構 |
+| RISK-07 | 大型平坦模組 | **降級**（已盤點） | `presentation/` 58 個檔案、約 15,700 行（原 82 個、12,400 行：檔案少了、總行數多了，因為戰鬥 UI 長大）。2026-10-23 逐模組查公開名稱在 `src/`、`tests/`、`scripts/`、`reference_projects/` 的引用：55 個模組有人用；**只有 `preview.py`（130 行）與 `workspace_controller.py`（104 行）除了互相引用外沒有任何引用**，`performance.py` 的 `FrameDiagnostics`、`IndexedEvents`、`BoundedDispatcher`、`ReuseBuffer`、`DegradationPolicy` 也沒有引用（8 個名稱只用到 2 個）。依 CB15，刪除要使用者逐項核准；先列在這裡 |
 | RISK-08 | Thread safety | **不需要行動** | `src/` 仍沒有 threading；音樂切換用子程序（D48） |
 | RISK-09 | 沒有 CI | **已處理** | `.github/workflows/tests.yml`（2026-10-23）：ruff check／format 加全部測試，Ubuntu、Python 3.12 與 3.13、SDL dummy、Qt offscreen。本機用同樣環境變數跑過 3200 個測試全過；GitHub 上的第一次執行結果要看 Actions 頁 |
 | RISK-10 | 存檔／專案沒有遷移 | **已處理** | `core/migration.py`（元件版本遷移，S§33）；D44 起每個新欄位「沒設定就不寫入」，舊專案照常讀（D54、D55 都有相容測試） |
@@ -49,4 +49,4 @@
 | 動畫取樣／粒子更新 | 中 | 粒子已在 `asteria.kernels`；動畫 0.8 ms |
 | Event VM、Battle 規則 | 低 | 不建議：不是 CPU 熱點，且要保持確定性與 Python 擴充性 |
 
-**結論（2026-10-23）：** 沒有任何「Measured 且必須用 native 才能解決」的瓶頸；原稿量到的兩個熱點（PERF-01、PERF-02）都已在 Python 層解決。架構風險裡還開著的是 RISK-07（presentation 模組大）與 RISK-05 的後半（`assets/` 依賴上層）。
+**結論（2026-10-23）：** 沒有任何「Measured 且必須用 native 才能解決」的瓶頸；原稿量到的兩個熱點（PERF-01、PERF-02）都已在 Python 層解決。架構風險裡還開著的是 RISK-07（presentation 模組大；盤點後只剩三處沒人用的程式，待核准刪除）與 RISK-05 的後半（`assets/` 依賴上層：`complex_codecs.py`、`monster.py`、`vfx.py` 在模組層 import `presentation.fidelity` 的資料型別，`rpg_maker_mv_map.py`、`rpg_maker_mv_map_render.py` import `runtime` 的元件；要解要把 `fidelity` 的資料型別下放到 `assets/` 或 `core/`，2026-10-23 評估後先不動：沒有打包或啟動時間的實際問題）。
