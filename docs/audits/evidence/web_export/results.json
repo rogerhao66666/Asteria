@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-23",
+  "page": "http://127.0.0.1:8765/ (python -m asteria.export_web ... --serve --port 8765)",
+  "python_runtime_from": "https://pygame-web.github.io/cdn/0.9.3/",
+  "browser": "Claude desktop app's built-in browser (Chromium)",
+  "runtime": "pygbag 0.9.3, CPython 3.12.12 wasm, pygame-ce 2.5.7 (SDL 2.28.4)",
+  "build": "asteria_full_verification_demo.tar.gz 13.0 MB (664 files: project 3.8 MB, pictures and audio 9.1 MB, engine sources 4.1 MB, Noto Sans TC 5.4 MB)",
+  "kernels": "python (ASTERIA_KERNELS=python)",
+  "frame_ms_in_step": {
+    "title": [
+      13.5,
+      14.2
+    ],
+    "field_walking": [
+      5.2,
+      7.2
+    ],
+    "battle_idle": [
+      3.2,
+      3.7
+    ],
+    "note": "CPU time inside PlayableTestRuntime.step per frame, printed every 600 frames by main.py; the browser's own compositing comes on top"
+  },
+  "checks": {
+    "page_loads_runtime_from_cdn": true,
+    "title_drawn": true,
+    "new_game_field_drawn": true,
+    "keyboard_walk_and_pause": true,
+    "settings_language_zh_tw_draws_chinese": true,
+    "f5_save_mirrored_to_localStorage": "asteria.saves.index, settings.json (156 chars), playtest_autosave.asteria-save.json (12,960 chars)",
+    "reload_restores_saves_and_load_screen_lists_autosave": true,
+    "loaded_save_keeps_zh_tw": true,
+    "battle_started_and_drawn": true,
+    "sounds_wav_loaded_without_error": "not checked (no audio capture)"
+  },
+  "screenshots": {
+    "01_title.png": "標題畫面（英文，載入後第一個畫面）",
+    "02_field_en.png": "野外（英文）：設定切回 English 後",
+    "03_pause_en.png": "暫停選單（英文）",
+    "04_settings_en.png": "設定畫面，語言 = English",
+    "05_settings_zh.png": "設定畫面，語言 = 繁體中文（內建的 Noto Sans TC 畫的）",
+    "06_pause_zh.png": "暫停選單（繁體中文）",
+    "08_saved.png": "F5 存檔後的「已存檔」訊息（暫停選單仍開著）",
+    "09_load_screen_after_reload.png": "重新整理頁面後按 L：讀取畫面列出 Autosave（Hearthfold · Aldric Lv 1），來自 localStorage",
+    "10_loaded_field_zh.png": "讀回存檔後的野外，語言跟著存檔是繁體中文",
+    "11_battle.png": "戰鬥（woods_patrol，從頁面的 Python 主控台 start_encounter 開的）：回合條、敵人護盾、HUD"
+  },
+  "how_shots_were_taken": "pygame.image.save of the display surface inside the page (python.PyRun_SimpleString), read from the Emscripten file system (Module.FS) and POSTed to the serve command's /shot endpoint; keyboard input dispatched as KeyboardEvents with a `code` (the browser tool's own key presses carry none, which SDL needs)",
+  "status": "PASS"
+}

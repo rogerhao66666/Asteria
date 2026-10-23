@@ -13,6 +13,7 @@ moderngl=["moderngl>=5.8", "pygame-ce>=2.5", "Pillow>=10"]
 editor=["PySide6>=6.8"]
 mv=["Pillow>=10"]
 fast=["numpy>=2"]
+web=["pygbag>=0.9"]
 dev=["pytest>=9", "ruff>=0.16", "numpy>=2"]
 
 [tool.setuptools.package-data]
@@ -54,4 +55,5 @@ asteria-editor="asteria.editor.shell:launch_editor"
 asteria-preview="asteria.runtime.preview:main"
 asteria-upgrade="asteria.project_tools:upgrade_main"
 asteria-export="asteria.project_tools:export_main"
+asteria-export-web="asteria.export_web:main"
 asteria-import-mv="asteria.assets.rpg_maker_mv_project:import_mv_main"

@@ -34,6 +34,13 @@ project imports pictures from it (File > Import from Asset Library…, copied in
   `scripts/build_kaykit_art.py` photographs from them with Blender; derived CC0 work, see its
   README). Both source pages state "No generative AI was used". Not copied: the FBX / OBJ
   duplicates, the mannequin, the Unity folder and the sample pictures.
+- `asset_library/fonts/noto_sans_tc/` (added 2026-10-23, 5.4 MB) - Noto Sans TC Regular
+  (`NotoSansTC-Regular.otf`, the Traditional Chinese subset build from
+  https://github.com/notofonts/noto-cjk, `Sans/SubsetOTF/TC/`), Google / Adobe, SIL Open Font
+  License 1.1 (`LICENSE.txt`; the font may be bundled with and redistributed in software).
+  The browser export (`python -m asteria.export_web`) ships it as the game's Chinese, Japanese
+  and Korean face, since a browser offers no system fonts; set `ASTERIA_CJK_FONT` to use it
+  on the desktop too.
 
 | Pack | Author | Source URL | License | Redistribution | Commercial use | Repository inclusion | Intended usage |
 |---|---|---|---|---|---|---|---|

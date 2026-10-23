@@ -50,6 +50,8 @@ def library_packs(root=None):
         return ()
     for collection in sorted(p for p in root.iterdir() if p.is_dir()):
         for pack in sorted(p for p in collection.iterdir() if p.is_dir()):
+            if not any(f.suffix.lower() in IMAGE_SUFFIXES for f in pack.rglob("*")):
+                continue  # not a picture pack (e.g. asset_library/fonts, used by exports)
             readme = next((f for f in sorted(pack.iterdir()) if f.suffix.lower() == ".txt"), None)
             text = readme.read_text(encoding="utf-8", errors="replace") if readme else ""
             packs.append(LibraryPack(f"{collection.name}/{pack.name}", pack, text))

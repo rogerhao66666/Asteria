@@ -2546,3 +2546,32 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **狀態：** 已提交（2026-10-23，使用者要求）。
 
+## D59 — Web 匯出：Asteria 專案在瀏覽器裡玩（pygbag）（2026-10-23）
+
+**要求：** 使用者 2026-10-23 決定做 Web 匯出（手冊「下一步的候選」第 5 項）。先盤點依賴（`docs/audits/WEB_EXPORT_ASSESSMENT_2026-10-23.md`），使用者核准路線 A（pygbag：CPython + pygame-ce 編成 WebAssembly）、把 Noto Sans TC 放進 asset_library 預設帶上、runtime 預設從 CDN 載入（`--cdn` 留給自架）、存檔先用 localStorage。
+
+**做了什麼：**
+- **匯出指令** `python -m asteria.export_web PROJECT.json OUT_DIR`（也裝成 `asteria-export-web`；`src/asteria/export_web.py`）。寫出 `OUT_DIR/<遊戲>/`：專案與它引用的每個檔案（含各包的 CREDITS／LICENSE，重用 `project_tools.export_game`）、精簡的引擎（排除 `editor`、`multiplayer`、`validation`、`templates`、`kernels/native`、`__pycache__`，4.1 MB 原始碼）、`fonts/NotoSansTC-Regular.otf` 與 OFL 授權、pygbag 要跑的 `main.py`；再呼叫 `pygbag --build --no_opt --disable-sound-format-error`（`--no_opt`：pygbag 的最佳化會把 PNG 有損重新量化、重新編碼音訊，像素圖不能給它碰），產物在 `build/web/`（`index.html`、圖示、遊戲 `.tar.gz`／`.apk`），整個資料夾放到任何靜態主機或 itch.io 即可。選項：`--serve [--port]`（建好後用自己的靜態伺服器開在 `http://127.0.0.1:PORT/`）、`--no-build`（只寫資料夾；配 `--serve` 開上次建好的）、`--cjk-font PATH|none`、`--cdn URL`、`--icon PNG`、`--allow-missing`、`--allow-unsupported-audio`（mp3 等瀏覽器不能解的格式預設拒絕匯出）、`--width/--height`。pyproject 新增選用依賴 `web=["pygbag>=0.9"]`。
+- **`main.py`**：async 主迴圈（每幀 `runtime.step(dt)` 後 `await asyncio.sleep(0)`）、`ASTERIA_KERNELS=python`、`ASTERIA_CJK_FONT` 指向帶上的字型、存檔鏡像每 30 幀同步、每 600 幀在 pygbag 的終端印一幀的毫秒數；`RUNTIME` 全域給頁面的 Python 主控台用。同一個檔在桌面也能跑（`ASTERIA_WEB_MAX_FRAMES`、`ASTERIA_WEB_FAKE_STORAGE`），測試就是這樣驗它。
+- **瀏覽器裡的存檔** `runtime/web_persistence.py`：`FolderMirror` 把 `saves/`（slot、autosave、settings.json）鏡像到 `localStorage`（鍵 `asteria.saves.<檔名>` 加一個 index 鍵）；開場 `restore`、之後 `sync` 比對大小與 mtime 只寫有變的、刪掉的也忘掉。遊戲程式碼照舊寫檔。
+- **引擎守衛（桌面行為不變）**：`image_preloader.py` 在 emscripten 不開執行緒（`threads` 參數；沒有執行緒時每幀同步解一張，`_Loaded` 長得像 Future）；`platform/pygame_battle_ui.py` 的 `cjk_font_path` 先看 `ASTERIA_CJK_FONT`（桌面匯出也可用，順便補了 D52 記的「匯出不附中文字型」）；`PlayableTestRuntime.step(dt, events=None)`（`run()` 改呼叫它）；`multiplayer_preview` 的 import 改成可缺（沒有 multiplayer 套件時 `multiplayer_profile_error` 說明）；`runtime/profiler.py` 不再硬性 import `resource`、`tracemalloc`、`statistics`（pygbag 的 CPython 3.12 三個都沒有；用探測頁掃過引擎全部 import，缺的只有這三個加上本來就只在桌面用的 certifi／zipapp）。
+- **pygbag 的四個坑，匯出工具都繞掉了**：(1) 它自己下載頁面模板與圖示用 urllib，python.org 的 Python 沒憑證會卡住 → 匯出工具自己抓（urllib → certifi → curl）到 `OUT_DIR/.pygbag-cache/` 再用 `--template`／`--icon` 傳給它；(2) 它的測試伺服器會把 CDN 改成本機代理、代理又用同一個沒憑證的 Python → `--serve` 改用自己的靜態伺服器（不加 `cross-origin-embedder-policy`，否則擋 CDN）；(3) 它的 runtime 看到網址是 `localhost:8xxx` 就當成自己的開發伺服器、去 `localhost:8000/cdn/` 找 pygame → 用 `127.0.0.1` 開；(4) 它只從 `main.py` 頂層的 import 決定要載哪些 wasm 套件 → `main.py` 頂層 `import pygame`。
+- **字型**：`asset_library/fonts/noto_sans_tc/NotoSansTC-Regular.otf`（5.4 MB，SIL OFL 1.1，`LICENSE.txt`，`THIRD_PARTY_ASSETS.md` 登記）。`assets/library.py` 列圖包時略過沒有圖片的資料夾（字型不是圖包，`test_asset_library` 的 CC0 檢查不套在它身上）。
+- 評估文件 `docs/audits/WEB_EXPORT_ASSESSMENT_2026-10-23.md`（路線比較與依賴表）。
+- **靜音開關**（使用者 2026-10-23 要求測試不要出聲）：`ASTERIA_MUTE=1` 讓 `open_audio_device` 一律回傳無聲的 `RecordingAudioDevice`（真實視窗的 live check 也不出聲）；網頁版網址加 `?mute=1` 同義。全域 skill `~/.claude/skills/quiet-testing` 規定自動化檢查一律帶著它。
+
+**測試：** `tests/test_export_web.py`（13 項）：app 資料夾的內容與排除、`main.py` 在桌面無頭跑 40 幀（同一段 async 迴圈）、pin 住純 Python kernel 與字型、mp3 拒絕與 `--allow-unsupported-audio`、pygbag 命令列、靜態伺服器的回應與 wasm 媒體型別、存檔鏡像（還原、只寫有變的、刪除、壞掉的 index 與奇怪檔名）、預載器無執行緒逐位元相同、瀏覽器預設不開執行緒、`ASTERIA_CJK_FONT` 優先且真的畫得出中文、`step()` 是 `run()` 用的那一幀。`test_asset_library`、`test_image_preloader`、`test_built_in_text`、`test_runtime_profiler` 照常。全套 pytest 見狀態。
+
+**實機證據（`docs/audits/evidence/web_export/`，`results.json` 逐項）：** 內建瀏覽器（Chromium）開 `http://127.0.0.1:8765/`，runtime 從 pygame-web CDN 載入（CPython 3.12.12 wasm、pygame-ce 2.5.7），遊戲包 13.0 MB。標題 → N 新遊戲 → 鍵盤走路、Esc 暫停 → 設定 ▸ 語言切繁體中文（Noto Sans TC 畫的，`05_settings_zh`、`06_pause_zh`、`10_loaded_field_zh`）→ F5 存檔，`localStorage` 出現 index、settings.json、autosave（12,960 字）→ 重新整理頁面 → L 讀取畫面列出 Autosave（`09_load_screen_after_reload`）→ 讀回後語言仍是中文 → 戰鬥（`11_battle`）。每幀在 `step()` 裡的 CPU 時間：標題 13.5–14.2 ms、野外走路 5.2–7.2 ms、戰鬥待機 3.2–3.7 ms（60 fps 的預算 16.7 ms）。截圖是在頁面裡用 `pygame.image.save` 存到 Emscripten 檔案系統再 POST 給 `--serve` 的 `/shot` 端點（瀏覽器工具的截圖拿不到 WebGL canvas 的內容）。
+
+**限制：**
+- Web 上沒有：編輯器、多人連線（沒有 TCP socket）、ModernGL 後端、C++ kernel（純 Python kernel）、debug server、預先解碼的執行緒（改成每幀解一張）、手把沒驗。
+- 玩家開頁面時要能連到 pygame-web 的 CDN 下載 Python runtime（約 20 MB，瀏覽器快取）；完全離線要自架一份並用 `--cdn`。
+- 存檔在同一個瀏覽器、同一個網址的 `localStorage`（約 5 MB 上限，清站台資料就沒了）；沒有匯出／匯入存檔檔案。
+- 音訊只有 `.ogg` 與 `.wav`；wav 有沒有真的出聲沒有自動化檢查（沒有音訊擷取）。
+- 第一次載入約 20–30 秒（下載 runtime 與解壓 13 MB），之後有快取。標題畫面每幀 14 ms 比野外還貴（整張背景每幀縮放）。
+- 要用 `127.0.0.1` 開本機測試頁，`localhost:8xxx` 會被 pygbag 的 runtime 誤認。
+- 鍵盤：瀏覽器自動化工具送的按鍵沒有 `code` 欄位時 SDL 收不到（真人按鍵正常）。
+- 工作目錄同時有另一個 session（寵物／創造物）未提交的改動；本批的檔案清單見狀態。
+
+**狀態：** 已提交（2026-10-23，使用者要求；只含本批檔案，`playable_test_runtime.py` 只提交兩段）。本批的檔案：`src/asteria/export_web.py`、`src/asteria/runtime/web_persistence.py`、`src/asteria/runtime/image_preloader.py`、`src/asteria/runtime/profiler.py`、`src/asteria/platform/pygame_battle_ui.py`、`src/asteria/assets/library.py`、`src/asteria/runtime/playable_test_runtime.py`（只有 multiplayer import 與 `step()` 兩段）、`pyproject.toml`、`THIRD_PARTY_ASSETS.md`、`asset_library/fonts/`、`tests/test_export_web.py`、`docs/audits/WEB_EXPORT_ASSESSMENT_2026-10-23.md`、`docs/audits/evidence/web_export/`、本文與手冊。

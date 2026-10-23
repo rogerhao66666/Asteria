@@ -91,22 +91,23 @@ class PlayableTestRuntime(
         self.project = project
         self.resource_root = Path(resource_root)
         self.manifest = _load_manifest(self.resource_root)
-        from asteria.runtime.multiplayer_preview import (
-            MultiplayerPreviewBridge,
-            load_runtime_multiplayer_profile,
-        )
-
         self.multiplayer_profile_error = ""
+        self.multiplayer_profile = self.multiplayer_bridge = None
         try:
-            self.multiplayer_profile = load_runtime_multiplayer_profile(self.resource_root)
-        except ValueError as exc:
-            self.multiplayer_profile = None
-            self.multiplayer_profile_error = str(exc)
-        self.multiplayer_bridge = (
-            MultiplayerPreviewBridge(self.multiplayer_profile)
-            if self.multiplayer_profile is not None
-            else None
-        )
+            from asteria.runtime.multiplayer_preview import (
+                MultiplayerPreviewBridge,
+                load_runtime_multiplayer_profile,
+            )
+        except ImportError as exc:  # a build without the multiplayer package (the web export)
+            if (self.resource_root / ".asteria" / "multiplayer.json").is_file():
+                self.multiplayer_profile_error = f"multiplayer is not part of this build ({exc})"
+        else:
+            try:
+                self.multiplayer_profile = load_runtime_multiplayer_profile(self.resource_root)
+            except ValueError as exc:
+                self.multiplayer_profile_error = str(exc)
+            if self.multiplayer_profile is not None:
+                self.multiplayer_bridge = MultiplayerPreviewBridge(self.multiplayer_profile)
         self._authoritative_project_mode = bool(
             self.multiplayer_profile
             and str(self.multiplayer_profile.get("adapter_factory", "")).endswith(
@@ -483,13 +484,7 @@ class PlayableTestRuntime(
         frames = 0
         try:
             while self.running:
-                dt = self.tick(target_fps)
-                self.profiler.begin_frame()
-                self._frame(self.pg.event.get(), dt)
-                with self.profiler.section("present"):
-                    self.present()
-                self._sample_counters()
-                self.profiler.end_frame()
+                self.step(self.tick(target_fps))
                 frames += 1
                 if max_frames is not None and frames >= max_frames:
                     break
@@ -499,6 +494,17 @@ class PlayableTestRuntime(
                 self.profiler.close()
             self.close()
         return 0
+
+    def step(self, dt, events=None):
+        """One whole frame: pygame's events (or ``events``), the game, drawing and the flip,
+        with the profiler's frame around it. ``run`` calls it after waiting for the frame's
+        time; a browser build calls it from its own async loop (``asteria.export_web``)."""
+        self.profiler.begin_frame()
+        self._frame(self.pg.event.get() if events is None else events, dt)
+        with self.profiler.section("present"):
+            self.present()
+        self._sample_counters()
+        self.profiler.end_frame()
 
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""

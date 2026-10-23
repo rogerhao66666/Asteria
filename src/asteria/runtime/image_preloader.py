@@ -10,8 +10,8 @@ same ones ``load_image`` would have produced: ``pygame.image.load(path).convert_
 
 from __future__ import annotations
 
+import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 
 
 class ImagePreloader:
@@ -21,10 +21,16 @@ class ImagePreloader:
     main thread) collects what the worker decoded; ``take(rel)`` hands one over (or None).
     Loading stops once ``budget_bytes`` of decoded pixels are held; pictures in ``loaded`` (the
     host's own cache) are never loaded twice.
+    ``threads`` (default: everywhere but the browser, which has none) decodes on a worker
+    thread; without threads each ``step`` decodes one picture on the main thread, which still
+    spreads a fight's pictures over the field's frames.
     """
 
-    def __init__(self, pg, path, loaded=(), *, budget_bytes=64 << 20, step_seconds=0.001):
+    def __init__(
+        self, pg, path, loaded=(), *, budget_bytes=64 << 20, step_seconds=0.001, threads=None
+    ):
         self.pg = pg
+        self.threads = (sys.platform != "emscripten") if threads is None else bool(threads)
         self.path = path
         self.loaded = loaded
         self.budget_bytes = int(budget_bytes)
@@ -99,7 +105,12 @@ class ImagePreloader:
                 break
         else:
             return False
+        if not self.threads:
+            self._pending = (rel, _Loaded(self.pg.image.load, self.path(rel)))
+            return True
         if self._executor is None:
+            from concurrent.futures import ThreadPoolExecutor
+
             self._executor = ThreadPoolExecutor(1, thread_name_prefix="asteria-preload")
         self._pending = (rel, self._executor.submit(self.pg.image.load, self.path(rel)))
         return True
@@ -110,6 +121,27 @@ class ImagePreloader:
         except Exception:  # noqa: BLE001 - a missing / unreadable picture: loaded (and reported)
             self._failed.add(rel)  # when it is drawn
             return None
+
+
+class _Loaded:
+    """A picture decoded right away, shaped like the Future a worker thread would give."""
+
+    __slots__ = ("_result", "_error")
+
+    def __init__(self, load, path):
+        self._result = self._error = None
+        try:
+            self._result = load(path)
+        except Exception as exc:  # noqa: BLE001 - reported by result(), like a Future
+            self._error = exc
+
+    def done(self):
+        return True
+
+    def result(self):
+        if self._error is not None:
+            raise self._error
+        return self._result
 
 
 def _bytes(image):

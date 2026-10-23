@@ -30,6 +30,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 .venv/bin/asteria-preview PROJECT.json         # 直接玩專案
 .venv/bin/python -m pytest -q                  # 全部測試（約 3,100 項，約 5 分鐘）
 .venv/bin/python -m asteria.kernels.build_native   # 編譯 C++ kernel（開發機一次；ABI 改了要重編）
+.venv/bin/python -m asteria.export_web PROJECT.json OUT --serve   # 瀏覽器版（D59；需要 pip install pygbag）
 ```
 
 提交前（專案規則）：
@@ -303,6 +304,9 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 
 ---
 
+- **不出聲**：`ASTERIA_MUTE=1` 讓任何執行（pytest、真實視窗 live check、`asteria-preview`）用無聲的音訊裝置；
+  web 版網址加 `?mute=1`。自動化檢查一律帶著它（D59）。
+
 ## 7. 已知限制與還沒做的事
 
 | 項目 | 狀態 |
@@ -312,7 +316,8 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 輕量電腦 | 效能只在本機（Apple silicon、沒開低耗電模式）量過；真的輕量電腦或低耗電模式要有人實際跑 |
 | 頭上名字的縮寫 | 名字超過 14 字會縮成縮寫（「Goblin Slinger 2」→「GS2」），要怎麼顯示待使用者決定。2026-10-22 發現的其他戰鬥畫面問題（拉近時的狀態文字、技能列名稱黏花費、狀態畫面 HP／MP 順序）已修（DECISION_LOG D51 補充） |
 | 編輯器 | 中文模式下，顯示的字就是存檔值的固定選項（Enemy AI 的條件／動作／目標、事件觸發、VFX 錨點）還是英文；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充） |
-| 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；還不能翻的是專案資料的名稱與說明（角色、技能、道具、狀態、敵人…）和開發用的錯誤訊息；中文用系統字型，匯出不附中文字型；寵物改名不支援中文輸入法組字 |
+| 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；還不能翻的是專案資料的名稱與說明（角色、技能、道具、狀態、敵人…）和開發用的錯誤訊息；中文用系統字型，桌面匯出不附中文字型（web 匯出附 Noto Sans TC，`ASTERIA_CJK_FONT` 可指定）；寵物改名不支援中文輸入法組字 |
+| Web 匯出（D59） | `python -m asteria.export_web`（pygbag）：沒有編輯器、多人連線、ModernGL、C++ kernel、預載執行緒；玩家開頁面要連得到 pygame-web 的 CDN（`--cdn` 自架）；存檔在瀏覽器的 localStorage；音訊只有 ogg／wav；本機測試用 `127.0.0.1` 開，不用 `localhost`；證據 `audits/evidence/web_export/` |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
 | 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整。Diablo 的九個流派用 `scripts/arpg_balance.py` 對齊（同等級、同技能點下的輸出加存活的綜合分數，差距在 ±20% 內）；沒有裝備、沒有真人操作，只能比流派之間 |
@@ -377,13 +382,20 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 程式結構 | `runtime/game_session.py` 的 `GameSessionRuntime` 由 `runtime/session/` 的 18 個 mixin 組成；`runtime/playable_test_runtime.py` 的 `PlayableTestRuntime` 由 `runtime/playtest/` 的 14 個 mixin 組成。本手冊其他列寫的 `runtime/game_session.py`／`runtime/playable_test_runtime.py`，方法現在在這兩個資料夾的對應模組裡 |
 | 文件 | `docs/audits/ARCHITECTURE_PERFORMANCE_RISKS.md` 重核為 2026-10-23 現況，含實機基準 |
 
+### D59 新增（2026-10-23；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 匯出 | `asteria.export_web`：專案＋精簡引擎＋Noto Sans TC＋async `main.py` → pygbag 打包成 `build/web/`；`--serve` 用自己的靜態伺服器；`runtime/web_persistence.py` 把 `saves/` 鏡像到 localStorage；引擎在瀏覽器裡不開執行緒、不碰 `resource`／`tracemalloc`／`statistics`；`PlayableTestRuntime.step()` |
+| 素材 | `asset_library/fonts/noto_sans_tc/`（OFL）；素材庫列圖包時略過沒有圖片的資料夾 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
 2. 編輯器剩下的英文：顯示＝存檔值的固定選項，要把顯示和值分開。
 3. 專案資料的翻譯（角色、技能、道具、狀態、敵人的名稱與說明可依語系不同）；內建字詞已可翻（D52）。
 4. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
-5. Web 匯出——使用者 2026-10-16 說先不用；要先做依賴盤點。
+5. Web 匯出——做了（D59）；還可做：存檔匯出／匯入成檔案、自架 runtime 的一鍵複製、標題畫面每幀 14 ms 的背景縮放快取。
 6. 技能圖示換成美術師手繪（現在是程式畫的 32 px 原創圖示，D35）。
 
 ---

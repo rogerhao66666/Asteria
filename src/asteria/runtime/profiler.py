@@ -18,13 +18,20 @@ number. Nothing here is estimated or synthesized.
 from __future__ import annotations
 
 import json
-import resource
+
+try:
+    import resource
+except ImportError:  # Windows and the browser build have no resource module
+    resource = None
 import sys
 import time
-import tracemalloc
+
+try:
+    import tracemalloc
+except ImportError:  # the browser build has no tracemalloc: heap tracking is off there
+    tracemalloc = None
 from contextlib import contextmanager
 from pathlib import Path
-from statistics import mean, pstdev
 
 SPEC_METRICS = (
     "frame",
@@ -41,6 +48,17 @@ SPEC_METRICS = (
     "memory",
     "asset_usage",
 )
+
+
+def mean(values):
+    values = list(values)
+    return sum(values) / len(values)
+
+
+def pstdev(values):
+    values = list(values)
+    centre = mean(values)
+    return (sum((v - centre) ** 2 for v in values) / len(values)) ** 0.5
 
 
 def _percentile(values, fraction):
@@ -82,7 +100,7 @@ class RuntimeProfiler:
         self._frame_sections: dict[str, float] = {}
         self.track_python_heap = bool(track_python_heap)
         self._started_tracemalloc = False
-        if self.track_python_heap and not tracemalloc.is_tracing():
+        if self.track_python_heap and tracemalloc is not None and not tracemalloc.is_tracing():
             tracemalloc.start()
             self._started_tracemalloc = True
 
@@ -141,11 +159,11 @@ class RuntimeProfiler:
         }
 
     def memory(self):
-        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        # ru_maxrss is bytes on macOS and kilobytes on Linux.
+        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss if resource else 0
+        # ru_maxrss is bytes on macOS and kilobytes on Linux (0 where it cannot be read).
         peak_rss = rss if sys.platform == "darwin" else rss * 1024
         result = {"peak_rss_bytes": int(peak_rss)}
-        if tracemalloc.is_tracing():
+        if tracemalloc is not None and tracemalloc.is_tracing():
             current, peak = tracemalloc.get_traced_memory()
             result.update(python_heap_current_bytes=current, python_heap_peak_bytes=peak)
         return result
@@ -178,7 +196,7 @@ class RuntimeProfiler:
         return path
 
     def close(self):
-        if self._started_tracemalloc and tracemalloc.is_tracing():
+        if self._started_tracemalloc and tracemalloc is not None and tracemalloc.is_tracing():
             tracemalloc.stop()
             self._started_tracemalloc = False
 

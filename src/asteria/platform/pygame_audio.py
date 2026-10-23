@@ -76,7 +76,13 @@ class PygameAudioDevice:
 
 
 def open_audio_device(pg):
-    """A pygame device when an output device can be opened, else a recording device."""
+    """A pygame device when an output device can be opened, else a recording device.
+    ``ASTERIA_MUTE=1`` always gives the silent recording device: automated real-window runs
+    and browser checks on a developer's machine make no sound."""
+    import os
+
+    if os.environ.get("ASTERIA_MUTE", "").strip() not in ("", "0"):
+        return RecordingAudioDevice()
     try:
         if not pg.mixer.get_init():
             pg.mixer.init()

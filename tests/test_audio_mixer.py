@@ -65,6 +65,7 @@ def test_pygame_device_plays_the_committed_files(monkeypatch):
     from asteria.platform.pygame_audio import PygameAudioDevice, open_audio_device
 
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    monkeypatch.delenv("ASTERIA_MUTE", raising=False)  # the real device, on the silent driver
     pygame.init()
     try:
         device = open_audio_device(pygame)

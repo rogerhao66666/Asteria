@@ -70,7 +70,12 @@ def _cjk_font_paths(platform_name):
 
 
 def cjk_font_path(pg):
-    """Find an installed system font that can draw common CJK scripts."""
+    """The font file for Chinese, Japanese and Korean text: ``ASTERIA_CJK_FONT`` (a font that
+    travels with the game, e.g. a web export's Noto Sans TC) when it names a file, else an
+    installed system font that covers those scripts, else None (the built-in face draws boxes)."""
+    bundled = os.environ.get("ASTERIA_CJK_FONT", "")
+    if bundled and os.path.isfile(bundled):
+        return bundled
     for path in _cjk_font_paths(sys.platform):
         if os.path.isfile(path):
             return path
