@@ -266,7 +266,9 @@ class TileMapField:
         line = getattr(request, "line", None)
         if line is None:
             return None
-        return f"{line.speaker}: {line.text}" if line.speaker else line.text
+        session = self.session
+        text, speaker = session.line_text(line), session.speaker_of(line)
+        return f"{speaker}: {text}" if speaker else text
 
     def step(self, actions, dt):
         """One frame: dialogue / movement / interactions / events. Returns the player's (dx,

@@ -12,6 +12,7 @@ class DialogueLine:
     speaker: str = ""
     portrait_asset_id: str = ""
     portrait_side: str = "left"
+    text_key: str = ""  # its translation's key in the locale tables (D60); "" = the text as is
 
     def __post_init__(self):
         if not str(self.text):
@@ -27,19 +28,22 @@ class DialogueLine:
         }
         if self.portrait_side != "left":  # written only when set: older data reads the same
             data["portrait_side"] = self.portrait_side
+        if self.text_key:
+            data["text_key"] = str(self.text_key)
         return data
 
     @classmethod
     def from_data(cls, data):
         keys = set(data)
         required = {"text", "speaker", "portrait_asset_id"}
-        if not required <= keys or keys - required - {"portrait_side"}:
+        if not required <= keys or keys - required - {"portrait_side", "text_key"}:
             raise ValueError("invalid dialogue line")
         return cls(
             text=str(data["text"]),
             speaker=str(data["speaker"]),
             portrait_asset_id=str(data["portrait_asset_id"]),
             portrait_side=str(data.get("portrait_side", "left")),
+            text_key=str(data.get("text_key", "")),
         )
 
 
@@ -47,19 +51,25 @@ class DialogueLine:
 class DialogueChoice:
     text: str
     value: object
+    text_key: str = ""  # its translation's key in the locale tables (D60)
 
     def __post_init__(self):
         if not str(self.text):
             raise ValueError("choice text is required")
 
     def to_data(self):
-        return {"text": str(self.text), "value": self.value}
+        data = {"text": str(self.text), "value": self.value}
+        if self.text_key:  # written only when set
+            data["text_key"] = str(self.text_key)
+        return data
 
     @classmethod
     def from_data(cls, data):
-        if set(data) != {"text", "value"}:
+        if not {"text", "value"} <= set(data) or set(data) - {"text", "value", "text_key"}:
             raise ValueError("invalid dialogue choice")
-        return cls(text=str(data["text"]), value=data["value"])
+        return cls(
+            text=str(data["text"]), value=data["value"], text_key=str(data.get("text_key", ""))
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,6 +98,7 @@ class ChoiceRequest:
     choices: tuple[DialogueChoice, ...]
     variable_name: str = ""
     local_name: str = ""
+    prompt_key: str = ""  # the prompt's translation key (D60)
 
     def __init__(
         self,
@@ -96,6 +107,7 @@ class ChoiceRequest:
         *,
         variable_name: str = "",
         local_name: str = "",
+        prompt_key: str = "",
     ):
         items = tuple(choices)
         if not items:
@@ -106,9 +118,10 @@ class ChoiceRequest:
         object.__setattr__(self, "choices", items)
         object.__setattr__(self, "variable_name", str(variable_name))
         object.__setattr__(self, "local_name", str(local_name))
+        object.__setattr__(self, "prompt_key", str(prompt_key))
 
     def to_data(self):
-        return {
+        data = {
             "schema": "asteria.choice_request",
             "version": 1,
             "prompt": self.prompt,
@@ -116,6 +129,9 @@ class ChoiceRequest:
             "variable_name": self.variable_name,
             "local_name": self.local_name,
         }
+        if self.prompt_key:  # written only when set
+            data["prompt_key"] = self.prompt_key
+        return data
 
     @classmethod
     def from_data(cls, data):
@@ -127,7 +143,7 @@ class ChoiceRequest:
             "variable_name",
             "local_name",
         }
-        if set(data) != expected:
+        if not expected <= set(data) or set(data) - expected - {"prompt_key"}:
             raise ValueError("invalid choice request")
         if data["schema"] != "asteria.choice_request" or data["version"] != 1:
             raise ValueError("unsupported choice request")
@@ -138,6 +154,7 @@ class ChoiceRequest:
             [DialogueChoice.from_data(item) for item in data["choices"]],
             variable_name=data["variable_name"],
             local_name=data["local_name"],
+            prompt_key=str(data.get("prompt_key", "")),
         )
 
 

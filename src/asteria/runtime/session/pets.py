@@ -81,15 +81,22 @@ class PetsMixin:
         if species.knows(ability_id, pet.level, pet.affinity):
             return ""
         return self.tr(
-            "battle.reason.pet_unlearned", "{pet} has not learned this", pet=pet.name(species)
+            "battle.reason.pet_unlearned", "{pet} has not learned this", pet=self.pet_display(pet)
         )
+
+    def pet_display(self, pet):
+        """What ``pet`` is called on screen: its nickname, else its species' name in the
+        player's language (D60)."""
+        if pet.nickname:
+            return pet.nickname
+        return self.name_of(self.pet_species(pet), pet.species_id)
 
     def pet_name(self, instance_id):
         """A pet's nickname (else its species' name) by instance id; ``""`` when unknown."""
         pet = next(
             (p for p in self.save.rpg_state.pets if p.instance_id == str(instance_id)), None
         )
-        return "" if pet is None else pet.name(self.pet_species(pet))
+        return "" if pet is None else self.pet_display(pet)
 
     def pet_abilities(self, pet=None):
         """Ability ids the pet (default: the active one) has learned from its species."""

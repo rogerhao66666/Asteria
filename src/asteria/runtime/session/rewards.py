@@ -48,12 +48,48 @@ class RewardsMixin:
             }
         return result
 
+    def _defeated_label(self, member_id):
+        """A fallen foe on the victory page: its translated name (``data.enemy.<id>.name``, with
+        its number when there were several), else its member id as before (D60)."""
+        lookup = self.data_lookup
+        if lookup is None:
+            return member_id
+        from asteria.rpg.data_text import key
+
+        base, _, number = str(member_id).partition(":")
+        name = lookup(key("enemy", base))
+        if not name:
+            return member_id
+        return f"{name} {number}" if number else name
+
+    def currency_names(self):
+        """Currency id -> its translated name (``data.currency.<id>.name``); only those that
+        have one, so untranslated currencies keep their id as before (D60)."""
+        lookup = self.data_lookup
+        if lookup is None:
+            return {}
+        from asteria.rpg.data_text import key
+
+        ids = set()
+        for definition in self.project.rpg_database.enemies.values():
+            ids.update(getattr(getattr(definition, "reward", None), "currencies", {}) or {})
+        settings = self.message_settings
+        if settings is not None and getattr(settings, "currency_id", ""):
+            ids.add(settings.currency_id)
+        ids.update(self.save.rpg_state.currencies)
+        names = {}
+        for currency_id in ids:
+            text = lookup(key("currency", currency_id))
+            if text:
+                names[currency_id] = text
+        return names
+
     def build_aftermath(self, applied, before, experience=None):
         """The victory results (rewards, level changes) for the battle just won."""
         from asteria.rpg.victory import build_aftermath
 
         db = self.project.rpg_database
-        names = {x: db.actors[x].display_name for x in before if x in db.actors}
+        names = {x: self.name_of(db.actors[x]) for x in before if x in db.actors}
         notes = []
         extensions = None if self.battle is None else self.battle.extensions
         if extensions is not None:
@@ -67,7 +103,7 @@ class RewardsMixin:
             applied,
             before,
             self.capture_hero_state(),
-            defeated=tuple(self._last_defeated),
+            defeated=tuple(self._defeated_label(m) for m in self._last_defeated),
             names=names,
             experience=experience,
             bonus_notes=tuple(dict.fromkeys(notes)),

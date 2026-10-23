@@ -92,7 +92,7 @@ class MenusInputMixin:
             self.text(label, x, 36, size=24, color=(255, 220, 120) if active else (150, 160, 180))
             x += 150
         actor = menu.actor_id or "—"
-        name = getattr(self.project.rpg_database.actors.get(actor), "display_name", actor)
+        name = self.game.name_of(self.project.rpg_database.actors.get(actor), actor)
         member = tr("status.member", "Q / E  {name}", name=name)
         self.text(member, self.width - 330, 40, size=20, color=(170, 220, 255))
         rows = menu.rows()

@@ -14,6 +14,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from asteria.rpg.data_text import map_name, name_of
+
 from .game_save import GameRuntimeSave
 
 SLOT_COUNT = 3
@@ -58,10 +60,11 @@ class SlotInfo:
 
 
 class SaveSlots:
-    def __init__(self, folder, project, *, count=SLOT_COUNT):
+    def __init__(self, folder, project, *, count=SLOT_COUNT, lookup=None):
         self.folder = Path(folder)
         self.project = project
         self.count = int(count)
+        self.lookup = lookup  # Localizer.lookup: map and leader names in the player's language
 
     def slots(self):
         return (AUTOSAVE, *(str(i) for i in range(1, self.count + 1)))
@@ -90,8 +93,10 @@ class SaveSlots:
         return SlotInfo(
             str(slot),
             True,
-            scene=scene.name if scene is not None else save.scene_id,
-            leader=leader.display_name if leader is not None else leader_id,
+            scene=map_name(self.lookup, save.scene_id, scene.name)
+            if scene is not None
+            else save.scene_id,
+            leader=name_of(self.lookup, leader, leader_id),
             level=progression.level if progression is not None else 0,
             saved_at=time.strftime("%Y-%m-%d %H:%M", time.localtime(path.stat().st_mtime)),
         )

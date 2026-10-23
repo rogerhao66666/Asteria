@@ -1,0 +1,42 @@
+{
+  "facts": {
+    "platform": "cocoa",
+    "data_groups_folded": true,
+    "count": "415 engine words · 415 translated · 10 project keys · 1750 data texts · 0 translated",
+    "search_opens_items": true,
+    "dialogue_without_keys_before": 106,
+    "programs_given_keys": 41,
+    "dialogue_without_keys_after": 0,
+    "lines_listed": 173,
+    "undo_restores": true,
+    "count_after_undo": "引擎字詞 415 個 · 已翻譯 415 個 · 專案自訂鍵 10 個 · 資料文字 1750 個 · 已翻譯 0 個",
+    "count_zh": "引擎字詞 415 個 · 已翻譯 415 個 · 專案自訂鍵 10 個 · 資料文字 1750 個 · 已翻譯 0 個"
+  },
+  "screenshots": [
+    {
+      "file": "t2_en_data_groups.png",
+      "shows": "English editor: the data groups, folded, below the engine words"
+    },
+    {
+      "file": "t2_en_search_healing.png",
+      "shows": "Search 'Healing': the items and skills groups open"
+    },
+    {
+      "file": "t2_en_project_data_filter.png",
+      "shows": "Show: Project data (actors, enemies opened)"
+    },
+    {
+      "file": "t2_en_dialogue_keys.png",
+      "shows": "After Give dialogue lines keys: the lines and choices group"
+    },
+    {
+      "file": "t2_zh_project_data.png",
+      "shows": "Chinese editor: group titles, filter and count in Chinese"
+    },
+    {
+      "file": "t2_zh_search_aegis.png",
+      "shows": "Chinese editor: search 'Aegis' opens the skills group"
+    }
+  ],
+  "status": "PASS"
+}

@@ -403,6 +403,7 @@ class CanonicalBattleAdapter:
         )
         self.screen.display_names = self._display_names(game)
         self.screen.translate = game.tr  # the screen's own words in the player's language
+        self.screen.hud.state_label = self._state_label(game)  # status chips (D60)
         self.screen.result.translate = game.tr  # and the result headline (Victory...)
         self.screen.animation.compositions = self._compositions(combatants)
         self.screen.member_heights = {v.member_id: self._body_height(v) for v in combatants}
@@ -570,6 +571,17 @@ class CanonicalBattleAdapter:
         return (x + sx, y + sy, zoom)
 
     @staticmethod
+    def _state_label(game):
+        """The battle HUD's status labels in the player's language: the state's translated
+        name (``data.state.<id>.name``) when the table has one, else the HUD style's label."""
+        lookup = game.data_lookup
+        if lookup is None:
+            return None
+        from asteria.rpg.data_text import key
+
+        return lambda state_id, label: lookup(key("state", state_id)) or label
+
+    @staticmethod
     def _display_names(game):
         """Member id -> project display name; repeated enemy kinds get their index."""
         db = game.project.rpg_database
@@ -585,7 +597,7 @@ class CanonicalBattleAdapter:
                 names[member_id] = game.pet_name(index)
                 continue
             definition = db.actors.get(member_id) or db.enemies.get(base)
-            name = getattr(definition, "display_name", "") or member_id
+            name = game.name_of(definition) or member_id
             if index and kinds[base] > 1:
                 name = f"{name} {index}"
             names[member_id] = name

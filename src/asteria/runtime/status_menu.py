@@ -111,12 +111,22 @@ class StatusMenu:
             ),
         )
 
+    def _word(self, kind, record_id, label):
+        """``label`` in the player's language: the locale table's ``data.<kind>.<id>.name``
+        when it has one, else ``label`` as the screen made it (D60)."""
+        lookup = self.game.data_lookup
+        if lookup is None:
+            return label
+        from asteria.rpg.data_text import key
+
+        return lookup(key(kind, record_id)) or label
+
     def rows(self):
         """Selectable rows of the current tab: ``(kind, key, label, detail)``."""
         view = self.view()
         if view is None:
             return []
-        tr = self.game.tr
+        tr, word = self.game.tr, self._word
         if self.tab == "items":
             equipment = self.game.project.rpg_database.equipment
             usable = "  " + tr("status.usable", "(use)")
@@ -124,9 +134,9 @@ class StatusMenu:
                 (
                     "item",
                     i.item_id,
-                    equipment[i.item_id].display_name
+                    self.game.name_of(equipment[i.item_id])
                     if i.label == i.item_id and i.item_id in equipment
-                    else i.label,
+                    else word("item", i.item_id, i.label),
                     f"x{i.count}" + (usable if i.usable else ""),
                 )
                 for i in view.items
@@ -134,28 +144,59 @@ class StatusMenu:
             ]
         if self.tab == "status":
             rows = [
-                ("resource", r.resource_id, r.label, f"{r.current:g} / {r.maximum:g}")
+                (
+                    "resource",
+                    r.resource_id,
+                    word("resource", r.resource_id, r.label),
+                    f"{r.current:g} / {r.maximum:g}",
+                )
                 for r in view.resources
             ]
-            rows += [("stat", s.stat_id, s.label, f"{s.value:g}") for s in view.stats]
+            rows += [
+                ("stat", s.stat_id, word("stat", s.stat_id, s.label), f"{s.value:g}")
+                for s in view.stats
+            ]
             return rows
         if self.tab == "equipment":
             rows = [
-                ("slot", slot.slot_id, slot.label, ", ".join(i.label for i in slot.items) or "—")
+                (
+                    "slot",
+                    slot.slot_id,
+                    word("slot", slot.slot_id, slot.label),
+                    ", ".join(word("equipment", i.equipment_id, i.label) for i in slot.items)
+                    or "—",
+                )
                 for slot in view.slots
             ]
             rows += [
-                ("candidate", c.equipment_id, c.label, f"→ {c.slot_id}") for c in view.candidates
+                (
+                    "candidate",
+                    c.equipment_id,
+                    word("equipment", c.equipment_id, c.label),
+                    f"→ {c.slot_id}",
+                )
+                for c in view.candidates
             ]
             return rows
         learned, active = tr("status.learned", "learned"), tr("status.active", "active")
         rows = [
-            ("ability", a.ability_id, a.label, learned if a.learned else "")
+            (
+                "ability",
+                a.ability_id,
+                word("ability", a.ability_id, a.label),
+                learned if a.learned else "",
+            )
             for a in view.abilities
             if a.learned or a.resolved
         ]
         rows += [
-            ("passive", p.passive_id, p.label, active if p.active else "") for p in view.passives
+            (
+                "passive",
+                p.passive_id,
+                word("passive", p.passive_id, p.label),
+                active if p.active else "",
+            )
+            for p in view.passives
         ]
         return rows
 

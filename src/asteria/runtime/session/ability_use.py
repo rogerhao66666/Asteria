@@ -444,7 +444,7 @@ class AbilityUseMixin:
             pet = self.active_pet()
             if pet is None or wanted not in ("any", pet.species_id):
                 species = self.project.rpg_database.pet_species.get(wanted)
-                name = species.display_name if species else tr("battle.reason.a_pet", "a pet")
+                name = self.name_of(species) or tr("battle.reason.a_pet", "a pet")
                 return tr("battle.reason.needs", "Needs {what}", what=name)
         pet_move = self._pet_move_missing(ability_id)
         if pet_move:
@@ -457,7 +457,7 @@ class AbilityUseMixin:
         for item_id, count in needs_items:
             if items.count(item_id) < count:
                 record = self.project.rpg_database.items.get(item_id)
-                name = record.display_name if record is not None else item_id
+                name = self.name_of(record, item_id)
                 if count > 1:
                     return tr(
                         "battle.reason.needs_items",
@@ -569,7 +569,7 @@ class AbilityUseMixin:
         inventory = self.save.rpg_state.inventory
         if inventory.count(item.item_id) < 1:
             raise GameSessionError(
-                self.tr("battle.item_none_left", "no {name} left", name=item.display_name)
+                self.tr("battle.item_none_left", "no {name} left", name=self.name_of(item))
             )
         battle = self.battle
         if item.battle_ability:

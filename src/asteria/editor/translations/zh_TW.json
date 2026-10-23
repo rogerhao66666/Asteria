@@ -2558,9 +2558,48 @@
   "− Condition": "− 條件",
   "− Track": "− 軌道",
   "● Local server stopped": "● 本機伺服器已停止",
-  "● Not connected": "● 未連線"
+  "● Not connected": "● 未連線",
+  "Data: actors": "資料：角色",
+  "Data: classes": "資料：職業",
+  "Data: crafting recipes": "資料：製作配方",
+  "Data: currencies": "資料：貨幣",
+  "Data: enemies": "資料：敵人",
+  "Data: equipment": "資料：裝備",
+  "Data: equipment growth": "資料：裝備成長",
+  "Data: equipment sets": "資料：套裝",
+  "Data: factions and achievements": "資料：陣營與成就",
+  "Data: items": "資料：道具",
+  "Data: map names": "資料：地圖名稱",
+  "Data: party setups and drop tables": "資料：隊伍設定與掉落表",
+  "Data: passives": "資料：被動",
+  "Data: pet species": "資料：寵物物種",
+  "Data: progression tracks": "資料：成長軌道",
+  "Data: quests": "資料：任務",
+  "Data: rarities and affixes": "資料：稀有度與詞綴",
+  "Data: shops": "資料：商店",
+  "Data: skill trees": "資料：技能樹",
+  "Data: skills": "資料：技能",
+  "Data: socketed items": "資料：鑲嵌物",
+  "Data: states": "資料：狀態",
+  "Data: stats": "資料：能力值",
+  "Data: world interactions": "資料：場景互動",
+  "Dialogue: lines and choices": "對話：台詞與選項",
+  "Dialogue: who speaks": "對話：說話者",
+  "Every dialogue line and choice already has a key": "每句對話與選項都已經有鍵",
+  "Give Dialogue Lines Keys": "替對話產生鍵",
+  "Give dialogue lines keys": "替對話產生鍵",
+  "Project data": "專案資料",
+  "Data: equipment slots": "資料：裝備部位"
  },
  "patterns": [
+  [
+   "(?P<n>\\d+) dialogue lines or choices have no key yet: give them keys so they can be translated here",
+   "{n} 句對話或選項還沒有鍵：產生鍵之後就能在這裡翻譯"
+  ],
+  [
+   "(?P<a>\\d+) engine words · (?P<b>\\d+) translated · (?P<c>\\d+) project keys · (?P<d>\\d+) data texts · (?P<e>\\d+) translated",
+   "引擎字詞 {a} 個 · 已翻譯 {b} 個 · 專案自訂鍵 {c} 個 · 資料文字 {d} 個 · 已翻譯 {e} 個"
+  ],
   [
    "Weak to (?P<x>.+)",
    "弱點：{x!T}"

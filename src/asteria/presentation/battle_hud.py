@@ -307,6 +307,8 @@ class BattleHudRuntime:
             raise TypeError("profile must be BattleHudProfile")
         self._members: dict[str, BattleHudMember] = {}
         self.revision = 0
+        # (state_id, label) -> the label in the player's language (D60); None: the style's own
+        self.state_label = None
 
     @property
     def members(self):
@@ -350,9 +352,12 @@ class BattleHudRuntime:
             if not self.profile.show_unmapped_statuses:
                 return None
             style = BattleHudStatusStyle(active.state_id, "status.unmapped", order=1000)
+        label = style.label or str(active.state_id)
+        if self.state_label is not None:
+            label = self.state_label(str(active.state_id), label)
         return BattleHudStatusIcon(
             str(active.state_id),
-            style.label or str(active.state_id),
+            label,
             style.icon_asset_id,
             int(active.stacks),
             _finite(active.remaining, "remaining"),

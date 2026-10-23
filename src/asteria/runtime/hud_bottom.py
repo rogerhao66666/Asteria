@@ -115,8 +115,9 @@ def active_statuses(game, state):
         if definition is None:
             continue
         words = active.state_id.replace(".", " ").replace("_", " ").split()
-        label = definition.display_name or " ".join(w.capitalize() for w in words)
-        initials = label.split() if definition.display_name else words
+        shown = game.name_of(definition) or ""
+        label = shown or " ".join(w.capitalize() for w in words)
+        initials = label.split() if shown else words
         out.append(
             {
                 "id": active.state_id,
@@ -259,7 +260,7 @@ class BottomHud:
             prices = game.action_combat._prices(game.player, ability) if ability else []
             usable = not isinstance(prices, str)
             name = (
-                getattr(ability, "display_name", "")
+                (game.name_of(ability) or "")
                 or labels.get(ability_id, {}).get("label")
                 or ability_id.split("_", 1)[-1]
             )

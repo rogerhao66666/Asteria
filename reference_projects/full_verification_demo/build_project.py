@@ -48,6 +48,7 @@ import trial_story as story  # noqa: E402
 import trial_systems as systems  # noqa: E402
 import trial_trees as trees  # noqa: E402
 import trial_world as world_extras  # noqa: E402
+import trial_zh_data as zh_data  # noqa: E402
 
 from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
@@ -114,6 +115,7 @@ def main():
     )
     world_extras.backdrops(context)  # the bog, catacomb and throne battle backdrops
     content.finalize_names(context)
+    zh_data.apply(project)  # dialogue keys and the data's Chinese (D60)
     content.game_start(context)
     path = HERE / "project.asteria.json"
     project.save_json(path)

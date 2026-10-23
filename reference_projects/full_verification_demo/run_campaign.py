@@ -485,6 +485,19 @@ class Campaign:
         line = game.backlog.entries()[-1].text
         assert "英雄之廳" in line, line
         self.facts["translated_lines"] += 1
+        # the project's own data in Chinese too (D60): names, a skill's help, a map, a speaker
+        db, library = game.project.rpg_database, game.project.gameplay_library
+        shown = {
+            game.name_of(db.actors["hero_01"]): "艾德里克",
+            game.name_of(db.items["healing_herb"]): "療傷草",
+            game.name_of(db.enemies["goblin_slinger"]): "哥布林投石兵",
+            game.name_of(library.abilities.require("fire_bolt")): "火焰箭",
+            game.map_name(game.scene.id, game.scene.name): "爐心鎮",
+            game.name_of(db.quests["q_patrol"]): "清理道路",
+        }
+        for drawn, chinese in shown.items():
+            assert drawn == chinese, (drawn, chinese)
+            self.facts["translated_data"] += 1
         self.talk("Scholar Lin", picks=(0,))
         assert game.localizer.locale == "en"
         self.facts["languages"] = len(game.localizer.locales())
@@ -1072,7 +1085,8 @@ REQUIRED = (
     "staged_sideview", "staged_portrait", "command_more_page", "weave_steps",
     "used_elemental_weave", "arts_learned", "slots_full", "slots_grown",
     "used_art_rending_gale", "used_art_dawn_edge", "used_art_iron_vow",
-    "translated_lines", "bog_damage", "area_backdrops", "glade_rests", "shadow_stealth",
+    "translated_lines", "translated_data", "bog_damage", "area_backdrops", "glade_rests",
+    "shadow_stealth",
     "embers_burn", "embers_out", "music_unlocked", "new_game_plus", "home_sleeps",
     "ring_sockets", "used_attack_ring", "used_valiant_slash", "used_arsenal_storm",
     "used_wind_bolt", "used_earth_bolt", "equip_offers", "guarded_blows", "dodged_blows",

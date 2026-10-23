@@ -55,7 +55,7 @@ class BattleEventsMixin:
         before = self.resolve_actor_build(actor_id) if in_battle else None
         broke = rules.apply_wear(loadout, str(event))
         for item in broke:
-            name = item.nickname or item.equipment.display_name
+            name = item.nickname or self.name_of(item.equipment)
             self.notify(self.tr("notice.broke", "{name} broke!", name=name), kind="warning")
         if broke and in_battle:
             self._apply_break_to_battle(str(actor_id), before)
@@ -346,7 +346,7 @@ class BattleEventsMixin:
         if line is not None and line is not self._last_logged_line:
             self._last_logged_line = line  # each line is logged once, when it first shows
             self.backlog.add(
-                self.expand_message(line.speaker, plain=True),
-                self.expand_message(line.text, plain=True),
+                self.expand_message(self.speaker_of(line), plain=True),
+                self.expand_message(self.line_text(line), plain=True),
             )
         return request

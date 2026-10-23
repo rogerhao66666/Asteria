@@ -114,6 +114,7 @@ class LootSystem(System):
 
     def __init__(self, database=None, *, rng=None, collect=None, scatter=18.0, luck=0.0):
         self.database = database  # RpgDatabase: equipment, items, rarities, affixes
+        self.name_of = None  # GameSessionRuntime.name_of: labels in the player's language (D60)
         self.rng = rng or random.Random(0)
         self.collect = collect  # callable(looter_entity, LootComponent, equipment_item_or_None)
         self.scatter = float(scatter)
@@ -179,7 +180,9 @@ class LootSystem(System):
             for table in (db.equipment, getattr(db, "items", {})):
                 record = table.get(item_id)
                 if record is not None and getattr(record, "display_name", ""):
-                    return record.display_name
+                    if self.name_of is not None:
+                        return self.name_of(record)
+                    return record.display_name  # no session: as written
         return item_id
 
     # -- picking up ------------------------------------------------------------------------------

@@ -2575,3 +2575,56 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 工作目錄同時有另一個 session（寵物／創造物）未提交的改動；本批的檔案清單見狀態。
 
 **狀態：** 已提交（2026-10-23，使用者要求；只含本批檔案，`playable_test_runtime.py` 只提交兩段）。本批的檔案：`src/asteria/export_web.py`、`src/asteria/runtime/web_persistence.py`、`src/asteria/runtime/image_preloader.py`、`src/asteria/runtime/profiler.py`、`src/asteria/platform/pygame_battle_ui.py`、`src/asteria/assets/library.py`、`src/asteria/runtime/playable_test_runtime.py`（只有 multiplayer import 與 `step()` 兩段）、`pyproject.toml`、`THIRD_PARTY_ASSETS.md`、`asset_library/fonts/`、`tests/test_export_web.py`、`docs/audits/WEB_EXPORT_ASSESSMENT_2026-10-23.md`、`docs/audits/evidence/web_export/`、本文與手冊。
+
+## D60 — 專案資料翻譯：名稱、說明、對話依語系不同（2026-10-23；T1 引擎）
+
+**要求：** 使用者 2026-10-23 決定做「專案資料的翻譯」（手冊「下一步的候選」第 3 項）：角色、職業、技能、道具、裝備、狀態、敵人、任務、地圖名、對話的名稱與說明可依語系不同；沒設定就不寫入、舊專案照讀；編輯器有翻譯表可編；Full Verification 做 zh-TW 示範並在真實視窗切換語言截圖。核准的做法：**鍵放在現有的翻譯表**（D52 的 `LocaleTable`），**對話用選填的 `text_key`**。分三批：T1 引擎、T2 編輯器翻譯頁、T3 demo 示範與實機證據。
+
+**做了什麼（T1）：**
+- **鍵的規則** `rpg/data_text.py`：`data.<種類>.<id>.name`、`data.<種類>.<id>.description`；種類由紀錄的類別決定（`KINDS`，29 種：actor、class、ability、passive、attack、state、item、equipment、attachment、equipment_set、growth、growth_node、rarity、affix、enemy、quest、objective、shop、recipe、pet_species、skill_tree、skill_tree_node、track、stat、faction、achievement、interaction、party、drop_table）。另外 `data.map.<場景 id>.name`（地圖名）、`data.speaker.<名字>.name`（說話者）、`data.currency.<id>.name`（貨幣）、`data.resource.<id>.name`、`data.slot.<id>.name`（狀態選單的資源與部位）。紀錄本身的資料完全不改。
+- **取字**：`GameSessionRuntime.name_of(record, fallback)`、`description_of`、`map_name`、`line_text`、`speaker_of`、`prompt_of`、`pet_display`、`currency_names`（`runtime/session/messages.py`、`pets.py`、`rewards.py`）。`data_lookup` 在專案沒有任何翻譯表時是 None，畫面直接用紀錄自己的字、不查表。
+- **畫面**：約 70 處直接讀 `display_name`／`description` 的地方改走上面的方法：商店、任務紀錄與野外任務追蹤、製作、成就、圖鑑、技能欄、寵物、技能樹（大小兩種畫面）、角色養成與工坊（測試用畫面）、背包（含隨機詞綴與套裝，`rpg/loot.item_display_name` 加選填 `name_of`）、狀態選單（道具、裝備、技能、被動、能力值、資源、部位）、動作 HUD 的狀態與技能、地上掉落物的標籤、獲得道具／裝備壞掉的通知、新裝備提示、存檔欄的地圖名與隊長名、戰鬥（成員名、技能名與說明、道具、調合材料、狀態、捕獲、技能不能用的原因）、勝利頁（道具；被擊敗的敵人與貨幣只在有翻譯時換字，沒有表的專案照舊顯示 id）、訊息控制碼 `\N[..]`／`\P[..]`。戰鬥技能名的順序：翻譯 → manifest 的 label → id。
+- **對話**：`DialogueLine.text_key`、`DialogueChoice.text_key`、`ChoiceRequest.prompt_key`（都只在有設定時寫入，舊資料照讀）；DIALOGUE／CHOICE 指令的參數 `text_key`、`prompt_key`；野外訊息框、選項、說話者、訊息紀錄、tilemap 場景的對話都查表。
+- 開發用的錯誤訊息（`GameSessionError` 的職業解鎖原因等）維持英文（同 D52）。
+
+**測試：** `tests/test_data_text.py`（9 項）：每個種類都對得上真的紀錄類別與 id 欄位、種類不重複；查不到時回到紀錄自己的字；對話鍵只在有設定時寫入、舊資料照讀、多餘欄位拒絕；Full Verification 加上一組 zh-TW 資料鍵後，道具、角色、技能名與說明、狀態、地圖名、成就、圖鑑、貨幣、商店、任務與目標、`\N[hero_01]`、對話與選項與說話者、戰鬥成員名與技能名都換成中文，切回英文就還原；沒有翻譯表時 `data_lookup` 是 None、勝利頁照舊用 id；**原始碼掃描**：`runtime/` 與 `presentation/` 不再有直接畫 `display_name` 的地方（允許清單：開發錯誤、資料複製、寵物戰鬥單位、多人連線名稱、presentation 自己的 view model，以及明確標記的無 session 後援）。全套 3243 通過、1 略過；`run_campaign.py` 結束碼 0（REQUIRED 全有）；ruff 乾淨。
+
+**畫面不變的證據：** HEAD 的引擎（`git archive HEAD`）與目前工作目錄各畫 13 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、讀檔、技能欄、訊息紀錄、製作人員、遊戲結束、戰鬥），Octopath、Complex Reference、英文的 Full Verification 共 **39 張逐像素相同**（狀態畫面兩邊都要先選角色才能開，這次沒比到）。
+
+**限制（T1）：**
+- 編輯器還沒有資料翻譯的頁面（T2）；Full Verification 還沒有資料的 zh-TW 翻譯（T3）。
+- 同一個 id 的技能樹節點出現在兩棵樹時共用一個翻譯（鍵只看節點 id）。
+- presentation 的戰鬥畫面模型（`rpg_character_screen`、`rpg_inventory_screen`）自己產生的標籤經狀態選單轉換；直接用這兩個模型的程式要自己呼叫 `name_of`。
+- 工作目錄同時有另一個 session 的創造物改動，部分檔案兩邊都改（提交時分 hunk）。
+
+**T2：編輯器的翻譯頁（2026-10-23）**
+
+- **專案資料分組**（`editor/data_translation.py`，不依賴 Qt）：Database ▸ Game Systems ▸ Translations 在引擎字詞與專案名稱之後列出專案資料，每種紀錄一組（角色、職業、技能、被動、狀態、道具、裝備、鑲嵌物、套裝、裝備成長、稀有度與詞綴、敵人、寵物物種、任務〔含目標〕、商店、製作配方、技能樹〔含節點〕、成長軌道、能力值、陣營與成就、場景互動、隊伍設定與掉落表），加上地圖名稱、貨幣、說話者，以及已有鍵的台詞與選項。每列：鍵、英文（紀錄自己的字）、譯文。Full Verification 共 1,746 列；資料分組預設收合，搜尋時有符合的組自動展開；「顯示」多一個「專案資料」；計數多「資料文字 N 個 · 已翻譯 M 個」。頁面建立 55 ms（第一次 149 ms），搜尋 11 ms。
+- **鍵已經對不到紀錄的**（紀錄被刪了）留在表裡，列在「專案自訂的鍵」組，不會不見。
+- **替對話產生鍵**：按鈕把每個沒有鍵的 DIALOGUE 台詞、CHOICE 選項與提示加上 `dlg.<事件程式>.<指令序號>`（選項 `.<n>`、提示 `.prompt`；重名時加 `_2`），整批是一個可復原步驟（`CommandTransaction` 加 `ReplaceEventProgramCommand`），台詞本身不改、已有的鍵保留；只寫了 `\T[..]` 的台詞本來就從翻譯表取字，不給鍵。Full Verification：41 個事件程式、106 個指令拿到鍵，之後頁面列出 173 列台詞與選項；Ctrl+Z 全部還原（頁面的資料快取跟著文件修訂號更新）。
+- 新的介面文字（26 個分組標題、篩選、按鈕、提示、兩個樣板）都有 zh_TW。
+
+**T2 測試：** `tests/test_data_text.py` 新增 6 項（共 15 項）：資料分組列出名稱與說明、地圖、貨幣、說話者，鍵不重複；產生鍵一次可復原、不改字、已有的鍵保留、第二次按不再改；頁面資料組收合、搜尋展開、「專案資料」篩選、對不到紀錄的鍵留在自訂組；復原後頁面跟著更新；只有 `\T[..]` 的台詞不給鍵；新字詞都有中文。全套 3247 通過、1 略過、2 失敗：都是 `test_built_in_text` 抓到另一個 session 進行中加的 `creature.close_bag` 鍵（不是本批）。
+
+**T2 實機證據（`docs/audits/evidence/data_translation/`）：** `scripts/data_translation_editor_live_check.py`（Cocoa 視窗，Full Verification）PASS：`t2_en_data_groups`（資料組收合）、`t2_en_search_healing`（搜尋「Healing」展開技能、道具、配方）、`t2_en_project_data_filter`、`t2_en_dialogue_keys`（按下後的台詞與選項組）、`t2_zh_project_data`、`t2_zh_search_aegis`（中文介面）；`results.json` 記下計數、產生前後沒有鍵的數目、復原後計數回到 1,746。`editor_ui_audit.py` 的 Translations 頁在 1600×1000 與 1100×700 都 0 缺陷（只有整頁上下捲）。截圖從工作目錄拍（另一個 session 的改動不碰編輯器這頁）。
+
+**T2 限制：** 戰鬥序列（`BATTLE_SEQUENCE` 的軌道）裡的對話不在清單、也不會產生鍵；資源與裝備部位（`data.resource.*`、`data.slot.*`）沒有自動列出，要用「新增鍵」；同一個說話者名稱在不同事件裡共用一個翻譯。
+
+**T3：Full Verification 的繁體中文（2026-10-23）**
+
+- **翻譯方式**：`trial_zh_data.py`（`apply(project)`，`build_project.py` 在 `finalize_names` 之後呼叫，也能直接套在已建好的專案上，重複套用不會多加）先替每句對話產生鍵，再把 Translations 頁列出的每一列翻成中文寫進 zh-TW 表（已在表裡的鍵不覆蓋）。demo 的名稱有固定句型（「Fire Bolt (Echo)」「Rune: Siphon (Holy Blade)」「Spec: Frost」「Vigor Notable 3」「Bishop Training」「Flawless Ruby」「Craft amethyst_item」…）、技能說明由固定片語組成（「Magic / Dark: all foes, 4 hits, inflicts Magic Down」），所以翻譯是詞彙表加句型：`trial_zh_words.py` 的 `WORDS`（約 690 個詞：人物、地點、職業、敵人、能力值、狀態、武器、道具、裝備、技能、被動、節點）、`DESCRIPTION`（說明的開頭與片語、能力值與任務的整句說明）、`LINES`（155 句台詞與選項）。接在「施加／自身獲得／解除」後的多個狀態用頓號接續（「施加暈眩、燃燒」）。
+- **結果**：1,923 列全部有中文（`missing()` 為空），對話 106 個指令、41 個事件程式有鍵；英文表沒有任何 `data.*`／`dlg.*`（英文照紀錄自己的字）。只寫 `\T[..]` 的台詞（區域名稱）本來就由 D52 的表翻，不給鍵。
+- **T3 順手補的引擎缺口**（實機截圖時看到的英文）：互動提示的 NPC 名稱（`speaker_name`，同說話者的鍵）、狀態選單右上的角色名、新裝備提示裡的部位 id（`slot_name`，`data.slot.<id>.name`；Translations 頁多一組「裝備部位」）、戰鬥側欄狀態字（`BattleHudRuntime.state_label`，由 adapter 接 `data.state.<id>.name`）、商店價格與錢包的貨幣名（`currency_names`，一次算好整張表）。
+- **run_campaign**：學者林切到中文時，檢查 6 個專案名稱（角色、道具、敵人、技能、地圖、任務）畫出的是中文，新事實 `translated_data`（6）加進 REQUIRED；整段劇情結束碼 0。
+
+**T3 測試：** `tests/test_data_text.py` 共 17 項：demo 每一列都有中文、每句對話都有鍵、重複套用加 0、英文表沒有資料鍵；句型翻譯的例子（符文、變體、交會、技能書、製作、說明的頓號、「+」相連的屬性）；T1／T2 的測試改從「未翻譯的 demo」開始（`_plain`）。全套 3253 通過、1 略過；ruff 乾淨。
+
+**T3 實機證據（`docs/audits/evidence/data_translation/`）：** `scripts/data_translation_live_check.py`（Cocoa、真的按鍵、`ASTERIA_MUTE=1`）PASS：同一組畫面先英文再中文——跟守衛瑟莎莉說話（`t3_*_dialogue`：說話者與台詞）、狀態選單的道具／裝備／技能（`t3_*_items`、`t3_*_equipment`、`t3_*_skills`）、商店（`t3_*_shop`：「30 金幣」）、任務紀錄（`t3_*_quests`）、戰鬥（`t3_*_battle`：隊伍名、頭上的「哥布林投石兵 1」、側欄「流血 失明」）、技能清單（`t3_*_battle_skills`：名稱與說明的語言跟著切換）、勝利頁（`t3_*_victory`：「打倒了：哥布林投石兵」「金幣 +786」）。`results.json` 記下每張圖畫出的字；中文畫面上沒有任何一個表裡有翻譯的專案名稱以英文出現。編輯器那支（T2）改在記憶體裡先拿掉 demo 的翻譯與鍵再操作，證據照舊。
+
+**T3 限制：**
+- 翻譯是我寫的，需要使用者讀過；名詞統一見 `trial_zh_words.py`。少數由程式產生、沒有可讀名稱的紀錄（`w_bone_scepter Enchant`）照 id 的意思翻。
+- 頭目、戰鬥中的說話（`BATTLE_SEQUENCE`）、music room 的曲名、製作人員名單、manifest 的技能 label 還沒有資料鍵。
+- 標題畫面的副標題（「Complex Reference RPG」）是 manifest 的字，不在表裡。
+- demo 的 `project.asteria.json` 這次是用 `trial_zh_data.apply` 直接套在現有檔案上（讀存不改其他內容），沒有重跑整個建置（工作目錄有另一個 session 直接寫進這個檔的改動）；`build_project.py` 已接上，下次重建會產生同樣結果。
+
+**狀態：** 已提交（2026-10-24，使用者要求；只含本批檔案：與另一個 session 共用的 8 個程式檔是 HEAD 加上本批的改動，`zh_TW.json` 只含本批的 31 個詞與 2 個樣板，demo 的 `project.asteria.json` 是 HEAD 版本套用 `trial_zh_data.apply` 的結果）。

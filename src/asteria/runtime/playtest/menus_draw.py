@@ -152,7 +152,8 @@ class MenusDrawMixin:
         if kind == "achievements":
             rows = achievement_rows(self.game)
             by_name = {
-                a.display_name: a.icon_id for a in self.project.rpg_database.achievements.values()
+                self.game.name_of(a): a.icon_id
+                for a in self.project.rpg_database.achievements.values()
             }
             line_icons = [by_name.get(name, "") for name, _description, _unlocked in rows]
             done = sum(1 for r in rows if r[2])
@@ -400,7 +401,7 @@ class MenusDrawMixin:
         if shop_icon:
             self._draw_icon(shop_icon, 90, 50, 32)
         self.text(
-            screen.shop.display_name,
+            self.game.name_of(screen.shop),
             90 + (40 if shop_icon else 0),
             54,
             size=30,

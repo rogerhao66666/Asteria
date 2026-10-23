@@ -253,7 +253,7 @@ class AbilitySlotsScreen(_Screen):
             return
         actor = self.game.project.rpg_database.actors.get(actor_id)
         equipped, capacity = self.game.ability_slots(actor_id)
-        name = actor.display_name if actor is not None else actor_id
+        name = self.game.name_of(actor, actor_id)
         slots = self.tr(
             "skill_slots.count",
             "{name}   Slots {used}/{capacity}",
@@ -269,7 +269,7 @@ class AbilitySlotsScreen(_Screen):
         library = self.game.project.gameplay_library.abilities
         for row, ability_id in enumerate(learned):
             definition = library.get(ability_id)
-            label = getattr(definition, "display_name", "") or ability_id.replace("_", " ").title()
+            label = self.game.name_of(definition) or ability_id.replace("_", " ").title()
             on = ability_id in equipped
             current = row == self.index % len(learned)
             color = GOOD if on else ((255, 255, 255) if current else (190, 196, 210))

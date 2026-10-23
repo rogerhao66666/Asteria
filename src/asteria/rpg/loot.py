@@ -317,22 +317,25 @@ def fixed_rarity(equipment):
     return None
 
 
-def item_display_name(item, affixes, *, brief=False):
+def item_display_name(item, affixes, *, brief=False, name_of=None):
     """``"<prefixes> <base> <suffixes>"`` from the rolled affixes' display names; ``brief`` keeps
-    the first prefix and the first suffix (labels on the ground, lists - details show the rest)."""
+    the first prefix and the first suffix (labels on the ground, lists - details show the rest).
+    ``name_of(record)`` words each part in the player's language (``GameSessionRuntime.name_of``,
+    D60); without it the records' own names are used."""
+    named = name_of or (lambda record: record.display_name)
     prefixes = [
-        affixes[a.affix_id].display_name
+        named(affixes[a.affix_id])
         for a in item.rolled_affixes
         if affixes.get(a.affix_id) and affixes[a.affix_id].position == "prefix"
     ]
     suffixes = [
-        affixes[a.affix_id].display_name
+        named(affixes[a.affix_id])
         for a in item.rolled_affixes
         if affixes.get(a.affix_id) and affixes[a.affix_id].position != "prefix"
     ]
     if brief:
         prefixes, suffixes = prefixes[:1], suffixes[:1]
-    return " ".join([*prefixes, item.equipment.display_name, *suffixes])
+    return " ".join([*prefixes, named(item.equipment), *suffixes])
 
 
 __all__ = [

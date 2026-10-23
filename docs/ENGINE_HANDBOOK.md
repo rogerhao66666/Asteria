@@ -199,7 +199,10 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   選單等主畫面是英文字型行高的 1.25 倍（以前同字級時中文大了約 45%）；並且垂直置中在英文大寫字母的
   中線（`glyph_shift`），選單游標和中文標籤同高；置中的標題與提示不超出英文那一行的上緣。skin 字型本身有
   中文字時直接用它。
-- **還不能翻的**：專案資料的名稱和說明（角色、技能、道具、狀態、敵人、任務、商店、貨幣 id）照作者寫的顯示；
+- **專案資料也能翻（D60）**：同一張表裡寫 `data.<種類>.<id>.name`／`.description`（種類由紀錄類別決定，見 `rpg/data_text.py` 的 `KINDS`）、`data.map.<場景 id>.name`、`data.speaker.<名字>.name`、`data.currency.<id>.name`；對話與選項用選填的 `text_key`（選項提示 `prompt_key`）。畫面一律經 `game.name_of(record)`／`description_of`／`line_text`，沒寫就照紀錄自己的字。
+- **Full Verification（D60 T3）**：資料的繁中由 `trial_zh_data.py`（詞彙表 `trial_zh_words.py` 加句型）在建置時產生，1,923 列全有；真實視窗證據 `audits/evidence/data_translation/`（`scripts/data_translation_live_check.py`）。
+- **編輯器（D60 T2）**：Translations 頁在引擎字詞之後列出專案資料（每種紀錄一組，加上地圖、貨幣、說話者、台詞；預設收合、搜尋時展開；「顯示 ▸ 專案資料」）；「替對話產生鍵」一次替所有沒有鍵的台詞、選項與提示加上 `dlg.*` 鍵（可復原）。
+- **還不能翻的**：（D60 之前）專案資料的名稱和說明照作者寫的顯示；
   開發用的錯誤訊息（`unknown …`、資料設定錯誤）維持英文。細節見 DECISION_LOG D52。
 
 ---
@@ -264,6 +267,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | `ActionCombat` 綁定替代、`item:<id>` 消耗；`CombatantComponent.defeat_switch`；`ClassAppearance`；`ParallaxBackground2D` | `runtime/` |
 | `ActionCombat` 綁定 `slot:N`（技能欄第 N 格）、`vfx` 提示（世界裡的圖片特效：`effect` 精靈表 id、位移、縮放、`rotate`、`follow`）；技能欄規則 `AbilityLoadoutRules.limited_sources` 可含 `allocation`（技能樹給的技能），技能樹學到新技能會自動放進空格 | `runtime/action_combat.py`、`runtime/action_play.py`、`runtime/session/action_play.py` |
 | 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/progression_graph.py` |
+| 專案資料翻譯（D60）：`DialogueLine.text_key`、`DialogueChoice.text_key`、`ChoiceRequest.prompt_key`（只在有設定時寫入）；翻譯放在既有的語系表 `data.*` 鍵，紀錄本身不變 | `rpg/data_text.py`、`events/dialogue.py`、`events/runner.py`、`runtime/session/messages.py` |
 | 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/localization.py`、`runtime/playtest/field_ui.py`、`editor/dialogue_command_dialog.py` |
 | 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle_ui.py`、`presentation/library.py`、`editor/integrated_authoring.py` |
 | 戰鬥版面 `command_counts`（頂層指令旁的數量，預設關，D42）；戰鬥 HUD 資源樣式 `color`（空白＝主題色，D47） | `presentation/battle_ui.py`、`presentation/battle_hud.py` |
@@ -316,7 +320,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 輕量電腦 | 效能只在本機（Apple silicon、沒開低耗電模式）量過；真的輕量電腦或低耗電模式要有人實際跑 |
 | 頭上名字的縮寫 | 名字超過 14 字會縮成縮寫（「Goblin Slinger 2」→「GS2」），要怎麼顯示待使用者決定。2026-10-22 發現的其他戰鬥畫面問題（拉近時的狀態文字、技能列名稱黏花費、狀態畫面 HP／MP 順序）已修（DECISION_LOG D51 補充） |
 | 編輯器 | 中文模式下，顯示的字就是存檔值的固定選項（Enemy AI 的條件／動作／目標、事件觸發、VFX 錨點）還是英文；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充） |
-| 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；還不能翻的是專案資料的名稱與說明（角色、技能、道具、狀態、敵人…）和開發用的錯誤訊息；中文用系統字型，桌面匯出不附中文字型（web 匯出附 Noto Sans TC，`ASTERIA_CJK_FONT` 可指定）；寵物改名不支援中文輸入法組字 |
+| 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；專案資料的名稱、說明、對話也能翻（D60；Full Verification 全部有繁中）；開發用的錯誤訊息維持英文；中文用系統字型，桌面匯出不附中文字型（web 匯出附 Noto Sans TC，`ASTERIA_CJK_FONT` 可指定）；寵物改名不支援中文輸入法組字 |
 | Web 匯出（D59） | `python -m asteria.export_web`（pygbag）：沒有編輯器、多人連線、ModernGL、C++ kernel、預載執行緒；玩家開頁面要連得到 pygame-web 的 CDN（`--cdn` 自架）；存檔在瀏覽器的 localStorage；音訊只有 ogg／wav；本機測試用 `127.0.0.1` 開，不用 `localhost`；證據 `audits/evidence/web_export/` |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
@@ -393,7 +397,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
 2. 編輯器剩下的英文：顯示＝存檔值的固定選項，要把顯示和值分開。
-3. 專案資料的翻譯（角色、技能、道具、狀態、敵人的名稱與說明可依語系不同）；內建字詞已可翻（D52）。
+3. 專案資料的翻譯——做了（D60）；剩下戰鬥序列裡的對話、曲名與製作人員名單的資料鍵。
 4. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
 5. Web 匯出——做了（D59）；還可做：存檔匯出／匯入成檔案、自架 runtime 的一鍵複製、標題畫面每幀 14 ms 的背景縮放快取。
 6. 技能圖示換成美術師手繪（現在是程式畫的 32 px 原創圖示，D35）。

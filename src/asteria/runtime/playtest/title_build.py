@@ -147,7 +147,7 @@ class TitleBuildMixin:
         self.text(tr("build.class", "1 Secondary Class: {value}", value=classes), 44, 148, size=20)
         passives = ", ".join(ability.active_passives[:4]) or "—"
         self.text(tr("build.passives", "3 Passives: {value}", value=passives), 44, 178, size=20)
-        held = weapon.equipment.display_name if weapon else "—"
+        held = self.game.name_of(weapon.equipment) if weapon else "—"
         self.text(tr("build.weapon", "4 Weapon: {value}", value=held), 44, 208, size=20)
         growth = (
             "—"
@@ -157,7 +157,7 @@ class TitleBuildMixin:
         )
         self.text(tr("build.upgrade", "5 Weapon Upgrade: {value}", value=growth), 44, 238, size=20)
         accessories = self.save.rpg_state.loadouts[actor_id].equipped("accessory")
-        worn = ", ".join(x.equipment.display_name for x in accessories) or "—"
+        worn = ", ".join(self.game.name_of(x.equipment) for x in accessories) or "—"
         self.text(tr("build.accessories", "6 Accessories: {value}", value=worn), 44, 268, size=20)
         active = ", ".join(self.save.rpg_state.party_active_actor_ids)
         self.text(
@@ -171,7 +171,7 @@ class TitleBuildMixin:
         graph = db.progression_graphs.get(graph_id)
         if graph is not None:
             ox, oy = 485, 150
-            self.text(graph.display_name, ox, 116, size=22, color=(255, 220, 120))
+            self.text(self.game.name_of(graph), ox, 116, size=22, color=(255, 220, 120))
             if graph.node_positions:
                 ranks = allocation.allocations.get(graph.graph_id, {})
                 for node in graph.nodes:
@@ -198,7 +198,9 @@ class TitleBuildMixin:
                     )
                     self.pg.draw.rect(self.screen, (190, 200, 225), rect, 1, border_radius=4)
                     self.text(
-                        node.display_name.replace(graph.display_name.split()[0], "")[:10],
+                        self.game.name_of(node).replace(self.game.name_of(graph).split()[0], "")[
+                            :10
+                        ],
                         x + 4,
                         y + 5,
                         size=14,
@@ -207,7 +209,8 @@ class TitleBuildMixin:
                 ranks = allocation.allocations.get(graph.graph_id, {})
                 for i, node in enumerate(graph.nodes[:6]):
                     self.text(
-                        ("[x] " if ranks.get(node.node_id, 0) else "[ ] ") + node.display_name,
+                        ("[x] " if ranks.get(node.node_id, 0) else "[ ] ")
+                        + self.game.name_of(node),
                         ox,
                         155 + i * 38,
                         size=18,
@@ -245,7 +248,7 @@ class TitleBuildMixin:
             if preview.allowed:
                 self.game.allocate_progression(actor_id, graph_id, node.node_id, 1)
                 self.message = self.game.tr(
-                    "build.learned", "Learned {name}", name=node.display_name
+                    "build.learned", "Learned {name}", name=self.game.name_of(node)
                 )
                 self.message_until = self.pg.time.get_ticks() + 1400
                 return
@@ -285,7 +288,7 @@ class TitleBuildMixin:
                     return
                 growth.unlock(node.node_id)
                 self.message = self.game.tr(
-                    "build.upgraded", "Weapon upgraded: {name}", name=node.display_name
+                    "build.upgraded", "Weapon upgraded: {name}", name=self.game.name_of(node)
                 )
                 self.message_until = self.pg.time.get_ticks() + 1400
                 return

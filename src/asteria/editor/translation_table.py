@@ -2,8 +2,10 @@
 
 The rows are the engine's built-in words (``rpg.built_in_text``: grouped by screen, each with the
 English it shows), the project's own names the engine's screens draw (input actions on the
-Controls screen, Command Menu Pages labels and skill groups in the battle menu), and the table's
-own keys (``\\T[key]`` in messages, anything else the project looks up). A
+Controls screen, Command Menu Pages labels and skill groups in the battle menu), the project's
+data (D60, ``editor/data_translation.py``: every record's name and description, maps,
+currencies, who speaks and the dialogue lines that have a key; collapsed until searched), and
+the table's own keys (``\\T[key]`` in messages, anything else the project looks up). A
 row's Text is what the game shows for that key in this table's locale; an empty Text keeps the
 English, so a table never has to list every word. Built-in keys are never locked: in the
 default locale's table they rename a word (``Fight`` for Attack).
@@ -32,6 +34,7 @@ from PySide6.QtWidgets import (
 
 from asteria.rpg.built_in_text import GROUPS, engine_translations
 
+from . import data_translation
 from .flow_layout import FlowLayout
 from .i18n import translate
 
@@ -40,11 +43,19 @@ ACTIONS_GROUP = "Controls: input action names"
 LAYERS_GROUP = "Battle: Command Menu Pages names"
 SKILL_GROUPS = "Battle: the project's skill groups"
 ENTRIES_GROUP = "Pause menu: the project's own entries"
+DATA_PREFIXES = ("data.", "dlg.")  # project data rows (D60): names, descriptions, dialogue
+
+
+def _is_data(key):
+    return str(key).startswith(DATA_PREFIXES)
+
+
 SHOWN = (  # the Show filter: (label, test of a row's (key, english, text, own))
     ("All words", lambda key, english, text, own: True),
     ("Not translated yet", lambda key, english, text, own: not text),
     ("Translated", lambda key, english, text, own: bool(text)),
-    ("Engine words", lambda key, english, text, own: not own),
+    ("Engine words", lambda key, english, text, own: not own and not _is_data(key)),
+    ("Project data", lambda key, english, text, own: _is_data(key) and not own),
     ("This project's own keys", lambda key, english, text, own: own),
 )
 GROUP_ICONS = {  # editor icons (icons.py) beside each group of the tree
@@ -80,6 +91,33 @@ GROUP_ICONS = {  # editor icons (icons.py) beside each group of the tree
     "Workshop (testing)": "hammer",
     "Co-op": "multiplayer",
     OWN_GROUP: "project",
+    "Data: actors": "actor",
+    "Data: classes": "class",
+    "Data: skills": "skill",
+    "Data: passives": "skill",
+    "Data: states": "state",
+    "Data: items": "item",
+    "Data: equipment": "armor",
+    "Data: socketed items": "item",
+    "Data: equipment sets": "armor",
+    "Data: equipment growth": "hammer",
+    "Data: rarities and affixes": "banner",
+    "Data: enemies": "enemy",
+    "Data: pet species": "paw",
+    "Data: quests": "quest",
+    "Data: shops": "chest",
+    "Data: crafting recipes": "hammer",
+    "Data: skill trees": "skill",
+    "Data: progression tracks": "gauge",
+    "Data: stats": "gauge",
+    "Data: factions and achievements": "trophy",
+    "Data: world interactions": "target",
+    "Data: party setups and drop tables": "list",
+    data_translation.MAPS_GROUP: "scene",
+    data_translation.CURRENCY_GROUP: "chest",
+    data_translation.SLOTS_GROUP: "armor",
+    data_translation.SPEAKERS_GROUP: "dialogue",
+    data_translation.LINES_GROUP: "dialogue",
 }
 _KEY = Qt.UserRole  # a row's key; a group row holds its English title instead
 _GROUP = Qt.UserRole + 1
@@ -146,6 +184,8 @@ class TranslationTable(QWidget):
         self.remove = QPushButton(_icon("delete", "#de5a62"), "Remove key")
         self.remove.setToolTip("Remove the selected project key, or clear a built-in row")
         self.remove.clicked.connect(self.remove_selected)
+        self.keys = QPushButton(_icon("dialogue", "#d68a3c"), "Give dialogue lines keys")
+        self.keys.clicked.connect(self.give_dialogue_keys)
         self.tree = _ShareTree()
         self.tree.setColumnCount(3)
         self.tree.setHeaderLabels(["Key", "English", "Text"])
@@ -175,7 +215,7 @@ class TranslationTable(QWidget):
         find.addWidget(self.show_box)
         buttons = FlowLayout(spacing=6)  # in a narrow window the buttons wrap
         layout.addLayout(buttons)  # added empty, then filled (see ui_fit.layout_widgets)
-        for button in (self.fill, self.add, self.remove):
+        for button in (self.fill, self.add, self.remove, self.keys):
             buttons.addWidget(button)
         layout.addWidget(self.tree, 1)
         layout.addWidget(self.count)
@@ -215,21 +255,39 @@ class TranslationTable(QWidget):
             words.append((SKILL_GROUPS, sorted(groups.items())))
         return words
 
+    def _project(self):
+        return getattr(self.document, "project", None)
+
+    def _data(self):
+        """The project's data rows (``data_translation.data_groups``), worked out again when
+        the rows are set or the document changed (an undo of Give dialogue lines keys...)."""
+        stamp = (id(self._project()), getattr(self.document, "revision", None))
+        cached = getattr(self, "_data_cache", None)
+        if cached is None or cached[0] != stamp:
+            cached = self._data_cache = (stamp, data_translation.data_groups(self._project()))
+        return cached[1]
+
+    def _known(self):
+        known = {key for _, rows in GROUPS for key, _ in rows}
+        known.update(key for _, rows in self._project_words() for key, _ in rows)
+        known.update(key for _, rows in self._data() for key, _ in rows)
+        return known
+
     def _groups(self):
         """``[(title, [(key, english)], own)]`` in the order the tree shows them."""
-        known = {key for _, rows in GROUPS for key, _ in rows}
-        derived = self._project_words()
-        known.update(key for _, rows in derived for key, _ in rows)
+        known = self._known()
         own = [k for k in self.own if k not in known]
         groups = [(OWN_GROUP, [(k, "") for k in own], True)] if own else []
         groups += [(title, list(rows), False) for title, rows in GROUPS]
-        groups += [(title, rows, False) for title, rows in derived]
+        groups += [(title, rows, False) for title, rows in self._project_words()]
+        groups += [(title, rows, False) for title, rows in self._data()]
         return groups
 
     def set_rows(self, rows, locale=""):
         self.locale = str(locale or "")
         self.texts, self.own = {}, []
-        known = {key for _, group in GROUPS for key, _ in group}
+        self._data_cache = None
+        known = self._known()
         for row in rows or ():
             key, text = str(row.get("key", "")).strip(), str(row.get("text", ""))
             if not key:
@@ -239,6 +297,7 @@ class TranslationTable(QWidget):
             derived = key.startswith(
                 ("controls.action.", "battle.layer.", "battle.group.", "pause.entry.")
             )
+            # a data key whose record is gone stays listed (with the project's own keys)
             if key not in known and not derived and key not in self.own:
                 self.own.append(key)
         self._build()
@@ -252,6 +311,7 @@ class TranslationTable(QWidget):
         self.tree.clear()
         bold = QFont()
         bold.setBold(True)
+        data_titles = {title for title, _rows in self._data()}
         for title, rows, own in self._groups():
             group = QTreeWidgetItem([translate(title), "", ""])
             group.setData(0, _GROUP, title)
@@ -260,9 +320,9 @@ class TranslationTable(QWidget):
             group.setIcon(0, _icon(GROUP_ICONS.get(title, "list")))
             self.tree.addTopLevelItem(group)
             group.setFirstColumnSpanned(True)
-            for key, english in rows:
-                group.addChild(self._row(key, english, own))
-            group.setExpanded(True)
+            group.addChildren([self._row(key, english, own) for key, english in rows])
+            group.setData(1, _GROUP, title in data_titles)  # data: collapsed until searched
+            group.setExpanded(title not in data_titles)
         self._loading = False
         self._filter()
 
@@ -372,6 +432,25 @@ class TranslationTable(QWidget):
         self.changed.emit()
         return name
 
+    def give_dialogue_keys(self):
+        """Put a key on every dialogue line, choice and prompt of the project's events that has
+        none (one undoable step), so each can be translated here; returns how many programs
+        changed."""
+        project = self._project()
+        execute = getattr(self.document, "execute", None)
+        changes = data_translation.keyed_programs(project) if project is not None else []
+        if not changes or execute is None:
+            return 0
+        from .commands import CommandTransaction
+        from .event_editing import ReplaceEventProgramCommand
+
+        tx = CommandTransaction("Give Dialogue Lines Keys")
+        for program_id, new, old in changes:
+            tx.add(ReplaceEventProgramCommand(project.event_programs, program_id, new, old))
+        execute(tx)
+        self._build()
+        return len(changes)
+
     def remove_selected(self):
         item = self.tree.currentItem()
         if item is None or item.parent() is None:
@@ -407,19 +486,33 @@ class TranslationTable(QWidget):
                 item.setHidden(not visible)
                 shown += visible
             group.setHidden(shown == 0)
+            if group.data(1, _GROUP):  # project data: open while a search finds rows in it
+                group.setExpanded(bool(words) and shown > 0)
         self.fill.setEnabled(bool(engine_translations(self.locale)))
         self.fill.setToolTip(
             "Copy the engine's own translation of its words into the empty rows"
             if self.fill.isEnabled()
             else "The engine has no translation of its own words for this locale"
         )
+        project = self._project()
+        missing = data_translation.dialogue_without_keys(project) if project is not None else 0
+        self.keys.setEnabled(bool(missing) and hasattr(self.document, "execute"))
+        self.keys.setToolTip(
+            f"{missing} dialogue lines or choices have no key yet: give them keys so they can "
+            "be translated here"
+            if missing
+            else "Every dialogue line and choice already has a key"
+        )
         self._count()
 
     def _count(self):
         built_in = sum(len(rows) for _, rows in GROUPS)
         done = sum(1 for _, rows in GROUPS for key, _ in rows if key in self.texts)
+        data = [key for _, rows in self._data() for key, _ in rows]
+        data_done = sum(1 for key in data if key in self.texts)
         self.count.setText(
-            f"{built_in} engine words · {done} translated · {len(self.own)} project keys"
+            f"{built_in} engine words · {done} translated · {len(self.own)} project keys · "
+            f"{len(data)} data texts · {data_done} translated"
         )
 
 

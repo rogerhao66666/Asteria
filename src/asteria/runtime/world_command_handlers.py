@@ -191,7 +191,7 @@ def register_standard_world_commands(router, session):
         inventory = session.save.rpg_state.inventory
         before, lost = inventory.count(item_id), len(inventory.overflow)
         inventory.add(item_id, int(_amount(command, "quantity", 1)))
-        name = session.project.rpg_database.items[item_id].display_name
+        name = session.name_of(session.project.rpg_database.items[item_id])
         if inventory.count(item_id) > before:
             gained = inventory.count(item_id) - before
             text = session.tr("notice.gained", "+{count} {name}", count=gained, name=name)

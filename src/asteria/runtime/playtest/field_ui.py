@@ -61,7 +61,11 @@ class FieldUiMixin:
         candidate = self._interaction_candidate()
         if candidate is not None and not self.game.event_busy:
             self.text(
-                tr("field.interact", "E  Interact — {name}", name=candidate.entity.name),
+                tr(
+                    "field.interact",
+                    "E  Interact — {name}",
+                    name=self.game.speaker_name(candidate.entity.name),
+                ),
                 self.width / 2,
                 55,
                 size=26,
@@ -80,16 +84,16 @@ class FieldUiMixin:
         db = self.project.rpg_database
         bag = self.game.save.rpg_state.equipment_bag
         item = next((g for g in bag if g.instance_id == offer.instance_id), None)
-        name = item.equipment.display_name if item is not None else offer.instance_id
+        name = self.game.name_of(item.equipment) if item is not None else offer.instance_id
         actor = db.actors.get(offer.actor_id)
-        who = getattr(actor, "display_name", "") or offer.actor_id
+        who = self.game.name_of(actor, offer.actor_id) or offer.actor_id
         if offer.replaces:
             loadout = self.game.save.rpg_state.loadouts[offer.actor_id]
             worn = next(
                 (g for g in loadout.equipped(offer.slot_id) if g.instance_id == offer.replaces),
                 None,
             )
-            old = worn.equipment.display_name if worn is not None else offer.replaces
+            old = self.game.name_of(worn.equipment) if worn is not None else offer.replaces
             return (
                 self.game.tr("equip_offer.new", "New: {name}", name=name),
                 self.game.tr(
@@ -105,7 +109,7 @@ class FieldUiMixin:
                 "equip_offer.free",
                 "{who} has a free {slot} place. Wear it now?",
                 who=who,
-                slot=offer.slot_id,
+                slot=self.game.slot_name(offer.slot_id),
             ),
         )
 
@@ -231,11 +235,11 @@ class FieldUiMixin:
                 if progress.status != "active" or quest_id not in quests:
                     continue
                 quest = quests[quest_id]
-                lines.append((quest.display_name, (245, 245, 250)))
+                lines.append((self.game.name_of(quest), (245, 245, 250)))
                 for objective in quest.objectives:
                     have = progress.counts.get(objective.objective_id, 0)
                     done = have >= objective.required
-                    label = objective.description or objective.objective_id
+                    label = self.game.description_of(objective, objective.objective_id)
                     lines.append(
                         (
                             f"  {label}  {min(have, objective.required)}/{objective.required}",
@@ -435,9 +439,9 @@ class FieldUiMixin:
                 else:  # the hint ends before the face
                     hint_x, hint_anchor = room[0] - 14, "topright"
             if line.speaker:
-                speaker = self.game.expand_message(line.speaker, plain=True)
+                speaker = self.game.expand_message(self.game.speaker_of(line), plain=True)
                 self.text(speaker, text_x, y + 12, size=24, color=(255, 220, 124))
-            self._draw_message(self.game.expand_message(line.text), text_x, y + 46)
+            self._draw_message(self.game.expand_message(self.game.line_text(line)), text_x, y + 46)
             self.text(
                 self.game.tr("dialogue.continue", "Enter / E: continue"),
                 hint_x,
@@ -448,7 +452,7 @@ class FieldUiMixin:
             )
             return
         self.text(
-            request.prompt or self.game.tr("dialogue.choose", "Choose"),
+            self.game.prompt_of(request) or self.game.tr("dialogue.choose", "Choose"),
             84,
             self.height - 218,
             size=22,
@@ -456,7 +460,7 @@ class FieldUiMixin:
         )
         for i, choice in enumerate(request.choices[:9], 1):
             self.text(
-                f"{i}. {choice.text}",
+                f"{i}. {self.game.line_text(choice)}",
                 84 + ((i - 1) % 3) * 270,
                 self.height - 184 + ((i - 1) // 3) * 26,
                 size=20,

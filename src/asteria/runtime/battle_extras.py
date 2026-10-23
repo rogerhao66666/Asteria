@@ -176,7 +176,7 @@ def extras_layout(
         names = []
         for active in states.active_states() if states is not None else ():
             definition = states.registry.get(active.state_id)
-            shown = getattr(definition, "display_name", "") or active.state_id
+            shown = game.name_of(definition) or active.state_id
             if active.state_id not in held:  # the held state is already the red tile
                 names.append(shown.replace("_", " "))
         if broken and "broken" in held:  # what Break does, in words

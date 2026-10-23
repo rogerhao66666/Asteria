@@ -46,7 +46,7 @@ class WorkshopMixin:
                         self._workshop_message = game.tr(
                             "workshop.took_out",
                             "Took {name} out of {socket}",
-                            name=attached.display_name,
+                            name=game.name_of(attached),
                             socket=socket_id,
                         )
                         break
@@ -71,7 +71,7 @@ class WorkshopMixin:
                 return game.tr(
                     "workshop.socketed",
                     "Socketed {name} into {socket}",
-                    name=item.display_name,
+                    name=game.name_of(item),
                     socket=socket.socket_id,
                 )
         return game.tr(
@@ -90,7 +90,8 @@ class WorkshopMixin:
             except ValueError:
                 continue
             self.game.refresh_actor_combatants(actor)
-            return self.game.tr("workshop.point_spent", "+1 {name}", name=node.display_name)
+            name = self.game.name_of(node)
+            return self.game.tr("workshop.point_spent", "+1 {name}", name=name)
         return self.game.tr("workshop.no_points", "No attribute points left")
 
     def _draw_workshop(self):
@@ -125,7 +126,8 @@ class WorkshopMixin:
         if weapon is None:
             self.text(tr("workshop.no_weapon", "No weapon equipped"), 44, y, size=22)
         else:
-            self.text(f"{weapon.equipment.display_name}  +{weapon.refine_level}", 44, y, size=26)
+            held = self.game.name_of(weapon.equipment)
+            self.text(f"{held}  +{weapon.refine_level}", 44, y, size=26)
             if rules is not None and weapon.refine_level < rules.max_level:
                 chance = round(rules.chance(weapon.refine_level) * 100)
                 self.text(
@@ -146,7 +148,7 @@ class WorkshopMixin:
             for socket in weapon.equipment.sockets:
                 attached = weapon.attachments.get(socket.socket_id)
                 if attached is not None:
-                    label = attached.display_name
+                    label = self.game.name_of(attached)
                 elif socket.locked:
                     label = tr("workshop.locked", "locked")
                 else:
@@ -179,7 +181,7 @@ class WorkshopMixin:
             ranks = allocation.allocations.get("attributes", {})
             for i, node in enumerate(graph.nodes):
                 self.text(
-                    f"{node.display_name}: {ranks.get(node.node_id, 0)}",
+                    f"{self.game.name_of(node)}: {ranks.get(node.node_id, 0)}",
                     540,
                     160 + i * 30,
                     size=20,

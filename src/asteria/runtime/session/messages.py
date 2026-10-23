@@ -44,6 +44,66 @@ class MessagesMixin:
         localizer.locale = str(chosen or localizer.default_locale)
         return localizer
 
+    @property
+    def data_lookup(self):
+        """``Localizer.lookup`` when the project has translations, else None (the screens then
+        draw the records' own text without looking anything up)."""
+        localizer = self.localizer
+        return localizer.lookup if localizer.tables else None
+
+    def name_of(self, record, fallback=None):
+        """A project record's name in the player's language (``rpg/data_text.py``, D60)."""
+        from asteria.rpg.data_text import name_of
+
+        return name_of(self.data_lookup, record, fallback)
+
+    def description_of(self, record, fallback=""):
+        """A project record's description in the player's language (D60)."""
+        from asteria.rpg.data_text import description_of
+
+        return description_of(self.data_lookup, record, fallback)
+
+    def line_text(self, line):
+        """A dialogue line's (or choice's) text in the player's language: the locale table's
+        text under its ``text_key``, else the text as written (D60)."""
+        from asteria.rpg.data_text import text_by_key
+
+        return text_by_key(self.data_lookup, getattr(line, "text_key", ""), line.text)
+
+    def speaker_of(self, line):
+        """Who speaks ``line``, in the player's language (``data.speaker.<name>.name``)."""
+        from asteria.rpg.data_text import speaker_name
+
+        return speaker_name(self.data_lookup, line.speaker)
+
+    def prompt_of(self, request):
+        """A choice's prompt in the player's language (its ``prompt_key``), else as written."""
+        from asteria.rpg.data_text import text_by_key
+
+        return text_by_key(self.data_lookup, getattr(request, "prompt_key", ""), request.prompt)
+
+    def speaker_name(self, name):
+        """A person's name as written in the events or on an entity, in the player's language
+        (``data.speaker.<name>.name``): NPCs carry their speaking name."""
+        from asteria.rpg.data_text import speaker_name
+
+        return speaker_name(self.data_lookup, name)
+
+    def slot_name(self, slot_id):
+        """An equipment slot in the player's language (``data.slot.<id>.name``), else its id."""
+        lookup = self.data_lookup
+        if lookup is None:
+            return slot_id
+        from asteria.rpg.data_text import key
+
+        return lookup(key("slot", slot_id)) or slot_id
+
+    def map_name(self, scene_id, own):
+        """A map's name in the player's language (``data.map.<scene id>.name``, D60)."""
+        from asteria.rpg.data_text import map_name
+
+        return map_name(self.data_lookup, scene_id, own)
+
     def set_locale(self, locale):
         if str(locale) not in self.localizer.locales():
             raise GameSessionError(f"unknown locale: {locale}")
@@ -68,11 +128,11 @@ class MessagesMixin:
         def party(index):
             ids = state.party_active_actor_ids
             actor = db.actors.get(ids[index - 1]) if 0 < index <= len(ids) else None
-            return None if actor is None else actor.display_name
+            return None if actor is None else self.name_of(actor)
 
         def actor_name(actor_id):
             actor = db.actors.get(actor_id)
-            return None if actor is None else actor.display_name
+            return None if actor is None else self.name_of(actor)
 
         return MessageContext(
             variable=variable,

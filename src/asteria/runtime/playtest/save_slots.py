@@ -31,7 +31,9 @@ class SaveSlotsMixin:
         from asteria.runtime.save_slots import SaveSlots, SlotMenu
 
         self.slot_menu = SlotMenu(
-            SaveSlots(self.resource_root / "saves", self.project), mode, tr=self.game.tr
+            SaveSlots(self.resource_root / "saves", self.project, lookup=self.game.data_lookup),
+            mode,
+            tr=self.game.tr,
         )
         self._slots_back = back
         self._ui_mode = "slots"

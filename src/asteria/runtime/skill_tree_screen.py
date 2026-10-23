@@ -313,12 +313,12 @@ class SkillTreeScreen:
             unmet = game.tr("skill_tree.unmet", "requirements not met")
             reason = (preview.reasons or (unmet,))[0]
             for other in sorted(graph.nodes, key=lambda x: -len(x.node_id)):
-                reason = reason.replace(other.node_id, other.display_name)  # ids -> names
+                reason = reason.replace(other.node_id, game.name_of(other))  # ids -> names
             self._say(
                 game.tr(
                     "skill_tree.cannot_learn",
                     "Cannot learn {name}: {reason}",
-                    name=node.display_name,
+                    name=game.name_of(node),
                     reason=reason,
                 )
             )
@@ -329,7 +329,7 @@ class SkillTreeScreen:
             game.tr(
                 "skill_tree.learned",
                 "Learned {name} (rank {rank}/{max})",
-                name=node.display_name,
+                name=game.name_of(node),
                 rank=rank,
                 max=node.max_rank,
             )
@@ -393,7 +393,7 @@ class SkillTreeScreen:
             )
         )
         classes = ", ".join(
-            game.project.rpg_database.classes[c].display_name
+            game.name_of(game.project.rpg_database.classes[c])
             for c in progression.active_class_ids
             if c in game.project.rpg_database.classes
         )
@@ -401,7 +401,7 @@ class SkillTreeScreen:
             tr(
                 "skill_tree.header",
                 "{tree}   ·   {classes}   ·   Lv {level}",
-                tree=graph.display_name,
+                tree=game.name_of(graph),
                 classes=classes or "—",
                 level=progression.level,
             ),
@@ -464,7 +464,7 @@ class SkillTreeScreen:
             if zoom < 0.55:  # zoomed far out: pictures and ranks only
                 continue
             room = node_w - shift * 2 - icon_size - 16 * zoom
-            name, size = node.display_name, max(10, round(18 * zoom))
+            name, size = rt.game.name_of(node), max(10, round(18 * zoom))
             while size > 9 and rt.text_width(name, size) > room:
                 size -= 1
             while len(name) > 4 and rt.text_width(name, size) > room:
@@ -530,7 +530,11 @@ class SkillTreeScreen:
         rank = allocation.rank(graph.graph_id, node.node_id)
         icon = rt._draw_icon(self.node_icon(node), x + 16, y + 10, 36)
         rt.text(
-            node.display_name, x + (60 if icon else 16), y + 14, size=24, color=(255, 220, 124)
+            rt.game.name_of(node),
+            x + (60 if icon else 16),
+            y + 14,
+            size=24,
+            color=(255, 220, 124),
         )
         status = self.status(graph, node)
         status = tr(STATUS_WORDS[status], status)  # the status is an id: its word is drawn
@@ -582,7 +586,7 @@ class SkillTreeScreen:
             for req in reqs:
                 have = allocation.rank(graph.graph_id, req.node_id)
                 mark = "✓" if have >= req.minimum_rank else "·"
-                name = graph.node(req.node_id).display_name
+                name = rt.game.name_of(graph.node(req.node_id))
                 rt.text(f"  {mark} {name} {req.minimum_rank}", x + 16, row, size=18)
                 row += 22
 

@@ -209,7 +209,7 @@ class BattleFlowMixin:
             names = []
             for active in states.active_states() if states is not None else ():
                 definition = states.registry.get(active.state_id)
-                shown = getattr(definition, "display_name", "") or active.state_id
+                shown = self.game.name_of(definition) or active.state_id
                 names.append(shown.replace("_", " "))
             if names and not panel_has_bp:  # the side panel shows them as chips
                 from asteria.presentation.text_cells import cut
@@ -299,7 +299,8 @@ class BattleFlowMixin:
         aftermath = self.game.build_aftermath(applied, before, gained)
         return VictoryScreen(
             aftermath,
-            item_names={k: v.display_name for k, v in {**db.items, **db.equipment}.items()},
+            item_names={k: self.game.name_of(v) for k, v in {**db.items, **db.equipment}.items()},
+            currency_names=self.game.currency_names() or None,
             tr=self.game.tr,
         )
 

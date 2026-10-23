@@ -34,9 +34,15 @@ def text_keys(prefix, options):
     return {option_id: f"{prefix}.{option_id}" for option_id, _ in options}
 
 
-def _price_text(prices):
+def _price_text(prices, names=None):
+    """``"30 gold + 2 gems"``; ``names`` words a currency id (D60: its translation)."""
+    names = names or {}
     return (
-        " + ".join(f"{amount:g} {currency}" for currency, amount in sorted(prices.items())) or "—"
+        " + ".join(
+            f"{amount:g} {names.get(currency, currency)}"
+            for currency, amount in sorted(prices.items())
+        )
+        or "—"
     )
 
 
@@ -93,6 +99,7 @@ class ShopScreen:
         if shop is None:
             return ()
         items = self.game.project.rpg_database.items
+        names = self.game.currency_names()  # once per list, not once per row
         state = self.game.save.rpg_state
         rows = []
         shops = self.game.shops
@@ -112,8 +119,8 @@ class ShopScreen:
             rows.append(
                 ShopRow(
                     entry.item_id,
-                    item.display_name if item else entry.item_id,
-                    _price_text(prices),
+                    self.game.name_of(item, entry.item_id),
+                    _price_text(prices, names),
                     "-" if remaining is None else str(remaining),
                     owned,
                     available,
@@ -123,7 +130,8 @@ class ShopScreen:
 
     def wallet(self):
         currencies = self.game.save.rpg_state.currencies
-        return "  ".join(f"{currencies[k]:g} {k}" for k in sorted(currencies))
+        names = self.game.currency_names()
+        return "  ".join(f"{currencies[k]:g} {names.get(k, k)}" for k in sorted(currencies))
 
     def switch_tab(self):
         self.tab = "sell" if self.tab == "buy" else "buy"
@@ -181,13 +189,14 @@ def quest_rows(game):
             value = min(required, log.objective_value(quest_id, objective))
             objectives.append(
                 (
-                    objective.description or objective.objective_id,
+                    game.description_of(objective, objective.objective_id),
                     value,
                     required,
                     value >= required,
                 )
             )
-        rows.append(QuestRow(quest_id, quest.display_name, progress.status, tuple(objectives)))
+        name = game.name_of(quest)
+        rows.append(QuestRow(quest_id, name, progress.status, tuple(objectives)))
     return tuple(rows)
 
 
@@ -214,7 +223,7 @@ class CraftingScreen:
 
     def _name(self, item_id):
         item = self.game.project.rpg_database.items.get(item_id)
-        return item.display_name if item else item_id
+        return self.game.name_of(item, item_id)
 
     def rows(self):
         inventory = self.game.save.rpg_state.inventory
@@ -233,7 +242,7 @@ class CraftingScreen:
             rows.append(
                 CraftingRow(
                     recipe.recipe_id,
-                    recipe.display_name,
+                    self.game.name_of(recipe),
                     outputs,
                     materials,
                     all(have >= need for _, need, have in materials),
@@ -297,7 +306,7 @@ def achievement_rows(game):
                 )
             )
         else:
-            rows.append((achievement.display_name, achievement.description, done))
+            rows.append((game.name_of(achievement), game.description_of(achievement), done))
     return tuple(rows)
 
 
@@ -320,10 +329,10 @@ def bestiary_rows(game):
                 continue
             item_id = key[5:]
             record = db.items.get(item_id) or db.equipment.get(item_id)
-            drops.append((getattr(record, "display_name", "") or item_id, times))
+            drops.append((game.name_of(record, item_id) or item_id, times))
         rows.append(
             (
-                enemy.display_name,
+                game.name_of(enemy),
                 entry.get("seen", 0),
                 entry.get("defeated", 0),
                 entry.get("captured", 0),

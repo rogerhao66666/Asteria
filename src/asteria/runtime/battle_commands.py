@@ -145,6 +145,15 @@ class BattleCommands:
         return self.game.tr(f"battle.layer.{name}", layer.label)
 
     def _name(self, ability_id):
+        """A skill's name: its translation (``data.ability.<id>.name``, D60), else the manifest's
+        label, else its id in words."""
+        lookup = self.game.data_lookup
+        if lookup is not None:
+            from asteria.rpg.data_text import key
+
+            translated = lookup(key("ability", ability_id))
+            if translated:
+                return translated
         meta = self.labels.get(ability_id) or {}
         return meta.get("label") or ability_id.replace("_", " ").title()
 
@@ -213,7 +222,7 @@ class BattleCommands:
                     cost_text=self._cost_text(definition),
                     enabled=not reason,
                     disabled_reason=reason,
-                    detail=getattr(definition, "description", ""),
+                    detail=self.game.description_of(definition),
                     order=len(rows),
                 )
             )
@@ -327,7 +336,7 @@ class BattleCommands:
                     detail=(
                         game.tr("battle.hint.concoct", "Pick ingredients")
                         if definition.concoct_station
-                        else getattr(definition, "description", "")
+                        else self.game.description_of(definition)
                     ),
                     order=len(rows),
                 )
@@ -380,7 +389,7 @@ class BattleCommands:
             rows.append(
                 BattleActionEntry(
                     item_id,
-                    f"{item.display_name}",
+                    self.game.name_of(item, item_id),
                     category="Items",
                     icon_asset_id=getattr(item, "icon_id", "") or None,
                     cost_text=f"x{count}",
@@ -413,7 +422,7 @@ class BattleCommands:
             left = inventory.count(item_id) - chosen.count(item_id)
             if left > 0:
                 item = self.game.project.rpg_database.items.get(item_id)
-                name = item.display_name if item else item_id
+                name = self.game.name_of(item, item_id)
                 rows.append(
                     BattleActionEntry(
                         item_id, name, category=step.title(), cost_text=f"x{left}", order=len(rows)
@@ -564,7 +573,7 @@ class BattleCommands:
         if key == "pet" and self.game.pet_name(number):
             return self.game.pet_name(number)
         record = db.actors.get(key) or db.enemies.get(key)
-        name = getattr(record, "display_name", None) or key.replace("_", " ").title()
+        name = self.game.name_of(record) or key.replace("_", " ").title()
         same = [m for m in self.game.battle.members if m.split(":", 1)[0] == key]
         return f"{name} {number}" if number and len(same) > 1 else name
 

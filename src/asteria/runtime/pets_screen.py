@@ -57,7 +57,7 @@ class PetsScreen:
             return
         if inp.just_pressed("confirm") or inp.just_pressed("interact"):
             self.game.set_active_pet(pet.instance_id)
-            name = pet.name(self.game.pet_species(pet))
+            name = self.game.pet_display(pet)
             self._say(self.game.tr("pets.sent_out", "{name} will be sent out", name=name))
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
@@ -77,7 +77,7 @@ class PetsScreen:
                 continue
             if game.pet_evolution(pet.instance_id, item_id=evolution.item_id) is evolution:
                 game.evolve_pet(pet.instance_id, item_id=evolution.item_id)
-                self._say(game.tr("pets.evolved", "{name} evolved!", name=pet.name(species)))
+                self._say(game.tr("pets.evolved", "{name} evolved!", name=game.pet_display(pet)))
                 return
         self._say(game.tr("pets.not_ready", "Not ready to evolve"))
 
@@ -135,11 +135,11 @@ class PetsScreen:
                     color=TITLE,
                     anchor="center",
                 )
-            name = pet.name(species)
+            name = self.game.pet_display(pet)
             if self.renaming is not None and selected:
                 name = self.renaming + "_"
             rt.text(name, 112, y + 8, size=24, color=(255, 255, 255))
-            kind = species.display_name if species else pet.species_id
+            kind = self.game.name_of(species, pet.species_id)
             line = tr("pets.level", "{kind}   Lv {level}", kind=kind, level=pet.level)
             if species is not None and pet.affinity:
                 line += "   " + tr("pets.bond", "Bond {bond}", bond=f"{pet.affinity:g}")

@@ -170,7 +170,8 @@ class BagScreen:
     def _name(self, item):
         from asteria.rpg.loot import item_display_name
 
-        return item_display_name(item, self.game.project.rpg_database.affixes, brief=True)
+        affixes = self.game.project.rpg_database.affixes
+        return item_display_name(item, affixes, brief=True, name_of=self.game.name_of)
 
     def handle(self, dt=0.0):
         inp = self.rt.input
@@ -206,7 +207,7 @@ class BagScreen:
         if item is not None:
             icon_id = getattr(item.equipment, "icon_id", "")
             if not (icon_id and rt._draw_icon(icon_id, x + 7, y + 7, CELL - 14)):
-                words = item.equipment.display_name.split()
+                words = rt.game.name_of(item.equipment).split()
                 text = "".join(w[0] for w in words[:2]).upper()
                 rt.text(text, x + CELL / 2, y + CELL / 2, size=26, color=color, center=True)
         elif label:
@@ -288,7 +289,7 @@ class BagScreen:
         rarity = rarities.get(_rarity(item))
         color = rarity.rgb() if rarity is not None else (230, 230, 230)
         rt.text(self._name(item), x + 16, y + 14, size=26, color=color)
-        kind = rarity.display_name if rarity is not None else _rarity(item)
+        kind = game.name_of(rarity) if rarity is not None else _rarity(item)
         kind = kind or tr("bag.common", "Common")
         rt.text(
             tr(
@@ -330,7 +331,7 @@ class BagScreen:
             row += 26
         affixes = db.affixes if (db := game.project.rpg_database) else {}
         names = [
-            affixes[a.affix_id].display_name for a in item.rolled_affixes if a.affix_id in affixes
+            game.name_of(affixes[a.affix_id]) for a in item.rolled_affixes if a.affix_id in affixes
         ]
         if names:
             row += 8
@@ -343,7 +344,7 @@ class BagScreen:
             row += 8
             total = len(definition.equipment_ids)
             rt.text(
-                f"{definition.display_name}  ({have}/{total})",
+                f"{game.name_of(definition)}  ({have}/{total})",
                 x + 16,
                 row,
                 size=20,

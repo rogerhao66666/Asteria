@@ -351,6 +351,7 @@ class EventRunner:
             speaker=str(instruction.args.get("speaker", "")),
             portrait_asset_id=str(instruction.args.get("portrait_asset_id", "")),
             portrait_side=side if side in PORTRAIT_SIDES else "left",  # unknown: the default
+            text_key=str(instruction.args.get("text_key", "")),
         )
         self.dialogue.dialogue = DialogueRequest(line)
 
@@ -362,12 +363,15 @@ class EventRunner:
         for item in raw_choices:
             if not isinstance(item, dict) or "text" not in item or "value" not in item:
                 raise EventRunnerError("invalid CHOICE entry")
-            choices.append(DialogueChoice(str(item["text"]), item["value"]))
+            choices.append(
+                DialogueChoice(str(item["text"]), item["value"], str(item.get("text_key", "")))
+            )
         self.dialogue.choice = ChoiceRequest(
             str(instruction.args.get("prompt", "")),
             choices,
             variable_name=str(instruction.args.get("variable_name", "")),
             local_name=str(instruction.args.get("local_name", "")),
+            prompt_key=str(instruction.args.get("prompt_key", "")),
         )
 
     def acknowledge_dialogue(self):

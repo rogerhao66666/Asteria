@@ -196,6 +196,7 @@ class FieldPlayMixin:
                 rng=random.Random(f"{scene.id}:loot"),
                 collect=self._collect_loot,
             )
+            loot.name_of = self.name_of
 
             def drop_loot(event):
                 if event.kind == "drop":
