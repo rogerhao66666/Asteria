@@ -1,0 +1,55 @@
+name: tests
+
+# Every push and pull request: lint and format check (ruff), then the whole test suite
+# headless (SDL dummy drivers, Qt offscreen). Real-window checks (scripts/*_live_check.py)
+# need a desktop and stay local; the evidence they produce is committed under docs/audits.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SDL_VIDEODRIVER: dummy
+  SDL_AUDIODRIVER: dummy
+  QT_QPA_PLATFORM: offscreen
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install "ruff>=0.16"
+      - run: ruff check src scripts tests reference_projects
+      - run: ruff format --check src scripts tests reference_projects
+
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Qt offscreen and SDL libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 libfontconfig1 \
+            libglib2.0-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 \
+            libxcb-xkb1 libxrender1 libsdl2-2.0-0
+      - run: pip install -e ".[pygame,editor,mv,dev]"
+      - run: python -m pytest tests -q -p no:cacheprovider --durations=15
