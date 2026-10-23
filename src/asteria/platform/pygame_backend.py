@@ -1,4 +1,5 @@
 from asteria.assets import TextureResource
+from asteria.graphics.scaling import resized
 
 from .backend import RuntimeBackend, TextureBackend
 
@@ -111,12 +112,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             raise RuntimeError("pygame screen not configured")
         src = self.pg.Rect(*draw_command.source)
         image = texture_resource.backend_handle.subsurface(src)
-        target_size = (
-            max(1, int(draw_command.width)),
-            max(1, int(draw_command.height)),
-        )
-        if image.get_size() != target_size:
-            image = self.pg.transform.scale(image, target_size)
+        image = resized(self.pg, image, (int(draw_command.width), int(draw_command.height)))
         if draw_command.flip_x:
             image = self.pg.transform.flip(image, True, False)
         if draw_command.opacity < 1.0:
@@ -208,12 +204,7 @@ class PygameTextureBackend(TextureBackend):
             raise RuntimeError("pygame screen not configured")
         src = self.pg.Rect(*draw_command.source)
         image = texture_resource.backend_handle.subsurface(src)
-        target_size = (
-            max(1, int(draw_command.width)),
-            max(1, int(draw_command.height)),
-        )
-        if image.get_size() != target_size:
-            image = self.pg.transform.scale(image, target_size)
+        image = resized(self.pg, image, (int(draw_command.width), int(draw_command.height)))
         if draw_command.flip_x:
             image = self.pg.transform.flip(image, True, False)
         if draw_command.opacity < 1.0:

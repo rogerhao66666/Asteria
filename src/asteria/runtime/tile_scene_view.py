@@ -22,6 +22,7 @@ from __future__ import annotations
 from math import floor
 
 from asteria.core import Transform
+from asteria.graphics.scaling import resized
 
 from .camera import Camera2D
 from .components2d import (
@@ -308,12 +309,8 @@ class TileSceneView:
                 (frame.x, frame.y, frame.width, frame.height)
             )
             size = (max(1, round(frame.width * scale)), max(1, round(frame.height * scale)))
-            if sheet.smooth:  # a painted or rendered sheet: blended pixels, not a sharp grid
-                if source.get_bitsize() < 24:
-                    source = source.convert_alpha()
-                image = self.pg.transform.smoothscale(source, size)
-            else:
-                image = self.pg.transform.scale(source, size)
+            # a painted or rendered sheet asks for blended pixels, pixel art for a sharp grid
+            image = resized(self.pg, source, size, smooth=sheet.smooth)
             self._frames[key] = (image, frame.pivot_x, frame.pivot_y)
             image = self._frames[key]
         return image
@@ -547,8 +544,7 @@ class TileSceneView:
     def _draw_skeleton_texture(self, screen, draw):
         """Draw a skeletal slot with the same pivot and rotation as TextureDraw."""
         image = self._texture(draw.texture_asset_id).subsurface(self.pg.Rect(draw.source))
-        size = (max(1, round(draw.width)), max(1, round(draw.height)))
-        image = self.pg.transform.scale(image, size)
+        image = resized(self.pg, image, (round(draw.width), round(draw.height)))
         if draw.flip_x:
             image = self.pg.transform.flip(image, True, False)
         center = (

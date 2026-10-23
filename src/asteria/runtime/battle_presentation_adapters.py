@@ -138,14 +138,9 @@ class PygameTextureDrawer:
 
     def resized(self, asset_id, image, size):
         """``image`` at ``size`` the way its sheet asks (see ``smooth``)."""
-        pg = self.host.pg
-        if image.get_size() == size:
-            return image
-        if not self.smooth(asset_id):
-            return pg.transform.scale(image, size)
-        if image.get_bitsize() < 24:  # smoothscale needs a 24/32-bit surface
-            image = image.convert_alpha()
-        return pg.transform.smoothscale(image, size)
+        from asteria.graphics.scaling import resized
+
+        return resized(self.host.pg, image, size, smooth=self.smooth(asset_id))
 
     def surface(self, asset_id):
         lookup = getattr(self.resolver, "generated_image", None)
