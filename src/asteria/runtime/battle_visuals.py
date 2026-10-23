@@ -297,12 +297,14 @@ class BattleVisualResolver:
         "left"|"right"}``.
 
         Combatants stand in the free stage between the HUD columns of the UI
-        ``layout`` (BattleUiLayoutProfile), above the action menu: up to three
-        per column, the first column nearest the centre, the second staggered
-        behind it. Members on the right face left.
+        ``layout`` (BattleUiLayoutProfile), above the action menu: up to ``column_size``
+        per column, the first column nearest the centre, the next ones staggered
+        behind it (the layout's ``column_spacing`` apart, else clear of each other's
+        frames). Members on the right face left.
 
         ``template`` (a Side-View Positions or Portrait Party Layout record) then moves them to
-        its zones; ``party_sides`` are the sides a portrait layout keeps in the HUD.
+        its zones, their feet kept on the ground band while the layout's ``feet_on_ground`` is
+        on; ``party_sides`` are the sides a portrait layout keeps in the HUD.
         ``hud_portraits`` are the members whose party cards show a portrait (a bottom-row HUD
         with portraits over its cells stands taller).
         """
@@ -354,6 +356,9 @@ class BattleVisualResolver:
             if zone != "left" and getattr(layout, "stage_front_right", None) is not None:
                 front = float(layout.stage_front_right)
             front_x = left_edge + stage * front if zone == "left" else right_edge - stage * front
+            spacing = float(getattr(layout, "column_spacing", 0.0) or 0.0)
+            if zone != "left" and getattr(layout, "column_spacing_right", None) is not None:
+                spacing = float(layout.column_spacing_right)
 
             def logical_size(member_id):
                 profile = self.profile_for(member_id)
@@ -375,7 +380,8 @@ class BattleVisualResolver:
                 profile = self.profile_for(member_id)
                 return apart_zone and profile is not None and not profile.hud_visible
 
-            large = [m for m in members if sizes[m][1] > smallest * 1.5 or apart(m)]
+            oversized = {m for m in members if sizes[m][1] > smallest * 1.5}
+            large = [m for m in members if m in oversized or apart(m)]
             regular = [m for m in members if m not in large]
             per_column = max(1, int(getattr(layout, "column_size", 3)))
             columns = [regular[i : i + per_column] for i in range(0, len(regular), per_column)]
@@ -383,10 +389,13 @@ class BattleVisualResolver:
                 columns = [[m] for m in large] + columns  # toward the centre of the stage
             else:
                 columns += [[m] for m in large]
-            # Column centres: each column clears the previous one by the widest sprites.
+            # Column centres: each column stands the layout's spacing behind the previous one, or
+            # (spacing 0, or a boss in either column) clears it by the widest sprites.
             xs, x = [], front_x
             for index, column in enumerate(columns):
-                if index:
+                if index and spacing > 0 and not oversized & {*columns[index - 1], *column}:
+                    x -= direction * spacing
+                elif index:
                     previous = max(sizes[m][0] for m in columns[index - 1])
                     x -= direction * (previous / 2 + max(sizes[m][0] for m in column) / 2 + 4)
                 xs.append(x)
@@ -443,14 +452,16 @@ class BattleVisualResolver:
                         )
                     )
         if template is not None:
-            visuals = self._staged(visuals, sides, placement, template, party_sides)
+            ground = (top, bottom) if getattr(layout, "feet_on_ground", True) else None
+            visuals = self._staged(visuals, sides, placement, template, party_sides, ground)
         return tuple(visuals)
 
-    def _staged(self, visuals, sides, placement, template, party_sides):
+    def _staged(self, visuals, sides, placement, template, party_sides, ground=None):
         """``visuals`` moved to the zones of an authored staging template: a side-view one
         stands each side in its left / right zone; a portrait one keeps the party in the HUD
         (bodies hidden when it says so) and lines the others up in its battlefield zone. Members
-        past a zone's cap keep their place but are not drawn."""
+        past a zone's cap keep their place but are not drawn. ``ground`` ``(top, bottom)``: the
+        band a zone's feet are kept in (None = where the template says)."""
         from dataclasses import replace
 
         from asteria.presentation.battle_portrait_party_template import (
@@ -495,12 +506,13 @@ class BattleVisualResolver:
                 moved.append(replace(visual, body_hidden=hidden))
                 continue
             transform = self.profile_for(visual.member_id).transform
+            y = spot.y if ground is None else min(max(spot.y, ground[0]), ground[1])
             anchor = replace(
                 visual.anchor,
                 x=spot.x + transform.offset_x,
-                y=spot.y + transform.offset_y,
+                y=y + transform.offset_y,
                 facing=spot.facing,
-                depth=spot.y + spot.depth,
+                depth=y + spot.depth,
             )
             moved.append(replace(visual, anchor=anchor, body_hidden=hidden))
         return moved

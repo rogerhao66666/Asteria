@@ -363,6 +363,18 @@ HELP = {
     "hud_portrait_size": "The portrait's square in layout units. 0 = as tall as the card's "
     "rows. Beside the rows it is never taller than they are, and the name and bars always keep "
     "their room.",
+    "stage_front_right": "How far in from the right edge the front column of the side on the "
+    "right stands, as a share of the stage width. The same as Stage Front = follow it; 0 = the "
+    "side stands against its edge.",
+    "column_spacing": "How far apart neighbouring columns of one side stand, centre to centre, "
+    "in layout units. 0 = automatic: far enough that their whole pictures never overlap. A "
+    "column with a boss in it always keeps the automatic distance.",
+    "column_spacing_right": "Column Spacing for the side standing on the right (the party, "
+    "unless the game places it elsewhere). The same as Column Spacing = follow it.",
+    "feet_on_ground": "Every fighter's feet stay on the ground, between Stage Top and the "
+    "bottom of the stage, even where a Side-View Positions or Portrait Party Layout record puts "
+    "them higher or lower. A sprite's own Offset Y still lifts a flyer. Off = a record's "
+    "positions are used as written.",
     "class_assignments": "The jobs this character has; the first is the main job.",
     "base_stats": "Starting numbers before jobs, levels, gear and points.",
     "base_resources": "HP, MP and other pools at the start.",

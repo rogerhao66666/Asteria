@@ -1,0 +1,686 @@
+{
+  "driver": "cocoa",
+  "cases": {
+    "3p_crypt_boss": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "pet:war_slinger#1",
+          "x": 199.2,
+          "y": 207.2,
+          "px": 531,
+          "py": 552,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_01",
+          "x": 262.7,
+          "y": 166.1,
+          "px": 701,
+          "py": 443,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 262.7,
+          "y": 230.6,
+          "px": 701,
+          "py": 615,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 326.2,
+          "y": 250.0,
+          "px": 870,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:2",
+          "x": 231.2,
+          "y": 185.4,
+          "px": 617,
+          "py": 495,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:3",
+          "x": 231.2,
+          "y": 250.0,
+          "px": 617,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_ancient:1",
+          "x": 96.0,
+          "y": 250.1,
+          "px": 256,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "4p_boss_room": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "pet:war_slinger#1",
+          "x": 199.2,
+          "y": 207.2,
+          "px": 531,
+          "py": 552,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_01",
+          "x": 262.7,
+          "y": 166.1,
+          "px": 701,
+          "py": 443,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 262.7,
+          "y": 230.6,
+          "px": 701,
+          "py": 615,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 326.2,
+          "y": 185.4,
+          "px": 870,
+          "py": 495,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 326.2,
+          "y": 250.0,
+          "px": 870,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "crimson_warlord:1",
+          "x": 88.5,
+          "y": 250.0,
+          "px": 236,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "4p_crypt_boss": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "pet:war_slinger#1",
+          "x": 199.2,
+          "y": 207.2,
+          "px": 531,
+          "py": 552,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_01",
+          "x": 262.7,
+          "y": 166.1,
+          "px": 701,
+          "py": 443,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 262.7,
+          "y": 230.6,
+          "px": 701,
+          "py": 615,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 326.2,
+          "y": 185.4,
+          "px": 870,
+          "py": 495,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 326.2,
+          "y": 250.0,
+          "px": 870,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:2",
+          "x": 231.2,
+          "y": 185.4,
+          "px": 617,
+          "py": 495,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:3",
+          "x": 231.2,
+          "y": 250.0,
+          "px": 617,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_ancient:1",
+          "x": 96.0,
+          "y": 250.1,
+          "px": 256,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "3p_woods_boss": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "hero_01",
+          "x": 262.7,
+          "y": 185.4,
+          "px": 701,
+          "py": 495,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 262.7,
+          "y": 250.0,
+          "px": 701,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 326.2,
+          "y": 211.3,
+          "px": 870,
+          "py": 563,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_beast:1",
+          "x": 168.8,
+          "y": 185.4,
+          "px": 450,
+          "py": 495,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:2",
+          "x": 168.8,
+          "y": 250.0,
+          "px": 450,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:3",
+          "x": 51.2,
+          "y": 211.3,
+          "px": 137,
+          "py": 563,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "4p_crypt_guard_template": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "pet:war_slinger#1",
+          "x": 324.0,
+          "y": 256.0,
+          "px": 864,
+          "py": 683,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_01",
+          "x": 236.0,
+          "y": 120.0,
+          "px": 629,
+          "py": 320,
+          "facing": "left",
+          "on_wall": true
+        },
+        {
+          "member": "hero_02",
+          "x": 258.0,
+          "y": 154.0,
+          "px": 688,
+          "py": 411,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 280.0,
+          "y": 188.0,
+          "px": 747,
+          "py": 501,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 302.0,
+          "y": 222.0,
+          "px": 805,
+          "py": 592,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:1",
+          "x": 150.0,
+          "y": 236.0,
+          "px": 400,
+          "py": 629,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:2",
+          "x": 116.0,
+          "y": 196.0,
+          "px": 309,
+          "py": 523,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "skeleton_hunter:3",
+          "x": 82.0,
+          "y": 156.0,
+          "px": 219,
+          "py": 416,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "4p_woods_ambush": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "hero_01",
+          "x": 262.7,
+          "y": 185.4,
+          "px": 701,
+          "py": 495,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 262.7,
+          "y": 250.0,
+          "px": 701,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 326.2,
+          "y": 166.1,
+          "px": 870,
+          "py": 443,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 326.2,
+          "y": 230.6,
+          "px": 870,
+          "py": 615,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:1",
+          "x": 141.6,
+          "y": 185.4,
+          "px": 378,
+          "py": 495,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:2",
+          "x": 141.6,
+          "y": 250.0,
+          "px": 378,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:3",
+          "x": 51.2,
+          "y": 211.3,
+          "px": 137,
+          "py": 563,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "1p_woods_patrol": {
+      "ground_y": 126.89999999999999,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "pet:war_slinger#1",
+          "x": 262.7,
+          "y": 207.2,
+          "px": 701,
+          "py": 552,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_01",
+          "x": 326.2,
+          "y": 211.3,
+          "px": 870,
+          "py": 563,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:1",
+          "x": 63.7,
+          "y": 185.4,
+          "px": 170,
+          "py": 495,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "goblin_slinger:2",
+          "x": 63.7,
+          "y": 250.0,
+          "px": 170,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "octo_boss_room": {
+      "ground_y": 32.4,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "hero_01",
+          "x": 277.1,
+          "y": 104.0,
+          "px": 739,
+          "py": 277,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 277.1,
+          "y": 177.0,
+          "px": 739,
+          "py": 472,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 277.1,
+          "y": 250.0,
+          "px": 739,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 331.0,
+          "y": 184.3,
+          "px": 883,
+          "py": 491,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "mender_wisp:2",
+          "x": 113.0,
+          "y": 140.5,
+          "px": 301,
+          "py": 375,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "ember_hound:3",
+          "x": 113.0,
+          "y": 250.0,
+          "px": 301,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "astral_tyrant:1",
+          "x": 46.5,
+          "y": 178.8,
+          "px": 124,
+          "py": 477,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "octo_gazer_nest": {
+      "ground_y": 32.4,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "hero_01",
+          "x": 277.1,
+          "y": 104.0,
+          "px": 739,
+          "py": 277,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 277.1,
+          "y": 177.0,
+          "px": 739,
+          "py": 472,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 277.1,
+          "y": 250.0,
+          "px": 739,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 331.0,
+          "y": 184.3,
+          "px": 883,
+          "py": 491,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "mirror_gazer:1",
+          "x": 63.7,
+          "y": 104.0,
+          "px": 170,
+          "py": 277,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "pit_viper:2",
+          "x": 63.7,
+          "y": 177.0,
+          "px": 170,
+          "py": 472,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "pit_viper:3",
+          "x": 63.7,
+          "y": 250.0,
+          "px": 170,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    },
+    "cr_boss_room": {
+      "ground_y": 32.4,
+      "scale": 2.6666666666666665,
+      "members": [
+        {
+          "member": "hero_01",
+          "x": 248.8,
+          "y": 104.0,
+          "px": 663,
+          "py": 277,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_02",
+          "x": 248.8,
+          "y": 177.0,
+          "px": 663,
+          "py": 472,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_03",
+          "x": 248.8,
+          "y": 250.0,
+          "px": 663,
+          "py": 667,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_04",
+          "x": 302.7,
+          "y": 84.2,
+          "px": 807,
+          "py": 225,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_05",
+          "x": 302.7,
+          "y": 155.1,
+          "px": 807,
+          "py": 414,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "hero_06",
+          "x": 302.7,
+          "y": 228.1,
+          "px": 807,
+          "py": 608,
+          "facing": "left",
+          "on_wall": false
+        },
+        {
+          "member": "mender_wisp:2",
+          "x": 113.0,
+          "y": 140.5,
+          "px": 301,
+          "py": 375,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "mender_wisp:3",
+          "x": 113.0,
+          "y": 250.0,
+          "px": 301,
+          "py": 667,
+          "facing": "right",
+          "on_wall": false
+        },
+        {
+          "member": "astral_tyrant:1",
+          "x": 46.5,
+          "y": 178.8,
+          "px": 124,
+          "py": 477,
+          "facing": "right",
+          "on_wall": false
+        }
+      ]
+    }
+  }
+}

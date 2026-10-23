@@ -278,9 +278,10 @@ def presentation(c):
         "crypt_ranks",
         BattleSideviewTemplateProfile(
             "crypt_ranks",
-            # foes on the left, each next one up and to the back; the party a rank to the right
+            # foes on the left, each next one up and to the back; the party a rank to the right,
+            # every one of its five (with the pet) on the floor below the wall
             BattleSideviewZone("ranks.foes", 150.0, 236.0, -40.0, "right", 0.2, 0.01, -34.0),
-            BattleSideviewZone("ranks.party", 236.0, 120.0, 34.0, "left", 0.2, 0.01, 22.0),
+            BattleSideviewZone("ranks.party", 246.0, 136.0, 30.0, "left", 0.2, 0.01, 20.0),
         ),
     )
     library.set(

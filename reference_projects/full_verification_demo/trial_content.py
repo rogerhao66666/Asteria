@@ -2224,6 +2224,8 @@ def presentation(c):
             hud_panel_width=108.0,
             stage_top=0.47,  # feet stay on the grass: the backdrop's wall is the top 44%
             stage_front=0.16,
+            stage_front_right=0.0,  # the party stands against its edge, away from the foes
+            column_spacing_right=30.0,  # and close together: its two columns 30 apart
             hidden_zones=(),  # foes show their name over the head, as in every demo
             overhead_bars=False,  # their health stays hidden (the bestiary tells it)
             front_large_zones=("right",),  # a summon stands left of the party, toward the foe

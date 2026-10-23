@@ -2402,6 +2402,53 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **狀態：** 已提交（2026-10-23，使用者要求）。
 
+## D54 — 戰鬥站位：隊伍收緊、站在自己那一側、腳一定在地面上（2026-10-23）
+
+**要求：** Full Verification 的戰鬥裡，隊伍成員之間（尤其水平方向）離得太遠，看起來離怪物很近；隊伍要收緊並維持在畫面右側、離敵人遠一點，間距和位置要做成編輯器可調的選項。看截圖時使用者另外要求：所有角色都要站在草地或地板上，有的站到牆上了。
+
+**原因（實測，480×270 版面單位）：**
+- 兩欄的距離用整張精靈格的寬度算（約 60 單位，含攻擊動作的空白），身體只有約 25，所以隊伍兩欄中心相距 63.5（1280 寬的畫面上 169px）。
+- 前排照 `stage_front` 站在 300，但後排超出舞台右緣（側欄 HUD 的左邊 356），整隊被往左推 37 單位，前排反而靠向敵人；寵物（`front_large_zones` 讓它站在隊伍前）再前一欄，落在 199，比 Crypt Boss 的骷髏（231）還靠左，站進敵陣。
+- 側視站位（Side-View Positions）範本用絕對座標，不看地面線 `stage_top`；`crypt_ranks` 的隊伍從 y=120 開始，Aldric 的腳在牆上（地面線 127）。
+
+**做了什麼：**
+- **戰鬥版面新選項**（`presentation/battle_ui.py`，編輯器 Battle Screen ▸ Battle UI Layout，附說明與中文）：
+  - `column_spacing`（欄距）：同一方相鄰兩欄的中心距離（版面單位）；0 = 自動，也就是原本的規則（整張圖不重疊）。有 Boss（比最小的高 1.5 倍以上）的那一欄一律用自動距離，不會疊在一起；沒有 HUD、站在隊伍前的寵物不算大型，照欄距站。
+  - `column_spacing_right`（右側欄距）：右側那一方另設；空白 = 跟著 `column_spacing`（和 `stage_front`／`stage_front_right` 同樣的做法，編輯器顯示時填入跟隨的值，改成相同的值又變回跟隨）。
+  - `feet_on_ground`（腳站在地面，預設開）：側視站位或肖像隊伍版面給的位置，腳的高度夾在地面帶內（舞台頂端 `stage_top` 到舞台底），先夾再加角色圖自己的偏移 Y，所以飛行單位照樣能離地；關掉 = 照範本寫的。自動站位本來就在地面帶內，不受影響。
+  - 三個選項都只在不是預設值時寫入；舊資料照常讀。
+- **隊伍位置**用既有的 `stage_front_right`（右側舞台前緣）：欄距收緊後不再被溢出推擠蓋掉；設 0 = 整方貼著自己的邊緣（後排的圖剛好在舞台內）。編輯器補上它的說明與中文名稱（D53 記下的缺口之一）。
+- **Full Verification**：`column_spacing_right` = 30、`stage_front_right` = 0；`crypt_ranks` 的隊伍區 y 從 120（每人 +34）改成 136（每人 +30），x 從 236（每人 +22）改成 246（每人 +20），五個人（含寵物）都站在地板上、往右靠。
+
+**結果（Cocoa 視窗實測，英雄前排／後排／寵物的 x，1280 寬的畫面）：**
+
+| 戰鬥 | 改之前 | 改之後 |
+| --- | --- | --- |
+| 3 人＋寵物 Crypt Boss | 701／870／531（骷髏在 617） | 790／870／710 |
+| 4 人＋寵物 Boss Room、Crypt Boss | 701／870／531 | 790／870／710 |
+| 3 人 Woods Boss、4 人 Woods Ambush | 701／870 | 790／870 |
+| Aldric 一人＋寵物 | 870／—／701 | 870／—／790 |
+| 4 人＋寵物 Crypt Guard（範本） | Aldric 的腳在 y=320px（牆上） | 最高的腳在 y=363px（地板上） |
+
+兩欄間距 169px → 80px；英雄前排到最近敵人 84px → 173px；寵物不再站在敵人前面。敵人的位置都沒變。
+
+**相容：** 沒有設定這些選項的專案站位完全不變：Octopath（boss_room、gazer_nest）與 Complex Reference（boss_room）的座標相同，改之前（HEAD 的乾淨副本）和改之後的 Cocoa 截圖逐像素相同（3 張，0 個像素不同）。目前只有 Full Verification 有站位範本，所以「腳站在地面」預設開也只影響它（Crypt Guard 的 Aldric）。
+
+**測試：** `tests/test_battle_stage_spacing.py`（11 項）：沒設定時和以前一樣（自動距離 64、被推到 262）；欄距兩側都套用、右側欄距覆蓋、敵人保持自動；整方貼著邊緣（後排 326、前排 296，一人時也在 326）；Boss 那一欄保持自動距離；隊伍前的寵物照欄距站；範本的腳不會在牆上或舞台底下、x 與面向照範本；關掉時照範本；偏移 Y 照樣讓飛行單位離地；選項只在有設定時寫入、舊資料照讀、負值擋下；編輯器顯示與跟隨、中英文說明；Full Verification 的資料。`run_campaign.py` 的 Crypt Guard 站位檢查改成新的 x（246）。完整測試 3195 通過、1 略過、1 失敗（`pytest -q`，約 6 分鐘）：失敗的是 `test_asset_library`，因為另一個 session 正在加、還沒提交的 `asset_library/kaykit/`（沒有授權文字），和這次的改動無關；那個 session 把它分成三個各有授權檔的包之後，`test_asset_library` 重跑通過。`ruff check`、`ruff format --check` 乾淨。
+
+**實機證據：** `docs/audits/evidence/battle_stage_spacing/`
+- 改之前／改之後對照（上下兩張，Cocoa 視窗，真的跑 frame 到主角回合、指令選單開著）：`3p_crypt_boss.png`、`4p_boss_room.png`、`4p_crypt_boss.png`、`4p_crypt_guard_template.png`（地板背景）、`4p_crypt_boss_hero_03_turn.png`（後排 Vesper 的回合）、`1p_woods_patrol.png`；每個角色的座標在 `before_positions.json`、`after_positions.json`（driver = cocoa）。改之前從 HEAD（13faf4b4）的乾淨副本拍。戰鬥直接開（不經過劇情），背景照遊戲的區域：Crypt Guard 用地下墓穴背景，其他用預設背景。
+- 整段劇情（`scripts/full_verification_campaign_live_check.py`，Cocoa 視窗）PASS：Crypt Boss、Boss Room、Crypt Guard 等每場戰鬥在遊戲自己的背景上，所有角色都站在草地或地板上。
+- 編輯器（Cocoa）：`editor_battle_ui_layout_en.png`／`_zh_TW.png`：Battle UI Layout 表單的右側舞台前緣、欄距、右側欄距、腳站在地面，含說明；`editor_results.json`。
+
+**限制：**
+- **指令選單蓋到 HUD**：Full Verification 的選單放在行動者的右下（`actor_bottom_right`，規則本來就允許沒空間時蓋到 HUD）。前排英雄往右 89px 後，Aldric／Mira 回合的選單蓋到 Vesper 的側欄卡片約 100px（之前約 12px）；後排英雄的位置沒變，他們回合的選單和以前一樣蓋到側欄。使用者看過截圖後決定站位這樣可以、選單先不處理（2026-10-23）。
+- 敵人那一側沒改：Crypt Boss 的骷髏被 Boss 很寬的精靈格（含劍的範圍）推到 617px。
+- 地面線只有一條（版面的 `stage_top` = 0.47）：預設、沼澤、地下墓穴背景的地面從 44.5% 開始，符合；王座背景的地板從約 64.5% 開始（中間是岩漿），目前那裡只有 Acolyte Vigil（肖像版面，敵人腳在 570px，地板上），但自動站位的戰鬥若在那裡發生，上排會站在岩漿上。依背景設定地面線要另外做。
+- 欄距用中心距離；圖格本身的空白仍決定「貼邊」時後排離舞台邊多遠（後排中心最多到 326）。
+
+**狀態：** 未提交（等使用者說）。
+
 ## D55 — 精靈表可選縮放方式；KayKit 3D 角色渲染工具（隊伍試用後退回 Lucifer）（2026-10-23）
 
 **要求：** 使用者要一個好看一點的主角，試過各種免費素材後選定 KayKit（Kay Lousberg，CC0）的 3D Q 版角色，用 Blender 拍成 2D 圖，而且要「更接近平滑版」而不是像素化。核准 B1–B5：引擎平滑縮放選項、渲染工具進 repo、整隊角色、地圖行走圖、demo 接入；角色對應 Aldric＝Knight（劍盾）、Mira＝Mage（法杖＋攤開的魔法書）、Vesper＝Rogue_Hooded（魔杖＋魔法書）、Cael＝Rogue（雙匕首）；KayKit 原始檔放進 repo；敵人先維持 Lucifer 像素風。

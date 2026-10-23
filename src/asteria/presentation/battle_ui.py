@@ -94,6 +94,17 @@ class BattleUiLayoutProfile:
     # stage_front_right: the same for the side standing on the right (None = stage_front), so the
     # party can stand nearer its edge while the foes stand nearer the middle
     stage_front_right: float | None = None
+    # column_spacing: how far apart neighbouring columns of one side stand, centre to centre
+    # (layout units); 0 = automatic: far enough that their whole frames never overlap. A column
+    # holding an oversized combatant (a boss) always keeps the automatic distance
+    column_spacing: float = 0.0
+    # column_spacing_right: the same for the side standing on the right (None = column_spacing)
+    column_spacing_right: float | None = None
+    # feet_on_ground: every combatant's feet stay on the ground band (stage_top down to the
+    # bottom of the stage), also where a Side-View Positions or Portrait Party Layout record puts
+    # them higher or lower; a sprite's own offset still lifts a flyer. Off = a record's positions
+    # are used as written
+    feet_on_ground: bool = True
     # stage_template: a Side-View Positions or Portrait Party Layout record the combatants stand
     # by ("" = the automatic columns); an encounter's ``stage:<id>`` tag picks one for its fight
     stage_template: str = ""
@@ -134,7 +145,11 @@ class BattleUiLayoutProfile:
             raise ValueError("stage_front_right must be in [0, 0.5]")
         if not 0.0 <= float(self.stage_front) <= 0.5:
             raise ValueError("stage_front must be in [0, 0.5]")
+        if self.column_spacing_right is not None:
+            if _finite(self.column_spacing_right, "column_spacing_right") < 0:
+                raise ValueError("column_spacing_right must be >= 0")
         for name in (
+            "column_spacing",
             "margin",
             "hud_panel_width",
             "hud_row_height",

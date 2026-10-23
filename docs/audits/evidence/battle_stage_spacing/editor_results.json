@@ -1,0 +1,60 @@
+[
+ {
+  "shot": "editor_battle_ui_layout_en.png",
+  "fields": {
+   "stage_front_right": {
+    "label": "Stage Front Right  ⓘ",
+    "widget": "NumberBox",
+    "value": 0.0,
+    "shown": true
+   },
+   "column_spacing": {
+    "label": "Column Spacing  ⓘ",
+    "widget": "NumberBox",
+    "value": 0.0,
+    "shown": true
+   },
+   "column_spacing_right": {
+    "label": "Column Spacing Right  ⓘ",
+    "widget": "NumberBox",
+    "value": 30.0,
+    "shown": true
+   },
+   "feet_on_ground": {
+    "label": "",
+    "widget": "QCheckBox",
+    "value": true,
+    "shown": true
+   }
+  }
+ },
+ {
+  "shot": "editor_battle_ui_layout_zh_TW.png",
+  "fields": {
+   "stage_front_right": {
+    "label": "右側舞台前緣  ⓘ",
+    "widget": "NumberBox",
+    "value": 0.0,
+    "shown": true
+   },
+   "column_spacing": {
+    "label": "欄距  ⓘ",
+    "widget": "NumberBox",
+    "value": 0.0,
+    "shown": true
+   },
+   "column_spacing_right": {
+    "label": "右側欄距  ⓘ",
+    "widget": "NumberBox",
+    "value": 30.0,
+    "shown": true
+   },
+   "feet_on_ground": {
+    "label": "",
+    "widget": "QCheckBox",
+    "value": true,
+    "shown": true
+   }
+  }
+ }
+]

@@ -276,12 +276,14 @@ class BattlePresentationLibrary:
 
     def encode_for_editor(self, category, value):
         """Like ``_encode`` but with every field shown: the optional layout options (menu over
-        the stage, row buttons, bars under the feet, the right side's front) stay reachable in
-        the editor even while they hold their default."""
+        the stage, row buttons, bars under the feet, the right side's front and column spacing)
+        stay reachable in the editor even while they hold their default."""
         if category == "ui_layout":
             data = asdict(value)
             if data.get("stage_front_right") is None:
                 data["stage_front_right"] = data["stage_front"]
+            if data.get("column_spacing_right") is None:
+                data["column_spacing_right"] = data["column_spacing"]
             return data
         if category == "action_workflows":  # every step shows its options list, even empty
             data = self._encode(category, value)
@@ -295,6 +297,8 @@ class BattlePresentationLibrary:
             data = dict(data)
             if data.get("stage_front_right") == data.get("stage_front"):
                 data["stage_front_right"] = None
+            if data.get("column_spacing_right") == data.get("column_spacing", 0.0):
+                data["column_spacing_right"] = None
         return self._decode(category, data)
 
     def _encode(self, category, value):
@@ -318,6 +322,12 @@ class BattlePresentationLibrary:
                 data.pop("column_size")
             if data.get("stage_front_right") is None:
                 data.pop("stage_front_right", None)
+            if not data.get("column_spacing"):
+                data.pop("column_spacing", None)
+            if data.get("column_spacing_right") is None:
+                data.pop("column_spacing_right", None)
+            if data.get("feet_on_ground", True):
+                data.pop("feet_on_ground", None)
             if data.get("overhead_below", True):
                 data.pop("overhead_below", None)
             if data.get("overhead_bars", True):

@@ -37435,10 +37435,10 @@
             "depth_start": 0.2,
             "depth_step": 0.01,
             "facing": "left",
-            "x": 236.0,
-            "x_step": 22.0,
-            "y_start": 120.0,
-            "y_step": 34.0,
+            "x": 246.0,
+            "x_step": 20.0,
+            "y_start": 136.0,
+            "y_step": 30.0,
             "zone_id": "ranks.party"
           },
           "template_id": "crypt_ranks"
@@ -37448,6 +37448,7 @@
         "adaptive": {
           "action_menu_placement": "actor_bottom_right",
           "column_size": 2,
+          "column_spacing_right": 30.0,
           "command_pages": "trial_commands",
           "front_large_zones": [
             "right"
@@ -37467,6 +37468,7 @@
           "result_panel_width": 196.0,
           "row_buttons": true,
           "stage_front": 0.16,
+          "stage_front_right": 0.0,
           "stage_top": 0.47,
           "timeline_y": 7.0,
           "virtual_height": 270,

@@ -421,7 +421,7 @@ class Campaign:
             assert heroes and all(v.body_hidden for v in heroes), "party bodies are drawn"
         else:
             xs = sorted(round(v.anchor.x) for v in heroes)
-            assert xs and xs[0] == 236 and len(set(xs)) == len(xs), xs
+            assert xs and xs[0] == 246 and len(set(xs)) == len(xs), xs
         self.facts[f"staged_{kind}"] += 1
 
     def learn_arts(self):
