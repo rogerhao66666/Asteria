@@ -2518,3 +2518,17 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - ENGINE_HANDBOOK 裡指到 `runtime/game_session.py`／`runtime/playable_test_runtime.py` 的列仍指原模組（類別還在那裡）；方法本身現在在 `runtime/session/`、`runtime/playtest/` 的對應模組。
 
 **狀態：** 已提交（2026-10-23，使用者要求）。
+
+## D57 — 刪掉盤點出來沒人用的 presentation 程式（2026-10-23）
+
+**要求：** D56 的 presentation 用量盤點列出三處沒有任何引用的程式，使用者逐項核准刪除：`presentation/preview.py`、`presentation/workspace_controller.py`，以及 `presentation/performance.py` 裡沒人用的類別。
+
+**做了什麼：**
+- 刪除 `presentation/preview.py`（130 行：`PreviewDiagnostic`、`PreviewExecutorRegistry`、`PresentationPreviewSession`）與 `presentation/workspace_controller.py`（104 行：`AssetIntakeRequest`、`AssetIntakeAction`、`PresentationWorkspaceController`、`ASSET_INTAKE_INVARIANTS`）；兩者只互相引用，`src/`、`tests/`、`scripts/`、`reference_projects/` 都沒有用到。`presentation/__init__.py` 拿掉它們的 `from .x import *`。
+- `presentation/performance.py` 只留 `FrameBudget`、`FrameDiagnostics`、`diagnose`（`fidelity_editor.py` 在用；`diagnose` 回傳 `FrameDiagnostics`，所以它雖然在外面沒被點名也要留）；刪掉 `IndexedEvents`、`BoundedDispatcher`、`ReuseBuffer`、`DegradationPolicy`、`DEFAULT_DEGRADATION_POLICY`（盤點說的五個名稱裡，`FrameDiagnostics` 其實有人用，改刪 `DEFAULT_DEGRADATION_POLICY`）。
+- 風險文件 RISK-07 的待辦清掉。
+
+**測試：** 全部 3205 個測試通過；`asteria.presentation` 與 `asteria.editor` 照常 import。
+
+**狀態：** 已提交（2026-10-23，使用者要求）。
+
