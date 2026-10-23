@@ -2401,3 +2401,50 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 既有、與肖像無關：欄位 HUD 的數字在 Octopath 字型下 4 位數時會壓到血條右端；Battle UI Layout 表單的 Command Counts、Stage Front Right 兩個欄位名還沒有中文。
 
 **狀態：** 已提交（2026-10-23，使用者要求）。
+
+## D55 — 精靈表可選縮放方式；KayKit 3D 角色渲染工具（隊伍試用後退回 Lucifer）（2026-10-23）
+
+**要求：** 使用者要一個好看一點的主角，試過各種免費素材後選定 KayKit（Kay Lousberg，CC0）的 3D Q 版角色，用 Blender 拍成 2D 圖，而且要「更接近平滑版」而不是像素化。核准 B1–B5：引擎平滑縮放選項、渲染工具進 repo、整隊角色、地圖行走圖、demo 接入；角色對應 Aldric＝Knight（劍盾）、Mira＝Mage（法杖＋攤開的魔法書）、Vesper＝Rogue_Hooded（魔杖＋魔法書）、Cael＝Rogue（雙匕首）；KayKit 原始檔放進 repo；敵人先維持 Lucifer 像素風。
+
+**原因：** 戰鬥與地圖的角色一律用最近鄰縮放（`pg.transform.scale`），平滑圖一放大（Boss 登場 1.35 倍、不同視窗大小）就出現鋸齒；引擎沒有「這張圖要平滑縮放」的資料。
+
+**做了什麼：**
+- **B1 引擎**：精靈表中繼資料 `scaling`：`pixel`（預設，不寫入）／`smooth`。`SpriteSheet.scaling`（`graphics/sprites.py`）、`reference_data.load_sprite_sheet`、`BattleVisualResolver.sprite_sheet` 都帶著它；戰鬥繪製（`PygameTextureDrawer.resized`，含旋轉與快取路徑）與地圖（`TileSceneView._sprite`）照它選 `smoothscale` 或 `scale`。playtest 的玩家行走圖另有 manifest `field.player_scaling: smooth`（連線 HUD 的小人也照它）。編輯器 Sprite Animation ▸ Sheet 多了「縮放方式」下拉（像素風（銳利）／平滑（手繪或 3D 渲染），附說明與中文），`AnimationAuthoringController.set_scaling` 可復原，錯的值會擋下。
+- **B2 工具**：`scripts/build_kaykit_art.py`（專案 venv；`--render` 才需要 Blender，沒裝就印出下載網址與 `ASTERIA_BLENDER` 說明；`--keys`、`--views field` 只重拍地圖視角；`--list`）呼叫 `scripts/kaykit_render_blender.py`（Blender 無頭：匯入角色、動畫檔、手上道具掛到 `handslot.r/.l`，正交相機，每個視角逐格拍）。原始影格放 git 忽略的 `local_reference/free_assets/kaykit_render/raw/`；成品放 `asset_library/kaykit/KayKit_Rendered_Sheets/<key>_battle.png/.json`（80 格、每列 10 格、版面單位 ×3、站立 44 單位、`scaling: smooth`、profile scale 1/3、`body_height`、所有戰鬥片段含 revive／transform／victory）與 `<key>_field.png/.json`（3×4 行走圖，48 px 格、站立 32 px，和 Lucifer 行走圖同大小，俯角 30°；地圖的精靈沒有自己的縮放，所以行走圖得先縮到 1 倍大小再由鏡頭放大）。KayKit 來源檔（6 個角色 .glb、31 個道具、8 個動畫檔、各自的 License.txt）放 `asset_library/kaykit/`，分成三個 pack 以符合素材庫的授權檢查。
+- **B3／B4**：四位隊員的戰鬥圖與行走圖都拍好（每人約 60 秒）。
+- **B5 demo**：`trial_kaykit.py` 在四張圖都存在時把它們登記成 hero_01–04 的戰鬥圖（`scaling: smooth`、facing left、來源 KayKit），地圖上隊員的外觀（`trial_maps` 的 `hero_<face>` look）改由 `trial_kaykit.field_character` 從行走圖建出 idle／walk 四向片段（sheet JSON 帶 `scaling: smooth`，`Assets.sheet` 多了 `scaling` 參數），舊式 manifest 的 `player_field_sheet.png` 也換掉並在 `write_manifest` 後補上 `player_scaling`；沒有圖時照舊用 Lucifer 隊伍，所以 demo 建置永遠不需要 Blender。CREDITS.md 多了 KayKit 一列；THIRD_PARTY_ASSETS.md 記了來源、版本、大小與「No generative AI was used」。
+
+**相容：** 沒設定 `scaling` 的精靈表畫面完全不變（`pixel` 是預設、不寫入）；舊資料照常讀。現有專案與範本都沒設定。
+
+**測試：** `tests/test_sprite_scaling.py`（4 項：資料與驗證、戰鬥繪製只對要求的圖做平滑且與 `smoothscale` 逐像素相同、地圖視圖、編輯器設定→執行期解析器→復原）、`tests/test_kaykit_art.py`（4 項：job 的視角與片段、假影格→格狀圖與行走圖的大小／軸心／片段、demo 不用 Blender 讀回、沒有 Blender 的訊息）；`tests/test_asset_library.py` 通過（三個 pack 都有 CC0 授權文字）。
+
+**實機證據（`docs/audits/evidence/kaykit_smooth/`）：**
+- `b1_boss_zoom_pixel_vs_smooth_x4.png`：Boss 登場拉近時，`pixel` 鋸齒、`smooth` 平滑（同一張 KayKit 圖）；`b1_woods_smooth_960.png`：960 寬視窗。
+- `b1_editor_sprite_animation_scaling.png`／`_zh.png`：Sprite Animation 的「縮放方式」下拉。
+- `b3_party_battle_frames.png`、`b4_party_field_sheets_x3.png`：四位隊員的戰鬥動作與行走圖。
+- `campaign/`：`scripts/full_verification_campaign_live_check.py` 在 Cocoa 視窗跑完整段劇情 PASS（`results.json`），`battle_*.png` 每場戰鬥、`map_*.png` 每張地圖都是 KayKit 隊伍；`run_campaign.py` 無頭版所有 REQUIRED 事實成立。
+
+**限制：**
+- 敵人仍是 Lucifer 像素風，隊伍是平滑 3D 渲染：混搭是使用者先接受的。
+- 換武器時手上的道具不會跟著換（引擎的掛點系統還沒接到戰鬥）；要換武器要重拍。
+- 行走圖每個方向只有 3 格（引擎的 3×4 格式），動作幅度小。
+- 渲染用 EEVEE 的預設材質，沒有描邊或卡通著色；要更像手繪得再調。
+- Blender 是作者機器上的工具，不隨引擎安裝；版本 5.2.3 驗證過。
+
+**後續（同日）：使用者覺得畫風不對，隊伍退回 Lucifer。**
+- 平滑 3D 渲染放在 Lucifer 像素背景與敵人旁邊像貼上去的。試了 A 版：Blender 卡通著色（`kaykit_render_blender.py` 的 `toon`：漫射亮度分 3 階後平塗發光）、縮到 Lucifer 的像素大小、全角色共用 40 色調色盤、四向 1 px 深色外框、`scaling: pixel`（`build_kaykit_art.py --style toon --out <dir>`，影格放 `raw/<key>_toon/`）。在 demo 複本的真實視窗跑完整段劇情 PASS（`scripts/full_verification_campaign_live_check.py` 現在可用 `ASTERIA_FV_DEMO` 指定 demo 複本）。外框與像素和環境融合多了，但騎士內部糊成一片灰、色調比 Lucifer 亮，使用者決定退回。
+- **Demo**：隊伍回到 Lucifer 像素風。`trial_kaykit.py` 留著但改成選用：建置時 `ASTERIA_FV_PARTY=kaykit` 且圖已建好才換成 KayKit（`built()`／`available()`）；預設建置的隊伍圖、行走圖、manifest、CREDITS 與 HEAD 相同。重建後 `run_campaign.py` 所有 REQUIRED 事實成立，真實視窗 live check PASS（劇情截圖 `full_verification_campaign/` 和 D54 的站位一起重拍，隨 D54 提交）。
+- **保留**：引擎的 `scaling` 選項（通用，所有專案可用）、`scripts/build_kaykit_art.py` 與 `kaykit_render_blender.py`（smooth 與 toon 兩種風格）、`asset_library/kaykit/` 的來源檔與平滑版成品。toon 版成品只在 git 忽略的 `local_reference/free_assets/kaykit_render/toon_sheets/`。
+- `docs/audits/evidence/kaykit_smooth/` 的 `campaign/` 與 `b3_*`／`b4_*` 是試用時的證據，不代表目前 demo 的樣子。
+
+- **寵物與召喚改成可愛的小動物**（使用者要求）：原本收服的寵物用哥布林投石手的圖、召喚的 Spirit Knight 用哥布林騎兵。改用素材庫裡 Foozle Critters（同一位畫師 Baldur，CC0）：寵物（所有 `pet:` 成員）＝ Little Bird、Spirit Knight ＝ Elite（穿盔甲拿劍的狐狸，使用者挑的；先試過 Mouse）。新模組 `trial_critters.py`（單向條帶：玩家角色包面向右要鏡像，敵人包本來就面向左，`FACING_LEFT` 不鏡像），`trial_lucifer.sheet_from_strips` 從 `character_sheet` 拆出來共用。比例：寵物 0.75、狐狸 0.8——超過隊員 1.5 倍高會被當成「大型」站到隊伍前面靠近敵人（`front_large_zones`），0.9 時就發生過，已確認 0.75 留在隊伍裡。真實視窗 live check PASS（`full_verification_campaign/battle_boss_room.png` 可見小鳥在隊伍中）；召喚的狐狸只在組好的圖上確認過（`kaykit_smooth/summon_fox_frames.png`）：劇情腳本從來不施放 Call Spirit，所以沒有遊戲視窗的召喚截圖。
+- 注意：campaign 裡收服的是野生哥布林投石手，收服後外觀變成小鳥（引擎的寵物外觀是共用的 `pet` profile，不分來源）。
+
+- **受擊特效被截一半、偏在一邊**（使用者指出）：Pixel Magic Effects 的 Wind 是一陣往右飛的風，第 6–10 格撞在 64 px 格子的右緣、被壓成半個括號，置中時又被這幾格拉向右邊。所有用 Wind 的特效（slash、cut、claw、spark、circ 等 9 種）現在只播完整弧形的第 1–5 格，以內容置中在目標上（`trial_art.effect_assets`）。真實視窗逐格截圖確認（`kaykit_smooth/hit_effect_whole_arc.png`）。
+
+- **全部戰鬥圖與特效檢查**（使用者問「你都有檢查嗎」：之前沒有）：自動檢查 34 張戰鬥圖每個片段每一格（空格、超出、碰到格子邊緣），並回頭查原始素材：Lucifer 包有多個大動作（Aldric 攻擊第 3 格的劍光、Skeleton Ancient 與 Skeleton King 的揮砍弧與劍身、Cultist 的爆光、冰特效的水柱頂）在素材自己的格子邊緣被直線切斷。
+  - 修法（使用者選 A）：`trial_lucifer.fade_cut_edges` 把碰到格子邊緣的那一側在最後 5 個像素淡出（角色保留底邊，因為腳站在那裡；特效四邊都淡），角色圖在 `sheet_from_strips`、特效在 `effect_assets` 套用；特效另外拿掉空白格（Portal 系的 aura、circle、shield、spirit 中間有一格空白，會閃一下）。
+  - 新腳本 `scripts/battle_art_gallery_live_check.py`：在真實 Cocoa 視窗用引擎自己的戰鬥繪製（`PygameTextureDrawer`、`vfx_placement`／`vfx_rect`）把每個角色的每個片段逐格畫在戰鬥背景上、每種特效逐格落在一個目標身上，每個角色一張、特效每 4 種一張；PASS，19 張在 `docs/audits/evidence/battle_art_gallery/`。
+  - 沒涵蓋的：這是逐格畫出，不是完整戰鬥流程（衝刺、時機、命中同步）逐技能播放；fx_heal 最後一格空白（另一個來源，看不出來）。
+
+**狀態：** 未提交（等使用者）。

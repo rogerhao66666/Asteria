@@ -1318,7 +1318,11 @@ class PlayableTestRuntime:
         render_w, render_h = field_player_render_size(
             pf.get_size(), self.manifest["field"].get("player_render_width", 64) * zoom
         )
-        pf = self.pg.transform.scale(pf, (render_w, render_h))
+        if self.manifest["field"].get("player_scaling") == "smooth":
+            # a painted or rendered walker: blended pixels, as a smooth battle sheet gets
+            pf = self.pg.transform.smoothscale(pf.convert_alpha(), (render_w, render_h))
+        else:
+            pf = self.pg.transform.scale(pf, (render_w, render_h))
         position = (int(px - render_w / 2), int(py - render_h + 10 * zoom))
         sheet_path = self.manifest["field"]["player_sheet"]
         fw, fh = self.manifest["field"]["player_frame_size"]
@@ -1708,7 +1712,12 @@ class PlayableTestRuntime:
         source_w, source_h = frame.get_size()
         render_width = max(18, round(self.manifest["field"].get("player_render_width", 64) * zoom))
         render_height = max(1, round(source_h * render_width / max(1, source_w)))
-        frame = self.pg.transform.scale(frame, (render_width, render_height))
+        if self.manifest["field"].get("player_scaling") == "smooth":
+            frame = self.pg.transform.smoothscale(
+                frame.convert_alpha(), (render_width, render_height)
+            )
+        else:
+            frame = self.pg.transform.scale(frame, (render_width, render_height))
         remote_positions = bridge.remote_positions()
         for index, player in enumerate(players):
             if not isinstance(player, dict) or player.get("player_id") == local_id:

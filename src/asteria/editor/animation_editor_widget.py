@@ -301,6 +301,15 @@ class AnimationEditorWidget(QWidget):
             spin.setRange(0.0, 1.0)
             spin.setSingleStep(0.05)
             spin.setDecimals(3)
+        # how the game resizes the frames: sharp pixels, or blended for painted / rendered art
+        self.scaling = QComboBox()
+        self.scaling.addItem("Pixel art (sharp)", "pixel")
+        self.scaling.addItem("Smooth (painted or rendered)", "smooth")
+        self.scaling.setToolTip(
+            "Pixel art keeps every pixel a crisp square when the frame is enlarged. Smooth "
+            "blends neighbouring pixels: for painted or 3D-rendered pictures, which would "
+            "otherwise show jagged edges."
+        )
         apply_sheet = QPushButton("Apply Grid / Pivot")
         apply_sheet.clicked.connect(self.apply_sheet)
         sheet_box = QGroupBox("Sheet")
@@ -313,6 +322,7 @@ class AnimationEditorWidget(QWidget):
         pivot_row.addWidget(self.pivot_y)
         sheet_form.addRow("Frame size", size_row)
         sheet_form.addRow("Pivot (x, y)", pivot_row)
+        sheet_form.addRow("Scaling", self.scaling)
         sheet_form.addRow(apply_sheet)
 
         # how the battle uses this sheet: the body's real height (menus and bars sit on it) and,
@@ -472,6 +482,7 @@ class AnimationEditorWidget(QWidget):
         self.frame_h.setValue(data["frame_size"][1])
         self.pivot_x.setValue(data["pivot"][0])
         self.pivot_y.setValue(data["pivot"][1])
+        self.scaling.setCurrentIndex(max(0, self.scaling.findData(data["scaling"])))
         self.body_height.setValue(int(data["body_height"]))
         placement = data["vfx"]
         self.vfx_on.setChecked(placement is not None)
@@ -564,6 +575,8 @@ class AnimationEditorWidget(QWidget):
                 self.api.set_frame_size(sheet, self.frame_w.value(), self.frame_h.value())
             if tuple(data["pivot"]) != (self.pivot_x.value(), self.pivot_y.value()):
                 self.api.set_pivot(sheet, self.pivot_x.value(), self.pivot_y.value())
+            if data["scaling"] != self.scaling.currentData():
+                self.api.set_scaling(sheet, self.scaling.currentData())
 
         ok = self._try(apply, f"Applied grid / pivot for {sheet}")
         self.refresh(sheet, self.clip)

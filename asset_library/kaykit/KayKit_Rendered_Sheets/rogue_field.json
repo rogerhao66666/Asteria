@@ -1,0 +1,13 @@
+{
+ "frame_size": [
+  48,
+  48
+ ],
+ "rows": [
+  "down",
+  "left",
+  "right",
+  "up"
+ ],
+ "scaling": "smooth"
+}

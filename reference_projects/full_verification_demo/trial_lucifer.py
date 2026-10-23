@@ -77,7 +77,6 @@ def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump", facing="
     ``facing`` picks the pack's Right or Left strips: they are drawn separately (the swing, the
     weapon hand), not mirrors of each other, so a side that fights facing left uses ``"Left"`` art
     (the sheet is then marked ``facing: left`` and is not turned round)."""
-    from PIL import Image
 
     wanted = {
         "idle": "Idle",
@@ -96,14 +95,64 @@ def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump", facing="
             key, "Attack01" if role.startswith("attack") else "Idle", source
         )
         strips[role] = _strip_frames(path, mirror)
-    cell = max(f.width for frames in strips.values() for f in frames)
+    return sheet_from_strips(strips, scale=scale)
+
+
+FADE = 5  # source pixels over which a picture cut off at its cell edge fades out
+
+
+def fade_cut_edges(frame, edges=("left", "top", "right"), width=FADE):
+    """``frame`` with the parts that run into its cell edge faded out over ``width`` pixels.
+
+    Some pack frames draw a swing, a blade or a flash larger than their fixed-size cell, so the
+    picture stops on a straight line at the edge; fading the last pixels toward that edge makes
+    it read as the stroke trailing off instead of a cut. Edges the picture does not reach are
+    left alone (the feet stand on the bottom edge, so characters keep it)."""
+    from PIL import Image
+
+    alpha = frame.getchannel("A")
+    box = alpha.point(lambda a: 255 if a > 40 else 0).getbbox()
+    if box is None:
+        return frame
+    w, h = frame.size
+    touching = {
+        "left": box[0] == 0,
+        "top": box[1] == 0,
+        "right": box[2] == w,
+        "bottom": box[3] == h,
+    }
+    edges = [e for e in edges if touching[e]]
+    if not edges:
+        return frame
+    ramp = Image.new("L", frame.size, 255)
+    pixels = ramp.load()
+    for y in range(h):
+        for x in range(w):
+            distance = min(
+                {"left": x, "top": y, "right": w - 1 - x, "bottom": h - 1 - y}[e] for e in edges
+            )
+            if distance < width:
+                pixels[x, y] = int(255 * (distance + 1) / (width + 1))
+    out = frame.copy()
+    faded = Image.new("L", frame.size)
+    faded.putdata([a * r // 255 for a, r in zip(alpha.getdata(), ramp.getdata(), strict=True)])
+    out.putalpha(faded)
+    return out
+
+
+def sheet_from_strips(strips, *, scale=2):
+    """``strips`` (role -> frames: idle, attack, attack2, attack3, cast, hit, ko, transform) on
+    one battle sheet: ``(image, (frame w, frame h), clips, body_height)``."""
+    from PIL import Image
+
+    cell = max(max(f.width, f.height) for frames in strips.values() for f in frames)
 
     def placed(frame):
         out = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
         out.alpha_composite(frame, ((cell - frame.width) // 2, cell - frame.height))
         return out
 
-    cells = {role: [placed(f) for f in frames] for role, frames in strips.items()}
+    cells = {role: [placed(fade_cut_edges(f)) for f in frames] for role, frames in strips.items()}
     boxes = [f.getchannel("A").getbbox() for frames in cells.values() for f in frames]
     boxes = [b for b in boxes if b]
     left, right = min(b[0] for b in boxes), max(b[2] for b in boxes)

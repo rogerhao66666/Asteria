@@ -23,6 +23,7 @@ def load_sprite_sheet(path):
     return SpriteSheet(
         AssetRef(data["texture_asset_id"], "texture"),
         [SpriteFrame(**frame) for frame in data["frames"]],
+        scaling=str(data.get("scaling", "pixel")),
     )
 
 

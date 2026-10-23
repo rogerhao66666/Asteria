@@ -1,0 +1,26 @@
+{
+  "driver": "cocoa",
+  "status": "PASS",
+  "pictures": [
+    "combatant_crimson_warlord",
+    "combatant_goblin_beast",
+    "combatant_goblin_slinger",
+    "combatant_hero_01",
+    "combatant_hero_02",
+    "combatant_hero_03",
+    "combatant_hero_04",
+    "combatant_mender_wisp",
+    "combatant_pet",
+    "combatant_skeleton_ancient",
+    "combatant_skeleton_hunter",
+    "combatant_spirit_knight",
+    "combatant_vigil_acolyte",
+    "effects_01",
+    "effects_02",
+    "effects_03",
+    "effects_04",
+    "effects_05",
+    "effects_06"
+  ],
+  "problems": []
+}

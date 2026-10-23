@@ -121,6 +121,31 @@ class PygameTextureDrawer:
         self.draw_count = 0
         self._sprites = {}  # (asset, source, size, flip) -> (sheet, visible part, its offset)
         self._sprite_pixels = 0
+        self._smooth = {}  # asset id -> whether its sheet asks for smooth (bilinear) resizing
+
+    def smooth(self, asset_id):
+        """True when the sheet's ``scaling`` metadata is ``smooth``: its frames are resized
+        with blended pixels instead of the sharp nearest-neighbour pixel art gets."""
+        known = self._smooth.get(asset_id)
+        if known is None:
+            lookup = getattr(self.resolver, "sheet_meta", None)
+            try:
+                meta = lookup(asset_id) if lookup is not None else {}
+            except Exception:  # noqa: BLE001 - a generated or unknown sheet: pixel art
+                meta = {}
+            known = self._smooth[asset_id] = str(meta.get("scaling", "pixel")) == "smooth"
+        return known
+
+    def resized(self, asset_id, image, size):
+        """``image`` at ``size`` the way its sheet asks (see ``smooth``)."""
+        pg = self.host.pg
+        if image.get_size() == size:
+            return image
+        if not self.smooth(asset_id):
+            return pg.transform.scale(image, size)
+        if image.get_bitsize() < 24:  # smoothscale needs a 24/32-bit surface
+            image = image.convert_alpha()
+        return pg.transform.smoothscale(image, size)
 
     def surface(self, asset_id):
         lookup = getattr(self.resolver, "generated_image", None)
@@ -149,9 +174,7 @@ class PygameTextureDrawer:
         if blend != "add" and not rotation_deg:
             self._blit_visible(asset_id, source, x, y, size, flip_x, opacity, tint)
             return
-        image = self.surface(asset_id).subsurface(pg.Rect(*source))
-        if image.get_size() != size:
-            image = pg.transform.scale(image, size)
+        image = self.resized(asset_id, self.surface(asset_id).subsurface(pg.Rect(*source)), size)
         if flip_x:
             image = pg.transform.flip(image, True, False)
         if tint:
@@ -187,9 +210,7 @@ class PygameTextureDrawer:
         key = (asset_id, tuple(source), size, bool(flip_x))
         known = self._sprites.get(key)
         if known is None or known[0] is not sheet:
-            image = sheet.subsurface(pg.Rect(*source))
-            if image.get_size() != size:
-                image = pg.transform.scale(image, size)
+            image = self.resized(asset_id, sheet.subsurface(pg.Rect(*source)), size)
             if flip_x:
                 image = pg.transform.flip(image, True, False)
             box = image.get_bounding_rect()

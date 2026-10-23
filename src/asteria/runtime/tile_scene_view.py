@@ -308,7 +308,12 @@ class TileSceneView:
                 (frame.x, frame.y, frame.width, frame.height)
             )
             size = (max(1, round(frame.width * scale)), max(1, round(frame.height * scale)))
-            image = self.pg.transform.scale(source, size)
+            if sheet.smooth:  # a painted or rendered sheet: blended pixels, not a sharp grid
+                if source.get_bitsize() < 24:
+                    source = source.convert_alpha()
+                image = self.pg.transform.smoothscale(source, size)
+            else:
+                image = self.pg.transform.scale(source, size)
             self._frames[key] = (image, frame.pivot_x, frame.pivot_y)
             image = self._frames[key]
         return image

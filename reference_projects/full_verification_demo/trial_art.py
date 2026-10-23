@@ -1,7 +1,7 @@
-"""Battle art of the Full Verification demo, all from Foozle's CC0 packs: the Lucifer characters
-(see
-``trial_lucifer.py``), the Pixel Magic Effects strips for the skill effects, and the Lucifer
-equipment pictures for the weapon attacks.
+"""Battle art of the Full Verification demo, all CC0: the party from KayKit's chibi characters
+photographed into smooth sheets (``trial_kaykit.py``; the Lucifer party stands in when those
+sheets are not built), the Lucifer foes (``trial_lucifer.py``), the Pixel Magic Effects strips
+for the skill effects, and the Lucifer equipment pictures for the weapon attacks.
 """
 
 from __future__ import annotations
@@ -9,6 +9,8 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
+import trial_critters as critters
+import trial_kaykit as kaykit
 import trial_lucifer as lucifer
 
 REPO = Path(__file__).resolve().parents[2]
@@ -30,7 +32,18 @@ def hero_and_boss_art(context):
     battle.mkdir(parents=True, exist_ok=True)
     library = project.battle_presentation_library
 
-    def register(name, image, frame, clips, tags, scale, states, body_height=None):
+    def register(
+        name,
+        image,
+        frame,
+        clips,
+        tags,
+        scale,
+        states,
+        body_height=None,
+        source=SOURCE,
+        smooth=False,
+    ):
         left = "hero" in tags  # the party fights facing left: its Left strips, not turned round
         image.save(battle / f"{name}.png")
         pivot_y = lucifer.feet_pivot(image, frame)
@@ -39,7 +52,7 @@ def hero_and_boss_art(context):
             CanonicalAsset(
                 asset_id,
                 "sprite_sheet",
-                AssetSource(f"playable_assets/battle/{name}.png", "project", SOURCE),
+                AssetSource(f"playable_assets/battle/{name}.png", "project", source),
                 tags=frozenset({"battle", "combatant", *tags}),
                 metadata=(
                     ("clips", clips),
@@ -47,6 +60,7 @@ def hero_and_boss_art(context):
                     ("pivot", [0.5, pivot_y]),
                     *((("facing", "left"),) if left else ()),
                     *((("body_height", body_height),) if body_height else ()),
+                    *((("scaling", "smooth"),) if smooth else ()),  # a rendered picture
                 ),
             ),
             replace=True,
@@ -76,7 +90,8 @@ def hero_and_boss_art(context):
     for name, key, tags, scale, states in (
         (context.hero_id, "warrior", ("hero",), 0.62, hero_states),
         ("hero_02", "sorceress", ("hero",), 0.62, hero_states),
-        ("spirit_knight", "goblin_rider", ("hero", "summon"), 0.62, hero_states),
+        ("spirit_knight", "fox_elite", ("hero", "summon"), 0.8, hero_states),  # a cute critter
+        ("pet", "little_bird", ("hero", "summon"), 0.75, hero_states),  # tamed pets
         (context.boss_id, "skeleton_king", ("enemy",), 1.15, enemy_states),
         ("hero_03", "necromancer", ("hero",), 0.62, hero_states),
         ("hero_04", "cultist", ("hero",), 0.62, hero_states),
@@ -87,11 +102,25 @@ def hero_and_boss_art(context):
         ("skeleton_hunter", "skeleton_hunter", ("enemy",), 0.9, enemy_states),
         ("skeleton_ancient", "skeleton_ancient", ("enemy",), 1.1, enemy_states),
     ):
+        if name in kaykit.CAST and kaykit.available():
+            # the party: KayKit characters photographed into smooth sheets (D54)
+            image, frame, clips, scale, body = kaykit.battle_sheet(kaykit.CAST[name])
+            register(
+                name, image, frame, clips, tags, scale, states, body, kaykit.SOURCE, smooth=True
+            )
+            continue
+        if key in critters.CRITTERS:  # companions: Foozle's Critters, already facing left
+            image, frame, clips, _ = critters.character_sheet(key)
+            register(name, image, frame, clips, tags, scale, states, None, critters.SOURCE)
+            continue
         image, frame, clips, body = lucifer.character_sheet(
             key, facing="Left" if "hero" in tags else "Right"
         )
         register(name, image, frame, clips, tags, scale, states, body if "enemy" in tags else None)
-    lucifer.field_sheet("warrior").save(out_dir / "player_field_sheet.png")
+    if kaykit.available():
+        kaykit.field_sheet(out_dir)
+    else:
+        lucifer.field_sheet("warrior").save(out_dir / "player_field_sheet.png")
     lucifer.npc_picture("skeleton_king", size=64).save(out_dir / "boss_field.png")
     for name in trial_content.SERVICES:
         lucifer.npc_picture(lucifer.NPC_CAST.get(name, "cultist")).save(
@@ -137,6 +166,16 @@ def effect_assets(context):
     out.mkdir(parents=True, exist_ok=True)
     for key, (folder, tint, vfx_scale) in EFFECTS.items():
         frames = lucifer.effect_frames(folder, tint)
+        if folder == "Wind":
+            # the pack's gust flies to the right edge of its 64 px cell and ends squashed flat
+            # against it (frames 6-10): as a hit those read as a half-cut bracket off to one
+            # side, so a hit plays only the whole arc (frames 1-5), centred on the target
+            frames = frames[:5]
+        # a geyser or flash cut by its cell edge fades out there instead (the bottom too: an
+        # effect does not stand on the ground line)
+        edges = ("left", "top", "right", "bottom")
+        frames = [lucifer.fade_cut_edges(f, edges) for f in frames]
+        frames = [f for f in frames if f.getbbox()]  # a blank cell would flicker
         count, side = len(frames), frames[0].width * 2
         strip = Image.new("RGBA", (side * count, side), (0, 0, 0, 0))
         for i, frame in enumerate(frames):
@@ -206,6 +245,8 @@ def write_credits(root):
         if line.startswith("| `audio/") and "theme" not in line.split("|")[1]
     ]
     rows = [
+        *(kaykit.credits_rows() if kaykit.available() else ()),
+        *critters.credits_rows(),
         *lucifer.credits_rows(tuple(lucifer.PACKS)),
         *lucifer.credits_extra(),
         *lucifer.credits_music(),
@@ -242,21 +283,8 @@ def prune_unused_art(context):
         "skeleton_ancient",
     }
     library = context.project.battle_presentation_library
-    # a captured wisp fights on the hero side: every pet unit (member ids "pet:...") is drawn
-    # with the "pet" profile, here the same sheet as the wild wisp; no side-list panel, that list
-    # is for the party's characters
-    wisp = library.require("combatant_visuals", "goblin_slinger")
-    library.set(
-        "combatant_visuals",
-        "pet",
-        dataclasses.replace(
-            wisp,
-            profile_id="pet",
-            hud_visible=False,
-            # about the size of a character; pets stand in their own column (see front_large_zones)
-            transform=dataclasses.replace(wisp.transform, scale_x=0.62, scale_y=0.62),
-        ),
-    )
+    # every pet unit (member ids "pet:...") is drawn with the "pet" profile: the Little Bird
+    # (``hero_and_boss_art``), no side-list panel - that list is for the party's characters
     root = context.root / "playable_assets"
     for profile_id in list(library.ids("combatant_visuals")):
         if profile_id in keep:

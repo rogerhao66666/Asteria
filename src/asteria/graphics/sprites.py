@@ -25,18 +25,32 @@ class SpriteFrame:
             raise ValueError("pivot 0..1")
 
 
+SCALING_PIXEL = "pixel"  # nearest neighbour: pixel art stays sharp (the default)
+SCALING_SMOOTH = "smooth"  # bilinear: painted or rendered pictures keep their soft edges
+SCALINGS = (SCALING_PIXEL, SCALING_SMOOTH)
+
+
 @dataclass(slots=True)
 class SpriteSheet:
     texture: AssetRef
     frames: list[SpriteFrame] = field(default_factory=list)
+    # how the renderer resizes this sheet's frames (SCALINGS): a sheet's own choice, so pixel
+    # art and smooth pictures can stand in the same scene
+    scaling: str = SCALING_PIXEL
 
     def validate(self):
         if getattr(self.texture, "expected_kind", None) not in (None, "texture"):
             raise TypeError("texture ref required")
         if not self.frames:
             raise ValueError("frames required")
+        if self.scaling not in SCALINGS:
+            raise ValueError(f"scaling must be one of {SCALINGS}")
         for f in self.frames:
             f.validate()
+
+    @property
+    def smooth(self):
+        return self.scaling == SCALING_SMOOTH
 
 
 @dataclass(frozen=True, slots=True)

@@ -39,6 +39,7 @@ import trial_gear as gear_plus  # noqa: E402
 import trial_icons as icons  # noqa: E402
 import trial_items as items  # noqa: E402
 import trial_jobs as jobs  # noqa: E402
+import trial_kaykit as kaykit  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as maps  # noqa: E402
 import trial_stage as stage  # noqa: E402
@@ -118,6 +119,8 @@ def main():
     project.save_json(path)
     Project.load_json(path, registry)  # it must load back
     content.write_manifest(context)
+    if kaykit.available():
+        kaykit.patch_manifest(HERE)  # the KayKit walker: a smooth sheet
     art.write_credits(HERE)
     from prune_orphan_assets import prune
 

@@ -9,7 +9,9 @@ Data contract (all canonical project data, no runtime code per project):
   - ``frame_size``: ``[width, height]`` of one frame (row-major grid);
   - ``pivot``: ``[x, y]`` in 0..1 (default ``[0.5, 1.0]``, feet);
   - ``clips``: ``{name: {"frames": [index, ...], "frame_duration": seconds,
-    "loop": bool, "events": {"<keyframe position>": [names]}}}``.
+    "loop": bool, "events": {"<keyframe position>": [names]}}}``;
+  - ``scaling``: ``"pixel"`` (default: nearest neighbour, pixel art stays sharp) or
+    ``"smooth"`` (bilinear: painted or rendered pictures keep their soft edges).
 
   Combatant sheets and VFX sheets use the same format. VFX sheets (tag
   ``vfx``) play their ``play`` clip and may carry ``vfx`` placement
@@ -237,8 +239,12 @@ class BattleVisualResolver:
                 for r in range(rows)
                 for c in range(columns)
             ]
-            sheet = SpriteSheet(_TextureRef(str(asset_id)), frames)
-            sheet.validate()
+            scaling = str(meta.get("scaling", "pixel"))
+            sheet = SpriteSheet(_TextureRef(str(asset_id)), frames, scaling=scaling)
+            try:
+                sheet.validate()
+            except ValueError as exc:
+                raise BattleVisualError(f"{asset_id}: {exc}") from None
             self._sheets[asset_id] = sheet
         return self._sheets[asset_id]
 

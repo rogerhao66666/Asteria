@@ -14,6 +14,8 @@ import copy
 from dataclasses import dataclass, replace
 from pathlib import Path
 
+from asteria.graphics import SCALINGS
+
 SHEET_KIND = "sprite_sheet"
 
 
@@ -75,6 +77,8 @@ class AnimationAuthoringController:
         return {
             "frame_size": list(meta.get("frame_size", (16, 16))),
             "pivot": list(meta.get("pivot", (0.5, 1.0))),
+            # how frames are resized on screen: "pixel" (sharp) or "smooth" (bilinear)
+            "scaling": str(meta.get("scaling", "pixel")),
             "clips": copy.deepcopy(dict(meta.get("clips", {}))),
             # battle use: the character's real height in the frame (0 = the whole frame) and
             # where an effect sheet appears on its target (None = the engine defaults)
@@ -126,6 +130,8 @@ class AnimationAuthoringController:
         px, py = data["pivot"]
         if not (0 <= px <= 1 and 0 <= py <= 1):
             found.append(f"{asset_id}: pivot must be inside the frame (0..1)")
+        if data.get("scaling", "pixel") not in SCALINGS:
+            found.append(f"{asset_id}: scaling must be one of {', '.join(SCALINGS)}")
         for name, clip in sorted(data["clips"].items()):
             frames = clip.get("frames", [])
             if not frames:
@@ -149,6 +155,10 @@ class AnimationAuthoringController:
         meta.update(
             frame_size=list(data["frame_size"]), pivot=list(data["pivot"]), clips=data["clips"]
         )
+        if data.get("scaling", "pixel") == "pixel":
+            meta.pop("scaling", None)  # the default is not written
+        else:
+            meta["scaling"] = data["scaling"]
         after = replace(before, metadata=tuple(sorted(meta.items())))
         self.document.execute(_ReplaceAssetCommand(self.project.assets, before, after, label))
         return self.data(asset_id)
@@ -194,6 +204,13 @@ class AnimationAuthoringController:
     def _replace_meta(self, before, meta, label):
         after = replace(before, metadata=tuple(sorted(meta.items())))
         self.document.execute(_ReplaceAssetCommand(self.project.assets, before, after, label))
+
+    def set_scaling(self, asset_id, scaling):
+        """``"pixel"`` keeps the pixel grid sharp when a frame is resized; ``"smooth"`` blends
+        the pixels (painted or rendered pictures)."""
+        data = self.data(asset_id)
+        data["scaling"] = str(scaling)
+        return self._commit(asset_id, data, f"Scaling {asset_id}")
 
     def set_pivot(self, asset_id, x, y):
         data = self.data(asset_id)

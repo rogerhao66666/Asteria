@@ -71,12 +71,13 @@ class Assets:
         image.save(path)
         return self._add(key, "texture", f"{key}.png", name)
 
-    def sheet(self, key, image, frames, name, pivot=(0.5, 1.0)):
+    def sheet(self, key, image, frames, name, pivot=(0.5, 1.0), scaling=None):
         texture = self.texture(key, image, name)
         self._json(
             f"{key}_sheet.json",
             {
                 "texture_asset_id": texture,
+                **({"scaling": scaling} if scaling else {}),  # "smooth": a rendered picture
                 "frames": [
                     {
                         "x": x,
@@ -747,9 +748,15 @@ def build_world(c, story):
         )
         for key in (*NPC_FACES, *FOE_LOOKS.values())
     }
+    import trial_kaykit as kaykit
+
     looks.update(
         {
-            f"hero_{key}": character(assets, f"look_hero_{key}", key, key.title())
+            f"hero_{key}": (
+                kaykit.field_character(assets, f"look_hero_{key}", key, key.title())
+                if kaykit.available() and key in kaykit.FIELD_LOOKS
+                else character(assets, f"look_hero_{key}", key, key.title())
+            )
             for key in NPC_FACES
         }
     )

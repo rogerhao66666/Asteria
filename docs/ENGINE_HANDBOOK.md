@@ -359,6 +359,14 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 效能 | 碰撞世界就地更新、C++ kernel 不需 numpy、繪製快取、戰鬥圖預先解碼、HUD 與指令列只在變化時重排、場上 AI 批次、換音樂不凍住（D48） |
 | Demo | Full Verification（原 Boss Trial）補滿所有系統，成為推薦範本（D43） |
 
+### D55 新增（2026-10-23；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 精靈表 | 中繼資料 `scaling`：`pixel`（預設）／`smooth`，戰鬥與地圖照它用最近鄰或平滑縮放；編輯器 Sprite Animation ▸ Sheet ▸ 縮放方式；playtest manifest `field.player_scaling` |
+| 素材 | `asset_library/kaykit/`（KayKit Adventurers 2.0、Character Animations 1.1，CC0）與渲染成品；`scripts/build_kaykit_art.py`（`--render` 用 Blender 拍，否則只組圖）、`scripts/kaykit_render_blender.py` |
+| Demo | Full Verification 隊伍仍是 Lucifer 像素風；建置時 `ASTERIA_FV_PARTY=kaykit` 可換成 KayKit（`trial_kaykit.py`）；`build_kaykit_art.py --style toon` 產生卡通著色＋外框的像素版 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

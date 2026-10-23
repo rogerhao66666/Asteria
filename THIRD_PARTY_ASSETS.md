@@ -23,6 +23,17 @@ project imports pictures from it (File > Import from Asset Library…, copied in
   rarity outline.
 - `asset_library/opengameart/CC0_Ranged_Icons_Falco276/` - three bows and two arrows (32x32) by
   Falco276 from the same collection (drawn from openclipart.org), CC0 1.0; not used yet.
+- `asset_library/kaykit/` (added 2026-10-23, 18 MB) - Kay Lousberg's CC0 3D chibi characters,
+  tried as the Full Verification party (the demo keeps its Lucifer party unless built with
+  `ASTERIA_FV_PARTY=kaykit`): `KayKit_Adventurers_2.0/` (the six free characters as
+  .glb with textures, the 31 hand-held props as gltf; `License.txt` CC0 1.0, from
+  https://kaylousberg.itch.io/kaykit-adventurers, "Free 2.0", 13 MB),
+  `KayKit_Character_Animations_1.1/` (the eight Rig_Medium animation files, 139 clips;
+  `License.txt` CC0 1.0, from https://kaylousberg.itch.io/kaykit-character-animations, "Free
+  1.1", 14.9 MB) and `KayKit_Rendered_Sheets/` (the 2D battle and walking sheets
+  `scripts/build_kaykit_art.py` photographs from them with Blender; derived CC0 work, see its
+  README). Both source pages state "No generative AI was used". Not copied: the FBX / OBJ
+  duplicates, the mannequin, the Unity folder and the sample pictures.
 
 | Pack | Author | Source URL | License | Redistribution | Commercial use | Repository inclusion | Intended usage |
 |---|---|---|---|---|---|---|---|

@@ -15,7 +15,10 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-DEMO = REPO / "reference_projects" / "full_verification_demo"
+# ASTERIA_FV_DEMO runs a copy of the demo instead (e.g. one with other art swapped in)
+DEMO = Path(
+    os.environ.get("ASTERIA_FV_DEMO") or REPO / "reference_projects" / "full_verification_demo"
+)
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(DEMO))
 
