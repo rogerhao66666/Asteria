@@ -2532,3 +2532,17 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **狀態：** 已提交（2026-10-23，使用者要求）。
 
+## D58 — README 重寫；匯出修好並實測三種成品；歷史文件標示（2026-10-23）
+
+**要求：** 使用者問 repo 上有沒有寫清楚這個專案是什麼、怎麼安裝、怎麼用、要不要打包。
+
+**做了什麼：**
+- `README.md` 重寫（中文為主、附英文摘要）：特色、安裝（extras 說明、C++ kernel 選用）、五個指令（`asteria-editor`、`asteria-preview`、`asteria-upgrade`、`asteria-export`、`asteria-import-mv`）、從範本開新專案、遊戲鍵位、範例專案表、開發與實機驗證指令、CI、文件地圖、授權狀態。舊 README 的 Batch 98 歷史內容移除（git 歷史與 `ASTERIA_PROGRESS.md` 仍有）。
+- **匯出修好**：`asteria-export` 對 Full Verification 失敗，因為兩個粒子特效資產（`fx.divine_burst`、`fx.restore`）是純資料、`source.uri` 為空，`referenced_files` 把空路徑算成 `.` 而判定缺檔。現在沒有檔案的資產直接略過。新增 `tests/test_migration_and_export.py::test_export_skips_data_only_assets_that_have_no_file`。
+- **三種成品都實跑過**（2026-10-23，repo 外的資料夾，各跑 120 格後正常結束）：遊戲資料夾（26 MB，`python run_game.py`）、單檔 `Asteria_Full_Verification_Demo.pyz`（11 MB）、macOS `Asteria Full Verification Demo.app`（用 `ASTERIA_PYTHON` 指定直譯器）。所以「打包」已經有：使用者只需要對專案跑 `asteria-export … --pyz --app`。
+- `START_HERE_MAC.md`、`PROJECT_HANDOFF.md` 頂端標示為歷史文件並指向 README／手冊；`VSCODE_QUICK_GUIDE.md` 指向 README。
+
+**限制：** 程式碼授權還沒決定（沒有 `LICENSE`），使用者說之後再定；成品仍需要使用者機器上有 Python 3.12+ 與 pygame-ce（.app 不是自含的）。
+
+**狀態：** 已提交（2026-10-23，使用者要求）。
+

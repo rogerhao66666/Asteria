@@ -291,3 +291,19 @@ def test_editor_export_game_saves_and_packages(tmp_path):
     )  # saved first
     window.close()
     app.processEvents()
+
+
+def test_export_skips_data_only_assets_that_have_no_file(tmp_path):
+    """A particle effect is data in the project, not a file: its empty source uri is not a
+    missing resource (it used to export as the path "." and refuse the whole project)."""
+    from asteria.project_tools import referenced_files
+
+    demo = REF.parent / "full_verification_demo"
+    project = load_project(demo / "project.asteria.json")
+    data_only = [a.asset_id for a in project.assets.snapshot() if not a.source.uri]
+    assert data_only  # the demo's particle effects
+    files = referenced_files(project, demo)
+    assert "." not in files and "" not in files
+    report = export_game(demo / "project.asteria.json", tmp_path / "game")
+    assert report.missing == []
+    assert (tmp_path / "game" / "run_game.py").is_file()

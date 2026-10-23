@@ -167,6 +167,8 @@ def referenced_files(project, root):
     for record in project.assets.records():
         paths.add(str(record.source_path))
     for asset in project.assets.snapshot():
+        if not asset.source.uri:  # data-only assets (a particle effect) have no file
+            continue
         uri = Path(asset.source.uri)
         if not uri.is_absolute():
             paths.add(str(uri))

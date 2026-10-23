@@ -1,3 +1,5 @@
+> **歷史文件**（v0.94 的首次驗收清單）。現在的安裝與使用方式見 [`README.md`](README.md) 與 [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md)。
+
 # Asteria — Mac First-Run Test
 
 Optional setup and reference-world checks for the v0.94.0a94 full canonical review package.
