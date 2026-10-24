@@ -454,12 +454,17 @@ def describe(c):
             parts.append("all foes" if kind != "Healing" else "all allies")
         if len(definition.hits) > 1:
             parts.append(f"{len(definition.hits)} hits")
-        inflicts = [_state_name(s["state"]) for s in definition.apply_states if s["to"] != "self"]
-        buffs = [_state_name(s["state"]) for s in definition.apply_states if s["to"] == "self"]
+        given = [s for s in definition.apply_states if not s.get("remove")]
+        inflicts = [_state_name(s["state"]) for s in given if s["to"] != "self"]
+        buffs = [_state_name(s["state"]) for s in given if s["to"] == "self"]
+        # a state taken away is said as such (D61: it used to read "user gains Poison...")
+        removes = [_state_name(s["state"]) for s in definition.apply_states if s.get("remove")]
         if inflicts:
             parts.append("inflicts " + ", ".join(dict.fromkeys(inflicts)))
         if buffs:
             parts.append("user gains " + ", ".join(dict.fromkeys(buffs)))
+        if removes:
+            parts.append("removes " + ", ".join(dict.fromkeys(removes)))
         if any(e.effect.effect_id.endswith(".sap") for e in definition.effects):
             parts.append("drains MP")
         elif any(e.mode.value == "self" for e in definition.effects) and kind != "Healing":

@@ -538,6 +538,9 @@ GROUPS = (
         "Workshop (testing)",
         (
             ("workshop.refined", "Refine: {outcome}"),
+            ("workshop.outcome.success", "success"),
+            ("workshop.outcome.failure", "failure"),
+            ("workshop.outcome.protected", "failed, level kept"),
             ("workshop.took_out", "Took {name} out of {socket}"),
             ("workshop.socketed", "Socketed {name} into {socket}"),
             (

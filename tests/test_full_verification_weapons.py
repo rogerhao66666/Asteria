@@ -25,7 +25,9 @@ def test_every_weapon_has_a_whole_picture_and_a_rarity():
         assert weapon.rarity in db.rarities, weapon.equipment_id
         if weapon.equipment_id in ("w_demon_ring", "w_bow", "w_longbow"):
             continue  # a ring and two drawn bows
-        assert Image.open(DEMO / weapon.icon_id).size == (32, 16), weapon.equipment_id
+        # Lucifer weapons are 32 x 16 pictures; the arsenal's (D61) are 7Soul's 34 x 34 icons
+        size = (34, 34) if "icons_7soul/" in weapon.icon_id else (32, 16)
+        assert Image.open(DEMO / weapon.icon_id).size == size, weapon.equipment_id
     sunbrand = db.equipment["w_sunbrand"]
     rare = (
         Path.home()

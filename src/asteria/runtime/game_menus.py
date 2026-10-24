@@ -99,6 +99,7 @@ class ShopScreen:
         if shop is None:
             return ()
         items = self.game.project.rpg_database.items
+        gear = self.game.project.rpg_database.equipment  # a shop may sell equipment (D61)
         names = self.game.currency_names()  # once per list, not once per row
         state = self.game.save.rpg_state
         rows = []
@@ -108,14 +109,19 @@ class ShopScreen:
             if not prices:
                 continue
             remaining = self.game.shops.remaining(shop.shop_id, entry.item_id)
-            owned = state.inventory.count(entry.item_id)
+            if entry.item_id in gear:  # equipment: the pieces in the equipment bag
+                owned = sum(
+                    1 for g in state.equipment_bag if g.equipment.equipment_id == entry.item_id
+                )
+            else:
+                owned = state.inventory.count(entry.item_id)
             if self.tab == "buy":
                 available = (remaining is None or remaining > 0) and self.game.shops.can_afford(
                     prices, 1
                 )
             else:
                 available = owned > 0
-            item = items.get(entry.item_id)
+            item = items.get(entry.item_id) or gear.get(entry.item_id)
             rows.append(
                 ShopRow(
                     entry.item_id,

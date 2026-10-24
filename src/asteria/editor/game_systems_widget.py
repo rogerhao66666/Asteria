@@ -708,6 +708,8 @@ class RecordForm(QWidget):
                  "attachments", "passives", "encounters")  # fmt: skip
         if f.source in known and vocabulary.project is not None:
             return list(vocabulary.choices(f.source))  # names and icons
+        if f.source == "goods" and vocabulary.project is not None:  # a shop's wares (D61)
+            return [*vocabulary.choices("items"), *vocabulary.choices("equipment")]
         if f.source:
             out = []
             for entry in self.references(f.source):

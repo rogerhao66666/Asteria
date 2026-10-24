@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 337 個鍵，27 組。
+共 340 個鍵，27 組。
 
 ## Title screen
 
@@ -437,6 +437,9 @@
 | 鍵 | English | 引擎的繁體中文 |
 | --- | --- | --- |
 | `workshop.refined` | Refine: {outcome} | 精煉：{outcome} |
+| `workshop.outcome.success` | success | 成功 |
+| `workshop.outcome.failure` | failure | 失敗 |
+| `workshop.outcome.protected` | failed, level kept | 失敗，等級保住了 |
 | `workshop.took_out` | Took {name} out of {socket} | 從 {socket} 取下了 {name} |
 | `workshop.socketed` | Socketed {name} into {socket} | 把 {name} 鑲進了 {socket} |
 | `workshop.nothing_to_socket` | Nothing to socket (no free socket or no fitting item in the bag) | 沒有可以鑲嵌的（沒有空孔，或背包裡沒有合適的道具） |

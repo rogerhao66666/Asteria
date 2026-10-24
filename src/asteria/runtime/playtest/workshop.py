@@ -35,8 +35,14 @@ class WorkshopMixin:
                     self._ui_mode = "build"
                 elif weapon is not None and event.key == self.pg.K_r:
                     result = game.refine_equipment(actor, weapon.instance_id)
+                    words = {
+                        "success": game.tr("workshop.outcome.success", "success"),
+                        "failure": game.tr("workshop.outcome.failure", "failure"),
+                        "protected": game.tr("workshop.outcome.protected", "failed, level kept"),
+                    }
+                    outcome = words.get(result.outcome, result.outcome)
                     self._workshop_message = game.tr(
-                        "workshop.refined", "Refine: {outcome}", outcome=result.outcome
+                        "workshop.refined", "Refine: {outcome}", outcome=outcome
                     )
                 elif weapon is not None and event.key == self.pg.K_s:
                     self._workshop_message = self._socket_next(actor, weapon)
@@ -113,7 +119,7 @@ class WorkshopMixin:
             tr(
                 "workshop.keys",
                 "R Refine   S Socket   X Take out   A Attribute point   C Back  [{actor}]",
-                actor=actor,
+                actor=self.game.name_of(self.project.rpg_database.actors.get(actor), actor),
             ),
             44,
             76,
@@ -137,7 +143,7 @@ class WorkshopMixin:
                         level=weapon.refine_level + 1,
                         chance=chance,
                         cost=int(rules.cost(weapon.refine_level)),
-                        currency=rules.currency,
+                        currency=self.game.currency_names().get(rules.currency, rules.currency),
                     ),
                     44,
                     y + 34,

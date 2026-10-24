@@ -21,6 +21,12 @@ project imports pictures from it (File > Import from Asset Library…, copied in
   Ranged Icons" collection (https://opengameart.org/content/cc0-ranged-icons); downloaded
   2026-10-19. The Full Verification demo's Hunter's Bow and Longbow wear it with a Lucifer
   rarity outline.
+- `asset_library/opengameart/7Soul_496_RPG_Icons/` (added 2026-10-24, 1.9 MB) - "496 pixel art
+  icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1),
+  https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg, licence field
+  CC0 (checked 2026-10-24; the author also calls them public domain). All 496 icons, 34x34,
+  unchanged (`Readme.txt`). The Full Verification demo's added weapons (D61) wear them: every
+  kind incl. books, fists and throwing weapons, which the Lucifer pack does not draw.
 - `asset_library/opengameart/CC0_Ranged_Icons_Falco276/` - three bows and two arrows (32x32) by
   Falco276 from the same collection (drawn from openclipart.org), CC0 1.0; not used yet.
 - `asset_library/kaykit/` (added 2026-10-23, 18 MB) - Kay Lousberg's CC0 3D chibi characters,

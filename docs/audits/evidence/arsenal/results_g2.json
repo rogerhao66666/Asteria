@@ -1,0 +1,153 @@
+{
+  "driver": "cocoa",
+  "status": "PASS",
+  "checks": {
+    "worn": [
+      "a_hunters_charm",
+      "a_mithril_mail"
+    ],
+    "g2_en_items": true,
+    "g2_en_equipment": true,
+    "en_hero_turn": true,
+    "en_items_listed": [
+      "Antidote",
+      "Elixir",
+      "Ether",
+      "Hi-Potion",
+      "Holy Bomb",
+      "Iron Ball",
+      "Potion",
+      "Remedy"
+    ],
+    "g2_en_battle_items": true,
+    "en_bomb_thrown": true,
+    "g2_en_after_bomb": true,
+    "g2_zh_items": true,
+    "g2_zh_equipment": true,
+    "zh_hero_turn": true,
+    "zh_items_listed": [
+      "解毒藥",
+      "萬能藥",
+      "以太",
+      "高級藥水",
+      "神聖炸彈",
+      "鐵球",
+      "藥水",
+      "萬靈藥"
+    ],
+    "g2_zh_battle_items": true,
+    "zh_bomb_thrown": true,
+    "g2_zh_after_bomb": true
+  },
+  "failed": [],
+  "words": {
+    "g2_en_items": [
+      "Equipment",
+      "Field Test",
+      "Iron Ore",
+      "Items",
+      "Mithril Ingot",
+      "Moon Shard",
+      "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
+      "Onyx",
+      "Phoenix Seed",
+      "Potion",
+      "Q / E  Aldric",
+      "Remedy",
+      "Ruby",
+      "Sage Card",
+      "Sapphire",
+      "Silver Ore",
+      "Skills",
+      "Slayer Card",
+      "Slinger Card",
+      "Status",
+      "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
+      "Thunder Bomb",
+      "x2",
+      "x3",
+      "x8"
+    ],
+    "g2_en_equipment": [
+      "Equipment",
+      "Field Test",
+      "Human Form",
+      "Items",
+      "Mithril Mail",
+      "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
+      "Q / E  Aldric",
+      "Skills",
+      "Status",
+      "Sunbrand",
+      "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
+      "Warden Charm, Hunter's Charm",
+      "accessory",
+      "armor",
+      "form",
+      "weapon"
+    ],
+    "g2_en_battle_items": [
+      "4",
+      "?"
+    ],
+    "g2_en_after_bomb": [
+      "4",
+      "?",
+      "STUN"
+    ],
+    "g2_zh_items": [
+      "Q／E  艾德里克",
+      "Tab：下一頁   上／下：選擇   Enter：使用／裝備／卸下   Esc：返回",
+      "x2",
+      "x3",
+      "x8",
+      "不死鳥之種",
+      "屠戮者卡片",
+      "技能",
+      "投石兵卡片",
+      "月之碎片",
+      "狀態",
+      "秘銀錠",
+      "移動：WASD／方向鍵   C：角色養成   Q：任務   E：互動   F5：存檔   Esc：暫停",
+      "紅寶石",
+      "萬靈藥",
+      "藍寶石",
+      "藥水",
+      "裝備",
+      "賢者卡片",
+      "道具",
+      "野外測試",
+      "銀礦",
+      "鐵礦",
+      "雷電炸彈",
+      "黑瑪瑙"
+    ],
+    "g2_zh_equipment": [
+      "Q／E  艾德里克",
+      "Tab：下一頁   上／下：選擇   Enter：使用／裝備／卸下   Esc：返回",
+      "人形",
+      "守衛護符, 獵人護符",
+      "形態",
+      "技能",
+      "日炎劍",
+      "武器",
+      "狀態",
+      "秘銀鎧甲",
+      "移動：WASD／方向鍵   C：角色養成   Q：任務   E：互動   F5：存檔   Esc：暫停",
+      "裝備",
+      "道具",
+      "野外測試",
+      "防具",
+      "飾品"
+    ],
+    "g2_zh_battle_items": [
+      "4",
+      "?"
+    ],
+    "g2_zh_after_bomb": [
+      "4",
+      "?",
+      "STUN"
+    ]
+  }
+}

@@ -43,6 +43,8 @@ class EconomyMixin:
             currencies=state.currencies,
             stock=state.shop_stock,
             condition=self._conditions_hold,
+            receive_equipment=self.gain_equipment,  # gear bought goes to the equipment bag
+            equipment=self.project.rpg_database.equipment,
         )
 
     def _conditions_hold(self, conditions):

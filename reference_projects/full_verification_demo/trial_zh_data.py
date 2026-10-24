@@ -186,10 +186,17 @@ def apply(project):
     entries = dict(table.entries) if table is not None else {}
     added = 0
     for key, english in rows(project):
-        if key in entries:
+        generated = key.startswith(("data.", "dlg."))  # this module's own: made again
+        if key in entries and not generated:
             continue  # a word set elsewhere (trial_world.TEXT...) wins
         chinese = translate(key, english)
-        if chinese:
+        if chinese and entries.get(key) != chinese:
+            added += key not in entries
+            entries[key] = chinese  # a changed English (a fixed description) is made again
+    from asteria.rpg.built_in_text import engine_translations
+
+    for key, chinese in engine_translations("zh-TW").items():  # engine words added since
+        if key not in entries:  # the table was built (a word set by the game stays)
             entries[key] = chinese
             added += 1
     tables["zh-TW"] = LocaleTable("zh-TW", entries)

@@ -111,15 +111,29 @@ class StatusMenu:
             ),
         )
 
+    # the record a row of each kind names (its own name stands in when the screen has only
+    # the id: the equipment page's labels are ids unless a screen profile names them)
+    _RECORDS = {
+        "item": lambda game: game.project.rpg_database.items,
+        "equipment": lambda game: game.project.rpg_database.equipment,
+        "passive": lambda game: game.project.rpg_database.passives,
+    }
+
     def _word(self, kind, record_id, label):
         """``label`` in the player's language: the locale table's ``data.<kind>.<id>.name``
-        when it has one, else ``label`` as the screen made it (D60)."""
+        when it has one, else the record's own name when ``label`` is only its id, else
+        ``label`` as the screen made it (D60, D61)."""
         lookup = self.game.data_lookup
-        if lookup is None:
-            return label
-        from asteria.rpg.data_text import key
+        if lookup is not None:
+            from asteria.rpg.data_text import key
 
-        return lookup(key(kind, record_id)) or label
+            translated = lookup(key(kind, record_id))
+            if translated:
+                return translated
+        if label == record_id and kind in self._RECORDS:
+            record = self._RECORDS[kind](self.game).get(record_id)
+            return self.game.name_of(record, label)
+        return label
 
     def rows(self):
         """Selectable rows of the current tab: ``(kind, key, label, detail)``."""

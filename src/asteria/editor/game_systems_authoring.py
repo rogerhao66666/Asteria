@@ -299,7 +299,7 @@ FORMS = {
             "table",
             default=(),
             fields=(
-                F("item_id", "Item", "ref", source="items"),
+                F("item_id", "Item or Equipment", "ref", source="goods"),  # gear sells (D61)
                 F("buy_prices", "Buy Price", "amounts", default={}),
                 F("sell_prices", "Sell Price", "amounts", default={}),
                 F("stock", "Limited Stock", "optional_int", default=None),
@@ -1114,6 +1114,8 @@ class GameSystemsAuthoringController:
             return tuple(sorted(self.project.event_programs.ids()))
         if source == "carry_parts":
             return tuple(CARRY)
+        if source == "goods":  # what a shop can sell: items, then equipment (D61)
+            return tuple(sorted(db.items)) + tuple(sorted(db.equipment))
         stores = {
             "items": db.items,
             "enemies": db.enemies,

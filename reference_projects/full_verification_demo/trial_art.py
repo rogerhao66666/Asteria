@@ -236,6 +236,8 @@ def weapon_icons(context):
 def write_credits(root):
     """The credits of this demo: Lucifer art and music, and the sound effects the reference game
     ships."""
+    import trial_arsenal as arsenal
+
     credits = Path(root) / "playable_assets" / "CREDITS.md"
     old = credits.read_text(encoding="utf-8") if credits.exists() else ""
     cc0 = "[CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/)"
@@ -250,6 +252,7 @@ def write_credits(root):
         *lucifer.credits_rows(tuple(lucifer.PACKS)),
         *lucifer.credits_extra(),
         *lucifer.credits_music(),
+        *arsenal.credits_rows(),
         "| `battle/fx_*.png` (19 skill effects) | Foozle Pixel Magic Effects "
         "(`Foozle_2DE0001`): Explosion, Water Geyser, Molten Spear, Wind, Tornado, Portal "
         f"strips, tinted and scaled | Foozle (lordfitoi) | {cc0} |",

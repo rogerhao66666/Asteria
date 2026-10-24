@@ -1592,7 +1592,7 @@ class RpgDatabase:
                 )
         for shop in self.shops.values():
             for entry in shop.entries:
-                if entry.item_id not in self.items:
+                if entry.item_id not in self.items and entry.item_id not in self.equipment:
                     errors.append(f"shop {shop.shop_id} references unknown item {entry.item_id}")
         for quest in self.quests.values():
             for quest_id in quest.prerequisites + quest.next_quest_ids:

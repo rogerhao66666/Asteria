@@ -964,6 +964,15 @@
       },
       "beast_command": {
         "label": "Beast Command"
+      },
+      "attack_book": {
+        "label": "Attack (book)"
+      },
+      "attack_fist": {
+        "label": "Attack (fist)"
+      },
+      "attack_throw": {
+        "label": "Attack (throw)"
       }
     },
     "enemy_layouts": {},

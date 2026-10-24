@@ -979,6 +979,7 @@ class Campaign:
             ("hero_04", "heretic"),
         ):
             self.advance(actor_id, job, 2, 10)
+        self.new_shops()  # D61: the arms, armour and remedy shops before the last stand
         self.go("Road East")
         self.go("Crypt Door")
         self.go("Throne Door")
@@ -1057,10 +1058,98 @@ class Campaign:
         self.woods()
         self.crypt()
         self.throne()
+        self.supplies_fight()  # D61: after the last boss, so no earlier fight changes
         facts = self.finish()
         self.music_room()
         self.new_game_plus()  # last: the game starts over
         return facts
+
+    def new_shops(self):
+        """Hearthfold's three new shops (D61): one weapon of every kind from Brann, armour from
+        Hilde, supplies and an orb from Sela; the orb goes into a bought blade, which is
+        refined once at the Smith's rules, worn by Mira for the while."""
+        import trial_arsenal as arsenal
+
+        from asteria.events.world_commands import WorldCommand
+
+        game = self.game
+        state = game.save.rpg_state
+        order = ("common", "magic", "rare", "legendary", "mythic")
+        self.talk("Weaponsmith Brann")
+        assert game.open_shop_id == "arms_shop", game.open_shop_id
+        for weapons in arsenal.WEAPONS.values():  # the cheapest of each kind
+            weapon_id = min(weapons, key=lambda w: order.index(w[2]))[0]
+            game.buy(weapon_id, 1, shop_id="arms_shop")
+            self.facts["weapon_kinds_bought"] += 1
+        game.open_shop_id = None
+        bag = {g.equipment.equipment_id for g in state.equipment_bag}
+        assert {
+            min(w, key=lambda x: order.index(x[2]))[0] for w in arsenal.WEAPONS.values()
+        } <= bag
+        self.talk("Armorer Hilde")
+        assert game.open_shop_id == "armour_shop"
+        game.buy("a_padded_jerkin", 1, shop_id="armour_shop")
+        game.open_shop_id = None
+        self.facts["armour_bought"] += 1
+        self.talk("Apothecary Sela")
+        assert game.open_shop_id == "remedy_shop"
+        for item_id in ("potion", "antidote", "thunder_bomb", "fire_orb_item"):
+            game.buy(item_id, 1, shop_id="remedy_shop")
+            self.facts["remedies_bought"] += 1
+        game.open_shop_id = None
+        # the orb into the bought blade's gem socket, then one refine (Mira holds it a while)
+        mira = "hero_02"
+        before = state.loadouts[mira].equipped("weapon")
+        old = before[0].equipment.equipment_id if before else None
+        wear = {"actor_id": mira, "equipment_id": "w_knights_blade", "slot_id": "weapon"}
+        game.world_commands.dispatch(WorldCommand("EQUIP_ITEM", wear))
+        blade = state.loadouts[mira].equipped("weapon")[0]
+        assert blade.equipment.equipment_id == "w_knights_blade"
+        fire = game.resolve_actor_build(mira).stats.get("fire_attack")
+        game.socket_item(mira, blade.instance_id, "g1", "fire_orb_item")
+        assert game.resolve_actor_build(mira).stats.get("fire_attack") == fire + 15
+        self.facts["orbs_socketed"] += 1
+        state.inventory.add("iron_ore", 1)  # the refine's material (the Smith's rules)
+        kept = getattr(game, "refine_rng", None)
+        game.refine_rng = random.Random("new_shops")  # its own roll: the fights stay as they were
+        try:
+            game.refine_equipment(mira, blade.instance_id)
+        finally:
+            game.refine_rng = kept
+        self.facts["new_weapon_refines"] += 1
+        if old is not None:  # Mira takes her own weapon back for the last fights
+            game.world_commands.dispatch(
+                WorldCommand(
+                    "EQUIP_ITEM", {"actor_id": mira, "equipment_id": old, "slot_id": "weapon"}
+                )
+            )
+        self.log(f"   new shops: 9 kinds bought, gold left {state.currencies.get('gold', 0):g}")
+
+    def supplies_fight(self):
+        """A patrol fought with the remedy shop's wares (D61): a Thunder Bomb at a foe, then a
+        hero poisoned and cured with an Antidote; the fight is then won as any other. It comes
+        after the throne, so the fights the other facts count play out as they always did."""
+        game, rt = self.game, self.rt
+        game.start_encounter("woods_patrol")
+        rt._turn_actor = None
+        rt._advance_to_hero_turn()
+        actor = rt._battle_actor()
+        assert actor is not None
+        foe = game.active_enemy_ids()[0]
+        game.use_battle_item(actor, "thunder_bomb", (foe,))
+        self.facts["thrown_items"] += 1
+        rt._after_hero_action()
+        rt._advance_to_hero_turn()
+        actor = rt._battle_actor()
+        if actor is not None:
+            states = game.battle.member(actor).subject.states
+            states.apply("poison")
+            game.use_battle_item(actor, "antidote", (actor,))
+            assert "poison" not in [s.state_id for s in states.active_states()]
+            self.facts["cures_used"] += 1
+            rt._after_hero_action()
+        if game.mode == "battle":
+            self.fight()
 
     def finish(self):
         game = self.game
@@ -1086,7 +1175,8 @@ REQUIRED = (
     "used_elemental_weave", "arts_learned", "slots_full", "slots_grown",
     "used_art_rending_gale", "used_art_dawn_edge", "used_art_iron_vow",
     "translated_lines", "translated_data", "bog_damage", "area_backdrops", "glade_rests",
-    "shadow_stealth",
+    "shadow_stealth", "weapon_kinds_bought", "armour_bought", "remedies_bought",
+    "orbs_socketed", "new_weapon_refines", "thrown_items", "cures_used",
     "embers_burn", "embers_out", "music_unlocked", "new_game_plus", "home_sleeps",
     "ring_sockets", "used_attack_ring", "used_valiant_slash", "used_arsenal_storm",
     "used_wind_bolt", "used_earth_bolt", "equip_offers", "guarded_blows", "dodged_blows",

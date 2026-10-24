@@ -425,8 +425,16 @@ class MenusDrawMixin:
         rows = screen.rows()
         icons = [record_icon_id(self.project, "item", r.item_id) for r in rows]
         name_x = 90 + (30 if any(icons) else 0)
+        # a long list scrolls with the cursor (D61: a shop of 38 wares), "n/total" above it
+        fit = max(1, (self.height - 130 - 134) // 30 + 1)
+        first = min(max(0, screen.index - fit // 2), max(0, len(rows) - fit))
+        if len(rows) > fit:
+            where = f"{min(screen.index, len(rows) - 1) + 1}/{len(rows)}"
+            self.text(where, 840, 104, size=19, color=(170, 210, 240))
         for i, row in enumerate(rows):
-            y = 134 + i * 30
+            if i < first:
+                continue
+            y = 134 + (i - first) * 30
             if y > self.height - 130:
                 break
             color = (

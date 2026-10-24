@@ -2628,3 +2628,90 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - demo 的 `project.asteria.json` 這次是用 `trial_zh_data.apply` 直接套在現有檔案上（讀存不改其他內容），沒有重跑整個建置（工作目錄有另一個 session 直接寫進這個檔的改動）；`build_project.py` 已接上，下次重建會產生同樣結果。
 
 **狀態：** 已提交（2026-10-24，使用者要求；只含本批檔案：與另一個 session 共用的 8 個程式檔是 HEAD 加上本批的改動，`zh_TW.json` 只含本批的 31 個詞與 2 個樣板，demo 的 `project.asteria.json` 是 HEAD 版本套用 `trial_zh_data.apply` 的結果）。
+
+## D61 — Full Verification 補武器、道具、裝備（2026-10-24；G1 武器）
+
+**要求：** 使用者 2026-10-23 要求 Full Verification 的武器、裝備與道具補多：每種武器類型（劍、斧、矛、弓、匕首、法杖、書、拳、投擲）都有數把、分稀有度；防具每個部位多幾件；道具（藥水、狀態藥、戰鬥投擲、材料、寶珠、卡片）多一批；圖用 asset_library 的 CC0 圖並登記；商店買得到、工坊能精煉與鑲嵌；run_campaign 事實跟著增加；編輯器 Database 看得到。使用者核准的做法：部位維持「防具」與「飾品」兩個；7Soul 496 icons 放進 asset_library，新東西都用它；爐心鎮加武器、防具、道具三間新商店；寶珠＝可鑲嵌、讓武器帶屬性的珠子。分三批：G1 武器、G2 防具飾品道具、G3 商店與驗證。
+
+**做了什麼（G1）：**
+- **素材**：`asset_library/opengameart/7Soul_496_RPG_Icons/`（496 張 34×34，1.9 MB，原檔不改）。授權 2026-10-24 重新查 OpenGameArt 頁面：License 欄位 CC0，作者另稱 Public Domain；`Readme.txt` 記出處；`THIRD_PARTY_ASSETS.md` 登記；demo 的 `CREDITS.md` 由 `trial_art.write_credits` 寫入一列（`trial_arsenal.credits_rows`）。
+- **`trial_arsenal.py`**（`build_project.py` 在翻譯之前呼叫；也能直接套在已建好的專案，重複套用加 0）：
+  - 三種新武器類型的普通攻擊 `attack_book`、`attack_fist`、`attack_throw`：複製既有的法杖／匕首／弓攻擊，換成 `weapon.book`／`weapon.fist`／`weapon.throw` 標籤（弱點與抗性讀這個標籤），同樣的命中檢查；戰鬥選目標規則照抄；manifest 的戰鬥名稱「Attack (book)」等（建置時寫進 `skill_names`，現有檔案用 `patch_manifest`）。
+  - 29 把新武器，每種類型補到至少 5 把且五個稀有度都有：劍 +2（騎士之刃、煉獄之刃）、斧 +2（戰鬥斧、嗜血斧）、矛 +3（闊頭槍、潮汐三叉戟、穿天槍）、弓 +3（反曲弓、不死鳥之弓、星墜之弓）、匕首 +2（左手短劍、霜牙）、法杖 +2（翡翠法杖、太陽法杖）、書 5（入門書～寒霜法典）、拳 5（皮革纏手～泰坦之拳）、投擲 5（投擲斧～虛空星鏢）。
+  - 數值依稀有度（`TIERS`）：主要能力（力量；法杖與書是魔力）普通 12／魔法 20／稀有 30／傳說 45／神話 65；稀有以上有自己的屬性攻擊（10／15／25）與暴擊；匕首、拳、投擲、弓另有速度。鑲嵌孔：魔法 1 個寶石孔，稀有以上 2 個寶石孔加 1 個卡片孔。全部帶 `weapon` 標籤，工坊的 +N 精煉（`plus`）都適用。
+  - 圖示從素材庫複製到 `playable_assets/icons_7soul/`（29 張）。
+- **中文**：29 個武器名與「書／拳／投擲」加進 `trial_zh_words.py`，zh-TW 表多 35 筆，`missing()` 仍為空。
+- **順手修的**：狀態選單的裝備頁在英文下顯示 id（`w_titan_fists`、`a_warden_plate`、`f_normal`），因為 presentation 的裝備清單標籤預設是 id；現在標籤只是 id 時改用紀錄自己的名稱（`status_menu._word`）。中文本來就因 D60 的表而正確。
+- 舊測試 `test_full_verification_weapons` 原本規定每把武器的圖都是 Lucifer 的 32×16，改成依圖的來源檢查（7Soul 是 34×34）。
+
+**測試：** `tests/test_arsenal.py`（6 項）：九種類型各 ≥5 把且五個稀有度都有；新類型的攻擊帶自己的武器標籤、有選目標規則、武器給的就是它；數值與鑲嵌孔照稀有度；圖示與素材庫的檔案逐位元相同、CREDITS 與 THIRD_PARTY_ASSETS 都有；重複套用加 0、每個名稱都有中文；穿上普通與神話拳套後力量差 53（65－12）、`attack_fist` 打得到敵人。全套 3264 通過、1 略過；`run_campaign.py` 結束碼 0；ruff 乾淨。
+
+**實機證據（`docs/audits/evidence/arsenal/`）：** `scripts/arsenal_live_check.py`（Cocoa、真的按鍵、`ASTERIA_MUTE=1`）PASS：給艾德里克星鏢、魔導書、拳套（一次只能拿一把武器，最後的拳套穿著，另兩把在背包），英文與中文各拍狀態選單裝備頁（`g1_*_equipment`）、戰鬥按「攻擊」（`g1_*_fight`）與出拳後（`g1_*_after_fist`）；選單上的名稱「Attack (fist)」／「攻擊（拳）」，按鍵真的呼叫到 `attack_fist`。編輯器 Database ▸ Game Data ▸ Equipment（`g1_editor_equipment_en.png`／`_zh.png`）：71 筆裝備，選中「Titan Fists」顯示 7Soul 圖示、稀有度 Mythic、技能「Attack (fist)」。
+
+**限制（G1）：**
+- 書的普通攻擊和既有法杖一樣以力量計算傷害，書與法杖給的魔力只影響法術。
+- 7Soul 的圖是 34×34、Lucifer 的武器是 32×16，兩種風格在背包裡並存。
+- 部位名稱在英文是作者寫的 id（weapon、armor）；中文由 D61 前的 `data.slot.*` 翻。
+- 商店、工坊實際操作、run_campaign 的新事實在 G3。
+
+**G2：防具、飾品、道具（2026-10-24）**
+
+- **`trial_supplies.py`**（建置時接在 `trial_arsenal` 之後；可重複套用）新增 65 筆：
+  - 防具 8 件（襯墊短衣～天界板甲：輕／重／布三種重量，普通到神話）與飾品 8 件（銅戒指～王家勳章）；稀有度決定防禦、魔防、抗性或飾品的加成（`TIERS`），稀有以上防具有卡片孔、飾品有寶石孔。防具 18 件、飾品 19 件。
+  - 藥水 6（藥水、高級藥水、超級藥水、以太、高級以太、萬能藥）、狀態藥 7（解毒藥、眼藥、回聲草、燒傷藥膏、止血藥、鬧鐘、萬靈藥）：每個是戰鬥道具，有自己的技能（對一名隊友；狀態藥用 `apply_states` 加 `remove`）。
+  - 投擲 6：投擲石、鐵球（物理，鐵球會暈眩）與雷電、旋風、神聖、黑暗炸彈（`damage.<元素>` 標籤，敵人的屬性弱點會讀；各帶一個狀態）。
+  - 材料 8（狼毛、利牙、上等布料、煤炭、秘銀錠、金錠、蝙蝠翅膀、蠍鉗）。
+  - 寶珠 7（火、冰、雷、風、土、光、闇）：鑲嵌物帶 `gem` 與 `orb` 標籤，鑲在寶石孔；給該屬性攻擊 15 與魔力 6，鑲進武器後攻擊帶上那個屬性。
+  - 卡片 4（騎士、賢者、流浪者、學者），拿下來會毀掉，和怪物卡片一樣。
+  - 圖示都是 7Soul（`icons_7soul/` 共 83 張）；CREDITS 那一列改寫成涵蓋武器、防具、飾品與道具。
+- **順手修的**：會解除狀態的技能（Purify 等）說明原本寫「user gains Poison, Burn…」，因為說明產生器把被解除的狀態也算成獲得；`trial_stats` 的產生器改了，現有專案用 `fix_removal_words` 改寫成「removes …」，中文跟著變成「輔助：解除中毒、燃燒…」。`trial_zh_data.apply` 現在每次重算 `data.*`／`dlg.*` 的譯文（英文改了，中文跟著改），手寫的其他鍵照舊不動。
+- 中文：54 個名稱與「restores MP」「all allies」加進詞彙表；zh-TW 多 103 筆，`missing()` 仍為空。
+
+**G2 測試：** `tests/test_supplies.py`（5 項）：每筆紀錄都在 demo 且有圖、防具鑲嵌孔照稀有度、重複套用加 0；道具分類（藥水、狀態藥、投擲、材料、寶珠、卡片）；戰鬥中藥水把 HP 100 回到 600、解毒藥解掉中毒、萬靈藥解掉失明與沉默、雷電炸彈造成傷害並暈眩且帶 `damage.lightning`；冰之寶珠鑲進嗜血斧後冰屬性攻擊 +15、寶珠從背包扣掉；每個會解除狀態的技能說明都寫 removes、Purify 的中文正確。全套 3268 通過、1 略過、1 失敗：`test_skeleton_component` 的地圖繪製測試，失敗來自另一個 session 未提交的 `tile_scene_view.py`（地圖動畫格、跳躍影子），不是本批；`run_campaign.py` 結束碼 0。
+
+**G2 實機證據（`docs/audits/evidence/arsenal/`）：** `scripts/supplies_live_check.py`（Cocoa、真的按鍵、靜音）PASS：背包道具頁捲到新道具（`g2_*_items`）、穿上秘銀鎧甲與獵人護符的裝備頁（`g2_*_equipment`）、戰鬥的道具選單（`g2_*_battle_items`：解毒藥、萬能藥、以太…與 7Soul 圖示）、按鍵丟出雷電炸彈（`g2_*_after_bomb`）；`results_g2.json`。編輯器 Database ▸ Game Data ▸ Items（`g2_editor_items_en.png`／`_zh.png`）：94 筆道具，火之寶珠帶圖示與鑲嵌物欄位。
+
+**G2 限制：** 防具只有「防具」與「飾品」兩個部位（使用者選的）；材料目前只能買賣，還沒有用它們的配方；寶珠讓攻擊帶屬性靠的是屬性攻擊數值，不改技能本身的屬性標籤。
+
+**G3：爐心鎮三間新商店、工坊精煉與鑲嵌、run_campaign 新事實（2026-10-24）**
+
+- **引擎：商店可以賣裝備。** `ShopRuntime` 多了 `receive_equipment` 與 `equipment`：商品 id 是裝備時，買下的東西進裝備背包（`gain_equipment`），不佔道具背包的格子；沒給 `receive_equipment` 時行為和以前一樣。遊戲階段把 `gain_equipment` 與資料庫的裝備傳進去；資料驗證允許商品是裝備 id；商店畫面的名稱與「持有」會讀裝備背包。
+- **引擎：商店清單會捲動。** 商品超過一頁時清單跟著游標捲，標題列右邊顯示「28/38」。原本只畫前 16 列，游標往下就看不到了。
+- **引擎：工坊文字。** 精煉結果（成功／失敗／失敗但等級保住）走翻譯鍵 `workshop.outcome.*`；下一級費用的貨幣用翻譯後的名稱（原本寫 gold）；按鍵列的角色用名字（原本寫 hero_01）。
+- **編輯器：** 遊戲系統 ▸ 商店的商品欄改名為「道具或裝備」，選單列出道具和裝備，兩者都顯示名稱與圖示（原本裝備只能手打 id，清單也只顯示 id）；`zh_TW.json` 加一筆。
+- **`trial_shops.py`**（建置時接在 `trial_supplies` 之後；可重複套用）：
+  - 布蘭武器店（武器匠布蘭）：G1 的 29 把武器。
+  - 希爾德防具店（防具匠希爾德）：G2 的 8 件防具與 8 件飾品。
+  - 瑟拉藥鋪（藥師瑟拉）：藥水、狀態藥、投擲、材料、7 顆寶珠、4 張卡片，共 38 項；可以四分之一價賣回。
+  - 裝備依稀有度定價：普通 120、魔法 400、稀有 1200、傳說 3500、神話 9000。
+  - 三位店主站在爐心鎮廣場北邊的路兩側，各用一個 Ninja Adventure 角色（CC0），先說一句話再開店。
+- **demo 的中文表：** `trial_zh_data.apply` 也會補上中文表缺少的引擎翻譯鍵。原本中文表是建置時複製的，之後新增的引擎文字不會進來；這次補了 3 筆。屬性節點「STR (Strength)」原本翻成「力量（力量）」，改成「力量（STR）」，其他四個屬性也一樣。
+- **run_campaign 新事實：**
+  - 在王座之前到三間店：九種武器各買最便宜的一把、買襯墊短衣、買四樣藥鋪商品。
+  - 把騎士之刃給米拉，鑲上火之寶珠（確認火屬性攻擊 +15），再精煉一次。精煉用自己的亂數，不影響之後的戰鬥。
+  - 最後一個魔王之後再打一場巡邏：丟雷電炸彈、讓英雄中毒再用解毒藥解掉。
+  - 這場原本放在守夜侍僧戰裡，但會改變之後的戰鬥亂數，害魔王戰少了破防（`boss_breaks`），所以移到最後。
+  - 新的必要事實：weapon_kinds_bought 9、armour_bought 1、remedies_bought 4、orbs_socketed 1、new_weapon_refines 1、thrown_items 1、cures_used 1。
+  - 連跑兩次都是 exit 0。
+
+**G3 測試：** `tests/test_shops.py`（4 項）：
+- 商店直接賣裝備時進裝備背包，道具照舊進道具背包，金幣扣對。
+- 三間店的商品與價格正確，裝備不收購，九種武器都有，重複套用加 0。
+- 每位店主在鎮上只有一位，事件會打開自己的店，店名有中文。
+- 買下騎士之刃與火之寶珠、裝上、鑲嵌 +15 火屬性、精煉花掉材料。
+- 全部測試：3291 通過、1 跳過、1 失敗。失敗的是 `test_built_in_text`，原因是另一個 session 未追蹤的 `runtime/creature_battle.py` 用了沒登記的 `creature.foe_weak`，不是這批的檔案。ruff check 全過；ruff format 只剩另一個 session 的 `formulas.py`、`battle_states.py`。
+
+**G3 實機證據（`docs/audits/evidence/arsenal/`）：** `scripts/shops_live_check.py`（Cocoa、真的按鍵、靜音）PASS，英文和中文各跑一次：
+- 按 E 跟三位店主說話（`g3_*_line`），按 Enter 進店，按方向鍵和 Enter 買騎士之刃、襯墊短衣、火之寶珠（`g3_*_shop`）。
+- 藥鋪清單捲到第 28 項。
+- 工坊按 S 鑲上火之寶珠（火屬性攻擊 0 → 15），按 R 精煉，畫面顯示「精煉：成功」（`g3_*_workshop`）。
+- 結果在 `results_g3.json`。
+- 編輯器截圖：`g3_editor_shops_en/zh.png`（瑟拉藥鋪）、`g3_editor_arms_en/zh.png`（布蘭武器店，裝備顯示名稱）。
+
+**G3 限制：**
+- 商店不收購裝備（賣出分頁只列道具）。
+- 工坊的 S 鍵鑲背包裡第一顆合適的寶石。實機檢查先把其他寶石移開，所以鑲的是火之寶珠。
+- 米拉換騎士之刃、精煉完再換回原武器，是腳本做的。
+- 材料仍只能買賣，沒有用到它們的配方。
+
+**狀態：** 已提交（2026-10-24，使用者要求；只含本批檔案與 hunk，demo JSON 是在 HEAD 的乾淨副本上套用 `trial_arsenal`、`trial_supplies`、`trial_shops`、`trial_zh_data` 後的版本）。

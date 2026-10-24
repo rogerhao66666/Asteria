@@ -219,14 +219,32 @@ class ShopRuntime:
     kept in the save; limited entries start at their defined stock.
     """
 
-    def __init__(self, shops, *, inventory, currencies, stock, condition=None):
+    def __init__(
+        self,
+        shops,
+        *,
+        inventory,
+        currencies,
+        stock,
+        condition=None,
+        receive_equipment=None,
+        equipment=(),
+    ):
         self.shops = shops
         self.inventory = inventory
         self.currencies = currencies
         self.stock = stock
+        # ``receive_equipment(equipment_id, quantity)`` takes a bought piece of gear (an entry
+        # whose id names equipment) into the equipment bag instead of the item bag; ``None``:
+        # entries sell items only, as before (D61)
+        self.receive_equipment = receive_equipment
+        self.equipment = frozenset(equipment)  # the ids that name equipment
         # ``condition(conditions) -> bool`` evaluates switch / variable conditions; without it
         # every condition holds (plain prices, every entry visible)
         self.condition = condition
+
+    def _is_equipment(self, item_id):
+        return item_id in self.equipment
 
     def _holds(self, conditions):
         return all(self.condition([c]) for c in conditions) if self.condition else True
@@ -307,8 +325,11 @@ class ShopRuntime:
                     item=entry.item_id,
                 )
             )
+        gear = self.receive_equipment is not None and self._is_equipment(entry.item_id)
         room = (
-            self.inventory.room_for(entry.item_id) if hasattr(self.inventory, "room_for") else None
+            self.inventory.room_for(entry.item_id)
+            if hasattr(self.inventory, "room_for") and not gear
+            else None
         )
         if (
             room is not None and room < quantity
@@ -325,7 +346,10 @@ class ShopRuntime:
         change = {k: -v * quantity for k, v in buy_prices.items()}
         for key, delta in change.items():
             self.currencies[key] = self.currencies.get(key, 0.0) + delta
-        self.inventory.add(entry.item_id, quantity)
+        if gear:
+            self.receive_equipment(entry.item_id, quantity)
+        else:
+            self.inventory.add(entry.item_id, quantity)
         if remaining is not None:
             self.stock.setdefault(shop.shop_id, {})[entry.item_id] = remaining - quantity
         return ShopTransaction(shop.shop_id, entry.item_id, quantity, change)

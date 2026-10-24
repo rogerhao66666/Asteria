@@ -26,6 +26,7 @@ sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(REPO / "scripts"))
 
+import trial_arsenal as arsenal  # noqa: E402
 import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
@@ -42,9 +43,11 @@ import trial_jobs as jobs  # noqa: E402
 import trial_kaykit as kaykit  # noqa: E402
 import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as maps  # noqa: E402
+import trial_shops as shops  # noqa: E402
 import trial_stage as stage  # noqa: E402
 import trial_stats as stats  # noqa: E402
 import trial_story as story  # noqa: E402
+import trial_supplies as supplies  # noqa: E402
 import trial_systems as systems  # noqa: E402
 import trial_trees as trees  # noqa: E402
 import trial_world as world_extras  # noqa: E402
@@ -115,6 +118,9 @@ def main():
     )
     world_extras.backdrops(context)  # the bog, catacomb and throne battle backdrops
     content.finalize_names(context)
+    arsenal.apply(project, HERE, context.skill_names)  # every weapon kind, five rarities (D61)
+    supplies.apply(project, HERE)  # armour, accessories, potions, cures, bombs, orbs (D61)
+    shops.apply(project, HERE)  # Hearthfold's arms, armour and remedy shops (D61)
     zh_data.apply(project)  # dialogue keys and the data's Chinese (D60)
     content.game_start(context)
     path = HERE / "project.asteria.json"

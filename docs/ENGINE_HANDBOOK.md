@@ -393,6 +393,17 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 匯出 | `asteria.export_web`：專案＋精簡引擎＋Noto Sans TC＋async `main.py` → pygbag 打包成 `build/web/`；`--serve` 用自己的靜態伺服器；`runtime/web_persistence.py` 把 `saves/` 鏡像到 localStorage；引擎在瀏覽器裡不開執行緒、不碰 `resource`／`tracemalloc`／`statistics`；`PlayableTestRuntime.step()` |
 | 素材 | `asset_library/fonts/noto_sans_tc/`（OFL）；素材庫列圖包時略過沒有圖片的資料夾 |
 
+### D61 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 素材 | `asset_library/opengameart/7Soul_496_RPG_Icons/`（CC0，496 張 34×34） |
+| Demo | Full Verification 九種武器類型（含新的書、拳、投擲與它們的普通攻擊）各 ≥5 把、五個稀有度；`trial_arsenal.py`；證據 `audits/evidence/arsenal/` |
+| Demo | 防具 18、飾品 19、道具 94（藥水、狀態藥、投擲、材料、屬性寶珠、卡片）；`trial_supplies.py`；會解除狀態的技能說明寫 removes |
+| 引擎 | 商店可以賣裝備：`ShopRuntime(receive_equipment=, equipment=)`，買下進裝備背包；商店清單跟著游標捲動；工坊精煉結果 `workshop.outcome.*` 有翻譯 |
+| 編輯器 | 商店商品欄「道具或裝備」（來源 `goods`：道具＋裝備，都顯示名稱與圖示） |
+| Demo | 爐心鎮三間新商店（武器、防具、藥鋪）；`trial_shops.py`；run_campaign 新增 7 個必要事實；`scripts/shops_live_check.py` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
