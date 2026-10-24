@@ -134,40 +134,41 @@ def main(argv=None):
             press(pygame.K_ESCAPE, 0.3)
             decline_offers()
             runtime._ui_mode = "field"
-        # the bought blade on Aldric, then the workshop: S sockets the orb, R refines
+        # the bought blade on Roger, then the workshop: S sockets the orb, R refines
         wear = {"actor_id": "hero_01", "equipment_id": "w_knights_blade", "slot_id": "weapon"}
         game.world_commands.dispatch(WorldCommand("EQUIP_ITEM", wear))
         blade = state.loadouts["hero_01"].equipped("weapon")[0]
         checks[f"{tag}_blade_worn"] = blade.equipment.equipment_id == "w_knights_blade"
         runtime._ui_mode = "build"
         pump(runtime, 0.3)
-        press(pygame.K_8, 0.3)
-        checks[f"{tag}_workshop_opened"] = runtime._ui_mode == "workshop"
+        press(pygame.K_8, 0.3)  # the build menu's 8: the enhance screen (U3)
+        checks[f"{tag}_workshop_opened"] = runtime._ui_mode == "enhance"
+        screen = runtime._gear_screen
+        gear = [p.instance_id for _s, p in screen.gear()]
         fire = game.resolve_actor_build("hero_01").stats.get("fire_attack")
-        gems = {  # S sockets the first fitting gem: the bag's other gems wait aside
-            i.item_id: state.inventory.count(i.item_id)
-            for i in project.rpg_database.items.values()
-            if i.attachment_id and i.item_id != "fire_orb_item"
-        }
-        for item_id, count in gems.items():
-            if count:
-                state.inventory.remove(item_id, count)
-        press(pygame.K_s, 0.3)
-        for item_id, count in gems.items():
-            if count:
-                state.inventory.add(item_id, count)
+        press(pygame.K_TAB, 0.2)  # the Sockets page: the blade's gem socket, then the orb
+        screen.rows["gear"] = gear.index(blade.instance_id)
+        press(pygame.K_RETURN, 0.2)
+        press(pygame.K_RETURN, 0.2)
+        names = [item.item_id for item, _a, _n in screen.choices()]
+        if "fire_orb_item" in names:
+            screen.rows["choices"] = names.index("fire_orb_item")
+            press(pygame.K_RETURN, 0.3)
         socketed = blade.attachments.get("g1")
         checks[f"{tag}_orb_socketed"] = bool(socketed) and socketed.attachment_id == "fire_orb"
         checks[f"{tag}_fire_attack"] = [
             fire,
             game.resolve_actor_build("hero_01").stats.get("fire_attack"),
         ]
+        for _ in range(3):  # back round to the Refine page
+            press(pygame.K_TAB, 0.1)
+        screen.rows["gear"] = gear.index(blade.instance_id)
         ore = state.inventory.count("iron_ore")
-        press(pygame.K_r, 0.3)
+        press(pygame.K_RETURN, 0.3)
         checks[f"{tag}_refined"] = state.inventory.count("iron_ore") == ore - 1
-        checks[f"{tag}_workshop_message"] = getattr(runtime, "_workshop_message", "")
+        checks[f"{tag}_workshop_message"] = screen.message
         shot(f"g3_{tag}_workshop", "騎士之刃" if zh else "Knight's Blade")
-        press(pygame.K_c, 0.2)
+        press(pygame.K_ESCAPE, 0.2)
         runtime._ui_mode = "field"
         pump(runtime, 0.3)
         deadline = time.perf_counter() + 1.0

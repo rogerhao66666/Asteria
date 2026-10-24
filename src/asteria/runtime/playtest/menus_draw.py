@@ -21,6 +21,10 @@ from .support import (  # noqa: F401 - the names the moved methods use
     walking_row_index,
 )
 
+# the menus' own colours (a menu theme or a layout element may give others, U2)
+TITLE, PICKED, TEXT, MUTED = (255, 220, 124), (255, 226, 129), (235, 238, 245), (170, 210, 240)
+GREY, LACKING, DIM = (130, 135, 150), (200, 130, 130), (120, 125, 140)
+
 
 class MenusDrawMixin:
     # -- controls / rebinding (ENG-15) ------------------------------------------------------------
@@ -66,87 +70,88 @@ class MenusDrawMixin:
         self.settings.save(self._settings_path())
 
     def _draw_controls(self):
-        self._draw_backdrop()
+        c = self.menu_canvas("controls")
+        self._draw_backdrop(canvas=c)
         menu = self.controls_menu
-        self.panel((60, 30, self.width - 120, self.height - 60))
+        c.panel("frame", (60, 30, self.width - 120, self.height - 60))
         tr = self.game.tr
         title = tr("controls.title", "Controls")
-        self.text(title, self.width / 2, 44, size=32, color=(255, 220, 124), center=True)
-        for i, (action, bindings) in enumerate(menu.rows()):
-            y = 92 + i * 30
+        c.text(
+            "title", title, self.width / 2, 44, size=32, color=c.tone("title", TITLE), center=True
+        )
+        rows = menu.rows()
+        at = c.place("options", (90, 92, self.width - 180, len(rows) * 30), 30)
+        size = c.size("options", 21)
+        for i, (action, bindings) in enumerate(rows):
+            y = at.y(92) + i * at.row
             selected = i == menu.row
-            color = (255, 226, 129) if selected else (235, 238, 245)
-            self.menu_row(menu.action_name(action), 90, y, selected=selected, size=21, color=color)
-            self.text(bindings, self.width / 2, y, size=21, color=(170, 210, 240))
+            color = (
+                c.tone("selected", PICKED)
+                if selected
+                else c.color("options", c.tone("text", TEXT))
+            )
+            name = menu.action_name(action)
+            self.menu_row(name, at.x(90), y, selected=selected, size=size, color=color)
+            self.text(bindings, at.x(self.width / 2), y, size=size, color=c.tone("muted", MUTED))
         hint = menu.message or tr(
             "controls.hint", "Enter: rebind   Backspace: reset action   Esc: save and back"
         )
-        self.text(
-            hint, self.width / 2, self.height - 58, size=19, color=(255, 226, 129), center=True
-        )
+        c.text("hint", hint, self.width / 2, self.height - 58, size=19, color=PICKED, center=True)
+        c.finish()
 
     def _draw_crafting(self):
         screen = self._crafting_screen
-        self._draw_backdrop()
+        station = screen.station if screen is not None else ""
+        c = self.menu_canvas("crafting", {"station.name": station.replace("_", " ").title()})
+        self._draw_backdrop(canvas=c)
         if screen is None:
             return
-        self.panel((60, 40, self.width - 120, self.height - 80))
+        c.panel("frame", (60, 40, self.width - 120, self.height - 80))
         tr = self.game.tr
         title = tr("pause.crafting", "Crafting") + (
             f" — {screen.station.replace('_', ' ').title()}" if screen.station else ""
         )
-        self.text(title, 90, 54, size=30, color=(255, 220, 124))
+        c.text("title", title, 90, 54, size=30, color=c.tone("title", TITLE))
         rows = screen.rows()
         if not rows:
             empty = tr("crafting.none", "No known recipes here.")
-            self.text(empty, 90, 110, size=22, color=(170, 210, 240))
-        y = 104
+            c.text("empty", empty, 90, 110, size=22, color=c.tone("muted", MUTED))
+        at = c.place("rows", (90, 104, self.width - 180, self.height - 150 - 104), 56)
+        y = at.y(104)
         for i, row in enumerate(rows):
-            if y > self.height - 150:
+            if y > at.bottom:
                 break
             selected = i == screen.index
-            color = (
-                (255, 226, 129)
-                if selected
-                else (235, 238, 245)
-                if row.craftable
-                else (130, 135, 150)
-            )
+            normal = c.color("rows", c.tone("text", TEXT))
+            color = c.tone("selected", PICKED) if selected else normal if row.craftable else GREY
+            name = f"{row.name}  ->  {row.outputs}"
             self.menu_row(
-                f"{row.name}  ->  {row.outputs}", 90, y, selected=selected, size=22, color=color
+                name, at.x(90), y, selected=selected, size=c.size("rows", 22), color=color
             )
             y += 26
             materials = "   ".join(f"{name} {have}/{need}" for name, need, have in row.materials)
-            self.text(
-                materials,
-                120,
-                y,
-                size=17,
-                color=(170, 210, 240) if row.craftable else (200, 130, 130),
-            )
-            y += 30
+            muted = c.tone("muted", MUTED)
+            self.text(materials, at.x(120), y, size=17, color=muted if row.craftable else LACKING)
+            y += at.row - 26
         hidden = screen.undiscovered()
         if hidden:
             self.text(
                 tr("crafting.hidden", "??? {count} recipe(s) not yet discovered", count=hidden),
-                90,
+                at.x(90),
                 self.height - 128,
                 size=18,
                 color=(150, 155, 175),
             )
         if screen.message:
-            self.text(screen.message, 90, self.height - 100, size=20, color=(255, 220, 124))
-        self.text(
-            tr("crafting.hint", "Up/Down: select   Enter: craft   Esc: back"),
-            90,
-            self.height - 72,
-            size=18,
-            color=(170, 210, 240),
-        )
+            c.text("message", screen.message, 90, self.height - 100, size=20, color=TITLE)
+        hint = tr("crafting.hint", "Up/Down: select   Enter: craft   Esc: back")
+        c.text("hint", hint, 90, self.height - 72, size=18, color=c.tone("muted", MUTED))
+        c.finish()
 
     def _draw_list_screen(self, kind):
-        self._draw_backdrop()
-        self.panel((60, 40, self.width - 120, self.height - 80))
+        c = self.menu_canvas(kind)
+        self._draw_backdrop(canvas=c)
+        c.panel("frame", (60, 40, self.width - 120, self.height - 80))
         tr = self.game.tr
         line_icons = []  # an icon per line (achievements may carry one)
         if kind == "achievements":
@@ -157,7 +162,8 @@ class MenusDrawMixin:
             }
             line_icons = [by_name.get(name, "") for name, _description, _unlocked in rows]
             done = sum(1 for r in rows if r[2])
-            self.text(
+            c.text(
+                "title",
                 tr(
                     "achievements.title",
                     "Achievements  {done}/{count}",
@@ -167,7 +173,7 @@ class MenusDrawMixin:
                 self.width / 2,
                 56,
                 size=30,
-                color=(255, 220, 124),
+                color=c.tone("title", TITLE),
                 center=True,
             )
             lines = [
@@ -181,12 +187,13 @@ class MenusDrawMixin:
         else:
             rows = bestiary_rows(self.game)
             seen = sum(1 for r in rows if r[1])
-            self.text(
+            c.text(
+                "title",
                 tr("bestiary.title", "Bestiary  {seen}/{count} seen", seen=seen, count=len(rows)),
                 self.width / 2,
                 56,
                 size=30,
-                color=(255, 220, 124),
+                color=c.tone("title", TITLE),
                 center=True,
             )
             lines = [
@@ -195,31 +202,35 @@ class MenusDrawMixin:
                 for name in (row[0],)
             ]
         if not lines:
-            self.text(
-                tr("status.empty", "Nothing here yet."), 90, 110, size=22, color=(170, 210, 240)
-            )
+            empty = tr("status.empty", "Nothing here yet.")
+            c.text("empty", empty, 90, 110, size=22, color=c.tone("muted", MUTED))
         self._list_scroll = min(self._list_scroll, max(0, len(lines) - 1))
-        y = 104
-        shift = 30 if any(line_icons) else 0
+        at = c.place("rows", (90, 104, self.width - 180, self.height - 110 - 104), 24)
+        icon_size = c.icon_size("rows", 24)
+        y = at.y(104)
+        shift = icon_size + 6 if any(line_icons) else 0
+        size = c.size("rows", 22)
         for number, (title, detail, color) in enumerate(lines[self._list_scroll :]):
-            if y > self.height - 110:
+            if y > at.bottom:
                 break
             index = self._list_scroll + number
             if index < len(line_icons) and line_icons[index]:
-                self._draw_icon(line_icons[index], 90, y - 2, 24)
-            self.text(title, 90 + shift, y, size=22, color=color)
-            y += 24
+                self._draw_icon(line_icons[index], at.x(90), y - 2, icon_size)
+            self.text(title, at.x(90) + shift, y, size=size, color=color)
+            y += at.row
             for part in detail.split("\n") if detail else ():
-                self.text(part, 120, y, size=17, color=(170, 210, 240))
+                self.text(part, at.x(120), y, size=17, color=c.tone("muted", MUTED))
                 y += 22
             y += 6
-        self.text(
+        c.text(
+            "hint",
             tr("list.hint", "Up/Down: scroll   Enter / Esc: back"),
             self.width - 360,
             self.height - 72,
             size=18,
-            color=(170, 210, 240),
+            color=c.tone("muted", MUTED),
         )
+        c.finish()
 
     def _resource_labels(self):
         """Resource id -> the short label the battle HUD gives it (``vitality`` -> ``HP``)."""
@@ -272,191 +283,260 @@ class MenusDrawMixin:
         return localizer.tr("language.name", localizer.locale)
 
     def _draw_settings(self):
-        self._draw_backdrop()
+        c = self.menu_canvas("settings")
+        self._draw_backdrop(canvas=c)
         cursor = self._settings_menu
         tall = max(260, 120 + len(cursor.options) * 38)  # every row inside the panel
         x, y = self.width / 2 - 220, self.height / 2 - tall / 2
-        self.panel((x, y, 440, tall))
+        x, y, _w, tall = c.panel("frame", (x, y, 440, tall))
         tr = self.game.tr
         title = tr("pause.settings", "Settings")
-        self.text(title, self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
-        for i, (key, label) in enumerate(cursor.labels(tr)):
+        top = y + 18
+        c.text("title", title, x + 220, top, size=34, color=c.tone("title", TITLE), center=True)
+        labels = cursor.labels(tr)
+        at = c.place("options", (x + 40, y + 76, 360, len(labels) * 38), 38)
+        size = c.size("options", 24)
+        for i, (key, label) in enumerate(labels):
             selected = i == cursor.index
-            color = (255, 226, 129) if selected else (235, 238, 245)
-            self.menu_row(label, x + 40, y + 76 + i * 38, selected=selected, size=24, color=color)
+            color = (
+                c.tone("selected", PICKED)
+                if selected
+                else c.color("options", c.tone("text", TEXT))
+            )
+            row_y = at.y(y + 76) + i * at.row
+            self.menu_row(label, at.x(x + 40), row_y, selected=selected, size=size, color=color)
             if key == "language":
                 value = self._language_name()
             else:
                 value = self.settings.value_text(key, tr)
             if value:
-                self.text(
-                    f"< {value} >" if selected else value,
-                    x + 300,
-                    y + 76 + i * 38,
-                    size=24,
-                    color=color,
-                )
-        self.text(
+                shown = f"< {value} >" if selected else value
+                self.text(shown, at.x(x + 300), row_y, size=size, color=color)
+        c.text(
+            "hint",
             tr("settings.hint", "Left/Right: change   Esc: save and back"),
-            self.width / 2,
+            x + 220,
             y + tall - 24,
             size=16,
-            color=(170, 210, 240),
+            color=c.tone("muted", MUTED),
             center=True,
         )
+        c.finish()
 
-    def _draw_backdrop(self, base="field"):
-        if base == "battle":
-            self._battle_presentation.draw()  # the canonical battle screen as it was left
-        else:
-            self._draw_field(False)
-        shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-        shade.fill((5, 8, 16, 170))
-        self.screen.blit(shade, (0, 0))
+    def _draw_backdrop(self, base="field", canvas=None):
+        """The map (or the battle) darkened behind a menu; a layout's own background colour
+        or picture replaces it, and its ``dim`` sets how dark (U2)."""
+        layout = canvas.layout if canvas is not None else None
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            if base == "battle":
+                self._battle_presentation.draw()  # the canonical battle screen as it was left
+            else:
+                self._draw_field(False)
+            dim = 170 if layout is None or layout.dim < 0 else layout.dim
+            if dim:
+                shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+                shade.fill((5, 8, 16, dim))
+                self.screen.blit(shade, (0, 0))
+        if canvas is not None:
+            canvas.begin()
 
-    def _draw_overlay_menu(self, title, cursor, base="field"):
-        self._draw_backdrop(base)
+    def _draw_overlay_menu(self, title, cursor, base="field", screen_id="pause"):
+        c = self.menu_canvas(screen_id, self._menu_fields())
+        self._draw_backdrop(base, canvas=c)
         height = 90 + 34 * len(cursor.options)
         shift = 30 if cursor.icons else 0  # room for the rows' icons: the panel grows with it
         x, y = self.width / 2 - 170 - shift / 2, self.height / 2 - height / 2
-        self.panel((x, y, 340 + shift, height))
-        self.text(title, self.width / 2, y + 18, size=34, color=(255, 220, 124), center=True)
-        for i, (option_id, label) in enumerate(cursor.labels(self.game.tr)):
+        x, y, width, height = c.panel("frame", (x, y, 340 + shift, height))
+        middle = x + width / 2
+        c.text("title", title, middle, y + 18, size=34, color=c.tone("title", TITLE), center=True)
+        labels = cursor.labels(self.game.tr)
+        at = c.place("options", (x + 36, y + 68, width - 72, 34 * len(labels)), 34)
+        size = c.size("options", 24)
+        icon = c.icon_size("options", 26)
+        for i, (option_id, label) in enumerate(labels):
             selected = i == cursor.index
+            row_y = at.y(y + 68) + i * at.row
             if option_id in cursor.icons:
-                self._draw_icon(cursor.icons[option_id], round(x + 36), round(y + 68 + i * 34), 26)
+                self._draw_icon(cursor.icons[option_id], round(at.x(x + 36)), round(row_y), icon)
+            normal = c.color("options", c.tone("text", TEXT))
             self.menu_row(
                 label,
-                x + 40 + shift,
-                y + 70 + i * 34,
+                at.x(x + 40 + shift),
+                row_y + 2,
                 selected=selected,
-                size=24,
-                color=(255, 226, 129) if selected else (235, 238, 245),
+                size=size,
+                color=c.tone("selected", PICKED) if selected else normal,
             )
         if self.message and self.pg.time.get_ticks() < self.message_until:
             self.text(
                 self.message,
-                self.width / 2,
+                middle,
                 y + height + 14,
                 size=20,
                 color=(175, 235, 255),
                 center=True,
             )
+        c.finish()
+
+    def _menu_fields(self):
+        """Fields every overlay menu offers the author's own texts (U2)."""
+        game = self.game
+        party = game.save.rpg_state.party_actor_ids
+        leader = party[0] if party else ""
+        gold = game.save.rpg_state.currencies.get("gold", 0)
+        return {
+            "party.leader": lambda: game.name_of(
+                self.project.rpg_database.actors.get(leader), leader
+            ),
+            "wallet.gold": gold,
+            "map.name": lambda: self._map_title(),
+            "game.title": self.manifest.get("title", ""),
+        }
+
+    def _map_title(self):
+        scene = getattr(self, "scene", None)
+        name = getattr(scene, "name", "") if scene is not None else ""
+        return self.game.map_name(getattr(scene, "id", ""), name) if name else ""
 
     def _draw_quests(self):
-        self._draw_backdrop()
-        self.panel((60, 40, self.width - 120, self.height - 80))
+        c = self.menu_canvas("quests")
+        self._draw_backdrop(canvas=c)
+        c.panel("frame", (60, 40, self.width - 120, self.height - 80))
         tr = self.game.tr
         title = tr("pause.quests", "Quest Log")
-        self.text(title, self.width / 2, 56, size=32, color=(255, 220, 124), center=True)
+        c.text(
+            "title", title, self.width / 2, 56, size=32, color=c.tone("title", TITLE), center=True
+        )
         rows = quest_rows(self.game)
         if not rows:
-            self.text(tr("quests.none", "No quests yet."), 90, 110, size=22, color=(170, 210, 240))
-        y = 104
+            none = tr("quests.none", "No quests yet.")
+            c.text("empty", none, 90, 110, size=22, color=c.tone("muted", MUTED))
+        at = c.place("rows", (90, 104, self.width - 180, self.height - 110 - 104), 30)
+        y = at.y(104)
         colors = {
-            "active": (235, 238, 245),
+            "active": c.color("rows", c.tone("text", TEXT)),
             "completed": (130, 220, 150),
             "failed": (230, 120, 120),
         }
+        icon_size = c.icon_size("rows", 24)
         for row in rows:
-            if y > self.height - 110:
+            if y > at.bottom:
                 break
             icon = self.project.rpg_database.quests[row.quest_id].icon_id
             if icon:
-                self._draw_icon(icon, 90, y - 2, 24)
+                self._draw_icon(icon, at.x(90), y - 2, icon_size)
             status = tr(f"quests.status.{row.status}", row.status)  # the status is an id
             self.text(
                 f"{row.name}  [{status}]",
-                90 + (30 if icon else 0),
+                at.x(90) + (icon_size + 6 if icon else 0),
                 y,
-                size=24,
+                size=c.size("rows", 24),
                 color=colors[row.status],
             )
-            y += 30
+            y += at.row
             for description, value, required, done in row.objectives:
                 self.text(
                     f"{'[x]' if done else '[ ]'} {description}  {value}/{required}",
-                    120,
+                    at.x(120),
                     y,
                     size=19,
-                    color=(170, 210, 240),
+                    color=c.tone("muted", MUTED),
                 )
                 y += 24
             y += 8
-        self.text(
+        c.text(
+            "hint",
             tr("quests.hint", "Enter / Esc: back"),
             self.width - 260,
             self.height - 72,
             size=18,
-            color=(170, 210, 240),
+            color=c.tone("muted", MUTED),
         )
+        c.finish()
 
     def _draw_shop(self):
         screen = self._shop_screen
-        self._draw_backdrop()
+        shop = screen.shop if screen is not None else None
+        c = self.menu_canvas(
+            "shop",
+            {
+                "shop.name": lambda: self.game.name_of(shop) if shop is not None else "",
+                "wallet.gold": self.game.save.rpg_state.currencies.get("gold", 0),
+            },
+        )
+        self._draw_backdrop(canvas=c)
         if screen is None or screen.shop is None:
             return
-        self.panel((60, 40, self.width - 120, self.height - 80))
+        c.panel("frame", (60, 40, self.width - 120, self.height - 80))
         shop_icon = screen.shop.icon_id
-        if shop_icon:
+        if shop_icon and c.shown("title"):
             self._draw_icon(shop_icon, 90, 50, 32)
-        self.text(
+        c.text(
+            "title",
             self.game.name_of(screen.shop),
             90 + (40 if shop_icon else 0),
             54,
             size=30,
-            color=(255, 220, 124),
+            color=c.tone("title", TITLE),
         )
         tr = self.game.tr
-        for i, tab in enumerate(("buy", "sell")):
-            self.text(
-                tr(f"shop.{tab}", tab.title()),
-                self.width - 300 + i * 100,
-                60,
-                size=24,
-                color=(255, 226, 129) if screen.tab == tab else (130, 140, 160),
-            )
-        self.text(tr("shop.item", "Item"), 90, 104, size=19, color=(170, 210, 240))
-        self.text(tr("shop.price", "Price"), 420, 104, size=19, color=(170, 210, 240))
-        self.text(tr("shop.stock", "Stock"), 640, 104, size=19, color=(170, 210, 240))
-        self.text(tr("shop.owned", "Owned"), 740, 104, size=19, color=(170, 210, 240))
+        tabs = c.place("tabs", (self.width - 300, 60, 200, 30), 100)
+        if c.shown("tabs"):
+            for i, tab in enumerate(("buy", "sell")):
+                self.text(
+                    tr(f"shop.{tab}", tab.title()),
+                    tabs.x(self.width - 300) + i * tabs.row,
+                    tabs.y(60),
+                    size=c.size("tabs", 24),
+                    color=c.tone("selected", PICKED) if screen.tab == tab else (130, 140, 160),
+                )
         from asteria.runtime.menu_icons import record_icon_id
 
+        at = c.place("rows", (90, 134, self.width - 180, self.height - 130 - 134), 30)
+        heads = c.place("columns", (90, 104, 680, 24))
+        muted = c.tone("muted", MUTED)
+        if c.shown("columns"):
+            for word, x in (
+                (tr("shop.item", "Item"), 90),
+                (tr("shop.price", "Price"), 420),
+                (tr("shop.stock", "Stock"), 640),
+                (tr("shop.owned", "Owned"), 740),
+            ):
+                self.text(word, heads.x(x), heads.y(104), size=19, color=c.color("columns", muted))
         rows = screen.rows()
         icons = [record_icon_id(self.project, "item", r.item_id) for r in rows]
-        name_x = 90 + (30 if any(icons) else 0)
+        icon_size = c.icon_size("rows", 22)
+        name_x = at.x(90) + (icon_size + 8 if any(icons) else 0)
         # a long list scrolls with the cursor (D61: a shop of 38 wares), "n/total" above it
-        fit = max(1, (self.height - 130 - 134) // 30 + 1)
+        fit = max(1, (at.bottom - at.y(134)) // at.row + 1)
         first = min(max(0, screen.index - fit // 2), max(0, len(rows) - fit))
         if len(rows) > fit:
             where = f"{min(screen.index, len(rows) - 1) + 1}/{len(rows)}"
-            self.text(where, 840, 104, size=19, color=(170, 210, 240))
+            c.text("count", where, heads.x(840), heads.y(104), size=19, color=muted)
+        size = c.size("rows", 22)
         for i, row in enumerate(rows):
             if i < first:
                 continue
-            y = 134 + (i - first) * 30
-            if y > self.height - 130:
+            y = at.y(134) + (i - first) * at.row
+            if y > at.bottom:
                 break
-            color = (
-                (255, 226, 129)
-                if i == screen.index
-                else (235, 238, 245)
-                if row.available
-                else (120, 125, 140)
-            )
-            if i == screen.index:
-                self.menu_mark(72, y, size=22, color=color)
-            self._draw_icon(icons[i], 90, y - 2)
-            self.text(row.name, name_x, y, size=22, color=color)
-            self.text(row.price, 420, y, size=22, color=color)
-            self.text(row.stock, 640, y, size=22, color=color)
-            self.text(str(row.owned), 740, y, size=22, color=color)
-        self.text(screen.wallet(), 90, self.height - 100, size=20, color=(175, 235, 255))
+            normal = c.color("rows", c.tone("text", TEXT))
+            selected = i == screen.index
+            color = c.tone("selected", PICKED) if selected else normal if row.available else DIM
+            if selected:
+                self.menu_mark(at.x(72), y, size=size, color=color)
+            self._draw_icon(icons[i], at.x(90), y - 2, icon_size)
+            self.text(row.name, name_x, y, size=size, color=color)
+            self.text(row.price, at.x(420), y, size=size, color=color)
+            self.text(row.stock, at.x(640), y, size=size, color=color)
+            self.text(str(row.owned), at.x(740), y, size=size, color=color)
+        c.text("wallet", screen.wallet(), 90, self.height - 100, size=20, color=(175, 235, 255))
         if screen.message:
-            self.text(
-                screen.message, self.width / 2, self.height - 100, size=20, color=(255, 220, 124)
+            c.text(
+                "message", screen.message, self.width / 2, self.height - 100, size=20, color=TITLE
             )
-        self.text(
+        c.text(
+            "hint",
             tr(
                 "shop.hint",
                 "Up/Down: select   Left/Right: buy/sell   Enter: confirm   Esc: leave",
@@ -464,5 +544,6 @@ class MenusDrawMixin:
             90,
             self.height - 72,
             size=18,
-            color=(170, 210, 240),
+            color=muted,
         )
+        c.finish()

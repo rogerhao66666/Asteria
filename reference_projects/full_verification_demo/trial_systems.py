@@ -195,7 +195,7 @@ def events(c):
         project,
         "common.camp",
         [
-            say("Aldric", "We camp here tonight."),
+            say("Roger", "We camp here tonight."),
             world("REST_PARTY"),
             world("ADD_COUNTER", counter_id="camps", amount=1),
             world("SHOW_POPUP", text="The party is rested.", kind="item"),

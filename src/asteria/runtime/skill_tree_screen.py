@@ -99,17 +99,15 @@ def describe_reward(reward, labels, names=None, tr=None):
     return parts
 
 
-def stat_names(project):
-    """Stat and resource names from the project's first character screen profile."""
-    library = project.battle_presentation_library
-    try:
-        ids = library.ids("rpg_character_screen")
-    except (KeyError, ValueError):
-        return {}
-    if not ids:
-        return {}
-    profile = library.require("rpg_character_screen", ids[0])
-    return {**dict(profile.resource_labels), **dict(profile.stat_labels)}
+class StatNames:
+    """``names.get(stat_id)`` for ``describe_reward``: the stat's name in the player's language
+    (``GameSessionRuntime.stat_name``: the locale table, the character screen, the id)."""
+
+    def __init__(self, game):
+        self.game = game
+
+    def get(self, stat_id, _default=None):
+        return self.game.stat_name(stat_id)
 
 
 class SkillTreeScreen:
@@ -375,19 +373,29 @@ class SkillTreeScreen:
     def draw(self):
         rt = self.rt
         pg, screen = rt.pg, rt.screen
-        screen.fill((10, 12, 20))
         graph = self.graph()
         actor_id = self.actor_id
         game = rt.game
+        db = game.project.rpg_database
+        c = self.canvas = rt.menu_canvas(
+            "skill_tree",
+            {"member.name": lambda: game.name_of(db.actors.get(actor_id), actor_id or "")},
+        )
+        layout = c.layout
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            screen.fill((10, 12, 20))
+        c.begin()
         tr = game.tr
-        rt.text(tr("skill_tree.title", "Skill Tree"), 36, 22, size=34, color=(255, 220, 124))
+        title = tr("skill_tree.title", "Skill Tree")
+        c.text("title", title, 36, 22, size=34, color=c.tone("title", (255, 220, 124)))
         if graph is None or actor_id is None:
             rt.text(tr("skill_tree.none", "No skill tree for this character."), 36, 80, size=22)
+            c.finish()
             return
         allocation = self._allocation()
         progression = game.ensure_actor_progression(actor_id)
         balances = "   ".join(
-            f"{currency.upper()} {allocation.balance(currency):g}"
+            f"{game.points_name(currency)} {allocation.balance(currency):g}"
             for currency in sorted(
                 {c for n in graph.nodes for cost in n.rank_costs for c in cost} or {"ap"}
             )
@@ -397,7 +405,8 @@ class SkillTreeScreen:
             for c in progression.active_class_ids
             if c in game.project.rpg_database.classes
         )
-        rt.text(
+        c.text(
+            "header",
             tr(
                 "skill_tree.header",
                 "{tree}   ·   {classes}   ·   Lv {level}",
@@ -410,10 +419,11 @@ class SkillTreeScreen:
             size=21,
             color=(190, 205, 230),
         )
-        rt.text(balances, rt.width - 36 - 300, 30, size=24, color=(140, 230, 170))
+        c.text("points", balances, rt.width - 36 - 300, 30, size=24, color=(140, 230, 170))
         count = len(self.graphs())
         if count > 1:
-            rt.text(
+            c.text(
+                "trees",
                 tr(
                     "skill_tree.trees",
                     "Tree {index}/{count}  (O: next tree)",
@@ -480,7 +490,8 @@ class SkillTreeScreen:
             )
         screen.set_clip(previous_clip)
         self._draw_details(graph, allocation)
-        rt.text(
+        c.text(
+            "hint",
             tr(
                 "skill_tree.hint",
                 "Arrows: choose   Enter: learn   Wheel / + -: zoom   Drag: move   R: fit   "
@@ -501,6 +512,7 @@ class SkillTreeScreen:
                 color=(175, 235, 255),
                 center=True,
             )
+        c.finish()
 
     def node_icon(self, node):
         """The node's own icon, else the first granted ability's icon, else ``""``."""
@@ -520,12 +532,15 @@ class SkillTreeScreen:
     def _draw_details(self, graph, allocation):
         rt = self.rt
         node = graph.node(self.node_id) if self.node_id else None
-        x, y, w = rt.width - 330, 100, 300
-        rt.panel((x, y, w, rt.height - 100 - 60), fill=(16, 20, 32, 235))
+        canvas = getattr(self, "canvas", None) or rt.menu_canvas("skill_tree")
+        if not canvas.shown("detail"):
+            return
+        default = (rt.width - 330, 100, 300, rt.height - 100 - 60)
+        x, y, w, _h = canvas.panel("detail", default, fill=(16, 20, 32, 235))
         if node is None:
             return
         labels = rt.manifest.get("battle", {}).get("skills", {})
-        names = stat_names(rt.game.project)
+        names = StatNames(rt.game)
         tr = rt.game.tr
         rank = allocation.rank(graph.graph_id, node.node_id)
         icon = rt._draw_icon(self.node_icon(node), x + 16, y + 10, 36)
@@ -554,7 +569,7 @@ class SkillTreeScreen:
         row = y + 78
         if rank < node.max_rank:
             cost = node.cost_for_rank(rank + 1)
-            text = ", ".join(f"{v:g} {k.upper()}" for k, v in sorted(cost.items()))
+            text = ", ".join(f"{v:g} {rt.game.points_name(k)}" for k, v in sorted(cost.items()))
             text = text or tr("skill_tree.free", "free")
             rt.text(
                 tr("skill_tree.cost", "Next rank costs {cost}", cost=text), x + 16, row, size=18

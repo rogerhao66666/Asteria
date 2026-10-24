@@ -130,3 +130,31 @@ def speaker_name(lookup, speaker):
 
 def is_data_key(text_key):
     return str(text_key).startswith(PREFIX)
+
+
+def words(identifier):
+    """An id in words for a name nobody gave: ``fire_attack`` -> ``Fire attack``."""
+    return str(identifier).replace("_", " ").replace(".", " ").strip().capitalize()
+
+
+def stat_name(lookup, stat_id, labels=None):
+    """A stat's or resource's name (``data.stat.<id>.name``, then ``data.resource.<id>.name``),
+    else the screen profile's label (``labels``), else the id in words (U1)."""
+    stat_id = str(stat_id)
+    if lookup is not None:
+        found = lookup(key("stat", stat_id)) or lookup(key("resource", stat_id))
+        if found:
+            return found
+    return (labels or {}).get(stat_id) or words(stat_id)
+
+
+def slot_name(lookup, slot_id, labels=None):
+    """An equipment slot's name (``data.slot.<id>.name``), else the profile's, else words."""
+    slot_id = str(slot_id)
+    found = lookup(key("slot", slot_id)) if lookup is not None else None
+    return found or (labels or {}).get(slot_id) or words(slot_id)
+
+
+def credits_key(page_id, part):
+    """The key of a credits page's title (``part`` "title") or line (``line1``, ``line2``...)."""
+    return f"{PREFIX}credits.{page_id}.{part}"

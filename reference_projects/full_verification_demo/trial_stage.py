@@ -10,9 +10,9 @@ Battle and Game Data categories, each used by the campaign.
   Run); past six of them the rest wait on a More page.
 * **Command Input Steps**: Vesper's Elemental Weave asks an element, then up to two focuses
   (Overcharge, Echo) that raise its power for more technique or Soul.
-* **Ability Slots**: the Old Master teaches Aldric four secret arts; only the ones set in his
+* **Ability Slots**: the Old Master teaches Roger four secret arts; only the ones set in his
   slots (two, three from level 10, four from level 18) are usable.
-* **Attacks / Projectiles**: Aldric swings (J) and slings a stone (1) on the map; hitting a foe
+* **Attacks / Projectiles**: Roger swings (J) and slings a stone (1) on the map; hitting a foe
   in view first starts its fight preemptive.
 """
 
@@ -242,7 +242,7 @@ def arm_the_field(builders):
 
 
 def old_master(builders, looks, maps):
-    """The Old Master in Hearthfold teaches Aldric the four secret arts (LEARN_ABILITY)."""
+    """The Old Master in Hearthfold teaches Roger the four secret arts (LEARN_ABILITY)."""
     town = builders["town"]
     name = "Old Master"
     town.npc(name, maps.world_xy(26, 19), looks["necromancer"])
@@ -253,7 +253,7 @@ def old_master(builders, looks, maps):
         "story.old_master",
         maps.menu(
             name,
-            "Four arts, Aldric. Your slots hold only so many at once.",
+            "Four arts, Roger. Your slots hold only so many at once.",
             [
                 (
                     "Learn the arts",

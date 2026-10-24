@@ -179,7 +179,7 @@ def main(argv=None):
         actor = start("woods_patrol")
         checks[f"{tag}_hero_turn"] = actor is not None
         commands = runtime.battle_commands
-        shot(f"t3_{tag}_battle", "艾德里克" if zh else "Aldric")
+        shot(f"t3_{tag}_battle", "羅傑" if zh else "Roger")
         foes = [commands.display_name(m) for m in game.active_enemy_ids()]
         checks[f"{tag}_foe_names"] = bool(foes) and all(
             ("哥布林" in n) == zh for n in foes

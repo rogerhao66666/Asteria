@@ -108,6 +108,7 @@ def test_every_drawn_word_is_listed_with_the_english_it_draws():
 def test_every_listed_word_is_drawn_somewhere_and_listed_once():
     used = set(_drawn_words()) | set(_keyed_tables()) | {"pause.pets", "pause.backlog"}
     used |= {"pause.skill_slots", "pause.music", "pause.credits", "settings.language"}
+    used |= {"pause.equipment", "pause.enhance"}  # offered when the project has gear
     assert sorted(set(BUILT_IN_TEXT) - used) == []
     keys = [key for _, rows in GROUPS for key, _ in rows]
     assert len(keys) == len(set(keys)) == len(BUILT_IN_TEXT)

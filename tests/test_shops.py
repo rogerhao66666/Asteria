@@ -15,6 +15,7 @@ DEMO = REPO / "reference_projects" / "full_verification_demo"
 sys.path.insert(0, str(DEMO))
 
 import trial_arsenal as arsenal  # noqa: E402
+import trial_doll as doll  # noqa: E402
 import trial_shops as shops  # noqa: E402
 import trial_supplies as supplies  # noqa: E402
 
@@ -65,7 +66,7 @@ def test_the_three_shops_and_their_wares(project):
     db = project.rpg_database
     stocked = {sid: [e.item_id for e in db.shops[sid].entries] for sid in shops.SHOPS}
     assert stocked["arms_shop"] == list(arsenal.weapon_ids())
-    assert stocked["armour_shop"] == list(supplies.all_equipment_ids())
+    assert stocked["armour_shop"] == [*supplies.all_equipment_ids(), *doll.equipment_ids()]
     remedies = set(stocked["remedy_shop"])
     assert set(shops.ITEM_PRICE) | set(supplies.MATERIALS) <= remedies
     assert {f"{e}_orb_item" for e in supplies.ORBS} <= remedies

@@ -47,7 +47,7 @@ def test_fields_get_friendly_widgets(app):
     pickers = [p for p in form.findChildren(Picker) if p.value() == "brave"]
     assert pickers  # the job is picked from the jobs, not typed
     assert form.findChildren(NumberBox)
-    assert "Aldric" in family.browser.item(family._ids.index("hero_01")).text()  # names listed
+    assert "Roger" in family.browser.item(family._ids.index("hero_01")).text()  # names listed
 
 
 def test_an_edit_applies_on_its_own_and_undoes(app):

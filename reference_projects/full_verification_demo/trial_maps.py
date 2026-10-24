@@ -28,7 +28,7 @@ HIDDEN = ("collision", "regions")  # layers the player never sees
 # map areas (the hidden Regions layer; tile id = region id, see trial_stage.areas)
 BOG, GLADE, SHADOW, EMBERS = 1, 2, 3, 4
 AREA_TILES = {}  # "bog" / "shadow" / "embers" -> tile ids added to the tilesets
-HOME_LOT = (36, 4, 40, 7)  # Aldric's house on the town map, in tiles (x0, y0, x1, y1)
+HOME_LOT = (36, 4, 40, 7)  # Roger's house on the town map, in tiles (x0, y0, x1, y1)
 DIRECTIONS = ("down", "up", "left", "right")
 OUT = "playable_assets/lucifer/world"
 
@@ -469,7 +469,7 @@ def hearthfold(grid):
     grid.block(w - 1, 0, w, 11)
     grid.block(w - 1, 16, w, h)
     guild = box(3, 6, 11, 10)  # the adventurers' guild: where companions wait to be hired
-    x0, y0, x1, y1 = HOME_LOT  # Aldric's house and the path from its door down to the road
+    x0, y0, x1, y1 = HOME_LOT  # Roger's house and the path from its door down to the road
     home = box(x0 - 1, y0 - 1, x1 + 1, 11)
     clear = [box(2, 10, w - 1, 16), box(19, 1, 26, h - 1), box(11, 6, 34, 21), guild, home]
     scatter(grid, grid.rng, ("tree",), 14, 2, 2, w - 2, h - 2, clear)
@@ -730,7 +730,7 @@ def build_world(c, story):
     }
     import trial_home as home_lib
 
-    home_lib.clear_lot(town_grid)  # Aldric's house stands in the town's north-east corner
+    home_lib.clear_lot(town_grid)  # Roger's house stands in the town's north-east corner
     places["town"]["start"] = home_lib.front_door()  # the game starts at his own door
     home_tiles, home_cols, home_floor, home_walls = home_lib.tileset(assets)
     home_grid = Grid(home_cols, *home_lib.ROOM, 15)
@@ -740,7 +740,7 @@ def build_world(c, story):
         "woods": assets.tilemap("woods", woods_grid.data(ext, 16), "Whispering Woods"),
         "crypt": assets.tilemap("crypt", crypt_grid.data(dun, 16), "Catacombs"),
         "throne": assets.tilemap("throne", throne_grid.data(lav, 16), "Ember Throne"),
-        "home": assets.tilemap("home", home_grid.data(home_tiles, 16), "Aldric's House"),
+        "home": assets.tilemap("home", home_grid.data(home_tiles, 16), "Roger's House"),
     }
     looks = {  # NPC_FACES keys: townsfolk; "hero_<face>": the party members themselves
         key: character(
@@ -765,7 +765,7 @@ def build_world(c, story):
         "woods": SceneBuilder(project, "woods", "Whispering Woods"),
         "crypt": SceneBuilder(project, "crypt", "Catacombs"),
         "throne": SceneBuilder(project, "throne", "Ember Throne"),
-        "home": SceneBuilder(project, "home", "Aldric's House"),
+        "home": SceneBuilder(project, "home", "Roger's House"),
     }
     for key, builder in builders.items():
         builder.setup(maps[key])

@@ -2,7 +2,7 @@
 
     ASTERIA_MUTE=1 python scripts/arsenal_live_check.py OUTPUT_DIR
 
-Aldric is given a fist, a book and a throwing weapon (the new kinds) and wears them; the status
+Roger is given a fist, a book and a throwing weapon (the new kinds) and wears them; the status
 menu's equipment page, the battle's weapon list (Fight) and an attack with each new kind are
 pictured in English and in Traditional Chinese. ``results.json`` lists the words each picture
 drew and the checks.

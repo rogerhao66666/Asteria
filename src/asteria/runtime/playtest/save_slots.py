@@ -67,30 +67,48 @@ class SaveSlotsMixin:
                     self.message_until = self.pg.time.get_ticks() + 1800
 
     def _draw_slots(self):
-        self._draw_backdrop()
+        c = self.menu_canvas("save_slots")
+        self._draw_backdrop(canvas=c)
         menu = self.slot_menu
-        self.panel((100, 60, self.width - 200, self.height - 120))
+        c.panel("frame", (100, 60, self.width - 200, self.height - 120))
         tr = self.game.tr  # the slot screens' titles are the pause menu's own words
         title = (
             tr("pause.save", "Save Game") if menu.mode == "save" else tr("pause.load", "Load Game")
         )
-        self.text(title, self.width / 2, 76, size=32, color=(255, 220, 124), center=True)
-        for i, info in enumerate(menu.rows()):
-            y = 140 + i * 64
+        title_color = c.tone("title", (255, 220, 124))
+        c.text("title", title, self.width / 2, 76, size=32, color=title_color, center=True)
+        rows = menu.rows()
+        at = c.place("slots", (120, 132, self.width - 240, 64 * len(rows)), 64)
+        size = c.size("slots", 24)
+        for i, info in enumerate(rows):
+            y = at.y(140) + i * at.row
             selected = i == menu.row
             if selected:
-                self.pg.draw.rect(
-                    self.screen, (40, 52, 78), (120, y - 8, self.width - 240, 54), border_radius=6
+                band = (at.x(120), y - 8, at.rect[2], at.row - 10)
+                c.selection(
+                    "slots",
+                    band,
+                    lambda band=band: self.pg.draw.rect(
+                        self.screen, (40, 52, 78), band, border_radius=6
+                    ),
                 )
             if info.slot == "autosave":
                 name = tr("slots.autosave", "Autosave (F5)")
             else:
                 name = tr("slots.slot", "Slot {slot}", slot=info.slot)
-            self.text(
-                name, 140, y, size=24, color=(255, 226, 129) if selected else (235, 238, 245)
-            )
-            self.text(info.summary_text(tr), 140, y + 24, size=18, color=(170, 210, 240))
+            normal = c.color("slots", c.tone("text", (235, 238, 245)))
+            picked = c.tone("selected", (255, 226, 129))
+            self.text(name, at.x(140), y, size=size, color=picked if selected else normal)
+            summary = info.summary_text(tr)
+            self.text(summary, at.x(140), y + 24, size=18, color=c.tone("muted", (170, 210, 240)))
         hint = menu.message or tr("slots.hint", "Enter: choose   Delete: erase   Esc: back")
-        self.text(
-            hint, self.width / 2, self.height - 96, size=19, color=(255, 226, 129), center=True
+        c.text(
+            "hint",
+            hint,
+            self.width / 2,
+            self.height - 96,
+            size=19,
+            color=(255, 226, 129),
+            center=True,
         )
+        c.finish()

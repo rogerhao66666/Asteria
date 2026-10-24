@@ -99,15 +99,49 @@ class GearMixin:
         self.refresh_actor_combatants(offer.actor_id)
         return offer
 
-    def unequip_to_bag(self, actor_id, slot_id):
+    def unequip_to_bag(self, actor_id, slot_id, index=0):
+        """Take the ``index``-th piece worn in ``slot_id`` off, into the equipment bag."""
         loadout = self.save.rpg_state.loadouts[str(actor_id)]
         items = list(loadout.equipped(str(slot_id)))
-        if not items:
+        if not 0 <= int(index) < len(items):
             return None
-        loadout.unequip(str(slot_id), 0)
-        self.save.rpg_state.equipment_bag.append(items[0])
+        loadout.unequip(str(slot_id), int(index))
+        self.save.rpg_state.equipment_bag.append(items[int(index)])
         self.refresh_actor_combatants(actor_id)
-        return items[0]
+        return items[int(index)]
+
+    def wear_from_bag(self, actor_id, instance_id, slot_id, index=None):
+        """Wear the bag piece ``instance_id`` in ``slot_id`` (the equipment screen, U3): instead
+        of the ``index``-th piece worn there (which goes back to the bag), else in a free place,
+        else instead of the first piece. Its requirements are checked; nothing changes when they
+        are not met. Returns the piece taken off, or None."""
+        actor_id, slot_id = str(actor_id), str(slot_id)
+        bag = self.save.rpg_state.equipment_bag
+        item = next((g for g in bag if g.instance_id == instance_id), None)
+        if item is None:
+            raise GameSessionError(f"{instance_id} is not in the equipment bag")
+        loadout = self.save.rpg_state.loadouts[actor_id]
+        capabilities = self.resolve_actor_build(actor_id).capabilities
+        held = list(loadout.equipped(slot_id))
+        slot = loadout._slots.get(slot_id)
+        full = slot is not None and slot.capacity is not None and len(held) >= slot.capacity
+        if index is None or not 0 <= int(index) < len(held):
+            index = 0 if full and held else None
+        removed = None
+        if index is not None:
+            removed = held[int(index)]
+            loadout.unequip(slot_id, int(index))
+        try:
+            loadout.equip(slot_id, item, capabilities=capabilities)
+        except Exception:
+            if removed is not None:
+                loadout.equip(slot_id, removed, validate_requirements=False)
+            raise
+        bag.remove(item)
+        if removed is not None:
+            bag.append(removed)
+        self.refresh_actor_combatants(actor_id)
+        return removed
 
     def reset_progression(self, actor_id, graph_id=None, *, cost=None):
         """Refund every allocated skill-tree point of ``actor_id`` (one graph or all) for ``cost``

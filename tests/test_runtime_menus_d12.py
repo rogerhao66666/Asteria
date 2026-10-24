@@ -50,10 +50,9 @@ def _open_pause(rt):
 
 
 def _choose_pause(rt, label):
-    from asteria.runtime.game_menus import PAUSE_OPTIONS
-
-    index = [key for key, _ in PAUSE_OPTIONS].index(label)
-    for _ in range((index - rt._pause_menu.index) % len(PAUSE_OPTIONS)):
+    options = rt._pause_menu.options  # the project's own: equipment / enhance when it has gear
+    index = [key for key, _ in options].index(label)
+    for _ in range((index - rt._pause_menu.index) % len(options)):
         _press(rt, pygame.K_DOWN)
     _press(rt, pygame.K_RETURN)
 

@@ -71,6 +71,8 @@ REFERENCES = {  # field name -> vocabulary source
     "target_scene": "scenes",
     "stat": "stats",
     "stat_id": "stats",
+    "stat_order": "stats",  # a screen profile's lead stats, shown by name (U1)
+    "resource_order": "resources",
     "initiative_stat": "stats",
     "source_stat": "stats",
     "opponent_stat": "stats",

@@ -404,6 +404,30 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 編輯器 | 商店商品欄「道具或裝備」（來源 `goods`：道具＋裝備，都顯示名稱與圖示） |
 | Demo | 爐心鎮三間新商店（武器、防具、藥鋪）；`trial_shops.py`；run_campaign 新增 7 個必要事實；`scripts/shops_live_check.py` |
 
+### D65 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| Demo | Full Verification 主角改名 Roger（中文羅傑），家是 Roger's House；id 仍是 `hero_01` |
+
+### D67 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 翻譯 | `stat_name`、`slot_name`、`game.tag_name`（`data.tag.<標籤>.name`）；`SocketDefinition.label`；任務目標顯示名稱；`test_full_verification_ui_words.py` 檢查中文畫面沒有 id 與英文 |
+| 選單版面 | `presentation/menu_layout.py`（`MenuLayout`／`MenuElement`／`MenuSlotPlace`／`MenuTheme`，演出庫類別 `menu_layout`、`menu_theme`）；`runtime/menu_canvas.py` 依版面畫；沒有版面時逐像素和以前一樣 |
+| 預覽 | `runtime/menu_preview.py`：`MenuPreview` 在畫面外畫任一個畫面；`open_menu_screen`；`ASTERIA_OPEN_MENU` 讓試玩一開始就打開某個畫面 |
+| 編輯器 | 演出 ▸ 選單畫面 ▸ 版面（`editor/menu_layout_widget.py`）：畫布拖曳與縮放、屬性欄、紙娃娃部位表、主題、在遊戲中開啟；選單資料移到同一頁的第二個子頁 |
+| 設定 | `GameSettings.developer_menu`：C 鍵的養成驗收選單只在開啟時出現 |
+
+### D68 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 畫面 | `runtime/equipment_screen.py` 紙娃娃（只列能穿的、比較、穿上後的數值）；`runtime/enhance_screen.py` 精煉、鑲嵌、卡片、成長四頁；工坊移除 |
+| 遊戲 | `game.wear_from_bag(actor, instance, slot, index)`；暫停選單的「裝備」「強化」依專案內容出現 |
+| Demo | `trial_doll.py`：頭、腿、腳部位，14 件 Lucifer 圖示裝備，Lucifer 紙娃娃版面與石頭面板；證據 `audits/evidence/ui_u3/` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

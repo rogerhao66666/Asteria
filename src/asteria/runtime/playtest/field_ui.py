@@ -45,11 +45,19 @@ class FieldUiMixin:
             return
 
         tr = self.game.tr
-        self.panel((18, self.height - 92, self.width - 36, 72))
-        self.text(
-            tr("field.title", "Field Test"), 34, self.height - 82, size=24, color=(255, 220, 124)
+        c = self.menu_canvas("field_hint", {"map.name": self._map_title})
+        c.begin()
+        c.panel("frame", (18, self.height - 92, self.width - 36, 72))
+        c.text(
+            "title",
+            tr("field.title", "Field Test"),
+            34,
+            self.height - 82,
+            size=24,
+            color=c.tone("title", (255, 220, 124)),
         )
-        self.text(
+        c.text(
+            "controls",
             tr(
                 "field.controls",
                 "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
@@ -57,7 +65,9 @@ class FieldUiMixin:
             34,
             self.height - 52,
             size=19,
+            color=c.tone("text", (245, 245, 250)),
         )
+        c.finish()
         candidate = self._interaction_candidate()
         if candidate is not None and not self.game.event_busy:
             self.text(
@@ -119,18 +129,32 @@ class FieldUiMixin:
         if not offers or self.game.pending_dialogue is not None:
             return
         title, question = self._equip_offer_text(offers[0])
+        c = self.menu_canvas("equip_offer")
+        c.begin()
         box = (self.width / 2 - 300, self.height - 250, 600, 150)
-        self.panel(box, fill=(10, 14, 24, 240), border=(240, 201, 93))
-        self.text(title, self.width / 2, box[1] + 26, size=26, color=(255, 220, 124), center=True)
-        self.text(question, self.width / 2, box[1] + 64, size=21, center=True)
-        self.text(
-            self.game.tr("equip_offer.keys", "1 / Enter: wear it     2 / Esc: keep it in the bag"),
-            self.width / 2,
-            box[1] + 108,
-            size=18,
-            color=(170, 210, 240),
+        box = c.panel("frame", box, fill=(10, 14, 24, 240), border=(240, 201, 93))
+        middle = box[0] + box[2] / 2
+        title_color = c.tone("title", (255, 220, 124))
+        c.text("title", title, middle, box[1] + 26, size=26, color=title_color, center=True)
+        c.text(
+            "question",
+            question,
+            middle,
+            box[1] + 64,
+            size=21,
+            color=c.tone("text", (245, 245, 250)),
             center=True,
         )
+        c.text(
+            "keys",
+            self.game.tr("equip_offer.keys", "1 / Enter: wear it     2 / Esc: keep it in the bag"),
+            middle,
+            box[1] + 108,
+            size=18,
+            color=c.tone("muted", (170, 210, 240)),
+            center=True,
+        )
+        c.finish()
 
     def _equip_offer_input(self, events):
         """Keys for a waiting equip offer. Returns True when one is open."""
@@ -600,7 +624,7 @@ class FieldUiMixin:
                 dict(self.input.current.actions) if self._field_abilities() else None
             )
 
-        if self.input.just_pressed("menu"):
+        if self.input.just_pressed("menu") and self.settings.developer_menu:
             self._ui_mode = "build"
         if self.input.just_pressed("cancel"):
             self._pause_menu.index = 0

@@ -128,7 +128,7 @@
           "license": "CC0 1.0",
           "source": "reference_projects/full_verification_demo/trial_maps.py"
         },
-        "name": "Aldric's House",
+        "name": "Roger's House",
         "source_path": "playable_assets/lucifer/world/home.png"
       },
       {
@@ -141,7 +141,7 @@
           "license": "CC0 1.0",
           "source": "reference_projects/full_verification_demo/trial_maps.py"
         },
-        "name": "Aldric's House Sheet",
+        "name": "Roger's House Sheet",
         "source_path": "playable_assets/lucifer/world/home_sheet.json"
       },
       {
@@ -154,7 +154,7 @@
           "license": "CC0 1.0",
           "source": "reference_projects/full_verification_demo/trial_maps.py"
         },
-        "name": "Aldric's House Tileset",
+        "name": "Roger's House Tileset",
         "source_path": "playable_assets/lucifer/world/home_tileset.json"
       },
       {
@@ -219,7 +219,7 @@
           "license": "CC0 1.0",
           "source": "reference_projects/full_verification_demo/trial_maps.py"
         },
-        "name": "Aldric's House Map",
+        "name": "Roger's House Map",
         "source_path": "playable_assets/lucifer/world/home_map.json"
       },
       {
@@ -8923,6 +8923,295 @@
           ],
           "schema": "asteria.battle_presentation_layering_profile",
           "version": 1
+        }
+      },
+      "menu_layout": {
+        "enhance": {
+          "elements": [
+            {
+              "border": [
+                92,
+                72,
+                50
+              ],
+              "element_id": "frame",
+              "fill": [
+                30,
+                24,
+                20,
+                244
+              ],
+              "kind": "panel"
+            },
+            {
+              "color": [
+                255,
+                214,
+                120
+              ],
+              "element_id": "title",
+              "kind": "text",
+              "size": 34
+            },
+            {
+              "element_id": "gear",
+              "kind": "list",
+              "skin": {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            },
+            {
+              "element_id": "sockets",
+              "kind": "list",
+              "skin": {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            },
+            {
+              "element_id": "choices",
+              "kind": "list",
+              "skin": {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            },
+            {
+              "element_id": "detail",
+              "kind": "detail",
+              "skin": {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            }
+          ],
+          "screen_id": "enhance"
+        },
+        "equipment": {
+          "elements": [
+            {
+              "border": [
+                92,
+                72,
+                50
+              ],
+              "element_id": "frame",
+              "fill": [
+                30,
+                24,
+                20,
+                244
+              ],
+              "kind": "panel"
+            },
+            {
+              "color": [
+                255,
+                214,
+                120
+              ],
+              "element_id": "title",
+              "kind": "text",
+              "rect": [
+                460,
+                30,
+                400,
+                40
+              ],
+              "size": 34
+            },
+            {
+              "element_id": "member",
+              "kind": "text",
+              "rect": [
+                460,
+                72,
+                780,
+                28
+              ]
+            },
+            {
+              "element_id": "doll",
+              "image": "playable_assets/lucifer/ui/inventory_doll.png",
+              "kind": "doll",
+              "rect": [
+                40,
+                96,
+                392,
+                524
+              ],
+              "slots": [
+                {
+                  "rect": [
+                    56,
+                    28,
+                    64,
+                    64
+                  ],
+                  "slot_id": "head"
+                },
+                {
+                  "rect": [
+                    272,
+                    28,
+                    64,
+                    64
+                  ],
+                  "slot_id": "armor"
+                },
+                {
+                  "rect": [
+                    56,
+                    104,
+                    64,
+                    64
+                  ],
+                  "slot_id": "legs"
+                },
+                {
+                  "rect": [
+                    272,
+                    104,
+                    64,
+                    64
+                  ],
+                  "slot_id": "feet"
+                },
+                {
+                  "rect": [
+                    56,
+                    180,
+                    64,
+                    64
+                  ],
+                  "slot_id": "accessory"
+                },
+                {
+                  "rect": [
+                    132,
+                    180,
+                    128,
+                    64
+                  ],
+                  "slot_id": "weapon"
+                },
+                {
+                  "rect": [
+                    272,
+                    180,
+                    64,
+                    64
+                  ],
+                  "slot_id": "weapon"
+                },
+                {
+                  "rect": [
+                    12,
+                    204,
+                    32,
+                    32
+                  ],
+                  "slot_id": "accessory"
+                },
+                {
+                  "rect": [
+                    348,
+                    204,
+                    32,
+                    32
+                  ],
+                  "slot_id": "form"
+                }
+              ]
+            },
+            {
+              "border": [
+                40,
+                34,
+                31
+              ],
+              "element_id": "candidates",
+              "fill": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "kind": "list",
+              "rect": [
+                48,
+                378,
+                376,
+                234
+              ],
+              "row_height": 42
+            },
+            {
+              "element_id": "detail",
+              "kind": "detail",
+              "rect": [
+                452,
+                112,
+                386,
+                508
+              ],
+              "skin": {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            },
+            {
+              "element_id": "stats",
+              "kind": "list",
+              "rect": [
+                852,
+                112,
+                388,
+                508
+              ],
+              "row_height": 30,
+              "skin": {
+                "asset_id": "playable_assets/lucifer/ui/panel_stone.png",
+                "bottom": 3,
+                "left": 3,
+                "right": 3,
+                "scale": 2.0,
+                "top": 3
+              }
+            },
+            {
+              "element_id": "hint",
+              "kind": "text",
+              "rect": [
+                48,
+                640,
+                1180,
+                24
+              ]
+            }
+          ],
+          "screen_id": "equipment"
         }
       },
       "motion_sequences": {
@@ -37989,7 +38278,7 @@
       "instructions": [
         {
           "args": {
-            "speaker": "Aldric",
+            "speaker": "Roger",
             "text": "We camp here tonight.",
             "text_key": "dlg.common_c.0"
           },
@@ -40998,7 +41287,7 @@
                 "value": 1
               }
             ],
-            "prompt": "Old Master: Four arts, Aldric. Your slots hold only so many at once.",
+            "prompt": "Old Master: Four arts, Roger. Your slots hold only so many at once.",
             "prompt_key": "dlg.story_ol.0.prompt",
             "variable_name": "menu"
           },
@@ -45015,6 +45304,7 @@
                 "version": 2
               }
             ],
+            "feet": [],
             "form": [
               {
                 "attachments": {},
@@ -45025,6 +45315,8 @@
                 "version": 2
               }
             ],
+            "head": [],
+            "legs": [],
             "weapon": [
               {
                 "attachments": {},
@@ -45057,6 +45349,21 @@
               "accepted_tags": [],
               "capacity": 1,
               "slot_id": "form"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "head"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "legs"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "feet"
             }
           ],
           "version": 1
@@ -45065,6 +45372,9 @@
           "equipped": {
             "accessory": [],
             "armor": [],
+            "feet": [],
+            "head": [],
+            "legs": [],
             "weapon": [
               {
                 "attachments": {},
@@ -45092,6 +45402,21 @@
               "accepted_tags": [],
               "capacity": 1,
               "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "head"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "legs"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "feet"
             }
           ],
           "version": 1
@@ -45100,6 +45425,9 @@
           "equipped": {
             "accessory": [],
             "armor": [],
+            "feet": [],
+            "head": [],
+            "legs": [],
             "weapon": [
               {
                 "attachments": {},
@@ -45127,6 +45455,21 @@
               "accepted_tags": [],
               "capacity": 1,
               "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "head"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "legs"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "feet"
             }
           ],
           "version": 1
@@ -45135,6 +45478,9 @@
           "equipped": {
             "accessory": [],
             "armor": [],
+            "feet": [],
+            "head": [],
+            "legs": [],
             "weapon": [
               {
                 "attachments": {},
@@ -45162,6 +45508,21 @@
               "accepted_tags": [],
               "capacity": 1,
               "slot_id": "accessory"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "head"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "legs"
+            },
+            {
+              "accepted_tags": [],
+              "capacity": 1,
+              "slot_id": "feet"
             }
           ],
           "version": 1
@@ -78127,7 +78488,7 @@
             "version": 1
           }
         ],
-        "display_name": "Aldric",
+        "display_name": "Roger",
         "schema": "asteria.rpg.actor",
         "tags": [
           "actor.playable",
@@ -92475,6 +92836,735 @@
       },
       {
         "any_capabilities": [],
+        "display_name": "Chainmail Boots",
+        "equipment_id": "ft_chain_boots",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/ft_chain_boots.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_chain_boots.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_chain_boots.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 2.0
+          }
+        ],
+        "rarity": "common",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "feet",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "feet",
+          "feet.chain"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Explorer's Boots",
+        "equipment_id": "ft_explorer_boots",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/ft_explorer_boots.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_explorer_boots.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_explorer_boots.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_explorer_boots.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_explorer_boots.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 5.0
+          }
+        ],
+        "rarity": "rare",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "feet",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "feet",
+          "feet.explorer"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Plate Boots",
+        "equipment_id": "ft_plate_boots",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/ft_plate_boots.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_plate_boots.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_plate_boots.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 4.0
+          }
+        ],
+        "rarity": "rare",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "feet",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "feet",
+          "feet.plate"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Wizard's Shoes",
+        "equipment_id": "ft_wizard_shoes",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/ft_wizard_shoes.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_wizard_shoes.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_wizard_shoes.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_wizard_shoes.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 3.0
+          }
+        ],
+        "rarity": "magic",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "feet",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "feet",
+          "feet.wizard"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Chainmail Helmet",
+        "equipment_id": "hd_chain_helmet",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/hd_chain_helmet.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_chain_helmet.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_chain_helmet.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 2.0
+          }
+        ],
+        "rarity": "common",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "head",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "head",
+          "head.chain"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Explorer's Ushanka",
+        "equipment_id": "hd_explorer_ushanka",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/hd_explorer_ushanka.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_explorer_ushanka.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_explorer_ushanka.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_explorer_ushanka.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_explorer_ushanka.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 5.0
+          }
+        ],
+        "rarity": "rare",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "head",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "head",
+          "head.explorer"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Plate Helmet",
+        "equipment_id": "hd_plate_helmet",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/hd_plate_helmet.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_plate_helmet.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_plate_helmet.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 4.0
+          }
+        ],
+        "rarity": "rare",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "head",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "head",
+          "head.plate"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Royal Helmet",
+        "equipment_id": "hd_royal_helmet",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/hd_royal_helmet.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_royal_helmet.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 22.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_royal_helmet.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 5.0
+          }
+        ],
+        "rarity": "legendary",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "head",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "head",
+          "head.plate"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Wizard's Hat",
+        "equipment_id": "hd_wizard_hat",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/hd_wizard_hat.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_wizard_hat.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_wizard_hat.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_wizard_hat.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 3.0
+          }
+        ],
+        "rarity": "magic",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "head",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "head",
+          "head.wizard"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Chainmail Leggings",
+        "equipment_id": "lg_chain_leggings",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/lg_chain_leggings.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_chain_leggings.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 7.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_chain_leggings.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 4.0
+          }
+        ],
+        "rarity": "magic",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "legs",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "legs",
+          "legs.chain"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Explorer's Leggings",
+        "equipment_id": "lg_explorer_leggings",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/lg_explorer_leggings.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_explorer_leggings.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_explorer_leggings.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_explorer_leggings.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_explorer_leggings.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 5.0
+          }
+        ],
+        "rarity": "rare",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "legs",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "legs",
+          "legs.explorer"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Leggings",
+        "equipment_id": "lg_leggings",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/lg_leggings.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_leggings.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_leggings.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 2.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_leggings.speed",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "speed",
+            "value": 2.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_leggings.evade",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "evade",
+            "value": 2.0
+          }
+        ],
+        "rarity": "common",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "legs",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "legs",
+          "legs.explorer"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Plate Leggings",
+        "equipment_id": "lg_plate_leggings",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/lg_plate_leggings.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_plate_leggings.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_plate_leggings.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 4.0
+          }
+        ],
+        "rarity": "rare",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "legs",
+        "sockets": [
+          {
+            "accepted_tags": [
+              "gem"
+            ],
+            "locked": false,
+            "socket_id": "g1"
+          }
+        ],
+        "tags": [
+          "armor",
+          "legs",
+          "legs.plate"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
+        "display_name": "Wizard's Leggings",
+        "equipment_id": "lg_wizard_leggings",
+        "forbidden_capabilities": [],
+        "granted_abilities": [],
+        "growth_id": null,
+        "icon_id": "playable_assets/lucifer/icons/lg_wizard_leggings.png",
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_wizard_leggings.defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "defense",
+            "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_wizard_leggings.magic_defense",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic_defense",
+            "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_wizard_leggings.magic",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "magic",
+            "value": 3.0
+          }
+        ],
+        "rarity": "magic",
+        "required_capabilities": [],
+        "schema": "asteria.rpg.equipment",
+        "slot": "legs",
+        "sockets": [],
+        "tags": [
+          "armor",
+          "legs",
+          "legs.wizard"
+        ],
+        "triggers": [],
+        "version": 3
+      },
+      {
+        "any_capabilities": [],
         "display_name": "Ash Staff",
         "equipment_id": "w_ash_staff",
         "forbidden_capabilities": [],
@@ -99665,7 +100755,7 @@
           "banner.again": "Begin the Trial again with all your strength? (New Game+)",
           "banner.won": "The Skeleton King is dust. The woods are quiet.",
           "language.name": "English",
-          "plaque.cleared": "The Hall of Heroes: Aldric's name is carved here. The Trial begins anew.",
+          "plaque.cleared": "The Hall of Heroes: Roger's name is carved here. The Trial begins anew.",
           "plaque.empty": "The Hall of Heroes: no name is carved here yet.",
           "scholar.ask": "Which tongue shall I tell the tales in?",
           "scholar.done": "So be it."
@@ -99716,6 +100806,7 @@
           "battle.command.items": "\u9053\u5177",
           "battle.command.more": "\u66f4\u591a",
           "battle.command.skills": "\u6280\u80fd",
+          "battle.command.switch": "\u4ea4\u63db",
           "battle.concoct_nothing": "\u9019\u4e9b\u6750\u6599\u8abf\u4e0d\u51fa\u6771\u897f",
           "battle.condition.not": "\u6c92\u6709 {what}",
           "battle.condition.or": " \u6216 ",
@@ -99737,6 +100828,7 @@
           "battle.hint.items": "\u4f7f\u7528\u80cc\u5305\u88e1\u7684\u9053\u5177",
           "battle.hint.more": "\u66f4\u591a\u6307\u4ee4",
           "battle.hint.skills": "\u6280\u80fd\u3001\u8abf\u5408\u3001\u6355\u7372",
+          "battle.hint.switch": "\u63db\u53e6\u4e00\u96bb\u4e0a\u5834",
           "battle.item_none_left": "{name} \u5df2\u7d93\u7528\u5b8c\u4e86",
           "battle.layer.Arts": "\u6230\u6280",
           "battle.layer.Attack": "\u653b\u64ca",
@@ -99751,6 +100843,7 @@
           "battle.menu.filter": "\u7be9\u9078\uff1a{query}",
           "battle.menu.form": "\u65bd\u653e\u65b9\u5f0f",
           "battle.menu.target": "\u76ee\u6a19",
+          "battle.no_one": "\u6c92\u6709\u4eba\u80fd\u6230\u9b25\uff1a\u968a\u4f0d\u88e1\u6c92\u6709\u7ad9\u5f97\u4f4f\u7684\u751f\u7269",
           "battle.nothing_to_use": "\u6c92\u6709\u53ef\u7528\u7684\u9805\u76ee",
           "battle.pick_count": "\u8acb\u9078 {count} \u500b",
           "battle.reason.a_pet": "\u5bf5\u7269",
@@ -99763,6 +100856,7 @@
           "battle.reason.needs_amount": "\u9700\u8981 {amount} {resource}",
           "battle.reason.needs_items": "\u9700\u8981 {what} x{count}",
           "battle.reason.no_ingredients": "\u6c92\u6709\u6750\u6599",
+          "battle.reason.no_pp": "\u6c92\u6709\u4f7f\u7528\u6b21\u6578\u4e86",
           "battle.reason.no_uses": "\u672c\u5834\u6230\u9b25\u5df2\u7528\u5b8c\u6b21\u6578",
           "battle.reason.pet_unlearned": "{pet} \u9084\u6c92\u5b78\u6703\u9019\u62db",
           "battle.reason.short": "\u9700\u8981 {amount} {resource}\uff08\u76ee\u524d {have}\uff09",
@@ -99771,6 +100865,7 @@
           "battle.result.escape": "\u6210\u529f\u9003\u812b",
           "battle.result.rank": "\u968e\u7d1a {old} \u2192 {new}",
           "battle.result.victory": "\u52dd\u5229",
+          "battle.switch.no_room": "\u5834\u4e0a\u6c92\u6709\u7a7a\u4f4d",
           "battle.tile.break": "\u7834\u9632",
           "battle.workflow.ready": "\u6e96\u5099\u5b8c\u6210",
           "bestiary.counts": "\u9047\u898b {seen}   \u6253\u5012 {defeated}   \u6355\u7372 {captured}",
@@ -99802,10 +100897,12 @@
           "build.upgrade": "5 \u6b66\u5668\u5f37\u5316\uff1a{value}",
           "build.upgraded": "\u6b66\u5668\u5f37\u5316\uff1a{name}",
           "build.weapon": "4 \u6b66\u5668\uff1a{value}",
+          "capture.ball": "\u4e1f\u54ea\u4e00\u500b\uff1f1-9\uff1a\u9053\u5177   Esc\uff1a\u53d6\u6d88",
           "capture.broke_free": "{name} \u6399\u812b\u4e86",
           "capture.cancel": "Esc\uff1a\u53d6\u6d88",
           "capture.caught": "\u6355\u7372\u4e86 {name}\uff01",
           "capture.failed": "\u6355\u7372\u5931\u6557\uff1a{reason}",
+          "capture.item_row": "{item} x{count}   {chance}%",
           "capture.title": "\u6355\u7372",
           "capture.uses": "\uff08\u4f7f\u7528 {item}\uff1a\u5269 {count}\uff09",
           "controls.action.cancel": "\u53d6\u6d88",
@@ -99821,6 +100918,8 @@
           "controls.hint": "Enter\uff1a\u91cd\u65b0\u8a2d\u5b9a   Backspace\uff1a\u6062\u5fa9\u6b64\u9805\u9810\u8a2d   Esc\uff1a\u5132\u5b58\u4e26\u8fd4\u56de",
           "controls.pad_axis": "\u624b\u628a {axis}",
           "controls.pad_button": "\u624b\u628a {button}",
+          "controls.pad_hat": "\u5341\u5b57\u9375",
+          "controls.pad_stick": "\u6416\u687f",
           "controls.press": "\u8acb\u6309\u4e0b\u8981\u7d66\u300c{action}\u300d\u7684\u6309\u9375\u6216\u624b\u628a\u6309\u9215\uff08Esc \u53d6\u6d88\uff09",
           "controls.reset_all": "\u5168\u90e8\u6062\u5fa9\u9810\u8a2d",
           "controls.title": "\u6309\u9375\u8a2d\u5b9a",
@@ -99859,6 +100958,83 @@
           "crafting.hint": "\u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   Enter\uff1a\u88fd\u4f5c   Esc\uff1a\u8fd4\u56de",
           "crafting.none": "\u9019\u88e1\u6c92\u6709\u5df2\u77e5\u7684\u914d\u65b9\u3002",
           "crafting.nothing": "\u4ec0\u9ebc\u90fd\u6c92\u6709",
+          "creature.about_to_use": "{trainer}\n\u6e96\u5099\u6d3e\u51fa{name}\u3002",
+          "creature.almost": "\u5509\uff01\u5dee\u4e00\u9ede\u5c31\u6293\u5230\u4e86\uff01",
+          "creature.already_out": "{name}\u5df2\u7d93\u5728\u6230\u9b25\u4e2d\u4e86\uff01",
+          "creature.appeared": "\u91ce\u751f\u7684{name}\u51fa\u73fe\u4e86\uff01",
+          "creature.bag_empty": "\u4ec0\u9ebc\u90fd\u6c92\u6709\u3002",
+          "creature.broke_free": "\u554a\uff01\u88ab\u7260\u6399\u812b\u4e86\uff01",
+          "creature.but_it_failed": "\u4f46\u662f\u5931\u6557\u4e86\uff01",
+          "creature.cancel": "\u53d6\u6d88",
+          "creature.cant_escape": "\u9003\u4e0d\u6389\uff01",
+          "creature.caught": "\u597d\u8036\uff01\u6293\u5230{name}\u4e86\uff01",
+          "creature.choose": "\u8acb\u9078\u64c7\u5925\u4f34\u3002",
+          "creature.close_bag": "\u95dc\u4e0a\u80cc\u5305",
+          "creature.cmd.bag": "\u80cc\u5305",
+          "creature.cmd.fight": "\u6230\u9b25",
+          "creature.cmd.party": "\u968a\u4f0d",
+          "creature.cmd.run": "\u9003\u8d70",
+          "creature.come_back": "{name}\uff0c\u56de\u4f86\u5427\uff01",
+          "creature.critical": "\u64ca\u4e2d\u4e86\u8981\u5bb3\uff01",
+          "creature.defeated_trainer": "{player}\u6253\u6557\u4e86{trainer}\uff01",
+          "creature.do_it": "\u5c31\u662f\u73fe\u5728\uff01{name}\uff01",
+          "creature.drained": "{name}\u7684\n\u9ad4\u529b\u88ab\u5438\u53d6\u4e86\uff01",
+          "creature.evolved": "{name}\u9032\u5316\u6210\u4e86{species}\uff01",
+          "creature.exp": "{name}\u7372\u5f97\u4e86{amount}\u7d93\u9a57\u503c\uff01",
+          "creature.fainted": "{name}\u5012\u4e0b\u4e86\uff01",
+          "creature.foe": "\u5c0d\u624b",
+          "creature.foe_name": "\u5c0d\u624b\u7684{name}",
+          "creature.foe_weak": "\u5c0d\u624b\u5f88\u865b\u5f31\u4e86\uff01\n\u4e0a\u5427\uff0c{name}\uff01",
+          "creature.go": "\u53bb\u5427\uff01{name}\uff01",
+          "creature.go_for_it": "\u52a0\u6cb9\uff0c{name}\uff01",
+          "creature.good_come_back": "{name}\uff0c\u505a\u5f97\u597d\uff01\n\u56de\u4f86\u5427\uff01",
+          "creature.got_away": "\u9806\u5229\u9003\u8d70\u4e86\uff01",
+          "creature.hit_times": "\u547d\u4e2d\u4e86{count}\u6b21\uff01",
+          "creature.hp_restored": "{name}\u7684\u9ad4\u529b\u6062\u5fa9\u4e86\u3002",
+          "creature.legendary_appeared": "{name}\u51fa\u73fe\u4e86\uff01",
+          "creature.level": "Lv{level}",
+          "creature.level_up": "{name}\u5347\u5230\u4e86\u7b49\u7d1a{level}\uff01",
+          "creature.missed": "{name}\u7684\n\u653b\u64ca\u6c92\u6709\u547d\u4e2d\uff01",
+          "creature.no": "\u5426",
+          "creature.no_effect": "\u5c0d{name}\u597d\u50cf\u6c92\u6709\u6548\u679c\u2026\u2026",
+          "creature.no_energy": "\u5df2\u7d93\u6c92\u6709\u529b\u6c23\u6230\u9b25\u4e86\uff01",
+          "creature.no_moves_left": "{name}\u5df2\u7d93\u6c92\u6709\u53ef\u4ee5\u4f7f\u7528\u7684\u62db\u5f0f\u4e86\uff01",
+          "creature.no_pp": "\u9019\u500b\u62db\u5f0f\u5df2\u7d93\u6c92\u6709 PP \u4e86\uff01",
+          "creature.no_running": "\u4e0d\u884c\uff01\u4e0d\u80fd\u5f9e\u8a13\u7df4\u5bb6\u7684\u5c0d\u6230\u4e2d\u9003\u8d70\uff01",
+          "creature.no_stealing": "\u8a13\u7df4\u5bb6\u64cb\u4f4f\u4e86\u7403\uff01\u4e0d\u53ef\u4ee5\u6436\u5225\u4eba\u7684\u6771\u897f\uff01",
+          "creature.not_very_effective": "\u6548\u679c\u4e0d\u592a\u597d\u2026\u2026",
+          "creature.ok_come_back": "{name}\uff0c\u597d\uff01\n\u56de\u4f86\u5427\uff01",
+          "creature.out_of_creatures": "{player}\u5df2\u7d93\u6c92\u6709\u53ef\u4ee5\u6230\u9b25\u7684\u5925\u4f34\u4e86\uff01",
+          "creature.pocket.balls": "\u6355\u7372\u7403",
+          "creature.pocket.items": "\u9053\u5177",
+          "creature.pp": "PP",
+          "creature.prize": "{player}\u7372\u5f97\u4e86{amount}\u4f5c\u70ba\u734e\u91d1\uff01",
+          "creature.recoil": "{name}\u53d7\u5230\u4e86\n\u53cd\u4f5c\u7528\u529b\u7684\u50b7\u5bb3\uff01",
+          "creature.sent_to_storage": "{name}\u88ab\u9001\u5230\u5bc4\u653e\u8655\u4e86\u3002",
+          "creature.shoot": "\u7cdf\u7cd5\uff01\u660e\u660e\u5c31\u5feb\u6293\u5230\u4e86\uff01",
+          "creature.so_close": "\u53ef\u60e1\uff01\u53ea\u5dee\u4e00\u9ede\uff01",
+          "creature.stat_fell": "{name}\u7684{stat}\n\u964d\u4f4e\u4e86\uff01",
+          "creature.stat_harshly_fell": "{name}\u7684{stat}\n\u5927\u5e45\u964d\u4f4e\u4e86\uff01",
+          "creature.stat_rose": "{name}\u7684{stat}\n\u63d0\u9ad8\u4e86\uff01",
+          "creature.stat_sharply_rose": "{name}\u7684{stat}\n\u5927\u5e45\u63d0\u9ad8\u4e86\uff01",
+          "creature.stat_wont_fall": "{name}\u7684{stat}\n\u5df2\u7d93\u7121\u6cd5\u518d\u964d\u4f4e\u4e86\uff01",
+          "creature.stat_wont_rise": "{name}\u7684{stat}\n\u5df2\u7d93\u7121\u6cd5\u518d\u63d0\u9ad8\u4e86\uff01",
+          "creature.state_applied": "{name}\u9677\u5165\u4e86{state}\u72c0\u614b\uff01",
+          "creature.super_effective": "\u6548\u679c\u7d55\u4f73\uff01",
+          "creature.thats_enough": "{name}\uff0c\u5920\u4e86\uff01\n\u56de\u4f86\u5427\uff01",
+          "creature.threw": "{player}\u4f7f\u7528\u4e86{item}\uff01",
+          "creature.trainer_challenge": "{trainer}\u5411\u4f60\u767c\u8d77\u4e86\u5c0d\u6230\uff01",
+          "creature.trainer_sent_out": "{trainer}\u6d3e\u51fa\u4e86{name}\uff01",
+          "creature.type": "\u5c6c\u6027/{type}",
+          "creature.use_next": "\u8981\u6d3e\u51fa\u4e0b\u4e00\u96bb\u55ce\uff1f",
+          "creature.used": "{user}\u4f7f\u7528\u4e86{move}\uff01",
+          "creature.used_item": "{player}\u4f7f\u7528\u4e86{item}\uff01",
+          "creature.what_will": "\u8981\u8b93\n{name}\u505a\u4ec0\u9ebc\uff1f",
+          "creature.whited_out": "{player}\u773c\u524d\u4e00\u7247\u6f06\u9ed1\uff01",
+          "creature.wild_name": "\u91ce\u751f\u7684{name}",
+          "creature.will_change": "{player}\u8981\u66f4\u63db\n\u5925\u4f34\u55ce\uff1f",
+          "creature.yes": "\u662f",
+          "creature.you": "\u4f60",
           "credits.hint": "\u5de6\uff0f\u53f3\uff1a\u7ffb\u9801   {page}/{pages}   Esc\uff1a\u8fd4\u56de",
           "credits.title": "\u88fd\u4f5c\u4eba\u54e1",
           "data.ability.add_bite.description": "\u8f14\u52a9",
@@ -100537,7 +101713,7 @@
           "data.achievement.warden_friend.name": "\u5b88\u885b\u968a\u4e4b\u53cb",
           "data.achievement.warlord_slayer.description": "\u64ca\u6557\u7dad\u52d2\u723e\u3002",
           "data.achievement.warlord_slayer.name": "\u5f12\u738b\u8005",
-          "data.actor.hero_01.name": "\u827e\u5fb7\u91cc\u514b",
+          "data.actor.hero_01.name": "\u7f85\u5091",
           "data.actor.hero_02.name": "\u7c73\u83c8",
           "data.actor.hero_03.name": "\u8587\u7d72\u73c0",
           "data.actor.hero_04.name": "\u51f1\u723e",
@@ -100616,6 +101792,13 @@
           "data.class.spirit.name": "\u7cbe\u795e",
           "data.class.weapon_master.name": "\u6b66\u5668\u5927\u5e2b",
           "data.class.zealot.name": "\u72c2\u4fe1\u8005",
+          "data.credits.art.line1": "\u89d2\u8272\u3001\u6575\u4eba\u3001\u5730\u5716\u3001\u88dd\u5099\u8207\u4ecb\u9762\uff1aFoozle Lucifer \u7d20\u6750\u5305\uff08CC0\uff09\u3002",
+          "data.credits.art.line2": "\u6280\u80fd\u7279\u6548\uff1aFoozle Pixel Magic Effects\uff08CC0\uff09\u3002",
+          "data.credits.art.title": "\u7f8e\u8853",
+          "data.credits.thanks.line1": "\u7210\u5fc3\u93ae\u5c79\u7acb\u4e0d\u6416\uff0c\u9918\u71fc\u738b\u5ea7\u5df2\u7136\u7a7a\u7121\u4e00\u4eba\u3002",
+          "data.credits.thanks.title": "\u611f\u8b1d\u904a\u73a9",
+          "data.credits.title.line1": "\u56de\u5408\u5236\u5f15\u64ce\u7684\u58d3\u529b\u6e2c\u8a66\u3002",
+          "data.credits.title.title": "Asteria \u5168\u9762\u9a57\u8b49",
           "data.currency.gold.name": "\u91d1\u5e63",
           "data.enemy.crimson_warlord.name": "\u7dad\u52d2\u723e",
           "data.enemy.goblin_beast.name": "\u54e5\u5e03\u6797\u5de8\u7378",
@@ -100663,6 +101846,20 @@
           "data.equipment.a_zealot_mail.name": "\u72c2\u4fe1\u8005\u93a7\u7532",
           "data.equipment.f_dragon.name": "\u9f8d\u5f62",
           "data.equipment.f_normal.name": "\u4eba\u5f62",
+          "data.equipment.ft_chain_boots.name": "\u9396\u5b50\u9774",
+          "data.equipment.ft_explorer_boots.name": "\u63a2\u96aa\u5bb6\u9774",
+          "data.equipment.ft_plate_boots.name": "\u677f\u7532\u9774",
+          "data.equipment.ft_wizard_shoes.name": "\u5deb\u5e2b\u978b",
+          "data.equipment.hd_chain_helmet.name": "\u9396\u5b50\u982d\u76d4",
+          "data.equipment.hd_explorer_ushanka.name": "\u63a2\u96aa\u5bb6\u6bdb\u5e3d",
+          "data.equipment.hd_plate_helmet.name": "\u677f\u7532\u982d\u76d4",
+          "data.equipment.hd_royal_helmet.name": "\u738b\u5bb6\u982d\u76d4",
+          "data.equipment.hd_wizard_hat.name": "\u5deb\u5e2b\u5e3d",
+          "data.equipment.lg_chain_leggings.name": "\u9396\u5b50\u8b77\u817f",
+          "data.equipment.lg_explorer_leggings.name": "\u63a2\u96aa\u5bb6\u8b77\u817f",
+          "data.equipment.lg_leggings.name": "\u5e03\u7d81\u817f",
+          "data.equipment.lg_plate_leggings.name": "\u677f\u7532\u8b77\u817f",
+          "data.equipment.lg_wizard_leggings.name": "\u5deb\u5e2b\u8b77\u817f",
           "data.equipment.w_ash_staff.name": "\u68a3\u6728\u6cd5\u6756",
           "data.equipment.w_axe.name": "\u624b\u65a7",
           "data.equipment.w_battle_axe.name": "\u6230\u9b25\u65a7",
@@ -100832,7 +102029,8 @@
           "data.map.4ca2db1c-f03a-51a8-aac9-3f85718155ee.name": "\u7210\u5fc3\u93ae",
           "data.map.814b23c0-7d56-51e1-8476-9465d25ba2a7.name": "\u9918\u71fc\u738b\u5ea7",
           "data.map.c25cbc23-f5cf-5455-bb56-e6a1e657b559.name": "\u5730\u4e0b\u5893\u7a74",
-          "data.map.c9ab136c-890e-5246-bf89-c43ecfd071a5.name": "\u827e\u5fb7\u91cc\u514b\u7684\u5bb6",
+          "data.map.c9ab136c-890e-5246-bf89-c43ecfd071a5.name": "\u7f85\u5091\u7684\u5bb6",
+          "data.objective.tricks.description": "\u70ba\u89c0\u773e\u8868\u6f14\u628a\u6232",
           "data.party.main_party.name": "\u4e3b\u968a\u4f0d",
           "data.passive.arcane_focus.name": "\u5967\u8853\u5c08\u6ce8",
           "data.passive.archmage_arcane_capstone.name": "\u5967\u8853\u7cbe\u901a",
@@ -101653,10 +102851,12 @@
           "data.skill_tree_node.zealot_spec_fervor_t2.name": "\u71b1\u8aa0 II",
           "data.slot.accessory.name": "\u98fe\u54c1",
           "data.slot.armor.name": "\u9632\u5177",
+          "data.slot.feet.name": "\u8173\u90e8",
           "data.slot.form.name": "\u5f62\u614b",
+          "data.slot.head.name": "\u982d\u90e8",
+          "data.slot.legs.name": "\u817f\u90e8",
           "data.slot.weapon.name": "\u6b66\u5668",
           "data.speaker.Alchemist.name": "\u934a\u91d1\u8853\u5e2b",
-          "data.speaker.Aldric.name": "\u827e\u5fb7\u91cc\u514b",
           "data.speaker.Apothecary Sela.name": "\u85e5\u5e2b\u745f\u62c9",
           "data.speaker.Armorer Hilde.name": "\u9632\u5177\u5320\u5e0c\u723e\u5fb7",
           "data.speaker.Astral Tyrant.name": "\u661f\u754c\u66b4\u541b",
@@ -101681,6 +102881,7 @@
           "data.speaker.Mystic Teacher.name": "\u79d8\u8853\u5c0e\u5e2b",
           "data.speaker.Old Cache.name": "\u820a\u85cf\u7269",
           "data.speaker.Outfitter.name": "\u88c1\u7e2b\u5e2b",
+          "data.speaker.Roger.name": "\u7f85\u5091",
           "data.speaker.Rogue Guild.name": "\u76dc\u8cca\u516c\u6703",
           "data.speaker.Sage's Tower.name": "\u8ce2\u8005\u4e4b\u5854",
           "data.speaker.Scholar Lin.name": "\u5b78\u8005\u6797",
@@ -101701,10 +102902,26 @@
           "data.stat.crit.name": "\u66b4\u64ca\u7387",
           "data.stat.crit_damage.description": "+1% \u66b4\u64ca\u50b7\u5bb3",
           "data.stat.crit_damage.name": "\u66b4\u64ca\u50b7\u5bb3",
+          "data.stat.dark_attack.name": "\u95c7\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.dark_resist.name": "\u95c7\u5c6c\u6027\u6297\u6027 %",
           "data.stat.defense.description": "\u53d7\u5230\u7684\u7269\u7406\u50b7\u5bb3\u6e1b\u5c11",
           "data.stat.defense.name": "\u7269\u7406\u9632\u79a6",
+          "data.stat.dex.name": "\u654f\u6377",
+          "data.stat.earth_attack.name": "\u5730\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.earth_resist.name": "\u5730\u5c6c\u6027\u6297\u6027 %",
           "data.stat.evade.description": "\u6bcf\u9ede\u88ab\u547d\u4e2d\u7387 -0.3%",
           "data.stat.evade.name": "\u8ff4\u907f",
+          "data.stat.fire_attack.name": "\u706b\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.fire_resist.name": "\u706b\u5c6c\u6027\u6297\u6027 %",
+          "data.stat.ice_attack.name": "\u51b0\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.ice_resist.name": "\u51b0\u5c6c\u6027\u6297\u6027 %",
+          "data.stat.int.name": "\u667a\u529b",
+          "data.stat.lifesteal.name": "\u5438\u8840",
+          "data.stat.light_attack.name": "\u5149\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.light_resist.name": "\u5149\u5c6c\u6027\u6297\u6027 %",
+          "data.stat.lightning_attack.name": "\u96f7\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.lightning_resist.name": "\u96f7\u5c6c\u6027\u6297\u6027 %",
+          "data.stat.luk.name": "\u5e78\u904b",
           "data.stat.magic.description": "\u6cd5\u8853\u7684\u50b7\u5bb3\u8207\u6cbb\u7642\u63d0\u9ad8",
           "data.stat.magic.name": "\u9b54\u6cd5\u653b\u64ca",
           "data.stat.magic_defense.description": "\u53d7\u5230\u7684\u6cd5\u8853\u50b7\u5bb3\u6e1b\u5c11",
@@ -101713,6 +102930,9 @@
           "data.stat.power.name": "\u7269\u7406\u653b\u64ca",
           "data.stat.speed.description": "\u66f4\u65e9\u3001\u66f4\u983b\u7e41\u5730\u884c\u52d5",
           "data.stat.speed.name": "\u901f\u5ea6",
+          "data.stat.str.name": "\u529b\u91cf",
+          "data.stat.wind_attack.name": "\u98a8\u5c6c\u6027\u653b\u64ca %",
+          "data.stat.wind_resist.name": "\u98a8\u5c6c\u6027\u6297\u6027 %",
           "data.state.armor_up.name": "\u8b77\u7532\u63d0\u5347",
           "data.state.attack_up.name": "\u653b\u64ca\u63d0\u5347",
           "data.state.berserk.name": "\u72c2\u66b4",
@@ -101753,6 +102973,10 @@
           "data.state.swift_feet.name": "\u8fc5\u6377\u6b65\u4f10",
           "data.state.taunt.name": "\u5632\u8af7",
           "data.state.ward.name": "\u5b88\u8b77",
+          "data.tag.card.name": "\u5361\u7247",
+          "data.tag.charm.name": "\u9b45\u60d1",
+          "data.tag.gem.name": "\u5bf6\u77f3",
+          "data.tag.immune.kill.name": "\u514d\u75ab\u5373\u6b7b",
           "data.track.battle_experience.name": "\u6230\u9b25\u7d93\u9a57",
           "data.track.level_curve.name": "\u7b49\u7d1a\u66f2\u7dda",
           "dialogue.choose": "\u8acb\u9078\u64c7",
@@ -101831,7 +103055,7 @@
           "dlg.story_mi.8": "\u5f85\u5728\u6211\u8eab\u908a\uff0c\u6211\u6703\u8b93\u4f60\u6490\u4e0b\u53bb\u3002",
           "dlg.story_ol.0.1": "\u5b78\u7fd2\u6280\u85dd",
           "dlg.story_ol.0.2": "\u73fe\u5728\u4e0d\u8981",
-          "dlg.story_ol.0.prompt": "\u8001\u5e2b\u7236\uff1a\u56db\u7a2e\u6280\u85dd\uff0c\u827e\u5fb7\u91cc\u514b\u3002\u4f60\u7684\u6280\u80fd\u6b04\u4e00\u6b21\u53ea\u653e\u5f97\u4e0b\u9019\u9ebc\u591a\u3002",
+          "dlg.story_ol.0.prompt": "\u8001\u5e2b\u7236\uff1a\u56db\u7a2e\u6280\u85dd\uff0c\u7f85\u5091\u3002\u4f60\u7684\u6280\u80fd\u6b04\u4e00\u6b21\u53ea\u653e\u5f97\u4e0b\u9019\u9ebc\u591a\u3002",
           "dlg.story_ou.0.1": "\u7c73\u83c8\uff1a\u9ece\u660e\u8056\u888d",
           "dlg.story_ou.0.2": "\u8587\u7d72\u73c0\uff1a\u5893\u4e4b\u738b\u88dd",
           "dlg.story_ou.0.3": "\u51f1\u723e\uff1a\u72c2\u4fe1\u8005\u4e4b\u8863",
@@ -101933,10 +103157,65 @@
           "dlg.town_smi.20": "\u5c0f\u5fc3\u706b\u3002",
           "dlg.town_wea.0": "\u6bcf\u4e00\u7a2e\u6b66\u5668\uff0c\u4e00\u624b\u638c\u63e1\u3002",
           "dlg.town_wea.2": "\u7b49\u7d1a 3 \u518d\u4f86\u3002",
+          "enhance.auto": "\u689d\u4ef6\u9054\u6210\u6642\u81ea\u52d5\u89e3\u9396",
+          "enhance.cannot_refine": "\u9019\u4ef6\u88dd\u5099\u4e0d\u80fd\u7cbe\u7149\u3002",
+          "enhance.card_sockets": "\u5361\u7247\u5b54",
+          "enhance.counter_row": "{name}  {now}/{need}",
+          "enhance.destroyed": "\u88dd\u5099\u640d\u6bc0\u4e86",
+          "enhance.evolves": "\u9032\u5316\u70ba {name}",
+          "enhance.fail.break": "\u5931\u6557\u6703\u8b93\u88dd\u5099\u640d\u58de\uff08\u9700\u8981\u4fee\u7406\uff09",
+          "enhance.fail.destroy": "\u5931\u6557\u6703\u8b93\u88dd\u5099\u6d88\u5931",
+          "enhance.fail.drop": "\u5931\u6557\u6703\u964d\u4e00\u7d1a",
+          "enhance.fail.keep": "\u5931\u6557\u53ea\u6703\u640d\u5931\u8cbb\u7528",
+          "enhance.fits": "\u80cc\u5305\u88e1\u53ef\u7528\u7684",
+          "enhance.gear": "\u8eab\u4e0a\u7684\u88dd\u5099",
+          "enhance.gives": "\u7372\u5f97",
+          "enhance.hint.growth": "Enter\uff1a\u9078\u64c7\uff0f\u89e3\u9396   Tab\uff1a\u63db\u9801   Q / E\uff1a\u6210\u54e1   Esc\uff1a\u8fd4\u56de",
+          "enhance.hint.refine": "Enter\uff1a\u7cbe\u7149   P\uff1a\u4fdd\u8b77\u958b\uff0f\u95dc   Tab\uff1a\u63db\u9801   Q / E\uff1a\u6210\u54e1   Esc\uff1a\u8fd4\u56de",
+          "enhance.hint.sockets": "Enter\uff1a\u9078\u64c7\uff0f\u9472\u5d4c   X\uff1a\u53d6\u4e0b   Tab\uff1a\u63db\u9801   Q / E\uff1a\u6210\u54e1   Esc\uff1a\u8fd4\u56de",
+          "enhance.level_row": "+{level}   {chance}%   {cost} {currency}",
+          "enhance.levels": "\u7cbe\u7149\u7b49\u7d1a",
+          "enhance.material_row": "{name}  {have}/{need}",
+          "enhance.materials": "\u6750\u6599",
+          "enhance.max_level": "\u5df2\u9054\u6700\u9ad8\u7b49\u7d1a\uff08+{level}\uff09",
+          "enhance.member": "{name}  \u00b7  \u91d1\u5e63 {gold}   (Q / E)",
+          "enhance.needs": "\u4e0b\u4e00\u968e\u9700\u8981",
+          "enhance.next_level": "+{level} \u2192 +{next}   \u6210\u529f\u7387 {chance}%",
+          "enhance.no_growth": "\u9019\u4ef6\u88dd\u5099\u4e0d\u6703\u6210\u9577\u3002",
+          "enhance.no_sockets": "\u9019\u4ef6\u88dd\u5099\u6c92\u6709\u9019\u7a2e\u5b54\u3002",
+          "enhance.nothing_fits": "\u80cc\u5305\u88e1\u6c92\u6709\u80fd\u653e\u9032\u9019\u500b\u5b54\u7684\u6771\u897f\u3002",
+          "enhance.opens_sockets": "\u958b\u555f {count} \u500b\u5b54",
+          "enhance.preview": "\u4e0b\u4e00\u7d1a\u7684\u6548\u679c",
+          "enhance.price": "\u8cbb\u7528 {cost} {currency}\uff08\u6301\u6709 {have}\uff09",
+          "enhance.protect": "{name} x{have}\uff1a\u4fdd\u8b77 {state}\uff08P\uff09",
+          "enhance.ready": "\u53ef\u4ee5\u89e3\u9396\uff1a\u6309 Enter",
+          "enhance.removal.kept": "\u53d6\u4e0b\u5f8c\u6703\u56de\u5230\u80cc\u5305",
+          "enhance.removal.lost": "\u53d6\u4e0b\u6642\u6703\u6d88\u5931",
+          "enhance.safe": "+{level} \u4ee5\u524d\u5fc5\u5b9a\u6210\u529f",
+          "enhance.sockets": "\u9472\u5d4c\u5b54",
+          "enhance.stage_done": "\u5df2\u5b8c\u6210",
+          "enhance.stages": "\u6210\u9577\u968e\u6bb5",
+          "enhance.tab.cards": "\u5361\u7247",
+          "enhance.tab.growth": "\u6210\u9577",
+          "enhance.tab.refine": "\u7cbe\u7149",
+          "enhance.tab.sockets": "\u9472\u5d4c",
+          "enhance.takes": "\u53ef\u653e\u5165\uff1a{tags}",
+          "enhance.takes_any": "\u4efb\u4f55\u6771\u897f",
+          "enhance.title": "\u5f37\u5316",
+          "enhance.unlocked": "\u5df2\u89e3\u9396 {name}",
           "equip_offer.free": "{who} \u7684 {slot} \u6b04\u4f4d\u662f\u7a7a\u7684\uff0c\u8981\u73fe\u5728\u88dd\u5099\u55ce\uff1f",
           "equip_offer.instead": "{who}\uff1a\u8981\u63db\u4e0b {old} \u6539\u7a7f\u9019\u4ef6\u55ce\uff1f",
           "equip_offer.keys": "1\uff0fEnter\uff1a\u88dd\u5099     2\uff0fEsc\uff1a\u6536\u9032\u80cc\u5305",
           "equip_offer.new": "\u65b0\u88dd\u5099\uff1a{name}",
+          "equipment.durability": "\u8010\u4e45 {now}/{most}",
+          "equipment.empty_slot": "\u9019\u88e1\u6c92\u6709\u88dd\u5099\u3002",
+          "equipment.fits": "\u53ef\u88dd\u5099\u65bc{slot}",
+          "equipment.hint": "\u65b9\u5411\u9375\uff1a\u9078\u64c7   Enter\uff1a\u66f4\u63db   X\uff1a\u5378\u4e0b   Q / E\uff1a\u6210\u54e1   Esc\uff1a\u8fd4\u56de",
+          "equipment.member": "{name}  \u00b7  Lv {level}  \u00b7  {job}   (Q / E)",
+          "equipment.nothing_fits": "\u80cc\u5305\u88e1\u6c92\u6709\u53ef\u4ee5\u88dd\u5099\u7684\u6771\u897f\u3002",
+          "equipment.sockets": "\u9472\u5d4c\u5b54 {filled}/{total}",
+          "equipment.stats": "\u80fd\u529b\u503c",
+          "equipment.title": "\u88dd\u5099",
           "field.controls": "\u79fb\u52d5\uff1aWASD\uff0f\u65b9\u5411\u9375   C\uff1a\u89d2\u8272\u990a\u6210   Q\uff1a\u4efb\u52d9   E\uff1a\u4e92\u52d5   F5\uff1a\u5b58\u6a94   Esc\uff1a\u66ab\u505c",
           "field.interact": "E  \u4e92\u52d5 \u2014 {name}",
           "field.saved": "\u5df2\u5b58\u6a94\uff1a{file}",
@@ -101964,7 +103243,9 @@
           "pause.bestiary": "\u602a\u7269\u5716\u9451",
           "pause.crafting": "\u88fd\u4f5c",
           "pause.credits": "\u88fd\u4f5c\u4eba\u54e1",
+          "pause.enhance": "\u5f37\u5316",
           "pause.entry.camp": "\u7d2e\u71df",
+          "pause.equipment": "\u88dd\u5099",
           "pause.heading": "\u66ab\u505c",
           "pause.load": "\u8b80\u53d6\u9032\u5ea6",
           "pause.music": "\u97f3\u6a02\u5ba4",
@@ -101980,18 +103261,37 @@
           "pets.active": "\u51fa\u6230\u4e2d",
           "pets.bond": "\u89aa\u5bc6\u5ea6 {bond}",
           "pets.evolved": "{name} \u9032\u5316\u4e86\uff01",
+          "pets.health": "HP {current}/{maximum}",
           "pets.hint": "\u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   Enter\uff1a\u6d3e\u9019\u96bb\u51fa\u6230   R\uff1a\u6539\u540d   Esc\uff1a\u8fd4\u56de",
+          "pets.last_one": "\u6700\u5f8c\u4e00\u96bb\u5fc5\u9808\u7559\u5728\u8eab\u908a",
+          "pets.learn_hint": "1-9\uff1a\u5fd8\u6389\u90a3\u4e00\u62db\u4f86\u5b78   Esc\uff1a\u4e0d\u5b78",
+          "pets.learn_title": "{name} \u60f3\u5b78\u6703 {move}",
+          "pets.learned": "{name} \u5b78\u6703\u4e86 {move}",
           "pets.level": "{kind}   Lv {level}",
+          "pets.moved_in": "{name} \u52a0\u5165\u968a\u4f0d",
+          "pets.moved_out": "{name} \u9001\u53bb\u5bc4\u653e",
+          "pets.no_storage": "\u6c92\u6709\u5730\u65b9\u53ef\u4ee5\u5bc4\u653e",
           "pets.none": "\u4f60\u9084\u6c92\u6709\u5bf5\u7269\u3002",
+          "pets.not_learned": "{name} \u6c92\u6709\u5b78 {move}",
           "pets.not_ready": "\u9084\u4e0d\u80fd\u9032\u5316",
+          "pets.party": "\u968a\u4f0d",
+          "pets.party_full": "\u968a\u4f0d\u5df2\u6eff",
+          "pets.party_hint": "\u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   \u5de6\uff0f\u53f3\uff1a\u968a\u4f0d\uff0f\u5bc4\u653e   Enter\uff1a\u79fb\u52d5   R\uff1a\u6539\u540d   Esc\uff1a\u8fd4\u56de",
           "pets.rename_hint": "\u8f38\u5165\u540d\u5b57\uff0cEnter \u78ba\u5b9a\uff0cEsc \u53d6\u6d88",
           "pets.renamed": "\u5df2\u6539\u540d",
           "pets.sent_out": "\u4e0b\u6b21\u6d3e\u51fa {name}",
+          "pets.storage": "\u5bc4\u653e",
           "pets.title": "\u5bf5\u7269",
-          "plaque.cleared": "\u82f1\u96c4\u4e4b\u5ef3\uff1a\u9019\u88e1\u523b\u8457 Aldric \u7684\u540d\u5b57\u3002\u8a66\u7149\u518d\u6b21\u958b\u59cb\u3002",
+          "plaque.cleared": "\u82f1\u96c4\u4e4b\u5ef3\uff1a\u9019\u88e1\u523b\u8457\u7f85\u5091\u7684\u540d\u5b57\u3002\u8a66\u7149\u518d\u6b21\u958b\u59cb\u3002",
           "plaque.empty": "\u82f1\u96c4\u4e4b\u5ef3\uff1a\u724c\u533e\u4e0a\u9084\u6c92\u6709\u523b\u4efb\u4f55\u540d\u5b57\u3002",
+          "points.ap": "\u80fd\u529b\u9ede",
+          "points.jp": "{name}\u8077\u696d\u9ede",
+          "points.skill_points": "\u6280\u80fd\u9ede",
+          "points.stat_points": "\u5c6c\u6027\u9ede",
           "quests.hint": "Enter\uff0fEsc\uff1a\u8fd4\u56de",
           "quests.none": "\u9084\u6c92\u6709\u4efb\u52d9\u3002",
+          "quests.objective.defeat": "\u64ca\u6557{name}",
+          "quests.objective.item": "\u6536\u96c6{name}",
           "quests.status.active": "\u9032\u884c\u4e2d",
           "quests.status.completed": "\u5df2\u5b8c\u6210",
           "quests.status.failed": "\u5931\u6557",
@@ -101999,6 +103299,7 @@
           "scholar.done": "\u5c31\u9019\u9ebc\u8fa6\u3002",
           "settings.back": "\u8fd4\u56de",
           "settings.controls": "\u6309\u9375\u8a2d\u5b9a\u2026",
+          "settings.developer_menu": "\u958b\u767c\u8005\u9078\u55ae",
           "settings.effects_volume": "\u97f3\u6548\u97f3\u91cf",
           "settings.hint": "\u5de6\uff0f\u53f3\uff1a\u8abf\u6574   Esc\uff1a\u5132\u5b58\u4e26\u8fd4\u56de",
           "settings.language": "\u8a9e\u8a00",
@@ -102061,6 +103362,7 @@
           "slots.saved": "\u5df2\u5b58\u5230\u5b58\u6a94 {slot}",
           "slots.slot": "\u5b58\u6a94 {slot}",
           "slots.summary": "{scene} \u00b7 {leader} Lv {level} \u00b7 {saved_at}",
+          "socket.number": "\u5b54 {number}",
           "status.active": "\u751f\u6548\u4e2d",
           "status.cannot_use": "{name} \u7121\u6cd5\u4f7f\u7528\uff08{reason}\uff09",
           "status.empty": "\u9019\u88e1\u9084\u6c92\u6709\u6771\u897f\u3002",
@@ -102078,6 +103380,9 @@
           "status.unequipped": "\u5378\u4e0b\u4e86 {name}",
           "status.usable": "\uff08\u53ef\u4f7f\u7528\uff09",
           "status.used": "\u4f7f\u7528\u4e86 {name}",
+          "switch.hint": "1-9\uff1a\u9078\u64c7",
+          "switch.row": "{name}   Lv {level}   HP {current}/{maximum}",
+          "switch.title": "\u6d3e\u8ab0\u4e0a\u5834\uff1f",
           "title.guest": "\u8a2a\u5ba2\uff1a{player}",
           "title.load_game": "L   \u8b80\u53d6\u9032\u5ea6",
           "title.loaded": "\u5df2\u8b80\u53d6\u73a9\u5bb6\u5b58\u6a94",
@@ -102115,6 +103420,7 @@
           "workshop.points": "\u5c6c\u6027\u9ede\uff1a{count}",
           "workshop.refined": "\u7cbe\u7149\uff1a{outcome}",
           "workshop.socket": "\u5b54 {socket}\uff1a{value}",
+          "workshop.socket_row": "{socket}\uff1a{value}",
           "workshop.socketed": "\u628a {name} \u9472\u9032\u4e86 {socket}",
           "workshop.title": "\u5de5\u574a",
           "workshop.took_out": "\u5f9e {socket} \u53d6\u4e0b\u4e86 {name}"
@@ -139179,7 +140485,7 @@
         "next_quest_ids": [],
         "objectives": [
           {
-            "description": "",
+            "description": "Show the crowd a trick",
             "kind": "counter",
             "objective_id": "tricks",
             "required": 3,
@@ -139590,6 +140896,118 @@
               "gold": 9000.0
             },
             "item_id": "a_royal_medal",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 120.0
+            },
+            "item_id": "hd_chain_helmet",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 400.0
+            },
+            "item_id": "hd_wizard_hat",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 1200.0
+            },
+            "item_id": "hd_explorer_ushanka",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 1200.0
+            },
+            "item_id": "hd_plate_helmet",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 3500.0
+            },
+            "item_id": "hd_royal_helmet",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 120.0
+            },
+            "item_id": "lg_leggings",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 400.0
+            },
+            "item_id": "lg_chain_leggings",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 400.0
+            },
+            "item_id": "lg_wizard_leggings",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 1200.0
+            },
+            "item_id": "lg_explorer_leggings",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 1200.0
+            },
+            "item_id": "lg_plate_leggings",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 120.0
+            },
+            "item_id": "ft_chain_boots",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 400.0
+            },
+            "item_id": "ft_wizard_shoes",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 1200.0
+            },
+            "item_id": "ft_explorer_boots",
+            "sell_prices": {},
+            "stock": null
+          },
+          {
+            "buy_prices": {
+              "gold": 1200.0
+            },
+            "item_id": "ft_plate_boots",
             "sell_prices": {},
             "stock": null
           }
@@ -141079,7 +142497,7 @@
           ],
           "enabled": true,
           "id": "9cf4478b-06f8-5843-a71d-e2490b54e926",
-          "name": "Aldric's House"
+          "name": "Roger's House"
         },
         {
           "components": [
@@ -145565,7 +146983,7 @@
         }
       ],
       "id": "c9ab136c-890e-5246-bf89-c43ecfd071a5",
-      "name": "Aldric's House",
+      "name": "Roger's House",
       "schema": "asteria.scene",
       "version": 1
     }

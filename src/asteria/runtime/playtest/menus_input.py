@@ -78,49 +78,90 @@ class MenusInputMixin:
     def _draw_status_menu(self):
         from asteria.runtime.status_menu import TAB_WORDS, TABS
 
-        self._draw_field(False)
-        shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-        shade.fill((6, 9, 18, 215))
-        self.screen.blit(shade, (0, 0))
         menu = self.status_menu
-        tr = self.game.tr
-        self.panel((24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
-        x = 44
-        for tab in TABS:
-            label = tr(TAB_WORDS[tab], tab.title())
-            active = tab == menu.tab
-            self.text(label, x, 36, size=24, color=(255, 220, 120) if active else (150, 160, 180))
-            x += 150
         actor = menu.actor_id or "—"
-        name = self.game.name_of(self.project.rpg_database.actors.get(actor), actor)
+        record = self.project.rpg_database.actors.get(actor)
+        name = self.game.name_of(record, actor)
+        c = self.menu_canvas("status", self._member_fields(actor))
+        layout = c.layout
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            self._draw_field(False)
+            dim = 215 if layout is None or layout.dim < 0 else layout.dim
+            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+            shade.fill((6, 9, 18, dim))
+            self.screen.blit(shade, (0, 0))
+        c.begin()
+        tr = self.game.tr
+        c.panel("frame", (24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
+        tabs = c.place("tabs", (44, 36, 150 * len(TABS), 30), 150)
+        if c.shown("tabs"):
+            x = tabs.x(44)
+            for tab in TABS:
+                label = tr(TAB_WORDS[tab], tab.title())
+                active = tab == menu.tab
+                color = c.tone("selected", (255, 220, 120)) if active else (150, 160, 180)
+                self.text(label, x, tabs.y(36), size=c.size("tabs", 24), color=color)
+                x += tabs.row
         member = tr("status.member", "Q / E  {name}", name=name)
-        self.text(member, self.width - 330, 40, size=20, color=(170, 220, 255))
+        c.text("member", member, self.width - 330, 40, size=20, color=(170, 220, 255))
         rows = menu.rows()
         icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
-        label_x = 56 + (30 if any(icons) else 0)
-        start = max(0, menu.row - 13)
-        for i, (_kind, _key, label, detail) in enumerate(rows[start : start + 14]):
-            y = 92 + i * 28
+        at = c.place("rows", (40, 88, self.width - 80, 14 * 28), 28)
+        icon_size = c.icon_size("rows", 22)
+        label_x = at.x(56) + (icon_size + 8 if any(icons) else 0)
+        fit = max(1, at.rect[3] // at.row)
+        start = max(0, menu.row - (fit - 1))
+        size = c.size("rows", 20)
+        normal = c.color("rows", c.tone("text", (210, 215, 225)))
+        for i, (_kind, _key, label, detail) in enumerate(rows[start : start + fit]):
+            y = at.y(92) + i * at.row
             selected = start + i == menu.row
             if selected:
-                self.pg.draw.rect(
-                    self.screen, (40, 52, 78), (40, y - 4, self.width - 80, 26), border_radius=4
+                band = (at.x(40), y - 4, at.rect[2], at.row - 2)
+                c.selection(
+                    "rows",
+                    band,
+                    lambda band=band: self.pg.draw.rect(
+                        self.screen, (40, 52, 78), band, border_radius=4
+                    ),
                 )
-            self._draw_icon(icons[start + i], 56, y - 3)
-            self.text(
-                label, label_x, y, size=20, color=(255, 255, 255) if selected else (210, 215, 225)
-            )
-            self.text(detail, self.width - 420, y, size=20, color=(170, 210, 240))
+            self._draw_icon(icons[start + i], at.x(56), y - 3, icon_size)
+            picked = c.tone("selected", (255, 255, 255))
+            self.text(label, label_x, y, size=size, color=picked if selected else normal)
+            detail_x = at.x(40) + at.rect[2] - 380
+            self.text(detail, detail_x, y, size=size, color=c.tone("muted", (170, 210, 240)))
         if not rows:
             empty = tr("status.empty", "Nothing here yet.")
-            self.text(empty, 56, 92, size=20, color=(150, 160, 180))
+            c.text("empty", empty, 56, 92, size=20, color=(150, 160, 180))
         hint = tr(
             "status.hint",
             "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
         )
-        self.text(hint, 44, self.height - 60, size=18, color=(170, 210, 240))
+        c.text("hint", hint, 44, self.height - 60, size=18, color=c.tone("muted", (170, 210, 240)))
         if menu.message:
-            self.text(menu.message, 44, self.height - 88, size=19, color=(255, 226, 129))
+            c.text("message", menu.message, 44, self.height - 88, size=19, color=(255, 226, 129))
+        c.finish()
+
+    def _member_fields(self, actor_id):
+        """Fields a screen about one party member offers the author's own texts (U2)."""
+        game = self.game
+        db = self.project.rpg_database
+
+        def level():
+            state = game.save.rpg_state.actor_progression.get(actor_id)
+            return getattr(state, "level", "")
+
+        def job():
+            state = game.save.rpg_state.actor_progression.get(actor_id)
+            ids = getattr(state, "active_class_ids", ()) or ()
+            return ", ".join(game.name_of(db.classes.get(c), c) for c in ids)
+
+        return {
+            "member.name": lambda: game.name_of(db.actors.get(actor_id), actor_id),
+            "member.level": level,
+            "member.class": job,
+            "wallet.gold": game.save.rpg_state.currencies.get("gold", 0),
+        }
 
     def _pause_input(self):
         if self.input.just_pressed("cancel"):
@@ -133,6 +174,10 @@ class MenusInputMixin:
             self._ui_mode = "field"
         elif choice == "status":
             self.open_status_menu(back="pause")
+        elif choice == "equipment":
+            self.open_equipment_screen(back="pause")
+        elif choice == "enhance":
+            self.open_enhance_screen(back="pause")
         elif choice in ("backlog", "music", "credits", "skill_slots"):
             from asteria.runtime import extras_screens
 
@@ -210,8 +255,13 @@ class MenusInputMixin:
             screen.move(1)
         if self.input.just_pressed("move_left") or self.input.just_pressed("move_right"):
             screen.switch_tab()
-        if self.input.just_pressed("confirm") and screen.confirm() is not None:
-            self._sound(self.manifest.get("dialogue_confirm_sfx"))
+        if self.input.just_pressed("confirm"):
+            theme = self.menu_theme()
+            if screen.confirm() is not None:  # the theme's "buy", else the dialogue's sound
+                bought = theme.sound("buy") if theme is not None else ""
+                self._sound(bought or self.manifest.get("dialogue_confirm_sfx"))
+            elif theme is not None:
+                self._sound(theme.sound("fail"))
 
     def _open_crafting(self, station, back="field"):
         if self._multiplayer_connected():
@@ -235,8 +285,13 @@ class MenusInputMixin:
             screen.move(-1)
         if self.input.just_pressed("move_down"):
             screen.move(1)
-        if self.input.just_pressed("confirm") and screen.confirm() is not None:
-            self._sound(self.manifest.get("dialogue_confirm_sfx"))
+        if self.input.just_pressed("confirm"):
+            theme = self.menu_theme()
+            if screen.confirm() is not None:  # the theme's "buy", else the dialogue's sound
+                bought = theme.sound("buy") if theme is not None else ""
+                self._sound(bought or self.manifest.get("dialogue_confirm_sfx"))
+            elif theme is not None:
+                self._sound(theme.sound("fail"))
 
     def _list_screen_input(self):
         if self.input.just_pressed("cancel") or self.input.just_pressed("confirm"):
@@ -275,7 +330,11 @@ class MenusInputMixin:
         delta = (1 if self.input.just_pressed("move_right") else 0) - (
             1 if self.input.just_pressed("move_left") else 0
         )
-        if self.input.just_pressed("confirm") and key in ("show_battle_log", "language"):
+        if self.input.just_pressed("confirm") and key in (
+            "show_battle_log",
+            "developer_menu",
+            "language",
+        ):
             delta = 1
         if delta and key == "language":
             locales = self.game.localizer.locales()

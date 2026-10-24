@@ -179,6 +179,23 @@ class QuestRow:
     objectives: tuple  # (description, value, required, done)
 
 
+def objective_words(game, objective):
+    """What an objective without a description asks, made from its kind and target:
+    "Defeat Acolyte", "Collect Iron Ore", else its id in words (U1)."""
+    from asteria.rpg.data_text import words
+
+    db = game.project.rpg_database
+    if objective.kind == "defeat_enemy" and objective.target in db.enemies:
+        name = game.name_of(db.enemies[objective.target], objective.target)
+        return game.tr("quests.objective.defeat", "Defeat {name}", name=name)
+    if objective.kind == "item":
+        record = db.items.get(objective.target) or db.equipment.get(objective.target)
+        if record is not None:
+            name = game.name_of(record, objective.target)
+            return game.tr("quests.objective.item", "Collect {name}", name=name)
+    return words(objective.objective_id)
+
+
 def quest_rows(game):
     """Active quests first, then completed and failed ones, with objective progress."""
     log = game.quest_log
@@ -195,7 +212,7 @@ def quest_rows(game):
             value = min(required, log.objective_value(quest_id, objective))
             objectives.append(
                 (
-                    game.description_of(objective, objective.objective_id),
+                    game.description_of(objective) or objective_words(game, objective),
                     value,
                     required,
                     value >= required,
@@ -360,11 +377,14 @@ class GameSettings:
     input_overrides: dict = (
         None  # ENG-15: action -> [binding data], laid over the project input map
     )
+    # U3: the build-test menu (C) only for a player who turns it on in Settings
+    developer_menu: bool = False
 
     OPTIONS = (
         ("music_volume", "Music Volume"),
         ("effects_volume", "Effects Volume"),
         ("show_battle_log", "Battle Messages"),
+        ("developer_menu", "Developer Menu"),
         ("controls", "Controls…"),
         ("back", "Back"),
     )
@@ -378,6 +398,8 @@ class GameSettings:
             setattr(self, key, round(min(1.0, max(0.0, getattr(self, key) + 0.1 * delta)), 2))
         elif key == "show_battle_log":
             self.show_battle_log = not self.show_battle_log
+        elif key == "developer_menu":
+            self.developer_menu = not self.developer_menu
         return self
 
     def value_text(self, key, tr=None):
@@ -385,8 +407,8 @@ class GameSettings:
         in the player's language."""
         if key in ("music_volume", "effects_volume"):
             return f"{round(getattr(self, key) * 100):d}%"
-        if key == "show_battle_log":
-            on = self.show_battle_log
+        if key in ("show_battle_log", "developer_menu"):
+            on = getattr(self, key)
             if tr is None:
                 return "On" if on else "Off"
             return tr("settings.on", "On") if on else tr("settings.off", "Off")
@@ -405,6 +427,7 @@ class GameSettings:
             "effects_volume": self.effects_volume,
             "show_battle_log": self.show_battle_log,
             "input_overrides": {k: list(v) for k, v in sorted(self.input_overrides.items())},
+            "developer_menu": self.developer_menu,
         }
 
     @classmethod
@@ -416,6 +439,7 @@ class GameSettings:
             float(data["effects_volume"]),
             bool(data["show_battle_log"]),
             dict(data.get("input_overrides", {})),
+            bool(data.get("developer_menu", False)),
         )
 
     def save(self, path):

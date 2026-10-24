@@ -1,4 +1,4 @@
-"""Aldric's house in Hearthfold: a house on the town map the player walks into, a room with a
+"""Roger's house in Hearthfold: a house on the town map the player walks into, a room with a
 bed, and sleeping in the bed rests the whole party (fade out, REST_PARTY, fade in).
 
 The pictures are Ninja Adventure's (CC0, Pixel-boy): the house from TilesetHouse, the walls and
@@ -19,7 +19,7 @@ DOOR_X = 6  # the room's doorway column (bottom wall)
 
 
 def front_door():
-    """Where the game starts: on the path just below Aldric's front door."""
+    """Where the game starts: on the path just below Roger's front door."""
     x0, _y0, x1, y1 = LOT
     return ((x0 + x1) * 8.0, (y1 + 2) * 16.0 + 8.0)
 
@@ -46,7 +46,7 @@ def tileset(assets):
         image.alpha_composite(tile, (index * 16, 0))
     block = len(cells)
     walls = tuple(range(len(FLOOR), len(cells)))
-    tileset_id, _ = assets.tileset("home", image, 16, "Aldric's House", solid=(*walls, block))
+    tileset_id, _ = assets.tileset("home", image, 16, "Roger's House", solid=(*walls, block))
     floor = list(range(len(FLOOR)))
     return tileset_id, len(cells) + 1, floor, list(walls)
 
@@ -88,7 +88,7 @@ def furnish(assets, town, home, home_places):
     from asteria.runtime.collision import Collider2DComponent
 
     x0, y0, x1, y1 = LOT
-    house = town.entity("Aldric's House", (x0 + x1) * 8.0, y1 * 16.0)  # stands on its lot
+    house = town.entity("Roger's House", (x0 + x1) * 8.0, y1 * 16.0)  # stands on its lot
     town.look(house, *picture(assets, "home_outside", "TilesetHouse.png", (0, 0, 64, 48), "House"))
     door_x = (x0 + x1) * 8.0
     town.door(

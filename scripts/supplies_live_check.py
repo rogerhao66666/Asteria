@@ -3,7 +3,7 @@
 
     ASTERIA_MUTE=1 python scripts/supplies_live_check.py OUTPUT_DIR
 
-The bag gets potions, cures, bombs, materials, orbs and cards; Aldric wears new armour and an
+The bag gets potions, cures, bombs, materials, orbs and cards; Roger wears new armour and an
 accessory. The status menu's items and equipment pages, the battle's item list and a thrown
 Thunder Bomb (real key presses) are pictured in English and in Traditional Chinese.
 ``results.json`` lists the words each picture drew and the checks.

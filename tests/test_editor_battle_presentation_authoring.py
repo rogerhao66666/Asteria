@@ -89,6 +89,8 @@ def test_all_presentation_categories_are_project_owned_and_authorable():
         "rpg_progression_screen",
         "rpg_inventory_screen",
         "rpg_party_screen",
+        "menu_layout",  # authored on Presentation ▸ Menu Screens ▸ Layout (U2)
+        "menu_theme",
     }
     assert doc.commands.can_undo
 

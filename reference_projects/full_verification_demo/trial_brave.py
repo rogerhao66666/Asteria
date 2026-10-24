@@ -1,4 +1,4 @@
-"""Aldric the Brave and Archmage: his own two jobs, their trees, the Demon Ring, two new
+"""Roger the Brave and Archmage: his own two jobs, their trees, the Demon Ring, two new
 elements and much stronger foes.
 
 * **Brave** (main job): every weapon (sword, axe, spear, dagger, bow, staff, ring), power and
@@ -15,7 +15,7 @@ elements and much stronger foes.
   Paths, specs, runes on Fire Bolt and a book.
 * **Demon Ring**: a ring weapon with power and magic, seven sockets (three cards, two gems, two
   charms - six new charm attachments) whose attack strikes five times. It waits in the family
-  chest in Aldric's house.
+  chest in Roger's house.
 * **Foes**: every foe is stronger (FOE_SCALE: a row for minions, one for bosses, rows of their
   own for some), grows faster with its level and meets the party on Legend difficulty
   (strength x1.35, three levels above).
@@ -323,7 +323,7 @@ FX = {
 
 # -- jobs ----------------------------------------------------------------------------------
 def jobs(c):
-    """The Brave and the Archmage, their skills, passives and trees; Aldric becomes both."""
+    """The Brave and the Archmage, their skills, passives and trees; Roger becomes both."""
     db = c.db
     for rows in (brave_skills(), archmage_skills()):
         for ability_id, label, target, definition in rows:
@@ -720,7 +720,7 @@ def ring(c):
 
 
 def family_chest(assets, home, maps):
-    """The chest in Aldric's house: the Demon Ring (his free hand is offered it) and the
+    """The chest in Roger's house: the Demon Ring (his free hand is offered it) and the
     charms."""
     import trial_people as people
 

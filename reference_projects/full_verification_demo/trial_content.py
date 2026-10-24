@@ -1361,7 +1361,7 @@ def hero_jobs_and_trees(c):
     actor = db.actors[c.hero_id]
     db.actors[c.hero_id] = dataclasses.replace(
         actor,
-        display_name="Aldric",
+        display_name="Roger",
         class_assignments=(
             ClassAssignment("knight", assignment_id="hero_01.main", role="main", priority=10),
             ClassAssignment("duelist", assignment_id="hero_01.sub", role="secondary", priority=5),
@@ -1911,7 +1911,7 @@ def game_start(c):
             "level": 1,
             "experience": 0.0,
             "points": {},
-            "active_class_ids": ["brave", "archmage"],  # Aldric the Brave, an Archmage too
+            "active_class_ids": ["brave", "archmage"],  # Roger the Brave, an Archmage too
             # the rest: trainers
             "unlocked_class_ids": ["brave", "archmage", "knight", "duelist", "mystic"],
         },

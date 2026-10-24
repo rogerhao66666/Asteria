@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 
 from asteria.events.program import EventInstruction, EventProgram
-from asteria.rpg.data_text import key, kind_of
+from asteria.rpg.data_text import credits_key, key, kind_of, words
 
 # (title, the RpgDatabase tables or gameplay libraries it lists, nested records)
 DATA_GROUPS = (
@@ -47,6 +47,9 @@ DATA_GROUPS = (
 MAPS_GROUP = "Data: map names"
 CURRENCY_GROUP = "Data: currencies"
 SLOTS_GROUP = "Data: equipment slots"
+STATS_GROUP = "Data: stats used by the data"
+CREDITS_GROUP = "Data: credits"
+TAGS_GROUP = "Data: tags shown in menus"
 SPEAKERS_GROUP = "Dialogue: who speaks"
 LINES_GROUP = "Dialogue: lines and choices"
 NESTED = ("objectives", "nodes")  # quest objectives, skill-tree / growth nodes
@@ -113,6 +116,81 @@ def currency_ids(project):
     return sorted(ids)
 
 
+def _walk_stats(value, found, depth=0):
+    """Stat ids in ``value``: every modifier's ``stat`` and the keys of ``*stat*`` mappings
+    (a skill-tree reward's ``stat_bonuses``, a pet species' base stats...)."""
+    if depth > 8 or value is None or isinstance(value, (str, int, float, bool)):
+        return
+    stat = getattr(value, "stat", None)
+    if isinstance(stat, str) and hasattr(value, "operation"):
+        found.add(stat)
+        return
+    if isinstance(value, dict):
+        for item in value.values():
+            _walk_stats(item, found, depth + 1)
+        return
+    if isinstance(value, (list, tuple, set, frozenset)):
+        for item in value:
+            _walk_stats(item, found, depth + 1)
+        return
+    names = getattr(type(value), "__dataclass_fields__", None)
+    for name in names or ():
+        field = getattr(value, name, None)
+        if "stat" in name and isinstance(field, dict):
+            found.update(str(k) for k in field)
+        elif "stat" in name and isinstance(field, tuple) and field and isinstance(field[0], tuple):
+            found.update(str(pair[0]) for pair in field if pair)
+        else:
+            _walk_stats(field, found, depth + 1)
+
+
+def _stat_labels(project):
+    """The first character screen profile's stat and resource labels (its English)."""
+    library = getattr(project, "battle_presentation_library", None)
+    try:
+        ids = library.ids("rpg_character_screen") if library is not None else ()
+    except (KeyError, ValueError):
+        ids = ()
+    if not ids:
+        return {}
+    profile = library.require("rpg_character_screen", ids[0])
+    return {**dict(profile.resource_labels), **dict(profile.stat_labels)}
+
+
+def stat_ids(project):
+    """Every stat id the project's data uses (modifiers, rewards, base stats), sorted."""
+    db = getattr(project, "rpg_database", None)
+    found = set()
+    for table in (
+        "actors",
+        "classes",
+        "passives",
+        "equipment",
+        "attachments",
+        "equipment_sets",
+        "equipment_growth",
+        "affixes",
+        "pet_species",
+        "progression_graphs",
+        "items",
+    ):
+        _walk_stats(getattr(db, table, None), found)
+    states = getattr(getattr(project, "gameplay_library", None), "states", None)
+    if states is not None and hasattr(states, "ids"):
+        _walk_stats([states.get(i) for i in states.ids()], found)
+    return sorted(s for s in found if s)
+
+
+def menu_tags(project):
+    """Every tag a menu shows by name: what equipment sockets accept, what set bonuses give."""
+    db = getattr(project, "rpg_database", None)
+    equipment = getattr(db, "equipment", None) or {}
+    sets = getattr(db, "equipment_sets", None) or {}
+    found = {t for e in equipment.values() for s in e.sockets for t in s.accepted_tags}
+    found |= {t for d in sets.values() for b in d.bonuses for t in b.tags}
+    return sorted(found)
+
+
 def data_groups(project):
     """``[(title, [(key, english)])]`` of the project's own data, groups without rows left
     out."""
@@ -136,9 +214,28 @@ def data_groups(project):
     slots = sorted({str(getattr(e, "slot", "") or "") for e in equipment} - {""})
     if slots:
         groups.append((SLOTS_GROUP, [(key("slot", s), s) for s in slots]))
+    have = {k for _t, rows in groups for k, _e in rows}
+    labels = _stat_labels(project)
+    stats = [(key("stat", s), labels.get(s) or words(s)) for s in stat_ids(project)]
+    stats = [(k, e) for k, e in stats if k not in have]
+    if stats:
+        groups.append((STATS_GROUP, stats))
+    credits = []
+    pages = (getattr(getattr(project, "rpg_database", None), "credits_pages", None) or {}).values()
+    for page in sorted(pages, key=lambda p: (p.order, p.page_id)):
+        if page.title:
+            credits.append((credits_key(page.page_id, "title"), page.title))
+        for row, line in enumerate(page.lines):
+            if _translatable(line):
+                credits.append((credits_key(page.page_id, f"line{row + 1}"), line))
+    if credits:
+        groups.append((CREDITS_GROUP, credits))
     currencies = [(key("currency", c), c) for c in currency_ids(project)]
     if currencies:
         groups.append((CURRENCY_GROUP, currencies))
+    tags = [(key("tag", t), words(t)) for t in menu_tags(project)]
+    if tags:  # what a socket takes, what a set bonus gives (U3)
+        groups.append((TAGS_GROUP, tags))
     speakers, lines = {}, {}
     for _program_id, _index, instruction in _instructions(project):
         args = instruction.args

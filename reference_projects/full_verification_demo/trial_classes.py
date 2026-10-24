@@ -7,7 +7,7 @@
 A job asks for its level and the job before it (``unlock_level`` / ``unlock_classes``); the Job
 Hall in Hearthfold advances a companion and trains them for gold. Every companion job has a
 skill tree (a ranked core, its skills, two exclusive keystones, a mastery passive) paid for with
-that job's points. Aldric keeps his own lines (Knight -> Guardian -> Hero, Duelist -> Weapon
+that job's points. Roger keeps his own lines (Knight -> Guardian -> Hero, Duelist -> Weapon
 Master / Rogue, Mystic -> Sage).
 """
 

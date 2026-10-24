@@ -104,32 +104,54 @@ class PetsScreen:
         rt = self.rt
         pg, screen = rt.pg, rt.screen
         game = self.game
-        screen.fill((10, 12, 20))
+        c = self.canvas = rt.menu_canvas("pets")
+        layout = c.layout
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            screen.fill((10, 12, 20))
+        c.begin()
         tr = game.tr
-        rt.text(tr("pets.title", "Pets"), 36, 22, size=34, color=TITLE)
+        c.text("title", tr("pets.title", "Pets"), 36, 22, size=34, color=c.tone("title", TITLE))
         hint = tr(
             "pets.hint", "Up / Down: choose   Enter: send this one out   R: rename   Esc: back"
         )
-        rt.text(hint, 36, 62, size=18, color=MUTED)
+        muted = c.tone("muted", MUTED)
+        c.text("help", hint, 36, 62, size=18, color=muted)
         pets = self.pets()
         if not pets:
-            rt.text(tr("pets.none", "You have no pets yet."), 36, 110, size=22, color=MUTED)
+            rt.text(tr("pets.none", "You have no pets yet."), 36, 110, size=22, color=muted)
+            self._footer()
+            c.finish()
             return
         active = game.active_pet()
-        row_h = 64
+        at = c.place("rows", (36, 100, rt.width - 72, rt.height - 170), 64)
+        row_h = at.row
+        element = c.element("rows")
         for i, pet in enumerate(pets):
             species = game.pet_species(pet)
-            y = 100 + i * (row_h + 8)
-            rect = pg.Rect(36, y, rt.width - 72, row_h)
+            y = at.y(100) + i * (row_h + 8)
+            rect = pg.Rect(at.x(36), y, at.rect[2], row_h)
             selected = i == min(self.index, len(pets) - 1)
-            pg.draw.rect(screen, (30, 40, 62) if selected else (20, 24, 38), rect, border_radius=8)
-            pg.draw.rect(
-                screen, TITLE if selected else (60, 66, 84), rect, 2 if selected else 1, 8
-            )
-            if not (species and species.icon_id and rt._draw_icon(species.icon_id, 48, y + 8, 48)):
+            if element is not None and (element.skin or element.image):
+                c._draw_look(element, tuple(rect))  # the layout's row picture
+            else:
+                fill = (30, 40, 62) if selected else (20, 24, 38)
+                pg.draw.rect(screen, fill, rect, border_radius=8)
+            if selected:
+                c.selection(
+                    "rows",
+                    tuple(rect),
+                    lambda rect=rect: pg.draw.rect(screen, TITLE, rect, 2, 8),
+                )
+            else:
+                pg.draw.rect(screen, (60, 66, 84), rect, 1, 8)
+            if not (
+                species
+                and species.icon_id
+                and rt._draw_icon(species.icon_id, rect.x + 12, y + 8, 48)
+            ):
                 rt.text(
                     pet.species_id[:2].upper(),
-                    72,
+                    rect.x + 36,
                     y + row_h / 2,
                     size=28,
                     color=TITLE,
@@ -138,12 +160,12 @@ class PetsScreen:
             name = self.game.pet_display(pet)
             if self.renaming is not None and selected:
                 name = self.renaming + "_"
-            rt.text(name, 112, y + 8, size=24, color=(255, 255, 255))
+            rt.text(name, rect.x + 76, y + 8, size=24, color=(255, 255, 255))
             kind = self.game.name_of(species, pet.species_id)
             line = tr("pets.level", "{kind}   Lv {level}", kind=kind, level=pet.level)
             if species is not None and pet.affinity:
                 line += "   " + tr("pets.bond", "Bond {bond}", bond=f"{pet.affinity:g}")
-            rt.text(line, 112, y + 36, size=18, color=MUTED)
+            rt.text(line, rect.x + 76, y + 36, size=18, color=MUTED)
             if pet is active:
                 rt.text(tr("pets.active", "ACTIVE"), rect.right - 100, y + 10, size=20, color=GOOD)
             need = species.exp_to_next(pet.level) if species else 1.0
@@ -156,10 +178,15 @@ class PetsScreen:
             )
             if species is not None:
                 stats = "   ".join(
-                    f"{k.replace('_', ' ').capitalize()} {v:g}"
-                    for k, v in species.stats_at(pet.level).items()
+                    f"{game.stat_name(k)} {v:g}" for k, v in species.stats_at(pet.level).items()
                 )
                 rt.text(stats, rect.right - 560, y + 12, size=18, color=(170, 210, 240))
+        self._footer()
+        c.finish()
+
+    def _footer(self):
+        rt = self.rt
+        tr = rt.game.tr
         if self.renaming is not None:
             rt.text(
                 tr("pets.rename_hint", "Type a name, Enter keeps it, Esc cancels"),

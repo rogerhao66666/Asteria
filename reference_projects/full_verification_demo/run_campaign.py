@@ -488,7 +488,7 @@ class Campaign:
         # the project's own data in Chinese too (D60): names, a skill's help, a map, a speaker
         db, library = game.project.rpg_database, game.project.gameplay_library
         shown = {
-            game.name_of(db.actors["hero_01"]): "艾德里克",
+            game.name_of(db.actors["hero_01"]): "羅傑",
             game.name_of(db.items["healing_herb"]): "療傷草",
             game.name_of(db.enemies["goblin_slinger"]): "哥布林投石兵",
             game.name_of(library.abilities.require("fire_bolt")): "火焰箭",
@@ -503,12 +503,12 @@ class Campaign:
         self.facts["languages"] = len(game.localizer.locales())
 
     def home(self):
-        """Aldric's house: walk in, sleep in the bed, wake up whole, walk out."""
+        """Roger's house: walk in, sleep in the bed, wake up whole, walk out."""
         game = self.game
         game.damage_party("vitality", 900)
         hurt = self.hp()
         self.go("House Door")
-        assert self.scene_name() == "Aldric's House", self.scene_name()
+        assert self.scene_name() == "Roger's House", self.scene_name()
         self.talk("Bed", picks=(0,))  # Sleep
         full = game.save.rpg_state.actor_snapshots[HERO].resources["values"]["vitality"]
         assert self.hp() == full["maximum"] > hurt, (hurt, self.hp())
@@ -607,7 +607,7 @@ class Campaign:
         assert fresh.save.event_context.get_switch("music.heard.town_theme")
         assert fresh.quest_log.status("q_patrol") != "completed"
         self.talk("Hall of Heroes")
-        assert "Aldric's name" in fresh.backlog.entries()[-1].text
+        assert "Roger's name" in fresh.backlog.entries()[-1].text
         self.facts["new_game_plus"] += 1
         self.rt.save, self.rt.game = cleared
         self.rt._ui_mode = "field"
@@ -779,7 +779,7 @@ class Campaign:
         self.shot("town_ready")
         self.learn_arts()  # slot-limited arts from the Old Master
         self.language()  # Scholar Lin: Traditional Chinese and back
-        self.home()  # a night in Aldric's own bed
+        self.home()  # a night in Roger's own bed
         self.showman()
 
     def showman(self):

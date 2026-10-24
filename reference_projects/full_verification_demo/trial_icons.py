@@ -189,7 +189,7 @@ WEAPON_RARITY = {  # a weapon's rarity: what its Lucifer picture is called (Comm
     "w_spear": "common",
     "w_staff": "common",
     "w_bow": "common",
-    "w_sunbrand": "rare",  # Aldric's sword: the Rare Greatsword
+    "w_sunbrand": "rare",  # Roger's sword: the Rare Greatsword
     "w_ritual_kris": "rare",
     "w_dragoon_lance": "rare",
     "w_ash_staff": "rare",

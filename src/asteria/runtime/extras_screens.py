@@ -25,6 +25,16 @@ class _Screen:
         """The screen's own words in the player's language (``rpg.built_in_text``)."""
         return self.rt.game.tr(key, english, **params)
 
+    def _canvas(self, screen_id, fields=None):
+        """The screen's ``MenuCanvas`` (U2) with the background drawn: the layout's colour or
+        picture, else the screen's dark fill."""
+        canvas = self.rt.menu_canvas(screen_id, fields)
+        layout = canvas.layout
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            self.rt.screen.fill((10, 12, 20))
+        canvas.begin()
+        return canvas
+
     def _move(self, count):
         inp = self.rt.input
         if inp.just_pressed("cancel"):
@@ -55,24 +65,32 @@ class BacklogScreen(_Screen):
 
     def draw(self):
         rt = self.rt
-        rt.screen.fill((10, 12, 20))
-        rt.text(self.tr("backlog.title", "Message Log"), 36, 22, size=34, color=TITLE)
+        c = self._canvas("backlog")
+        title = c.tone("title", TITLE)
+        muted = c.tone("muted", MUTED)
+        c.text("title", self.tr("backlog.title", "Message Log"), 36, 22, size=34, color=title)
         hint = self.tr("backlog.hint", "Up / Down: scroll   Esc: back")
-        rt.text(hint, 36, 62, size=18, color=MUTED)
+        c.text("help", hint, 36, 62, size=18, color=muted)
         top, entries = self.visible()
         if not entries:
             empty = self.tr("backlog.empty", "Nothing has been said yet.")
-            rt.text(empty, 36, 110, size=22, color=MUTED)
+            rt.text(empty, 36, 110, size=22, color=muted)
+            c.finish()
             return
-        y = 100
+        at = c.place("rows", (36, 100, rt.width - 72, rt.height - 140), 38)
+        size = c.size("rows", 22)
+        y = at.y(100)
         for offset, entry in enumerate(entries):
             current = top + offset == self.index
-            color = (255, 255, 255) if current else (190, 196, 210)
+            normal = c.color("rows", c.tone("text", (190, 196, 210)))
+            color = c.tone("selected", (255, 255, 255)) if current else normal
             if entry.speaker:
-                rt.text(entry.speaker, 36, y, size=22, color=TITLE)
+                speaker = self.game.speaker_name(entry.speaker)
+                rt.text(speaker, at.x(36), y, size=size, color=title)
                 y += 26
-            rt.text(entry.text, 60, y, size=22, color=color)
-            y += 38
+            rt.text(entry.text, at.x(60), y, size=size, color=color)
+            y += at.row
+        c.finish()
 
 
 class MusicRoomScreen(_Screen):
@@ -110,29 +128,38 @@ class MusicRoomScreen(_Screen):
 
     def draw(self):
         rt = self.rt
-        rt.screen.fill((10, 12, 20))
-        rt.text(self.tr("music.title", "Music Room"), 36, 22, size=34, color=TITLE)
+        c = self._canvas("music")
+        muted = c.tone("muted", MUTED)
+        title = self.tr("music.title", "Music Room")
+        c.text("title", title, 36, 22, size=34, color=c.tone("title", TITLE))
         hint = self.tr("music.hint", "Up / Down: choose   Enter: play   Esc: back")
-        rt.text(hint, 36, 62, size=18, color=MUTED)
+        c.text("help", hint, 36, 62, size=18, color=muted)
         rows = self.tracks()
         if not rows:
-            rt.text(self.tr("music.empty", "There are no tracks."), 36, 110, size=22, color=MUTED)
+            rt.text(self.tr("music.empty", "There are no tracks."), 36, 110, size=22, color=muted)
+            c.finish()
             return
+        at = c.place("rows", (22, 100, rt.width - 44, len(rows) * 36), 36)
+        size = c.size("rows", 26)
+        icon = c.icon_size("rows", 28)
         for i, (track, _) in enumerate(rows):
             open_ = self.unlocked(track)
-            y = 100 + i * 36
+            y = at.y(100) + i * at.row
             selected = i == min(self.index, len(rows) - 1)
             name = track.name if open_ else self.tr("music.locked", "? ? ?")
-            color = (255, 255, 255) if selected else ((190, 196, 210) if open_ else (96, 102, 120))
-            rt.text(">" if selected else "", 22, y, size=26, color=color)
+            normal = c.color("rows", c.tone("text", (190, 196, 210)))
+            picked = c.tone("selected", (255, 255, 255))
+            color = picked if selected else (normal if open_ else (96, 102, 120))
+            rt.text(">" if selected else "", at.x(22), y, size=size, color=color)
             # an opened track shows its picture; a closed one keeps it secret
-            shown = open_ and rt._draw_icon(track.icon_id, 36, y - 3, 28)
-            rt.text(name, 72 if shown else 44, y, size=26, color=color)
+            shown = open_ and rt._draw_icon(track.icon_id, at.x(36), y - 3, icon)
+            rt.text(name, at.x(72 if shown else 44), y, size=size, color=color)
             if track.track_id == self.playing:
                 playing = self.tr("music.playing", "PLAYING")
-                rt.text(playing, rt.width - 140, y + 4, size=20, color=GOOD)
+                rt.text(playing, at.right - 118, y + 4, size=20, color=GOOD)
             elif open_ and track.note:
-                rt.text(track.note, rt.width - 360, y + 6, size=18, color=MUTED)
+                rt.text(track.note, at.right - 338, y + 6, size=18, color=muted)
+        c.finish()
 
 
 class CreditsScreen(_Screen):
@@ -158,19 +185,29 @@ class CreditsScreen(_Screen):
 
     def draw(self):
         rt = self.rt
-        rt.screen.fill((10, 12, 20))
+        c = self._canvas("credits")
         pages = self.pages()
         title = self.tr("credits.title", "Credits")
         if not pages:
-            rt.text(title, 36, 22, size=34, color=TITLE)
+            c.text("title", title, 36, 22, size=34, color=c.tone("title", TITLE))
+            c.finish()
             return
         page = pages[min(self.index, len(pages) - 1)]
-        rt.text(page.title or title, rt.width / 2, 60, size=40, color=TITLE, center=True)
+        from asteria.rpg.data_text import credits_key, text_by_key
+
+        lookup = self.game.data_lookup
+        heading = text_by_key(lookup, credits_key(page.page_id, "title"), page.title) or title
+        title_color = c.tone("title", TITLE)
+        c.text("title", heading, rt.width / 2, 60, size=40, color=title_color, center=True)
+        at = c.place("lines", (rt.width / 2 - 400, 130, 800, 30 * len(page.lines)), 30)
+        size = c.size("lines", 24)
+        color = c.color("lines", c.tone("text", (230, 232, 240)))
         for row, line in enumerate(page.lines):
-            rt.text(
-                line, rt.width / 2, 130 + row * 30, size=24, color=(230, 232, 240), center=True
-            )
-        rt.text(
+            line = text_by_key(lookup, credits_key(page.page_id, f"line{row + 1}"), line)
+            y = at.y(130) + row * at.row
+            rt.text(line, at.x(rt.width / 2), y, size=size, color=color, center=True)
+        c.text(
+            "hint",
             self.tr(
                 "credits.hint",
                 "Left / Right: page   {page}/{pages}   Esc: back",
@@ -180,9 +217,10 @@ class CreditsScreen(_Screen):
             rt.width / 2,
             rt.height - 36,
             size=18,
-            color=MUTED,
+            color=c.tone("muted", MUTED),
             center=True,
         )
+        c.finish()
 
 
 __all__ = ["BacklogScreen", "CreditsScreen", "MusicRoomScreen"]
@@ -234,9 +272,12 @@ class AbilitySlotsScreen(_Screen):
 
     def draw(self):
         rt = self.rt
-        rt.screen.fill((10, 12, 20))
-        rt.text(self.tr("skill_slots.title", "Skill Slots"), 36, 22, size=34, color=TITLE)
-        rt.text(
+        c = self._canvas("ability_slots")
+        muted = c.tone("muted", MUTED)
+        title = self.tr("skill_slots.title", "Skill Slots")
+        c.text("title", title, 36, 22, size=34, color=c.tone("title", TITLE))
+        c.text(
+            "help",
             self.tr(
                 "skill_slots.hint",
                 "Up / Down: choose   Enter: equip / remove   Left / Right: member   Esc: back",
@@ -244,12 +285,13 @@ class AbilitySlotsScreen(_Screen):
             36,
             62,
             size=18,
-            color=MUTED,
+            color=muted,
         )
         actor_id = self.actor_id()
         if actor_id is None:
             empty = self.tr("skill_slots.no_party", "No party members.")
-            rt.text(empty, 36, 110, size=22, color=MUTED)
+            rt.text(empty, 36, 110, size=22, color=muted)
+            c.finish()
             return
         actor = self.game.project.rpg_database.actors.get(actor_id)
         equipped, capacity = self.game.ability_slots(actor_id)
@@ -261,23 +303,28 @@ class AbilitySlotsScreen(_Screen):
             used=len(equipped),
             capacity=capacity,
         )
-        rt.text(slots, 36, 96, size=24, color=(255, 255, 255))
+        c.text("member", slots, 36, 96, size=24, color=c.tone("text", (255, 255, 255)))
         learned = self.learned(actor_id)
         if not learned:
             empty = self.tr("skill_slots.nothing", "Nothing learned yet.")
-            rt.text(empty, 36, 140, size=22, color=MUTED)
+            rt.text(empty, 36, 140, size=22, color=muted)
         library = self.game.project.gameplay_library.abilities
+        at = c.place("rows", (36, 140, rt.width - 72, len(learned) * 32), 32)
+        size = c.size("rows", 24)
+        icon = c.icon_size("rows", 28)
         for row, ability_id in enumerate(learned):
             definition = library.get(ability_id)
             label = self.game.name_of(definition) or ability_id.replace("_", " ").title()
             on = ability_id in equipped
             current = row == self.index % len(learned)
-            color = GOOD if on else ((255, 255, 255) if current else (190, 196, 210))
-            y = 140 + row * 32
-            shown = rt._draw_icon(getattr(definition, "icon_id", ""), 36, y - 3, 28)
-            rt.menu_row(label, 72 if shown else 36, y, selected=current, size=24, color=color)
+            normal = c.color("rows", c.tone("text", (190, 196, 210)))
+            color = GOOD if on else (c.tone("selected", (255, 255, 255)) if current else normal)
+            y = at.y(140) + row * at.row
+            shown = rt._draw_icon(getattr(definition, "icon_id", ""), at.x(36), y - 3, icon)
+            x = at.x(72 if shown else 36)
+            rt.menu_row(label, x, y, selected=current, size=size, color=color)
             mark = self.tr("skill_slots.equipped", "EQUIPPED") if on else ""
-            rt.text(mark, rt.width - 200, y, size=20, color=GOOD)
+            rt.text(mark, at.right - 164, y, size=20, color=GOOD)
         if self.message_left > 0:
             rt.text(
                 self.message,
@@ -287,3 +334,4 @@ class AbilitySlotsScreen(_Screen):
                 color=(255, 190, 160),
                 center=True,
             )
+        c.finish()

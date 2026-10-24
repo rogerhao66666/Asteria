@@ -66,7 +66,7 @@ FORMULAS = (  # (stat, name, terms, order, description)
 )
 
 ACTOR_ATTRIBUTES = {  # actor: STR, DEX, INT, LUK at level 1
-    "hero_01": (12, 8, 10, 6),  # Aldric: a Brave who casts
+    "hero_01": (12, 8, 10, 6),  # Roger: a Brave who casts
     "hero_02": (4, 6, 14, 8),  # Mira
     "hero_03": (5, 6, 13, 8),  # Vesper
     "hero_04": (8, 12, 4, 12),  # Cael

@@ -68,7 +68,7 @@ def test_no_skill_name_runs_into_its_cost(battle):
             rt._frame([], 1 / 60)
     menu = adapter.screen.action_menu
     pages = menu.view.page_count
-    assert pages > 1  # the skill list is open (Aldric has many)
+    assert pages > 1  # the skill list is open (Roger has many)
     backend, theme = adapter._ui_backend, adapter.renderer.theme
     scale = backend.scale
 

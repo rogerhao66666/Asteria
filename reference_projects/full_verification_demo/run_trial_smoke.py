@@ -33,7 +33,7 @@ SUB_JOBS = (
     "forgemaster",
     "rogue",
     "guardian",
-    "archmage",  # with the Brave as main job: Aldric's own pair
+    "archmage",  # with the Brave as main job: Roger's own pair
 )
 SW = "w_sunbrand:hero_01"
 

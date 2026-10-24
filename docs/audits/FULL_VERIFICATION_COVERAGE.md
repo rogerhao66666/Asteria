@@ -17,7 +17,7 @@ How it is verified:
 
 ## Cast (2026-10-18)
 
-The hero (Aldric, Lucifer Warrior) sets out alone. Three companions are hired at the adventurers'
+The hero (Roger, Lucifer Warrior; called Aldric until 2026-10-24, D65) sets out alone. Three companions are hired at the adventurers'
 guild in Hearthfold, each with art no one else wears: Mira (Sorceress) waits there from the start,
 Vesper (Necromancer) and Cael (Cultist) walk there once met after the woods and catacomb bosses.
 Guildmaster Orla sends a companion back to wait (LEAVE_PARTY) and they can be hired again.
@@ -31,7 +31,7 @@ Skeleton Hunter; Vaelor's Skeleton Acolyte), three foes in the woods and two in 
 Every party member has a main job and a sub job. The companions walk three-tier lines
 (MapleStory style), advanced and trained at the Job Master in Hearthfold: Mira Cleric -> Priest
 (Lv 5) -> Bishop (Lv 10), sub Mystic; Vesper Necromancer -> Lich -> Death Lord, sub Knight; Cael
-Cultist -> Zealot -> Heretic, sub Duelist. Aldric keeps Knight -> Guardian -> Hero, Duelist ->
+Cultist -> Zealot -> Heretic, sub Duelist. Roger keeps Knight -> Guardian -> Hero, Duelist ->
 Weapon Master / Rogue, Mystic -> Sage. 19 jobs, a skill tree per job (212 nodes), job points per
 job. The campaign makes all six advances; the smoke fights every companion in every tier (18 of
 18 jobs use their skills).
@@ -116,7 +116,7 @@ and lists only the drops that really fell.
 | Action Timing / Transactions | Long casts (Holy Judgment, Mass Cure, Death Coil, Soul Harvest, Forbidden Rite, Frost Nova) |
 | Sequences | `party_rush`: the actor leads, the party follows with Rush Blow (world command `BATTLE_SEQUENCE`) |
 | Gauge Compositions | `overdrive`: crits add momentum; at 10 the striker gains Attack Up and it resets |
-| Reactions | `cover` (Aldric intercepts a blow at an ally), `follow_up` (Cael's Chase Strike) |
+| Reactions | `cover` (Roger intercepts a blow at an ally), `follow_up` (Cael's Chase Strike) |
 | Objectives / Escape / Session Rules | Acolyte Vigil at the throne: survive 8 rounds (`objective:vigil_survive`), its own `rules:vigil_gauntlet`; `escape:woods_escape` / `crypt_escape` rates |
 
 Engine gaps this phase found and fixed: objectives never ended a fight (the session now settles
@@ -124,7 +124,7 @@ them each turn), sequences could not be reached from an ability, only the first 
 rule was ever used (encounters now pick one by tag), and a follow-up aimed at a foe the first blow
 already felled crashed the battle (the reaction is now skipped as `no_target`).
 
-Balance note: by the throne Aldric (Lv 22) has power 3147 and one-shots about 98k HP; the web,
+Balance note: by the throne Roger (Lv 22) has power 3147 and one-shots about 98k HP; the web,
 specs, books, gear and refining stack. The vigil foes are warded so the 8 rounds really happen.
 
 ## Presentation, slots and field strikes (phase 5, 2026-10-18)
@@ -155,7 +155,7 @@ preview follows it).
 | Category | Where the campaign uses it |
 |---|---|
 | Map Areas | `trial_areas` on a hidden Regions layer: the woods' poison bog (40 HP/s, a bog battle backdrop; the escape fight happens there), the warden's glade (foes cannot enter, the party rests), the catacombs' shadowed halls (foes see half as far; the crypt guards fight on a crypt backdrop), the throne's ember floor (burns while `vaelor.awake`, out after the win) |
-| New Game Plus | `trial_again`: the Victory Banner offers it; levels (cap 40), skills, gear, bag, pets and bestiary carry, gold halves, `ngplus.` and `music.heard.` switches stay; the Hall of Heroes plaque then names Aldric |
+| New Game Plus | `trial_again`: the Victory Banner offers it; levels (cap 40), skills, gear, bag, pets and bestiary carry, gold halves, `ngplus.` and `music.heard.` switches stay; the Hall of Heroes plaque then names Roger |
 | Translations | `en` and `zh-TW` tables; Scholar Lin (`SET_LOCALE`) or Settings > Language switches; area lines, the plaque, the banner and the scholar speak through `\T[key]` |
 | Music Room | five themes with pictures, opened by hearing them (`PLAY_BGM`) or by beating the Goblin Beast |
 
@@ -171,19 +171,19 @@ tree graph drew black text on the dark theme and no icons (it now draws a card p
 its icon, name, ranks and gift, coloured by kind, with arrows, and opens as the graph); a node
 without an icon shows its skill's or passive's.
 
-## Townsfolk and Aldric's house (2026-10-19)
+## Townsfolk and Roger's house (2026-10-19)
 
 Every person on the maps wears a look of their own (`trial_people.CAST`): the hero and the three
 companions keep their Lucifer characters, the 28 others are distinct Ninja Adventure characters
 (CC0) at 1.5x, the shrines, plaque and banner are spirits and statues, the cache a bag, the vault
-a chest (`tests/test_town_people_and_home.py` fails if two share a picture). Aldric's house stands
+a chest (`tests/test_town_people_and_home.py` fails if two share a picture). Roger's house stands
 in Hearthfold's north-east corner; the game starts at its door. Inside, the bed's Sleep fades out,
 rests the party (`REST_PARTY`) and fades in; the campaign hurts the hero, sleeps and checks full
 health (`home_sleeps`).
 
-## Aldric the Brave and Archmage, the Demon Ring, stronger foes (2026-10-19)
+## Roger the Brave and Archmage, the Demon Ring, stronger foes (2026-10-19)
 
-`trial_brave.py`. Aldric starts as a **Brave** (main) with an **Archmage** sub job; the job
+`trial_brave.py`. Roger starts as a **Brave** (main) with an **Archmage** sub job; the job
 teachers and the vault let him try others, and he returns to the pair.
 
 | What | Design |
@@ -192,7 +192,7 @@ teachers and the vault let him try others, and he returns to the pair.
 | Archmage | Every element: fire, ice, lightning, light, dark and the new wind and earth (weak / resist rules, foes tagged); a Bolt and a Storm each, Prismatic Cataclysm (seven elements), Mana Shield, Arcane Surge |
 | Brave tree (38 nodes) | 10-rank core, the skills, a 5-rank mastery per weapon (its blows x1.25), Weapon Saint (all seven at rank 3), three exclusive Oaths, Hero's Resolve, three specs with talents and capstones, three runes on Valiant Slash, a skill book; Final Hope needs Dragon Slayer, Lightbringer and an Oath |
 | Archmage tree (52 nodes) | 10-rank core, seven schools (school, Bolt, Storm, Attunement: that element x1.25), Mana Shield, Arcane Surge, three exclusive Paths, Archmage's Insight, three specs, runes on Fire Bolt, a book; Prismatic Cataclysm needs fire / ice / lightning attunement and one more |
-| Demon Ring | A ring weapon (power +45, magic +45, crit, speed); seven sockets - three cards, two gems, two charms (six new charm attachments); its attack strikes five times; in the Family Chest in Aldric's house: it goes to the bag and the game asks whether to wear it in his free second hand |
+| Demon Ring | A ring weapon (power +45, magic +45, crit, speed); seven sockets - three cards, two gems, two charms (six new charm attachments); its attack strikes five times; in the Family Chest in Roger's house: it goes to the bag and the game asks whether to wear it in his free second hand |
 | Foes | See the next two sections |
 
 The campaign opens the chest, sockets two charms, and uses the ring's five-strike attack,
@@ -208,7 +208,7 @@ Wear New Gear"). `GIVE_EQUIPMENT` gives gear to the bag; chests, drops and loot 
 the same offer. The playtest host shows "New: <name> / <who> has a free <place>. Wear it now?"
 (1 / Enter: wear it, 2 / Esc: keep it in the bag).
 
-Demo: `empty_slot`. Aldric starts with only Sunbrand, so the chest's Demon Ring is offered for
+Demo: `empty_slot`. Roger starts with only Sunbrand, so the chest's Demon Ring is offered for
 his free hand (the campaign says yes); the Armory's pick is offered too (the campaign keeps it
 in the bag). Fact `equip_offers` = 2.
 
@@ -279,7 +279,7 @@ names stats as the status screen does.
 
 Bugs found and fixed: a battle saved the heroes' *finished* stats and health as their base, so
 every build added level growth, trees, gear and passives again - stats compounded after every
-fight (Aldric's power had climbed to 5,431 at the end; 770 honestly). Snapshots now keep the
+fight (Roger's power had climbed to 5,431 at the end; 770 honestly). Snapshots now keep the
 base, and health is stored without the build's bonus. A round where nobody can act (all
 stunned, the boss broken) no longer stalls the battle, and a foe that dies on its own turn
 (poison, burn) now ends the fight in victory. The escape chance weighs the foes' speed too.
@@ -299,7 +299,7 @@ strip). Each weapon carries the rarity its picture names - the new optional
 | Rarity | Weapons (picture) |
 |---|---|
 | Common | Iron Sword (Arming Sword), Steel Sword (Greatsword), Stiletto (Shamshir), Hand Axe (Bearded Axe), Wyrm Lance (Spear), Oak Staff (Wizards Pole), Hunter's Bow |
-| Rare | **Sunbrand, Aldric's sword (Rare Greatsword)**, Ritual Kris (Explorers Hook), Dragoon Lance, Ash Staff (Mages Spire), Saint's Staff, Longbow |
+| Rare | **Sunbrand, Roger's sword (Rare Greatsword)**, Ritual Kris (Explorers Hook), Dragoon Lance, Ash Staff (Mages Spire), Saint's Staff, Longbow |
 | Legendary | Kris (Rapier), War Axe (Dane Axe), Dawnbreaker (Shamshir) |
 | Mythic (new, never rolled as loot) | Bone Scepter (Godhammer), Demon Ring, **Titan Cleaver (Mythic Battleaxe)** - a new axe (power 75, crit 10, STR 10, earth +25, two gem and one card sockets) the crypt's Ancient Skeleton always leaves (campaign fact `titan_cleaver`) |
 

@@ -32,7 +32,7 @@ def test_rpg_conditions_read_the_party_state():
     assert _holds(game, "party:hero_02") and not _holds(game, "party:hero_03")
     game.join_party("hero_03")
     assert _holds(game, "party:hero_03")
-    assert _holds(game, "job:hero_01:brave")  # Aldric sets out a Brave
+    assert _holds(game, "job:hero_01:brave")  # Roger sets out a Brave
     assert not _holds(game, "job:hero_01:sage")
     game.world.reputation["wardens"] = 30.0
     assert _holds(game, "reputation:wardens", ">=", 25)

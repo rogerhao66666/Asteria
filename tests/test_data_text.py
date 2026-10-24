@@ -22,7 +22,7 @@ ZH = {
     "data.quest.q_patrol.name": "清理道路",
     "data.objective.slingers.description": "擊退投石兵",
     "data.enemy.goblin_slinger.name": "哥布林投石兵",
-    "data.actor.hero_01.name": "艾德里克",
+    "data.actor.hero_01.name": "羅傑",
     "data.ability.aegis.name": "神盾",
     "data.ability.aegis.description": "輔助：施放者獲得守護",
     "data.state.attack_up.name": "攻擊提升",
@@ -163,7 +163,7 @@ def test_names_follow_the_players_language(host):
     game.set_locale("zh-TW")
     assert game.name_of(db.items["healing_herb"]) == "療傷草"
     assert game.name_of(db.items["ether_leaf"]) == "Ether Leaf"  # not in the table
-    assert game.name_of(db.actors["hero_01"]) == "艾德里克"
+    assert game.name_of(db.actors["hero_01"]) == "羅傑"
     aegis = host.project.gameplay_library.abilities.require("aegis")
     assert game.name_of(aegis) == "神盾" and game.description_of(aegis) == "輔助：施放者獲得守護"
     states = host.project.gameplay_library.states
@@ -189,7 +189,7 @@ def test_the_shop_quest_log_and_messages_use_the_translation(host):
     game.quest_log.start("q_patrol")
     row = next(r for r in quest_rows(game) if r.quest_id == "q_patrol")
     assert row.name == "清理道路" and row.objectives[0][0] == "擊退投石兵"
-    assert game.expand_message("\\N[hero_01]", plain=True) == "艾德里克"
+    assert game.expand_message("\\N[hero_01]", plain=True) == "羅傑"
 
 
 def test_dialogue_lines_choices_and_speakers_are_looked_up_by_key(host):
@@ -215,7 +215,7 @@ def test_battle_menus_use_translated_names(host):
     commands = host.battle_commands
     names = {commands.display_name(m) for m in game.battle.members}
     assert any(n.startswith("哥布林投石兵") for n in names)
-    assert "艾德里克" in names
+    assert "羅傑" in names
     assert commands._name("aegis") == "神盾"
 
 

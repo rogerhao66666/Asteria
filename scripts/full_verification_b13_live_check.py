@@ -1,9 +1,9 @@
-"""Real-window run of the Full Verification workshop screen and escape command (macOS, Cocoa).
+"""Real-window run of the Full Verification enhance screen and escape command (macOS, Cocoa).
 
     python scripts/full_verification_b13_live_check.py OUTPUT_DIR
 
-The workshop screen refines, sockets and spends attribute points by key presses; the swarm
-fight has an Escape row that runs, the warlord hall refuses it. Output: OUTPUT_DIR.
+The enhance screen (the build menu's 8; it replaced the workshop in U3) refines by key presses;
+a woods patrol has an Escape row that runs, the warlord hall refuses it. Output: OUTPUT_DIR.
 """
 
 from __future__ import annotations
@@ -87,29 +87,27 @@ def main(argv=None):
     game.save.rpg_state.currencies["gold"] = 40000.0
     game.save.rpg_state.progression_allocations["hero_01"].grant("stat_points", 3)
     game.save.rpg_state.inventory.add("ruby_item", 2)
+    game.save.rpg_state.inventory.add("iron_ore", 4)  # the weapon refine's material
     runtime._ui_mode = "build"
     pump(runtime, 0.3)
-    press(pygame.K_8)
+    press(pygame.K_8)  # the build menu's 8: the enhance screen (U3, it replaced the workshop)
     pump(runtime, 0.3)
     shot("b13_workshop_open.png")
+    screen = runtime._gear_screen
     weapon = runtime._current_weapon("hero_01")
+    screen.rows["gear"] = [p for _s, p in screen.gear()].index(weapon)
     before = weapon.refine_level
     for _ in range(4):
-        press(pygame.K_r, 0.05)
-    press(pygame.K_a, 0.05)
-    press(pygame.K_s, 0.05)
+        press(pygame.K_RETURN, 0.05)
     pump(runtime, 0.3)
     shot("b13_workshop_used.png")
-    checks["workshop_opened"] = runtime._ui_mode == "workshop"
-    checks["refine_tried"] = "Refine" in getattr(runtime, "_workshop_message", "") or (
-        weapon.refine_level != before
-    )
-    press(pygame.K_c)
+    checks["workshop_opened"] = runtime._ui_mode == "enhance"
+    checks["refine_tried"] = "Refine" in screen.message or weapon.refine_level != before
     runtime._ui_mode = "field"
     rules = game.project.rpg_database.escape_rules  # a sure thing for the scripted run
     for rule_id, rule in list(rules.items()):
         rules[rule_id] = type(rule)(rule_id, rule.side, base_chance=1.0)
-    game.start_encounter("swarm")
+    game.start_encounter("woods_patrol")  # the swarm downs a fresh Roger before his turn
     runtime._battle_presentation.begin()
     runtime._advance_to_hero_turn()
     actor = turn()

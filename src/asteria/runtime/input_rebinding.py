@@ -34,7 +34,12 @@ def describe_binding(binding, tr=None):
     if binding.device == "gamepad_button":
         return tr("controls.pad_button", "Pad {button}", button=binding.code)
     sign = "+" if binding.direction > 0 else "−"
-    axis = f"{binding.device.removeprefix('gamepad_')} {binding.code}{sign}"
+    kind = binding.device.removeprefix("gamepad_")
+    if kind == "axis":
+        kind = tr("controls.pad_stick", "stick")
+    elif kind == "hat":
+        kind = tr("controls.pad_hat", "d-pad")
+    axis = f"{kind} {binding.code}{sign}"
     return tr("controls.pad_axis", "Pad {axis}", axis=axis)
 
 

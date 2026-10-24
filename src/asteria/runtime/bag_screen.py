@@ -19,10 +19,6 @@ GAP = 6
 GOOD, BAD, MUTED, TITLE = (130, 230, 150), (240, 130, 120), (150, 160, 180), (255, 220, 124)
 
 
-def _label(stat):
-    return str(stat).replace("_", " ").capitalize()
-
-
 def stat_totals(item):
     """``{(stat, operation): value}`` an item gives (``add`` and ``multiply`` kept apart)."""
     totals = {}
@@ -114,12 +110,15 @@ class BagScreen:
                 have = len(worn & set(definition.equipment_ids))
                 bonuses = []
                 for bonus in definition.bonuses:
+                    game = self.game
                     parts = [
-                        f"{m.stat} {format_value(m.value, m.operation.value)}"
+                        f"{game.stat_name(m.stat)} {format_value(m.value, m.operation.value)}"
                         for m in bonus.modifiers
                     ]
-                    tr = self.game.tr
-                    parts += [tr("bag.set_tag", "tag {tag}", tag=t) for t in bonus.tags]
+                    tr = game.tr
+                    parts += [
+                        tr("bag.set_tag", "tag {tag}", tag=game.tag_name(t)) for t in bonus.tags
+                    ]
                     bonuses.append(
                         (bonus.pieces, ", ".join(parts) or tr("bag.set_bonus", "bonus"))
                     )
@@ -143,11 +142,12 @@ class BagScreen:
             if dy < 0:
                 self.in_worn = True
             return
-        row, col = divmod(self.index, COLUMNS)
+        columns = self.columns()
+        row, col = divmod(self.index, columns)
         if dy < 0 and row == 0:
             self.in_worn, self.worn_index = True, min(col, max(0, len(self.worn_slots()) - 1))
             return
-        index = self.index + dx + dy * COLUMNS
+        index = self.index + dx + dy * columns
         self.index = max(0, min(len(bag) - 1, index))
 
     def activate(self):
@@ -190,30 +190,58 @@ class BagScreen:
         if inp.just_pressed("confirm") or inp.just_pressed("interact"):
             self.activate()
 
+    def columns(self):
+        """Cells in a bag row: the layout's grid columns (U2), else ``COLUMNS``."""
+        layout = self.rt.menu_layout("bag")
+        element = layout.element("grid") if layout is not None else None
+        return element.columns if element is not None and element.columns else COLUMNS
+
     # -- drawing ---------------------------------------------------------------------------------
-    def _cell(self, x, y, item, *, selected, rarities, label=""):
+    def _cell(self, x, y, item, *, selected, rarities, label="", cell=CELL, element=None):
         rt = self.rt
         pg, screen = rt.pg, rt.screen
-        rect = pg.Rect(x, y, CELL, CELL)
+        rect = pg.Rect(x, y, cell, cell)
         color = (60, 66, 84)
         fill = (24, 28, 42)
         if item is not None:
             rarity = rarities.get(_rarity(item))
             if rarity is not None:
-                color = rarity.rgb()
+                theme = rt.menu_theme()
+                own = theme.rarity_color(rarity.rarity_id) if theme is not None else None
+                color = tuple(own[:3]) if own else rarity.rgb()
                 fill = tuple(int(c * 0.22) + 14 for c in color)
-        pg.draw.rect(screen, fill, rect, border_radius=6)
-        pg.draw.rect(screen, color, rect, 2, border_radius=6)
+        look = element is not None and (element.skin or element.image)
+        if look:  # the layout's cell picture, the rarity's colour around it
+            if element.skin is not None and rt.skin_image(element.skin.asset_id) is not None:
+                from asteria.presentation.ui_skin import draw_nine_patch
+
+                image = rt.skin_image(element.skin.asset_id)
+                draw_nine_patch(pg, screen, image, tuple(rect), element.skin)
+            elif element.image and rt.skin_image(element.image) is not None:
+                screen.blit(rt.scaled_image(rt.skin_image(element.image), rect.size), rect)
+            if item is not None:
+                pg.draw.rect(screen, color, rect, 2, border_radius=6)
+        else:
+            pg.draw.rect(screen, fill, rect, border_radius=6)
+            pg.draw.rect(screen, color, rect, 2, border_radius=6)
+        inset = round(cell * 7 / CELL)
         if item is not None:
             icon_id = getattr(item.equipment, "icon_id", "")
-            if not (icon_id and rt._draw_icon(icon_id, x + 7, y + 7, CELL - 14)):
+            if not (icon_id and rt._draw_icon(icon_id, x + inset, y + inset, cell - 2 * inset)):
                 words = rt.game.name_of(item.equipment).split()
                 text = "".join(w[0] for w in words[:2]).upper()
-                rt.text(text, x + CELL / 2, y + CELL / 2, size=26, color=color, center=True)
+                rt.text(text, x + cell / 2, y + cell / 2, size=26, color=color, center=True)
         elif label:
-            rt.text(label[:6], x + CELL / 2, y + CELL / 2, size=15, color=MUTED, center=True)
+            rt.text(label[:6], x + cell / 2, y + cell / 2, size=15, color=MUTED, center=True)
         if selected:
-            pg.draw.rect(screen, TITLE, rect.inflate(6, 6), 3, border_radius=8)
+            skin = element.selection_skin if element is not None else None
+            image = rt.skin_image(skin.asset_id) if skin is not None else None
+            if image is not None:
+                from asteria.presentation.ui_skin import draw_nine_patch
+
+                draw_nine_patch(pg, screen, image, tuple(rect.inflate(6, 6)), skin)
+            else:
+                pg.draw.rect(screen, TITLE, rect.inflate(6, 6), 3, border_radius=8)
 
     def draw(self):
         rt = self.rt
@@ -221,53 +249,80 @@ class BagScreen:
         game = self.game
         db = game.project.rpg_database
         rarities = db.loot_rarities()
-        screen.fill((10, 12, 20))
+        bag = self.bag()
+        actor = self.actor_id or ""
+        canvas = self.canvas = rt.menu_canvas(
+            "bag",
+            {
+                "member.name": lambda: game.name_of(db.actors.get(actor), actor),
+                "bag.count": len(bag),
+            },
+        )
+        layout = canvas.layout
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            screen.fill((10, 12, 20))
+        canvas.begin()
         tr = game.tr
-        rt.text(tr("bag.title", "Equipment"), 36, 22, size=34, color=TITLE)
-        rt.text(
+        title = canvas.tone("title", TITLE)
+        muted = canvas.tone("muted", MUTED)
+        canvas.text("title", tr("bag.title", "Equipment"), 36, 22, size=34, color=title)
+        canvas.text(
+            "help",
             tr("bag.hint", "Arrows: choose   Enter: equip / unequip   B / Esc: close"),
             36,
             62,
             size=18,
-            color=MUTED,
+            color=muted,
         )
         left, top = 36, 100
-        rt.text(tr("bag.worn", "Worn"), left, top, size=22, color=TITLE)
+        canvas.text("worn_label", tr("bag.worn", "Worn"), left, top, size=22, color=title)
         slots = self.worn_slots()
-        for k, (slot_id, item) in enumerate(slots):
-            x = left + k * (CELL + GAP)
-            self._cell(
-                x,
-                top + 28,
-                item,
-                selected=self.in_worn and k == self.worn_index,
-                rarities=rarities,
-                label=_label(slot_id),
-            )
-        bag = self.bag()
+        cell = canvas.number("worn", "cell", CELL)
+        gap = canvas.number("worn", "gap", GAP)
+        worn = canvas.place("worn", (left, top + 28, len(slots) * (cell + gap), cell))
+        if canvas.shown("worn"):
+            for k, (slot_id, item) in enumerate(slots):
+                self._cell(
+                    worn.x(left) + k * (cell + gap),
+                    worn.y(top + 28),
+                    item,
+                    selected=self.in_worn and k == self.worn_index,
+                    rarities=rarities,
+                    label=self.game.slot_name(slot_id),
+                    cell=cell,
+                    element=canvas.element("worn"),
+                )
         grid_top = top + 28 + CELL + 54
-        rt.text(
+        canvas.text(
+            "bag_label",
             tr("bag.count", "Bag  ({count})", count=len(bag)),
             left,
             grid_top - 28,
             size=22,
-            color=TITLE,
+            color=title,
         )
-        rows = max(4, -(-len(bag) // COLUMNS))
+        columns = self.columns()
+        cell = canvas.number("grid", "cell", CELL)
+        gap = canvas.number("grid", "gap", GAP)
+        rows = max(4, -(-len(bag) // columns))
+        grid = canvas.place("grid", (left, grid_top, columns * (cell + gap), rows * (cell + gap)))
         for r in range(rows):
-            for c in range(COLUMNS):
-                k = r * COLUMNS + c
+            for c in range(columns):
+                k = r * columns + c
                 item = bag[k] if k < len(bag) else None
                 self._cell(
-                    left + c * (CELL + GAP),
-                    grid_top + r * (CELL + GAP),
+                    grid.x(left) + c * (cell + gap),
+                    grid.y(grid_top) + r * (cell + gap),
                     item,
                     selected=(not self.in_worn) and k == self.index and item is not None,
                     rarities=rarities,
+                    cell=cell,
+                    element=canvas.element("grid"),
                 )
         self._tooltip(rarities)
         if self.message_left > 0:
-            rt.text(
+            canvas.text(
+                "message",
                 self.message,
                 rt.width / 2,
                 rt.height - 28,
@@ -275,14 +330,18 @@ class BagScreen:
                 color=(175, 235, 255),
                 center=True,
             )
+        canvas.finish()
 
     def _tooltip(self, rarities):
         rt = self.rt
         game = self.game
         tr = game.tr
         item, slot_id, worn = self.selected()
-        x, y, w = rt.width - 380, 100, 344
-        rt.panel((x, y, w, rt.height - 100 - 56), fill=(16, 20, 32, 240))
+        canvas = getattr(self, "canvas", None) or rt.menu_canvas("bag")
+        if not canvas.shown("detail"):
+            return
+        default = (rt.width - 380, 100, 344, rt.height - 100 - 56)
+        x, y, w, _h = canvas.panel("detail", default, fill=(16, 20, 32, 240))
         if item is None:
             rt.text(tr("bag.empty", "Nothing here."), x + 16, y + 16, size=20, color=MUTED)
             return
@@ -297,7 +356,7 @@ class BagScreen:
                 "{rarity}  ·  item level {level}  ·  {slot}",
                 rarity=kind,
                 level=item.item_level,
-                slot=_label(item.equipment.slot),
+                slot=game.slot_name(item.equipment.slot),
             ),
             x + 16,
             y + 46,
@@ -315,7 +374,8 @@ class BagScreen:
         rt.text(header, x + 16, row, size=18, color=TITLE)
         row += 26
         for stat, value, delta, operation in compare(item, other):
-            rt.text(f"{_label(stat)}  {format_value(value, operation)}", x + 16, row, size=20)
+            line = f"{game.stat_name(stat)}  {format_value(value, operation)}"
+            rt.text(line, x + 16, row, size=20)
             if delta is not None and abs(delta) > 1e-9:
                 rt.text(
                     f"({delta:+g})",

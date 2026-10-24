@@ -1,3 +1,4 @@
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -71,6 +72,7 @@ try:
         QScrollArea,
         QStyle,
         QTabBar,
+        QTabWidget,
         QTextEdit,
         QToolBar,
         QVBoxLayout,
@@ -250,7 +252,18 @@ class AsteriaEditorWindow(QMainWindow):
         self.ui_workspace.tabBar().setObjectName("PresentationWorkspaceTabBar")
         self.ui_workspace.tabBar().setDrawBase(True)
         self.ui_workspace.addTab(self.presentation_authoring, "Battle Screen")
-        self.ui_workspace.addTab(self.runtime_ui_authoring, "Menu Screens")
+        from .menu_layout_widget import MenuLayoutWorkspace
+
+        # U2b: every menu screen laid out on a live canvas, beside the menu records
+        self.menu_layout_editor = MenuLayoutWorkspace(
+            self.document, self, open_in_game=self.play_menu_screen
+        )
+        self.menu_layout_editor.changed.connect(self._refresh_actions)
+        self.menu_screens_tabs = QTabWidget(self)
+        self.menu_screens_tabs.setObjectName("MenuScreensTabs")
+        self.menu_screens_tabs.addTab(self.menu_layout_editor, "Layout")
+        self.menu_screens_tabs.addTab(self.runtime_ui_authoring, "Menu Records")
+        self.ui_workspace.addTab(self.menu_screens_tabs, "Menu Screens")
         self.ui_workspace.addTab(self.animation_widget, "Animation Preview")
         from .action_timeline_widget import ActionTimelineWidget
         from .animation_editor_widget import AnimationEditorWidget
@@ -807,6 +820,7 @@ class AsteriaEditorWindow(QMainWindow):
         elif mode == WorkspaceMode.UI:
             self.presentation_authoring.rebuild()
             self.runtime_ui_authoring.rebuild()
+            self.menu_layout_editor.rebuild()
         elif mode == WorkspaceMode.EVENT:
             self.game_flow_overview.refresh()
         elif mode == WorkspaceMode.MULTIPLAYER:
@@ -2123,11 +2137,14 @@ class AsteriaEditorWindow(QMainWindow):
                 "rpg": (WorkspaceMode.RPG, self.rpg_workspace, self.rpg_authoring),
                 "battle": (WorkspaceMode.BATTLE, None, self.battle_authoring),
                 "presentation": (WorkspaceMode.UI, self.ui_workspace, self.presentation_authoring),
-                "runtime_ui": (WorkspaceMode.UI, self.ui_workspace, self.runtime_ui_authoring),
+                "runtime_ui": (WorkspaceMode.UI, self.ui_workspace, self.menu_screens_tabs),
             }[family]
             self.workspace.set_mode(mode)
             if tabs is not None:
                 tabs.setCurrentWidget(host)
+            if host is self.menu_screens_tabs:
+                host.setCurrentWidget(self.runtime_ui_authoring)
+                host = self.runtime_ui_authoring
             host.rebuild()
             child = host.child
             index = child.category.findData(category_id)
@@ -2638,6 +2655,15 @@ class AsteriaEditorWindow(QMainWindow):
 
     def play_project(self):
         return self._start_play(from_start=True)
+
+    def play_menu_screen(self, screen_id):
+        """Run the project from its start, opened on one menu screen (Menu Screens ▸ Layout ▸
+        Open in game)."""
+        os.environ["ASTERIA_OPEN_MENU"] = str(screen_id)
+        try:
+            return self._start_play(from_start=True, title="Open in Game")
+        finally:
+            os.environ.pop("ASTERIA_OPEN_MENU", None)
 
     def play_current_scene(self):
         return self._start_play(from_start=False, title="Play")

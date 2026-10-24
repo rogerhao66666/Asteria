@@ -123,7 +123,11 @@ def systems(c):
             "q_show",
             "The Showman's Request",
             description="Pip wants three tricks for the crowd, then a bow.",
-            objectives=(QuestObjective("tricks", "counter", required=3),),
+            objectives=(
+                QuestObjective(
+                    "tricks", "counter", required=3, description="Show the crowd a trick"
+                ),
+            ),
             reward=RewardDefinition(currencies={"gold": 300}),
             auto_complete=False,
         )

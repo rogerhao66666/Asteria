@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from asteria.core import Transform
@@ -180,9 +181,16 @@ class PlayableTestRuntime(
         self._drawing = False
         self._wrap_draw_methods()
         options = list(PAUSE_OPTIONS)
-        if getattr(self.project.rpg_database, "pet_species", None):  # a game with pets
-            options.insert(2, ("pets", "Pets"))
         db = self.project.rpg_database
+        loadouts = getattr(self.save.rpg_state, "loadouts", None)
+        gear = []
+        if loadouts:  # U3: the paper doll, and the enhance screen when gear can change
+            gear.append(("equipment", "Equipment"))
+            if db.refine_rules or any(e.sockets or e.growth_id for e in db.equipment.values()):
+                gear.append(("enhance", "Enhance"))
+        options[2:2] = gear
+        if getattr(self.project.rpg_database, "pet_species", None):  # a game with pets
+            options.insert(2 + len(gear), ("pets", "Pets"))
         extras = []
         if self.game.message_settings is not None and self.game.message_settings.backlog_limit:
             extras.append(("backlog", "Message Log"))
@@ -479,6 +487,12 @@ class PlayableTestRuntime(
 
     def run(self, target_fps=60, max_frames=None, *, profile_path=None):
         self.open()
+        # the editor's "Open in game" (Menu Screens ▸ Layout): start on that menu screen
+        start_menu = os.environ.pop("ASTERIA_OPEN_MENU", "")
+        if start_menu:
+            from asteria.runtime.menu_preview import open_menu_screen
+
+            open_menu_screen(self, start_menu)
         if profile_path is not None:
             self.enable_profiling(target_fps=target_fps)
         frames = 0
@@ -599,6 +613,7 @@ class PlayableTestRuntime(
             ):
                 self.save_playtest()
 
+        self.menu_sounds()  # the menu theme's open / move / confirm / cancel sounds (U2)
         if self._ui_mode == "title":
             for event in events:
                 if event.type == self.pg.KEYDOWN and event.key == self.pg.K_n:
@@ -609,9 +624,13 @@ class PlayableTestRuntime(
         elif self._ui_mode == "build":
             self._build_menu_input(events)
             self._draw_build_menu()
-        elif self._ui_mode == "workshop":
-            self._workshop_input(events)
-            self._draw_workshop()
+        elif self._ui_mode in ("equipment", "enhance"):
+            screen = self._gear_screen
+            screen.handle(dt, events)
+            if screen.closed:
+                self._ui_mode = screen.back
+            else:
+                screen.draw()
         elif self._ui_mode == "pause":
             self._pause_input()
             self._draw_overlay_menu(self.game.tr("pause.heading", "Paused"), self._pause_menu)
@@ -666,7 +685,9 @@ class PlayableTestRuntime(
         elif self._ui_mode == "game_over":
             self._game_over_input()
             title = self.game.tr("game_over.heading", "Game Over")
-            self._draw_overlay_menu(title, self._game_over_menu, base="battle")
+            self._draw_overlay_menu(
+                title, self._game_over_menu, base="battle", screen_id="game_over"
+            )
         elif self.game.mode == "battle" or self._victory:
             if self.game.mode == "battle":
                 with self.profiler.section("events"):

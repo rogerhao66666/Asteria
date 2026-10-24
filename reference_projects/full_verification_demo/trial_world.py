@@ -53,8 +53,8 @@ TEXT = {  # key: (English, 繁體中文)
         "英雄之廳：牌匾上還沒有刻任何名字。",
     ),
     "plaque.cleared": (
-        "The Hall of Heroes: Aldric's name is carved here. The Trial begins anew.",
-        "英雄之廳：這裡刻著 Aldric 的名字。試煉再次開始。",
+        "The Hall of Heroes: Roger's name is carved here. The Trial begins anew.",
+        "英雄之廳：這裡刻著羅傑的名字。試煉再次開始。",
     ),
     "banner.won": (
         "The Skeleton King is dust. The woods are quiet.",

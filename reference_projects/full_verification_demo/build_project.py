@@ -35,6 +35,7 @@ import trial_brave as brave  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
 import trial_content as content  # noqa: E402
+import trial_doll as doll  # noqa: E402
 import trial_extras as extras  # noqa: E402
 import trial_gear as gear_plus  # noqa: E402
 import trial_icons as icons  # noqa: E402
@@ -84,7 +85,7 @@ def main():
     b12.systems(context)
     cast.party(context)
     classes.jobs(context)  # three-tier job lines and sub jobs for the companions
-    brave.jobs(context)  # Aldric the Brave and Archmage: skills, passives, their trees
+    brave.jobs(context)  # Roger the Brave and Archmage: skills, passives, their trees
     trees.trees(context)  # the shared web, specs, runes and skill books
     cast.foes(context)
     gear_plus.forge(context)  # more gear, sets, gems, cards, refining, crafting
@@ -123,6 +124,8 @@ def main():
     shops.apply(project, HERE)  # Hearthfold's arms, armour and remedy shops (D61)
     zh_data.apply(project)  # dialogue keys and the data's Chinese (D60)
     content.game_start(context)
+    doll.apply(project, HERE)  # head, legs, feet, their gear, the doll screen (U3)
+    zh_data.apply(project)  # the new gear's and slots' Chinese
     path = HERE / "project.asteria.json"
     project.save_json(path)
     Project.load_json(path, registry)  # it must load back

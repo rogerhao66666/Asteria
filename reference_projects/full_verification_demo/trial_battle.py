@@ -2,17 +2,17 @@
 that a fight uses.
 
 * **Resources**: Momentum (+1 each turn a member ends, 10 at most, gone after the fight) feeds
-  Aldric's Momentum Strike (3) and the Party Rush combo (2); Soul (+1 each round, 6 at most)
+  Roger's Momentum Strike (3) and the Party Rush combo (2); Soul (+1 each round, 6 at most)
   feeds Vesper's Soul Burst (3).
 * **Chance checks**: Block (the defender's defence) halves a foe's blow (an interaction rule
   reads ``outcome.block``); foes' attacks roll it.
 * **Turn order**: a swift timeline (a shorter scale) for a catacomb patrol.
 * **Cast & recovery / costs**: the big spells charge (cast time) and can be broken; their price
   is paid when they start and lost when they are broken.
-* **Sequences**: Party Rush - Aldric leads, every other member strikes in turn (a combo
+* **Sequences**: Party Rush - Roger leads, every other member strikes in turn (a combo
   started by the ``BATTLE_SEQUENCE`` world command).
 * **Gauges**: Overdrive - a critical hit adds Momentum; at 10 the striker gets Attack Up.
-* **Counters & follow-ups**: Cover (Aldric wards an ally a foe hits) and Follow-up (Cael strikes
+* **Counters & follow-ups**: Cover (Roger wards an ally a foe hits) and Follow-up (Cael strikes
   whoever an ally just hit with a weapon).
 * **Victory & defeat**: the Acolytes' Vigil is won by holding out eight rounds against warded
   Vigil Acolytes (a damage interaction rule zeroes blows against them).

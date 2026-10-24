@@ -19,31 +19,45 @@ from .support import (  # noqa: F401 - the names the moved methods use
 
 class TitleBuildMixin:
     def _draw_title(self):
-        bg = self.load_image(self.manifest["field"]["background"])
-        self.screen.blit(self.pg.transform.smoothscale(bg, (self.width, self.height)), (0, 0))
-        shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-        shade.fill((5, 8, 16, 150))
-        self.screen.blit(shade, (0, 0))
+        c = self.menu_canvas("title", {"game.title": self.manifest.get("title", "")})
+        layout = c.layout
+        if layout is None or (layout.background_color is None and not layout.background_image):
+            bg = self.load_image(self.manifest["field"]["background"])
+            self.screen.blit(self.pg.transform.smoothscale(bg, (self.width, self.height)), (0, 0))
+            dim = 150 if layout is None or layout.dim < 0 else layout.dim
+            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+            shade.fill((5, 8, 16, dim))
+            self.screen.blit(shade, (0, 0))
+        c.begin()
         tr = self.game.tr
         name = tr("title.name", "ASTERIA")
-        self.text(name, self.width / 2, 120, size=64, color=(255, 220, 120), center=True)
+        title = c.tone("title", (255, 220, 120))
+        c.text("name", name, self.width / 2, 120, size=64, color=title, center=True)
         # the game's own name (manifest "subtitle"); the reference project keeps its old text
         subtitle = self.manifest.get("subtitle") or tr("title.subtitle", "Complex Reference RPG")
-        self.text(subtitle, self.width / 2, 180, size=36, center=True)
-        self.panel((280, 250, 400, 150))
+        text = c.tone("text", (245, 245, 250))
+        c.text("subtitle", subtitle, self.width / 2, 180, size=36, color=text, center=True)
+        box = c.panel("options", (280, 250, 400, 150))
+        dx, dy = box[0] - 280, box[1] - 250
         if self._multiplayer_connected() or self._network_gameplay_frozen():
-            self.text(tr("title.server_session", "N   Enter Server Session"), 310, 282, size=25)
-            self.text(tr("title.server_save", "L   Reload Server Save"), 310, 330, size=25)
+            server = tr("title.server_session", "N   Enter Server Session")
+            self.text(server, 310 + dx, 282 + dy, size=25, color=text)
+            reload = tr("title.server_save", "L   Reload Server Save")
+            self.text(reload, 310 + dx, 330 + dy, size=25, color=text)
             self.text(
                 tr("title.guest", "Guest: {player}", player=self.multiplayer_bridge.player_id),
-                310,
-                372,
+                310 + dx,
+                372 + dy,
                 size=16,
-                color=(170, 210, 240),
+                color=c.tone("muted", (170, 210, 240)),
             )
+            c.finish()
             return
-        self.text(tr("title.new_game", "N   New Game"), 330, 282, size=28)
-        self.text(tr("title.load_game", "L   Load Game"), 330, 330, size=28)
+        size = c.size("options", 28)
+        self.text(tr("title.new_game", "N   New Game"), 330 + dx, 282 + dy, size=size, color=text)
+        self.text(
+            tr("title.load_game", "L   Load Game"), 330 + dx, 330 + dy, size=size, color=text
+        )
         from asteria.runtime.save_slots import SaveSlots
 
         used = sum(
@@ -51,15 +65,17 @@ class TitleBuildMixin:
             for s in SaveSlots(self.resource_root / "saves", self.project).slots()
             if self._slot_exists(s)
         )
-        self.text(
+        c.text(
+            "status",
             tr("title.saves", "{count} save(s) found", count=used)
             if used
             else tr("title.no_saves", "No saves yet"),
-            330,
-            372,
+            330 + dx,
+            372 + dy,
             size=18,
-            color=(170, 210, 240),
+            color=c.tone("muted", (170, 210, 240)),
         )
+        c.finish()
 
     def _load_player_save(self):
         if self._multiplayer_connected() or self._network_gameplay_frozen():
@@ -127,7 +143,8 @@ class TitleBuildMixin:
         tr = self.game.tr
         title = tr("build.title", "Character / Build Acceptance Menu")
         self.text(title, 44, 38, size=30, color=(255, 220, 120))
-        keys = tr("build.keys", "Q/E Actor   C Close     Current: {actor}", actor=actor_id)
+        actor_name = self.game.name_of(db.actors.get(actor_id), actor_id)
+        keys = tr("build.keys", "Q/E Actor   C Close     Current: {actor}", actor=actor_name)
         self.text(keys, 44, 76, size=19)
         self.text(
             tr(
@@ -143,23 +160,37 @@ class TitleBuildMixin:
             size=20,
             color=(170, 220, 255),
         )
-        classes = " + ".join(state.active_class_ids) or "—"
+        classes = (
+            " + ".join(self.game.name_of(db.classes.get(c), c) for c in state.active_class_ids)
+            or "—"
+        )
         self.text(tr("build.class", "1 Secondary Class: {value}", value=classes), 44, 148, size=20)
-        passives = ", ".join(ability.active_passives[:4]) or "—"
+        passives = (
+            ", ".join(
+                self.game.name_of(db.passives.get(p), p) for p in ability.active_passives[:4]
+            )
+            or "—"
+        )
         self.text(tr("build.passives", "3 Passives: {value}", value=passives), 44, 178, size=20)
         held = self.game.name_of(weapon.equipment) if weapon else "—"
         self.text(tr("build.weapon", "4 Weapon: {value}", value=held), 44, 208, size=20)
         growth = (
             "—"
             if weapon is None or weapon.growth is None
-            else ", ".join(f"{k}:{v}" for k, v in sorted(weapon.growth.ranks.items()))
+            else ", ".join(
+                f"{self._growth_node_name(weapon, k)}:{v}"
+                for k, v in sorted(weapon.growth.ranks.items())
+            )
             or tr("build.base", "base")
         )
         self.text(tr("build.upgrade", "5 Weapon Upgrade: {value}", value=growth), 44, 238, size=20)
         accessories = self.save.rpg_state.loadouts[actor_id].equipped("accessory")
         worn = ", ".join(self.game.name_of(x.equipment) for x in accessories) or "—"
         self.text(tr("build.accessories", "6 Accessories: {value}", value=worn), 44, 268, size=20)
-        active = ", ".join(self.save.rpg_state.party_active_actor_ids)
+        active = ", ".join(
+            self.game.name_of(db.actors.get(a), a)
+            for a in self.save.rpg_state.party_active_actor_ids
+        )
         self.text(
             tr("build.party", "7 Party / Formation: {value}", value=active), 44, 298, size=20
         )
@@ -225,6 +256,13 @@ class TitleBuildMixin:
             size=18,
             color=(170, 210, 240),
         )
+
+    def _growth_node_name(self, item, node_id):
+        growth = self.project.rpg_database.equipment_growth.get(
+            getattr(item.equipment, "growth_id", "") or ""
+        )
+        node = next((n for n in getattr(growth, "nodes", ()) if n.node_id == node_id), None)
+        return self.game.name_of(node, node_id)
 
     def _cycle_secondary_class(self, actor_id):
         state = self.save.rpg_state.actor_progression[actor_id]
@@ -345,4 +383,4 @@ class TitleBuildMixin:
             elif event.key == self.pg.K_7:
                 self._rotate_party()
             elif actor is not None and event.key == self.pg.K_8:
-                self._ui_mode = "workshop"
+                self.open_enhance_screen(back="build")

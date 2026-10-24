@@ -21,7 +21,7 @@ REPO = Path(__file__).resolve().parents[2]
 RENDERED = REPO / "asset_library" / "kaykit" / "KayKit_Rendered_Sheets"
 SOURCE = (("license", "CC0 1.0"), ("source", "KayKit (Kay Lousberg), rendered sheets"))
 CAST = {  # party member -> rendered character (the user's choice, 2026-10-23)
-    "hero_01": "knight",  # Aldric: sword and shield
+    "hero_01": "knight",  # Roger: sword and shield
     "hero_02": "mage",  # Mira: staff and open spellbook
     "hero_03": "rogue_hooded",  # Vesper: wand and closed spellbook
     "hero_04": "rogue",  # Cael: two daggers

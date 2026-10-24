@@ -22,38 +22,142 @@ class TextDrawMixin:
     def text_size(self, value, size=20):
         """``(width, height)`` in pixels of ``value`` drawn at ``size``, in the face ``text``
         draws it with (a system CJK face for Chinese, Japanese or Korean)."""
-        from asteria.platform.pygame_battle_ui import cjk_size, font_for_text
+        from asteria.platform.pygame_battle_ui import cjk_size, contains_cjk, font_for_text
 
-        f = self._menu_font(size)
+        f, cjk_path = self._font_face(size)
+        if cjk_path and contains_cjk(value):
+            return self.pg.font.Font(cjk_path, cjk_size(f)).size(str(value))
         return font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f)).size(str(value))
 
-    def text(self, value, x, y, *, size=20, color=(245, 245, 250), center=False, anchor=None):
+    # --- menu layouts and the menu theme (U2) -----------------------------------------------
+    def menu_layout(self, screen_id):
+        """The project's layout for menu screen ``screen_id``, or None (the engine's look)."""
+        library = self.project.battle_presentation_library
+        try:
+            return library.get("menu_layout", screen_id)
+        except KeyError:  # a library from before menu layouts
+            return None
+
+    def menu_theme(self):
+        """The project's menu theme (``default``, else the first), or None."""
+        project = getattr(self, "project", None)  # a bare host (tests) has no project
+        library = getattr(project, "battle_presentation_library", None)
+        records = getattr(library, "_records", {})
+        themes = records.get("menu_theme")  # asked for every text drawn: kept cheap
+        if not themes:
+            return None
+        return themes.get("default") or themes[min(themes)]
+
+    def menu_sounds(self):
+        """The menu theme's sounds for this frame: ``open`` when a menu opens over the field,
+        ``move`` / ``confirm`` / ``cancel`` for the keys pressed in a menu (the shop plays
+        ``buy`` or ``fail`` itself). Nothing without a theme that names them."""
+        mode, last = self._ui_mode, getattr(self, "_menu_last_mode", "field")
+        self._menu_last_mode = mode
+        theme = self.menu_theme()
+        if theme is None or not theme.sounds or mode == "field":
+            return
+        if last == "field":
+            self._sound(theme.sound("open"))
+        pressed = self.input.just_pressed
+        if any(pressed(a) for a in ("move_up", "move_down", "move_left", "move_right")):
+            self._sound(theme.sound("move"))
+        if pressed("cancel"):
+            self._sound(theme.sound("cancel"))
+        elif pressed("confirm") and mode != "shop":
+            self._sound(theme.sound("confirm"))
+
+    def menu_canvas(self, screen_id, fields=None):
+        from asteria.runtime.menu_canvas import MenuCanvas
+
+        return MenuCanvas(self, screen_id, fields)
+
+    def scaled_image(self, image, size):
+        """``image`` scaled to ``size`` (cached: menu pictures repeat every frame)."""
+        size = (max(1, int(size[0])), max(1, int(size[1])))
+        if image.get_size() == size:
+            return image
+        cache = self.__dict__.setdefault("_scaled_cache", {})
+        key = (id(image), size)
+        found = cache.get(key)
+        if found is None or found[0] is not image:
+            if len(cache) > 512:
+                cache.clear()
+            found = cache[key] = (image, self.pg.transform.scale(image, size))
+        return found[1]
+
+    def _font_face(self, size, font=None):
+        """The face ``text`` draws at ``size``: the element's font asset, else the menu
+        theme's Latin font, else the built-in face. Returns ``(face, cjk path or None)``."""
+        theme = self.menu_theme()
+        asset = font or (theme.font_latin if theme is not None else "")
+        cjk = self.skin_font(theme.font_cjk) if theme is not None and theme.font_cjk else None
+        if not asset:
+            return self._menu_font(size), cjk
+        scale = theme.font_scale if theme is not None else 1.0
+        key = (str(asset), int(size), scale)
+        faces = self.__dict__.setdefault("_asset_fonts", {})
+        face = faces.get(key)
+        if face is None:
+            path = self.skin_font(asset)
+            face = faces[key] = (
+                self.pg.font.Font(path, max(1, round(int(size) * scale)))
+                if path
+                else self._menu_font(size)
+            )
+        return face, cjk
+
+    def text(
+        self,
+        value,
+        x,
+        y,
+        *,
+        size=20,
+        color=(245, 245, 250),
+        center=False,
+        anchor=None,
+        font=None,
+    ):
         """Draw text at ``(x, y)``: top-left by default, ``center=True`` centres it, ``anchor`` is
         any pygame rect attribute (``"midleft"``, ``"midright"``, ``"bottomright"``...) placed at
         the point - so a label can sit on the same horizontal line as a bar. Text drawn in the
         CJK face (Chinese...) is placed where the built-in face's line would be, centred on the
         same height as its capitals, so menu cursors and mixed rows stay level."""
-        f = self._fonts.get(int(size))
-        if f is None:
-            f = self._fonts[int(size)] = self.pg.font.Font(None, int(size))
+        f, cjk_path = self._font_face(size, font)
         from asteria.platform.pygame_battle_ui import (
             cjk_size,
+            contains_cjk,
             font_for_text,
             glyph_shift,
+            render_with_fallback,
             renderable_text,
         )
 
         # rendered text is cached: HUD labels and damage numbers repeat every frame
-        key = (str(value), int(size), tuple(color))
+        key = (str(value), int(size), tuple(color), id(f), cjk_path)
         cache = self.__dict__.setdefault("_text_cache", {})
         entry = cache.get(key)
         if entry is None:
             if len(cache) > 2048:
                 cache.clear()
-            text_font = font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f))
-            surf = text_font.render(
-                renderable_text(self.pg, text_font, value, self._glyphs), True, color
-            )
+            if cjk_path and contains_cjk(value):  # the menu theme's own CJK font
+                faces = self.__dict__.setdefault("_asset_fonts", {})
+                face_key = (cjk_path, "cjk", cjk_size(f))
+                if face_key not in faces:
+                    faces[face_key] = self.pg.font.Font(cjk_path, cjk_size(f))
+                text_font = faces[face_key]
+            else:
+                text_font = font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f))
+            if text_font is f and not str(value).isascii():
+                # what the Latin face lacks ("→", "·" in a pixel font) comes from one that has it
+                surf = render_with_fallback(
+                    self.pg, f, value, color, self._glyphs, self._fallback_face
+                )
+            else:
+                surf = text_font.render(
+                    renderable_text(self.pg, text_font, value, self._glyphs), True, color
+                )
             shift = None  # the built-in face: placed as it is
             if text_font is not f:
                 metrics = text_font.metrics("中")
@@ -78,6 +182,21 @@ class TextDrawMixin:
             rect = self.pg.Rect(rect.x, top, *surf.get_size())
         self.screen.blit(surf, rect)
         return rect
+
+    def _fallback_face(self, height):
+        """A face for the characters an author's font lacks, ``height`` pixels tall: the
+        menu theme's CJK font, else the system CJK face (both have arrows and symbols), else
+        the built-in face."""
+        from asteria.platform.pygame_battle_ui import cjk_font_path
+
+        theme = self.menu_theme()
+        path = self.skin_font(theme.font_cjk) if theme is not None and theme.font_cjk else None
+        path = path or cjk_font_path(self.pg)
+        faces = self.__dict__.setdefault("_asset_fonts", {})
+        key = (path, "fallback", int(height))
+        if key not in faces:
+            faces[key] = self.pg.font.Font(path, int(height)) if path else self._menu_font(height)
+        return faces[key]
 
     def _menu_font(self, size):
         f = self._fonts.get(int(size))
@@ -121,8 +240,11 @@ class TextDrawMixin:
         )
 
     def panel(self, rect, fill=(13, 17, 28, 220), border=(124, 145, 190)):
-        theme = self._skin_theme()
-        skin = None if theme is None else theme.panel_skin("host:panel")
+        menu_theme = self.menu_theme()
+        skin = menu_theme.panel_skin if menu_theme is not None else None
+        if skin is None:
+            theme = self._skin_theme()
+            skin = None if theme is None else theme.panel_skin("host:panel")
         image = None if skin is None else self.skin_image(skin.asset_id)
         if image is not None:
             from asteria.presentation.ui_skin import draw_nine_patch

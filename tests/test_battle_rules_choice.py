@@ -50,5 +50,5 @@ def test_a_combo_skill_runs_its_sequence_with_the_party():
     game.battle_log.clear()
     game.use_ability("hero_01", "party_rush", (boss,))
     blows = [e.member_id for e in game.battle_log if e.ability_id == "rush_blow"]
-    assert blows[0] == "hero_01" and len(set(blows)) >= 2  # Aldric leads, others follow
+    assert blows[0] == "hero_01" and len(set(blows)) >= 2  # Roger leads, others follow
     assert game.battle.battle_resources.current("hero_01", "momentum") == 3

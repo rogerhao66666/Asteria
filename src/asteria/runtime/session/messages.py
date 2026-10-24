@@ -57,6 +57,86 @@ class MessagesMixin:
 
         return name_of(self.data_lookup, record, fallback)
 
+    def _profile_labels(self, category, *attributes):
+        """The labels of the project's first ``category`` screen profile, merged (U1)."""
+        library = self.project.battle_presentation_library
+        try:
+            ids = library.ids(category)
+        except (KeyError, ValueError):
+            return {}
+        if not ids:
+            return {}
+        profile = library.require(category, ids[0])
+        labels = {}
+        for attribute in attributes:
+            labels.update(dict(getattr(profile, attribute, ()) or ()))
+        return labels
+
+    def stat_name(self, stat_id):
+        """A stat's (or resource's) name in the player's language: the locale table's
+        ``data.stat.<id>.name``, else the character screen's label, else the id in words."""
+        from asteria.rpg.data_text import stat_name
+
+        labels = self._profile_labels("rpg_character_screen", "resource_labels", "stat_labels")
+        return stat_name(self.data_lookup, stat_id, labels)
+
+    def slot_name(self, slot_id):
+        """An equipment slot's name (``data.slot.<id>.name``, else a screen's label)."""
+        from asteria.rpg.data_text import slot_name
+
+        labels = self._profile_labels("rpg_equipment_screen", "slot_labels")
+        labels = {**self._profile_labels("rpg_character_screen", "slot_labels"), **labels}
+        return slot_name(self.data_lookup, slot_id, labels)
+
+    def socket_name(self, equipment, socket_id):
+        """A socket's name: ``data.socket.<equipment id>.<socket id>`` in the locale table,
+        else the socket's own label, else "Socket <n>" by its place on the equipment (U1)."""
+        from asteria.rpg.data_text import PREFIX
+
+        sockets = tuple(getattr(equipment, "sockets", ()) or ())
+        index = next((i for i, s in enumerate(sockets) if s.socket_id == socket_id), None)
+        lookup = self.data_lookup
+        equipment_id = getattr(equipment, "equipment_id", "")
+        found = None
+        if lookup is not None and equipment_id:
+            found = lookup(f"{PREFIX}socket.{equipment_id}.{socket_id}.name")
+        if found:
+            return found
+        if index is not None and sockets[index].label:
+            return sockets[index].label
+        number = index + 1 if index is not None else socket_id
+        return self.tr("socket.number", "Socket {number}", number=number)
+
+    def tag_name(self, tag):
+        """A tag's name (a socket accepts "gem", "card"...): ``data.tag.<tag>.name``, else the
+        tag in words (U3)."""
+        from asteria.rpg.data_text import key, words
+
+        lookup = self.data_lookup
+        return (lookup(key("tag", tag)) if lookup is not None else None) or words(tag)
+
+    def points_name(self, currency):
+        """A skill-tree point's short name: ``data.points.<id>.name``, else the built-in
+        words (AP, SP, stat points, "<class> JP" for ``jp.<class>``), else the id."""
+        from asteria.rpg.data_text import key, words
+
+        currency = str(currency)
+        lookup = self.data_lookup
+        found = lookup(key("points", currency)) if lookup is not None else None
+        if found:
+            return found
+        if currency.startswith("jp."):
+            job = currency[3:]
+            name = self.name_of(self.project.rpg_database.classes.get(job), words(job))
+            return self.tr("points.jp", "{name} JP", name=name)
+        if currency == "ap":
+            return self.tr("points.ap", "AP")
+        if currency == "skill_points":
+            return self.tr("points.skill_points", "SP")
+        if currency == "stat_points":
+            return self.tr("points.stat_points", "Stat points")
+        return words(currency).upper() if len(currency) <= 3 else words(currency)
+
     def description_of(self, record, fallback=""):
         """A project record's description in the player's language (D60)."""
         from asteria.rpg.data_text import description_of
@@ -88,15 +168,6 @@ class MessagesMixin:
         from asteria.rpg.data_text import speaker_name
 
         return speaker_name(self.data_lookup, name)
-
-    def slot_name(self, slot_id):
-        """An equipment slot in the player's language (``data.slot.<id>.name``), else its id."""
-        lookup = self.data_lookup
-        if lookup is None:
-            return slot_id
-        from asteria.rpg.data_text import key
-
-        return lookup(key("slot", slot_id)) or slot_id
 
     def map_name(self, scene_id, own):
         """A map's name in the player's language (``data.map.<scene id>.name``, D60)."""

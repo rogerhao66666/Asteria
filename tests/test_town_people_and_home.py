@@ -1,4 +1,4 @@
-"""Everyone on the Full Verification maps wears a look of their own, and Aldric's house has a bed
+"""Everyone on the Full Verification maps wears a look of their own, and Roger's house has a bed
 that rests the party."""
 
 import sys
@@ -34,7 +34,7 @@ def test_no_two_people_share_a_look():
 
 def test_sleeping_in_the_bed_rests_the_party():
     _project, game = smoke.load()
-    home = next(s for s in game.project.scenes() if s.name == "Aldric's House")
+    home = next(s for s in game.project.scenes() if s.name == "Roger's House")
     town = next(s for s in game.project.scenes() if s.name == "Hearthfold")
     assert any(e.name == "House Door" for e in town.entities())
     game.transfer_player(home.id)

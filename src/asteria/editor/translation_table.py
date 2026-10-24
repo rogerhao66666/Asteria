@@ -88,7 +88,7 @@ GROUP_ICONS = {  # editor icons (icons.py) beside each group of the tree
     "Skill tree (action games)": "skill",
     "Action HUD": "gauge",
     "Build menu (testing)": "class",
-    "Workshop (testing)": "hammer",
+    "Equipment and enhance": "hammer",
     "Co-op": "multiplayer",
     OWN_GROUP: "project",
     "Data: actors": "actor",

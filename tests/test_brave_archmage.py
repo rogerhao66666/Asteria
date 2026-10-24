@@ -1,4 +1,4 @@
-"""Aldric the Brave and Archmage in the Full Verification demo: every weapon, every element,
+"""Roger the Brave and Archmage in the Full Verification demo: every weapon, every element,
 their trees, the Demon Ring and the stronger foes."""
 
 import sys
@@ -16,7 +16,7 @@ def _game():
     return game
 
 
-def test_aldric_is_a_brave_with_an_archmage_sub_job():
+def test_roger_is_a_brave_with_an_archmage_sub_job():
     game = _game()
     progress = game.ensure_actor_progression(smoke.HERO)
     assert list(progress.active_class_ids[:2]) == ["brave", "archmage"]
@@ -58,7 +58,7 @@ def test_the_demon_ring_takes_cards_gems_and_charms_and_strikes_five_times():
     kinds = [s.accepted_tags[0] for s in ring.sockets]
     assert kinds.count("card") == 3 and kinds.count("gem") == 2 and kinds.count("charm") == 2
     assert len(game.project.gameplay_library.abilities.get("attack_ring").hits) == 5
-    # as the family chest does it: in Aldric's second hand
+    # as the family chest does it: in Roger's second hand
     smoke.world(game, "EQUIP_ITEM", actor_id=smoke.HERO, equipment_id="w_demon_ring", index=1)
     loadout = game.save.rpg_state.loadouts[smoke.HERO]
     weapons = loadout.equipped("weapon")

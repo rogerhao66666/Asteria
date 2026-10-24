@@ -28,11 +28,13 @@ class SocketDefinition:
     socket_id: str
     accepted_tags: tuple[str, ...] = ()
     locked: bool = False
+    label: str = ""  # the name screens show ("Gem socket"); empty: "Socket <n>" (U1)
 
-    def __init__(self, socket_id, *, accepted_tags=(), locked=False):
+    def __init__(self, socket_id, *, accepted_tags=(), locked=False, label=""):
         object.__setattr__(self, "socket_id", _id(socket_id, "socket_id"))
         object.__setattr__(self, "accepted_tags", _tags(accepted_tags))
         object.__setattr__(self, "locked", bool(locked))
+        object.__setattr__(self, "label", str(label or "").strip())
 
     def accepts(self, attachment):
         if self.locked:
@@ -42,20 +44,29 @@ class SocketDefinition:
         return any(tag in attachment.tags for tag in self.accepted_tags)
 
     def to_data(self):
-        return {
+        data = {
             "socket_id": self.socket_id,
             "accepted_tags": list(self.accepted_tags),
             "locked": self.locked,
         }
+        if self.label:  # written only when set: older projects stay byte-identical
+            data["label"] = self.label
+        return data
 
     @classmethod
     def from_data(cls, data):
-        if set(data) != {"socket_id", "accepted_tags", "locked"}:
+        if not {"socket_id", "accepted_tags", "locked"} <= set(data) or set(data) - {
+            "socket_id",
+            "accepted_tags",
+            "locked",
+            "label",
+        }:
             raise ValueError("invalid socket definition")
         return cls(
             data["socket_id"],
             accepted_tags=data["accepted_tags"],
             locked=data["locked"],
+            label=data.get("label", ""),
         )
 
 

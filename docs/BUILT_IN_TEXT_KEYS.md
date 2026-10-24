@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 340 個鍵，27 組。
+共 397 個鍵，27 組。
 
 ## Title screen
 
@@ -61,6 +61,8 @@
 | --- | --- | --- |
 | `pause.resume` | Resume | 繼續遊戲 |
 | `pause.status` | Status / Items / Equipment / Skills | 狀態／道具／裝備／技能 |
+| `pause.equipment` | Equipment | 裝備 |
+| `pause.enhance` | Enhance | 強化 |
 | `pause.achievements` | Achievements | 成就 |
 | `pause.bestiary` | Bestiary | 怪物圖鑑 |
 | `pause.title` | Return to Title | 回到標題畫面 |
@@ -92,6 +94,7 @@
 | `settings.music_volume` | Music Volume | 音樂音量 |
 | `settings.effects_volume` | Effects Volume | 音效音量 |
 | `settings.show_battle_log` | Battle Messages | 戰鬥訊息 |
+| `settings.developer_menu` | Developer Menu | 開發者選單 |
 | `settings.controls` | Controls… | 按鍵設定… |
 | `settings.back` | Back | 返回 |
 | `settings.language` | Language | 語言 |
@@ -106,6 +109,8 @@
 | --- | --- | --- |
 | `controls.pad_button` | Pad {button} | 手把 {button} |
 | `controls.pad_axis` | Pad {axis} | 手把 {axis} |
+| `controls.pad_stick` | stick | 搖桿 |
+| `controls.pad_hat` | d-pad | 十字鍵 |
 | `controls.reset_all` | Reset all to defaults | 全部恢復預設 |
 | `controls.all_reset` | All controls reset | 已恢復所有按鍵的預設 |
 | `controls.press` | Press a key or pad button for {action} (Esc cancels) | 請按下要給「{action}」的按鍵或手把按鈕（Esc 取消） |
@@ -161,6 +166,8 @@
 | `quests.status.failed` | failed | 失敗 |
 | `quests.none` | No quests yet. | 還沒有任務。 |
 | `quests.hint` | Enter / Esc: back | Enter／Esc：返回 |
+| `quests.objective.defeat` | Defeat {name} | 擊敗{name} |
+| `quests.objective.item` | Collect {name} | 收集{name} |
 
 ## Shop
 
@@ -399,6 +406,11 @@
 | `skill_tree.gives` | Next rank gives: | 下一級獲得： |
 | `skill_tree.so_far` | Learned so far: | 目前已獲得： |
 | `skill_tree.needs` | Needs: | 前置條件： |
+| `points.ap` | AP | 能力點 |
+| `points.skill_points` | SP | 技能點 |
+| `points.stat_points` | Stat points | 屬性點 |
+| `points.jp` | {name} JP | {name}職業點 |
+| `socket.number` | Socket {number} | 孔 {number} |
 
 ## Action HUD
 
@@ -432,7 +444,7 @@
 | `build.upgraded` | Weapon upgraded: {name} | 武器強化：{name} |
 | `build.no_upgrade` | Weapon growth maxed or blocked | 武器已強化到頂或無法強化 |
 
-## Workshop (testing)
+## Equipment and enhance
 
 | 鍵 | English | 引擎的繁體中文 |
 | --- | --- | --- |
@@ -442,19 +454,64 @@
 | `workshop.outcome.protected` | failed, level kept | 失敗，等級保住了 |
 | `workshop.took_out` | Took {name} out of {socket} | 從 {socket} 取下了 {name} |
 | `workshop.socketed` | Socketed {name} into {socket} | 把 {name} 鑲進了 {socket} |
-| `workshop.nothing_to_socket` | Nothing to socket (no free socket or no fitting item in the bag) | 沒有可以鑲嵌的（沒有空孔，或背包裡沒有合適的道具） |
-| `workshop.no_attributes` | This project has no attribute graph | 這個專案沒有屬性圖 |
-| `workshop.point_spent` | +1 {name} | {name} +1 |
-| `workshop.no_points` | No attribute points left | 沒有剩下的屬性點 |
-| `workshop.title` | Workshop | 工坊 |
-| `workshop.keys` | R Refine   S Socket   X Take out   A Attribute point   C Back  [{actor}] | R 精煉   S 鑲嵌   X 取下   A 屬性點   C 返回  [{actor}] |
-| `workshop.gold` | Gold {amount} | 金幣 {amount} |
-| `workshop.no_weapon` | No weapon equipped | 沒有裝備武器 |
-| `workshop.next` | Next +{level}: {chance}% for {cost} {currency} | 下一級 +{level}：成功率 {chance}%，需要 {cost} {currency} |
 | `workshop.locked` | locked | 鎖住 |
 | `workshop.empty` | empty | 空 |
-| `workshop.socket` | Socket {socket}: {value} | 孔 {socket}：{value} |
-| `workshop.points` | Attribute points: {count} | 屬性點：{count} |
+| `workshop.socket_row` | {socket}: {value} | {socket}：{value} |
+| `equipment.title` | Equipment | 裝備 |
+| `equipment.member` | {name}  ·  Lv {level}  ·  {job}   (Q / E) | {name}  ·  Lv {level}  ·  {job}   (Q / E) |
+| `equipment.hint` | Arrows: choose   Enter: change   X: take off   Q / E: member   Esc: back | 方向鍵：選擇   Enter：更換   X：卸下   Q / E：成員   Esc：返回 |
+| `equipment.fits` | For {slot} | 可裝備於{slot} |
+| `equipment.nothing_fits` | Nothing in the bag fits. | 背包裡沒有可以裝備的東西。 |
+| `equipment.empty_slot` | Nothing worn here. | 這裡沒有裝備。 |
+| `equipment.durability` | durability {now}/{most} | 耐久 {now}/{most} |
+| `equipment.sockets` | Sockets {filled}/{total} | 鑲嵌孔 {filled}/{total} |
+| `equipment.stats` | Stats | 能力值 |
+| `enhance.title` | Enhance | 強化 |
+| `enhance.member` | {name}  ·  Gold {gold}   (Q / E) | {name}  ·  金幣 {gold}   (Q / E) |
+| `enhance.hint.refine` | Enter: refine   P: protection on / off   Tab: page   Q / E: member   Esc: back | Enter：精煉   P：保護開／關   Tab：換頁   Q / E：成員   Esc：返回 |
+| `enhance.hint.sockets` | Enter: choose / socket   X: take out   Tab: page   Q / E: member   Esc: back | Enter：選擇／鑲嵌   X：取下   Tab：換頁   Q / E：成員   Esc：返回 |
+| `enhance.hint.growth` | Enter: choose / unlock   Tab: page   Q / E: member   Esc: back | Enter：選擇／解鎖   Tab：換頁   Q / E：成員   Esc：返回 |
+| `enhance.tab.refine` | Refine | 精煉 |
+| `enhance.tab.sockets` | Sockets | 鑲嵌 |
+| `enhance.tab.cards` | Cards | 卡片 |
+| `enhance.tab.growth` | Growth | 成長 |
+| `enhance.gear` | Worn gear | 身上的裝備 |
+| `enhance.sockets` | Sockets | 鑲嵌孔 |
+| `enhance.card_sockets` | Card sockets | 卡片孔 |
+| `enhance.fits` | From the bag | 背包裡可用的 |
+| `enhance.stages` | Growth stages | 成長階段 |
+| `enhance.levels` | Refine levels | 精煉等級 |
+| `enhance.level_row` | +{level}   {chance}%   {cost} {currency} | +{level}   {chance}%   {cost} {currency} |
+| `enhance.no_growth` | This piece does not grow. | 這件裝備不會成長。 |
+| `enhance.no_sockets` | This piece has no such socket. | 這件裝備沒有這種孔。 |
+| `enhance.nothing_fits` | Nothing in the bag fits this socket. | 背包裡沒有能放進這個孔的東西。 |
+| `enhance.unlocked` | {name} unlocked | 已解鎖 {name} |
+| `enhance.destroyed` | the piece was destroyed | 裝備損毀了 |
+| `enhance.cannot_refine` | This piece cannot be refined. | 這件裝備不能精煉。 |
+| `enhance.max_level` | At the highest level (+{level}) | 已達最高等級（+{level}） |
+| `enhance.next_level` | +{level} → +{next}   chance {chance}% | +{level} → +{next}   成功率 {chance}% |
+| `enhance.price` | Price {cost} {currency} (have {have}) | 費用 {cost} {currency}（持有 {have}） |
+| `enhance.materials` | Materials | 材料 |
+| `enhance.material_row` | {name}  {have}/{need} | {name}  {have}/{need} |
+| `enhance.fail.keep` | A failure loses nothing but the price | 失敗只會損失費用 |
+| `enhance.fail.drop` | A failure drops one level | 失敗會降一級 |
+| `enhance.fail.break` | A failure breaks the piece (repair it) | 失敗會讓裝備損壞（需要修理） |
+| `enhance.fail.destroy` | A failure destroys the piece | 失敗會讓裝備消失 |
+| `enhance.safe` | Always succeeds up to +{level} | +{level} 以前必定成功 |
+| `enhance.protect` | {name} x{have}: protection {state} (P) | {name} x{have}：保護 {state}（P） |
+| `enhance.preview` | At the next level | 下一級的效果 |
+| `enhance.takes` | Takes: {tags} | 可放入：{tags} |
+| `enhance.takes_any` | anything | 任何東西 |
+| `enhance.removal.lost` | Taking it out destroys it | 取下時會消失 |
+| `enhance.removal.kept` | Taking it out returns it to the bag | 取下後會回到背包 |
+| `enhance.stage_done` | Complete | 已完成 |
+| `enhance.needs` | Next rank needs | 下一階需要 |
+| `enhance.counter_row` | {name}  {now}/{need} | {name}  {now}/{need} |
+| `enhance.gives` | Gives | 獲得 |
+| `enhance.opens_sockets` | Opens {count} socket(s) | 開啟 {count} 個孔 |
+| `enhance.evolves` | Evolves into {name} | 進化為 {name} |
+| `enhance.auto` | Unlocks by itself when ready | 條件達成時自動解鎖 |
+| `enhance.ready` | Ready: Enter unlocks it | 可以解鎖：按 Enter |
 
 ## Co-op
 
