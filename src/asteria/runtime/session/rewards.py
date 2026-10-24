@@ -175,7 +175,7 @@ class RewardsMixin:
             if f"{enemy_id}:{serial}" not in self._captured
         )
         for enemy_id, member_id in zip(defeated, member_ids, strict=True):
-            definition = db.enemies[enemy_id].reward
+            definition = self.foe_definition(enemy_id).reward
             reward = roll_reward(
                 definition, rng, luck=self.loot_luck, switches=self.save.event_context.get_switch
             )
@@ -214,7 +214,7 @@ class RewardsMixin:
             self.world.note_enemy(enemy_id, "defeated")
         self._quest_switches()
         self.refresh_achievements()
-        self._pets_gain_experience()
+        self._pets_gain_experience(member_ids)
         self.mode = "field"
         self.battle = None
         self.encounter_id = None

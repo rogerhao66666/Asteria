@@ -210,10 +210,17 @@ class OutcomeCheckDefinition:
     # foe cannot guard or dodge)
     blocked_source_tags: tuple[str, ...] = ()
     blocked_target_tags: tuple[str, ...] = ()
+    # the chance as an expression (gameplay/expressions.py) instead of the base and the stat
+    # terms; ``source`` and ``target`` are the subjects (the bounds still apply)
+    chance_expression: str = ""
 
     SCHEMA = "asteria.rpg.outcome_check"
     VERSION = 1
-    OPTIONAL_DATA = {"blocked_source_tags": [], "blocked_target_tags": []}  # shown while empty
+    OPTIONAL_DATA = {  # shown while empty
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "chance_expression": "",
+    }
 
     def __init__(
         self,
@@ -230,11 +237,18 @@ class OutcomeCheckDefinition:
         failure_tags=(),
         blocked_source_tags=(),
         blocked_target_tags=(),
+        chance_expression="",
     ):
         minimum_chance = _number(minimum_chance, "minimum_chance")
         maximum_chance = _number(maximum_chance, "maximum_chance")
         if not 0 <= minimum_chance <= maximum_chance <= 1:
             raise ValueError("chance bounds must satisfy 0 <= min <= max <= 1")
+        chance_expression = str(chance_expression or "").strip()
+        if chance_expression:
+            from asteria.gameplay.expressions import check_expression
+
+            check_expression(chance_expression, ("source", "target"))
+        object.__setattr__(self, "chance_expression", chance_expression)
         object.__setattr__(self, "check_id", _id(check_id, "check_id"))
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
         object.__setattr__(
@@ -268,9 +282,10 @@ class OutcomeCheckDefinition:
             "failure_tags": list(self.failure_tags),
             **{
                 key: list(getattr(self, key))
-                for key in self.OPTIONAL_DATA
+                for key in ("blocked_source_tags", "blocked_target_tags")
                 if getattr(self, key)  # written only when set
             },
+            **({"chance_expression": self.chance_expression} if self.chance_expression else {}),
         }
 
     @classmethod
@@ -290,6 +305,7 @@ class OutcomeCheckDefinition:
             failure_tags=data.get("failure_tags", ()),
             blocked_source_tags=data.get("blocked_source_tags", ()),
             blocked_target_tags=data.get("blocked_target_tags", ()),
+            chance_expression=data.get("chance_expression", ""),
         )
 
 
@@ -445,11 +461,21 @@ class InteractionResolver:
         )
         if not applicable:
             return OutcomeCheckResult(definition.check_id, False, None, None, None, ())
-        chance = definition.base_chance
-        chance += sum(self._stat(source, k) * c for k, c in definition.source_stat_terms.items())
-        chance += sum(self._stat(target, k) * c for k, c in definition.target_stat_terms.items())
-        chance = max(definition.minimum_chance, min(definition.maximum_chance, chance))
         rng = rng or random.Random()
+        if definition.chance_expression:
+            from asteria.gameplay.expressions import SubjectView, evaluate
+
+            names = {"source": SubjectView(source), "target": SubjectView(target)}
+            chance = evaluate(definition.chance_expression, names, rng)
+        else:
+            chance = definition.base_chance
+            chance += sum(
+                self._stat(source, k) * c for k, c in definition.source_stat_terms.items()
+            )
+            chance += sum(
+                self._stat(target, k) * c for k, c in definition.target_stat_terms.items()
+            )
+        chance = max(definition.minimum_chance, min(definition.maximum_chance, chance))
         roll = float(rng.random())
         success = roll < chance
         tags = definition.success_tags if success else definition.failure_tags

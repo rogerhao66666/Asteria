@@ -69,8 +69,30 @@ class BattleStatePolicy:
     # who the afflicted member's actions hit, whatever was chosen: "" (as aimed),
     # "random_any" (confusion), "random_opponent", "random_ally" (charm)
     target_override: str = ""
+    # chance each tick (at ``tick_trigger``) that the member cannot act this turn (paralysis);
+    # 0 = only ``prevent_action`` decides
+    prevent_chance: float = 0.0
+    # chance each tick that the state ends at once, before the member acts (thawing out)
+    remove_chance: float = 0.0
+    # a random whole duration in ticks (minimum, maximum) instead of the state's own (sleep);
+    # () = the state's duration
+    duration_range: tuple = ()
+    # a state of a group cannot be applied while the member has another of the same group (one
+    # main ailment at a time); "" = no group
+    exclusive_group: str = ""
+    # the state ends with the battle (a flinch, a stance...): not kept on a creature after it
+    battle_only: bool = False
     # shown in the editor even when empty (left out of the saved data while empty)
-    OPTIONAL_DATA = {"interaction_tags": [], "allowed_ability_tags": [], "target_override": ""}
+    OPTIONAL_DATA = {
+        "battle_only": False,
+        "interaction_tags": [],
+        "allowed_ability_tags": [],
+        "target_override": "",
+        "prevent_chance": 0.0,
+        "remove_chance": 0.0,
+        "duration_range": [],
+        "exclusive_group": "",
+    }
 
     SCHEMA = "asteria.rpg.battle_state_policy"
     VERSION = 1
@@ -95,6 +117,11 @@ class BattleStatePolicy:
         interaction_tags=(),
         allowed_ability_tags=(),
         target_override="",
+        prevent_chance=0.0,
+        remove_chance=0.0,
+        duration_range=(),
+        exclusive_group="",
+        battle_only=False,
     ):
         if target_override not in TARGET_OVERRIDES:
             raise ValueError(f"target_override must be one of {TARGET_OVERRIDES}")
@@ -128,6 +155,19 @@ class BattleStatePolicy:
         object.__setattr__(self, "interaction_tags", _tags(interaction_tags))
         object.__setattr__(self, "allowed_ability_tags", _tags(allowed_ability_tags))
         object.__setattr__(self, "target_override", target_override)
+        for name, value in (("prevent_chance", prevent_chance), ("remove_chance", remove_chance)):
+            value = _number(value, name)
+            if not 0 <= value <= 1:
+                raise ValueError(f"{name} must be between 0 and 1")
+            object.__setattr__(self, name, value)
+        duration_range = tuple(int(x) for x in duration_range or ())
+        if duration_range and (
+            len(duration_range) != 2 or not 0 <= duration_range[0] <= duration_range[1]
+        ):
+            raise ValueError("duration_range is (minimum, maximum) ticks with minimum <= maximum")
+        object.__setattr__(self, "duration_range", duration_range)
+        object.__setattr__(self, "exclusive_group", str(exclusive_group or "").strip())
+        object.__setattr__(self, "battle_only", bool(battle_only))
 
     def to_data(self):
         return {
@@ -154,6 +194,11 @@ class BattleStatePolicy:
                 else {}
             ),
             **({"target_override": self.target_override} if self.target_override else {}),
+            **({"prevent_chance": self.prevent_chance} if self.prevent_chance else {}),
+            **({"remove_chance": self.remove_chance} if self.remove_chance else {}),
+            **({"duration_range": list(self.duration_range)} if self.duration_range else {}),
+            **({"exclusive_group": self.exclusive_group} if self.exclusive_group else {}),
+            **({"battle_only": True} if self.battle_only else {}),
         }
 
     @classmethod
@@ -178,6 +223,11 @@ class BattleStatePolicy:
             interaction_tags=data.get("interaction_tags", ()),
             allowed_ability_tags=data.get("allowed_ability_tags", ()),
             target_override=data.get("target_override", ""),
+            prevent_chance=data.get("prevent_chance", 0.0),
+            remove_chance=data.get("remove_chance", 0.0),
+            duration_range=data.get("duration_range", ()),
+            exclusive_group=data.get("exclusive_group", ""),
+            battle_only=data.get("battle_only", False),
         )
 
 
@@ -213,6 +263,8 @@ class BattleStateRuntime:
         self.hooks = hooks
         # Set by BattleRuntime: (member, active_state, policy) -> value_transform or None.
         self.periodic_transform = None
+        self.rng = None  # the battle's dice (prevent / remove chances, random durations)
+        self._held = {}  # id(subject) -> states that stop it this turn (a prevent_chance hit)
 
     @staticmethod
     def _stat(subject, name):
@@ -229,8 +281,12 @@ class BattleStateRuntime:
             value += self._stat(target, name) * coefficient
         return min(policy.maximum_chance, max(policy.minimum_chance, value))
 
-    def _duration(self, policy, target):
+    def _duration(self, policy, target, rng=None):
         definition = target.states.registry.require(policy.state_id)
+        if policy.duration_range:
+            low, high = policy.duration_range
+            dice = rng if rng is not None else (self.rng or random)
+            return float(dice.randint(low, high)) * policy.tick_amount
         multiplier = policy.duration_multiplier
         for name, coefficient in policy.duration_target_stat_terms.items():
             multiplier += self._stat(target, name) * coefficient
@@ -254,6 +310,16 @@ class BattleStateRuntime:
                 data={"result": result},
             )
             return result
+        group = policy.exclusive_group
+        if group and target.states is not None:
+            for active in target.states.active_states():
+                other = self.policies.get(active.state_id)
+                if other is not None and other.exclusive_group == group:
+                    reason = "already" if active.state_id == state_id else "exclusive"
+                    return BattleStateApplicationResult(
+                        state_id, str(source_id), str(target_id), False, False, 0.0, None,
+                        None, reason,
+                    )  # fmt: skip
         chance = self._chance(policy, source, target)
         roller = rng.random if rng is not None else random.random
         roll = float(roller())
@@ -276,7 +342,7 @@ class BattleStateRuntime:
                 data={"result": result},
             )
             return result
-        duration = self._duration(policy, target)
+        duration = self._duration(policy, target, rng)
         target.states.apply(state_id, duration=duration, source_id=str(source_id))
         result = BattleStateApplicationResult(
             state_id,
@@ -307,7 +373,13 @@ class BattleStateRuntime:
             outside = bool(policy.allowed_ability_tags) and not tags.intersection(
                 policy.allowed_ability_tags
             )
-            if policy.prevent_action or outside or tags.intersection(policy.blocked_ability_tags):
+            held = active.state_id in self._held.get(id(subject), ())
+            if (
+                policy.prevent_action
+                or held
+                or outside
+                or tags.intersection(policy.blocked_ability_tags)
+            ):
                 blocked.append(active.state_id)
         blocked = tuple(sorted(blocked))
         return AbilityAvailability(not blocked, blocked, "blocked_by_state" if blocked else "")
@@ -319,10 +391,23 @@ class BattleStateRuntime:
             states = member.subject.states
             if states is None:
                 continue
+            dice = self.rng or random
             for active in list(states.active_states()):
                 policy = self.policies.get(active.state_id)
                 if policy is None:
                     continue
+                if policy.tick_trigger == trigger:
+                    self._held.get(id(member.subject), set()).discard(active.state_id)
+                if policy.tick_trigger == trigger and policy.remove_chance:
+                    if dice.random() < policy.remove_chance:  # cured before acting
+                        states.remove(active.state_id, run_remove_effects=True)
+                        emit_hook(
+                            self.hooks,
+                            "rpg.battle.state_removed",
+                            source=member.member_id,
+                            data={"state_id": active.state_id, "trigger": "chance"},
+                        )
+                        continue
                 if trigger in policy.remove_triggers:
                     states.remove(active.state_id, run_remove_effects=True)
                     emit_hook(
@@ -337,7 +422,28 @@ class BattleStateRuntime:
                 transform = None
                 if self.periodic_transform is not None and policy.interaction_tags:
                     transform = self.periodic_transform(member, active, policy)
-                if states.advance(active.state_id, policy.tick_amount, value_transform=transform):
+                before = member.subject.resources.to_data()["values"]
+                ended = states.advance(
+                    active.state_id, policy.tick_amount, value_transform=transform
+                )
+                after = member.subject.resources.to_data()["values"]
+                changes = {
+                    name: after[name]["current"] - value["current"]
+                    for name, value in before.items()
+                    if name in after and after[name]["current"] != value["current"]
+                }
+                if changes:  # its periodic effect did something (poison...)
+                    emit_hook(
+                        self.hooks,
+                        "rpg.battle.state_ticked",
+                        source=member.member_id,
+                        data={"state_id": active.state_id, "changes": changes},
+                    )
+                if (
+                    not ended and policy.prevent_chance and dice.random() < policy.prevent_chance
+                ):  # it cannot act this turn (fully paralysed)
+                    self._held.setdefault(id(member.subject), set()).add(active.state_id)
+                if ended:
                     expired.append((member.member_id, active.state_id))
                     emit_hook(
                         self.hooks,

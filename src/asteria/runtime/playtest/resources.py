@@ -195,6 +195,8 @@ class ResourceMixin:
         "_draw_list_screen",
         "_draw_settings",
         "_draw_capture_menu",
+        "_draw_switch_menu",
+        "_draw_learn_prompt",
     )
 
     def _settings_path(self):
@@ -217,6 +219,13 @@ class ResourceMixin:
     def _sound(self, asset_id):
         if asset_id:
             self.audio.play_effect(asset_id)
+
+    def _end_temporary_music(self):
+        """A battle began: a temporary track (``PLAY_BGM`` with ``temporary``) is over, the
+        field goes back to its own music afterwards."""
+        if getattr(self, "_bgm_temporary", False):
+            self._bgm_override = None
+            self._bgm_temporary = False
 
     def _music(self, asset_id, fade=0.5):
         if asset_id:

@@ -102,6 +102,7 @@ class BattleScheduler:
         self._acted_this_round = set()
         self._charge_from = {}  # continuous mode: member id -> time its current charge began
         self._sitting_out = set()  # continuous mode: members that lost the opening
+        self._priorities = {}  # member id -> this round's priority (the action it chose)
         self._initialize()
 
     @property
@@ -134,7 +135,9 @@ class BattleScheduler:
         if self.mode == BattleSchedulerMode.ROUND:
             values.sort(key=lambda m: m.member_id)
         else:
-            values.sort(key=lambda m: (-self._speed(m), m.member_id))
+            values.sort(
+                key=lambda m: (-self._priorities.get(m.member_id, 0), -self._speed(m), m.member_id)
+            )
         self._pending = []
         for m in values:
             self._sequence += 1
@@ -156,6 +159,22 @@ class BattleScheduler:
             )
         )
         self._pending.sort(key=lambda x: (x.ready_time, x.member_id, x.sequence))
+
+    def set_priorities(self, priorities):
+        """This round's priorities (``{member id: priority}``, from the actions chosen): in a
+        speed-ordered round a higher priority acts first, then the faster one. The members
+        still to act are put in that order now (their speeds as they are now)."""
+        self._priorities = {str(k): int(v) for k, v in dict(priorities or {}).items()}
+        if self.mode != BattleSchedulerMode.SPEED_ORDERED:
+            return
+        members = self._members
+
+        def order(entry):
+            member = members.get(entry.member_id)
+            speed = self._speed(member) if member is not None else entry.speed
+            return (-self._priorities.get(entry.member_id, 0), -speed, entry.member_id)
+
+        self._pending.sort(key=order)
 
     def peek(self):
         return self._pending[0] if self._pending else None

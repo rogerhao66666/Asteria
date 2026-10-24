@@ -156,6 +156,9 @@ class BuildsMixin:
         state registry."""
         from asteria.gameplay import StateRuntime
 
+        for name, (low, high, start) in (self.rules.battle_counters or {}).items():
+            if not resources.contains(name):  # the rules' per-battle counters (stat stages...)
+                resources.define(name, high, current=start, minimum=low)
         states = StateRuntime(self.project.gameplay_library.states, stats, resources, tags)
         return GameplaySubject(stats, resources, tags, states)
 

@@ -99,6 +99,7 @@ class ChoiceRequest:
     variable_name: str = ""
     local_name: str = ""
     prompt_key: str = ""  # the prompt's translation key (D60)
+    box_at: tuple[int, int] | None = None  # where a game's own choice box goes (its pixels)
 
     def __init__(
         self,
@@ -108,6 +109,7 @@ class ChoiceRequest:
         variable_name: str = "",
         local_name: str = "",
         prompt_key: str = "",
+        box_at=None,
     ):
         items = tuple(choices)
         if not items:
@@ -119,6 +121,9 @@ class ChoiceRequest:
         object.__setattr__(self, "variable_name", str(variable_name))
         object.__setattr__(self, "local_name", str(local_name))
         object.__setattr__(self, "prompt_key", str(prompt_key))
+        if box_at is not None:
+            box_at = (int(box_at[0]), int(box_at[1]))
+        object.__setattr__(self, "box_at", box_at)
 
     def to_data(self):
         data = {
@@ -131,6 +136,8 @@ class ChoiceRequest:
         }
         if self.prompt_key:  # written only when set
             data["prompt_key"] = self.prompt_key
+        if self.box_at is not None:
+            data["box_at"] = list(self.box_at)
         return data
 
     @classmethod
@@ -143,7 +150,7 @@ class ChoiceRequest:
             "variable_name",
             "local_name",
         }
-        if not expected <= set(data) or set(data) - expected - {"prompt_key"}:
+        if not expected <= set(data) or set(data) - expected - {"prompt_key", "box_at"}:
             raise ValueError("invalid choice request")
         if data["schema"] != "asteria.choice_request" or data["version"] != 1:
             raise ValueError("unsupported choice request")
@@ -155,6 +162,7 @@ class ChoiceRequest:
             variable_name=data["variable_name"],
             local_name=data["local_name"],
             prompt_key=str(data.get("prompt_key", "")),
+            box_at=data.get("box_at"),
         )
 
 

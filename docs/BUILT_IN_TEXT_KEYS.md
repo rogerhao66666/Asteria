@@ -12,7 +12,125 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 492 個鍵，28 組。
+共 628 個鍵，29 組。
+
+## Creature battle
+
+| 鍵 | English | 引擎的繁體中文 |
+| --- | --- | --- |
+| `creature.wild_name` | Wild {name} | 野生的{name} |
+| `creature.you` | You | 你 |
+| `creature.fainted` | {name} fainted! | {name}倒下了！ |
+| `creature.threw` | {player} used {item}! | {player}使用了{item}！ |
+| `creature.out_of_creatures` | {player} is out of usable creatures! | {player}已經沒有可以戰鬥的夥伴了！ |
+| `creature.whited_out` | {player} whited out! | {player}眼前一片漆黑！ |
+| `creature.cmd.fight` | FIGHT | 戰鬥 |
+| `creature.cmd.bag` | BAG | 背包 |
+| `creature.cmd.party` | PARTY | 隊伍 |
+| `creature.cmd.run` | RUN | 逃走 |
+| `creature.pp` | PP | PP |
+| `creature.type` | TYPE/{type} | 屬性/{type} |
+| `creature.choose` | Choose a creature. | 請選擇夥伴。 |
+| `creature.pocket.items` | ITEMS | 道具 |
+| `creature.pocket.balls` | BALLS | 捕獲球 |
+| `creature.foe_name` | Foe {name} | 對手的{name} |
+| `creature.trainer_challenge` | {trainer} would like to battle! | {trainer}向你發起了對戰！ |
+| `creature.trainer_sent_out` | {trainer} sent out {name}! | {trainer}派出了{name}！ |
+| `creature.go` | Go! {name}! | 去吧！{name}！ |
+| `creature.cant_escape` | Can't escape! | 逃不掉！ |
+| `creature.caught` | Gotcha! {name} was caught! | 好耶！抓到{name}了！ |
+| `creature.defeated_trainer` | {player} defeated {trainer}! | {player}打敗了{trainer}！ |
+| `creature.cancel` | CANCEL | 取消 |
+| `creature.bag_empty` | Nothing here. | 什麼都沒有。 |
+| `creature.no_running` | No! There's no running from a trainer battle! | 不行！不能從訓練家的對戰中逃走！ |
+| `creature.got_away` | Got away safely! | 順利逃走了！ |
+| `creature.used` | {user} used {move}! | {user}使用了{move}！ |
+| `creature.sent_to_storage` | {name} was transferred to storage. | {name}被送到寄放處了。 |
+| `creature.exp` | {name} gained {amount} EXP. Points! | {name}獲得了{amount}經驗值！ |
+| `creature.level_up` | {name} grew to LV. {level}! | {name}升到了等級{level}！ |
+| `creature.evolved` | {name} evolved into {species}! | {name}進化成了{species}！ |
+| `creature.prize` | {player} got {amount} for winning! | {player}獲得了{amount}作為獎金！ |
+| `creature.come_back` | {name}, come back! | {name}，回來吧！ |
+| `creature.used_item` | {player} used {item}! | {player}使用了{item}！ |
+| `creature.no_effect` | It doesn't affect {name}... | 對{name}好像沒有效果…… |
+| `creature.critical` | A critical hit! | 擊中了要害！ |
+| `creature.already_out` | {name} is already in battle! | {name}已經在戰鬥中了！ |
+| `creature.no_energy` | There's no will to battle! | 已經沒有力氣戰鬥了！ |
+| `creature.hp_restored` | {name}'s HP was restored. | {name}的體力恢復了。 |
+| `creature.super_effective` | It's super effective! | 效果絕佳！ |
+| `creature.state_applied` | {name} is now {state}! | {name}陷入了{state}狀態！ |
+| `creature.no_pp` | There's no PP left for this move! | 這個招式已經沒有 PP 了！ |
+| `creature.not_very_effective` | It's not very effective... | 效果不太好…… |
+| `creature.what_will` | What will {name} do? | 要讓 {name}做什麼？ |
+| `creature.no_stealing` | The trainer blocked the ball! Don't be a thief! | 訓練家擋住了球！不可以搶別人的東西！ |
+| `creature.foe` | The foe | 對手 |
+| `creature.broke_free` | Oh, no! It broke free! | 啊！被牠掙脫了！ |
+| `creature.almost` | Aww! It appeared to be caught! | 唉！差一點就抓到了！ |
+| `creature.so_close` | Aargh! Almost had it! | 可惡！只差一點！ |
+| `creature.shoot` | Shoot! It was so close, too! | 糟糕！明明就快抓到了！ |
+| `creature.legendary_appeared` | {name} appeared! | {name}出現了！ |
+| `creature.appeared` | Wild {name} appeared! | 野生的{name}出現了！ |
+| `creature.level` | Lv{level} | Lv{level} |
+| `creature.close_bag` | CLOSE BAG | 關上背包 |
+| `creature.no_moves_left` | {name} has no moves left! | {name}已經沒有可以使用的招式了！ |
+| `creature.do_it` | Do it! {name}! | 就是現在！{name}！ |
+| `creature.go_for_it` | Go for it, {name}! | 加油，{name}！ |
+| `creature.foe_weak` | Your foe's weak! Get 'em, {name}! | 對手很虛弱了！ 上吧，{name}！ |
+| `creature.thats_enough` | {name}, that's enough! Come back! | {name}，夠了！ 回來吧！ |
+| `creature.ok_come_back` | {name}, OK! Come back! | {name}，好！ 回來吧！ |
+| `creature.good_come_back` | {name}, good! Come back! | {name}，做得好！ 回來吧！ |
+| `creature.missed` | {name}'s attack missed! | {name}的 攻擊沒有命中！ |
+| `creature.stat_sharply_rose` | {name}'s {stat} sharply rose! | {name}的{stat} 大幅提高了！ |
+| `creature.stat_rose` | {name}'s {stat} rose! | {name}的{stat} 提高了！ |
+| `creature.stat_fell` | {name}'s {stat} fell! | {name}的{stat} 降低了！ |
+| `creature.stat_harshly_fell` | {name}'s {stat} harshly fell! | {name}的{stat} 大幅降低了！ |
+| `creature.stat_wont_rise` | {name}'s {stat} won't go higher! | {name}的{stat} 已經無法再提高了！ |
+| `creature.stat_wont_fall` | {name}'s {stat} won't go lower! | {name}的{stat} 已經無法再降低了！ |
+| `creature.but_it_failed` | But it failed! | 但是失敗了！ |
+| `creature.about_to_use` | {trainer} is about to use {name}. | {trainer} 準備派出{name}。 |
+| `creature.will_change` | Will {player} change creatures? | {player}要更換 夥伴嗎？ |
+| `creature.use_next` | Use next creature? | 要派出下一隻嗎？ |
+| `creature.yes` | YES | 是 |
+| `creature.no` | NO | 否 |
+| `creature.hit_times` | Hit {count} time(s)! | 命中了{count}次！ |
+| `creature.drained` | {name} had its energy drained! | {name}的 體力被吸取了！ |
+| `creature.recoil` | {name} is hit with recoil! | {name}受到了 反作用力的傷害！ |
+| `menu.exit` | EXIT | 離開 |
+| `creature.menu.summary` | SUMMARY | 能力 |
+| `creature.menu.switch` | SWITCH | 替換 |
+| `creature.menu.do_what` | Do what with this {name}? | 要對{name}做什麼？ |
+| `creature.menu.move_where` | Move to where? | 要移到哪裡？ |
+| `creature.menu.use` | USE | 使用 |
+| `creature.menu.toss` | TOSS | 丟掉 |
+| `creature.menu.cant_use` | This can't be used now. | 現在不能使用。 |
+| `creature.menu.tossed` | Threw away 1 {item}. | 丟掉了1個{item}。 |
+| `creature.menu.close_bag_words` | CLOSE BAG | 關上背包 |
+| `creature.summary.info` | INFO | 資料 |
+| `creature.summary.skills` | SKILLS | 能力值 |
+| `creature.summary.moves` | MOVES | 招式 |
+| `creature.summary.none` | NONE | 無 |
+| `creature.summary.exp` | EXP. POINTS | 經驗值 |
+| `creature.summary.next` | NEXT LV. | 距離升級 |
+| `creature.summary.pp` | PP | PP |
+| `creature.menu.use_on_which` | Use on which creature? | 要對哪一隻使用？ |
+| `creature.menu.no_effect` | It won't have any effect. | 沒有任何效果。 |
+| `creature.menu.hp_restored` | {name}'s HP was restored by {amount} point(s). | {name}的HP回復了{amount}點。 |
+| `creature.menu.cured` | {name} was cured. | {name}恢復了。 |
+| `creature.card.name` | NAME:  | 名字： |
+| `creature.card.id` | IDNo. | ID號碼 |
+| `creature.card.money` | MONEY | 金錢 |
+| `creature.card.dex` | DEX | 圖鑑 |
+| `creature.card.time` | TIME | 時間 |
+| `creature.options.title` | OPTION | 設定 |
+| `creature.dex.seen` | SEEN | 見過 |
+| `creature.dex.owned` | OWN | 捕獲 |
+| `creature.dex.height` | HT | 身高 |
+| `creature.dex.weight` | WT | 體重 |
+| `creature.save.player` | PLAYER | 玩家 |
+| `creature.save.badges` | BADGES | 徽章 |
+| `creature.save.confirm` | Would you like to save the game? | 要記錄冒險嗎？ |
+| `creature.save.saving` | SAVING… DON'T TURN OFF THE POWER. | 記錄中……請不要關掉電源。 |
+| `creature.save.saved` | {player} saved the game. | {player}記錄了冒險。 |
 
 ## Title screen
 
@@ -363,6 +481,19 @@
 | `pets.bond` | Bond {bond} | 親密度 {bond} |
 | `pets.active` | ACTIVE | 出戰中 |
 | `pets.rename_hint` | Type a name, Enter keeps it, Esc cancels | 輸入名字，Enter 確定，Esc 取消 |
+| `pets.party` | Party | 隊伍 |
+| `pets.storage` | Storage | 寄放 |
+| `pets.party_hint` | Up / Down: choose   Left / Right: party / storage   Enter: move   R: rename   Esc: back | 上／下：選擇   左／右：隊伍／寄放   Enter：移動   R：改名   Esc：返回 |
+| `pets.party_full` | The party is full | 隊伍已滿 |
+| `pets.no_storage` | There is nowhere to keep it | 沒有地方可以寄放 |
+| `pets.last_one` | The last one must stay with you | 最後一隻必須留在身邊 |
+| `pets.moved_in` | {name} joins the party | {name} 加入隊伍 |
+| `pets.moved_out` | {name} goes into storage | {name} 送去寄放 |
+| `pets.health` | HP {current}/{maximum} | HP {current}/{maximum} |
+| `pets.learn_title` | {name} wants to learn {move} | {name} 想學會 {move} |
+| `pets.learn_hint` | 1-9: forget that move and learn it   Esc: do not learn | 1-9：忘掉那一招來學   Esc：不學 |
+| `pets.learned` | {name} learned {move} | {name} 學會了 {move} |
+| `pets.not_learned` | {name} did not learn {move} | {name} 沒有學 {move} |
 
 ## Battle commands
 
@@ -372,6 +503,7 @@
 | `battle.command.skills` | Skills | 技能 |
 | `battle.command.items` | Items | 道具 |
 | `battle.command.escape` | Escape | 逃跑 |
+| `battle.command.switch` | Switch | 交換 |
 | `battle.command.more` | More | 更多 |
 | `battle.command.back` | Back | 返回 |
 | `battle.menu.command` | Command | 指令 |
@@ -383,6 +515,7 @@
 | `battle.hint.skills` | Abilities, concoct, capture | 技能、調合、捕獲 |
 | `battle.hint.group` | Abilities | 技能 |
 | `battle.hint.items` | Use an item from the bag | 使用背包裡的道具 |
+| `battle.hint.switch` | Send out another creature | 換另一隻上場 |
 | `battle.hint.escape` | {chance}% to get away | {chance}% 機率逃走 |
 | `battle.hint.back` | The first commands | 回到前面的指令 |
 | `battle.hint.more` | More commands | 更多指令 |
@@ -407,6 +540,7 @@
 | `battle.reason.form_short` | needs {amount} {resource} ({have}) | 需要 {amount} {resource}（目前 {have}） |
 | `battle.reason.blocked` | Blocked by {states} | 受到 {states} 影響無法使用 |
 | `battle.reason.no_uses` | No uses left this battle | 本場戰鬥已用完次數 |
+| `battle.reason.no_pp` | No uses left | 沒有使用次數了 |
 | `battle.reason.a_pet` | a pet | 寵物 |
 | `battle.reason.needs_items` | Needs {what} x{count} | 需要 {what} x{count} |
 | `battle.reason.needs_amount` | Needs {amount} {resource} | 需要 {amount} {resource} |
@@ -432,6 +566,8 @@
 | `battle.item_none_left` | no {name} left | {name} 已經用完了 |
 | `battle.escape.no_rule` | The project defines no escape rule | 這個專案沒有設定逃跑規則 |
 | `battle.escape.blocked` | This battle has no_escape: there is no running away | 這場戰鬥無法逃跑 |
+| `battle.no_one` | No one can fight: the party has no creature standing | 沒有人能戰鬥：隊伍裡沒有站得住的生物 |
+| `battle.switch.no_room` | There is no room on the stage | 場上沒有空位 |
 | `battle.capture.needs` | capturing needs {item} | 捕獲需要 {item} |
 
 ## Capture
@@ -444,6 +580,11 @@
 | `capture.title` | Capture | 捕獲 |
 | `capture.uses` | (uses {item}: {count}) | （使用 {item}：剩 {count}） |
 | `capture.cancel` | Esc: cancel | Esc：取消 |
+| `capture.ball` | Throw which? 1-9: an item   Esc: cancel | 丟哪一個？1-9：道具   Esc：取消 |
+| `capture.item_row` | {item} x{count}   {chance}% | {item} x{count}   {chance}% |
+| `switch.title` | Send out which? | 派誰上場？ |
+| `switch.row` | {name}   Lv {level}   HP {current}/{maximum} | {name}   Lv {level}   HP {current}/{maximum} |
+| `switch.hint` | 1-9: choose | 1-9：選擇 |
 
 ## Victory
 

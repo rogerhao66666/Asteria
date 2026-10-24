@@ -122,6 +122,7 @@ class RpgRuntimeState:
     equipment_bag: list
     pets: list
     active_pet_id: str
+    party_pet_ids: tuple  # the pets travelling with the player (PetRules.party_size)
 
     SCHEMA = "asteria.rpg.runtime_state"
     VERSION = 8
@@ -145,6 +146,7 @@ class RpgRuntimeState:
         equipment_bag=None,
         pets=None,
         active_pet_id="",
+        party_pet_ids=(),
     ):
         from .pets import PetRecord
         from .quests import QuestProgress
@@ -154,6 +156,8 @@ class RpgRuntimeState:
         if any(not isinstance(p, PetRecord) for p in self.pets):
             raise TypeError("pets must contain PetRecord values")
         self.active_pet_id = str(active_pet_id or "")
+        owned = {p.instance_id for p in self.pets}
+        self.party_pet_ids = tuple(dict.fromkeys(str(x) for x in party_pet_ids if str(x) in owned))
         self.world = world if world is not None else WorldRecord()
         self.equipment_bag = list(
             equipment_bag or []
@@ -345,6 +349,7 @@ class RpgRuntimeState:
             "equipment_bag": [item.to_data() for item in self.equipment_bag],
             **({"pets": [p.to_data() for p in self.pets]} if self.pets else {}),
             **({"active_pet_id": self.active_pet_id} if self.active_pet_id else {}),
+            **({"party_pet_ids": list(self.party_pet_ids)} if self.party_pet_ids else {}),
         }
 
     @classmethod
@@ -389,7 +394,7 @@ class RpgRuntimeState:
             if version == 2
             else expected_v1
         )
-        if set(data) - {"pets", "active_pet_id"} != expected:
+        if set(data) - {"pets", "active_pet_id", "party_pet_ids"} != expected:
             raise ValueError("invalid RPG runtime state")
         result = cls(
             inventory=Inventory.from_data(data["inventory"]),
@@ -442,6 +447,7 @@ class RpgRuntimeState:
             ],
             pets=[PetRecord.from_data(raw) for raw in data.get("pets", ())],
             active_pet_id=data.get("active_pet_id", ""),
+            party_pet_ids=data.get("party_pet_ids", ()),
         )
         result.bind_database(database)
         result.validate(database)

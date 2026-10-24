@@ -79,6 +79,8 @@ class TurnsMixin:
         delay, self._turn_delay = getattr(self, "_turn_delay", 0.0), 0.0
         result = self.battle.advance_turn(recovery=delay)
         self.settle_objectives()
+        if self.battle is not None and self.battle.benched:
+            self._refill_slots("enemies")  # the foes' bench fills their empty slots at once
         return result
 
     def settle_objectives(self):
@@ -108,29 +110,77 @@ class TurnsMixin:
         binding = self.project.rpg_database.enemy_behavior_bindings.get(enemy_id)
         if binding is not None:
             return self.enemy_turn(member_id, binding.ai_id)
-        definition = self.project.rpg_database.enemies.get(enemy_id)
-        if definition is None or not definition.abilities:
-            return None
-        ability_id = definition.abilities[0]
+        record = self.foe_record(member_id)
+        if record is not None:  # a creature: its planned move, else one with uses left
+            planned = getattr(self, "_planned", {}).pop(str(member_id), None)
+            ability_id = planned if planned is not None else self._creature_move(member_id)
+            if ability_id is None:
+                if self.out_of_uses_move(member_id):
+                    targets = self.default_targets(member_id, self.out_of_uses_move(member_id))
+                    return self.use_out_of_uses_move(member_id, targets)
+                return None
+        else:
+            definition = self.project.rpg_database.enemies.get(enemy_id)
+            if definition is None or not definition.abilities:
+                return None
+            ability_id = definition.abilities[0]
         targets = self.default_targets(member_id, ability_id)
         if not targets:
             return None
-        before = self._knockout_values(targets)
-        result = self.execute(member_id, ability_id, targets)
-        self._log(
-            "action",
-            member_id=str(member_id),
-            ability_id=ability_id,
-            target_ids=targets,
-            outcomes=self._action_outcomes(member_id, ability_id, targets, before),
-        )
-        if getattr(
-            result, "success", True
+        # the same per-hit path as a hero's action: its hits roll their checks (a miss, a
+        # critical blow) and the action is logged there
+        offensive = self.ability_relation(ability_id) == TargetRelation.OPPONENT
+        targets, self._forced_cast = self._override_targets(member_id, targets)
+        try:
+            results = self._repeat_action(member_id, ability_id, targets, offensive, 1)
+        finally:
+            self._forced_cast = False
+        result = results[-1] if results else None
+        if record is not None:
+            self.spend_pet_use(record, ability_id)
+        if (
+            self.battle is not None and results and getattr(result, "success", True)
         ):  # enemy abilities apply their states, gains and commands too
             self._after_ability(
                 member_id, self.battle.ability_runtime.registry.get(ability_id), targets
             )
         return result
+
+    def _creature_move(self, member_id):
+        """A creature foe's move: one of its moves with uses left, at random (None: none)."""
+        record = self.foe_record(member_id)
+        usable = [
+            a
+            for a in self.battle.member(member_id).ability_ids
+            if record is None or self.pet_uses_left(record, a) != 0
+        ]
+        return self.battle.rng.choice(usable) if usable else None
+
+    def plan_round(self, choices=None):
+        """Everyone chooses before the round, as in creature games: ``choices`` gives the
+        heroes' (``{member id: ability id or None}``); every creature foe on the stage picks
+        its move now (used on its turn). The round then goes by the moves' ``priority``, then
+        speed (a speed-ordered scheduler). Returns ``{member id: priority}``."""
+        if self.battle is None:
+            return {}
+        registry = self.battle.ability_runtime.registry
+        self._planned = {}
+        priorities = {}
+        for member_id, ability_id in dict(choices or {}).items():
+            definition = registry.get(ability_id) if ability_id else None
+            priorities[str(member_id)] = int(getattr(definition, "priority", 0) or 0)
+        for member_id in self.active_enemy_ids():
+            if self.foe_record(member_id) is None:
+                continue
+            ability_id = self._creature_move(member_id)
+            if ability_id is None:
+                continue
+            self._planned[member_id] = ability_id
+            priorities[member_id] = int(getattr(registry.get(ability_id), "priority", 0) or 0)
+        scheduler = self.battle.scheduler
+        if scheduler is not None and hasattr(scheduler, "set_priorities"):
+            scheduler.set_priorities(priorities)
+        return priorities
 
     def run_enemy_turns(self, *, limit=1000):
         """Advance through enemy turns until a hero must act or the battle is decided.
@@ -141,7 +191,7 @@ class TurnsMixin:
         for _ in range(int(limit)):
             actor_id = self.current_turn_actor()
             if actor_id is None or self.battle.member(actor_id).side != "enemies":
-                if not self.active_hero_ids():
+                if not self.active_hero_ids() and not self.switch_needed("heroes"):
                     self._log(
                         "battle_finished",
                         data={"winning_sides": ("enemies",), "defeated_sides": ("heroes",)},
@@ -319,6 +369,7 @@ class TurnsMixin:
         )
 
     def _write_battle_heroes_to_save(self):
+        self._write_battle_pets_to_save()
         for member in self.battle.members.values():  # the weather tag lasts one battle
             tags = member.subject.tags
             for tag in [t for t in tags.values() if t.startswith(self.WEATHER_TAG_PREFIX)]:

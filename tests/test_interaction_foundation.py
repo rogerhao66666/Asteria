@@ -70,6 +70,21 @@ def test_action_button_is_edge_triggered_and_returns_event_start_seam():
     assert controller.step(pressed, scene, hero, "down") is not None
 
 
+def test_a_release_seen_while_an_event_runs_lets_the_next_press_trigger():
+    scene = Scene("Town")
+    hero = scene.add_entity(Entity("Hero"))
+    hero.add_component(Transform(10, 10))
+    make_interactable(scene, "Sign", 10, 20, "event-sign")
+    controller = InteractionController()
+    down, up = InputSnapshot({"interact": 1.0}), InputSnapshot({"interact": 0.0})
+
+    assert controller.step(down, scene, hero, "down") is not None  # a talk starts
+    controller.observe(up)  # the release arrives while the talk's event runs
+    assert controller.step(down, scene, hero, "down") is not None
+    controller.observe(down)  # the press that closes a talk is still held when it ends
+    assert controller.step(down, scene, hero, "down") is None
+
+
 def test_default_local_scope_uses_stable_entity_id():
     scene = Scene("Town")
     hero = scene.add_entity(Entity("Hero"))

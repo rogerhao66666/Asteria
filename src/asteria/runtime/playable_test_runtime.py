@@ -214,12 +214,16 @@ class PlayableTestRuntime(
         self._pause_menu = MenuCursor(options, icons, keys=keys)
         self._extra_screen = None
         self._pets_screen = None
+        self._creature_menu = None  # field.creature_menu: the start menu and its screens
         self._game_over_menu = MenuCursor(
             GAME_OVER_OPTIONS, keys=text_keys("game_over", GAME_OVER_OPTIONS)
         )
         self._shop_screen = None
         self._quest_return = "field"
         self._capture_menu = False
+        self._creature_battle = None  # the one-on-one creature battle screen while it runs
+        self._capture_item_menu = None  # the target whose capture item is being chosen
+        self._switch_menu = False  # a creature fell: choosing who comes in from the bench
         self._crafting_screen = None
         self._service_screen = None
         self._list_scroll = 0
@@ -599,8 +603,12 @@ class PlayableTestRuntime(
                 if request.name == "PLAY_BGM":
                     self.game.note_music_heard(request.args.get("asset_id", ""))
                     self._bgm_override = request.args.get("asset_id", "")
+                    # a temporary track (a trainer's encounter music) lasts until a battle
+                    self._bgm_temporary = bool(request.args.get("temporary"))
                 elif request.name == "STOP_BGM":
                     self._bgm_override = ""
+                elif request.name == "RESTORE_BGM":  # back to the area's own music
+                    self._bgm_override, self._bgm_temporary = None, False
         for cue in getattr(self._battle_presentation, "audio_cues", ()):
             self._sound(dict(cue.payload).get("asset_id"))
         if hasattr(self._battle_presentation, "audio_cues"):
@@ -685,12 +693,29 @@ class PlayableTestRuntime(
                 self._ui_mode = "pause"
             else:
                 self._extra_screen.draw()
+        elif self._ui_mode == "creature_menu":  # the start menu in the game's own art
+            menu = self._creature_menu
+            menu.update(dt, events)
+            if menu.done:
+                self._creature_menu = None
+                self._ui_mode = "field"
+                self._draw_field(False)
+            else:
+                from asteria.runtime.creature_menu import OVERLAY_PHASES
+
+                if menu.phase in OVERLAY_PHASES:
+                    self._draw_field(False)
+                menu.draw()
         elif self._ui_mode == "pets":
             self._pets_screen.handle(dt, events)
             if self._pets_screen.closed:
-                self._ui_mode = "pause"
+                self._ui_mode = getattr(self._pets_screen, "back", "pause")
             else:
                 self._pets_screen.draw()
+        elif self._ui_mode == "learn":  # a creature learned a move past its limit
+            self._learn_input(events)
+            self._draw_field(False)
+            self._draw_learn_prompt()
         elif self._ui_mode == "skills":
             self._skill_tree.handle(dt, events)
             if self._skill_tree.closed:
@@ -703,6 +728,36 @@ class PlayableTestRuntime(
             self._draw_overlay_menu(
                 title, self._game_over_menu, base="battle", screen_id="game_over"
             )
+        elif self._creature_battle is not None:  # the creature battle screen (one on one)
+            screen = self._creature_battle
+            if not self._dialogue_input(events):
+                screen.update(dt, events)
+            screen.draw()
+            self._draw_dialogue()
+            if screen.done:
+                self._creature_battle = None
+                if screen.defeated and "defeat_continues" in screen.tags:
+                    self.game.mode = "field"  # a battle the story goes on after, lost or won
+                    self.game.battle = None
+                elif screen.defeated and self.game.rules.defeat == "respawn":
+                    self.game.respawn_after_defeat()  # healed at the last respawn point
+                elif screen.defeated:
+                    self.game.mode = "field"
+                    self.game.battle = None
+                    self._game_over_menu.index = 0
+                    self._ui_mode = "game_over"
+                    self.audio.stop_music(fade_out=0.5)
+                else:
+                    self.game.mode = "field"
+        elif (
+            self.game.mode == "battle" and self._creature_style() and not self._victory
+        ):  # a creature battle started outside the field (an event, a test): its own screen
+            from asteria.runtime.creature_battle import CreatureBattleScreen
+
+            self._creature_battle = CreatureBattleScreen(self)
+            self._end_temporary_music()
+            self._music(self._creature_battle.music("start") or self.manifest["battle"].get("bgm"))
+            self._creature_battle.draw()
         elif self.game.mode == "battle" or self._victory:
             if self.game.mode == "battle":
                 with self.profiler.section("events"):
@@ -734,6 +789,19 @@ class PlayableTestRuntime(
             ):
                 self._shop_screen = ShopScreen(self.game)
                 self._ui_mode = "shop"
+            busy = (
+                getattr(self, "_network_event_busy", False)
+                if self._multiplayer_connected()
+                else self.game.event_busy
+            )
+            if self._ui_mode == "field" and self.game.pet_storage_requested and not busy:
+                from asteria.runtime.pets_screen import PetsScreen
+
+                self.game.pet_storage_requested = False
+                self._pets_screen = PetsScreen(self, back="field", storage=True)
+                self._ui_mode = "pets"
+            if self._ui_mode == "field" and self.game.pending_pet_moves() and not busy:
+                self._ui_mode = "learn"
             if (
                 self._ui_mode == "field"
                 and self.game.open_crafting_station is not None
@@ -745,15 +813,7 @@ class PlayableTestRuntime(
             ):
                 self._open_crafting(self.game.open_crafting_station, back="field")
             service = getattr(self.game, "open_service", None)
-            if (
-                self._ui_mode == "field"
-                and service
-                and not (
-                    getattr(self, "_network_event_busy", False)
-                    if self._multiplayer_connected()
-                    else self.game.event_busy
-                )
-            ):
+            if self._ui_mode == "field" and service and not busy:
                 from asteria.runtime.service_screens import open_service
 
                 self.game.open_service = None
@@ -788,7 +848,16 @@ class PlayableTestRuntime(
             )  # VFX-01 emitters
             self.field_effects.update(dt)
             self._skeleton_scene_runtime.update(self.game.scene, dt)
-            if self.game.mode == "battle":
+            if self.game.mode == "battle" and self._creature_style():
+                from asteria.runtime.creature_battle import CreatureBattleScreen
+
+                self._creature_battle = CreatureBattleScreen(self)
+                self._end_temporary_music()
+                self._music(
+                    self._creature_battle.music("start") or self.manifest["battle"].get("bgm")
+                )
+                self._creature_battle.draw()
+            elif self.game.mode == "battle":
                 self._turn_actor = None
                 self._battle_presentation.begin()
                 self._music(self.manifest["battle"].get("bgm"))
@@ -796,7 +865,9 @@ class PlayableTestRuntime(
                 self._present_battle(dt)
             else:
                 override = getattr(self, "_bgm_override", None)  # a story event chose the track
-                self._music(self.manifest["field"].get("bgm") if override is None else override)
+                if override is None:  # else the map area's own music, else the field's
+                    override = self.game.area_music or self.manifest["field"].get("bgm")
+                self._music(override)
                 self._preload_battle_images()
                 self._draw_field(moving)
 

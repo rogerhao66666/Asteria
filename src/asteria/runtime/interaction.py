@@ -93,6 +93,11 @@ class InteractionController:
     def reset(self):
         self._was_down = False
 
+    def observe(self, input_snapshot):
+        """Track the button without triggering (while an event runs), so its release is seen
+        and the next press counts as new."""
+        self._was_down = float(input_snapshot.actions.get(self.action, 0.0)) > 0.0
+
     def step(self, input_snapshot, scene, actor, facing: str):
         down = float(input_snapshot.actions.get(self.action, 0.0)) > 0.0
         pressed = down and not self._was_down

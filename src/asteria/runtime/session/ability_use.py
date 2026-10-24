@@ -181,6 +181,9 @@ class AbilityUseMixin:
             self._forced_cast = False
             for tag in added:
                 actor_tags.remove(tag)
+        record = self.unit_record(actor_id)
+        if record is not None:  # a creature's move: one of its uses is spent
+            self.spend_pet_use(record, ability_id)
         if any(getattr(r, "success", True) for r in results):
             if chosen is not None and chosen.get("apply_states"):
                 definition = dataclasses.replace(
@@ -365,6 +368,12 @@ class AbilityUseMixin:
                     )
                     self._log("resource_gain", member_id=str(member_id), data=dict(gain))
         for entry in definition.apply_states:
+            outcome = getattr(self, "last_outcome_tags", set())
+            if set(entry.get("unless_outcome", ())) & outcome:
+                continue  # the action missed: nothing of it lands
+            chance = entry.get("chance", 1.0)
+            if chance < 1.0 and battle.rng.random() >= chance:
+                continue  # its secondary effect did not come this time
             if entry["to"] == "self":
                 members = (actor_id,)
             elif entry["to"] == "targets":
@@ -392,7 +401,12 @@ class AbilityUseMixin:
                     self._log(
                         "state_applied",
                         member_id=str(member_id),
-                        data={"state": entry["state"], "applied": result.applied},
+                        data={
+                            "state": entry["state"],
+                            "applied": result.applied,
+                            "reason": result.reason,
+                            "chance": entry.get("chance", 1.0),
+                        },
                     )
         for command in definition.commands:
             first = targets[0] if targets else ""
@@ -439,6 +453,9 @@ class AbilityUseMixin:
             and battle.extensions.uses_left(actor_id, ability_id) == 0
         ):
             return tr("battle.reason.no_uses", "No uses left this battle")
+        record = self.unit_record(actor_id)
+        if record is not None and self.pet_uses_left(record, ability_id) == 0:
+            return tr("battle.reason.no_pp", "No uses left")
         wanted = getattr(definition, "requires_pet", "")
         if wanted:
             pet = self.active_pet()
@@ -595,6 +612,39 @@ class AbilityUseMixin:
         for target_id in targets:
             subject = battle.member(target_id).subject
             for effect in item.use_effects:
-                apply_effect(effect, subject.stats, subject.resources, subject.tags)
+                apply_effect(effect, subject.stats, subject.resources, subject.tags,
+                             formula_context=self_context(subject))  # fmt: skip
+            cure_states(subject, item)
         self._log("item_used", member_id=str(actor_id), data={"item": item.item_id})
         return ()
+
+
+def cured_states(item):
+    """The states an item takes away: its ``cures:<state id>`` tags (``cures:*``: all)."""
+    return tuple(t.split(":", 1)[1] for t in item.tags if str(t).startswith("cures:"))
+
+
+def cure_states(subject, item):
+    """Remove from ``subject`` the states ``item`` cures; returns the ids removed."""
+    wanted = cured_states(item)
+    states = getattr(subject, "states", None)
+    if not wanted or states is None:
+        return ()
+    removed = []
+    for active in tuple(states.active_states()):
+        if "*" in wanted or active.state_id in wanted:
+            states.remove(active.state_id)
+            removed.append(active.state_id)
+    return tuple(removed)
+
+
+def self_context(subject):
+    """A formula context where the subject is both the one acting and the one affected (an
+    item used on it)."""
+    from asteria.gameplay.formulas import FormulaContext
+
+    return FormulaContext(
+        subject.stats, subject.resources, subject.tags,
+        subject.stats, subject.resources, subject.tags,
+        source_subject=subject, target_subject=subject,
+    )  # fmt: skip

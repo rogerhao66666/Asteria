@@ -251,7 +251,9 @@ class AbilityDefinition:
     cooldown_turns: int = 0
     # Battle extras, all optional and left out of the data while empty:
     # battle_costs           {resource: amount} paid from battle resources (e.g. boost points)
-    # hits                   [{"tags": [...], "power": 1.0}] - the action lands once per hit; each
+    # hits                   [{"tags": [...], "power": 1.0, "checks": [...],
+    #                          "first_checks": [...]}]
+    #                        - the action lands once per hit; each
     # hit adds its
     # tags (damage types) for the interaction rules and scales the damage by its power
     # battle_resource_gains  [{"to": "self" | "targets" | "allies", "resource": id, "amount": n}]
@@ -261,7 +263,8 @@ class AbilityDefinition:
     #                        "@actor" / "@target" in string args are replaced by member ids
     # concoct_station        the action combines ingredients the player picks (recipes of that
     # station)
-    # apply_states           [{"state": id, "to": "targets" | "self" | "allies", "remove": false}]
+    # apply_states           [{"state": id, "to": "targets" | "self" | "allies", "remove": false,
+    #                          "chance": 1.0, "unless_outcome": [tags of a missed check]}]
     # after the
     # action: states go through the battle's state policies (chance, immunity, duration)
     battle_costs: dict = None
@@ -319,9 +322,27 @@ class AbilityDefinition:
     # each chosen option adds its tags to every hit, its "power" payload scales them and its
     # "resource_costs" / "battle_costs" payloads are paid on top). Written only when set.
     input_workflow: str = ""
+    # uses the ability has before something restores them (a creature's move "PP", kept
+    # between battles on the owned pet; 0 = unlimited). Written only when set.
+    max_uses: int = 0
+    # turn order in a round where everyone chooses first: a higher priority acts before a
+    # lower one whatever the speed (0 = normal). Written only when set.
+    priority: int = 0
+    # a share of the damage it deals that heals the user (drain), or that the user takes
+    # itself (recoil); 0 = none. Written only when set.
+    drain: float = 0.0
+    recoil: float = 0.0
+    # how many times it strikes in one use, by weight: {2: 3, 3: 3, 4: 1, 5: 1} - one count
+    # is rolled each use ({} = once). Written only when set.
+    hit_counts: dict = None
     OPTIONAL_DATA = {
+        "priority": 0,
+        "drain": 0.0,
+        "recoil": 0.0,
+        "hit_counts": {},
         "menu_category": "",
         "input_workflow": "",
+        "max_uses": 0,
         "requires_pet": "",
         "requires_items": {},
         "item_costs": {},
@@ -377,8 +398,13 @@ class AbilityDefinition:
         follow_tags=None,
         forms=(),
         requires_pet="",
+        max_uses=0,
         menu_category="",
         input_workflow="",
+        priority=0,
+        drain=0.0,
+        recoil=0.0,
+        hit_counts=None,
     ):
         ability_id = str(ability_id).strip()
         if not ability_id:
@@ -414,7 +440,7 @@ class AbilityDefinition:
         clean_hits = []
         for hit in hits:
             hit = dict(hit)
-            unknown = set(hit) - {"tags", "power", "checks", "kill"}
+            unknown = set(hit) - {"tags", "power", "checks", "first_checks", "kill"}
             if unknown:
                 raise ValueError(f"unknown hit fields: {sorted(unknown)}")
             clean = {
@@ -424,6 +450,11 @@ class AbilityDefinition:
             checks = [str(c).strip() for c in hit.get("checks", ()) if str(c).strip()]
             if checks:
                 clean["checks"] = checks
+            # checks rolled once on the first strike of a use and kept for its later strikes
+            # (a multi-strike move that lands or misses as a whole)
+            first = [str(c).strip() for c in hit.get("first_checks", ()) if str(c).strip()]
+            if first:
+                clean["first_checks"] = first
             kill = dict(hit.get("kill") or {})
             if kill and (kill.get("resource") or float(kill.get("chance", 1.0)) > 0):
                 clean["kill"] = _clean_kill(kill)  # a blank editor template stays out
@@ -464,13 +495,20 @@ class AbilityDefinition:
                 raise ValueError("apply_states entries need a state")
             if entry.get("to", "targets") not in ("self", "targets", "allies"):
                 raise ValueError('apply_states "to" must be self, targets or allies')
-            states.append(
-                {
-                    "state": str(entry["state"]),
-                    "to": entry.get("to", "targets"),
-                    "remove": bool(entry.get("remove", False)),
-                }
-            )
+            clean = {
+                "state": str(entry["state"]),
+                "to": entry.get("to", "targets"),
+                "remove": bool(entry.get("remove", False)),
+            }
+            chance = float(entry.get("chance", 1.0))  # a move's own odds (a secondary effect)
+            if not 0.0 <= chance <= 1.0:
+                raise ValueError("apply_states chance must be between 0 and 1")
+            if chance != 1.0:
+                clean["chance"] = chance
+            unless = [str(t).strip() for t in entry.get("unless_outcome", ()) if str(t).strip()]
+            if unless:  # not when the action's checks came out so (a miss)
+                clean["unless_outcome"] = unless
+            states.append(clean)
         object.__setattr__(self, "apply_states", tuple(states))
         object.__setattr__(self, "timeline_id", str(timeline_id or "").strip())
         cooldown_seconds = float(cooldown_seconds)
@@ -507,6 +545,23 @@ class AbilityDefinition:
             raise ValueError("gauge_costs needs ids and amounts > 0")
         object.__setattr__(self, "gauge_costs", gauges)
         object.__setattr__(self, "requires_pet", str(requires_pet or "").strip())
+        if int(max_uses) < 0:
+            raise ValueError("max_uses must be >= 0")
+        object.__setattr__(self, "max_uses", int(max_uses))
+        object.__setattr__(self, "priority", int(priority))
+        for name, value in (("drain", drain), ("recoil", recoil)):
+            value = float(value)
+            if not isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be >= 0")
+            object.__setattr__(self, name, value)
+        counts = {}
+        for count, weight in dict(hit_counts or {}).items():
+            count, weight = int(count), float(weight)
+            if count < 1 or weight < 0 or not isfinite(weight):
+                raise ValueError("hit_counts are counts >= 1 with weights >= 0")
+            if weight:
+                counts[count] = weight
+        object.__setattr__(self, "hit_counts", dict(sorted(counts.items())))
         object.__setattr__(self, "menu_category", str(menu_category or "").strip())
         object.__setattr__(self, "input_workflow", str(input_workflow or "").strip())
 
@@ -552,6 +607,15 @@ class AbilityDefinition:
             **({"currency_costs": dict(self.currency_costs)} if self.currency_costs else {}),
             **({"gauge_costs": dict(self.gauge_costs)} if self.gauge_costs else {}),
             **({"requires_pet": self.requires_pet} if self.requires_pet else {}),
+            **({"max_uses": self.max_uses} if self.max_uses else {}),
+            **({"priority": self.priority} if self.priority else {}),
+            **({"drain": self.drain} if self.drain else {}),
+            **({"recoil": self.recoil} if self.recoil else {}),
+            **(
+                {"hit_counts": {str(k): v for k, v in self.hit_counts.items()}}
+                if self.hit_counts
+                else {}
+            ),
             **({"menu_category": self.menu_category} if self.menu_category else {}),
             **({"input_workflow": self.input_workflow} if self.input_workflow else {}),
         }
@@ -605,6 +669,11 @@ class AbilityDefinition:
             currency_costs=data.get("currency_costs"),
             gauge_costs=data.get("gauge_costs"),
             requires_pet=data.get("requires_pet", ""),
+            max_uses=data.get("max_uses", 0),
+            priority=data.get("priority", 0),
+            drain=data.get("drain", 0.0),
+            recoil=data.get("recoil", 0.0),
+            hit_counts=data.get("hit_counts"),
             menu_category=data.get("menu_category", ""),
             input_workflow=data.get("input_workflow", ""),
         )
@@ -660,7 +729,7 @@ def _effective_stats(subject: GameplaySubject):
     return StatBlock(values)
 
 
-def _formula_context(source: GameplaySubject, target: GameplaySubject | None):
+def _formula_context(source: GameplaySubject, target: GameplaySubject | None, rng=None):
     if target is None:
         target = source
     return FormulaContext(
@@ -670,6 +739,9 @@ def _formula_context(source: GameplaySubject, target: GameplaySubject | None):
         _effective_stats(target),
         target.resources,
         target.tags,
+        source,
+        target,
+        rng,
     )
 
 
@@ -702,6 +774,7 @@ class AbilityRuntime:
         if not isinstance(registry, AbilityRegistry):
             raise TypeError("registry must be AbilityRegistry")
         self.registry = registry
+        self.rng = None  # the dice formula expressions roll (a battle hands its own)
 
     def execute(
         self,
@@ -739,7 +812,7 @@ class AbilityRuntime:
             errors.append("conditions_failed")
 
         evaluated_costs = []
-        formula_context = _formula_context(source.subject, condition_target)
+        formula_context = _formula_context(source.subject, condition_target, self.rng)
         for cost in () if waive_costs else definition.costs:
             try:
                 amount = float(cost.amount.evaluate(formula_context))
@@ -795,7 +868,7 @@ class AbilityRuntime:
                     staged_source.stats,
                     staged_source.resources,
                     staged_source.tags,
-                    formula_context=_formula_context(staged_source, staged_source),
+                    formula_context=_formula_context(staged_source, staged_source, self.rng),
                 )
                 effect_results.append((source.target_id, result))
             else:
@@ -820,7 +893,7 @@ class AbilityRuntime:
                         staged_target.stats,
                         staged_target.resources,
                         staged_target.tags,
-                        formula_context=_formula_context(staged_source, staged_target),
+                        formula_context=_formula_context(staged_source, staged_target, self.rng),
                         value_transform=transform,
                     )
                     effect_results.append((target.target_id, result))

@@ -30,6 +30,8 @@ class BattleEventsMixin:
             "rpg.battle.turn_skipped", self._turn_skipped
         )  # asleep, stunned, broken...: shown in battle
         bus.subscribe("rpg.battle.after_action", self._wear_equipment)  # durability
+        for hook in ("state_ticked", "state_expired", "state_removed"):  # told in battle
+            bus.subscribe(f"rpg.battle.{hook}", self._state_event)
         bindings = [
             b
             for b in self.project.lifecycle_event_bindings
@@ -281,6 +283,27 @@ class BattleEventsMixin:
             label = "/".join(n.split(".")[-1] for n in names)
             found.append((label, (kind, rule.rule_id) in self.revealed_weaknesses))
         return found
+
+    def _state_event(self, event):
+        """A state hurt its holder, ran out or was cured: logged as ``state_tick``,
+        ``state_expired`` or ``state_removed`` (data: ``state``, ``changes``, ``trigger``)."""
+        data = dict(event.data or {})
+        kind = {
+            "rpg.battle.state_ticked": "state_tick",
+            "rpg.battle.state_expired": "state_expired",
+            "rpg.battle.state_removed": "state_removed",
+        }.get(event.name, "")
+        if not kind:
+            return
+        self._log(
+            kind,
+            member_id=str(event.source),
+            data={
+                "state": data.get("state_id", ""),
+                "changes": dict(data.get("changes", {})),
+                "trigger": data.get("trigger", ""),
+            },
+        )
 
     def _turn_skipped(self, event):
         data = event.data or {}

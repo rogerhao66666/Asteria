@@ -39,6 +39,8 @@ def load_tileset(path):
                 td["collision"],
                 td["terrain"],
                 tuple(td["tags"]),
+                tuple(int(f) for f in td.get("animation", ())),
+                float(td.get("frame_ms", 0.0)),
             )
             for tile_id, td in data["tiles"].items()
         },

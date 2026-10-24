@@ -32,6 +32,7 @@ STANDARD_WORLD_COMMANDS = (
     "OPEN_GACHA",
     "PLAY_BGM",
     "STOP_BGM",
+    "RESTORE_BGM",
     "PLAY_SE",
     "SCREEN_FADE",
     "CAMERA_FOCUS",
@@ -52,6 +53,8 @@ STANDARD_WORLD_COMMANDS = (
     "SET_LOCALE",
     "NEW_GAME_PLUS",
     "REST_PARTY",
+    "HEAL_PETS",
+    "PET_STORAGE",
     "GRANT_EXPERIENCE",
     "REFINE_EQUIPMENT",
     "SOCKET_ITEM",
@@ -65,6 +68,7 @@ STANDARD_WORLD_COMMANDS = (
 PRESENTATION_COMMANDS = (
     "PLAY_BGM",
     "STOP_BGM",
+    "RESTORE_BGM",
     "PLAY_SE",
     "SCREEN_FADE",
     "CAMERA_FOCUS",
@@ -93,8 +97,9 @@ WORLD_COMMAND_ARGUMENTS = {
     "OPEN_QUEST_BOARD": ("board_id",),
     "OPEN_RECRUIT": ("office_id",),
     "OPEN_GACHA": ("banner_id",),
-    "PLAY_BGM": ("asset_id", "fade", "volume"),
+    "PLAY_BGM": ("asset_id", "fade", "volume", "temporary"),
     "STOP_BGM": ("fade",),
+    "RESTORE_BGM": (),
     "PLAY_SE": ("asset_id", "volume"),
     "SCREEN_FADE": ("to", "duration", "color"),
     "PLAY_VFX": ("asset_id", "entity", "x", "y", "scale", "anchor"),
@@ -115,6 +120,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "NEW_GAME_PLUS": ("rules_id",),
     "LEAVE_PARTY": ("actor_id",),
     "REST_PARTY": (),
+    "HEAL_PETS": ("party_only",),
+    "PET_STORAGE": (),
     "GRANT_EXPERIENCE": ("actor_id", "amount", "threshold", "points", "level_track"),
     "REFINE_EQUIPMENT": ("actor_id", "instance_id", "protect"),
     "SOCKET_ITEM": ("actor_id", "instance_id", "socket_id", "item_id"),
@@ -125,6 +132,15 @@ WORLD_COMMAND_ARGUMENTS = {
     "DISASSEMBLE": ("item_id",),
     "WALK_TO": ("entity", "x", "y", "speed"),
     "MOVE_ROUTE": ("entity", "route", "step", "speed"),
+    "GRID_ROUTE": ("entity", "steps"),
+    "SET_POSITION": ("entity", "x", "y", "facing", "permanent"),
+    "GIVE_PET": ("species_id", "level", "nickname", "moves"),
+    "SET_LOOK": ("entity", "sprite_sheet_asset_id", "clip_set_id"),
+    "SET_RESPAWN": ("scene_id", "x", "y", "facing"),
+    "SHOW_ENTITY": ("entity", "shown"),
+    "SET_MOVEMENT": ("entity", "behaviour", "facing"),
+    "PARTY_STASH": (),
+    "PARTY_RESTORE": (),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
     "SET_ENTITY_ICON": ("entity", "icon_id"),
     "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
@@ -426,6 +442,13 @@ def register_standard_world_commands(router, session):
     gear_command("LEAVE_PARTY", lambda c: session.leave_party(str(_required(c, "actor_id"))))
     gear_command("REST_PARTY", lambda c: session.rest_party())
     gear_command(
+        "HEAL_PETS",
+        lambda c: session.heal_pets(
+            party_only=str(c.args.get("party_only", "")).lower() in ("1", "true", "yes")
+        ),
+    )
+    gear_command("PET_STORAGE", lambda c: session.open_pet_storage())
+    gear_command(
         "REFINE_EQUIPMENT",
         lambda c: session.refine_equipment(
             str(_required(c, "actor_id")),
@@ -558,6 +581,86 @@ def register_standard_world_commands(router, session):
 
     router.register("SET_ENTITY_ICON", set_entity_icon)
     router.register("MOVE_ROUTE", move_route)
+
+    def _entity_or_self(command):
+        entity = _required(command, "entity")  # "self": the entity whose event this is
+        return command.source_entity_id or entity if entity == "self" else entity
+
+    def grid_route(command):
+        steps = command.args.get("steps") or ()
+        if isinstance(steps, str):
+            steps = [x.strip() for x in steps.split(",") if x.strip()]
+        try:
+            return session.grid_route(_entity_or_self(command), steps)
+        except Exception as exc:  # noqa: BLE001 - a bad route is the program's mistake
+            raise WorldCommandError(f"GRID_ROUTE: {exc}") from exc
+
+    def set_position(command):
+        return session.set_entity_position(
+            _entity_or_self(command),
+            _amount(command, "x", 0.0),
+            _amount(command, "y", 0.0),
+            facing=command.args.get("facing") or None,
+            permanent=bool(command.args.get("permanent")),
+        )
+
+    def give_pet(command):
+        pet = session.add_pet(
+            str(_required(command, "species_id")),
+            level=int(_amount(command, "level", 1)),
+            nickname=str(command.args.get("nickname") or ""),
+        )
+        if command.args.get("moves"):
+            pet.moves = [str(m) for m in command.args["moves"]]
+        return pet.instance_id
+
+    def set_look(command):
+        from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+
+        entity = session._sequence_entity(_required(command, "entity"))
+        sprite, animator = entity.try_get(SpriteRenderer2D), entity.try_get(Animator2DComponent)
+        if sprite is not None and command.args.get("sprite_sheet_asset_id"):
+            sprite.sprite_sheet_asset_id = str(command.args["sprite_sheet_asset_id"])
+        if animator is not None and command.args.get("clip_set_id"):
+            animator.clip_set_id = str(command.args["clip_set_id"])
+        return entity.id
+
+    def set_respawn(command):
+        session.save.event_context.set_variable(
+            session.RESPAWN_VARIABLE,
+            "|".join(
+                (
+                    str(_required(command, "scene_id")),
+                    str(_amount(command, "x", 0.0)),
+                    str(_amount(command, "y", 0.0)),
+                    str(command.args.get("facing") or "down"),
+                )
+            ),
+        )
+        return True
+
+    def show_entity(command):
+        return session.show_entity(_entity_or_self(command), bool(command.args.get("shown", True)))
+
+    def set_movement(command):
+        return session.set_entity_movement(
+            _entity_or_self(command),
+            str(command.args.get("behaviour") or ""),
+            str(command.args.get("facing") or ""),
+        )
+
+    for name, handler in (
+        ("PARTY_STASH", lambda command: session.stash_pets()),
+        ("PARTY_RESTORE", lambda command: session.restore_pets()),
+        ("SET_MOVEMENT", set_movement),
+        ("SHOW_ENTITY", show_entity),
+        ("GRID_ROUTE", grid_route),
+        ("SET_POSITION", set_position),
+        ("GIVE_PET", give_pet),
+        ("SET_LOOK", set_look),
+        ("SET_RESPAWN", set_respawn),
+    ):
+        router.register(name, handler)
     router.register("SHOW_BALLOON", show_balloon)
 
     def set_battle_weather(command):

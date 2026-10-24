@@ -52,9 +52,18 @@ class PartyMember:
     ability_ids: tuple[str, ...] = ()
     initiative: float = 0.0
     initiative_stat: str = ""
+    initiative_expression: str = ""
 
     def __init__(
-        self, member_id, side, subject, *, ability_ids=(), initiative=0.0, initiative_stat=""
+        self,
+        member_id,
+        side,
+        subject,
+        *,
+        ability_ids=(),
+        initiative=0.0,
+        initiative_stat="",
+        initiative_expression="",
     ):
         if not isinstance(subject, GameplaySubject):
             raise TypeError("subject must be GameplaySubject")
@@ -68,12 +77,18 @@ class PartyMember:
         )
         object.__setattr__(self, "initiative", _number(initiative, "initiative"))
         object.__setattr__(self, "initiative_stat", str(initiative_stat or ""))
+        object.__setattr__(self, "initiative_expression", str(initiative_expression or ""))
 
     @property
     def current_initiative(self):
         """Initiative now: the ``initiative_stat`` of the subject when named (so speed changes in
         battle -
-        haste, slow - move later turns), else the fixed ``initiative``."""
+        haste, slow - move later turns), else the fixed ``initiative``; an
+        ``initiative_expression`` (of ``self``) wins over both."""
+        if self.initiative_expression:
+            from asteria.gameplay.expressions import SubjectView, evaluate
+
+            return evaluate(self.initiative_expression, {"self": SubjectView(self.subject)})
         stats = self.subject.stats
         if self.initiative_stat and stats.contains(self.initiative_stat):
             return float(stats.get(self.initiative_stat))
@@ -340,12 +355,17 @@ class BattleRuntime:
             raise ValueError("duplicate battle member id")
         self.members = {m.member_id: m for m in members}
         self.outcome_exempt = set()  # members whose survival does not keep their side alive
+        # members waiting off the stage (a creature party's bench): standing, but not acting,
+        # not targetable, and still keeping their side in the fight
+        self.benched = set()
         self._base_is_active = self.is_active
         self.combatants = CombatantLifecycleRuntime(
             members, hooks=hooks, initial_active=self._base_is_active
         )
         self.is_active = lambda member: (
-            self.combatants.is_active(member) and self._base_is_active(member)
+            self.combatants.is_active(member)
+            and self._base_is_active(member)
+            and member.member_id not in self.benched
         )
         self.objectives = BattleObjectiveRuntime(objective_definitions, hooks=hooks)
         self.escape_rules = {}
@@ -407,6 +427,14 @@ class BattleRuntime:
         )
         self.transactions = BattleTransactionRuntime(transaction_policies)
         self.rng = random.Random(rng_seed)
+        if getattr(self.ability_runtime, "rng", "absent") is None:
+            self.ability_runtime.rng = self.rng  # formula expressions roll the battle's dice
+        self.escape_attempts = {}  # side -> how many times it tried to run (escape formulas)
+        # set by the session from its battle rules: the expression every hit's damage goes
+        # through after the interaction rules, and the resource that is health
+        self.final_damage_expression = ""
+        self.knockout_resource_id = ""
+        self.battle_states.rng = self.rng  # prevent / cure chances and random durations
         if isinstance(extensions, BattleExtensionRules):
             extensions = BattleExtensionRuntime(extensions)
         # Optional rules layered on the core (taunt, life steal, use limits ...); see
@@ -435,7 +463,33 @@ class BattleRuntime:
 
     def can_act(self, member_id):
         member = self.member(member_id)
-        return self.combatants.can_act(member_id) and self._base_is_active(member)
+        return (
+            self.combatants.can_act(member_id)
+            and self._base_is_active(member)
+            and member_id not in self.benched
+        )
+
+    def standing(self, member):
+        """Conscious and present, on the stage or on the bench."""
+        return self.combatants.is_active(member) and self._base_is_active(member)
+
+    def bench(self, member_id):
+        """Take a member off the stage: it keeps its state, but neither acts nor can be
+        targeted until ``send_in``."""
+        member_id = str(member_id)
+        self.member(member_id)
+        self.benched.add(member_id)
+        self.turn_queue.remove_pending(member_id)
+        emit_hook(self.hooks, "rpg.battle.benched", source=member_id, data={})
+
+    def send_in(self, member_id):
+        """Bring a benched member onto the stage; its next turn comes with the next round."""
+        member_id = str(member_id)
+        member = self.member(member_id)
+        self.benched.discard(member_id)
+        if self.scheduler is not None and member_id not in self.scheduler._members:
+            self.scheduler.register_member(member)  # benching dropped it from the timeline
+        emit_hook(self.hooks, "rpg.battle.sent_in", source=member_id, data={})
 
     def incapacitate(self, member_id, *, state_id="incapacitated", targetable=True, reason=""):
         state = self.combatants.incapacitate(
@@ -544,6 +598,7 @@ class BattleRuntime:
     def attempt_escape(self, rule_id, *, rng=None):
         rule = self.escape_rules[str(rule_id)]
         result = attempt_escape(rule, self, rng=rng)
+        self.escape_attempts[rule.side] = self.escape_attempts.get(rule.side, 0) + 1
         if result.succeeded:
             self._escaped_sides.add(rule.side)
             for member in tuple(self.parties[rule.side].members):
@@ -780,13 +835,33 @@ class BattleRuntime:
         from .interactions import InteractionDisposition
 
         scale = float(getattr(self, "action_scale", 1.0))  # a hit's power (ability "hits")
+        final = self.final_damage_expression
+
+        def finish(target_id, magnitude):
+            """The damage after the rules, through the battle's final expression."""
+            if not final or magnitude <= 0:
+                return magnitude
+            from asteria.gameplay.expressions import SubjectView, evaluate
+
+            names = {
+                "value": float(magnitude),
+                "source": SubjectView(subjects[0]),
+                "target": SubjectView(subjects[1].get(target_id)),
+            }
+            return max(0.0, evaluate(final, names, self.rng))
+
         if not self.interactions.rules:
-            if scale == 1.0:
+            if scale == 1.0 and not final:
                 return None
 
             def scaled(target_id, operation, value):
                 harmful = operation.kind == EffectOperationKind.RESOURCE_DELTA and value < 0
-                return value * scale if harmful else value
+                if not harmful:
+                    return value
+                health = self.knockout_resource_id
+                if health and operation.target != health:
+                    return value * scale
+                return -finish(target_id, -value * scale)
 
             return scaled
         tags = self.ability_runtime.registry.require(ability_id).tags
@@ -804,7 +879,9 @@ class BattleRuntime:
                 return resolved.resolved_value
             if resolved.disposition == InteractionDisposition.REFLECT:
                 return (0.0, -resolved.resolved_value)
-            return -resolved.resolved_value
+            if operation.target != self.knockout_resource_id and self.knockout_resource_id:
+                return -resolved.resolved_value  # only the knockout resource is "damage"
+            return -finish(target_id, resolved.resolved_value)
 
         return transform
 
@@ -1215,9 +1292,13 @@ class BattleRuntime:
             )
         return entry
 
+    def _on_stage(self):
+        """Every member but the benched ones (their states wait with them)."""
+        return tuple(m for k, m in self.members.items() if k not in self.benched)
+
     def start_next_round(self):
         self.battle_resources.apply_trigger("rpg.battle.round_ended")
-        self.battle_states.apply_trigger("rpg.battle.round_ended", tuple(self.members.values()))
+        self.battle_states.apply_trigger("rpg.battle.round_ended", self._on_stage())
         emit_hook(
             self.hooks,
             "rpg.battle.round_ended",
@@ -1226,7 +1307,7 @@ class BattleRuntime:
         entries = self.turn_queue.start_round()
         self._resource_ready_entry = None
         self.battle_resources.apply_trigger("rpg.battle.round_started")
-        self.battle_states.apply_trigger("rpg.battle.round_started", tuple(self.members.values()))
+        self.battle_states.apply_trigger("rpg.battle.round_started", self._on_stage())
         emit_hook(
             self.hooks,
             "rpg.battle.round_started",
@@ -1277,7 +1358,10 @@ class BattleRuntime:
                 if any(
                     member.member_id in self.members
                     and member.member_id not in self.outcome_exempt
-                    and self.is_active(member)
+                    and (
+                        self.is_active(member)
+                        or (member.member_id in self.benched and self.standing(member))
+                    )
                     for member in party.members
                 ):
                     active_sides.append(side)

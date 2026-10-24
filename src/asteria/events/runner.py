@@ -225,6 +225,11 @@ class EventRunner:
                 self._return_from_event()
                 continue
 
+            if instruction.opcode == "EXIT":  # the whole event stops, called programs too
+                self.call_stack.clear()
+                self.vm.stop()
+                break
+
             if instruction.opcode == "WORLD":
                 self._dispatch_world_command(instruction)
                 continue
@@ -372,6 +377,7 @@ class EventRunner:
             variable_name=str(instruction.args.get("variable_name", "")),
             local_name=str(instruction.args.get("local_name", "")),
             prompt_key=str(instruction.args.get("prompt_key", "")),
+            box_at=instruction.args.get("box_at"),
         )
 
     def acknowledge_dialogue(self):
@@ -415,6 +421,7 @@ class EventRunner:
         return True
 
     def stop(self) -> None:
+        self.call_stack.clear()  # the programs that called this one stop too
         if self.vm is not None:
             self.vm.stop()
         for _, sequence in self.sequences:

@@ -7,6 +7,7 @@ import random
 from dataclasses import replace
 
 from asteria.core import Transform
+from asteria.events.world_commands import WorldCommand
 from asteria.rpg import (
     RpgActorSnapshot,
 )
@@ -53,6 +54,7 @@ class FieldPlayMixin:
         if self.mode != "field":
             raise GameSessionError("field input unavailable outside field mode")
         if self.event_busy:
+            self.interaction.observe(InputSnapshot(dict(actions or {})))
             return None
         trigger = self.interaction.step(
             InputSnapshot(dict(actions or {})), self.scene, self.player, self.facing
@@ -61,6 +63,10 @@ class FieldPlayMixin:
             trigger = self.touch.step(self.scene, self.player)  # doors / transfers walked into
         if trigger is None:
             return None
+        source = self.scene.get_entity(trigger.source_entity_id)
+        if source is not None and self._grid_movers.get(self.scene.id) is not None:
+            t = self.player.get(Transform)
+            self._grid_movers[self.scene.id].face_toward(source, t.x, t.y)
         self.events.start_trigger(trigger, replace=True)
         self.update_events(0.0)
         return trigger
@@ -483,6 +489,417 @@ class FieldPlayMixin:
                 del self.walkers[entity_id]
                 self.save.event_context.set_switch(f"walk.{entity_id}.done", True)
 
+    def _map_rules_ready(self):
+        """Map rules bound to the scene the player is in (just after a transfer the new
+        scene's tiles are not bound yet: the old rules must not read the new position)."""
+        return (
+            self.map_rules is not None
+            and getattr(self, "_map_rules_scene", self.scene.id) == self.scene.id
+        )
+
+    def can_meet_wild(self):
+        """Random encounters need someone to fight them: when creatures decide a battle, a
+        standing creature in the party."""
+        rules = self.pet_rules
+        if rules is None or not rules.pets_decide_outcome:
+            return True
+        return any(self.pet_standing(pet) for pet in self.battle_pets())
+
+    def step_arrived(self):
+        """The player finished a step (a grid cell): roll the area's random encounter.
+        Returns the encounter id started, or None."""
+        if self.mode != "field" or self.event_busy or not self._map_rules_ready():
+            return None
+        self.map_rules.update(0.0)  # the areas of the cell just reached
+        if not self.can_meet_wild():
+            return None
+        encounter_id = self.map_rules.roll_encounter(self._step_rng)
+        if not encounter_id:
+            return None
+        self.start_encounter(encounter_id)
+        return encounter_id
+
+    # -- scripted routes, switch visibility, variable looks, kept positions -------------------
+    POSITION_PREFIX = "pos."
+    FACING_VARIABLE = "player.facing"  # "up" / "down" / ...: the facing as the event began
+    RESPAWN_VARIABLE = "respawn.point"  # "scene id|x|y|facing" (SET_RESPAWN)
+
+    def respawn_after_defeat(self):
+        """The battle rules' ``defeat: respawn``: the party is healed, a share of the money is
+        lost, the player goes back to the last respawn point (``SET_RESPAWN``, else where the
+        game started) and the rules' ``defeat_event`` runs. Returns the money lost."""
+        rules = self.rules
+        self.battle = None
+        self.mode = "field"
+        self.events.stop()  # the event that led to the battle ends with it
+        self.heal_pets()
+        lost = 0.0
+        currencies = self.save.rpg_state.currencies
+        currency = rules.defeat_currency
+        if currency and rules.defeat_currency_loss:
+            have = currencies.get(currency, 0.0)
+            lost = float(int(have * rules.defeat_currency_loss))
+            currencies[currency] = have - lost
+        point = self.save.event_context.get_variable(self.RESPAWN_VARIABLE)
+        if point:
+            scene_id, x, y, facing = str(point).split("|")
+            x, y = float(x), float(y)
+        else:
+            start = self.project.game_start
+            x, y = start.player_position or (None, None)
+            scene_id, facing = start.scene_id or self.project.startup_scene_id, start.player_facing
+        self.transfer_player(scene_id, x, y, facing=facing)
+        if rules.defeat_event:
+            self.events.start(rules.defeat_event)
+            self.update_events(0.0)
+        return lost
+
+    def grid_route(self, entity_key, steps):
+        """Walk ``entity_key`` (``"player"`` or an entity) along ``steps`` (see
+        ``grid_actors.parse_step``); the switch ``route.<entity id>.done`` turns on when it is
+        over, and ``route.all.done`` while no route runs. Returns the entity id."""
+        entity = self._sequence_entity(entity_key)
+        self.routes.start(entity.id, list(steps))
+        if entity is self.player:
+            self.player_story_moves += 1  # a step the player had begun is dropped
+        switches = self.save.event_context
+        names = {entity.id, entity.name} | ({"player"} if entity is self.player else set())
+        self._route_names[entity.id] = names  # route.<id>, route.<name> and route.player
+        for name in names:
+            switches.set_switch(f"route.{name}.done", False)
+        switches.set_switch("route.all.done", False)
+        return entity.id
+
+    def set_entity_movement(self, entity_key, behaviour="", facing=""):
+        """Change how a grid character moves (``GRID_BEHAVIOURS``) and / or the way it faces;
+        it starts again from where it stands."""
+        from asteria.runtime.grid_actors import FACINGS, GRID_BEHAVIOURS, GridMover2DComponent
+
+        entity = self._sequence_entity(entity_key)
+        mover = entity.try_get(GridMover2DComponent)
+        if mover is None:
+            raise GameSessionError(f"SET_MOVEMENT: {entity.name} is not a grid character")
+        if behaviour:
+            if behaviour not in GRID_BEHAVIOURS:
+                raise GameSessionError(f"SET_MOVEMENT: unknown behaviour {behaviour}")
+            mover.behaviour = behaviour
+        if facing:
+            if facing not in FACINGS:
+                raise GameSessionError(f"SET_MOVEMENT: unknown facing {facing}")
+            mover.facing = facing
+        system = self._grid_movers.get(self.scene.id)
+        if system is not None:
+            system.state.pop(entity.id, None)
+        return entity.id
+
+    def show_entity(self, entity_key, shown=True):
+        """Show or hide an entity: one with ``SwitchVisibility2D`` turns its switch (so it stays
+        so), any other is hidden until shown or the scene changes."""
+        from asteria.runtime.grid_actors import SwitchVisibility2DComponent
+
+        entity = self._sequence_entity(entity_key)
+        spec = entity.try_get(SwitchVisibility2DComponent)
+        if spec is not None and spec.hidden_switch:
+            self.save.event_context.set_switch(spec.hidden_switch, not shown)
+        else:
+            (self.route_hidden.discard if shown else self.route_hidden.add)(entity.id)
+        return entity.id
+
+    def set_entity_position(self, entity_key, x, y, *, facing=None, permanent=False):
+        """Put an entity on ``(x, y)``; ``permanent`` keeps it there whenever its scene loads
+        (saved as ``pos.<entity id>``)."""
+        entity = self._sequence_entity(entity_key)
+        transform = entity.get(Transform)
+        transform.x, transform.y = float(x), float(y)
+        if entity is self.player:
+            self.save.player_position = (transform.x, transform.y)
+            self.player_story_moves += 1
+            if facing:
+                self.set_player_facing(facing)
+        else:
+            from asteria.runtime.grid_actors import GridMover2DComponent
+
+            mover = entity.try_get(GridMover2DComponent)
+            if mover is not None and facing:
+                mover.facing = str(facing)
+            system = self._grid_movers.get(self.scene.id)
+            if system is not None:
+                system.state.pop(entity.id, None)  # it starts again from its new cell
+        if permanent:
+            self.save.event_context.set_variable(
+                f"{self.POSITION_PREFIX}{entity.id}", f"{float(x)}|{float(y)}|{facing or ''}"
+            )
+        return entity.id
+
+    def _story_frame(self, dt):
+        """Every field frame, events running or not: routes walk, entities follow their
+        visibility switch and their look variable, kept positions hold."""
+        from asteria.runtime.grid_actors import (
+            GridMover2DComponent,
+            LookByVariable2DComponent,
+            SwitchVisibility2DComponent,
+            parse_looks,
+        )
+
+        context = self.save.event_context
+        if not self.event_busy and context.get_variable(self.FACING_VARIABLE) != self.facing:
+            # the facing an event starts with (it keeps it while turning the player)
+            context.set_variable(self.FACING_VARIABLE, self.facing)
+        if self.mode == "field" and context.get_switch(self.BATTLE_RUNNING_SWITCH):
+            context.set_switch(self.BATTLE_RUNNING_SWITCH, False)  # back from a battle
+        if getattr(self, "_story_scene", None) != self.scene.id:  # a scene just loaded
+            self._story_scene = self.scene.id
+            self.route_hidden.clear()  # hidden by a route or SHOW_ENTITY: until the scene changes
+            context = self.save.event_context
+            for entity in self.scene.entities():
+                kept = context.get_variable(f"{self.POSITION_PREFIX}{entity.id}")
+                if kept and entity.has(Transform) and entity is not self.player:
+                    kept = str(kept).split("|")  # "x|y|facing"
+                    t = entity.get(Transform)
+                    t.x, t.y = float(kept[0]), float(kept[1])
+                    mover = entity.try_get(GridMover2DComponent)
+                    if mover is not None and len(kept) > 2 and kept[2]:
+                        mover.facing = kept[2]
+        if not self.routes.done():
+            session = self
+
+            class Host:
+                @staticmethod
+                def transform(entity_id):
+                    entity = session.scene.get_entity(entity_id)
+                    if entity is None and entity_id == session.player.id:
+                        entity = session.player
+                    return entity.get(Transform) if entity is not None else None
+
+                @staticmethod
+                def set_facing(entity_id, facing):
+                    if entity_id == session.player.id:
+                        session.set_player_facing(facing)
+                        return
+                    entity = session.scene.get_entity(entity_id)
+                    mover = entity.try_get(GridMover2DComponent) if entity else None
+                    if mover is not None:
+                        mover.facing = facing
+
+                @staticmethod
+                def set_lift(entity_id, height):
+                    if entity_id == session.player.id:
+                        session.player_lift = height
+
+                @staticmethod
+                def set_hidden(entity_id, hidden):
+                    (session.route_hidden.add if hidden else session.route_hidden.discard)(
+                        entity_id
+                    )
+
+                @staticmethod
+                def emote(entity_id, key):
+                    session.emotes[entity_id] = (key, 1.0)
+
+                @staticmethod
+                def face_player(entity_id):
+                    entity = session.scene.get_entity(entity_id)
+                    if entity is None or entity is session.player:
+                        return
+                    there = entity.get(Transform)
+                    here = session.player.get(Transform)
+                    dx, dy = here.x - there.x, here.y - there.y
+                    if abs(dx) >= abs(dy):
+                        Host.set_facing(entity_id, "right" if dx > 0 else "left")
+                    else:
+                        Host.set_facing(entity_id, "down" if dy > 0 else "up")
+
+            running = set(self.routes.routes)
+            self.routes.update(dt, Host)
+            for entity_id in running - set(self.routes.routes):
+                for name in self._route_names.pop(entity_id, {entity_id}):
+                    self.save.event_context.set_switch(f"route.{name}.done", True)
+                if entity_id == self.player.id:
+                    t = self.player.get(Transform)
+                    self.save.player_position = (t.x, t.y)
+            if self.routes.done():
+                self.save.event_context.set_switch("route.all.done", True)
+                system = self._grid_movers.get(self.scene.id)
+                if system is not None:  # walked people start again from where they stand
+                    for entity_id in running:
+                        system.state.pop(entity_id, None)
+        switches = self.save.event_context.get_switch
+        for entity in self.scene.entities():  # hidden ones too: a switch may show them again
+            spec = entity.try_get(SwitchVisibility2DComponent)
+            if spec is None:  # hidden by a route / SHOW_ENTITY only
+                if entity.id in self.route_hidden and entity is not self.player:
+                    entity.enabled = False
+                    self._story_hidden.add(entity.id)
+                elif entity.id in self._story_hidden:
+                    entity.enabled = True
+                    self._story_hidden.discard(entity.id)
+                continue
+            shown = not (spec.hidden_switch and switches(spec.hidden_switch))
+            entity.enabled = shown and entity.id not in self.route_hidden
+        self.player.enabled = self.player.id not in self.route_hidden
+        get = self.save.event_context.get_variable
+        for entity, spec in self.scene.query(LookByVariable2DComponent):
+            look = parse_looks(spec.looks).get(str(get(spec.variable, "")))
+            if look is None:
+                continue
+            from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+
+            sprite = entity.try_get(SpriteRenderer2D)
+            animator = entity.try_get(Animator2DComponent)
+            if sprite is not None and sprite.sprite_sheet_asset_id != look[0]:
+                sprite.sprite_sheet_asset_id = look[0]
+            if animator is not None and look[1] and animator.clip_set_id != look[1]:
+                animator.clip_set_id = look[1]
+
+    # -- characters that notice the player (SightTrigger2D) -----------------------------------
+    SIGHT_EMOTE_SECONDS = 1.0
+
+    def _tick_emotes(self, dt):
+        for entity_id, (emote, left) in list(self.emotes.items()):
+            if left - dt <= 0:
+                del self.emotes[entity_id]
+            else:
+                self.emotes[entity_id] = (emote, left - dt)
+
+    def check_sight(self):
+        """A character with ``SightTrigger2D`` that sees the player standing in a clear line
+        ahead of it notices them: its mark shows, its music plays, it walks up and then its
+        interaction event starts. Returns the entity id, or None."""
+        from asteria.runtime.grid_actors import (
+            GridMover2DComponent,
+            SightTrigger2DComponent,
+            line_of_sight,
+        )
+
+        if self.mode != "field" or self.event_busy or not self.can_meet_wild():
+            return None
+        found = list(self.scene.query(SightTrigger2DComponent, Transform))
+        if not found:
+            return None
+        switches = self.save.event_context.get_switch
+        player = self.player.get(Transform)
+        size = 16.0
+        movers = self._grid_movers.get(self.scene.id)
+        held = movers.held_cells() if movers is not None else set()
+        tiles = self._tile_blocking.get(self.scene.id)
+        for entity, sight, transform in found:
+            if not entity.enabled or sight.range <= 0:
+                continue
+            if sight.done_switch and switches(sight.done_switch):
+                continue
+            mover = entity.try_get(GridMover2DComponent)
+            if mover is not None:
+                size = mover.grid_size
+            own = (int(transform.x // size), int(transform.y // size))
+            target = (int(player.x // size), int(player.y // size))
+            facing = mover.facing if mover is not None else "down"
+
+            def blocked(cell, own=own, size=size):
+                if cell in held and cell != own:
+                    return True
+                centre = (cell[0] * size + size / 2, cell[1] * size + size / 2)
+                return tiles is not None and tiles.collides_world_point(*centre)
+
+            if line_of_sight(sight.range, facing, own, target, blocked) is None:
+                continue
+            self.sighting = {"entity": entity.id, "phase": "emote", "time": 0.0}
+            self.emotes[entity.id] = (sight.emote or "exclamation", self.SIGHT_EMOTE_SECONDS)
+            if sight.music:
+                self.presentation_requests.append(
+                    WorldCommand("PLAY_BGM", {"asset_id": sight.music, "temporary": True})
+                )
+            return entity.id
+        return None
+
+    def _advance_sighting(self, dt):
+        """The noticing character's mark, its walk up to the player, then its event."""
+        from asteria.runtime.grid_actors import (
+            STEP,
+            GridMover2DComponent,
+            SightTrigger2DComponent,
+        )
+
+        state = self.sighting
+        entity = self.scene.get_entity(state["entity"])
+        if entity is None:
+            self.sighting = None
+            return
+        state["time"] += dt
+        if state["phase"] == "emote":
+            if state["time"] < self.SIGHT_EMOTE_SECONDS:
+                return
+            state["phase"] = "approach"
+        sight = entity.get(SightTrigger2DComponent)
+        mover_spec = entity.try_get(GridMover2DComponent)
+        transform = entity.get(Transform)
+        player = self.player.get(Transform)
+        if state["phase"] == "approach" and sight.approach and mover_spec is not None:
+            system = self.grid_movers()
+            system.update(self.scene, 0.0, None, ())  # make sure it is known to the system
+            mover = system.state[entity.id]
+            if mover.target is not None:
+                system._walk(mover_spec, mover, transform, dt)
+                return
+            size = mover_spec.grid_size
+            own = (int(transform.x // size), int(transform.y // size))
+            target = (int(player.x // size), int(player.y // size))
+            ox, oy = STEP.get(mover_spec.facing, (0, 1))
+            distance = (target[0] - own[0]) * ox + (target[1] - own[1]) * oy
+            if distance > 1:
+                mover.target = (own[0] + ox, own[1] + oy)
+                return
+        self.sighting = None
+        if mover_spec is not None:  # the two face each other
+            opposite = {"up": "down", "down": "up", "left": "right", "right": "left"}
+            self.set_player_facing(opposite.get(mover_spec.facing, self.facing))
+        from asteria.runtime.components2d import Interaction2DComponent
+        from asteria.runtime.interaction import InteractionTrigger
+
+        interaction = entity.try_get(Interaction2DComponent)
+        if interaction is not None and interaction.event_program_id:
+            self.events.start_trigger(
+                InteractionTrigger(
+                    entity.id,
+                    interaction.event_program_id,
+                    interaction.local_scope_id or entity.id,
+                ),
+                replace=True,
+            )
+            self.update_events(0.0)
+
+    def grid_movers(self):
+        """The current scene's ``GridMoverSystem`` (created on first use)."""
+        system = self._grid_movers.get(self.scene.id)
+        if system is None:
+            from asteria.runtime.grid_actors import GridMoverSystem
+
+            system = self._grid_movers[self.scene.id] = GridMoverSystem(
+                random.Random(f"{self.scene.id}:grid")
+            )
+        return system
+
+    def _update_grid_movers(self, dt):
+        """Walk the scene's grid characters (GridMover2D) a cell at a time."""
+        from asteria.runtime.collision import CollisionWorld
+        from asteria.runtime.grid_actors import GridMover2DComponent
+
+        movers = [e.id for e, _ in self.scene.query(GridMover2DComponent)]
+        if not movers:
+            return
+        system = self.grid_movers()
+        solid = CollisionWorld.from_scene(self.scene).blocking_query(
+            exclude={self.player.id, *movers}
+        )
+        tiles = self._tile_blocking.get(self.scene.id)
+        walls = solid if tiles is None else _EitherBlocks(solid, tiles)
+        t = self.player.get(Transform)
+        size = 16.0
+        for _, spec in self.scene.query(GridMover2DComponent):
+            size = spec.grid_size
+            break
+        reserved = {(int(t.x // size), int(t.y // size)), *self.grid_reserved}
+        system.update(self.scene, dt, walls.collides_world_point, reserved)
+
     def bind_map_rules(self, keys_at):
         """Apply the project's map rule set (floor damage, regions...) to the field's tiles.
 
@@ -493,6 +910,8 @@ class FieldPlayMixin:
         from asteria.runtime.map_rules_field import FieldMapRules
 
         sets = self.project.rpg_database.map_rule_sets
+        self.area_title_shown = ""  # a new map: its area name shows again
+        self._map_rules_scene = self.scene.id  # the rules read this scene's tiles only
         if not sets:
             self.map_rules = None
             return None
@@ -553,12 +972,21 @@ class FieldPlayMixin:
 
     def field_update(self, dt):
         """Advance field enemies and spawn zones, then start any touched visible encounter."""
+        self._tick_emotes(float(dt))
+        if self.mode == "field":
+            self._story_frame(float(dt))
+        if self.mode == "field" and self.sighting is not None:
+            self._advance_sighting(float(dt))
+            return None
         if self.mode != "field" or self.event_busy:
             return None
-        if self.map_rules is not None:
+        if not self.grid_reserved and self.check_sight():
+            return None
+        if self._map_rules_ready():
             self.map_rules.update(float(dt))
         if self.walkers:
             self._advance_walkers(float(dt))
+        self._update_grid_movers(float(dt))
         systems = self._field_systems()
         self.progression_events = []
         action = self.action_scene

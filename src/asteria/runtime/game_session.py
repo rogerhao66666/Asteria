@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 from asteria.core import Transform
 from asteria.events import EventRunner, EventScheduler, WorldCommandRouter
 from asteria.events.timers import EventTimers
@@ -150,8 +152,28 @@ class GameSessionRuntime(
         self.entity_animation = {}
         self.scene_events = None
         self.open_shop_id = None
+        self.pet_storage_requested = False  # PET_STORAGE asked for the party / box screen
+        self._pending_pet_moves = []  # (pet instance id, ability id) learned past max_moves
+        self._species_foes = {}  # enemy member id -> the creature record of a species foe
         self.open_crafting_station = None
         self._field_simulation = {}
+        self._grid_movers = {}  # scene id -> GridMoverSystem (grid characters)
+        self.grid_reserved = ()  # cells the player's grid walk holds (column, row)
+        self.player_lift = 0.0  # how high the player is off the ground (a ledge hop)
+        self.area_music = ""  # the music of the map area the player is in ('' = none)
+        self.area_title_shown = ""  # the last area name shown (reset by a scene change)
+        self.area_title_requests = []  # area names to show (the field draws and clears them)
+        self.sighting = None  # a character that noticed the player: walking up (SightTrigger2D)
+        from asteria.runtime.grid_actors import RouteRunner
+
+        self.routes = RouteRunner()  # scripted grid routes (GRID_ROUTE)
+        self.route_hidden = set()  # entities a route hid (until shown or the scene changes)
+        self.pending_area_programs = []  # area entry programs queued while an event runs
+        self._route_names = {}  # entity id -> the names its route switches use
+        self.player_story_moves = 0  # counts events moving the player (grid walk resets)
+        self._story_hidden = set()  # entities a route / SHOW_ENTITY disabled
+        self.emotes = {}  # entity id -> (emote key, seconds left): a mark over a character
+        self._step_rng = random.Random(f"{self.project.id}:steps")
         self._tile_blocking = {}  # scene id -> tile map walls (set_tile_blocking)
         self._frame_collision_world = None
         from asteria.runtime.profiler import NullProfiler

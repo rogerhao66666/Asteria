@@ -40,6 +40,7 @@ from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
 from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
+from asteria.rpg.pets import EXP_SHARES, LEVEL_UP_HEALS, PetRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.refine import ON_FAIL, RefineRules
 from asteria.rpg.workstations import WorkstationDefinition
@@ -164,6 +165,26 @@ _PET_MOVE = (
     F("min_affinity", "Needs Affinity", "float", default=0.0),
 )
 
+_STAT_FORMULA = (  # Pet Rules: how a stat grows (base x level with the creature's genes)
+    F("stat", "Stat (* = every other stat)", "text", default="*"),
+    F("base_scale", "Base ×", "float", default=2.0),
+    F("gene_terms", "Gene × (gene prefix and coefficient)", "amounts", default={}),
+    F("level_divisor", "÷ After × Level", "float", default=100.0),
+    F("level_term", "+ Level ×", "float", default=0.0),
+    F("flat", "+ Flat", "float", default=5.0),
+    F("multiplier_gene", "× Gene (prefix, e.g. nature; empty: none)", "text", default=""),
+    F("round_down", "Round Down", "bool", default=True),
+)
+_GENE_RANGE = (
+    F("prefix", "Gene Prefix", "text", default="iv"),
+    F("low", "Lowest", "int", default=0),
+    F("high", "Highest", "int", default=31),
+)
+_GENE_SET = (
+    F("prefix", "Gene Prefix", "text", default="nature"),
+    F("values", "Stat Multipliers", "amounts", default={}),
+)
+
 _CONDITION = (  # a switch or variable check (shops: when an item is sold, a price changes)
     F("source", "Check a", "choice", choices=("switch", "variable"), default="switch"),
     F("name", "Switch / Variable Name", "text", default=""),
@@ -199,6 +220,21 @@ FORMS = {
         F("max_affinity", "Highest Affinity", "float", default=100.0),
         F("battle_unit", "Fights As Its Own Battle Unit", "bool", default=False),
         F("resources", "Battle Resources (maximums, e.g. vitality)", "amounts", default={}),
+        F(
+            "exp_curve",
+            "Experience Curve a, b, c, d (a·L³ + b·L² + c·L + d; empty: linear)",
+            "text",
+            default="",
+        ),
+        F("exp_yield", "Experience Given When Beaten (× its level)", "float", default=0.0),
+        F("capture_rate", "Capture Rate (rate mode)", "float", default=0.0),
+        F("visual_profile_id", "Battle Visual (front)", "text", default=""),
+        F(
+            "back_visual_profile_id",
+            "Battle Visual On The Player's Side (back)",
+            "text",
+            default="",
+        ),
         F(
             "battle_abilities",
             "Abilities As A Battle Unit",
@@ -519,9 +555,52 @@ FORMS = {
             default="",
         ),
         F("pet_level", "Pet Starts At Level", "int", default=1),
+        F("mode", "Chance Mode", "choice", choices=("linear", "rate"), default="linear"),
         F("base_chance", "Base Chance (0–1)", "float", default=0.25),
         F("low_health_bonus", "Low-Health Bonus", "float", default=0.5),
+        F("capture_rate", "Capture Rate (rate mode; 0 = the species' own)", "float", default=0.0),
+        F("divisor", "Rate Divisor", "float", default=255.0),
         F("item_id", "Consumed Item", "optional_ref", source="items", default=""),
+        F("item_bonuses", "Capture Items And Their ×", "amounts", source="items", default={}),
+        F("state_bonuses", "State Bonuses (state id and ×)", "amounts", default={}),
+        F("shake_checks", "Shake Checks (0 = One Roll)", "int", default=0),
+    ),
+    "pet_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("party_size", "Party Size (0 = every owned pet)", "int", default=0),
+        F("battle_slots", "Creatures On The Stage At Once (0 = all)", "int", default=1),
+        F("storage", "Storage Box For The Rest", "bool", default=False),
+        F("actors_fight", "Characters Fight Too", "bool", default=True),
+        F("pets_decide_outcome", "No Creature Standing = Lost", "bool", default=False),
+        F("switch_costs_turn", "Switching Costs The Turn", "bool", default=True),
+        F("exp_share", "Experience From Foes", "choice", choices=EXP_SHARES, default="none"),
+        F("exp_divisor", "Experience ÷", "float", default=1.0),
+        F("exp_whole", "Whole Experience Points (rounded down)", "bool", default=False),
+        F(
+            "level_up_heal",
+            "Health On Level Up",
+            "choice",
+            choices=LEVEL_UP_HEALS,
+            default="delta",
+        ),
+        F("max_moves", "Moves A Creature Knows At Once (0 = unlimited)", "int", default=0),
+        F("heal_restores_pp", "HEAL_PETS Restores Move Uses", "bool", default=True),
+        F(
+            "out_of_uses_ability",
+            "When No Move Has Uses Left, Use",
+            "optional_ref",
+            source="abilities",
+            default="",
+        ),
+        F("stat_formulas", "Stat Formulas", "table", fields=_STAT_FORMULA, default=()),
+        F("gene_ranges", "Rolled Genes (whole numbers)", "table", fields=_GENE_RANGE, default=()),
+        F(
+            "gene_sets",
+            "Gene Sets (one picked per creature)",
+            "table",
+            fields=_GENE_SET,
+            default=(),
+        ),
     ),
 }
 
@@ -547,6 +626,24 @@ _AREA_RULE = (
     F("on_step", "Event on Each Step", "optional_ref", source="event_programs", default=""),
     F("switch", "Only While Switch Is On", "text", default=""),
     F("battle_background", "Battle Background (asset id) For Fights Here", "text", default=""),
+    F("music", "Music Here (audio asset)", "text", default=""),
+    F("title", "Area Name Shown on Entering", "text", default=""),
+    F("encounters", "Random Encounters (weight each)", "amounts", source="encounters", default={}),
+    F("encounter_chance", "Encounter Chance per Step (0–1)", "float", default=0.0),
+    F("encounter_first_step", "Chance Scale on the Step Into the Area", "float", default=1.0),
+    F(
+        "autorun",
+        "Run While Here (first whose condition holds)",
+        "table",
+        default=(),
+        fields=(
+            F("switch", "Switch (or leave empty)", "text", default=""),
+            F("variable", "Variable (or leave empty)", "text", default=""),
+            F("value", "Equals (switch: on unless false/0)", "text", default=""),
+            F("program", "Event", "ref", source="event_programs"),
+            F("when", "When", "choice", choices=("always", "enter"), default="always"),
+        ),
+    ),
 )
 
 D26_FORMS = {
@@ -1036,6 +1133,63 @@ def _decode_refine(data):
     return data
 
 
+# kind id -> (record data -> form data, form data -> record data)
+def _encode_pet_species(data):
+    data = dict(data)
+    curve = data.get("exp_curve") or {}
+    data["exp_curve"] = ", ".join(f"{x:g}" for x in curve.get("cubic", ())) if curve else ""
+    return data
+
+
+def _decode_pet_species(data):
+    data = dict(data)
+    text = str(data.get("exp_curve") or "").strip()
+    if not text:
+        data.pop("exp_curve", None)
+    else:
+        parts = [float(x) for x in text.replace(",", " ").split()]
+        if len(parts) != 4:
+            raise ValueError("the experience curve needs four numbers a, b, c, d")
+        data["exp_curve"] = {"cubic": parts}
+    return data
+
+
+def _encode_pet_rules(data):
+    data = dict(data)
+    data["stat_formulas"] = [
+        {"stat": k, **v} for k, v in dict(data.get("stat_formulas", {})).items()
+    ]
+    data["gene_ranges"] = [
+        {"prefix": k, "low": v[0], "high": v[1]}
+        for k, v in dict(data.get("gene_ranges", {})).items()
+    ]
+    data["gene_sets"] = [
+        {"prefix": k, "values": v}
+        for k, sets in dict(data.get("gene_sets", {})).items()
+        for v in sets
+    ]
+    return data
+
+
+def _decode_pet_rules(data):
+    data = dict(data)
+    formulas = {}
+    for row in data.get("stat_formulas", ()):
+        row = dict(row)
+        stat = str(row.pop("stat", "") or "*").strip() or "*"
+        formulas[stat] = row
+    data["stat_formulas"] = formulas
+    data["gene_ranges"] = {
+        r["prefix"]: [r["low"], r["high"]] for r in data.get("gene_ranges", ()) if r["prefix"]
+    }
+    sets = {}
+    for row in data.get("gene_sets", ()):
+        if row.get("prefix"):
+            sets.setdefault(row["prefix"], []).append(dict(row.get("values") or {}))
+    data["gene_sets"] = sets
+    return data
+
+
 def _encode_gacha(data):
     data = copy.deepcopy(data)
     for rarity in data.get("rarities", ()):  # the colour as "r, g, b" words
@@ -1051,8 +1205,9 @@ def _decode_gacha(data):
     return data
 
 
-# kind id -> (record data -> form data, form data -> record data)
 ADAPTERS = {
+    "pet_species": (_encode_pet_species, _decode_pet_species),
+    "pet_rules": (_encode_pet_rules, _decode_pet_rules),
     "refine_rules": (_encode_refine, _decode_refine),
     "shops": (_encode_shop, _decode_shop),
     "battle_extension_rules": (_encode_extension, _decode_extension),
@@ -1092,6 +1247,7 @@ def _templates():
         "pet_species": lambda key, c: PetSpeciesDefinition(
             key, key, stats={"power": 10}, growth={"power": 2}
         ),
+        "pet_rules": lambda key, c: PetRules(key),
         "world_interactions": lambda key, c: WorldInteraction(key, key),
         "drop_tables": lambda key, c: DropTable(key, key),
         "inventory_rules": lambda key, c: InventoryRules(key, key),
@@ -1134,6 +1290,7 @@ KINDS = (
     _Kind("equipment_sets", "Equipment Sets", "equipment_sets", "set_id", EquipmentSetDefinition),
     _Kind("capture_rules", "Capture Rules", "capture_rules", "enemy_id", CaptureRule),
     _Kind("pet_species", "Pet Species", "pet_species", "species_id", PetSpeciesDefinition),
+    _Kind("pet_rules", "Pet Rules (creature party)", "pet_rules", "rules_id", PetRules),
     _Kind(
         "world_interactions",
         "World Interactions",

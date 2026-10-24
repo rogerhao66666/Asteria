@@ -3,8 +3,8 @@
 ``tile_area_keys`` reads ``region:<id>`` from the map's region layer and ``tag:<name>`` from the
 tags of the tiles under a point. ``FieldMapRules`` feeds the player's movement to a
 ``MapRulesRuntime`` and applies what comes back: floor damage to the party, footstep sound
-requests, event programs, a sliding player, restricted tiles for the player and field enemies, and
-the stealth scale of enemy sight.
+requests, event programs, a sliding player, restricted tiles for the player and field enemies,
+the stealth scale of enemy sight, the area's music and name, and random encounters on a step.
 """
 
 from __future__ import annotations
@@ -69,6 +69,7 @@ class FieldMapRules:
         transform = player.get(Transform)
         for event in self.runtime.advance(player.id, transform.x, transform.y, dt):
             self._dispatch(event)
+        self._autorun(transform)
         moving = self._last is None or (
             hypot(transform.x - self._last[0], transform.y - self._last[1]) > 1e-6
         )
@@ -94,6 +95,12 @@ class FieldMapRules:
         if event.kind == "damage":
             session.damage_party(rule.damage_resource, event.amount, can_kill=rule.can_kill)
             return
+        if event.kind == "enter":
+            if rule.music:
+                session.area_music = rule.music  # the field plays it (a story track wins)
+            if rule.title and rule.title != session.area_title_shown:
+                session.area_title_shown = rule.title
+                session.area_title_requests.append(rule.title)
         if event.kind == "footstep":
             session.presentation_requests.append(
                 WorldCommand("PLAY_SE", {"asset_id": rule.footstep_cue})
@@ -104,6 +111,37 @@ class FieldMapRules:
         ]
         if program and not session.event_busy:
             session.events.start(program)
+        elif program and event.kind == "enter":
+            session.pending_area_programs.append(program)  # runs once the field is free
+        if event.kind == "enter" and rule.autorun:
+            context = session.save.event_context
+            arrival = rule.autorun_program(context.get_switch, context.get_variable, "enter")
+            if arrival:
+                session.pending_area_programs.append(arrival)
+
+    def _autorun(self, transform):
+        """A queued area entry program, else an autorun program of an area the player is in."""
+        session = self.session
+        if session.event_busy:
+            return
+        if session.pending_area_programs:
+            session.events.start(session.pending_area_programs.pop(0))
+            return
+        context = session.save.event_context
+        for rule in self.runtime.rules_at(transform.x, transform.y):
+            program = rule.autorun and rule.autorun_program(
+                context.get_switch, context.get_variable
+            )
+            if program:
+                session.events.start(program)
+                return
+
+    def roll_encounter(self, rng):
+        """A step finished where the player stands: the encounter it starts, or ''."""
+        transform = self.session.player.get(Transform)
+        here = frozenset(r.key for r in self.runtime.rules_at(transform.x, transform.y))
+        before, self._step_keys = getattr(self, "_step_keys", frozenset()), here
+        return self.runtime.roll_encounter(transform.x, transform.y, rng, before)
 
     def _scale_enemy_sight(self, transform, moving):
         from asteria.runtime.field_ai import FieldAIComponent

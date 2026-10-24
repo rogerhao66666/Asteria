@@ -161,6 +161,8 @@ def describe_instruction(instruction):
     if op == "SET_SWITCH":
         return f"Set Switch  {a.get('name', '')} = {a.get('value', True)}"
     if op == "SET_VARIABLE":
+        if a.get("from_variable"):
+            return f"Set Variable  {a.get('name', '')} = @{a.get('from_variable')}"
         return f"Set Variable  {a.get('name', '')} = {a.get('value')}"
     if op == "WORLD":
         details = format_world_args(a.get("args") or {})
@@ -168,6 +170,11 @@ def describe_instruction(instruction):
     if op == "CALL":
         return f"Call  {a.get('program_id', '')}"
     if op == "WAIT":
+        until = a.get("until")
+        if isinstance(until, dict):
+            return f"Wait Until  {until.get('name', '')} {until.get('operator', '==')} " + str(
+                until.get("value")
+            )
         return f"Wait  {a.get('seconds', 0)}s"
     if op == "END":
         return "End"

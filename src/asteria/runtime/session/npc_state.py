@@ -33,13 +33,15 @@ class NpcStateMixin:
     def _rpg_value(self, name):
         """The ``rpg`` condition source: ``level:<actor>``, ``item:<id>``, ``gold`` (any
         currency: ``currency:<id>``), ``job:<actor>:<class>``, ``party:<actor>``,
-        ``reputation:<faction>`` and ``quest:<id>`` (its status)."""
+        ``reputation:<faction>``, ``quest:<id>`` (its status) and ``pets`` (the party's size)."""
         kind, _, rest = str(name).partition(":")
         state = self.save.rpg_state
         if kind == "level":
             return self.ensure_actor_progression(rest).level
         if kind == "item":
             return state.inventory.count(rest)
+        if kind == "pets":  # how many creatures travel with the player
+            return len(self.party_pets())
         if kind == "gold":
             return state.currencies.get("gold", 0.0)
         if kind == "currency":

@@ -181,6 +181,7 @@ class InputActionMap:
                 "confirm": (key("return"), key("space"), button("0")),
                 "cancel": (key("escape"), key("backspace"), button("1")),
                 "menu": (key("c"), button("7")),
+                "run": (key("left shift"), key("right shift"), button("1")),  # hold to run
             }
         )
 

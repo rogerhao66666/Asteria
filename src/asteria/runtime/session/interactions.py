@@ -128,15 +128,33 @@ class InteractionsMixin:
         self.refresh_achievements()
         return value
 
-    def capture_chance(self, target_id):
-        """Chance (0–1) that capturing ``target_id`` succeeds now, or None if it cannot be
-        captured."""
+    def capture_rule_for(self, target_id):
+        """The capture rule of an enemy unit: its kind's rule, a species foe's species rule or
+        the ``*`` rule; ``None`` when it cannot be captured (no rule, or an encounter tagged
+        ``no_capture``)."""
+        encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
+        if encounter is not None and "no_capture" in encounter.tags:
+            return None
+        rules = self.project.rpg_database.capture_rules
+        kind = str(target_id).rsplit(":", 1)[0]
+        rule = rules.get(kind)
+        if rule is None and self.foe_record(target_id) is not None:
+            rule = rules.get("*")
+        return rule
+
+    def capture_chance(self, target_id, item_id=None):
+        """Chance (0–1) that capturing ``target_id`` succeeds now (thrown with ``item_id``,
+        default the rule's item), or None if it cannot be captured."""
         if self.mode != "battle" or str(target_id) not in self.active_enemy_ids():
             return None
-        rule = self.project.rpg_database.capture_rules.get(str(target_id).rsplit(":", 1)[0])
+        rule = self.capture_rule_for(target_id)
         if rule is None:
             return None
-        resources = self.battle.member(str(target_id)).subject.resources
+        encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
+        if encounter is not None and "sure_capture" in encounter.tags:
+            return 1.0  # a battle that always ends in the catch (a tutorial)
+        member = self.battle.member(str(target_id))
+        resources = member.subject.resources
         resource = self.rules.knockout_resource_id
         ratio = 1.0
         if (
@@ -145,7 +163,17 @@ class InteractionsMixin:
             and resources.maximum(resource) > 0
         ):
             ratio = resources.current(resource) / resources.maximum(resource)
-        return rule.chance(ratio)
+        rate = 0.0
+        record = self.foe_record(target_id)
+        species = self.pet_species(record) if record is not None else None
+        if species is None and rule.pet_species_id:
+            species = self.project.rpg_database.pet_species.get(rule.pet_species_id)
+        if species is not None:
+            rate = species.capture_rate
+        states = member.subject.states
+        state_ids = tuple(a.state_id for a in states.active_states()) if states else ()
+        item = rule.item_id if item_id is None else str(item_id)
+        return rule.chance(ratio, rate=rate, item_id=item or None, state_ids=state_ids)
 
     def capture_targets(self):
         """``(member_id, chance, item_id)`` for every enemy that can be captured right now."""
@@ -153,43 +181,72 @@ class InteractionsMixin:
         for member_id in self.active_enemy_ids():
             chance = self.capture_chance(member_id)
             if chance is not None:
-                rule = self.project.rpg_database.capture_rules[member_id.rsplit(":", 1)[0]]
-                result.append((member_id, chance, rule.item_id))
+                result.append((member_id, chance, self.capture_rule_for(member_id).item_id))
         return tuple(result)
 
-    def attempt_capture(self, actor_id, target_id, *, rng=None):
-        """Try to capture enemy ``target_id``; on success it leaves battle and its actor joins the
-        roster."""
+    def capture_items(self, target_id):
+        """``(item_id, chance)`` for every capture item the bag holds that the target's rule
+        allows (the rule's own item and its bonus items); empty when the rule needs none."""
+        rule = self.capture_rule_for(target_id)
+        if rule is None or self.capture_chance(target_id) is None:
+            return ()
+        inventory = self.save.rpg_state.inventory
+        return tuple(
+            (item_id, self.capture_chance(target_id, item_id))
+            for item_id in rule.capture_items()
+            if inventory.count(item_id) > 0
+        )
+
+    def attempt_capture(self, actor_id, target_id, *, rng=None, item_id=None):
+        """Try to capture enemy ``target_id`` (throwing ``item_id``, default the rule's item);
+        on success it leaves battle and its actor joins the roster or it becomes an owned
+        pet (a species foe keeps its level, health, moves and genes)."""
         if self.mode != "battle":
             raise GameSessionError("no active battle")
         target_id = str(target_id)
         if target_id not in self.active_enemy_ids():
             raise GameSessionError(f"{target_id} cannot be captured now")
         enemy_id = target_id.rsplit(":", 1)[0]
-        rule = self.project.rpg_database.capture_rules.get(enemy_id)
+        rule = self.capture_rule_for(target_id)
         if rule is None:
             raise GameSessionError(f"{enemy_id} cannot be captured")
         state = self.save.rpg_state
-        if rule.item_id and not state.inventory.remove(rule.item_id, 1):
+        item = rule.item_id if item_id is None else str(item_id)
+        if item and item not in rule.capture_items():
+            raise GameSessionError(f"{item} cannot capture {enemy_id}")
+        if item and not state.inventory.remove(item, 1):
             raise GameSessionError(
-                self.tr("battle.capture.needs", "capturing needs {item}", item=rule.item_id)
+                self.tr("battle.capture.needs", "capturing needs {item}", item=item)
             )
-        roll = (rng or self.battle.rng).random()
-        success = roll < self.capture_chance(target_id)
+        chance = self.capture_chance(target_id, item or None)
+        success, shakes = rule.roll(chance, rng or self.battle.rng)
         self._log(
             "capture",
             member_id=str(actor_id),
             target_ids=(target_id,),
-            data={"success": success, "actor_id": rule.actor_id},
+            data={
+                "success": success,
+                "actor_id": rule.actor_id,
+                "item_id": item,
+                "shakes": shakes,
+            },
         )
         if not success:
             return False
+        unit = self.battle.member(target_id)
         self.battle.remove_combatant(target_id, state_id="captured", reason="captured")
         self._captured.add(target_id)
         self.world.note_enemy(enemy_id, "captured")
         if rule.pet_item_id:  # a pet item: kept in the bag, sent out by an ability that needs it
             state.inventory.add(rule.pet_item_id, 1)
-        if rule.pet_species_id:  # an owned creature with its own level and nickname
+        record = self.foe_record(target_id)
+        if record is not None:  # the creature as it stood: health, states, moves, genes
+            pool = unit.subject.resources
+            record.resources = {n: float(pool.current(n)) for n in pool.to_data()["values"]}
+            states = unit.subject.states
+            record.states = [a.state_id for a in states.active_states()] if states else []
+            self.add_pet(record.species_id, record=record)
+        elif rule.pet_species_id:  # an owned creature with its own level and nickname
             self.add_pet(rule.pet_species_id, level=rule.pet_level)
         if rule.actor_id and rule.actor_id not in state.party_actor_ids:
             state.party_actor_ids = state.party_actor_ids + (rule.actor_id,)

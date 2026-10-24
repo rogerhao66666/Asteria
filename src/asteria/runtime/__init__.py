@@ -42,6 +42,7 @@ from .field_ai import (
     VisibleEncounterComponent,
     touched_encounter,
 )
+from .grid_actors import GridMover2DComponent, GridMoverSystem
 from .texture_renderer import TextureRenderer
 from .tile_draw import build_tile_draws
 from .tilequery import TileMapQuery

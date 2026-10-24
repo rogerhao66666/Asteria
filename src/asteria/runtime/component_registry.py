@@ -21,6 +21,12 @@ def default_component_registry():
         TileMap2DComponent,
     )
     from .field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
+    from .grid_actors import (
+        GridMover2DComponent,
+        LookByVariable2DComponent,
+        SightTrigger2DComponent,
+        SwitchVisibility2DComponent,
+    )
     from .npc_state import NpcIdentity2DComponent
     from .skeleton_component import SkeletonAnimation2DComponent
 
@@ -59,6 +65,10 @@ def default_component_registry():
         FieldAIComponent,
         SpawnZoneComponent,
         VisibleEncounterComponent,
+        GridMover2DComponent,
+        SightTrigger2DComponent,
+        SwitchVisibility2DComponent,
+        LookByVariable2DComponent,
         SkeletonAnimation2DComponent,
     ):
         registry.register(component)

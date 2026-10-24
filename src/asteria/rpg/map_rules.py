@@ -1,4 +1,5 @@
-"""Map area rules: floor damage, slippery floors, footsteps, region events, restrictions, stealth.
+"""Map area rules: floor damage, slippery floors, footsteps, region events, restrictions, stealth,
+area music and names, and random encounters a step may start.
 
 An area is named by a key - ``region:<id>`` (the id painted on the map's region layer) or
 ``tag:<name>`` (a tag on the tile under the feet). Project data attaches an ``AreaRule`` to a key;
@@ -24,6 +25,10 @@ def _non_negative(value, label):
     return value
 
 
+FALSE_WORDS = ("0", "false", "off", "no")
+AUTORUN_WHEN = ("always", "enter")
+
+
 @dataclass(frozen=True, slots=True)
 class AreaRule:
     """What happens in one kind of area (every part is optional)."""
@@ -43,6 +48,17 @@ class AreaRule:
     on_step: str = ""
     switch: str = ""
     battle_background: str = ""
+    music: str = ""
+    title: str = ""
+    encounters: tuple[tuple[str, float], ...] = ()
+    encounter_chance: float = 0.0
+    encounter_first_step: float = 1.0
+    # programs run while the player is in the area and nothing else runs, the first whose
+    # condition holds: ({"switch"|"variable": name, "value": v, "program": id}, ...) - a
+    # condition of a variable compares equal, of a switch to ``value`` (default true); the
+    # program must change what it tests, or it runs again; ``"when": "enter"`` runs it once
+    # on coming into the area instead (after ``on_enter``)
+    autorun: tuple[dict, ...] = ()
 
     def __init__(
         self,
@@ -62,6 +78,12 @@ class AreaRule:
         on_step="",
         switch="",
         battle_background="",
+        music="",
+        title="",
+        encounters=(),
+        encounter_chance=0.0,
+        encounter_first_step=1.0,
+        autorun=(),
     ):
         key = _text(key)
         if not key.startswith(("region:", "tag:")) or key.endswith(":"):
@@ -86,6 +108,63 @@ class AreaRule:
         s(self, "on_step", _text(on_step))
         s(self, "switch", _text(switch))
         s(self, "battle_background", _text(battle_background))
+        s(self, "music", _text(music))
+        s(self, "title", str(title or ""))
+        pairs = encounters.items() if isinstance(encounters, dict) else encounters
+        table = []
+        for encounter_id, weight in pairs:
+            weight = _non_negative(weight, "encounter weight")
+            if _text(encounter_id) and weight > 0:
+                table.append((_text(encounter_id), weight))
+        s(self, "encounters", tuple(table))
+        chance = _non_negative(encounter_chance, "encounter_chance")
+        if chance > 1:
+            raise ValueError("encounter_chance must be between 0 and 1")
+        s(self, "encounter_chance", chance)
+        first = _non_negative(encounter_first_step, "encounter_first_step")
+        if first > 1:
+            raise ValueError("encounter_first_step must be between 0 and 1")
+        s(self, "encounter_first_step", first)
+        entries = []
+        for entry in autorun:
+            entry = dict(entry)
+            if not _text(entry.get("program")):
+                raise ValueError("an autorun entry needs a program")
+            if bool(_text(entry.get("switch"))) == bool(_text(entry.get("variable"))):
+                raise ValueError("an autorun entry tests one switch or one variable")
+            if entry.get("when", "always") not in AUTORUN_WHEN:
+                raise ValueError("an autorun entry runs 'always' or on 'enter'")
+            entries.append(entry)
+        s(self, "autorun", tuple(entries))
+
+    def autorun_program(self, get_switch, get_variable, when="always"):
+        """The program of the first autorun entry of ``when`` ("always": while the player is
+        here and nothing runs; "enter": once, on coming into the area) whose condition holds
+        now ('' for none)."""
+        for entry in self.autorun:
+            if entry.get("when", "always") != when:
+                continue
+            value = entry.get("value")
+            if entry.get("switch"):
+                wanted = True if value in (None, "") else str(value).lower() not in FALSE_WORDS
+                held = bool(get_switch(entry["switch"])) == wanted
+            else:  # compared as text: 1 and "1" are the same value
+                held = str(get_variable(entry["variable"])) == str(0 if value is None else value)
+            if held:
+                return entry["program"]
+        return ""
+
+    def pick_encounter(self, rng):
+        """One encounter id of this area's table by weight ('' when it has none)."""
+        total = sum(weight for _, weight in self.encounters)
+        if total <= 0:
+            return ""
+        roll = rng.random() * total
+        for encounter_id, weight in self.encounters:
+            roll -= weight
+            if roll < 0:
+                return encounter_id
+        return self.encounters[-1][0]
 
     def to_data(self):
         data = {"key": self.key}
@@ -105,10 +184,18 @@ class AreaRule:
             "on_step",
             "switch",
             "battle_background",
+            "music",
+            "title",
+            "encounter_chance",
+            "encounter_first_step",
         ):
             value = getattr(self, name)
             if value != getattr(defaults, name):
                 data[name] = list(value) if isinstance(value, tuple) else value
+        if self.encounters:
+            data["encounters"] = dict(self.encounters)
+        if self.autorun:
+            data["autorun"] = [dict(entry) for entry in self.autorun]
         return data
 
     @classmethod
@@ -218,6 +305,21 @@ class MapRulesRuntime:
             if rule is not None and (not rule.switch or self.switches(rule.switch)):
                 found.append(rule)
         return tuple(found)
+
+    def roll_encounter(self, x, y, rng, before=()):
+        """A step at ``(x, y)``: the encounter it starts, or ''. Each area there with an
+        encounter table rolls its ``encounter_chance`` - times ``encounter_first_step`` when the
+        step came from outside it (``before``: the area keys of the cell the step left); the
+        first that hits picks from its table by weight."""
+        for rule in self.rules_at(x, y):
+            if not rule.encounters or rule.encounter_chance <= 0:
+                continue
+            chance = rule.encounter_chance
+            if rule.key not in before:
+                chance *= rule.encounter_first_step
+            if rng.random() < chance:
+                return rule.pick_encounter(rng)
+        return ""
 
     def battle_background(self, x, y):
         """The battle background asset of the first area at the point that names one."""

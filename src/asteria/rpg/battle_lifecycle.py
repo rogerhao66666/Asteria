@@ -453,6 +453,11 @@ class BattleEscapeRule:
     opponent_scale: float = 0.0
     minimum_chance: float = 0.0
     maximum_chance: float = 1.0
+    # an expression for the chance instead of the linear terms (gameplay/expressions.py):
+    # ``source`` is the side's first standing member, ``opponent`` the first standing foe,
+    # ``attempts`` how many tries came before this one
+    chance_expression: str = ""
+    OPTIONAL_DATA = {"chance_expression": ""}
 
     def __init__(
         self,
@@ -466,6 +471,7 @@ class BattleEscapeRule:
         opponent_scale=0.0,
         minimum_chance=0.0,
         maximum_chance=1.0,
+        chance_expression="",
     ):
         minimum_chance = _number(minimum_chance, "minimum_chance")
         maximum_chance = _number(maximum_chance, "maximum_chance")
@@ -486,9 +492,16 @@ class BattleEscapeRule:
         object.__setattr__(self, "opponent_scale", _number(opponent_scale, "opponent_scale"))
         object.__setattr__(self, "minimum_chance", minimum_chance)
         object.__setattr__(self, "maximum_chance", maximum_chance)
+        chance_expression = str(chance_expression or "").strip()
+        if chance_expression:
+            from asteria.gameplay.expressions import check_expression
+
+            check_expression(chance_expression, ("source", "opponent", "attempts"))
+        object.__setattr__(self, "chance_expression", chance_expression)
 
     def to_data(self):
         return {
+            **({"chance_expression": self.chance_expression} if self.chance_expression else {}),
             "schema": "asteria.rpg.battle_escape_rule",
             "version": 1,
             "rule_id": self.rule_id,
@@ -516,6 +529,7 @@ class BattleEscapeRule:
             opponent_scale=data["opponent_scale"],
             minimum_chance=data["minimum_chance"],
             maximum_chance=data["maximum_chance"],
+            chance_expression=data.get("chance_expression", ""),
         )
 
 
@@ -571,6 +585,16 @@ def resolve_escape_chance(rule, battle):
         for m in party.members
         if m.member_id in battle.members and battle.combatants.is_active(m.member_id)
     ]
+    if rule.chance_expression:
+        from asteria.gameplay.expressions import SubjectView, evaluate
+
+        names = {
+            "source": SubjectView(source_members[0].subject if source_members else None),
+            "opponent": SubjectView(opponents[0].subject if opponents else None),
+            "attempts": float(getattr(battle, "escape_attempts", {}).get(rule.side, 0)),
+        }
+        chance = evaluate(rule.chance_expression, names, getattr(battle, "rng", None))
+        return max(rule.minimum_chance, min(rule.maximum_chance, chance))
     chance = rule.base_chance
     if rule.source_stat and source_members:
         chance += (

@@ -161,6 +161,9 @@ class BattleVisualResolver:
         # images.
         self._generated = {}
         self._generated_profiles = {}
+        # member id -> combatant visual profile id, when a unit is not drawn by its own kind
+        # (a creature by its species' profile); the host fills it
+        self.profile_keys = {}
 
     # -- generated visuals (projects without battle art) ------------------------
     def register_generated(
@@ -281,8 +284,12 @@ class BattleVisualResolver:
     def library(self):
         return self.project.battle_presentation_library
 
+    def profile_key(self, member_id):
+        """The profile id a member is drawn with: its ``profile_keys`` entry, else its kind."""
+        return self.profile_keys.get(str(member_id)) or str(member_id).split(":", 1)[0]
+
     def profile_for(self, member_id):
-        key = str(member_id).split(":", 1)[0]
+        key = self.profile_key(member_id)
         if key in self.library.ids("combatant_visuals"):
             return self.library.require("combatant_visuals", key)
         return self._generated_profiles.get(key)

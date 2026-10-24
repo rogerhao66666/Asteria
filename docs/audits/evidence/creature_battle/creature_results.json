@@ -1,0 +1,185 @@
+{
+ "music_played": [
+  "town_theme",
+  "battle_theme",
+  "town_theme",
+  "battle_theme",
+  "town_theme",
+  "battle_theme",
+  "town_theme",
+  "battle_theme",
+  "town_theme",
+  "battle_theme"
+ ],
+ "check": "D58 creature battle screen in a real window",
+ "driver": "cocoa",
+ "art": "/Users/roger/Documents/Vscode/Asteria/docs/audits/evidence/creature_battle/art",
+ "steps": [
+  {
+   "step": "01_wild_appeared",
+   "phase": "story",
+   "message": "Wild Wolf appeared!"
+  },
+  {
+   "step": "02_go",
+   "phase": "story",
+   "message": "Go! MOCHI!"
+  },
+  {
+   "step": "03_commands",
+   "phase": "command",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "04_moves",
+   "phase": "fight",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "05_move_selected",
+   "cursor": 1,
+   "phase": "fight",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "06_used_move",
+   "phase": "story",
+   "message": "MOCHI used Volley!"
+  },
+  {
+   "step": "07_super_effective",
+   "phase": "story",
+   "message": "It's super effective!"
+  },
+  {
+   "step": "08_foe_turn",
+   "phase": "story",
+   "message": "It's super effective!"
+  },
+  {
+   "step": "09_bag_items",
+   "phase": "bag",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "10_bag_balls",
+   "phase": "bag",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "11_ball_shaking",
+   "phase": "story",
+   "message": "Aldric used Pet Ball!"
+  },
+  {
+   "step": "12_caught",
+   "pets": [
+    "cub#1",
+    "wolf#1",
+    "wolf#2"
+   ],
+   "phase": "story",
+   "message": "Gotcha! Wolf was caught!"
+  },
+  {
+   "step": "13_trainer_challenge",
+   "phase": "command",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "14_trainer_sent_out",
+   "phase": "command",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "15_no_running",
+   "phase": "story",
+   "message": "No! There's no running from a\ntrainer battle!"
+  },
+  {
+   "step": "16_party_screen",
+   "phase": "party",
+   "message": "What will\nMOCHI do?"
+  },
+  {
+   "step": "17_come_back",
+   "phase": "story",
+   "message": "MOCHI, come back!"
+  },
+  {
+   "step": "18_switch_go",
+   "phase": "story",
+   "message": "Go! Wolf!"
+  },
+  {
+   "step": "19_mine_fainted",
+   "phase": "story",
+   "message": "Wolf fainted!"
+  },
+  {
+   "step": "20_forced_party",
+   "phase": "party",
+   "message": "Wolf fainted!"
+  },
+  {
+   "step": "21_sent_back_in",
+   "phase": "story",
+   "message": "Go! MOCHI!"
+  },
+  {
+   "step": "22_trainer_next",
+   "phase": "story",
+   "message": "YOUNGSTER CALVIN sent out Cub!"
+  },
+  {
+   "step": "23_defeated_trainer",
+   "phase": "story",
+   "message": "Aldric defeated YOUNGSTER\nCALVIN!"
+  },
+  {
+   "step": "24_prize",
+   "gold": 6160.0,
+   "phase": "story",
+   "message": "Aldric got $160 for winning!"
+  },
+  {
+   "step": "25_legendary",
+   "phase": "story",
+   "message": "Titan appeared!"
+  },
+  {
+   "step": "26_no_moves_left",
+   "phase": "story",
+   "message": "MOCHI has no moves left!"
+  },
+  {
+   "step": "27_struggle",
+   "phase": "story",
+   "message": "MOCHI used Struggle!"
+  },
+  {
+   "step": "28_struggle_recoil",
+   "hp_before": 25.0,
+   "hp_after": 18.75,
+   "top": 25.0,
+   "phase": "story",
+   "message": "MOCHI used Struggle!"
+  },
+  {
+   "step": "29_zh_appeared",
+   "phase": "story",
+   "message": "野生的Wolf出現了！"
+  },
+  {
+   "step": "30_zh_commands",
+   "phase": "command",
+   "message": "要讓\nMOCHI做什麼？"
+  },
+  {
+   "step": "31_zh_moves",
+   "phase": "fight",
+   "message": "要讓\nMOCHI做什麼？"
+  }
+ ],
+ "pass": true
+}

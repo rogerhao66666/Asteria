@@ -80,6 +80,11 @@ class EventVM:
             raise ValueError("dt must be >= 0")
         if self.state.status != EventVMStatus.WAITING:
             return self.state.status
+        until = getattr(self, "_until", None)
+        if until is not None:  # WAIT until: still waiting while the condition is false
+            if not until.evaluate(self.context):
+                return self.state.status
+            self._until = None
         remaining = max(0.0, self.state.wait_remaining - dt)
         self.state.wait_remaining = remaining
         if remaining == 0.0:
@@ -118,7 +123,15 @@ class EventVM:
             name = instruction.args.get("name")
             if name is None:
                 raise EventVMError("SET_VARIABLE requires name")
-            self.context.set_variable(name, instruction.args.get("value"))
+            source = instruction.args.get("from_variable")
+            if source:  # a copy of another variable's value (0 when it has none)
+                self.context.set_variable(name, self.context.get_variable(str(source), 0))
+            elif instruction.args.get("add") is not None:  # added to (a number; 0 when unset)
+                current = self.context.get_variable(name, 0)
+                current = current if isinstance(current, (int, float)) else 0
+                self.context.set_variable(name, current + instruction.args["add"])
+            else:
+                self.context.set_variable(name, instruction.args.get("value"))
 
         elif instruction.opcode == "SET_LOCAL":
             scope_id = instruction.args.get("scope_id", self.local_scope_id)
@@ -163,6 +176,19 @@ class EventVM:
                 self.state.pc = min(len(self.program), self.state.pc + count)
                 if self.state.pc >= len(self.program):
                     self.state.status = EventVMStatus.COMPLETED
+
+        elif instruction.opcode == "WAIT" and instruction.args.get("until") is not None:
+            # wait until a condition holds (a route walked, a switch turned on...)
+            raw_condition = instruction.args.get("until")
+            if not isinstance(raw_condition, dict):
+                raise EventVMError("WAIT until requires a condition")
+            condition = EventCondition.from_data(raw_condition)
+            if not condition.evaluate(self.context):
+                self._until = condition
+                self.state.status = EventVMStatus.WAITING
+                self.state.wait_remaining = 0.0
+            elif self.state.pc >= len(self.program):
+                self.state.status = EventVMStatus.COMPLETED
 
         elif instruction.opcode == "WAIT":
             raw = instruction.args.get("seconds")

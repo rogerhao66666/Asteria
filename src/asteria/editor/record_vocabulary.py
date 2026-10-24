@@ -318,6 +318,12 @@ LABELS = {
     "members": "Who is in it",
     "count": "How many",
     "weight": "How likely (weight)",
+    "pet_species_id": "Pet species (a creature foe)",
+    "level_max": "Level up to (0 = exactly the level)",
+    "reserve": "Waits on the bench",
+    "moves": "Moves (empty: what its species taught it)",
+    "genes": "Genes (its own numbers)",
+    "max_uses": "Uses before resting (0 = unlimited)",
     "experience": "Experience",
     "currencies": "Money",
     "loot": "Items it may drop",
@@ -437,7 +443,19 @@ HELP = {
     "target_override": "Confusion-like: the holder picks this kind of target instead.",
     "relation": "Allies, opponents, itself or anyone.",
     "selection_mode": "Manual (the player picks), all, random...",
-    "members": "The foes in this fight and how many of each.",
+    "members": "The foes in this fight and how many of each. A member can be a creature of a "
+    "pet species instead of an enemy: give it a level (or a range), its moves and genes.",
+    "pet_species_id": "A creature of this pet species fights here instead of an enemy "
+    "definition: its stats come from the species at the level, its moves from the species' "
+    "learnset. Leave the enemy empty.",
+    "level_max": "Roll the creature's level between the level and this (0 = always the level).",
+    "reserve": "This member waits on the bench and comes in when a stage slot of its side "
+    "empties (Pet Rules: battle slots) - a trainer's team.",
+    "moves": "The creature's moves here (empty: what its species taught it by its level).",
+    "genes": "The creature's own numbers for the stat formulas (iv.attack, nature.speed...); "
+    "empty = rolled by the Pet Rules.",
+    "max_uses": "How many times the ability can be used before something restores it (a "
+    "creature's move keeps its uses between battles; HEAL_PETS restores them). 0 = unlimited.",
     "weight": "Higher = more often, compared with the others.",
     "start_mode": "Full, empty or a fixed value when the battle starts.",
     "end_mode": "What happens to it when the battle ends.",

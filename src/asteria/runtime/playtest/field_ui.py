@@ -32,6 +32,8 @@ class FieldUiMixin:
         self._draw_event_timers()
         self._draw_field_windows()
         self._draw_entity_icons()
+        self._draw_area_name()
+        self._draw_emotes()
         if self.game.cutscene_active:
             self._draw_dialogue()
             return
@@ -45,30 +47,35 @@ class FieldUiMixin:
             return
 
         tr = self.game.tr
-        c = self.menu_canvas("field_hint", {"map.name": self._map_title})
-        c.begin()
-        c.panel("frame", (18, self.height - 92, self.width - 36, 72))
-        c.text(
-            "title",
-            tr("field.title", "Field Test"),
-            34,
-            self.height - 82,
-            size=24,
-            color=c.tone("title", (255, 220, 124)),
-        )
-        c.text(
-            "controls",
-            tr(
-                "field.controls",
-                "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   Esc: Pause",
-            ),
-            34,
-            self.height - 52,
-            size=19,
-            color=c.tone("text", (245, 245, 250)),
-        )
-        c.finish()
-        candidate = self._interaction_candidate()
+        # the playtest's own hints (its controls and the "E Interact" line); a game drawn as
+        # its own (field.test_hints: false) shows the field alone
+        hints = self.manifest.get("field", {}).get("test_hints", True)
+        if hints:
+            c = self.menu_canvas("field_hint", {"map.name": self._map_title})
+            c.begin()
+            c.panel("frame", (18, self.height - 92, self.width - 36, 72))
+            c.text(
+                "title",
+                tr("field.title", "Field Test"),
+                34,
+                self.height - 82,
+                size=24,
+                color=c.tone("title", (255, 220, 124)),
+            )
+            c.text(
+                "controls",
+                tr(
+                    "field.controls",
+                    "Move: WASD / Arrows   C: Build   Q: Quests   E: Interact   F5: Save   "
+                    "Esc: Pause",
+                ),
+                34,
+                self.height - 52,
+                size=19,
+                color=c.tone("text", (245, 245, 250)),
+            )
+            c.finish()
+        candidate = self._interaction_candidate() if hints else None
         if candidate is not None and not self.game.event_busy:
             self.text(
                 tr(
@@ -293,7 +300,10 @@ class FieldUiMixin:
 
         if getattr(self, "popups", None) is None:
             self.popups, self._popup_serial = AnimatedTextRuntime(), 0
-        for notice in self.game.drain_notices():
+        notices = self.game.drain_notices()
+        if self.manifest.get("field", {}).get("notices", True) is False:
+            notices = ()  # the game says it in its own windows (field.notices: false)
+        for notice in notices:
             self._popup_serial += 1
             rise = TextTransform(y=-34.0, opacity=0.0, scale=1.0)
             spec = AnimatedTextSpec(
@@ -447,6 +457,13 @@ class FieldUiMixin:
         if request is None:
             return
         line = getattr(request, "line", None)
+        if self.manifest.get("dialogue", {}).get("window"):
+            if line is not None:
+                self._draw_dialogue_window(line)
+                return
+            if self.manifest["dialogue"].get("choice_frame"):
+                self._draw_choice_window(request)
+                return
         box, portrait = self._dialogue_layout(line)
         if portrait is not None and portrait[2] == "bust":  # stands behind the window
             self.screen.blit(portrait[0], portrait[1])
@@ -482,13 +499,265 @@ class FieldUiMixin:
             size=22,
             color=(255, 220, 124),
         )
+        cursor = self._choice_index(request)
         for i, choice in enumerate(request.choices[:9], 1):
+            mark = "> " if i - 1 == cursor else "   "
             self.text(
-                f"{i}. {self.game.line_text(choice)}",
+                f"{mark}{i}. {self.game.line_text(choice)}",
                 84 + ((i - 1) % 3) * 270,
                 self.height - 184 + ((i - 1) // 3) * 26,
                 size=20,
             )
+
+    def _choice_index(self, request):
+        """The choice under the cursor (arrow keys move it; a new choice starts at the top)."""
+        if getattr(self, "_choice_request", None) is not request:
+            self._choice_request, self._choice_cursor = request, 0
+        return self._choice_cursor
+
+    def _draw_choice_window(self, request):
+        """A choice in the game's own windows: the prompt in the message window, the options in
+        a framed box above its right end (``dialogue.choice_frame``: a 3 x 3 grid of 8-pixel
+        border pieces; ``choice_fill``: the inside colour; ``choice_right`` / ``choice_bottom``:
+        the box's right and bottom edges in window pixels, unless the choice gives ``box_at``,
+        its inside's top left; ``choice_line_height``), a pointer at the option under the
+        cursor."""
+        settings = self.manifest["dialogue"]
+        self._draw_dialogue_window(None, text=self.game.prompt_of(request))
+        cache = self.__dict__.setdefault("_dialogue_window_cache", {})
+        frame = cache.get("choice_frame")
+        if frame is None:
+            frame = cache["choice_frame"] = self.load_image(settings["choice_frame"])
+        font, window = cache.get("font"), cache["window"]
+        letter, shadow = (
+            tuple(c) for c in settings.get("colours", ((98, 98, 98), (213, 213, 205)))
+        )
+        step = int(settings.get("choice_line_height", 16))
+        names = [self.game.expand_message(self.game.line_text(c), plain=True) for c in
+                 request.choices]  # fmt: skip
+        width = max((font.width(n) if font is not None else len(n) * 6) for n in names) + 16
+        inner = (width + 7) // 8 * 8, len(names) * step
+        ww, wh = window.get_size()
+        right = int(settings.get("choice_right", ww - 24))
+        bottom = int(settings.get("choice_bottom", 160 - wh))
+        if request.box_at is not None:  # the choice's own place: its inside's top left
+            right = request.box_at[0] - 8 + inner[0] + 16
+            bottom = request.box_at[1] - 8 + inner[1] + 16
+        box = self.pg.Surface((inner[0] + 16, inner[1] + 16), self.pg.SRCALPHA)
+        piece = frame.get_width() // 3
+        fill = settings.get("choice_fill") or frame.get_at(
+            (piece + piece // 2, piece + piece // 2)
+        )
+        box.fill(fill)
+        bw, bh = box.get_size()
+        for col, x in ((0, 0), (2, bw - piece)):
+            for row, y in ((0, 0), (2, bh - piece)):
+                box.blit(frame, (x, y), (col * piece, row * piece, piece, piece))
+        for x in range(piece, bw - piece, piece):
+            box.blit(frame, (x, 0), (piece, 0, piece, piece))
+            box.blit(frame, (x, bh - piece), (piece, 2 * piece, piece, piece))
+        for y in range(piece, bh - piece, piece):
+            box.blit(frame, (0, y), (0, piece, piece, piece))
+            box.blit(frame, (bw - piece, y), (2 * piece, piece, piece, piece))
+        cursor = self._choice_index(request)
+        for row, name in enumerate(names):
+            ty = 8 + row * step
+            if font is not None and font.covers(name):
+                font.render(box, name, 16, ty, letter, shadow)
+            else:
+                face = self.pg.font.Font(None, 16)
+                box.blit(face.render(name, False, letter), (16, ty))
+            if row == cursor:  # the pointer (menu.c's arrow)
+                tip = [(9, ty + 3), (9, ty + 11), (13, ty + 7)]
+                self.pg.draw.polygon(box, shadow, [(x + 1, y + 1) for x, y in tip])
+                self.pg.draw.polygon(box, letter, tip)
+        scale = max(1, self.width // ww)
+        big = self.pg.transform.scale(box, (bw * scale, bh * scale))
+        left = (self.width - ww * scale) // 2 + (right - bw) * scale
+        self.screen.blit(
+            big, (left, self.height - wh * scale - (160 - wh - bottom) * scale - bh * scale)
+        )
+
+    def _draw_dialogue_window(self, line, text=None):
+        """``dialogue.window``: the game's own message window, drawn at its own resolution and
+        scaled by whole pixels. ``window`` is the picture (placed at the bottom of the screen),
+        ``text_area`` ``[x, y, w, h]`` in it, ``line_height``, ``font`` (a bitmap font JSON;
+        text it lacks is drawn in a system face), ``colours`` ``[letter, shadow]``, ``speed``
+        (letters a second, 0 = all at once), ``arrow`` (a strip of frames under each other,
+        ``arrow_size`` ``[w, h]``) shown at ``arrow_at`` once the line is written out."""
+        settings = self.manifest.get("dialogue", {})
+        cache = self.__dict__.setdefault("_dialogue_window_cache", {})
+        if "window" not in cache:
+            cache["window"] = self.load_image(settings["window"])
+            cache["arrow"] = self.load_image(settings["arrow"]) if settings.get("arrow") else None
+            cache["font"] = None
+            if settings.get("font"):
+                from asteria.graphics.bitmap_font import BitmapFont
+
+                cache["font"] = BitmapFont(self.pg, self.path(settings["font"]))
+        window, arrow, font = cache["window"], cache["arrow"], cache["font"]
+        ww, wh = window.get_size()
+        scale = max(1, self.width // ww)
+        surface = window.copy()
+        if text is None:
+            text = self.game.line_text(line)
+        else:
+            line = ("text", text)  # a prompt: typed out like a line
+        text = self.game.expand_message(text, plain=True)
+        if cache.get("line") is not line and not (
+            isinstance(line, tuple) and cache.get("line") == line  # the same prompt
+        ):
+            cache["line"], cache["start"] = line, self.pg.time.get_ticks()
+        speed = float(settings.get("speed", 40))
+        speeds = settings.get("speeds")  # letters a second by the option.text_speed choice
+        if speeds:
+            chosen = int(self.game.save.event_context.get_variable("option.text_speed", 0) or 0)
+            speed = float(speeds[min(chosen, len(speeds) - 1)])
+        shown = len(text)
+        if speed > 0:
+            shown = int((self.pg.time.get_ticks() - cache["start"]) / 1000 * speed)
+        x0, y0, _w, _h = settings.get("text_area", (16, 8, 216, 32))
+        step = int(settings.get("line_height", 16))
+        letter, shadow = (
+            tuple(c) for c in settings.get("colours", ((98, 98, 98), (213, 213, 205)))
+        )
+        left = shown
+        for row, words in enumerate(text.split("\n")[:2]):
+            part = words[: max(0, left)]
+            left -= len(words) + 1
+            if not part:
+                continue
+            if font is not None and font.covers(part):
+                font.render(surface, part, x0, y0 + row * step, letter, shadow)
+            else:
+                from asteria.platform.pygame_battle_ui import font_for_text
+
+                face = font_for_text(
+                    self.pg, self.pg.font.Font(None, 16), part, self._cjk_fonts, 12
+                )
+                image = face.render(part, False, letter)
+                surface.blit(face.render(part, False, shadow), (x0 + 1, y0 + row * step + 1))
+                surface.blit(image, (x0, y0 + row * step))
+        if arrow is not None and shown >= len(text):
+            aw, ah = settings.get("arrow_size", (8, 16))
+            frames = max(1, arrow.get_height() // ah)
+            frame = (self.pg.time.get_ticks() // 160) % frames
+            ax, ay = settings.get("arrow_at", (220, 24))
+            surface.blit(arrow, (ax, ay), (0, frame * ah, aw, ah))
+        big = self.pg.transform.scale(surface, (ww * scale, wh * scale))
+        self.screen.blit(big, ((self.width - ww * scale) // 2, self.height - wh * scale))
+
+    def _draw_emotes(self):
+        """Marks over characters (``game.emotes``: a character that noticed the player...),
+        pictures from ``field.emotes`` (``{key: picture}``), drawn above the head."""
+        emotes = getattr(self.game, "emotes", None)
+        pictures = self.manifest.get("field", {}).get("emotes") or {}
+        view = self.tile_view
+        if not emotes or not pictures or view is None:
+            return
+        offset = float(self.manifest.get("field", {}).get("emote_offset", 40))
+        for entity_id, (key, _left) in emotes.items():
+            entity = self.game.scene.get_entity(entity_id)
+            if entity is None or key not in pictures:
+                continue
+            image = self.load_image(pictures[key])
+            zoom = view.camera.zoom
+            size = (round(image.get_width() * zoom), round(image.get_height() * zoom))
+            cache = self.__dict__.setdefault("_emote_images", {})
+            scaled = cache.get((key, size))
+            if scaled is None:
+                scaled = cache[(key, size)] = self.pg.transform.scale(image, size)
+            t = entity.get(Transform)
+            x, y = view.world_to_screen(t.x, t.y - offset)
+            self.screen.blit(scaled, (round(x - size[0] / 2), round(y)))
+
+    def _area_popup_offset(self, state, settings, now):
+        """How far the popup is above its place now (0 = fully shown); moves the popup through
+        sliding in, holding and sliding out, and starts a waiting name after it."""
+        hidden = state["height"]
+        speed = float(settings.get("slide_speed", 119.5))  # world pixels a second
+        hold = float(settings.get("show_seconds", 2.0))
+        since = now - state["t"]
+        if state["phase"] == "in":
+            offset = hidden - speed * since
+            if offset > 0:
+                return offset
+            state.update(phase="hold", t=now)
+            return 0.0
+        if state["phase"] == "hold":
+            if since < hold:
+                return 0.0
+            state.update(phase="out", t=now, start=0.0)
+            since = 0.0
+        offset = state["start"] + speed * since
+        if offset < hidden:
+            return offset
+        if state.get("next"):
+            state.update(title=state.pop("next"), phase="in", t=now)
+            return hidden
+        state["title"] = None
+        return None
+
+    def _draw_area_name(self):
+        """``field.area_name``: the name of a map area the player walks into, on a board that
+        slides down from the top of the screen, stays ``show_seconds`` (2) and slides back up
+        (``slide_speed`` world pixels a second, 119.5). ``window`` is the board's picture,
+        ``at`` ``[x, y]`` where it rests, ``text_area`` ``[x, y, width]`` the line the name is
+        centred on, ``font`` a bitmap font JSON and ``colours`` ``[letter, shadow]``. A new name
+        hurries the shown one away first."""
+        requests = self.game.area_title_requests
+        settings = self.manifest.get("field", {}).get("area_name")
+        if not settings:
+            requests.clear()
+            return
+        cache = self.__dict__.setdefault("_area_popup", {"title": None})
+        if "window" not in cache:
+            cache["window"] = self.load_image(settings["window"])
+            cache["font"] = None
+            if settings.get("font"):
+                from asteria.graphics.bitmap_font import BitmapFont
+
+                cache["font"] = BitmapFont(self.pg, self.path(settings["font"]))
+        window = cache["window"]
+        now = self.pg.time.get_ticks() / 1000.0
+        if requests:
+            title = requests[-1]
+            requests.clear()
+            if cache["title"] is None:
+                cache.update(title=title, phase="in", t=now, height=window.get_height())
+            else:
+                cache["next"] = title
+                if cache["phase"] != "out":
+                    offset = self._area_popup_offset(cache, settings, now) or 0.0
+                    cache.update(phase="out", t=now, start=offset)
+        if cache["title"] is None:
+            return
+        offset = self._area_popup_offset(cache, settings, now)
+        if offset is None:
+            return
+        surface = window.copy()
+        title = cache["title"]
+        tx, ty, tw = settings.get("text_area", (8, 11, 80))
+        letter, shadow = (
+            tuple(c) for c in settings.get("colours", ((255, 255, 255), (41, 49, 90)))
+        )
+        font = cache["font"]
+        if font is not None and font.covers(title):
+            font.render(surface, title, tx + (tw - font.width(title)) // 2, ty, letter, shadow)
+        else:
+            from asteria.platform.pygame_battle_ui import font_for_text
+
+            face = font_for_text(self.pg, self.pg.font.Font(None, 16), title, self._cjk_fonts, 12)
+            x = tx + (tw - face.size(title)[0]) // 2
+            surface.blit(face.render(title, False, shadow), (x + 1, ty + 1))
+            surface.blit(face.render(title, False, letter), (x, ty))
+        view = self.tile_view
+        scale = max(1, round(view.camera.zoom) if view is not None else self.width // 240)
+        ax, ay = settings.get("at", (0, 0))
+        big = self.pg.transform.scale(
+            surface, (surface.get_width() * scale, surface.get_height() * scale)
+        )
+        self.screen.blit(big, (round(ax * scale), round((ay - offset) * scale)))
 
     def _draw_message(self, text, x, y, *, size=22):
         """Draw a message whose data codes are expanded: colour and size spans, icons as boxes,
@@ -527,14 +796,28 @@ class FieldUiMixin:
                 self.game.acknowledge_dialogue()
                 self._sound(self.manifest.get("dialogue_confirm_sfx"))
             return True
+        choices = getattr(request, "choices", None) or ()
+        cursor = self._choice_index(request)
         for event in events:
-            if event.type != self.pg.KEYDOWN:
+            if event.type != self.pg.KEYDOWN or not choices:
                 continue
-            if getattr(request, "choices", None) and self.pg.K_1 <= event.key <= self.pg.K_9:
+            if self.pg.K_1 <= event.key <= self.pg.K_9:
                 index = event.key - self.pg.K_1
-                if index < len(request.choices):
+                if index < len(choices):
                     self.game.choose(index)
-                    break
+                    return True
+            elif event.key in (self.pg.K_UP, self.pg.K_LEFT):
+                self._choice_cursor = cursor = (cursor - 1) % len(choices)
+            elif event.key in (self.pg.K_DOWN, self.pg.K_RIGHT):
+                self._choice_cursor = cursor = (cursor + 1) % len(choices)
+        if choices and (self.input.just_pressed("confirm") or self.input.just_pressed("interact")):
+            self.game.choose(cursor)
+        elif (
+            choices
+            and self.manifest.get("dialogue", {}).get("cancel_picks_last")
+            and self.input.just_pressed("cancel")
+        ):
+            self.game.choose(len(choices) - 1)  # B on YES / NO answers NO
         return True
 
     def _field_input(self, events, dt):
@@ -590,6 +873,8 @@ class FieldUiMixin:
             self._predict_multiplayer_player(dx, dy, dt)
             self._send_multiplayer_input(dx, dy, dict(self.input.current.actions))
             self._sync_multiplayer_player()
+        elif self.manifest.get("field", {}).get("movement") == "grid":
+            moving = self._grid_field_step(dx, dy, dt)
         elif moving:
             mag = max(1.0, (dx * dx + dy * dy) ** 0.5)
             speed = 36.0
@@ -627,6 +912,12 @@ class FieldUiMixin:
         if self.input.just_pressed("menu") and self.settings.developer_menu:
             self._ui_mode = "build"
         if self.input.just_pressed("cancel"):
+            if self.manifest.get("field", {}).get("creature_menu"):  # the game's own menu
+                from asteria.runtime.creature_menu import CreatureMenuScreen
+
+                self._creature_menu = CreatureMenuScreen(self)
+                self._ui_mode = "creature_menu"
+                return moving
             self._pause_menu.index = 0
             self._ui_mode = "pause"
             return moving
@@ -645,6 +936,87 @@ class FieldUiMixin:
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
         return moving
+
+    def _grid_field_step(self, dx, dy, dt):
+        """``field.movement: "grid"``: a whole cell a step (runtime/grid_walk.py)."""
+        from asteria.runtime.collision import CombinedQuery
+        from asteria.runtime.grid_walk import GridWalker
+
+        walker = getattr(self, "_grid_walker", None)
+        moves = getattr(self.game, "player_story_moves", 0)  # an event moved / turned the player
+        if (
+            walker is None
+            or getattr(self, "_grid_walker_scene", None) != self.game.scene.id
+            or getattr(self, "_grid_walker_moves", moves) != moves
+        ):
+            walker = self._grid_walker = GridWalker(self.manifest.get("field", {}))
+            self._grid_walker_scene = self.game.scene.id
+            transform = self.game.player.get(Transform)  # on a whole cell again
+            size = walker.size
+            transform.x = (transform.x // size) * size + size / 2
+            transform.y = (transform.y // size) * size + size / 2
+        self._grid_walker_moves = moves
+        game = self.game
+        blocked = CollisionWorld.from_scene(game.scene).blocking_query(exclude={game.player.id})
+        walls = game._tile_blocking.get(game.scene.id)
+        if walls is not None:
+            blocked = CombinedQuery(blocked, walls)
+        running = self.input.held(walker.run_action) if walker.run_action else False
+        needs = self.manifest.get("field", {}).get("run_switch")  # running only once allowed
+        if running and needs and not game.save.event_context.get_switch(needs):
+            running = False
+        transform = game.player.get(Transform)
+        movers = game._grid_movers.get(game.scene.id)
+        held = movers.held_cells() if movers is not None else set()
+        size = walker.size
+
+        before = walker.target
+
+        def stopped(x, y):  # a wall, or a cell a grid character stands on or walks into
+            return (int(x // size), int(y // size)) in held or blocked.collides_world_point(x, y)
+
+        facing, moving = walker.step(
+            transform,
+            game.facing,
+            dx,
+            dy,
+            dt,
+            stopped,
+            running=running,
+            ledge=self._grid_ledge(),
+        )
+        game.player_lift = walker.lift  # the view draws a hopping player raised
+        if before is not None and walker.target != before and game.mode == "field":
+            # a step ended on a cell: the area there may start a random encounter
+            if game.step_arrived():
+                transform.x, transform.y = before  # the battle starts on that cell
+                walker.target, walker.jump, walker.lift = None, None, 0.0
+                game.player_lift = 0.0
+        target = walker.target
+        game.grid_reserved = (
+            ((int(target[0] // size), int(target[1] // size)),) if target is not None else ()
+        )
+        if facing != game.facing:
+            game.set_player_facing(facing)
+        game.save.player_position = (transform.x, transform.y)
+        if moving:
+            self._field_step += 1
+        return moving
+
+    def _grid_ledge(self):
+        """``ledge(x, y, facing)`` for the grid walk: the tiles there carry the tag
+        ``<field.ledge_tag><facing>`` (default ``ledge_down`` ...); ``None`` without a tile map."""
+        view = self.tile_view
+        if view is None:
+            return None
+        cache = getattr(self, "_ledge_keys", None)
+        if cache is None or cache[0] is not view.tilemap:
+            from asteria.runtime.map_rules_field import tile_area_keys
+
+            cache = self._ledge_keys = (view.tilemap, tile_area_keys(view.tilemap, view.tileset))
+        keys_at = cache[1]
+        prefix = str(self.manifest.get("field", {}).get("ledge_tag", "ledge_"))
+        return lambda x, y, facing: f"tag:{prefix}{facing}" in keys_at(x, y)
 
     def _field_abilities(self):
         """The player carries ActionCombat bindings (a field attack in a turn-based game)."""

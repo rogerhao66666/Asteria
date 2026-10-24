@@ -38,6 +38,7 @@ COMMAND_WORDS = {
     "Skills": "battle.command.skills",
     "Items": "battle.command.items",
     "Escape": "battle.command.escape",
+    "Switch": "battle.command.switch",
     "More": "battle.command.more",
     "Back": "battle.command.back",
     "Command": "battle.menu.command",
@@ -89,6 +90,8 @@ class BattleCommands:
         project's own ``menu_category`` groups (before Items in the categories style)."""
         base = self.categories
         custom = self.custom_categories(actor_id)
+        if self.style != "root" and self.switch_rows(actor_id):
+            custom = (*custom, "Switch")  # a creature party's bench, before Items
         if not custom:
             return base
         head = tuple(c for c in base if c != "Items")
@@ -250,6 +253,10 @@ class BattleCommands:
                 (name, len(abilities.get(name, ())), tr("battle.hint.group", "Abilities"))
             )
         groups.append(("Items", items, tr("battle.hint.items", "Use an item from the bag")))
+        bench = self.switch_rows(actor_id)
+        if bench:
+            hint = tr("battle.hint.switch", "Send out another creature")
+            groups.append(("Switch", len(bench), hint))
         run = self.game.escape_chance()
         if run is not None:
             hint = tr("battle.hint.escape", "{chance}% to get away", chance=round(run * 100))
@@ -572,7 +579,7 @@ class BattleCommands:
         key, _, number = str(member_id).partition(":")
         if key == "pet" and self.game.pet_name(number):
             return self.game.pet_name(number)
-        record = db.actors.get(key) or db.enemies.get(key)
+        record = db.actors.get(key) or self.game.foe_definition(key)
         name = self.game.name_of(record) or key.replace("_", " ").title()
         same = [m for m in self.game.battle.members if m.split(":", 1)[0] == key]
         return f"{name} {number}" if number and len(same) > 1 else name
@@ -594,7 +601,31 @@ class BattleCommands:
             return self.attack_rows(actor_id)
         if self.category == "Items":
             return self.item_rows()
+        if self.category == "Switch":
+            return self.switch_rows(actor_id)
         return self.skill_rows(actor_id, self.category)
+
+    def switch_rows(self, actor_id):
+        """One row per creature waiting on the bench of the actor's side (creature party)."""
+        candidates = getattr(self.game, "switch_candidates", None)
+        if candidates is None:
+            return []
+        rows = []
+        for member_id in candidates(actor_id):
+            member = self.game.battle.member(member_id)
+            pool = member.subject.resources
+            hp = self.game.rules.knockout_resource_id
+            detail = f"{pool.current(hp):g}/{pool.maximum(hp):g}" if pool.contains(hp) else ""
+            rows.append(
+                BattleActionEntry(
+                    f"switch:{member_id}",
+                    self.display_name(member_id),
+                    category="Switch",
+                    cost_text=detail,
+                    order=len(rows),
+                )
+            )
+        return rows
 
     def entries(self, actor_id):
         rows = self.rows(actor_id)
@@ -742,6 +773,18 @@ class BattleCommands:
         if self.mode == "command" and row.action_id == "capture" and self.category == "Skills":
             self.message = "capture"  # the host opens its capture prompt
             return False
+        if self.mode == "command" and self.category == "Switch":
+            out_id = actor_id
+            if self.game.pet_of_member(actor_id) is None:  # a trainer: its first stage pet
+                stage = [m for m in self.game.stage_ids("heroes") if m.startswith("pet:")]
+                out_id = stage[0] if stage else actor_id
+            try:
+                used = self.game.switch_pet(out_id, row.action_id.split(":", 1)[1])
+            except Exception as exc:
+                self.message = translated(exc, self.game.tr)
+                return False
+            self.reset()
+            return used
         if self.mode == "command" and row.action_id == "boost" and self.category == "Skills":
             top = self.game.max_boost_level(actor_id)
             self.boost = 0 if self.boost >= top else self.boost + 1

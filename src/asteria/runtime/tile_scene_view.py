@@ -31,6 +31,7 @@ from .components2d import (
     ParallaxBackground2DComponent,
     SpriteRenderer2D,
 )
+from .grid_actors import GridMover2DComponent
 from .skeleton_component import SkeletonAnimation2DComponent, SkeletonSceneRuntime
 from .tilemap_field import AssetResources, tilemap_binding
 from .tilequery import TileMapQuery
@@ -116,6 +117,8 @@ class TileSceneView:
         self._frames = {}
         self._animated = {}
         self._skeleton_runtime = SkeletonSceneRuntime()
+        self.jump_shadow = None  # a picture drawn under a hopping player (set by the game)
+        self.jump_shadow_offset = 4.0  # world units below the player's position
         self.load()
 
     # -- loading ---------------------------------------------------------------------------------
@@ -170,6 +173,19 @@ class TileSceneView:
         self.session.bind_map_rules(tile_area_keys(self.tilemap, self.tileset, layer))
         self._texture_surface = self._texture(self.tile_sheet.texture.asset_id)
         self._frame_rects = {}
+        # animated tiles: tile id -> (frame indices, ms per frame); the chunks that hold one are
+        # drawn again when any animation moves to its next frame
+        self._tile_animations = {
+            tile_id: (definition.animation, definition.frame_ms)
+            for tile_id, definition in self.tileset.tiles.items()
+            if definition.animation and definition.frame_ms > 0 and "cover" not in definition.tags
+        }
+        self._tile_clock = 0.0
+        self._tile_phase = self._animation_phase()  # the frames the chunks are drawn with
+        self._animated_chunks = set()
+        self._cover_ids = set()
+        self._covers = self._cover_cells(skip=layer)
+        self._cover_entered = {}  # entity id -> (cell, clock when it stepped in)
         self._chunk_cache = {}  # (group, chunk_x, chunk_y) -> Surface | None, least recent first
         self._canvas = {}
         self._scaled_canvas = {}  # the zoomed layer picture, reused frame to frame
@@ -229,6 +245,7 @@ class TileSceneView:
         from .character_control import CharacterController2DComponent
 
         self._apply_class_looks()
+        self._advance_tiles(dt)
         self._look_ahead(dt)
         self._skeleton_runtime.update(self.session.scene, dt)
         for entity in self.session.scene.entities():
@@ -253,6 +270,9 @@ class TileSceneView:
                 continue
             controller = entity.try_get(CharacterController2DComponent)
             facing = controller.facing if controller is not None else None
+            mover = entity.try_get(GridMover2DComponent)
+            if mover is not None:
+                facing = mover.facing
             if entity is self.session.player and controller is None:
                 facing = self.session.facing
             t = entity.get(Transform)
@@ -405,7 +425,22 @@ class TileSceneView:
             turned = self._frames[key] = self.pg.transform.rotate(image, angle)
         return turned
 
+    def _scaled_shadow(self):
+        key = ("jump_shadow", self.camera.zoom)
+        image = self._frames.get(key)
+        if image is None:
+            w, h = self.jump_shadow.get_size()
+            size = (round(w * self.camera.zoom), round(h * self.camera.zoom))
+            image = self._frames[key] = self.pg.transform.scale(self.jump_shadow, size)
+        return image
+
     def _tile_rect(self, tile_id):
+        animation = self._tile_animations.get(tile_id)
+        if animation is not None:  # the frame the tile's animation is on now
+            frames, frame_ms = animation
+            index = frames[int(self._tile_clock * 1000.0 / frame_ms) % len(frames)]
+            frame = self.tile_sheet.frames[index]
+            return self.pg.Rect(frame.x, frame.y, frame.width, frame.height)
         rect = self._frame_rects.get(tile_id)
         if rect is None:
             definition = self.tileset.tiles.get(tile_id)
@@ -416,6 +451,78 @@ class TileSceneView:
                 rect = self.pg.Rect(frame.x, frame.y, frame.width, frame.height)
             self._frame_rects[tile_id] = rect
         return rect
+
+    def _cover_cells(self, skip=""):
+        """``{(column, row): tile id}`` of the tiles tagged ``cover`` (in any layer, shown or
+        not, but the region layer ``skip`` whose numbers are region ids): such a tile is drawn
+        over whoever stands on its cell, right after them (tall grass over the feet), and is not
+        part of the layer pictures."""
+        tagged = {
+            tile_id
+            for tile_id, definition in self.tileset.tiles.items()
+            if "cover" in definition.tags
+        }
+        self._cover_ids = tagged
+        cells = {}
+        if not tagged:
+            return cells
+        cw, ch = self.tilemap.chunk_width, self.tilemap.chunk_height
+        for layer in self.tilemap.layers:
+            if layer.name == skip:
+                continue
+            for chunk in layer.chunks.values():
+                for i, tile_id in enumerate(chunk.tiles):
+                    if tile_id in tagged:
+                        x, y = i % chunk.width, i // chunk.width
+                        cells[(chunk.chunk_x * cw + x, chunk.chunk_y * ch + y)] = tile_id
+        return cells
+
+    def _draw_cover(self, screen, entity, transform):
+        """The cover tile of the cell a character stands on, over the character; its animation
+        plays once from the moment the character stepped in, then holds its last frame."""
+        tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+        cell = (floor(transform.x / tw), floor(transform.y / th))
+        tile_id = self._covers.get(cell)
+        if tile_id is None:
+            self._cover_entered.pop(entity.id, None)
+            return
+        entered = self._cover_entered.get(entity.id)
+        if entered is None or entered[0] != cell:
+            entered = self._cover_entered[entity.id] = (cell, self._tile_clock)
+        definition = self.tileset.tiles[tile_id]
+        index = definition.frame_index
+        if definition.animation and definition.frame_ms > 0:
+            step = int((self._tile_clock - entered[1]) * 1000.0 / definition.frame_ms)
+            index = definition.animation[min(step, len(definition.animation) - 1)]
+        frame = self.tile_sheet.frames[index]
+        key = ("cover", index, self.camera.zoom)
+        image = self._frames.get(key)
+        if image is None:
+            piece = self._texture_surface.subsurface((frame.x, frame.y, frame.width, frame.height))
+            size = (round(frame.width * self.camera.zoom), round(frame.height * self.camera.zoom))
+            image = self._frames[key] = self.pg.transform.scale(piece, size)
+        sx, sy = self.camera.world_to_screen(cell[0] * tw, cell[1] * th)
+        screen.blit(image, (round(sx), round(sy)))
+
+    def _animation_phase(self):
+        """The frame every tile animation is on now (one entry per distinct animation)."""
+        ms = self._tile_clock * 1000.0
+        return tuple(
+            sorted({(len(f), m, int(ms / m) % len(f)) for f, m in self._tile_animations.values()})
+        )
+
+    def _advance_tiles(self, dt):
+        """Move the tile animations on; drop the cached chunks that show an animated tile when
+        any animation reaches its next frame."""
+        self._tile_clock += max(0.0, float(dt))
+        if not self._tile_animations:
+            return
+        phase = self._animation_phase()
+        if phase != self._tile_phase:
+            self._tile_phase = phase
+            for key in self._animated_chunks:
+                self._chunk_cache.pop(key, None)
+            self._animated_chunks.clear()
 
     def _chunk_surface(self, group, cx, cy):
         """The pixels of one chunk of a layer group (None when it holds nothing); kept in a
@@ -433,9 +540,15 @@ class TileSceneView:
             chunk = layer.chunks.get((cx, cy))
             if chunk is None:
                 continue
+            animations = self._tile_animations
             for y in range(chunk.height):
                 for x in range(chunk.width):
-                    rect = self._tile_rect(chunk.tiles[y * chunk.width + x])
+                    tile_id = chunk.tiles[y * chunk.width + x]
+                    if tile_id in self._cover_ids:
+                        continue  # drawn over whoever stands there, not with the layer
+                    if tile_id in animations:
+                        self._animated_chunks.add(key)
+                    rect = self._tile_rect(tile_id)
                     if rect:
                         if surface is None:
                             surface = self.pg.Surface((cw * tw, ch * th), self.pg.SRCALPHA)
@@ -517,6 +630,8 @@ class TileSceneView:
                 if rig_draws:
                     sprites.append((t.y, 1, entity, None, None, rig_draws))
         sprites.sort(key=lambda row: (row[0], row[1]))
+        player = getattr(self.session, "player", None)
+        covers = getattr(self, "_covers", None)
         for _, _, entity, sprite, frame, rig_draws in sprites:
             if sprite is None:
                 for draw in rig_draws:
@@ -531,6 +646,16 @@ class TileSceneView:
                 continue
             t = entity.get(Transform)
             sx, sy = self.camera.world_to_screen(t.x, t.y)
+            lift = getattr(self.session, "player_lift", 0.0) if entity is player else 0.0
+            if lift > 0:  # a hop: the shadow stays on the ground, the character rises
+                if self.jump_shadow is not None:
+                    shadow = self._scaled_shadow()
+                    gx, gy = self.camera.world_to_screen(t.x, t.y + self.jump_shadow_offset)
+                    screen.blit(
+                        shadow,
+                        (round(gx - shadow.get_width() / 2), round(gy - shadow.get_height() / 2)),
+                    )
+                sy -= lift * self.camera.zoom
             if sprite.flip_x:
                 image = self.pg.transform.flip(image, True, False)
             if entity.id in flash:
@@ -539,6 +664,8 @@ class TileSceneView:
             screen.blit(
                 image, (round(sx - image.get_width() * px), round(sy - image.get_height() * py))
             )
+            if covers:
+                self._draw_cover(screen, entity, t)
         self._layer(screen, "above")
 
     def _draw_skeleton_texture(self, screen, draw):

@@ -20,6 +20,12 @@ class StrikesMixin:
         hits = tuple(getattr(definition, "hits", ()) or ()) or ({"tags": [], "power": 1.0},)
         results = []
         actor_tags = self.battle.member(actor_id).subject.tags
+        self.last_outcome_tags = set()  # what this action's hit checks came out as (a miss...)
+        counts = getattr(definition, "hit_counts", None) or {}
+        if counts:  # a move that strikes several times: one count rolled per use
+            repeats *= self._roll_count(counts)
+        first_rolled = None  # the first strike's first_checks, kept for the later strikes
+        strikes = 0
         for _ in range(repeats):
             for (
                 hit
@@ -27,6 +33,23 @@ class StrikesMixin:
                 hit_tags = list(hit["tags"])
                 follow = getattr(definition, "follow_tags", None) or {}
                 hit_tags += [to for have, to in follow.items() if actor_tags.contains(have)]
+                if offensive and hit.get("first_checks") and targets:
+                    if first_rolled is None:
+                        first_rolled = self._roll_hit_checks(
+                            actor_id,
+                            hit["first_checks"],
+                            targets[0],
+                            action_tags=(*definition.tags, *hit_tags),
+                        )
+                        if first_rolled:
+                            self._log(
+                                "hit_check",
+                                member_id=str(actor_id),
+                                target_ids=(str(targets[0]),),
+                                data={"tags": tuple(first_rolled)},
+                            )
+                    hit_tags += first_rolled
+                    self.last_outcome_tags.update(first_rolled)
                 if offensive and hit.get("checks") and targets:
                     rolled = self._roll_hit_checks(
                         actor_id,
@@ -35,6 +58,7 @@ class StrikesMixin:
                         action_tags=(*definition.tags, *hit_tags),
                     )
                     hit_tags += rolled
+                    self.last_outcome_tags.update(rolled)
                     if rolled:  # a crit / evade the player should see and the log can count
                         self._log(
                             "hit_check",
@@ -59,11 +83,34 @@ class StrikesMixin:
                     self.battle.action_scale = 1.0
                     for tag in added:
                         actor_tags.remove(tag)
+                strikes += 1
                 if offensive and hit.get("kill"):
                     self._apply_hit_kill(actor_id, hit["kill"], targets)
                 if not targets:
-                    return tuple(results)
+                    break
+                if first_rolled and counts and self._missed(first_rolled):
+                    break  # the whole use missed: no more strikes
+            else:
+                continue
+            break
+        if counts and strikes and not self._missed(first_rolled or ()):
+            self._log("strikes", member_id=str(actor_id), data={"count": strikes})
         return tuple(results)
+
+    def _roll_count(self, counts):
+        """One count of ``{count: weight}`` by its weight (the battle's dice)."""
+        roll = self.battle.rng.random() * sum(counts.values())
+        for count, weight in counts.items():
+            roll -= weight
+            if roll < 0:
+                return count
+        return max(counts)
+
+    def _missed(self, tags):
+        """Whether outcome ``tags`` hold a check's failure (a miss): its failure tags."""
+        checks = self.battle.interactions.checks
+        failures = {t for check in checks.values() for t in check.failure_tags}
+        return bool(failures & set(tags))
 
     def _roll_hit_checks(self, actor_id, check_ids, target_id, *, action_tags=()):
         """Outcome tags of a hit's checks, rolled once per hit against its first target (the
@@ -80,6 +127,33 @@ class StrikesMixin:
                 )
                 tags.extend(check.outcome_tags)
         return tags
+
+    def _drain_and_recoil(self, actor_id, ability_id, targets, before):
+        """An ability with ``drain`` heals its user by that share of the damage it just dealt
+        (at least 1); with ``recoil`` the user takes that share itself (at least 1)."""
+        definition = self.battle.ability_runtime.registry.get(ability_id)
+        drain = getattr(definition, "drain", 0.0)
+        recoil = getattr(definition, "recoil", 0.0)
+        resource = self.rules.knockout_resource_id
+        if not (drain or recoil) or not resource:
+            return
+        after = self._knockout_values(targets)
+        dealt = sum(max(0.0, before.get(t, 0.0) - after.get(t, 0.0)) for t in targets)
+        if dealt <= 0:
+            return
+        pool = self.battle.member(actor_id).subject.resources
+        if not pool.contains(resource):
+            return
+        if drain:
+            gain = max(1.0, float(int(dealt * drain)))
+            pool.set_current(resource, min(pool.maximum(resource), pool.current(resource) + gain))
+            self._log(
+                "drain", member_id=str(actor_id), target_ids=tuple(targets), data={"amount": gain}
+            )
+        if recoil:
+            loss = max(1.0, float(int(dealt * recoil)))
+            pool.set_current(resource, max(0.0, pool.current(resource) - loss))
+            self._log("recoil", member_id=str(actor_id), data={"amount": loss})
 
     def _apply_hit_kill(self, actor_id, kill, target_ids):
         """Instant KO of a hit: ``chance`` to empty ``resource``; targets tagged immune take
@@ -141,6 +215,7 @@ class StrikesMixin:
         before = self._knockout_values(targets)
         result = self.execute(actor_id, ability_id, targets, waive_costs=waive_costs)
         results.append(result)
+        self._drain_and_recoil(actor_id, ability_id, targets, before)
         outcomes = (
             self._action_outcomes(actor_id, ability_id, targets, before) if offensive else ()
         )

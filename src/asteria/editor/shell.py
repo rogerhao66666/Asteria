@@ -1526,9 +1526,15 @@ class AsteriaEditorWindow(QMainWindow):
             name, ok = QInputDialog.getText(self, "Set Variable", "Variable name:")
             if not ok or not name.strip():
                 return None
-            value, ok = QInputDialog.getText(self, "Set Variable", "Value:")
+            value, ok = QInputDialog.getText(
+                self, "Set Variable", "Value (@name copies that variable):"
+            )
             if not ok:
                 return None
+            if value.startswith("@") and value[1:].strip():
+                return EventInstruction(
+                    "SET_VARIABLE", {"name": name.strip(), "from_variable": value[1:].strip()}
+                )
             return EventInstruction("SET_VARIABLE", {"name": name.strip(), "value": value})
         if kind == "world":
             command, ok = QInputDialog.getText(self, "World Command", "Command:", text="TRANSFER")

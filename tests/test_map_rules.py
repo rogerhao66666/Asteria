@@ -145,3 +145,62 @@ def test_validation_of_numbers_and_duplicates():
         MapRuleSet("m", ("region:1",))
     with pytest.raises(ValueError):
         MapRuleSet.from_data({"schema": "x", "version": 1})
+
+
+def test_an_encounter_table_picks_by_weight():
+    import random
+
+    rule = AreaRule("tag:grass", encounters={"common": 9, "rare": 1}, encounter_chance=1.0)
+    rng = random.Random(4)
+    picks = [rule.pick_encounter(rng) for _ in range(2000)]
+    assert 0.85 < picks.count("common") / len(picks) < 0.95
+    assert AreaRule("tag:grass").pick_encounter(rng) == ""
+
+
+def test_a_step_rolls_the_area_chance_and_the_first_step_scale():
+    import random
+
+    grass = AreaRule(
+        "tag:grass", encounters={"wild": 1}, encounter_chance=1.0, encounter_first_step=0.0
+    )
+    rt = _runtime([grass], lambda x, y: ("tag:grass",))
+    rng = random.Random(0)
+    assert rt.roll_encounter(0, 0, rng, before=()) == ""  # stepping in: scaled to nothing
+    assert rt.roll_encounter(0, 0, rng, before=("tag:grass",)) == "wild"
+    never = AreaRule("tag:grass", encounters={"wild": 1}, encounter_chance=0.0)
+    assert _runtime([never], lambda x, y: ("tag:grass",)).roll_encounter(0, 0, rng) == ""
+    odds = AreaRule("tag:grass", encounters={"wild": 1}, encounter_chance=0.25)
+    rolls = [
+        _runtime([odds], lambda x, y: ("tag:grass",)).roll_encounter(0, 0, rng, ("tag:grass",))
+        for _ in range(4000)
+    ]
+    assert 0.22 < rolls.count("wild") / len(rolls) < 0.28
+
+
+def test_music_title_and_encounters_round_trip():
+    rule = AreaRule(
+        "region:3",
+        music="song",
+        title="ROUTE 101",
+        encounters={"a": 20, "b": 5},
+        encounter_chance=0.11,
+        encounter_first_step=0.6,
+    )
+    data = rule.to_data()
+    assert data["encounters"] == {"a": 20.0, "b": 5.0} and data["title"] == "ROUTE 101"
+    assert AreaRule.from_data(data) == rule
+    assert "encounters" not in AreaRule("region:3").to_data()
+    with pytest.raises(ValueError):
+        AreaRule("region:3", encounter_chance=1.5)
+    with pytest.raises(ValueError):
+        AreaRule("region:3", encounter_first_step=2)
+
+
+def test_an_unknown_encounter_in_an_area_is_a_reference_error():
+    from asteria.rpg.actors import RpgDatabase
+
+    db = RpgDatabase()
+    db.add_map_rule_set(
+        MapRuleSet("m", [AreaRule("region:1", encounters={"missing": 1}, encounter_chance=0.1)])
+    )
+    assert any("unknown encounter missing" in e for e in db.reference_errors())

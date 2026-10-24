@@ -18,6 +18,10 @@ from .support import (  # noqa: F401 - the names the moved methods use
 
 
 class BattleFlowMixin:
+    def _creature_style(self):
+        """The manifest asks for the one-on-one creature battle screen (``battle.style``)."""
+        return self.manifest.get("battle", {}).get("style") == "creature"
+
     def _battle_actor(self):
         return None if self.game.battle is None else self._turn_actor
 
@@ -64,7 +68,10 @@ class BattleFlowMixin:
         self._turn_actor = hero
         self._boost_level = 0
         if not self.game.active_hero_ids():
-            self._defeat = True
+            if self.game.switch_needed("heroes"):  # a creature fell: the bench fills its place
+                self._switch_menu = True
+            else:
+                self._defeat = True
         elif not self.game.active_enemy_ids() and not self._victory:
             self._finish_battle_victory()  # the last foe fell on its own turn (poison, burn...)
 
@@ -117,6 +124,8 @@ class BattleFlowMixin:
         self._battle_presentation.draw()
         if self._capture_menu and self.game.mode == "battle":
             self._draw_capture_menu()
+        if self._switch_menu and self.game.mode == "battle":
+            self._draw_switch_menu()
 
     def _presentation_busy(self):
         busy = getattr(self._battle_presentation, "busy", None)
@@ -142,6 +151,8 @@ class BattleFlowMixin:
         with self.profiler.section("render"):
             self._battle_presentation.draw()
             self._draw_battle_extras()
+            if self._switch_menu and self.game.mode == "battle" and not self._presentation_busy():
+                self._draw_switch_menu()
             screen = getattr(self, "_victory_screen", None)
             if screen is not None and self._victory and not self._presentation_busy():
                 screen.update(dt)
@@ -293,6 +304,7 @@ class BattleFlowMixin:
         }
 
     def _make_victory_screen(self, applied, before, gained):
+        from asteria.runtime.skill_tree_screen import StatNames
         from asteria.runtime.victory_screen import VictoryScreen
 
         db = self.game.project.rpg_database
@@ -301,6 +313,7 @@ class BattleFlowMixin:
             aftermath,
             item_names={k: self.game.name_of(v) for k, v in {**db.items, **db.equipment}.items()},
             currency_names=self.game.currency_names() or None,
+            stat_names=StatNames(self.game),
             tr=self.game.tr,
         )
 
@@ -323,6 +336,10 @@ class BattleFlowMixin:
                     self._last_action_name = ""
             return
         if self._defeat:
+            return
+        if self._switch_menu:
+            if not self._presentation_busy():
+                self._switch_input(events)
             return
         if self._capture_menu:
             self._capture_input(events)

@@ -107,3 +107,46 @@ def test_enemy_blocking_query_includes_restricted_areas():
     query = game.map_rules.block_query("enemy")
     assert query.collides_world_point(0, 0)
     assert not game.map_rules.block_query("player").collides_world_point(0, 0)
+
+
+def _by_x(x, y):  # region 1 left of x = 100, region 2 to the right
+    return ("region:1",) if x < 100 else ("region:2",)
+
+
+def test_entering_an_area_sets_its_music_and_shows_its_name_once():
+    rules = (
+        AreaRule("region:1", music="town_song", title="TOWN"),
+        AreaRule("region:2", music="route_song", title="TOWN"),  # the same name: no new board
+    )
+    game = _session(rules)
+    game.bind_map_rules(_by_x)
+    transform = game.player.get(Transform)
+    transform.x = 10
+    game.field_update(0.1)
+    assert game.area_music == "town_song" and game.area_title_requests == ["TOWN"]
+    game.area_title_requests.clear()
+    transform.x = 150
+    game.field_update(0.1)
+    assert game.area_music == "route_song" and game.area_title_requests == []
+    game.bind_map_rules(_by_x)  # a new map (a door taken): the name shows again
+    game.field_update(0.1)
+    assert game.area_title_requests == ["TOWN"]
+
+
+def test_a_finished_step_may_start_the_area_encounter():
+    project_game = _session(())
+    encounter_id = sorted(project_game.project.rpg_database.encounters)[0]
+    rule = AreaRule("region:1", encounters={encounter_id: 1}, encounter_chance=1.0)
+    game = _session((rule,))
+    game.bind_map_rules(_everywhere("region:1"))
+    game.field_update(0.0)
+    assert game.step_arrived() == encounter_id and game.mode == "battle"
+
+
+def test_rules_bound_to_another_scene_do_not_run():
+    game = _session((AreaRule("region:1", music="song", title="TOWN"),))
+    game.bind_map_rules(_everywhere("region:1"))
+    game._map_rules_scene = "a scene left a moment ago"
+    game.field_update(0.1)
+    assert game.area_music == "" and game.area_title_requests == []
+    assert game.step_arrived() is None

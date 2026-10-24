@@ -148,6 +148,10 @@ class FormulaContext:
     target_stats: StatBlock
     target_resources: ResourcePool
     target_tags: TagSet
+    # optional, for expressions: the whole subjects (their states too) and the dice
+    source_subject: object = None
+    target_subject: object = None
+    rng: object = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,8 +167,11 @@ class ValueFormula:
     multipliers: tuple[ConditionalMultiplier, ...] = ()
     minimum: float | None = None
     maximum: float | None = None
+    # an expression (gameplay/expressions.py) used instead of the terms when set: for rules
+    # that are not a sum of terms (``source``, ``target`` are the subjects)
+    expression: str = ""
 
-    def __init__(self, terms=(), *, multipliers=(), minimum=None, maximum=None):
+    def __init__(self, terms=(), *, multipliers=(), minimum=None, maximum=None, expression=""):
         terms = tuple(terms)
         multipliers = tuple(multipliers)
         if any(not isinstance(x, FormulaTerm) for x in terms):
@@ -179,6 +186,12 @@ class ValueFormula:
         object.__setattr__(self, "multipliers", multipliers)
         object.__setattr__(self, "minimum", minimum)
         object.__setattr__(self, "maximum", maximum)
+        expression = str(expression or "").strip()
+        if expression:
+            from .expressions import check_expression
+
+            check_expression(expression, ("source", "target"))
+        object.__setattr__(self, "expression", expression)
 
     @classmethod
     def constant(cls, value, **kwargs):
@@ -189,6 +202,8 @@ class ValueFormula:
             raise TypeError("context must be FormulaContext")
 
         value = 0.0
+        if self.expression:
+            value = self._expression_value(context)
         for term in self.terms:
             value += self._term_value(term, context) * term.coefficient
 
@@ -201,6 +216,30 @@ class ValueFormula:
         if self.maximum is not None:
             value = min(self.maximum, value)
         return _number(value)
+
+    def _expression_value(self, context):
+        from .expressions import SubjectView, evaluate
+
+        def view(subject, stats, resources, tags):
+            if subject is None:
+                subject = _Holder(stats, resources, tags)
+            return SubjectView(subject, stats)
+
+        names = {
+            "source": view(
+                context.source_subject,
+                context.source_stats,
+                context.source_resources,
+                context.source_tags,
+            ),
+            "target": view(
+                context.target_subject,
+                context.target_stats,
+                context.target_resources,
+                context.target_tags,
+            ),
+        }
+        return evaluate(self.expression, names, context.rng)
 
     @staticmethod
     def _term_value(term, context):
@@ -228,12 +267,13 @@ class ValueFormula:
             "multipliers": [m.to_data() for m in self.multipliers],
             "minimum": self.minimum,
             "maximum": self.maximum,
+            **({"expression": self.expression} if self.expression else {}),
         }
 
     @classmethod
     def from_data(cls, data):
         expected = {"schema", "version", "terms", "multipliers", "minimum", "maximum"}
-        if set(data) != expected:
+        if set(data) - {"expression"} != expected:
             raise ValueError("invalid value formula")
         if data["schema"] != "asteria.value_formula" or data["version"] != 1:
             raise ValueError("unsupported value formula")
@@ -242,7 +282,18 @@ class ValueFormula:
             multipliers=[ConditionalMultiplier.from_data(x) for x in data["multipliers"]],
             minimum=data["minimum"],
             maximum=data["maximum"],
+            expression=data.get("expression", ""),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class _Holder:
+    """A subject made of a context's parts (when the context carries no subject)."""
+
+    stats: StatBlock
+    resources: ResourcePool
+    tags: TagSet
+    states: object = None
 
 
 class FormulaBuilder:

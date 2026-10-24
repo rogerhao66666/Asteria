@@ -1,0 +1,241 @@
+{
+ "check": "D58 creature party in a real window",
+ "driver": "cocoa",
+ "first_pet": "cub#1",
+ "steps": [
+  {
+   "step": "01_battle_start",
+   "turn": "pet:cub#1",
+   "party": [
+    "cub#1",
+    "wolf#1"
+   ],
+   "stage": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [
+     "pet:wolf#1"
+    ],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "02_switch_rows",
+   "rows": [
+    "Wolf"
+   ],
+   "stage": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [
+     "pet:wolf#1"
+    ],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "03_switched",
+   "turn": null,
+   "stage": {
+    "heroes": [],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "04_send_out_prompt",
+   "switch_menu": true,
+   "stage": {
+    "heroes": [],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "05_sent_in",
+   "turn": "pet:cub#1",
+   "stage": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "06_capture_targets",
+   "targets": [
+    [
+     "cub:1",
+     0.9649122807017544,
+     "pet_ball"
+    ]
+   ],
+   "stage": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "07_capture_items",
+   "items": [
+    [
+     "pet_ball",
+     0.9649122807017544
+    ],
+    [
+     "great_ball",
+     1.0
+    ]
+   ],
+   "stage": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "cub:1"
+    ]
+   },
+   "bench": {
+    "heroes": [],
+    "enemies": [
+     "wolf:2"
+    ]
+   }
+  },
+  {
+   "step": "08_captured",
+   "caught": {
+    "species": "cub",
+    "level": 5,
+    "vitality": 1.0
+   },
+   "stored": [
+    "cub#2",
+    "cub#3"
+   ],
+   "party": [
+    "cub#1",
+    "wolf#1"
+   ],
+   "great_balls": 1,
+   "stage": {
+    "heroes": [
+     "pet:cub#1"
+    ],
+    "enemies": [
+     "wolf:2"
+    ]
+   },
+   "bench": {
+    "heroes": [],
+    "enemies": []
+   }
+  },
+  {
+   "step": "09_victory",
+   "victory": true,
+   "levels": {
+    "cub#1": 6,
+    "wolf#1": 7,
+    "cub#2": 5,
+    "cub#3": 5
+   },
+   "pending_moves": [
+    [
+     "cub#1",
+     "pet_volley"
+    ]
+   ]
+  },
+  {
+   "step": "10_learn_prompt",
+   "ui_mode": "learn"
+  },
+  {
+   "step": "11_after_learning",
+   "moves": {
+    "cub#1": [
+     "pet_volley",
+     "pet_bandage"
+    ],
+    "wolf#1": [
+     "pet_bandage",
+     "pet_volley"
+    ],
+    "cub#2": [
+     "pet_shot",
+     "pet_bandage"
+    ],
+    "cub#3": [
+     "pet_shot"
+    ]
+   }
+  },
+  {
+   "step": "12_pets_party_storage",
+   "ui_mode": "pets"
+  },
+  {
+   "step": "13_party_full_message",
+   "message": "The party is full"
+  },
+  {
+   "step": "14_storage_command",
+   "ui_mode": "pets",
+   "healed": true
+  }
+ ],
+ "pass": true
+}

@@ -806,6 +806,7 @@ class RpgDatabase:
         self.achievements = {}
         self.capture_rules = {}
         self.pet_species = {}  # rpg.pets PetSpeciesDefinition
+        self.pet_rules = {}  # rpg.pets PetRules (creature party: at most one is read)
         self.battle_extension_rules = {}  # rpg.battle_extensions BattleExtensionRules
         self.enemy_level_rules = {}  # rpg.enemy_levels EnemyLevelRules
         self.map_rule_sets = {}  # rpg.map_rules MapRuleSet
@@ -1225,6 +1226,7 @@ class RpgDatabase:
             ("credits_pages", self.credits_pages),
             ("menu_entries", self.menu_entries),
             ("battle_options", self.battle_options),
+            ("pet_rules", self.pet_rules),
             ("ability_loadout_rules", self.ability_loadout_rules),
             ("doodads", self.doodads),
             ("workstations", self.workstations),
@@ -1268,6 +1270,11 @@ class RpgDatabase:
             "rules_id",
             "ability loadout rules",
         )
+
+    def add_pet_rules(self, value):
+        from .pets import PetRules
+
+        return self._add_keyed(self.pet_rules, value, PetRules, "rules_id", "pet rules")
 
     def add_battle_options(self, value):
         from .extras import BattleOptions
@@ -1593,9 +1600,25 @@ class RpgDatabase:
                         f"pet species {species.species_id} evolution needs unknown item "
                         f"{evolution.item_id}"
                     )
+        for ruleset in self.map_rule_sets.values():
+            for area in ruleset.rules:
+                for encounter_id, _weight in area.encounters:
+                    if encounter_id not in self.encounters:
+                        errors.append(
+                            f"map area {area.key} references unknown encounter {encounter_id}"
+                        )
         for rule in self.capture_rules.values():
-            if rule.enemy_id not in self.enemies:
+            if (
+                rule.enemy_id not in self.enemies
+                and rule.enemy_id not in self.pet_species
+                and rule.enemy_id != "*"
+            ):
                 errors.append(f"capture rule references unknown enemy {rule.enemy_id}")
+            for item_id in rule.item_bonuses:
+                if item_id not in self.items:
+                    errors.append(
+                        f"capture rule {rule.enemy_id} references unknown item {item_id}"
+                    )
             if rule.actor_id and rule.actor_id not in self.actors:
                 errors.append(
                     f"capture rule {rule.enemy_id} references unknown actor {rule.actor_id}"
@@ -1654,7 +1677,12 @@ class RpgDatabase:
                     )
         for encounter in self.encounters.values():
             for member in encounter.members:
-                if member.enemy_id not in self.enemies:
+                if member.pet_species_id and member.pet_species_id not in self.pet_species:
+                    errors.append(
+                        f"encounter {encounter.encounter_id} references unknown pet species "
+                        f"{member.pet_species_id}"
+                    )
+                if member.enemy_id and member.enemy_id not in self.enemies:
                     errors.append(
                         f"encounter {encounter.encounter_id} references unknown enemy "
                         f"{member.enemy_id}"
@@ -2090,6 +2118,10 @@ class RpgDatabase:
 
             for x in data.get("battle_options", ()):
                 result.add_battle_options(BattleOptions.from_data(x))
+            from .pets import PetRules
+
+            for x in data.get("pet_rules", ()):
+                result.add_pet_rules(PetRules.from_data(x))
             for x in data.get("menu_entries", ()):
                 result.add_menu_entry(MenuEntry.from_data(x))
             from .doodads import DoodadDefinition

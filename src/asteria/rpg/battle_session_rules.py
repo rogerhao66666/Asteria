@@ -54,11 +54,39 @@ class BattleSessionRules:
     # that enemy).
     shield_resource_id: str = ""
     weakness_outcome_tag: str = "outcome.weak"
+    # counters every combatant carries for one battle (stat stages, a charge...): name ->
+    # [minimum, maximum, start]; effects change them like any resource, expressions read them
+    battle_counters: dict = None
+    # turn order from an expression of the combatant (``self``) instead of its speed stat:
+    # e.g. a speed scaled by a stage counter and halved by a state (gameplay/expressions.py)
+    initiative_expression: str = ""
+    # every hit's damage after the interaction rules (weakness, resistance...), from an
+    # expression of ``value`` (that damage), ``source`` and ``target``: a last random spread,
+    # whole numbers, a floor of 1... ("" = the damage as it is)
+    final_damage_expression: str = ""
+    # every battle rolls its own dice (seeded from the save's battle count) instead of the
+    # same fixed sequence each time
+    vary_seed: bool = False
+    # losing a battle: "game_over", or "respawn" - healed back at the last respawn point
+    # (SET_RESPAWN), losing ``defeat_currency_loss`` of ``defeat_currency``, then the event
+    # ``defeat_event`` runs (someone who looked after the party)
+    defeat: str = "game_over"
+    defeat_currency: str = ""
+    defeat_currency_loss: float = 0.0
+    defeat_event: str = ""
     OPTIONAL_DATA = {
+        "defeat": "game_over",
+        "defeat_currency": "",
+        "defeat_currency_loss": 0.0,
+        "defeat_event": "",
         "action_timing": "immediate",
         "boost_mode": "repeat",
         "shield_resource_id": "",
         "weakness_outcome_tag": "outcome.weak",
+        "battle_counters": {},
+        "initiative_expression": "",
+        "final_damage_expression": "",
+        "vary_seed": False,
     }
 
     def __init__(
@@ -74,6 +102,14 @@ class BattleSessionRules:
         boost_mode="repeat",
         shield_resource_id="",
         weakness_outcome_tag="outcome.weak",
+        battle_counters=None,
+        initiative_expression="",
+        final_damage_expression="",
+        vary_seed=False,
+        defeat="game_over",
+        defeat_currency="",
+        defeat_currency_loss=0.0,
+        defeat_event="",
     ):
         cost = float(boost_cost_per_level)
         if not isfinite(cost) or cost <= 0:
@@ -95,6 +131,35 @@ class BattleSessionRules:
         object.__setattr__(self, "boost_mode", boost_mode)
         object.__setattr__(self, "shield_resource_id", str(shield_resource_id or "").strip())
         object.__setattr__(self, "weakness_outcome_tag", str(weakness_outcome_tag or "").strip())
+        counters = {}
+        for name, values in dict(battle_counters or {}).items():
+            low, high, start = (float(x) for x in values)
+            if not (isfinite(low) and isfinite(high) and low <= start <= high):
+                raise ValueError(f"battle counter {name} needs minimum <= start <= maximum")
+            counters[_id(name, "battle counter")] = [low, high, start]
+        object.__setattr__(self, "battle_counters", dict(sorted(counters.items())))
+        initiative_expression = str(initiative_expression or "").strip()
+        if initiative_expression:
+            from asteria.gameplay.expressions import check_expression
+
+            check_expression(initiative_expression, ("self",))
+        object.__setattr__(self, "initiative_expression", initiative_expression)
+        final_damage_expression = str(final_damage_expression or "").strip()
+        if final_damage_expression:
+            from asteria.gameplay.expressions import check_expression
+
+            check_expression(final_damage_expression, ("value", "source", "target"))
+        object.__setattr__(self, "final_damage_expression", final_damage_expression)
+        object.__setattr__(self, "vary_seed", bool(vary_seed))
+        if defeat not in ("game_over", "respawn"):
+            raise ValueError("defeat must be game_over or respawn")
+        loss = float(defeat_currency_loss)
+        if not 0 <= loss <= 1:
+            raise ValueError("defeat_currency_loss must be between 0 and 1")
+        object.__setattr__(self, "defeat", defeat)
+        object.__setattr__(self, "defeat_currency", str(defeat_currency or "").strip())
+        object.__setattr__(self, "defeat_currency_loss", loss)
+        object.__setattr__(self, "defeat_event", str(defeat_event or "").strip())
 
     @property
     def boost_enabled(self):
@@ -118,6 +183,26 @@ class BattleSessionRules:
                 if self.weakness_outcome_tag != "outcome.weak"
                 else {}
             ),
+            **({"battle_counters": dict(self.battle_counters)} if self.battle_counters else {}),
+            **(
+                {"initiative_expression": self.initiative_expression}
+                if self.initiative_expression
+                else {}
+            ),
+            **(
+                {"final_damage_expression": self.final_damage_expression}
+                if self.final_damage_expression
+                else {}
+            ),
+            **({"vary_seed": True} if self.vary_seed else {}),
+            **({"defeat": self.defeat} if self.defeat != "game_over" else {}),
+            **({"defeat_currency": self.defeat_currency} if self.defeat_currency else {}),
+            **(
+                {"defeat_currency_loss": self.defeat_currency_loss}
+                if self.defeat_currency_loss
+                else {}
+            ),
+            **({"defeat_event": self.defeat_event} if self.defeat_event else {}),
         }
 
     @classmethod
@@ -135,4 +220,12 @@ class BattleSessionRules:
             boost_mode=data.get("boost_mode", "repeat"),
             shield_resource_id=data.get("shield_resource_id", ""),
             weakness_outcome_tag=data.get("weakness_outcome_tag", "outcome.weak"),
+            battle_counters=data.get("battle_counters"),
+            initiative_expression=data.get("initiative_expression", ""),
+            final_damage_expression=data.get("final_damage_expression", ""),
+            vary_seed=data.get("vary_seed", False),
+            defeat=data.get("defeat", "game_over"),
+            defeat_currency=data.get("defeat_currency", ""),
+            defeat_currency_loss=data.get("defeat_currency_loss", 0.0),
+            defeat_event=data.get("defeat_event", ""),
         )

@@ -13,10 +13,16 @@ class TileDef:
     collision: str = "none"
     terrain: str | None = None
     tags: tuple[str, ...] = ()
+    animation: tuple[int, ...] = ()  # frame indices shown in turn (an animated tile)
+    frame_ms: float = 0.0  # how long each animation frame shows
 
     def validate(self, frame_count):
         if self.frame_index < 0 or self.frame_index >= frame_count:
             raise ValueError("frame index")
+        if any(f < 0 or f >= frame_count for f in self.animation):
+            raise ValueError("animation frame index")
+        if self.animation and self.frame_ms <= 0:
+            raise ValueError("an animated tile needs frame_ms > 0")
         if self.collision not in {"none", "solid", "water", "one_way"}:
             raise ValueError("collision")
 

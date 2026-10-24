@@ -169,6 +169,10 @@ class FieldViewMixin:
             view = self._tile_view = TileSceneView(
                 self.game, self.resource_root, self.width, self.height, self.pg
             )
+            field = self.manifest.get("field", {})
+            if field.get("jump_shadow"):  # drawn under a player hopping a ledge
+                view.jump_shadow = self.load_image(field["jump_shadow"])
+                view.jump_shadow_offset = float(field.get("jump_shadow_offset", 4.0))
         elif view.scene_id != scene.id:
             view.load()
         if self._multiplayer_connected():

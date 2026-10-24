@@ -404,11 +404,51 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 編輯器 | 商店商品欄「道具或裝備」（來源 `goods`：道具＋裝備，都顯示名稱與圖示） |
 | Demo | 爐心鎮三間新商店（武器、防具、藥鋪）；`trial_shops.py`；run_campaign 新增 7 個必要事實；`scripts/shops_live_check.py` |
 
+### D62 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 生物 | Pet Rules（隊伍、上場數、倉庫、能力公式、基因、經驗曲線、招式上限、掙扎）；捕獲 rate 模式；遭遇的物種成員與預備；換人 |
+| 戰鬥畫面 | `runtime/creature_battle.py`（`battle.style: "creature"`，圖與座標都在 manifest 的 `battle.creature_screen`）；`graphics/bitmap_font.py` 點陣字型 |
+| 地圖 | `runtime/grid_walk.py` 格子行走與跳台階（`ledge_<方向>` 標籤、`field.jump_shadow`）；`runtime/grid_actors.py` 的 `GridMover2D` 格子角色；tile 的 `animation`／`frame_ms` 動畫；`cover` 標籤的遮蓋格（高草遮腳） |
+| 地圖區域 | `AreaRule` 的 `music`、`title`（`field.area_name` 地名牌）、`encounters`／`encounter_chance`／`encounter_first_step`（每走一格的隨機遇敵） |
+| 對話 | `dialogue.window`：遊戲自己的訊息窗圖、點陣字型、打字速度、翻頁箭頭 |
+
+### D63 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 算式 | `gameplay/expressions.py`：安全算式；`ValueFormula.expression`、`OutcomeCheckDefinition.chance_expression`、`BattleEscapeRule.chance_expression`（`attempts`）、`BattleSessionRules.initiative_expression`／`final_damage_expression` |
+| 戰鬥規則 | `BattleSessionRules.battle_counters`（能力段數等，換人歸零）、`vary_seed`（每場不同亂數） |
+| 狀態 | `BattleStatePolicy` 的 `prevent_chance`、`remove_chance`、`duration_range`、`exclusive_group`；`apply_states` 的 `chance`、`unless_outcome`；狀態每回合傷害、到期、解除寫進對戰紀錄 |
+| 捕捉 | `CaptureRule.shake_checks`：晃動判定與晃幾下 |
+| 戰鬥畫面 | 開場滑入、丟球、生物從球出來、資訊框滑入；依血量的換人台詞；訓練家換人前詢問、野生戰倒下後詢問；戰鬥中的隊伍順序；沒打中、能力段數、異常狀態台詞（`state_messages`）、異常圖示（`status_icons`） |
+
+### D64 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 地圖 | `SightTrigger2D`（視線、驚嘆號 `field.emotes`、走過來、開始事件、`done_switch`）；`GridMover2D.look_facings`；`PLAY_BGM` 的 `temporary` |
+| 招式 | `priority`、`drain`、`recoil`、`hit_counts`、每擊的 `first_checks`；`plan_round()`（敵方先選招、照先制度再照速度）；排程器 `set_priorities()` |
+| 狀態 | `BattleStatePolicy.battle_only`（戰後不保留）；戰鬥計數器不寫回存檔 |
+| 戰鬥畫面 | 吸取、反作用、打幾下的台詞；`outcome_lines`、`fail_tag`；訓練家的 `defeat_text` |
+
 ### D65 新增（2026-10-24；細節見 DECISION_LOG）
 
 | 類別 | 內容 |
 |---|---|
 | Demo | Full Verification 主角改名 Roger（中文羅傑），家是 Roger's House；id 仍是 `hero_01` |
+
+### D66 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 事件 | `WAIT until`、`EXIT`、`SET_VARIABLE.from_variable`、`CHOICE.box_at`；可讀 `player.facing`（事件開始時）與 `battle.running` |
+| 世界指令 | `GRID_ROUTE`、`SET_POSITION`（`permanent`）、`SHOW_ENTITY`、`SET_MOVEMENT`、`GIVE_PET`、`SET_LOOK`、`SET_RESPAWN`、`RESTORE_BGM`；`entity` 可寫 `self`、`var:<變數>` |
+| 元件 | `SwitchVisibility2D`（開關控制出現）、`LookByVariable2D`（外觀跟著變數） |
+| 區域規則 | `AreaRule.autorun`（`always` 或 `enter`）；忙碌時 `on_enter` 排隊 |
+| 輸掉戰鬥 | `BattleSessionRules.defeat`（`respawn`）、`defeat_currency`、`defeat_currency_loss`、`defeat_event`；遭遇標籤 `defeat_continues` |
+| 畫面 | 選項的方向鍵游標；`dialogue.choice_frame` 等遊戲自己的選項框、`cancel_picks_last`；`field.notices: false`；戰鬥設定可用 `\V[...]`、`encounters.<id>.no_running_text` |
 
 ### D67 新增（2026-10-24；細節見 DECISION_LOG）
 
@@ -427,6 +467,14 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 畫面 | `runtime/equipment_screen.py` 紙娃娃（只列能穿的、比較、穿上後的數值）；`runtime/enhance_screen.py` 精煉、鑲嵌、卡片、成長四頁；工坊移除 |
 | 遊戲 | `game.wear_from_bag(actor, instance, slot, index)`；暫停選單的「裝備」「強化」依專案內容出現 |
 | Demo | `trial_doll.py`：頭、腿、腳部位，14 件 Lucifer 圖示裝備，Lucifer 紙娃娃版面與石頭面板；證據 `audits/evidence/ui_u3/` |
+
+### D69 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 畫面 | `runtime/creature_menu.py`：生物遊戲自己的開始選單（`field.creature_menu`），暫停鍵打開；圖鑑（清單、項目）、隊伍（能力三頁、替換）、背包（依標籤分袋、使用／丟掉）、訓練家卡片、設定、記錄 |
+| 設定 | 各列可用開關隱藏、標籤可用 `\V[...]`；設定存在 `option.<id>`；`dialogue.speeds` 依 `option.text_speed` 改文字速度 |
+| 遊戲 | 世界計數器 `play.seconds`（遊玩時間）；記錄寫到存檔欄 `save_slot` |
 
 ### D70 新增（2026-10-24；細節見 DECISION_LOG）
 
@@ -455,6 +503,18 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 驗收 | 導覽 43 個畫面中英文（`scripts/ui_tour_live_check.py`）；`run_campaign.py` 用畫面操作告示板、招募、十連抽、煉金、紙娃娃、強化鑲嵌與精煉 |
 | 效能 | `scripts/menu_frame_time_check.py`：每個選單畫面 60 幀，95 百分位上限 16.7 ms；目前最慢 4.55 ms |
 | 證據 | `audits/evidence/ui_u6/` |
+
+### D73 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 道具 | `game.use_item_on_pet(pet, item)`；道具標籤 `cures:<狀態>`（`*` 全部）、`revives`；戰鬥與田野的道具效果有自己的公式環境 |
+| 隊伍 | 世界指令 `PARTY_STASH`／`PARTY_RESTORE`（借別人的隊伍打一場） |
+| 戰鬥畫面 | `encounters.<id>` 的 `player_name`、`player_back`、`auto_choices`、`auto_delay`；遭遇標籤 `sure_capture` |
+| 事件 | `SET_VARIABLE` 的 `add`；`rpg` 條件的 `pets`（隊伍隻數） |
+| 田野 | 預設按鍵 `run`（Shift、手把 B）；`field.run_switch` |
+| 規則 | Pet Rules `exp_whole`（經驗值取整數） |
+| 開始選單 | 背包「使用」選生物；訓練家卡片的 `badges` |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 

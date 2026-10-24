@@ -54,6 +54,7 @@ class SceneEventsMixin:
             self.events.busy
             or (self.scene_events is not None and self.scene_events.scheduler.autorun_busy)
             or self.common_events.autorun_busy
+            or getattr(self, "sighting", None) is not None
         )
 
     def _all_runners(self):
@@ -84,6 +85,8 @@ class SceneEventsMixin:
 
     def _sequence_entity(self, key):
         key = str(key)
+        if key.startswith("var:"):  # the entity a variable names (set earlier by the event)
+            key = str(self.save.event_context.get_variable(key[4:], ""))
         if key in ("player", "@player", self.player.id):
             return self.player
         entity = self.scene.get_entity(key) or next(

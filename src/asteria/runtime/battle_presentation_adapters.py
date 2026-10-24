@@ -362,6 +362,11 @@ class CanonicalBattleAdapter:
             side: [m.member_id for m in party.members]
             for side, party in game.battle.parties.items()
         }
+        key_for = getattr(game, "battle_profile_key", None)
+        if callable(key_for):  # creatures are drawn by their species' visual profiles
+            self.resolver.profile_keys = {
+                m: key_for(m) for members in sides.values() for m in members
+            }
         combatants = ()
         self._register_fallback_visuals(sides, layout)
         missing = self.resolver.missing_profiles(
@@ -531,11 +536,10 @@ class CanonicalBattleAdapter:
             return
         if settings.get("boss_intro", True) is False:
             return
-        db = game.project.rpg_database
         bosses = [
             m.member_id
             for m in game.battle.parties.get("enemies", ()).members
-            if "boss" in getattr(db.enemies.get(m.member_id.split(":", 1)[0]), "tags", ())
+            if "boss" in getattr(game.foe_definition(m.member_id.split(":", 1)[0]), "tags", ())
         ]
         if not bosses:
             return
@@ -596,7 +600,7 @@ class CanonicalBattleAdapter:
             if base == "pet" and game.pet_name(index):  # a pet unit: its nickname or species
                 names[member_id] = game.pet_name(index)
                 continue
-            definition = db.actors.get(member_id) or db.enemies.get(base)
+            definition = db.actors.get(member_id) or game.foe_definition(base)
             name = game.name_of(definition) or member_id
             if index and kinds[base] > 1:
                 name = f"{name} {index}"
@@ -850,7 +854,7 @@ class CanonicalBattleAdapter:
         done = set()
         for side, members in sides.items():
             for index, member_id in enumerate(members):
-                key = str(member_id).split(":", 1)[0]
+                key = self.resolver.profile_key(member_id)
                 if key in done or self.resolver.profile_for(member_id) is not None:
                     continue
                 done.add(key)

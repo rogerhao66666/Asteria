@@ -225,23 +225,84 @@ class EnemyRuntime:
 
 @dataclass(frozen=True, slots=True)
 class EncounterMember:
+    """One kind of foe in an encounter: an enemy definition (``enemy_id``) or, in a creature
+    game, ``count`` creatures of a pet species (``pet_species_id``) at ``level`` (up to
+    ``level_max`` when set, rolled per creature) with the species' moves (or ``moves``) and
+    ``genes`` - a wild creature or a trainer's team member. ``reserve`` members wait on the
+    bench and come in when a stage slot of their side empties (PetRules.battle_slots)."""
+
     enemy_id: str
     count: int = 1
     weight: float = 1.0
+    pet_species_id: str = ""
+    level: int = 1
+    level_max: int = 0
+    reserve: bool = False
+    moves: tuple = ()
+    genes: dict = None
 
-    def __init__(self, enemy_id, *, count=1, weight=1.0):
+    OPTIONAL_DATA = {
+        "pet_species_id": "",
+        "level": 1,
+        "level_max": 0,
+        "reserve": False,
+        "moves": [],
+        "genes": {},
+    }
+
+    def __init__(
+        self,
+        enemy_id="",
+        *,
+        count=1,
+        weight=1.0,
+        pet_species_id="",
+        level=1,
+        level_max=0,
+        reserve=False,
+        moves=(),
+        genes=None,
+    ):
         count = int(count)
         weight = _finite(weight, "weight")
         if count < 1:
             raise ValueError("count must be >= 1")
         if weight <= 0:
             raise ValueError("weight must be > 0")
-        object.__setattr__(self, "enemy_id", _id(enemy_id, "enemy_id"))
+        enemy_id, pet_species_id = str(enemy_id or "").strip(), str(pet_species_id or "").strip()
+        if not enemy_id and not pet_species_id:
+            raise ValueError("an encounter member needs an enemy_id or a pet_species_id")
+        object.__setattr__(self, "enemy_id", enemy_id)
+        object.__setattr__(self, "pet_species_id", pet_species_id)
         object.__setattr__(self, "count", count)
         object.__setattr__(self, "weight", weight)
+        level, level_max = int(level), int(level_max)
+        if level < 1 or level_max < 0:
+            raise ValueError("level must be >= 1 and level_max >= 0")
+        object.__setattr__(self, "level", level)
+        object.__setattr__(self, "level_max", max(level, level_max) if level_max else 0)
+        object.__setattr__(self, "reserve", bool(reserve))
+        object.__setattr__(self, "moves", tuple(dict.fromkeys(str(x) for x in moves if x)))
+        genes = {str(k): _finite(v, "gene") for k, v in dict(genes or {}).items() if str(k)}
+        object.__setattr__(self, "genes", genes)
+
+    @property
+    def kind_id(self):
+        """What the foe is called by: the enemy id, or the species id of a species foe."""
+        return self.enemy_id or self.pet_species_id
 
     def to_data(self):
-        return {"enemy_id": self.enemy_id, "count": self.count, "weight": self.weight}
+        return {
+            "enemy_id": self.enemy_id,
+            "count": self.count,
+            "weight": self.weight,
+            **({"pet_species_id": self.pet_species_id} if self.pet_species_id else {}),
+            **({"level": self.level} if self.level != 1 else {}),
+            **({"level_max": self.level_max} if self.level_max else {}),
+            **({"reserve": True} if self.reserve else {}),
+            **({"moves": list(self.moves)} if self.moves else {}),
+            **({"genes": dict(sorted(self.genes.items()))} if self.genes else {}),
+        }
 
     @classmethod
     def from_data(cls, data):
@@ -253,6 +314,8 @@ class EncounterDefinition:
     encounter_id: str
     members: tuple[EncounterMember, ...]
     tags: tuple[str, ...] = ()
+
+    NESTED_OPTIONAL = {"members": EncounterMember}  # the editor shows the members' options
 
     def __init__(self, encounter_id, *, members, tags=()):
         members = tuple(members)

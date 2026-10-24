@@ -103,6 +103,7 @@ class EncountersMixin:
             ability_ids=build.abilities,
             initiative=speed,
             initiative_stat="speed",
+            initiative_expression=self.rules.initiative_expression,
         )
 
     def _enemy_member(self, enemy_id, index):
@@ -124,6 +125,7 @@ class EncountersMixin:
             ability_ids=definition.abilities,
             initiative=speed,
             initiative_stat="speed",
+            initiative_expression=self.rules.initiative_expression,
         )
 
     def auto_battle_choice(self, actor_id, *, heal_tag="", heal_below=0.4):
@@ -192,27 +194,12 @@ class EncountersMixin:
         return removed
 
     def _pet_member(self):
-        """The active pet as a hero-side battle unit when its species is a ``battle_unit``."""
-        pet = self.active_pet()
-        species = self.pet_species(pet) if pet is not None else None
-        if species is None or not species.battle_unit:
+        """The first pet that fights as a hero-side unit (``battle_pets``), or ``None``."""
+        pets = self.battle_pets()
+        if not pets:
             return None
-        from asteria.gameplay import ResourcePool, StatBlock, TagSet
-
-        stats = StatBlock(species.stats_at(pet.level))
-        resources = ResourcePool()
-        for name, maximum in species.resources_at(pet.level).items():
-            resources.define(name, maximum)
-        subject = self._battle_subject(stats, resources, TagSet(species.tags))
-        self._pets_sent.add(pet.instance_id)
-        return PartyMember(
-            f"pet:{pet.instance_id}",
-            "heroes",
-            subject,
-            ability_ids=species.battle_abilities,
-            initiative=stats.get("speed"),
-            initiative_stat="speed",
-        )
+        self._pets_sent.add(pets[0].instance_id)
+        return self._pet_unit(pets[0])
 
     def summon(
         self, *, enemy_id=None, actor_id=None, count=1, owner_id=None, join_current_round=True
@@ -253,6 +240,22 @@ class EncountersMixin:
             self._log("summoned", member_id=member.member_id, data={"owner_id": owner_id})
         return tuple(added)
 
+    BATTLES_COUNTER = "battles.started"
+
+    def _battle_seed(self, encounter_id):
+        """The battle's dice: always 157, unless the rules vary it - then each battle of a
+        save rolls its own (from how many battles the save has started)."""
+        if not self.rules.vary_seed:
+            return 157
+        import zlib
+
+        counters = self.world.counters
+        count = int(counters.get(self.BATTLES_COUNTER, 0)) + 1
+        counters[self.BATTLES_COUNTER] = count
+        return zlib.crc32(f"{self.project.id}:{encounter_id}:{count}".encode())
+
+    BATTLE_RUNNING_SWITCH = "battle.running"
+
     def start_encounter(self, encounter_id, *, opening=None):
         """Begin a turn-based fight; ``opening`` (preemptive / normal / surprise) replaces the
         rolled one (a field strike that hit the foe first)."""
@@ -261,18 +264,34 @@ class EncountersMixin:
         db = self.project.rpg_database
         encounter = db.encounters[str(encounter_id)]
         active = self.save.rpg_state.party_active_actor_ids
-        heroes = tuple(self._actor_member(x) for x in active)
-        pet_member = self._pet_member()
-        if pet_member is not None:
-            heroes += (pet_member,)
+        pet_rules = self.pet_rules
+        heroes = ()
+        if pet_rules is None or pet_rules.actors_fight:
+            heroes = tuple(self._actor_member(x) for x in active)
+        self._pets_sent = set()
+        self._species_foes = {}
+        pet_members = tuple(self._pet_unit(p) for p in self.battle_pets())
+        heroes += pet_members
+        if not heroes:
+            raise GameSessionError(
+                self.tr("battle.no_one", "No one can fight: the party has no creature standing")
+            )
         enemies = []
         enemy_definition_ids = []
+        reserve = []
         serial = 0
+        foe_rng = random.Random(f"{encounter_id}:{self.save.rpg_state.world.counters!r}:foes")
         for member in encounter.members:
             for _ in range(member.count):
                 serial += 1
-                enemies.append(self._enemy_member(member.enemy_id, serial))
-                enemy_definition_ids.append(member.enemy_id)
+                if member.pet_species_id:
+                    unit = self._species_foe_unit(member, serial, foe_rng)
+                else:
+                    unit = self._enemy_member(member.enemy_id, serial)
+                enemies.append(unit)
+                enemy_definition_ids.append(member.kind_id)
+                if member.reserve:
+                    reserve.append(unit.member_id)
 
         registry = (
             AbilityRegistry()
@@ -303,11 +322,13 @@ class EncountersMixin:
             reaction_definitions=db.reactions.values(),
             enemy_ai_definitions=db.enemy_ai.values(),
             transaction_policies=db.action_transactions.values(),
-            rng_seed=157,
+            rng_seed=self._battle_seed(encounter_id),
             hooks=self._battle_hook_bus(),
             extensions=self.extension_rules,
         )
         self.opening = "normal"
+        self.battle.final_damage_expression = self.rules.final_damage_expression
+        self.battle.knockout_resource_id = self.rules.knockout_resource_id
         self._sync_weather_tags()
         extensions = self.battle.extensions
         if extensions is not None:
@@ -321,16 +342,32 @@ class EncountersMixin:
             from asteria.rpg.battle_extensions import apply_opening
 
             apply_opening(self.battle, self.opening, "heroes")
-        if pet_member is not None:  # a fallen pet unit never decides the fight
-            self.battle.outcome_exempt.add(pet_member.member_id)
+        if pet_rules is None or not pet_rules.pets_decide_outcome:
+            for unit in pet_members:  # a fallen pet unit never decides the fight
+                self.battle.outcome_exempt.add(unit.member_id)
+        slots = pet_rules.battle_slots if pet_rules is not None else 0
+        if slots:  # the other creatures of each side wait on the bench (creature party)
+            for unit in pet_members[slots:]:
+                self.battle.bench(unit.member_id)
+            foes = [u for u in enemies if u.member_id in self._species_foes]
+            for unit in foes[slots:]:
+                self.battle.bench(unit.member_id)
+        for member_id in reserve:
+            self.battle.bench(member_id)
+        if slots:
+            self._refill_slots("enemies")  # reserve members never leave the stage empty
+        for unit in pet_members:
+            if unit.member_id not in self.battle.benched:
+                self._pets_sent.add(self.pet_of_member(unit.member_id).instance_id)
         self.encounter_id = str(encounter_id)
         self.encounter_background = self._area_battle_background()
         self._enemy_ids = tuple(enemy_definition_ids)
         self._captured = set()
-        self._pets_sent = set()
         for enemy_id in sorted(set(enemy_definition_ids)):
             self.world.note_enemy(enemy_id, "seen")
         self.mode = "battle"
+        # on while the battle lasts: an event waits for "battle.running" off to go on after it
+        self.save.event_context.set_switch(self.BATTLE_RUNNING_SWITCH, True)
         self.battle_log.clear()
         self._logged_turn = None
         self._log("battle_started", data={"encounter_id": self.encounter_id})
