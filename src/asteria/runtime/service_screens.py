@@ -1115,8 +1115,10 @@ class GachaScreen(ServiceScreen):
         if not rows:
             rt.text(tr("gacha.no_history", "No pulls yet."), x + 20, y + 56, size=18, color=MUTED)
             return
-        per = max(1, (h - 70) // 24)
-        for n, (prize_id, rarity_id) in enumerate(rows[: per * 3]):
+        rows = rows[: max(1, (h - 70) // 24) * 3]  # up to three columns
+        columns = -(-len(rows) // max(1, (h - 70) // 24))
+        per = -(-len(rows) // columns)  # the columns as even as they can be
+        for n, (prize_id, rarity_id) in enumerate(rows):
             column, row = divmod(n, per)
             cx, cy = x + 20 + column * ((w - 40) // 3), y + 56 + row * 24
             rarity = self.banner.rarity(rarity_id)
