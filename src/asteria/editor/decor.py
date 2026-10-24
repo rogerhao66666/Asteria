@@ -71,6 +71,9 @@ BUTTON_RULES = (
 LABEL_RULES = (
     # game systems kinds
     (r"^quests?$", "quest"),
+    (r"quest boards?", "quest"),
+    (r"recruiting", "actor"),
+    (r"gacha", "chest"),
     (r"faction|reputation", "banner"),
     (r"achievement", "trophy"),
     (r"drop tables?", "chest"),

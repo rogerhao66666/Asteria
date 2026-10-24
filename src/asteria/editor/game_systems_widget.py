@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 
 from .authoring_sidebar import authoring_sidebar
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
+from .i18n import translate
 from .project_empty_state import ProjectEmptyState
 from .record_form import Picker
 from .responsive_form import ResponsiveForm, ResponsiveSplit
@@ -943,6 +944,13 @@ class GameSystemsEditorWidget(QWidget):
             button = QPushButton(label)
             button.clicked.connect(slot)
             buttons.addWidget(button)
+        # a gacha banner: draw 10,000 times and show the real spread (U5)
+        self.simulate_button = QPushButton("Simulate 10,000 Pulls")
+        self.simulate_button.clicked.connect(self.simulate_selected)
+        buttons.addWidget(self.simulate_button)
+        self.simulation = QLabel("")
+        self.simulation.setWordWrap(True)
+        self.simulation.setTextInteractionFlags(Qt.TextSelectableByMouse)
         buttons.addStretch(1)
         buttons.addWidget(QLabel("Changes apply as you edit  ·  Ctrl+Z undoes"))
         split = QSplitter()
@@ -952,6 +960,7 @@ class GameSystemsEditorWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(split, 1)
         layout.addWidget(self.used_by)
+        layout.addWidget(self.simulation)
         layout.addWidget(self.status)
         layout.addLayout(buttons)
         self.refresh()
@@ -959,6 +968,47 @@ class GameSystemsEditorWidget(QWidget):
     @property
     def kind_id(self):
         return self.kind_box.currentData()
+
+    def simulate_selected(self, pulls=10000):
+        """Draw ``pulls`` times from the chosen banner (seed 0) and show each rarity's share,
+        the most common prizes and how often the pity and the multi-pull guarantee decided."""
+        if self.kind_id != "gacha_banners" or self.selected_id is None:
+            return None
+        self.flush_edits()
+        try:
+            result = self.controller.simulate_gacha(self.selected_id, pulls)
+        except (GameSystemsAuthoringError, KeyError, ValueError) as exc:
+            self.simulation.setText(str(exc))
+            return None
+        banner = self.controller.database.gacha_banners[self.selected_id]
+        total = max(1, result["pulls"])
+        rate = translate("{name} {share} (rate {chance})")
+        rarities = "   ".join(
+            rate.format(
+                name=r.display_name,
+                share=f"{result['rarity'].get(r.rarity_id, 0) / total:.2%}",
+                chance=f"{chance:.2%}",
+            )
+            for r, chance, _p in reversed(banner.rates())
+        )
+        top = sorted(result["prize"].items(), key=lambda kv: -kv[1])[:5]
+        prizes = ", ".join(f"{k} {v}" for k, v in top)
+        first = translate("{pulls} pulls (seed 0):  {rarities}")
+        second = translate(
+            "Pity decided {pity}, the multi-pull guarantee {guaranteed}; longest run without"
+            " the top rarity: {dry}.  Most drawn: {prizes}"
+        )
+        self.simulation.setText(
+            first.format(pulls=f"{result['pulls']:,}", rarities=rarities)
+            + "\n"
+            + second.format(
+                pity=result["pity"],
+                guaranteed=result["guaranteed"],
+                dry=result["longest_dry"],
+                prizes=prizes,
+            )
+        )
+        return result
 
     @property
     def selected_id(self):
@@ -998,6 +1048,11 @@ class GameSystemsEditorWidget(QWidget):
             self.form = None
             return
         self.flush_edits()
+        gacha = self.kind_id == "gacha_banners"
+        self.simulate_button.setVisible(gacha)
+        self.simulation.setVisible(gacha)
+        if not gacha:
+            self.simulation.setText("")
         self.form = RecordForm(
             FORMS[self.kind_id],
             self.controller.references,
@@ -1028,6 +1083,7 @@ class GameSystemsEditorWidget(QWidget):
 
     def _selected(self, row):
         self.flush_edits()
+        self.simulation.setText("")  # it was another banner's
         key = self.selected_id
         self._editing = key
         if key is None:

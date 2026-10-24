@@ -31,10 +31,12 @@ import trial_art as art  # noqa: E402
 import trial_b11 as b11  # noqa: E402
 import trial_b12 as b12  # noqa: E402
 import trial_battle as battle_rules  # noqa: E402
+import trial_boards as boards  # noqa: E402
 import trial_brave as brave  # noqa: E402
 import trial_cast as cast  # noqa: E402
 import trial_classes as classes  # noqa: E402
 import trial_content as content  # noqa: E402
+import trial_crafting as crafting  # noqa: E402
 import trial_doll as doll  # noqa: E402
 import trial_extras as extras  # noqa: E402
 import trial_gear as gear_plus  # noqa: E402
@@ -122,9 +124,12 @@ def main():
     arsenal.apply(project, HERE, context.skill_names)  # every weapon kind, five rarities (D61)
     supplies.apply(project, HERE)  # armour, accessories, potions, cures, bombs, orbs (D61)
     shops.apply(project, HERE)  # Hearthfold's arms, armour and remedy shops (D61)
+    crafting.apply(project, HERE)  # the Alchemy Table and the Forge, their recipes (U4)
     zh_data.apply(project)  # dialogue keys and the data's Chinese (D60)
     content.game_start(context)
+    boards.apply(project, HERE)  # the Bounty Board, Guild Office, Starfall Chest (U5; stars)
     doll.apply(project, HERE)  # head, legs, feet, their gear, the doll screen (U3)
+    icons.first_frames(project, HERE)  # a pickup's animation strip shows its first frame
     zh_data.apply(project)  # the new gear's and slots' Chinese
     path = HERE / "project.asteria.json"
     project.save_json(path)

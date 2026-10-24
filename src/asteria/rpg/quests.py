@@ -8,6 +8,7 @@ from .enemies import RewardDefinition
 
 OBJECTIVE_KINDS = ("counter", "item", "defeat_enemy", "switch")
 QUEST_STATUSES = ("active", "completed", "failed")
+CARD_FIELDS = ("card_image", "rank", "category", "repeatable", "time_limit")
 
 
 def _id(value, label):
@@ -90,6 +91,12 @@ class QuestDefinition:
     auto_complete: bool
 
     icon_id: str = ""  # a project icon shown in menus; written only when set
+    # the quest board's card (U5); each written only when set
+    card_image: str = ""  # the card's picture
+    rank: str = ""  # shown on the card's corner ("S", "Bronze"...)
+    category: str = ""  # "Hunt", "Delivery"... shown on the card
+    repeatable: bool = False  # taken again from a board after it is handed in
+    time_limit: float = 0.0  # minutes of play to finish it once taken (0: no limit)
 
     def __init__(
         self,
@@ -103,6 +110,11 @@ class QuestDefinition:
         next_quest_ids=(),
         auto_complete=True,
         icon_id="",
+        card_image="",
+        rank="",
+        category="",
+        repeatable=False,
+        time_limit=0.0,
     ):
         objectives = tuple(objectives)
         if any(not isinstance(x, QuestObjective) for x in objectives):
@@ -125,6 +137,14 @@ class QuestDefinition:
         object.__setattr__(self, "next_quest_ids", next_quest_ids)
         object.__setattr__(self, "auto_complete", bool(auto_complete))
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "card_image", str(card_image or "").strip())
+        object.__setattr__(self, "rank", str(rank or "").strip())
+        object.__setattr__(self, "category", str(category or "").strip())
+        object.__setattr__(self, "repeatable", bool(repeatable))
+        time_limit = float(time_limit or 0.0)
+        if time_limit < 0:
+            raise ValueError("time_limit must be >= 0")
+        object.__setattr__(self, "time_limit", time_limit)
 
     def to_data(self):
         return {
@@ -139,6 +159,7 @@ class QuestDefinition:
             "next_quest_ids": list(self.next_quest_ids),
             "auto_complete": self.auto_complete,
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **{k: getattr(self, k) for k in CARD_FIELDS if getattr(self, k)},
         }
 
     @classmethod
@@ -155,6 +176,7 @@ class QuestDefinition:
             next_quest_ids=data["next_quest_ids"],
             auto_complete=data["auto_complete"],
             icon_id=data.get("icon_id", ""),
+            **{k: data[k] for k in CARD_FIELDS if k in data},
         )
 
 

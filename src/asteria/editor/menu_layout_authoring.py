@@ -16,6 +16,7 @@ from asteria.presentation.menu_layout import (
     MenuElement,
     MenuLayout,
     MenuTheme,
+    base_screen,
     screen_spec,
 )
 
@@ -24,6 +25,16 @@ from .runtime_rpg_ui_authoring import _ProfileCommand
 
 class MenuLayoutAuthoringError(RuntimeError):
     pass
+
+
+# screens each record of a kind may have its own layout of (``<screen>.<record id>``): every
+# workstation (U4), quest board, recruiting office and gacha banner (U5)
+VARIANTS = {
+    "crafting": "workstations",
+    "quest_board": "quest_boards",
+    "recruit": "recruit_offices",
+    "gacha": "gacha_banners",
+}
 
 
 class MenuLayoutAuthoringController:
@@ -46,7 +57,22 @@ class MenuLayoutAuthoringController:
         for screen_id in SCREEN_IDS:
             spec = screen_spec(screen_id)
             out.append((screen_id, spec.title, self.layout(screen_id) is not None))
+            for record_id, title in self.records(screen_id):
+                variant = f"{screen_id}.{record_id}"
+                custom = self.layout(variant) is not None
+                out.append((variant, f"  ▸ {title}", custom))  # under its screen
         return out
+
+    def records(self, screen_id):
+        """``[(id, name)]`` of the records that may have their own layout of ``screen_id``."""
+        store = VARIANTS.get(screen_id)
+        db = self.document.project.rpg_database
+        records = getattr(db, store, None) or {} if store else {}
+        return [(k, v.display_name) for k, v in sorted(records.items())]
+
+    def stations(self):
+        """``[(station id, name)]`` of the project's workstations."""
+        return self.records("crafting")
 
     def layout(self, screen_id):
         return self.library.get(self.LAYOUT, self._screen(screen_id))
@@ -153,7 +179,7 @@ class MenuLayoutAuthoringController:
     # --- helpers ------------------------------------------------------------------------
     def _screen(self, screen_id):
         screen_id = str(screen_id)
-        if screen_id not in SCREEN_IDS:
+        if base_screen(screen_id) not in SCREEN_IDS:
             raise KeyError(f"unknown menu screen: {screen_id}")
         return screen_id
 

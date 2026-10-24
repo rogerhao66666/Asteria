@@ -53,6 +53,12 @@ KINDS = {
     "WorldInteraction": ("interaction", "interaction_id"),
     "PartySetupDefinition": ("party", "party_id"),
     "DropTable": ("drop_table", "table_id"),
+    "WorkstationDefinition": ("workstation", "station_id"),
+    "WorkstationCategory": ("workstation_category", "category_id"),
+    "QuestBoardDefinition": ("quest_board", "board_id"),
+    "RecruitOfficeDefinition": ("recruit_office", "office_id"),
+    "GachaBanner": ("gacha_banner", "banner_id"),
+    "GachaRarity": ("gacha_rarity", "rarity_id"),
 }
 FIELDS = ("name", "description")
 PREFIX = "data."
@@ -153,6 +159,13 @@ def slot_name(lookup, slot_id, labels=None):
     slot_id = str(slot_id)
     found = lookup(key("slot", slot_id)) if lookup is not None else None
     return found or (labels or {}).get(slot_id) or words(slot_id)
+
+
+def quality_name(lookup, quality):
+    """A crafting quality tier's name (``data.quality.<name>.name``), else as written (U4)."""
+    quality = str(quality)
+    found = lookup(key("quality", quality)) if lookup is not None and quality else None
+    return found or quality
 
 
 def credits_key(page_id, part):

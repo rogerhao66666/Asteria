@@ -1,0 +1,31 @@
+{
+  "driver": "cocoa",
+  "checks": {
+    "en_board_opens": true,
+    "en_board_took": true,
+    "en_board_flipped": true,
+    "en_board_closed": true,
+    "en_recruit_opens": true,
+    "en_recruit_asks": true,
+    "en_recruit_hired": true,
+    "en_recruit_dismissed": true,
+    "en_gacha_opens": true,
+    "en_gacha_ten": true,
+    "en_gacha_results": true,
+    "en_gacha_rates": true,
+    "en_gacha_closed": true,
+    "zh_board_opens": true,
+    "zh_board_took": true,
+    "zh_board_flipped": true,
+    "zh_board_closed": true,
+    "zh_recruit_opens": true,
+    "zh_recruit_asks": true,
+    "zh_recruit_hired": true,
+    "zh_recruit_dismissed": true,
+    "zh_gacha_opens": true,
+    "zh_gacha_ten": true,
+    "zh_gacha_results": true,
+    "zh_gacha_rates": true,
+    "zh_gacha_closed": true
+  }
+}

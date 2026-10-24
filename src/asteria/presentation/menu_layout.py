@@ -557,9 +557,74 @@ SCREENS = (
     ),
     _spec(
         "crafting",
-        "Crafting",
-        [_FRAME, _TITLE, ("rows", "list", "The recipes"), _EMPTY, _HINT, _MESSAGE],
-        ("station.name",),
+        "Crafting (a workstation)",
+        [
+            _FRAME,
+            _TITLE,
+            ("wallet", "text", "The money held"),
+            ("tabs", "tabs", "The station's categories (and disassembly)"),
+            ("rows", "list", "The recipes, each with its product's icon"),
+            ("detail", "detail", "Product, materials held / needed, chance, quality, how many"),
+            ("quantity", "text", "How many to make"),
+            ("undiscovered", "text", "How many recipes are not discovered yet"),
+            ("flash", "image", "The station's picture shown after a success"),
+            _EMPTY,
+            _HINT,
+            _MESSAGE,
+        ],
+        ("station.name", "page", "quantity", "wallet.gold"),
+    ),
+    _spec(
+        "quest_board",
+        "Quest board",
+        [
+            _FRAME,
+            _TITLE,
+            ("count", "text", "How many of the board's quests are taken"),
+            ("description", "text", "The board's description"),
+            ("cards", "grid", "The quest cards (columns, cell, row height, gap)"),
+            ("detail", "detail", "The chosen card turned over: objectives, reward, time"),
+            _EMPTY,
+            _HINT,
+            _MESSAGE,
+        ],
+        ("board.name", "board.active", "board.limit", "wallet.gold"),
+    ),
+    _spec(
+        "recruit",
+        "Recruiting office",
+        [
+            _FRAME,
+            _TITLE,
+            ("wallet", "text", "The money held"),
+            ("party", "text", "The party's size"),
+            ("rows", "list", "The candidates: portrait, class, level, price"),
+            ("detail", "detail", "The chosen candidate: portrait, price, stats, note"),
+            ("ask", "text", "Hire for the price? (Enter once more)"),
+            _EMPTY,
+            _HINT,
+            _MESSAGE,
+        ],
+        ("office.name", "party.count", "party.limit", "wallet.gold"),
+    ),
+    _spec(
+        "gacha",
+        "Gacha banner",
+        [
+            _FRAME,
+            _TITLE,
+            ("wallet", "text", "The banner's currency held"),
+            ("banner", "panel", "The banner's picture, description and rate-up prizes"),
+            ("pity", "text", "Pulls left to the guaranteed rarity"),
+            ("rates", "list", "The rates of every rarity (always shown)"),
+            ("buttons", "list", "Pull x1 / pull many / all rates / history"),
+            ("table", "panel", "The full rates table and the history"),
+            ("chest", "image", "The chest that appears, shakes and opens"),
+            ("results", "grid", "The prizes of the pull"),
+            _HINT,
+            _MESSAGE,
+        ],
+        ("banner.name", "pity.count", "pity.limit", "wallet", "page"),
     ),
     _spec(
         "quests",
@@ -610,5 +675,12 @@ SCREENS = (
 SCREEN_IDS = tuple(s.screen_id for s in SCREENS)
 
 
+def base_screen(screen_id):
+    """The screen a layout id draws: ``crafting.forge`` (one workstation's own layout, U4)
+    draws the ``crafting`` screen."""
+    return str(screen_id).split(".", 1)[0]
+
+
 def screen_spec(screen_id):
-    return next((s for s in SCREENS if s.screen_id == screen_id), None)
+    base = base_screen(screen_id)
+    return next((s for s in SCREENS if s.screen_id == base), None)

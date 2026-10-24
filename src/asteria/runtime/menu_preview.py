@@ -85,7 +85,11 @@ class MenuPreview:
         open_menu_screen(rt, screen_id)
         for _ in range(2):
             rt._frame([], 0.0)
-        boxes = dict(rt._menu_boxes.get(screen_id, {}))
+        from asteria.presentation.menu_layout import base_screen
+
+        # a station without its own layout yet draws through the shared one
+        found = rt._menu_boxes.get(screen_id) or rt._menu_boxes.get(base_screen(screen_id), {})
+        boxes = dict(found)
         surface = rt.capture()
         self._reset()
         return surface, boxes
@@ -97,6 +101,8 @@ class MenuPreview:
         game.close_shop()
         rt._shop_screen = None
         game.open_crafting_station = None
+        game.open_service = None
+        rt._service_screen = None
         game.equip_offers.clear()
 
 
@@ -135,9 +141,35 @@ def open_menu_screen(rt, screen_id):
         if db.shops:
             game.open_shop(sorted(db.shops)[0])
             rt._shop_screen, rt._ui_mode = ShopScreen(game), "shop"
-    elif screen_id == "crafting":
-        stations = sorted({r.station for r in db.composition_recipes.values() if r.station})
-        rt._open_crafting(stations[0] if stations else "", back="field")
+    elif screen_id == "crafting" or screen_id.startswith("crafting."):
+        station = screen_id.partition(".")[2]  # crafting.forge: that workstation's screen
+        if not station:  # the shared layout: a station that draws through it
+            used = {r.station for r in db.composition_recipes.values() if r.station}
+            stations = sorted(db.workstations) or sorted(used)
+            shared = [
+                k
+                for k in stations
+                if rt.menu_layout(f"crafting.{k}") is None
+                and not getattr(db.workstations.get(k), "layout", "")
+            ]
+            station = (shared or [""])[0]
+        rt._open_crafting(station, back="field")
+    elif screen_id.partition(".")[0] in ("quest_board", "recruit", "gacha"):
+        from asteria.runtime.service_screens import open_service
+
+        kind, _, record_id = screen_id.partition(".")  # gacha.star: that banner's own
+        store = {"quest_board": db.quest_boards, "recruit": db.recruit_offices}.get(
+            kind, db.gacha_banners
+        )
+        if not record_id:  # the shared layout: a record that draws through it
+            shared = [
+                k
+                for k, v in sorted(store.items())
+                if rt.menu_layout(f"{kind}.{k}") is None and not v.layout
+            ]
+            record_id = (shared or sorted(store) or [""])[0]
+        if record_id in store:
+            open_service(rt, kind, record_id)
     elif screen_id == "quests":
         rt._quest_return, rt._ui_mode = "field", "quests"
     elif screen_id == "pets":

@@ -428,6 +428,34 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 遊戲 | `game.wear_from_bag(actor, instance, slot, index)`；暫停選單的「裝備」「強化」依專案內容出現 |
 | Demo | `trial_doll.py`：頭、腿、腳部位，14 件 Lucifer 圖示裝備，Lucifer 紙娃娃版面與石頭面板；證據 `audits/evidence/ui_u3/` |
 
+### D70 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 資料 | `rpg/workstations.py`：工作台（分頁依配方標籤、未發現顯示 ???、一次上限、分解頁、音效、成功圖、音樂、版面），`rpg_database.workstations` |
+| 畫面 | `runtime/crafting_screen.py`：分頁、成品圖示、材料持有／需要、成功率、品質、數量、分解；每個工作台可有自己的版面 `crafting.<id>` |
+| 翻譯 | `data.workstation.*`、`data.workstation_category.*`、`data.quality.<名稱>.name`；20 個 `crafting.*` 鍵 |
+| Demo | `trial_crafting.py`：爐心鎮的煉金台與鍛造爐、12 條新配方；證據 `audits/evidence/ui_u4/` |
+
+### D71 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 資料 | `rpg/boards.py`：任務告示板、招募事務所；`rpg/gacha.py`：抽獎卡池（稀有度、獎品、主打、硬／軟保底、多連抽保證）；任務的卡片欄位 `card_image`／`rank`／`category`／`repeatable`／`time_limit` |
+| 事件 | `OPEN_QUEST_BOARD`、`OPEN_RECRUIT`、`OPEN_GACHA` |
+| 規則與畫面 | `runtime/boards_play.py`（狀態存在 `world.systems`）、`runtime/service_screens.py`（卡片翻面、肖像、寶箱出現／搖晃／打開）；版面 `quest_board`／`recruit`／`gacha` 與 `<畫面>.<id>` |
+| 編輯器 | 遊戲系統三頁；抽獎卡池「模擬 10,000 抽」 |
+| 翻譯 | 75 個 `board.*`／`recruit.*`／`gacha.*` 鍵；資料鍵 `data.quest_board.*`、`data.recruit_office.*`、`data.gacha_banner.*`、`data.gacha_rarity.*`、`data.quest_category.*`、招募備註 |
+| Demo | `trial_boards.py`：星石、懸賞告示板、公會職員、星落寶箱；證據 `audits/evidence/ui_u5/` |
+
+### D72 新增（2026-10-24；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 驗收 | 導覽 43 個畫面中英文（`scripts/ui_tour_live_check.py`）；`run_campaign.py` 用畫面操作告示板、招募、十連抽、煉金、紙娃娃、強化鑲嵌與精煉 |
+| 效能 | `scripts/menu_frame_time_check.py`：每個選單畫面 60 幀，95 百分位上限 16.7 ms；目前最慢 4.55 ms |
+| 證據 | `audits/evidence/ui_u6/` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

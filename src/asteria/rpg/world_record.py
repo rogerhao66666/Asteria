@@ -186,6 +186,9 @@ class WorldRecord:
     # WLD-02: per-NPC saved state, npc_id -> {scene_id, position, facing, visible, alive, mood,
     # stage, flags}
     npcs: dict = field(default_factory=dict)
+    # U5: the state of the project's systems by key - "gacha.<banner>" (pulls, pity,
+    # history), "quest_board.<board>" (when repeatable quests were handed in)...
+    systems: dict = field(default_factory=dict)
 
     SCHEMA = "asteria.rpg.world_record"
 
@@ -283,6 +286,7 @@ class WorldRecord:
                 k: dict(v, flags=dict(sorted(v["flags"].items())))
                 for k, v in sorted(self.npcs.items())
             },
+            **({"systems": dict(sorted(self.systems.items()))} if self.systems else {}),
         }
 
     @classmethod
@@ -300,4 +304,5 @@ class WorldRecord:
                 str(k): dict(v, flags=dict(v.get("flags", {})))
                 for k, v in data.get("npcs", {}).items()
             },
+            {str(k): v for k, v in data.get("systems", {}).items()},
         )

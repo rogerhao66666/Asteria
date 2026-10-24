@@ -1,0 +1,17 @@
+{
+  "driver": "cocoa",
+  "checks": {
+    "en_alchemy_opens": true,
+    "en_two_potions": true,
+    "en_tab_gems": true,
+    "en_closed": true,
+    "en_forge_opens": true,
+    "en_three_at_once": true,
+    "zh_alchemy_opens": true,
+    "zh_two_potions": true,
+    "zh_tab_gems": true,
+    "zh_closed": true,
+    "zh_forge_opens": true,
+    "zh_three_at_once": true
+  }
+}

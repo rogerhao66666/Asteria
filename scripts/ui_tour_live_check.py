@@ -1,13 +1,16 @@
 """Real-window tour of every menu screen of the Full Verification demo (macOS, Cocoa).
 
-    ASTERIA_MUTE=1 python scripts/ui_tour_live_check.py OUTPUT_DIR
+    ASTERIA_MUTE=1 python scripts/ui_tour_live_check.py OUTPUT_DIR [NAME,NAME...]
 
 Each screen is opened the way the game opens it and pictured in English and Traditional
 Chinese: title, pause, settings, controls, save slots, the status menu's four pages, the bag,
-the skill tree, the build menu, the equipment doll and the enhance pages, crafting, a shop and
-its sell tab, the quest log, pets, achievements, bestiary, the backlog, music room, credits,
-ability slots, an equip offer, a battle and its item list, victory and game over.
-``results.json`` lists the screens.
+the skill tree, the build menu, the equipment doll and the enhance pages, the crafting
+stations' tabs, the bounty board, the guild office, the Starfall Chest (banner, ten prizes,
+rates, history), a shop and its sell tab, the quest log, pets, achievements, bestiary, the
+backlog, music room, credits, ability slots, an equip offer, a battle and its item list,
+victory and game over.
+``results.json`` lists the screens. Names after the folder (``crafting,shop``) picture only the
+screens whose names start with one of them.
 """
 
 from __future__ import annotations
@@ -46,6 +49,7 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     out = Path(argv[0] if argv else REPO / "docs" / "audits" / "evidence" / "ui_tour")
     out.mkdir(parents=True, exist_ok=True)
+    only = tuple(argv[1].split(",")) if len(argv) > 1 else ()
     pump = _helpers()._pump
     project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
     runtime = PlayableTestRuntime(
@@ -86,7 +90,8 @@ def main(argv=None):
     for locale, tag in (("en", "en"), ("zh-TW", "zh")):
         game.set_locale(locale)
         for name, setup in screens:
-            visit(f"{tag}_{name}", setup)
+            if not only or name.startswith(only):
+                visit(f"{tag}_{name}", setup)
         for _ in range(8):
             if not game.equip_offers:
                 break

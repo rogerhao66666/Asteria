@@ -1,0 +1,76 @@
+{
+  "clips": {
+    "idle_down": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "idle_left": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "idle_right": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "idle_up": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "walk_down": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "walk_left": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "walk_right": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    },
+    "walk_up": {
+      "keyframes": [
+        {
+          "duration": 0.5,
+          "frame_index": 0
+        }
+      ],
+      "loop": true
+    }
+  }
+}

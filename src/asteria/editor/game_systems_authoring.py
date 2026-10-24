@@ -26,6 +26,7 @@ from asteria.rpg import (
 )
 from asteria.rpg.ability_loadout import AbilityLoadoutRules
 from asteria.rpg.battle_extensions import GAIN_EVENTS, BattleExtensionRules
+from asteria.rpg.boards import CARD_STYLES, QuestBoardDefinition, RecruitOfficeDefinition
 from asteria.rpg.derived_stats import DerivedStatRule
 from asteria.rpg.disassembly import DisassemblyRecipe
 from asteria.rpg.doodads import DoodadDefinition
@@ -33,6 +34,7 @@ from asteria.rpg.drop_tables import RARITIES, DropTable
 from asteria.rpg.durability import ON_BREAK, DurabilityRules
 from asteria.rpg.enemy_levels import EnemyLevelRules
 from asteria.rpg.extras import BattleOptions, CreditsPage, MenuEntry, MusicTrack
+from asteria.rpg.gacha import PRIZE_KINDS, GachaBanner, GachaRuntime
 from asteria.rpg.items import EQUIP_OFFERS, INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
@@ -40,6 +42,7 @@ from asteria.rpg.map_rules import MapRuleSet
 from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.refine import ON_FAIL, RefineRules
+from asteria.rpg.workstations import WorkstationDefinition
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
 
@@ -342,6 +345,124 @@ FORMS = {
         F("next_quest_ids", "Next Quests (chain)", "ref_list", source="quests", default=()),
         F("auto_complete", "Complete Automatically", "bool", default=True),
         F("reward", "Reward", "group", fields=_REWARD),
+        # the quest board's card (U5)
+        F("card_image", "Card Picture (quest board)", "icon", default=""),
+        F("rank", "Card Rank (S, A, Bronze...)", "text", default=""),
+        F("category", "Card Category (Hunt, Delivery...)", "text", default=""),
+        F("repeatable", "Repeatable From a Board", "bool", default=False),
+        F(
+            "time_limit", "Time Limit Once Taken (minutes of play, 0 = none)", "float", default=0.0
+        ),  # fmt: skip
+    ),
+    "quest_boards": (
+        F("board_id", "Board ID (OPEN_QUEST_BOARD names it)", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("description", "Description", "multiline", default=""),
+        F(
+            "quest_ids",
+            "Quests on the Board (card order)",
+            "ref_list",
+            source="quests",
+            default=(),
+        ),  # fmt: skip
+        F("open_switch", "Open Only While Switch Is On (empty = always)", "text", default=""),
+        F("max_active", "Most Taken at Once (0 = no limit)", "int", default=0),
+        F(
+            "refresh_minutes",
+            "Repeatable Quests Return After (minutes of play)",
+            "float",
+            default=0.0,
+        ),  # fmt: skip
+        F("card_style", "Cards", "choice", choices=CARD_STYLES, default="grid"),
+        F("music", "Music While Open", "text", default=""),
+        F(
+            "layout",
+            "Menu Layout (empty = quest_board.<id>, else quest_board)",
+            "text",
+            default="",
+        ),  # fmt: skip
+    ),
+    "recruit_offices": (
+        F("office_id", "Office ID (OPEN_RECRUIT names it)", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("description", "Description", "multiline", default=""),
+        F(
+            "candidates",
+            "Candidates",
+            "table",
+            default=(),
+            fields=(
+                F("actor_id", "Character", "ref", source="actors"),
+                F("currency", "Currency", "text", default="gold"),
+                F("cost", "Price", "float", default=0.0),
+                F("require_switch", "Needs Switch On (empty = always)", "text", default=""),
+                F("level_min", "Level From (0 = their own)", "int", default=0),
+                F("level_max", "Level To", "int", default=0),
+                F("portrait", "Portrait (empty = their battle portrait)", "icon", default=""),
+                F("note", "Note on the Card", "text", default=""),
+            ),
+        ),
+        F("party_limit", "Largest Party (0 = no limit)", "int", default=0),
+        F("can_dismiss", "Members Can Be Sent Away Here", "bool", default=True),
+        F("dismiss_refund", "Refund When Sent Away (0–1 of the price)", "float", default=0.0),
+        F("experience_per_level", "Experience per Rolled Level", "float", default=1000.0),
+        F("music", "Music While Open", "text", default=""),
+        F("layout", "Menu Layout (empty = recruit.<id>, else recruit)", "text", default=""),
+    ),
+    "gacha_banners": (
+        F("banner_id", "Banner ID (OPEN_GACHA names it)", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("description", "Description", "multiline", default=""),
+        F("banner_image", "Banner Picture", "icon", default=""),
+        F("currency", "Currency", "text", default="gold"),
+        F("single_cost", "Price of One Pull", "float", default=100.0),
+        F("multi_cost", "Price of a Multi-Pull", "float", default=1000.0),
+        F("multi_count", "Pulls in a Multi-Pull", "int", default=10),
+        F(
+            "rarities",
+            "Rarities (lowest first)",
+            "table",
+            default=(),
+            fields=(
+                F("rarity_id", "Rarity ID", "text", default="common"),
+                F("display_name", "Name", "text", default=""),
+                F("color", "Colour (r, g, b)", "text", default="235, 235, 245"),
+                F("chest_image", "Closed Chest", "icon", default=""),
+                F("open_image", "Open Chest", "icon", default=""),
+                F("open_sound", "Opening Sound", "text", default=""),
+            ),
+        ),
+        F(
+            "prizes",
+            "Prizes",
+            "table",
+            default=(),
+            fields=(
+                F("prize_id", "Prize ID", "text", default="prize"),
+                F("kind", "Kind", "choice", choices=PRIZE_KINDS, default="item"),
+                F("target_id", "Item / Equipment / Character / Pet ID", "text", default=""),
+                F("amount", "Amount", "int", default=1),
+                F("weight", "Weight", "float", default=1.0),
+                F("rarity", "Rarity ID", "text", default=""),
+                F("featured", "Rate Up (featured)", "bool", default=False),
+                F("duplicate_item", "Already Owned: Give Item Instead", "text", default=""),
+                F("duplicate_amount", "Already Owned: How Many", "int", default=0),
+            ),
+        ),
+        F("featured_multiplier", "Rate Up: Weight Times", "float", default=1.0),
+        F("hard_pity", "Pity: Guaranteed by Pull (0 = none)", "int", default=0),
+        F("pity_rarity", "Pity Rarity (empty = the highest)", "text", default=""),
+        F("soft_pity_start", "Soft Pity: Starts After Pull (0 = none)", "int", default=0),
+        F("soft_pity_step", "Soft Pity: Chance Added per Pull (0–1)", "float", default=0.0),
+        F("multi_guarantee", "Multi-Pull: At Least One of Rarity", "text", default=""),
+        F("open_switch", "Open Only While Switch Is On (empty = always)", "text", default=""),
+        F("appear_seconds", "Chest Appears For (seconds)", "float", default=0.5),
+        F("shake_seconds", "Chest Shakes For (seconds)", "float", default=0.8),
+        F("open_seconds", "Chest Opens For (seconds)", "float", default=0.6),
+        F("appear_sound", "Appear Sound", "text", default=""),
+        F("shake_sound", "Shake Sound", "text", default=""),
+        F("music", "Music While Open", "text", default=""),
+        F("layout", "Menu Layout (empty = gacha.<id>, else gacha)", "text", default=""),
     ),
     "factions": (
         F("faction_id", "Faction ID", "id"),
@@ -584,6 +705,39 @@ D26_FORMS = {
         ),
         F("fee_currency", "Fee Currency", "text", default=""),
         F("fee", "Fee", "float", default=0.0),
+    ),
+    "workstations": (
+        F("station_id", "Station ID (recipes and OPEN_CRAFTING name it)", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("icon_id", "Icon", "icon", default=""),
+        F("description", "Description", "multiline", default=""),
+        F(
+            "categories",
+            "Tabs (recipe categories)",
+            "table",
+            default=(),
+            fields=(
+                F("category_id", "Tab ID", "text", default="tab"),
+                F("display_name", "Name", "text", default=""),
+                F("tags", "Recipe Tags (empty = every recipe left)", "string_list", default=()),
+                F("icon_id", "Icon", "icon", default=""),
+            ),
+        ),
+        F("show_undiscovered", "Show Undiscovered Recipes as ???", "bool", default=True),
+        F("max_quantity", "Most Made at Once", "int", default=99),
+        F("disassembly", "Disassembly Tab", "bool", default=False),
+        F(
+            "disassembly_tags",
+            "Break Down Only Items With Any Tag (empty = all)",
+            "string_list",
+            default=(),
+        ),
+        F("craft_sound", "Success Sound", "text", default=""),
+        F("fail_sound", "Failure Sound", "text", default=""),
+        F("success_image", "Picture Shown After a Success", "text", default=""),
+        F("success_seconds", "Picture Shown For (seconds)", "float", default=0.6),
+        F("music", "Music While Open", "text", default=""),
+        F("layout", "Menu Layout (empty = crafting.<station>, else crafting)", "text", default=""),
     ),
     "job_point_rules": (
         F("rules_id", "Rules ID", "id"),
@@ -882,6 +1036,21 @@ def _decode_refine(data):
     return data
 
 
+def _encode_gacha(data):
+    data = copy.deepcopy(data)
+    for rarity in data.get("rarities", ()):  # the colour as "r, g, b" words
+        rarity["color"] = ", ".join(str(int(v)) for v in rarity.get("color") or ())
+    return data
+
+
+def _decode_gacha(data):
+    data = copy.deepcopy(data)
+    for rarity in data.get("rarities", ()):
+        text = str(rarity.get("color") or "").replace(";", ",")
+        rarity["color"] = [int(float(v)) for v in text.split(",") if v.strip()] or None
+    return data
+
+
 # kind id -> (record data -> form data, form data -> record data)
 ADAPTERS = {
     "refine_rules": (_encode_refine, _decode_refine),
@@ -894,6 +1063,7 @@ ADAPTERS = {
     ),
     "message_settings": (_encode_message_settings, _decode_message_settings),
     "credits_pages": (_encode_credits, _decode_credits),
+    "gacha_banners": (_encode_gacha, _decode_gacha),
 }
 
 
@@ -931,6 +1101,15 @@ def _templates():
         "durability_rules": lambda key, c: DurabilityRules(key),
         "refine_rules": lambda key, c: RefineRules(key),
         "disassembly_recipes": lambda key, c: DisassemblyRecipe(key),
+        "workstations": lambda key, c: WorkstationDefinition(key, key),
+        "quest_boards": lambda key, c: QuestBoardDefinition(key, key),
+        "recruit_offices": lambda key, c: RecruitOfficeDefinition(key, key),
+        "gacha_banners": lambda key, c: GachaBanner(
+            key,
+            key,
+            rarities=[{"rarity_id": "common"}],
+            prizes=[{"prize_id": "potion", "rarity": "common"}],
+        ),  # fmt: skip
         "job_point_rules": lambda key, c: JobPointRules(key),
         "derived_stats": lambda key, c: DerivedStatRule(key),
         "new_game_plus_rules": lambda key, c: NewGamePlusRules(key),
@@ -982,6 +1161,22 @@ KINDS = (
     _Kind(
         "disassembly_recipes", "Disassembly", "disassembly_recipes", "item_id", DisassemblyRecipe
     ),
+    _Kind(
+        "workstations",
+        "Workstations (crafting)",
+        "workstations",
+        "station_id",
+        WorkstationDefinition,
+    ),  # fmt: skip
+    _Kind("quest_boards", "Quest Boards", "quest_boards", "board_id", QuestBoardDefinition),
+    _Kind(
+        "recruit_offices",
+        "Recruiting Offices",
+        "recruit_offices",
+        "office_id",
+        RecruitOfficeDefinition,
+    ),  # fmt: skip
+    _Kind("gacha_banners", "Gacha Banners", "gacha_banners", "banner_id", GachaBanner),
     _Kind("job_point_rules", "Job Points", "job_point_rules", "rules_id", JobPointRules),
     _Kind(
         "derived_stats",
@@ -1127,6 +1322,27 @@ class GameSystemsAuthoringController:
             "pet_species": db.pet_species,
         }
         return tuple(sorted(stores.get(source, {})))
+
+    def simulate_gacha(self, banner_id, pulls=10000, seed=0):
+        """Draw ``pulls`` times from a fresh save (multi-pulls, the seed fixed): ``{"rarity":
+        {id: count}, "prize": {id: count}, "pity": n, "guaranteed": n, "pulls": n}`` and the
+        most pulls in a row without the pity rarity (``"longest_dry"``)."""
+        banner = self.database.gacha_banners[str(banner_id)]
+        runtime = GachaRuntime(banner)
+        out = runtime.simulate(pulls, seed)
+        import random
+
+        from asteria.rpg.gacha import GachaState
+
+        rng, state, dry, longest, done = random.Random(seed), GachaState(), 0, 0, 0
+        top = banner.rank(banner.top_rarity())
+        while done < pulls:
+            for pull in runtime.pull(rng, state, min(banner.multi_count, pulls - done)):
+                done += 1
+                dry = 0 if banner.rank(pull.rarity) >= top else dry + 1
+                longest = max(longest, dry)
+        out["longest_dry"] = longest
+        return out
 
     def where_used(self, kind_id, key):
         """Other records that refer to ``key`` (deleting it would break them)."""

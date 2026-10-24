@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 397 個鍵，27 組。
+共 492 個鍵，28 組。
 
 ## Title screen
 
@@ -198,7 +198,107 @@
 | `crafting.failed` | Crafting failed — got {items} | 製作失敗，得到 {items} |
 | `crafting.none` | No known recipes here. | 這裡沒有已知的配方。 |
 | `crafting.hidden` | ??? {count} recipe(s) not yet discovered | ??? 還有 {count} 個配方尚未發現 |
-| `crafting.hint` | Up/Down: select   Enter: craft   Esc: back | 上／下：選擇   Enter：製作   Esc：返回 |
+| `crafting.hint` | Up/Down: recipe   Left/Right: how many   Enter: make   Tab / Q / E: tab   Esc: back | 上／下：配方   左／右：數量   Enter：製作   Tab／Q／E：分頁   Esc：返回 |
+| `crafting.all` | Recipes | 配方 |
+| `crafting.disassemble` | Disassemble | 分解 |
+| `crafting.gold` | Gold {gold} | 金幣 {gold} |
+| `crafting.recipes` | Recipes | 配方 |
+| `crafting.items` | Items to break down | 可分解的道具 |
+| `crafting.nothing_to_break` | Nothing in the bag can be broken down. | 背包裡沒有能分解的東西。 |
+| `crafting.can_make` | can make {count} | 可做 {count} |
+| `crafting.owned` | x{count} | x{count} |
+| `crafting.unknown` | You have not discovered this recipe yet. | 你還沒發現這個配方。 |
+| `crafting.unknown_hint` | Learn it, or make it by its exact materials. | 學會它，或用正確的材料做出來。 |
+| `crafting.makes` | Makes | 成品 |
+| `crafting.gives` | Gives | 得到 |
+| `crafting.fee` | Fee {fee} {currency} | 費用 {fee} {currency} |
+| `crafting.materials` | Materials (held / needed) | 材料（持有／需要） |
+| `crafting.chance` | Success chance {chance}% | 成功率 {chance}% |
+| `crafting.qualities` | Quality: {tiers} | 品質：{tiers} |
+| `crafting.quality_tier` | {quality} {percent}%+ | {quality} {percent}%以上 |
+| `crafting.quantity` | How many: {count}  (most {limit}) | 數量：{count}（最多 {limit}） |
+| `crafting.crafted_some` | Crafted {items} ({done} of {count} succeeded) | 製作了 {items}（{count} 次中成功 {done} 次） |
+| `crafting.disassembled` | Broke down {item}: {items} | 分解了 {item}：{items} |
+
+## Quest board, recruiting and gacha
+
+| 鍵 | English | 引擎的繁體中文 |
+| --- | --- | --- |
+| `board.accepted` | Accepted: {name} | 已接取：{name} |
+| `board.count` | Taken {count} | 已接 {count} |
+| `board.count_limit` | Taken {count} / {limit} | 已接 {count}／{limit} |
+| `board.done_long` | Already done. | 已經完成了。 |
+| `board.empty` | No quests on this board. | 告示板上沒有任務。 |
+| `board.experience` | {amount} EXP | {amount} 經驗值 |
+| `board.failed_long` | This quest failed. | 這個任務失敗了。 |
+| `board.full` | You can take {count} of these at once. | 這類任務同時只能接 {count} 件。 |
+| `board.hint` | Arrows: card   Enter: take / hand in   Space / F: turn over   Esc: back | 方向鍵：選卡片   Enter：接取／回報   Space／F：翻面   Esc：返回 |
+| `board.locked_long` | Not open to you yet. | 還不能接這個任務。 |
+| `board.needs` | After: {quests} | 需先完成：{quests} |
+| `board.no_reward` | no reward | 沒有報酬 |
+| `board.not_ready` | Finish the objectives first. | 請先完成目標。 |
+| `board.objectives` | Objectives | 目標 |
+| `board.repeatable` | repeatable | 可重複 |
+| `board.reported` | Handed in: {name} | 已回報：{name} |
+| `board.reward` | Reward | 報酬 |
+| `board.state.active` | Taken | 進行中 |
+| `board.state.available` | Open | 可接取 |
+| `board.state.done` | Done | 已完成 |
+| `board.state.failed` | Failed | 失敗 |
+| `board.state.full` | Full | 已滿 |
+| `board.state.locked` | Locked | 未開放 |
+| `board.state.ready` | Report! | 可回報！ |
+| `board.state.waiting` | Back in {time} | {time} 後重新張貼 |
+| `board.time_left` | Time left {time} | 剩餘時間 {time} |
+| `board.time_limit` | Time limit {minutes} min | 時限 {minutes} 分鐘 |
+| `board.waiting_long` | Back on the board soon. | 很快就會重新張貼。 |
+| `recruit.ask` | Hire {name} for {price}?  Enter: yes   Esc: no | 要花 {price} 雇用 {name} 嗎？  Enter：是   Esc：否 |
+| `recruit.cannot_dismiss` | {name} cannot be sent away here. | 這裡不能遣散 {name}。 |
+| `recruit.dismissed` | {name} left the party | {name} 離開了隊伍 |
+| `recruit.empty` | Nobody is looking for work here. | 這裡沒有人在找工作。 |
+| `recruit.free` | Free | 免費 |
+| `recruit.full_long` | The party is full. | 隊伍已滿。 |
+| `recruit.hint` | Up/Down: candidate   Enter: hire   X: send away   Esc: back | 上／下：候選人   Enter：雇用   X：遣散   Esc：返回 |
+| `recruit.hint_no_dismiss` | Up/Down: candidate   Enter: hire   Esc: back | 上／下：候選人   Enter：雇用   Esc：返回 |
+| `recruit.hired_long` | {name} is already in the party. | {name} 已經在隊伍裡了。 |
+| `recruit.joined` | {name} joined the party (Lv {level}) | {name} 加入了隊伍（Lv {level}） |
+| `recruit.last` | The last member cannot leave. | 最後一名隊員不能離開。 |
+| `recruit.level` | Lv {level} | Lv {level} |
+| `recruit.level_own` | Lv 1 | Lv 1 |
+| `recruit.level_range` | Lv {low}-{high} | Lv {low}–{high} |
+| `recruit.locked_long` | {name} will not join yet. | {name} 現在還不願意加入。 |
+| `recruit.party` | Party {count} | 隊伍 {count} |
+| `recruit.party_limit` | Party {count} / {limit} | 隊伍 {count}／{limit} |
+| `recruit.poor_long` | You cannot afford it. | 錢不夠。 |
+| `recruit.price` | Price {price} | 價格 {price} |
+| `recruit.refund` | Sent away: {refund} back | 遣散時退還 {refund} |
+| `recruit.state.full` | Party full | 隊伍已滿 |
+| `recruit.state.hired` | In the party | 已在隊伍中 |
+| `recruit.state.locked` | Not yet | 尚未開放 |
+| `recruit.state.poor` | Too dear | 錢不夠 |
+| `recruit.stats` | Stats | 能力值 |
+| `gacha.closed` | This banner is closed. | 這個卡池已關閉。 |
+| `gacha.duplicate` | → {item} | → {item} |
+| `gacha.featured` | Rate up: {prizes} | 機率提升：{prizes} |
+| `gacha.hint` | Left/Right: choose   Enter: pull   R: rates   H: history   Esc: back | 左／右：選擇   Enter：抽取   R：機率   H：紀錄   Esc：返回 |
+| `gacha.hint.back` | Enter / Esc: back | Enter／Esc：返回 |
+| `gacha.hint.results` | Enter / Esc: back to the banner | Enter／Esc：回到卡池 |
+| `gacha.hint.show` | Enter: skip | Enter：略過 |
+| `gacha.history` | Last pulls | 最近的抽取紀錄 |
+| `gacha.history_button` | History | 抽取紀錄 |
+| `gacha.more` | +{count} more (R) | 還有 {count} 項（R） |
+| `gacha.multi` | Pull x{count} | 抽 {count} 次 |
+| `gacha.no_history` | No pulls yet. | 還沒有抽過。 |
+| `gacha.pity` | {rarity} guaranteed within {count} pulls | {count} 抽內必得 {rarity} |
+| `gacha.poor` | Not enough {currency}. | {currency}不夠。 |
+| `gacha.rates` | Rates | 機率 |
+| `gacha.rates_button` | All rates | 完整機率 |
+| `gacha.rule.featured` | ★ rate up x{times} | ★ 機率提升 x{times} |
+| `gacha.rule.multi` | Every x{count}: at least one {rarity} | 每 {count} 連抽至少一個 {rarity} |
+| `gacha.rule.pity` | {rarity} at the latest on pull {count} | 最晚第 {count} 抽必得 {rarity} |
+| `gacha.rule.soft` | From pull {start} each pull adds {step}% | 從第 {start} 抽起，每抽提高 {step}% |
+| `gacha.single` | Pull x1 | 抽 1 次 |
+| `gacha.total` | Pulls so far: {count} | 已抽次數：{count} |
 
 ## Achievements and bestiary
 

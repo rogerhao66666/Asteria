@@ -2301,6 +2301,201 @@
         },
         "name": "Apothecary Sela Animations",
         "source_path": "playable_assets/lucifer/world/look_npc_apothecary_sela_clips.json"
+      },
+      {
+        "id": "b4ca9f34-dbc3-50f6-979c-f9989e744050",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Alchemy Table",
+        "source_path": "playable_assets/lucifer/world/look_object_alchemy_table.png"
+      },
+      {
+        "id": "791f09b3-2c5b-52bc-afa3-2df02b5a236c",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Alchemy Table Sheet",
+        "source_path": "playable_assets/lucifer/world/look_object_alchemy_table_sheet.json"
+      },
+      {
+        "id": "446963e3-42cf-5f4e-a148-ccc432dd0614",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Alchemy Table Animations",
+        "source_path": "playable_assets/lucifer/world/look_object_alchemy_table_clips.json"
+      },
+      {
+        "id": "4872550f-e570-5439-b4dd-fc7a53353861",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Forge",
+        "source_path": "playable_assets/lucifer/world/look_object_forge.png"
+      },
+      {
+        "id": "edb8895c-51fd-53f3-b488-513c7f06fa15",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Forge Sheet",
+        "source_path": "playable_assets/lucifer/world/look_object_forge_sheet.json"
+      },
+      {
+        "id": "c82016da-239c-580b-9a22-df3803b180c6",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Forge Animations",
+        "source_path": "playable_assets/lucifer/world/look_object_forge_clips.json"
+      },
+      {
+        "id": "23411ebe-f8cc-5b1d-a046-a43f9f55e96b",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bounty Board",
+        "source_path": "playable_assets/lucifer/world/look_object_bounty_board.png"
+      },
+      {
+        "id": "b3bff170-39d3-5f80-a24e-9bfb8e33e7c6",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bounty Board Sheet",
+        "source_path": "playable_assets/lucifer/world/look_object_bounty_board_sheet.json"
+      },
+      {
+        "id": "a3c6972f-2384-59f4-b0b2-5eac9127ed42",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Bounty Board Animations",
+        "source_path": "playable_assets/lucifer/world/look_object_bounty_board_clips.json"
+      },
+      {
+        "id": "63f0a82d-b0ea-54fc-bf36-8d717397e93a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guild Clerk",
+        "source_path": "playable_assets/lucifer/world/look_object_guild_clerk.png"
+      },
+      {
+        "id": "7ec87f60-0656-5a85-b3e6-8e10066e8d5a",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guild Clerk Sheet",
+        "source_path": "playable_assets/lucifer/world/look_object_guild_clerk_sheet.json"
+      },
+      {
+        "id": "231cbcbb-014f-5d12-850f-a8e52c46b942",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Guild Clerk Animations",
+        "source_path": "playable_assets/lucifer/world/look_object_guild_clerk_clips.json"
+      },
+      {
+        "id": "f62d25f2-9fa2-50f5-9fff-342cd094e595",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "texture",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Starfall Chest",
+        "source_path": "playable_assets/lucifer/world/look_object_starfall_chest.png"
+      },
+      {
+        "id": "d83a88ec-ae31-5698-9b34-fcd9eca59449",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "sprite_sheet",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Starfall Chest Sheet",
+        "source_path": "playable_assets/lucifer/world/look_object_starfall_chest_sheet.json"
+      },
+      {
+        "id": "8dbe0a5a-abc2-5bc3-afdf-de01455d0e1b",
+        "import_settings": {},
+        "importer": "full_verification_demo",
+        "importer_version": 1,
+        "kind": "animation",
+        "metadata": {
+          "license": "CC0 1.0",
+          "source": "reference_projects/full_verification_demo/trial_maps.py"
+        },
+        "name": "Starfall Chest Animations",
+        "source_path": "playable_assets/lucifer/world/look_object_starfall_chest_clips.json"
       }
     ],
     "canonical_assets": [
@@ -3760,7 +3955,17 @@
       {
         "asset_id": "icon.alchemy_salt",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3783,7 +3988,17 @@
       {
         "asset_id": "icon.ancient_thread",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3806,7 +4021,17 @@
       {
         "asset_id": "icon.boss_emblem",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3829,7 +4054,17 @@
       {
         "asset_id": "icon.ether_leaf",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3852,7 +4087,17 @@
       {
         "asset_id": "icon.fire_dust",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3875,7 +4120,17 @@
       {
         "asset_id": "icon.focus_stone",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3898,7 +4153,17 @@
       {
         "asset_id": "icon.guardian_scale",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3921,7 +4186,17 @@
       {
         "asset_id": "icon.healing_herb",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3944,7 +4219,17 @@
       {
         "asset_id": "icon.ice_crystal",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3967,7 +4252,17 @@
       {
         "asset_id": "icon.iron_ore",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -3990,7 +4285,17 @@
       {
         "asset_id": "icon.moon_shard",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -4013,7 +4318,17 @@
       {
         "asset_id": "icon.phoenix_seed",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -4036,7 +4351,17 @@
       {
         "asset_id": "icon.silver_ore",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -4059,7 +4384,17 @@
       {
         "asset_id": "icon.storm_core",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -4082,7 +4417,17 @@
       {
         "asset_id": "icon.venom_sac",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -4381,7 +4726,17 @@
       {
         "asset_id": "icon.wisp_essence",
         "kind": "icon",
-        "metadata": [],
+        "metadata": [
+          [
+            "region",
+            {
+              "height": 16,
+              "width": 16,
+              "x": 0,
+              "y": 0
+            }
+          ]
+        ],
         "source": {
           "provenance": [
             [
@@ -43387,6 +43742,26 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "town.alchemy": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "station": "alchemy"
+            },
+            "command": "OPEN_CRAFTING"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "town.alchemy",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "town.armory": {
       "instructions": [
         {
@@ -43641,6 +44016,26 @@
         }
       ],
       "name": "town.arms_shop",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "town.board": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "board_id": "hearthfold_board"
+            },
+            "command": "OPEN_QUEST_BOARD"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "town.board",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -44023,6 +44418,26 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "town.forge": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "station": "forge"
+            },
+            "command": "OPEN_CRAFTING"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "town.forge",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "town.forgemasters_smithy": {
       "instructions": [
         {
@@ -44097,6 +44512,26 @@
       "schema": "asteria.event_program",
       "version": 1
     },
+    "town.gacha": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "banner_id": "starfall"
+            },
+            "command": "OPEN_GACHA"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "town.gacha",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
     "town.guardian_post": {
       "instructions": [
         {
@@ -44168,6 +44603,26 @@
         }
       ],
       "name": "town.guardian_post",
+      "schema": "asteria.event_program",
+      "version": 1
+    },
+    "town.guild": {
+      "instructions": [
+        {
+          "args": {
+            "args": {
+              "office_id": "hearthfold_guild"
+            },
+            "command": "OPEN_RECRUIT"
+          },
+          "opcode": "WORLD"
+        },
+        {
+          "args": {},
+          "opcode": "END"
+        }
+      ],
+      "name": "town.guild",
       "schema": "asteria.event_program",
       "version": 1
     },
@@ -45229,7 +45684,8 @@
       },
       "actor_snapshots": {},
       "currencies": {
-        "gold": 6000.0
+        "gold": 6000.0,
+        "star_stones": 300.0
       },
       "inventory": {
         "counts": {
@@ -87904,6 +88360,209 @@
     ],
     "composition_recipes": [
       {
+        "display_name": "Brew Antidote",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 2,
+            "item_id": "antidote"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "brew_antidote",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "scorpion_claw"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "healing_herb"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [
+          "potion"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Brew Elixir",
+        "experience": {},
+        "failure_outputs": [
+          {
+            "amount": 1,
+            "item_id": "potion"
+          }
+        ],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "elixir"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "brew_elixir",
+        "requires_discovery": true,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "phoenix_seed",
+              "gold_ingot"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "mithril_ingot"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 0.7,
+        "tags": [
+          "potion"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Brew Eye Drops",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 2,
+            "item_id": "eye_drops"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "brew_eye_drops",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "bat_wing"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "ether_leaf"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [
+          "potion"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Brew Hi-Potion",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "hi_potion"
+          }
+        ],
+        "quality_tiers": [
+          {
+            "outputs": [
+              {
+                "amount": 2,
+                "item_id": "hi_potion"
+              }
+            ],
+            "quality": "Fine",
+            "threshold": 0.6
+          },
+          {
+            "outputs": [
+              {
+                "amount": 1,
+                "item_id": "mega_potion"
+              }
+            ],
+            "quality": "Masterwork",
+            "threshold": 0.9
+          }
+        ],
+        "recipe_id": "brew_hi_potion",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "potion",
+              "potion"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "ether_leaf"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [
+          "potion"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Brew Potion",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 2,
+            "item_id": "potion"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "brew_potion",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "healing_herb"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "bat_wing"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "alchemy",
+        "success_chance": 1.0,
+        "tags": [
+          "potion"
+        ],
+        "version": 2
+      },
+      {
         "display_name": "Craft amethyst_item",
         "experience": {},
         "failure_outputs": [],
@@ -87933,7 +88592,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -87966,7 +88627,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "card"
+        ],
         "version": 2
       },
       {
@@ -87999,7 +88662,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "card"
+        ],
         "version": 2
       },
       {
@@ -88032,7 +88697,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -88065,7 +88732,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -88098,7 +88767,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -88131,7 +88802,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -88164,7 +88837,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -88197,7 +88872,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "gem"
+        ],
         "version": 2
       },
       {
@@ -88267,6 +88944,181 @@
         "version": 2
       },
       {
+        "display_name": "Forge Fire Orb",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "fire_orb_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "forge_fire_orb",
+        "requires_discovery": true,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "ruby_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "mithril_ingot"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 1.0,
+        "tags": [
+          "orb"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Forge Ice Orb",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "ice_orb_item"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "forge_ice_orb",
+        "requires_discovery": true,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "sapphire_item"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "mithril_ingot"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 1.0,
+        "tags": [
+          "orb"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Forge Iron Ball",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 3,
+            "item_id": "iron_ball"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "forge_iron_ball",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "iron_ore"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "coal"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 1.0,
+        "tags": [
+          "bomb"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Forge Thunder Bomb",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "thunder_bomb"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "forge_thunder_bomb",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "iron_ball"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "scorpion_claw"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 1.0,
+        "tags": [
+          "bomb"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Forge Wind Bomb",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "wind_bomb"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "forge_wind_bomb",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "iron_ball"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "bat_wing"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 1.0,
+        "tags": [
+          "bomb"
+        ],
+        "version": 2
+      },
+      {
         "display_name": "Frost Bomb",
         "experience": {},
         "failure_outputs": [],
@@ -88329,7 +89181,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88362,7 +89216,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88395,7 +89251,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88428,7 +89286,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88461,7 +89321,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88494,7 +89356,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88527,7 +89391,9 @@
         ],
         "station": "alchemy",
         "success_chance": 1.0,
-        "tags": [],
+        "tags": [
+          "fuse"
+        ],
         "version": 2
       },
       {
@@ -88660,6 +89526,83 @@
         "station": "concoct",
         "success_chance": 1.0,
         "tags": [],
+        "version": 2
+      },
+      {
+        "display_name": "Smelt Gold Ingot",
+        "experience": {},
+        "failure_outputs": [
+          {
+            "amount": 1,
+            "item_id": "coal"
+          }
+        ],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "gold_ingot"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "smelt_gold",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "iron_ore",
+              "fire_dust"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "coal"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 0.8,
+        "tags": [
+          "smelt"
+        ],
+        "version": 2
+      },
+      {
+        "display_name": "Smelt Mithril Ingot",
+        "experience": {},
+        "failure_outputs": [],
+        "outputs": [
+          {
+            "amount": 1,
+            "item_id": "mithril_ingot"
+          }
+        ],
+        "quality_tiers": [],
+        "recipe_id": "smelt_mithril",
+        "requires_discovery": false,
+        "schema": "asteria.rpg.composition_recipe",
+        "selections": [
+          {
+            "item_ids": [
+              "silver_ore",
+              "silver_ore"
+            ],
+            "step_id": "base"
+          },
+          {
+            "item_ids": [
+              "coal"
+            ],
+            "step_id": "catalyst"
+          }
+        ],
+        "station": "forge",
+        "success_chance": 1.0,
+        "tags": [
+          "smelt"
+        ],
         "version": 2
       },
       {
@@ -97941,6 +98884,195 @@
         "version": 1
       }
     ],
+    "gacha_banners": [
+      {
+        "appear_seconds": 0.5,
+        "appear_sound": "confirm",
+        "banner_id": "starfall",
+        "banner_image": "playable_assets/chests/mythicalwithgems_yellow_glow.png",
+        "currency": "star_stones",
+        "description": "Star stones buy a chest. Most hold supplies; some hold legends.",
+        "display_name": "Starfall Chest",
+        "featured_multiplier": 2.0,
+        "hard_pity": 50,
+        "layout": "",
+        "multi_cost": 270.0,
+        "multi_count": 10,
+        "multi_guarantee": "rare",
+        "music": "",
+        "open_seconds": 0.6,
+        "open_switch": "",
+        "pity_rarity": "mythical",
+        "prizes": [
+          {
+            "amount": 2,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "potion",
+            "rarity": "common",
+            "target_id": "potion",
+            "weight": 24.0
+          },
+          {
+            "amount": 3,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "healing_herb",
+            "rarity": "common",
+            "target_id": "healing_herb",
+            "weight": 20.0
+          },
+          {
+            "amount": 3,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "iron_ore",
+            "rarity": "common",
+            "target_id": "iron_ore",
+            "weight": 18.0
+          },
+          {
+            "amount": 2,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "ether_leaf",
+            "rarity": "common",
+            "target_id": "ether_leaf",
+            "weight": 18.0
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "hi_potion",
+            "rarity": "rare",
+            "target_id": "hi_potion",
+            "weight": 6.0
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "ruby_item",
+            "rarity": "rare",
+            "target_id": "ruby_item",
+            "weight": 4.0
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "sapphire_item",
+            "rarity": "rare",
+            "target_id": "sapphire_item",
+            "weight": 4.0
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "gold_ingot",
+            "rarity": "rare",
+            "target_id": "gold_ingot",
+            "weight": 3.0
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "item",
+            "prize_id": "elixir",
+            "rarity": "mythical",
+            "target_id": "elixir",
+            "weight": 1.0
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 0,
+            "duplicate_item": "",
+            "featured": false,
+            "kind": "equipment",
+            "prize_id": "bloodreaver",
+            "rarity": "mythical",
+            "target_id": "w_bloodreaver",
+            "weight": 0.5
+          },
+          {
+            "amount": 1,
+            "duplicate_amount": 1,
+            "duplicate_item": "elixir",
+            "featured": true,
+            "kind": "actor",
+            "prize_id": "cael",
+            "rarity": "mythical",
+            "target_id": "hero_04",
+            "weight": 0.75
+          }
+        ],
+        "rarities": [
+          {
+            "chest_image": "playable_assets/chests/common_no_glow.png",
+            "color": [
+              205,
+              205,
+              215
+            ],
+            "display_name": "Common",
+            "open_image": "playable_assets/chests/common_empty_yellow_glow.png",
+            "open_sound": "confirm",
+            "rarity_id": "common"
+          },
+          {
+            "chest_image": "playable_assets/chests/rare_no_glow.png",
+            "color": [
+              120,
+              175,
+              255
+            ],
+            "display_name": "Rare",
+            "open_image": "playable_assets/chests/rare_empty_purple_glow.png",
+            "open_sound": "heal",
+            "rarity_id": "rare"
+          },
+          {
+            "chest_image": "playable_assets/chests/mythical_no_glow.png",
+            "color": [
+              255,
+              205,
+              90
+            ],
+            "display_name": "Mythical",
+            "open_image": "playable_assets/chests/mythicalwithgems_yellow_glow.png",
+            "open_sound": "victory",
+            "rarity_id": "mythical"
+          }
+        ],
+        "schema": "asteria.rpg.gacha_banner",
+        "shake_seconds": 0.8,
+        "shake_sound": "hit",
+        "single_cost": 30.0,
+        "soft_pity_start": 35,
+        "soft_pity_step": 0.06,
+        "version": 1
+      }
+    ],
     "gauge_compositions": [
       {
         "composition_id": "break",
@@ -100881,6 +102013,34 @@
           "bestiary.title": "\u602a\u7269\u5716\u9451  \u5df2\u767c\u73fe {seen}/{count}",
           "bestiary.unknown": "\u6253\u5012\u4e00\u6b21\u5c31\u80fd\u77e5\u9053\u7260\u7684\u5f31\u9ede\u8207\u9ad4\u529b\u3002",
           "bestiary.unseen": "???",
+          "board.accepted": "\u5df2\u63a5\u53d6\uff1a{name}",
+          "board.count": "\u5df2\u63a5 {count}",
+          "board.count_limit": "\u5df2\u63a5 {count}\uff0f{limit}",
+          "board.done_long": "\u5df2\u7d93\u5b8c\u6210\u4e86\u3002",
+          "board.empty": "\u544a\u793a\u677f\u4e0a\u6c92\u6709\u4efb\u52d9\u3002",
+          "board.experience": "{amount} \u7d93\u9a57\u503c",
+          "board.failed_long": "\u9019\u500b\u4efb\u52d9\u5931\u6557\u4e86\u3002",
+          "board.full": "\u9019\u985e\u4efb\u52d9\u540c\u6642\u53ea\u80fd\u63a5 {count} \u4ef6\u3002",
+          "board.hint": "\u65b9\u5411\u9375\uff1a\u9078\u5361\u7247   Enter\uff1a\u63a5\u53d6\uff0f\u56de\u5831   Space\uff0fF\uff1a\u7ffb\u9762   Esc\uff1a\u8fd4\u56de",
+          "board.locked_long": "\u9084\u4e0d\u80fd\u63a5\u9019\u500b\u4efb\u52d9\u3002",
+          "board.needs": "\u9700\u5148\u5b8c\u6210\uff1a{quests}",
+          "board.no_reward": "\u6c92\u6709\u5831\u916c",
+          "board.not_ready": "\u8acb\u5148\u5b8c\u6210\u76ee\u6a19\u3002",
+          "board.objectives": "\u76ee\u6a19",
+          "board.repeatable": "\u53ef\u91cd\u8907",
+          "board.reported": "\u5df2\u56de\u5831\uff1a{name}",
+          "board.reward": "\u5831\u916c",
+          "board.state.active": "\u9032\u884c\u4e2d",
+          "board.state.available": "\u53ef\u63a5\u53d6",
+          "board.state.done": "\u5df2\u5b8c\u6210",
+          "board.state.failed": "\u5931\u6557",
+          "board.state.full": "\u5df2\u6eff",
+          "board.state.locked": "\u672a\u958b\u653e",
+          "board.state.ready": "\u53ef\u56de\u5831\uff01",
+          "board.state.waiting": "{time} \u5f8c\u91cd\u65b0\u5f35\u8cbc",
+          "board.time_left": "\u5269\u9918\u6642\u9593 {time}",
+          "board.time_limit": "\u6642\u9650 {minutes} \u5206\u9418",
+          "board.waiting_long": "\u5f88\u5feb\u5c31\u6703\u91cd\u65b0\u5f35\u8cbc\u3002",
           "build.accessories": "6 \u98fe\u54c1\uff1a{value}",
           "build.base": "\u57fa\u672c",
           "build.class": "1 \u526f\u8077\u696d\uff1a{value}",
@@ -100951,13 +102111,33 @@
           "coop.retry": "\u9023\u7dda\u4e2d\u65b7 \u00b7 {status} \u00b7 \u6309 F3 \u91cd\u8a66",
           "coop.start_server": "\u8acb\u5148\u5728 Multiplayer \u5de5\u4f5c\u5340\u555f\u52d5\u672c\u6a5f\u4f3a\u670d\u5668",
           "coop.status": "\u9023\u7dda \u00b7 {count} \u540d\u73a9\u5bb6 \u00b7 \u7d93\u9a57 {xp} \u00b7 B\uff1a\u80cc\u5305\uff0fG\uff1a\u62fe\u53d6",
+          "crafting.all": "\u914d\u65b9",
+          "crafting.can_make": "\u53ef\u505a {count}",
+          "crafting.chance": "\u6210\u529f\u7387 {chance}%",
           "crafting.crafted": "\u88fd\u4f5c\u4e86 {items}",
           "crafting.crafted_quality": "\u88fd\u4f5c\u4e86 {items}\uff08{quality}\uff09",
+          "crafting.crafted_some": "\u88fd\u4f5c\u4e86 {items}\uff08{count} \u6b21\u4e2d\u6210\u529f {done} \u6b21\uff09",
+          "crafting.disassemble": "\u5206\u89e3",
+          "crafting.disassembled": "\u5206\u89e3\u4e86 {item}\uff1a{items}",
           "crafting.failed": "\u88fd\u4f5c\u5931\u6557\uff0c\u5f97\u5230 {items}",
+          "crafting.fee": "\u8cbb\u7528 {fee} {currency}",
+          "crafting.gives": "\u5f97\u5230",
+          "crafting.gold": "\u91d1\u5e63 {gold}",
           "crafting.hidden": "??? \u9084\u6709 {count} \u500b\u914d\u65b9\u5c1a\u672a\u767c\u73fe",
-          "crafting.hint": "\u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   Enter\uff1a\u88fd\u4f5c   Esc\uff1a\u8fd4\u56de",
+          "crafting.hint": "\u4e0a\uff0f\u4e0b\uff1a\u914d\u65b9   \u5de6\uff0f\u53f3\uff1a\u6578\u91cf   Enter\uff1a\u88fd\u4f5c   Tab\uff0fQ\uff0fE\uff1a\u5206\u9801   Esc\uff1a\u8fd4\u56de",
+          "crafting.items": "\u53ef\u5206\u89e3\u7684\u9053\u5177",
+          "crafting.makes": "\u6210\u54c1",
+          "crafting.materials": "\u6750\u6599\uff08\u6301\u6709\uff0f\u9700\u8981\uff09",
           "crafting.none": "\u9019\u88e1\u6c92\u6709\u5df2\u77e5\u7684\u914d\u65b9\u3002",
           "crafting.nothing": "\u4ec0\u9ebc\u90fd\u6c92\u6709",
+          "crafting.nothing_to_break": "\u80cc\u5305\u88e1\u6c92\u6709\u80fd\u5206\u89e3\u7684\u6771\u897f\u3002",
+          "crafting.owned": "x{count}",
+          "crafting.qualities": "\u54c1\u8cea\uff1a{tiers}",
+          "crafting.quality_tier": "{quality} {percent}%\u4ee5\u4e0a",
+          "crafting.quantity": "\u6578\u91cf\uff1a{count}\uff08\u6700\u591a {limit}\uff09",
+          "crafting.recipes": "\u914d\u65b9",
+          "crafting.unknown": "\u4f60\u9084\u6c92\u767c\u73fe\u9019\u500b\u914d\u65b9\u3002",
+          "crafting.unknown_hint": "\u5b78\u6703\u5b83\uff0c\u6216\u7528\u6b63\u78ba\u7684\u6750\u6599\u505a\u51fa\u4f86\u3002",
           "creature.about_to_use": "{trainer}\n\u6e96\u5099\u6d3e\u51fa{name}\u3002",
           "creature.almost": "\u5509\uff01\u5dee\u4e00\u9ede\u5c31\u6293\u5230\u4e86\uff01",
           "creature.already_out": "{name}\u5df2\u7d93\u5728\u6230\u9b25\u4e2d\u4e86\uff01",
@@ -100967,6 +102147,11 @@
           "creature.but_it_failed": "\u4f46\u662f\u5931\u6557\u4e86\uff01",
           "creature.cancel": "\u53d6\u6d88",
           "creature.cant_escape": "\u9003\u4e0d\u6389\uff01",
+          "creature.card.dex": "\u5716\u9451",
+          "creature.card.id": "ID\u865f\u78bc",
+          "creature.card.money": "\u91d1\u9322",
+          "creature.card.name": "\u540d\u5b57\uff1a",
+          "creature.card.time": "\u6642\u9593",
           "creature.caught": "\u597d\u8036\uff01\u6293\u5230{name}\u4e86\uff01",
           "creature.choose": "\u8acb\u9078\u64c7\u5925\u4f34\u3002",
           "creature.close_bag": "\u95dc\u4e0a\u80cc\u5305",
@@ -100977,6 +102162,10 @@
           "creature.come_back": "{name}\uff0c\u56de\u4f86\u5427\uff01",
           "creature.critical": "\u64ca\u4e2d\u4e86\u8981\u5bb3\uff01",
           "creature.defeated_trainer": "{player}\u6253\u6557\u4e86{trainer}\uff01",
+          "creature.dex.height": "\u8eab\u9ad8",
+          "creature.dex.owned": "\u6355\u7372",
+          "creature.dex.seen": "\u898b\u904e",
+          "creature.dex.weight": "\u9ad4\u91cd",
           "creature.do_it": "\u5c31\u662f\u73fe\u5728\uff01{name}\uff01",
           "creature.drained": "{name}\u7684\n\u9ad4\u529b\u88ab\u5438\u53d6\u4e86\uff01",
           "creature.evolved": "{name}\u9032\u5316\u6210\u4e86{species}\uff01",
@@ -100994,6 +102183,15 @@
           "creature.legendary_appeared": "{name}\u51fa\u73fe\u4e86\uff01",
           "creature.level": "Lv{level}",
           "creature.level_up": "{name}\u5347\u5230\u4e86\u7b49\u7d1a{level}\uff01",
+          "creature.menu.cant_use": "\u73fe\u5728\u4e0d\u80fd\u4f7f\u7528\u3002",
+          "creature.menu.close_bag_words": "\u95dc\u4e0a\u80cc\u5305",
+          "creature.menu.do_what": "\u8981\u5c0d{name}\u505a\u4ec0\u9ebc\uff1f",
+          "creature.menu.move_where": "\u8981\u79fb\u5230\u54ea\u88e1\uff1f",
+          "creature.menu.summary": "\u80fd\u529b",
+          "creature.menu.switch": "\u66ff\u63db",
+          "creature.menu.toss": "\u4e1f\u6389",
+          "creature.menu.tossed": "\u4e1f\u6389\u4e861\u500b{item}\u3002",
+          "creature.menu.use": "\u4f7f\u7528",
           "creature.missed": "{name}\u7684\n\u653b\u64ca\u6c92\u6709\u547d\u4e2d\uff01",
           "creature.no": "\u5426",
           "creature.no_effect": "\u5c0d{name}\u597d\u50cf\u6c92\u6709\u6548\u679c\u2026\u2026",
@@ -101004,12 +102202,18 @@
           "creature.no_stealing": "\u8a13\u7df4\u5bb6\u64cb\u4f4f\u4e86\u7403\uff01\u4e0d\u53ef\u4ee5\u6436\u5225\u4eba\u7684\u6771\u897f\uff01",
           "creature.not_very_effective": "\u6548\u679c\u4e0d\u592a\u597d\u2026\u2026",
           "creature.ok_come_back": "{name}\uff0c\u597d\uff01\n\u56de\u4f86\u5427\uff01",
+          "creature.options.title": "\u8a2d\u5b9a",
           "creature.out_of_creatures": "{player}\u5df2\u7d93\u6c92\u6709\u53ef\u4ee5\u6230\u9b25\u7684\u5925\u4f34\u4e86\uff01",
           "creature.pocket.balls": "\u6355\u7372\u7403",
           "creature.pocket.items": "\u9053\u5177",
           "creature.pp": "PP",
           "creature.prize": "{player}\u7372\u5f97\u4e86{amount}\u4f5c\u70ba\u734e\u91d1\uff01",
           "creature.recoil": "{name}\u53d7\u5230\u4e86\n\u53cd\u4f5c\u7528\u529b\u7684\u50b7\u5bb3\uff01",
+          "creature.save.badges": "\u5fbd\u7ae0",
+          "creature.save.confirm": "\u8981\u8a18\u9304\u5192\u96aa\u55ce\uff1f",
+          "creature.save.player": "\u73a9\u5bb6",
+          "creature.save.saved": "{player}\u8a18\u9304\u4e86\u5192\u96aa\u3002",
+          "creature.save.saving": "\u8a18\u9304\u4e2d\u2026\u2026\u8acb\u4e0d\u8981\u95dc\u6389\u96fb\u6e90\u3002",
           "creature.sent_to_storage": "{name}\u88ab\u9001\u5230\u5bc4\u653e\u8655\u4e86\u3002",
           "creature.shoot": "\u7cdf\u7cd5\uff01\u660e\u660e\u5c31\u5feb\u6293\u5230\u4e86\uff01",
           "creature.so_close": "\u53ef\u60e1\uff01\u53ea\u5dee\u4e00\u9ede\uff01",
@@ -101020,6 +102224,13 @@
           "creature.stat_wont_fall": "{name}\u7684{stat}\n\u5df2\u7d93\u7121\u6cd5\u518d\u964d\u4f4e\u4e86\uff01",
           "creature.stat_wont_rise": "{name}\u7684{stat}\n\u5df2\u7d93\u7121\u6cd5\u518d\u63d0\u9ad8\u4e86\uff01",
           "creature.state_applied": "{name}\u9677\u5165\u4e86{state}\u72c0\u614b\uff01",
+          "creature.summary.exp": "\u7d93\u9a57\u503c",
+          "creature.summary.info": "\u8cc7\u6599",
+          "creature.summary.moves": "\u62db\u5f0f",
+          "creature.summary.next": "\u8ddd\u96e2\u5347\u7d1a",
+          "creature.summary.none": "\u7121",
+          "creature.summary.pp": "PP",
+          "creature.summary.skills": "\u80fd\u529b\u503c",
           "creature.super_effective": "\u6548\u679c\u7d55\u4f73\uff01",
           "creature.thats_enough": "{name}\uff0c\u5920\u4e86\uff01\n\u56de\u4f86\u5427\uff01",
           "creature.threw": "{player}\u4f7f\u7528\u4e86{item}\uff01",
@@ -101800,6 +103011,7 @@
           "data.credits.title.line1": "\u56de\u5408\u5236\u5f15\u64ce\u7684\u58d3\u529b\u6e2c\u8a66\u3002",
           "data.credits.title.title": "Asteria \u5168\u9762\u9a57\u8b49",
           "data.currency.gold.name": "\u91d1\u5e63",
+          "data.currency.star_stones.name": "\u661f\u77f3",
           "data.enemy.crimson_warlord.name": "\u7dad\u52d2\u723e",
           "data.enemy.goblin_beast.name": "\u54e5\u5e03\u6797\u5de8\u7378",
           "data.enemy.goblin_slinger.name": "\u54e5\u5e03\u6797\u6295\u77f3\u5175",
@@ -101914,6 +103126,11 @@
           "data.equipment_set.zealot.name": "\u72c2\u4fe1\u8005\u4e4b\u8863",
           "data.faction.bonewalkers.name": "\u9ab8\u884c\u8005\u5bae\u5ef7",
           "data.faction.wardens.name": "\u7210\u5fc3\u93ae\u5b88\u885b\u968a",
+          "data.gacha_banner.starfall.description": "\u7528\u661f\u77f3\u958b\u5bf6\u7bb1\u3002\u5927\u591a\u662f\u88dc\u7d66\u54c1\uff0c\u5c11\u6578\u85cf\u8457\u50b3\u8aaa\u3002",
+          "data.gacha_banner.starfall.name": "\u661f\u843d\u5bf6\u7bb1",
+          "data.gacha_rarity.common.name": "\u666e\u901a",
+          "data.gacha_rarity.mythical.name": "\u795e\u8a71",
+          "data.gacha_rarity.rare.name": "\u7a00\u6709",
           "data.growth.sunbrand_growth.name": "\u65e5\u708e\u528d\u89ba\u9192",
           "data.growth.w_bone_scepter_growth.name": "\u9aa8\u4e4b\u6b0a\u6756\u9644\u9b54",
           "data.growth.w_ritual_kris_growth.name": "\u5100\u5f0f\u6ce2\u5203\u9644\u9b54",
@@ -102136,8 +103353,18 @@
           "data.passive.zealot_fervor_capstone.name": "\u71b1\u8aa0\u7cbe\u901a",
           "data.pet_species.slinger.name": "\u99b4\u670d\u6295\u77f3\u5175",
           "data.pet_species.war_slinger.name": "\u6295\u77f3\u6230\u58eb",
+          "data.quality.Fine.name": "\u7cbe\u826f",
+          "data.quality.Masterwork.name": "\u5091\u4f5c",
           "data.quest.bone_collector.description": "\u6bcf\u64ca\u5012\u4e00\u540d\u9ab7\u9acf\u4f8d\u50e7\uff0c\u5b88\u885b\u5c31\u4ed8\u9322\u3002",
           "data.quest.bone_collector.name": "\u6536\u9aa8\u4eba",
+          "data.quest.bounty_herbs.description": "\u85e5\u5e2b\u7684\u7642\u50b7\u8349\u4e0d\u5920\u4e86\u3002\u8d81\u8349\u9084\u6c92\u67af\u840e\uff0c\u9001\u4e09\u682a\u904e\u53bb\u3002",
+          "data.quest.bounty_herbs.name": "\u85e5\u8349\u904b\u9001",
+          "data.quest.bounty_hunters.description": "\u9ab7\u9acf\u7375\u624b\u8eb2\u5728\u5730\u4e0b\u5893\u7a74\u7684\u9ed1\u6697\u88e1\u653e\u7bad\u3002\u6253\u5012\u5169\u96bb\u3002",
+          "data.quest.bounty_hunters.name": "\u7375\u624b\u6383\u8569",
+          "data.quest.bounty_slingers.description": "\u54e5\u5e03\u6797\u6295\u77f3\u5175\u4e00\u76f4\u671d\u8def\u4e0a\u7684\u8ca8\u8eca\u4e1f\u77f3\u982d\u3002\u6253\u5012\u4e09\u96bb\uff0c\u516c\u6703\u5c31\u4ed8\u9322\u3002",
+          "data.quest.bounty_slingers.name": "\u6295\u77f3\u5175\u61f8\u8cde",
+          "data.quest.bounty_warlord.description": "\u7dad\u52d2\u723e\u4f54\u64da\u4e86\u738b\u5ea7\u3002\u9019\u662f\u516c\u6703\u8cde\u91d1\u6700\u9ad8\u7684\u61f8\u8cde\u3002",
+          "data.quest.bounty_warlord.name": "\u7dad\u52d2\u723e\u61f8\u8cde",
           "data.quest.q_beast.description": "\u4e00\u982d\u5de8\u7378\u9a45\u4f7f\u8457\u54e5\u5e03\u6797\u3002\u5230\u9053\u8def\u76e1\u982d\u7684\u7a7a\u5730\u628a\u7260\u89e3\u6c7a\u3002",
           "data.quest.q_beast.name": "\u54e5\u5e03\u6797\u5de8\u7378",
           "data.quest.q_crypt.description": "\u68ee\u6797\u5e95\u4e0b\u7684\u4ea1\u8005\u9a37\u52d5\u4e0d\u5b89\u3002\u8b93\u9ab7\u9acf\u53e4\u8001\u8005\u5b89\u606f\u3002",
@@ -102148,11 +103375,20 @@
           "data.quest.q_show.name": "\u96dc\u800d\u85dd\u4eba\u7684\u8acb\u6c42",
           "data.quest.slay_vaelor.description": "\u9ab7\u9acf\u738b\u7dad\u52d2\u723e\u5750\u5728\u9918\u71fc\u738b\u5ea7\u4e0a\u3002\u7d42\u7d50\u4ed6\uff1b\u8a18\u5f97\u5e36\u4e0a\u85e5\u8349\u3002",
           "data.quest.slay_vaelor.name": "\u8a0e\u4f10\u7dad\u52d2\u723e",
+          "data.quest_board.hearthfold_board.description": "\u7210\u5fc3\u93ae\u7684\u61f8\u8cde\u3002\u6700\u591a\u540c\u6642\u63a5\u4e09\u4ef6\uff0c\u5b8c\u6210\u5f8c\u56de\u9019\u88e1\u56de\u5831\u3002",
+          "data.quest_board.hearthfold_board.name": "\u61f8\u8cde\u544a\u793a\u677f",
+          "data.quest_category.Delivery.name": "\u904b\u9001",
+          "data.quest_category.Hunt.name": "\u8a0e\u4f10",
           "data.rarity.common.name": "\u666e\u901a",
           "data.rarity.legendary.name": "\u50b3\u8aaa",
           "data.rarity.magic.name": "\u9b54\u6cd5",
           "data.rarity.mythic.name": "\u795e\u8a71",
           "data.rarity.rare.name": "\u7a00\u6709",
+          "data.recipe.brew_antidote.name": "\u8abf\u88fd\u89e3\u6bd2\u85e5",
+          "data.recipe.brew_elixir.name": "\u8abf\u88fd\u842c\u80fd\u85e5",
+          "data.recipe.brew_eye_drops.name": "\u8abf\u88fd\u773c\u85e5",
+          "data.recipe.brew_hi_potion.name": "\u8abf\u88fd\u9ad8\u7d1a\u85e5\u6c34",
+          "data.recipe.brew_potion.name": "\u8abf\u88fd\u85e5\u6c34",
           "data.recipe.craft_amethyst_item.name": "\u88fd\u4f5c\u7d2b\u6c34\u6676",
           "data.recipe.craft_card_golem_item.name": "\u88fd\u4f5c\u9b54\u50cf\u5361\u7247",
           "data.recipe.craft_card_wolf_item.name": "\u88fd\u4f5c\u72fc\u5361\u7247",
@@ -102164,6 +103400,11 @@
           "data.recipe.craft_topaz_item.name": "\u88fd\u4f5c\u9ec3\u7389",
           "data.recipe.ether_draught.name": "\u4ee5\u592a\u85e5\u6c34",
           "data.recipe.fire_bomb.name": "\u706b\u7130\u70b8\u5f48",
+          "data.recipe.forge_fire_orb.name": "\u935b\u9020\u706b\u4e4b\u5bf6\u73e0",
+          "data.recipe.forge_ice_orb.name": "\u935b\u9020\u51b0\u4e4b\u5bf6\u73e0",
+          "data.recipe.forge_iron_ball.name": "\u935b\u9020\u9435\u7403",
+          "data.recipe.forge_thunder_bomb.name": "\u935b\u9020\u96f7\u96fb\u70b8\u5f48",
+          "data.recipe.forge_wind_bomb.name": "\u935b\u9020\u65cb\u98a8\u70b8\u5f48",
           "data.recipe.frost_bomb.name": "\u51b0\u971c\u70b8\u5f48",
           "data.recipe.fuse_amethyst.name": "\u878d\u5408\u7d2b\u6c34\u6676",
           "data.recipe.fuse_diamond.name": "\u878d\u5408\u947d\u77f3",
@@ -102176,8 +103417,15 @@
           "data.recipe.holy_water.name": "\u8056\u6c34",
           "data.recipe.phoenix_tonic.name": "\u4e0d\u6b7b\u9ce5\u85e5\u5291",
           "data.recipe.poison_vial.name": "\u6bd2\u85e5\u74f6",
+          "data.recipe.smelt_gold.name": "\u51b6\u7149\u91d1\u9320",
+          "data.recipe.smelt_mithril.name": "\u51b6\u7149\u79d8\u9280\u9320",
           "data.recipe.smoke_bomb.name": "\u7159\u9727\u5f48",
           "data.recipe.storm_flask.name": "\u98a8\u66b4\u71d2\u74f6",
+          "data.recruit.hearthfold_guild.hero_02.description": "\u4f60\u9084\u6c92\u958b\u53e3\uff0c\u5979\u5c31\u5148\u66ff\u4f60\u6cbb\u7642\u7684\u7267\u5e2b\u3002",
+          "data.recruit.hearthfold_guild.hero_03.description": "\u559a\u8d77\u4ea1\u8005\uff0c\u8b93\u4ed6\u5011\u7684\u9ab8\u9aa8\u70ba\u4f60\u800c\u6230\u3002",
+          "data.recruit.hearthfold_guild.hero_04.description": "\u4ee5\u9bae\u8840\u63db\u53d6\u529b\u91cf\u3002\u8981\u50f9\u662f\u661f\u77f3\u3002",
+          "data.recruit_office.hearthfold_guild.description": "\u6b63\u5728\u627e\u968a\u4f0d\u7684\u5192\u96aa\u8005\u3002",
+          "data.recruit_office.hearthfold_guild.name": "\u516c\u6703\u4e8b\u52d9\u6240",
           "data.shop.armour_shop.name": "\u5e0c\u723e\u5fb7\u9632\u5177\u5e97",
           "data.shop.arms_shop.name": "\u5e03\u862d\u6b66\u5668\u5e97",
           "data.shop.remedy_shop.name": "\u745f\u62c9\u85e5\u92ea",
@@ -102979,6 +104227,15 @@
           "data.tag.immune.kill.name": "\u514d\u75ab\u5373\u6b7b",
           "data.track.battle_experience.name": "\u6230\u9b25\u7d93\u9a57",
           "data.track.level_curve.name": "\u7b49\u7d1a\u66f2\u7dda",
+          "data.workstation.alchemy.name": "\u7149\u91d1\u53f0",
+          "data.workstation.forge.name": "\u935b\u9020\u7210",
+          "data.workstation_category.cards.name": "\u5361\u7247",
+          "data.workstation_category.fusion.name": "\u878d\u5408",
+          "data.workstation_category.gems.name": "\u5bf6\u77f3",
+          "data.workstation_category.ingots.name": "\u91d1\u5c6c\u9320",
+          "data.workstation_category.orbs.name": "\u5bf6\u73e0",
+          "data.workstation_category.potions.name": "\u85e5\u6c34",
+          "data.workstation_category.throwing.name": "\u6295\u64f2\u7269",
           "dialogue.choose": "\u8acb\u9078\u64c7",
           "dialogue.continue": "Enter\uff0fE\uff1a\u7e7c\u7e8c",
           "dlg.battle_a.0": "\u4ea1\u8005\u4e0d\u6703\u5c31\u6b64\u5012\u4e0b\u2026\u2026",
@@ -103221,6 +104478,28 @@
           "field.saved": "\u5df2\u5b58\u6a94\uff1a{file}",
           "field.skip_cutscene": "Esc\uff1a\u7565\u904e",
           "field.title": "\u91ce\u5916\u6e2c\u8a66",
+          "gacha.closed": "\u9019\u500b\u5361\u6c60\u5df2\u95dc\u9589\u3002",
+          "gacha.duplicate": "\u2192 {item}",
+          "gacha.featured": "\u6a5f\u7387\u63d0\u5347\uff1a{prizes}",
+          "gacha.hint": "\u5de6\uff0f\u53f3\uff1a\u9078\u64c7   Enter\uff1a\u62bd\u53d6   R\uff1a\u6a5f\u7387   H\uff1a\u7d00\u9304   Esc\uff1a\u8fd4\u56de",
+          "gacha.hint.back": "Enter\uff0fEsc\uff1a\u8fd4\u56de",
+          "gacha.hint.results": "Enter\uff0fEsc\uff1a\u56de\u5230\u5361\u6c60",
+          "gacha.hint.show": "Enter\uff1a\u7565\u904e",
+          "gacha.history": "\u6700\u8fd1\u7684\u62bd\u53d6\u7d00\u9304",
+          "gacha.history_button": "\u62bd\u53d6\u7d00\u9304",
+          "gacha.more": "\u9084\u6709 {count} \u9805\uff08R\uff09",
+          "gacha.multi": "\u62bd {count} \u6b21",
+          "gacha.no_history": "\u9084\u6c92\u6709\u62bd\u904e\u3002",
+          "gacha.pity": "{count} \u62bd\u5167\u5fc5\u5f97 {rarity}",
+          "gacha.poor": "{currency}\u4e0d\u5920\u3002",
+          "gacha.rates": "\u6a5f\u7387",
+          "gacha.rates_button": "\u5b8c\u6574\u6a5f\u7387",
+          "gacha.rule.featured": "\u2605 \u6a5f\u7387\u63d0\u5347 x{times}",
+          "gacha.rule.multi": "\u6bcf {count} \u9023\u62bd\u81f3\u5c11\u4e00\u500b {rarity}",
+          "gacha.rule.pity": "\u6700\u665a\u7b2c {count} \u62bd\u5fc5\u5f97 {rarity}",
+          "gacha.rule.soft": "\u5f9e\u7b2c {start} \u62bd\u8d77\uff0c\u6bcf\u62bd\u63d0\u9ad8 {step}%",
+          "gacha.single": "\u62bd 1 \u6b21",
+          "gacha.total": "\u5df2\u62bd\u6b21\u6578\uff1a{count}",
           "game_over.heading": "\u904a\u6232\u7d50\u675f",
           "game_over.load": "\u8b80\u53d6\u4e0a\u6b21\u7684\u5b58\u6a94",
           "game_over.title": "\u56de\u5230\u6a19\u984c\u756b\u9762",
@@ -103230,6 +104509,7 @@
           "hud.skills": "\u6280\u80fd 1-{last}",
           "language.name": "\u7e41\u9ad4\u4e2d\u6587",
           "list.hint": "\u4e0a\uff0f\u4e0b\uff1a\u6372\u52d5   Enter\uff0fEsc\uff1a\u8fd4\u56de",
+          "menu.exit": "\u96e2\u958b",
           "music.empty": "\u6c92\u6709\u4efb\u4f55\u66f2\u76ee\u3002",
           "music.hint": "\u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   Enter\uff1a\u64ad\u653e   Esc\uff1a\u8fd4\u56de",
           "music.locked": "? ? ?",
@@ -103295,6 +104575,31 @@
           "quests.status.active": "\u9032\u884c\u4e2d",
           "quests.status.completed": "\u5df2\u5b8c\u6210",
           "quests.status.failed": "\u5931\u6557",
+          "recruit.ask": "\u8981\u82b1 {price} \u96c7\u7528 {name} \u55ce\uff1f  Enter\uff1a\u662f   Esc\uff1a\u5426",
+          "recruit.cannot_dismiss": "\u9019\u88e1\u4e0d\u80fd\u9063\u6563 {name}\u3002",
+          "recruit.dismissed": "{name} \u96e2\u958b\u4e86\u968a\u4f0d",
+          "recruit.empty": "\u9019\u88e1\u6c92\u6709\u4eba\u5728\u627e\u5de5\u4f5c\u3002",
+          "recruit.free": "\u514d\u8cbb",
+          "recruit.full_long": "\u968a\u4f0d\u5df2\u6eff\u3002",
+          "recruit.hint": "\u4e0a\uff0f\u4e0b\uff1a\u5019\u9078\u4eba   Enter\uff1a\u96c7\u7528   X\uff1a\u9063\u6563   Esc\uff1a\u8fd4\u56de",
+          "recruit.hint_no_dismiss": "\u4e0a\uff0f\u4e0b\uff1a\u5019\u9078\u4eba   Enter\uff1a\u96c7\u7528   Esc\uff1a\u8fd4\u56de",
+          "recruit.hired_long": "{name} \u5df2\u7d93\u5728\u968a\u4f0d\u88e1\u4e86\u3002",
+          "recruit.joined": "{name} \u52a0\u5165\u4e86\u968a\u4f0d\uff08Lv {level}\uff09",
+          "recruit.last": "\u6700\u5f8c\u4e00\u540d\u968a\u54e1\u4e0d\u80fd\u96e2\u958b\u3002",
+          "recruit.level": "Lv {level}",
+          "recruit.level_own": "Lv 1",
+          "recruit.level_range": "Lv {low}\u2013{high}",
+          "recruit.locked_long": "{name} \u73fe\u5728\u9084\u4e0d\u9858\u610f\u52a0\u5165\u3002",
+          "recruit.party": "\u968a\u4f0d {count}",
+          "recruit.party_limit": "\u968a\u4f0d {count}\uff0f{limit}",
+          "recruit.poor_long": "\u9322\u4e0d\u5920\u3002",
+          "recruit.price": "\u50f9\u683c {price}",
+          "recruit.refund": "\u9063\u6563\u6642\u9000\u9084 {refund}",
+          "recruit.state.full": "\u968a\u4f0d\u5df2\u6eff",
+          "recruit.state.hired": "\u5df2\u5728\u968a\u4f0d\u4e2d",
+          "recruit.state.locked": "\u5c1a\u672a\u958b\u653e",
+          "recruit.state.poor": "\u9322\u4e0d\u5920",
+          "recruit.stats": "\u80fd\u529b\u503c",
           "scholar.ask": "\u8981\u7528\u54ea\u7a2e\u8a9e\u8a00\u8b1b\u8ff0\u6545\u4e8b\uff1f",
           "scholar.done": "\u5c31\u9019\u9ebc\u8fa6\u3002",
           "settings.back": "\u8fd4\u56de",
@@ -140369,6 +141674,27 @@
         "version": 1
       }
     ],
+    "quest_boards": [
+      {
+        "board_id": "hearthfold_board",
+        "card_style": "grid",
+        "description": "Hearthfold's bounties. Take up to three; report back here.",
+        "display_name": "Bounty Board",
+        "layout": "",
+        "max_active": 3,
+        "music": "",
+        "open_switch": "",
+        "quest_ids": [
+          "bounty_slingers",
+          "bounty_herbs",
+          "bounty_hunters",
+          "bounty_warlord"
+        ],
+        "refresh_minutes": 5.0,
+        "schema": "asteria.rpg.quest_board",
+        "version": 1
+      }
+    ],
     "quests": [
       {
         "auto_complete": true,
@@ -140389,6 +141715,147 @@
         "reward": {
           "currencies": {
             "gold": 1500.0
+          },
+          "experience": {},
+          "loot": []
+        },
+        "schema": "asteria.rpg.quest",
+        "version": 1
+      },
+      {
+        "auto_complete": false,
+        "card_image": "playable_assets/icons_7soul/I_Leaf.png",
+        "category": "Delivery",
+        "description": "The apothecary is short of healing herbs. Bring three before they wilt.",
+        "display_name": "Herb Delivery",
+        "icon_id": "playable_assets/icons_7soul/I_Leaf.png",
+        "next_quest_ids": [],
+        "objectives": [
+          {
+            "description": "",
+            "kind": "item",
+            "objective_id": "goal",
+            "required": 3,
+            "target": "healing_herb"
+          }
+        ],
+        "prerequisites": [],
+        "quest_id": "bounty_herbs",
+        "rank": "D",
+        "repeatable": true,
+        "reward": {
+          "currencies": {
+            "star_stones": 20.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 1.0,
+              "item_id": "potion",
+              "maximum": 2,
+              "minimum": 2
+            }
+          ]
+        },
+        "schema": "asteria.rpg.quest",
+        "time_limit": 10.0,
+        "version": 1
+      },
+      {
+        "auto_complete": false,
+        "card_image": "playable_assets/icons_7soul/I_Crystal01.png",
+        "category": "Hunt",
+        "description": "Skeleton hunters shoot from the catacomb dark. Put two of them down.",
+        "display_name": "Hunter Cull",
+        "icon_id": "playable_assets/icons_7soul/I_Crystal01.png",
+        "next_quest_ids": [],
+        "objectives": [
+          {
+            "description": "",
+            "kind": "defeat_enemy",
+            "objective_id": "goal",
+            "required": 2,
+            "target": "skeleton_hunter"
+          }
+        ],
+        "prerequisites": [],
+        "quest_id": "bounty_hunters",
+        "rank": "B",
+        "reward": {
+          "currencies": {
+            "star_stones": 50.0
+          },
+          "experience": {},
+          "loot": [
+            {
+              "chance": 1.0,
+              "item_id": "hi_potion",
+              "maximum": 1,
+              "minimum": 1
+            }
+          ]
+        },
+        "schema": "asteria.rpg.quest",
+        "version": 1
+      },
+      {
+        "auto_complete": false,
+        "card_image": "playable_assets/icons_7soul/W_Throw001.png",
+        "category": "Hunt",
+        "description": "Goblin slingers keep stoning the road carts. Three of them, and the guild pays.",
+        "display_name": "Slinger Bounty",
+        "icon_id": "playable_assets/icons_7soul/W_Throw001.png",
+        "next_quest_ids": [],
+        "objectives": [
+          {
+            "description": "",
+            "kind": "defeat_enemy",
+            "objective_id": "goal",
+            "required": 3,
+            "target": "goblin_slinger"
+          }
+        ],
+        "prerequisites": [],
+        "quest_id": "bounty_slingers",
+        "rank": "C",
+        "repeatable": true,
+        "reward": {
+          "currencies": {
+            "gold": 150.0,
+            "star_stones": 30.0
+          },
+          "experience": {},
+          "loot": []
+        },
+        "schema": "asteria.rpg.quest",
+        "version": 1
+      },
+      {
+        "auto_complete": false,
+        "card_image": "playable_assets/icons_7soul/W_Sword016.png",
+        "category": "Hunt",
+        "description": "Vaelor holds the throne. The guild's richest bounty.",
+        "display_name": "Vaelor's Bounty",
+        "icon_id": "playable_assets/icons_7soul/W_Sword016.png",
+        "next_quest_ids": [],
+        "objectives": [
+          {
+            "description": "",
+            "kind": "defeat_enemy",
+            "objective_id": "goal",
+            "required": 1,
+            "target": "crimson_warlord"
+          }
+        ],
+        "prerequisites": [
+          "q_crypt"
+        ],
+        "quest_id": "bounty_warlord",
+        "rank": "S",
+        "reward": {
+          "currencies": {
+            "gold": 1000.0,
+            "star_stones": 300.0
           },
           "experience": {},
           "loot": []
@@ -140692,6 +142159,53 @@
         "schema": "asteria.rpg.reaction_definition",
         "target_selector": "event_source",
         "trigger": "rpg.battle.after_action",
+        "version": 1
+      }
+    ],
+    "recruit_offices": [
+      {
+        "can_dismiss": true,
+        "candidates": [
+          {
+            "actor_id": "hero_02",
+            "cost": 500.0,
+            "currency": "gold",
+            "level_max": 3,
+            "level_min": 1,
+            "note": "A cleric who heals before you ask.",
+            "portrait": "playable_assets/portraits/hero_02.png",
+            "require_switch": ""
+          },
+          {
+            "actor_id": "hero_03",
+            "cost": 1500.0,
+            "currency": "gold",
+            "level_max": 5,
+            "level_min": 3,
+            "note": "Raises the dead, and their bones fight for you.",
+            "portrait": "playable_assets/portraits/hero_03.png",
+            "require_switch": ""
+          },
+          {
+            "actor_id": "hero_04",
+            "cost": 300.0,
+            "currency": "star_stones",
+            "level_max": 6,
+            "level_min": 4,
+            "note": "Pays in blood for power. Asks star stones.",
+            "portrait": "playable_assets/portraits/hero_04.png",
+            "require_switch": ""
+          }
+        ],
+        "description": "Adventurers looking for a party.",
+        "dismiss_refund": 0.5,
+        "display_name": "Guild Office",
+        "experience_per_level": 1000.0,
+        "layout": "",
+        "music": "",
+        "office_id": "hearthfold_guild",
+        "party_limit": 4,
+        "schema": "asteria.rpg.recruit_office",
         "version": 1
       }
     ],
@@ -141824,6 +143338,104 @@
       }
     ],
     "version": 30,
+    "workstations": [
+      {
+        "categories": [
+          {
+            "category_id": "potions",
+            "display_name": "Potions",
+            "icon_id": "playable_assets/icons_7soul/P_Red01.png",
+            "tags": [
+              "potion"
+            ]
+          },
+          {
+            "category_id": "gems",
+            "display_name": "Gems",
+            "icon_id": "playable_assets/icons_7soul/I_Ruby.png",
+            "tags": [
+              "gem"
+            ]
+          },
+          {
+            "category_id": "fusion",
+            "display_name": "Fusion",
+            "icon_id": "playable_assets/icons_7soul/I_Crystal01.png",
+            "tags": [
+              "fuse"
+            ]
+          },
+          {
+            "category_id": "cards",
+            "display_name": "Cards",
+            "icon_id": "playable_assets/icons_7soul/I_Scroll.png",
+            "tags": [
+              "card"
+            ]
+          }
+        ],
+        "craft_sound": "heal",
+        "description": "",
+        "disassembly": true,
+        "disassembly_tags": [],
+        "display_name": "Alchemy Table",
+        "fail_sound": "hit",
+        "icon_id": "playable_assets/icons_7soul/P_Red05.png",
+        "layout": "",
+        "max_quantity": 99,
+        "music": "",
+        "schema": "asteria.rpg.workstation",
+        "show_undiscovered": true,
+        "station_id": "alchemy",
+        "success_image": "playable_assets/fx_heal.png",
+        "success_seconds": 0.6,
+        "version": 1
+      },
+      {
+        "categories": [
+          {
+            "category_id": "ingots",
+            "display_name": "Ingots",
+            "icon_id": "playable_assets/icons_7soul/I_GoldBar.png",
+            "tags": [
+              "smelt"
+            ]
+          },
+          {
+            "category_id": "throwing",
+            "display_name": "Throwing",
+            "icon_id": "playable_assets/icons_7soul/I_IronBall.png",
+            "tags": [
+              "bomb"
+            ]
+          },
+          {
+            "category_id": "orbs",
+            "display_name": "Orbs",
+            "icon_id": "playable_assets/icons_7soul/I_Sapphire.png",
+            "tags": [
+              "orb"
+            ]
+          }
+        ],
+        "craft_sound": "heal",
+        "description": "",
+        "disassembly": false,
+        "disassembly_tags": [],
+        "display_name": "Forge",
+        "fail_sound": "hit",
+        "icon_id": "playable_assets/icons_7soul/I_SilverBar.png",
+        "layout": "",
+        "max_quantity": 10,
+        "music": "",
+        "schema": "asteria.rpg.workstation",
+        "show_undiscovered": true,
+        "station_id": "forge",
+        "success_image": "playable_assets/fx_heal.png",
+        "success_seconds": 0.6,
+        "version": 1
+      }
+    ],
     "world_interactions": [
       {
         "actor_tag": "",
@@ -142274,6 +143886,51 @@
           "entity_id": "efc85b5e-02ba-5116-8e32-3f8a71b492e8",
           "local_scope_id": "town.remedy_shop",
           "program_id": "town.remedy_shop",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "town.alchemy.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "0e516d51-61b6-5b41-aabc-57797f6139d6",
+          "local_scope_id": "town.alchemy",
+          "program_id": "town.alchemy",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "town.forge.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "9c9c45a2-9d3d-5f9e-924f-e60eadf34926",
+          "local_scope_id": "town.forge",
+          "program_id": "town.forge",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "town.board.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "1cd17318-64d1-5cae-8c3a-b1070a48fc9c",
+          "local_scope_id": "town.board",
+          "program_id": "town.board",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "town.guild.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "8a4b2288-5b81-5976-85e1-96feee2fd19b",
+          "local_scope_id": "town.guild",
+          "program_id": "town.guild",
+          "trigger": "action"
+        },
+        {
+          "binding_id": "town.gacha.binding",
+          "conditions": [],
+          "enabled": true,
+          "entity_id": "fd0f30cb-c281-56a1-8529-1f371bfe4248",
+          "local_scope_id": "town.gacha",
+          "program_id": "town.gacha",
           "trigger": "action"
         }
       ],
@@ -145166,6 +146823,371 @@
           "enabled": true,
           "id": "efc85b5e-02ba-5116-8e32-3f8a71b492e8",
           "name": "Apothecary Sela"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 440.0,
+                "y": 200.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "791f09b3-2c5b-52bc-afa3-2df02b5a236c",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "446963e3-42cf-5f4e-a148-ccc432dd0614",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "town.alchemy.binding",
+                "event_program_id": "town.alchemy",
+                "local_scope_id": "town.alchemy",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "0e516d51-61b6-5b41-aabc-57797f6139d6",
+          "name": "Alchemy Table"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 312.0,
+                "y": 200.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "edb8895c-51fd-53f3-b488-513c7f06fa15",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "c82016da-239c-580b-9a22-df3803b180c6",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "town.forge.binding",
+                "event_program_id": "town.forge",
+                "local_scope_id": "town.forge",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "9c9c45a2-9d3d-5f9e-924f-e60eadf34926",
+          "name": "Forge"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 248.0,
+                "y": 200.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "b3bff170-39d3-5f80-a24e-9bfb8e33e7c6",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "a3c6972f-2384-59f4-b0b2-5eac9127ed42",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "town.board.binding",
+                "event_program_id": "town.board",
+                "local_scope_id": "town.board",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "1cd17318-64d1-5cae-8c3a-b1070a48fc9c",
+          "name": "Bounty Board"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 216.0,
+                "y": 200.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "7ec87f60-0656-5a85-b3e6-8e10066e8d5a",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "231cbcbb-014f-5d12-850f-a8e52c46b942",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "town.guild.binding",
+                "event_program_id": "town.guild",
+                "local_scope_id": "town.guild",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "8a4b2288-5b81-5976-85e1-96feee2fd19b",
+          "name": "Guild Clerk"
+        },
+        {
+          "components": [
+            {
+              "fields": {
+                "parent_id": "",
+                "rotation": 0.0,
+                "scale_x": 1.0,
+                "scale_y": 1.0,
+                "x": 504.0,
+                "y": 200.0
+              },
+              "type": "asteria.Transform",
+              "version": 1
+            },
+            {
+              "fields": {
+                "depth": 0.0,
+                "elevation": 0.0,
+                "flip_x": false,
+                "frame_index": 0,
+                "layer": 0,
+                "opacity": 1.0,
+                "sprite_sheet_asset_id": "d83a88ec-ae31-5698-9b34-fcd9eca59449",
+                "visible": true
+              },
+              "type": "asteria.SpriteRenderer2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "clip_set_id": "8dbe0a5a-abc2-5bc3-afdf-de01455d0e1b",
+                "default_clip": "idle_down",
+                "playing": true,
+                "speed": 1.0
+              },
+              "type": "asteria.Animator2D",
+              "version": 1
+            },
+            {
+              "fields": {
+                "enabled": true,
+                "height": 8.0,
+                "is_trigger": false,
+                "ladder": false,
+                "layer": 0,
+                "mask": 4294967295,
+                "offset_x": 0.0,
+                "offset_y": 0.0,
+                "one_way": false,
+                "radius": 8.0,
+                "shape": "box",
+                "width": 10.0
+              },
+              "type": "asteria.Collider2D",
+              "version": 3
+            },
+            {
+              "fields": {
+                "event_binding_id": "town.gacha.binding",
+                "event_program_id": "town.gacha",
+                "local_scope_id": "town.gacha",
+                "range": 24.0,
+                "require_facing": true,
+                "trigger": "action"
+              },
+              "type": "asteria.Interaction2D",
+              "version": 2
+            }
+          ],
+          "enabled": true,
+          "id": "fd0f30cb-c281-56a1-8529-1f371bfe4248",
+          "name": "Starfall Chest"
         }
       ],
       "id": "4ca2db1c-f03a-51a8-aac9-3f85718155ee",

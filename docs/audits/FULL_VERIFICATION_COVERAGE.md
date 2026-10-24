@@ -308,6 +308,33 @@ bow (OpenGameArt) with the Lucifer outline of their rarity, and the bow attack s
 art comes from the engine's asset library (`asset_library/`, see THIRD_PARTY_ASSETS.md), not
 from `~/Downloads`.
 
+## Menu screens and the plaza's services (U1–U6, 2026-10-24)
+
+Every menu screen is drawn from a menu layout the editor can change (Presentation ▸ Menu
+Screens ▸ Layout). The paper doll and the enhance pages (refine, sockets, cards, growth) replace
+the old workshop. Hearthfold's plaza has an Alchemy Table and a Forge (tabs, quantities,
+success and quality, undiscovered recipes, disassembly). It also has a Bounty Board (quest cards
+that turn over, ranks, time limits, repeatable bounties), a Guild Clerk (hire for gold or star
+stones, send away for half back) and the Starfall Chest (gacha: rarities, rate-up, hard and soft
+pity, a ten-pull guarantee, a chest that appears, shakes and opens).
+
+The campaign uses them through the screens themselves:
+
+- It takes the slinger bounty and wins it in the woods, then hands it in.
+- It sends Mira away and hires her again.
+- It pulls ten with a fixed seed.
+- It brews a Hi-Potion on the alchemy screen.
+- It puts a ring on the doll, sockets a ruby into the ring and refines it once.
+
+The facts for these are `bounties_taken`, `bounties_done`, `guild_hires`, `gacha_pulls`,
+`brewed_on_screen`, `doll_worn`, `screen_sockets` and `screen_refines`.
+
+`scripts/ui_tour_live_check.py` pictures all 43 screens in both languages.
+`scripts/menu_frame_time_check.py` times each of them; the slowest has a 95th percentile of
+4.55 ms.
+
+New world commands: OPEN_QUEST_BOARD, OPEN_RECRUIT, OPEN_GACHA.
+
 ## World commands (58)
 
 Used in the campaign or by Showman Pip's menu: TRANSFER, GIVE_ITEM, TAKE_ITEM, START_QUEST,

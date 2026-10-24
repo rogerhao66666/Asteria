@@ -226,7 +226,8 @@ def test_the_layout_page_outlines_moves_and_edits_elements(monkeypatch):
         page.rebuild()
         assert not page.boxes  # hidden: nothing drawn yet
         page.show()
-        assert page.screen_list.count() == len(SCREEN_IDS)
+        # and a layout per workstation, quest board, recruiting office and gacha banner
+        assert page.screen_list.count() == len(SCREEN_IDS) + 5
         assert set(page.canvas.boxes) >= {"frame", "options", "title"}
         frame = page.boxes["frame"]
         page.pick("frame")

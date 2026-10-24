@@ -256,6 +256,10 @@ def write_credits(root):
         "| `battle/fx_*.png` (19 skill effects) | Foozle Pixel Magic Effects "
         "(`Foozle_2DE0001`): Explosion, Water Geyser, Molten Spear, Wind, Tornado, Portal "
         f"strips, tinted and scaled | Foozle (lordfitoi) | {cc0} |",
+        "| `chests/*.png` (Starfall Chest) | Foozle Chest and Key Pack (`Foozle_2DO0002`): "
+        f"closed and opened chests with glows | Foozle (lordfitoi) | {cc0} |",
+        "| `portraits/hero_0*.png` (Guild Office) | First idle frame of each Lucifer hero "
+        f"| Foozle (lordfitoi) | {cc0} |",
         *sound,
     ]
     credits.write_text(

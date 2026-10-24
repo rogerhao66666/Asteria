@@ -953,13 +953,21 @@ class MenuLayoutWorkspace(QWidget):
         if self._stale:
             self.refresh_preview()
 
-    def _label_screens(self):
+    def _label_screens(self, custom=None):
+        """Each screen's title in the editor's language, marked when it has a layout
+        (``custom``: the ids that do; None keeps the marks shown)."""
         from .i18n import translate
 
         for row in range(self.screen_list.count()):
             item = self.screen_list.item(row)
-            mark = "● " if item.text().startswith("●") else "   "
-            item.setText(mark + translate(item.data(Qt.UserRole + 1)))
+            if custom is None:
+                marked = item.text().startswith("●")
+            else:
+                marked = item.data(Qt.UserRole) in custom
+            english = str(item.data(Qt.UserRole + 1))
+            # a workstation's own layout ("  ▸ Forge") keeps the station's name
+            title = english if english.lstrip().startswith("▸") else translate(english)
+            item.setText(("● " if marked else "   ") + title)
 
     def refresh_preview(self):
         self._label_screens()
@@ -1040,11 +1048,7 @@ class MenuLayoutWorkspace(QWidget):
         self.changed.emit()
 
     def _mark_screens(self):
-        custom = {s for s, _t, c in self.controller.screens() if c}
-        for row in range(self.screen_list.count()):
-            item = self.screen_list.item(row)
-            title = screen_spec(item.data(Qt.UserRole)).title
-            item.setText(("● " if item.data(Qt.UserRole) in custom else "   ") + title)
+        self._label_screens({s for s, _t, c in self.controller.screens() if c})
 
     def _add(self, kind):
         size = self.inspector.size

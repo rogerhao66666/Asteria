@@ -273,7 +273,7 @@ class MenusInputMixin:
         self._crafting_back = back
         self._ui_mode = "crafting"
 
-    def _crafting_input(self):
+    def _crafting_input(self, events=()):
         screen = self._crafting_screen
         if screen is None or self.input.just_pressed("cancel"):
             if screen is not None:
@@ -281,17 +281,31 @@ class MenusInputMixin:
             self._crafting_screen = None
             self._ui_mode = getattr(self, "_crafting_back", "field")
             return
+        pg = self.pg
+        keys = {e.key for e in events if e.type == pg.KEYDOWN}
+        if keys & {pg.K_TAB, pg.K_e, pg.K_PAGEDOWN}:
+            screen.switch_tab(1)
+        elif keys & {pg.K_q, pg.K_PAGEUP}:
+            screen.switch_tab(-1)
         if self.input.just_pressed("move_up"):
             screen.move(-1)
         if self.input.just_pressed("move_down"):
             screen.move(1)
+        if self.input.just_pressed("move_left"):
+            screen.change_quantity(-1)
+        if self.input.just_pressed("move_right"):
+            screen.change_quantity(1)
         if self.input.just_pressed("confirm"):
             theme = self.menu_theme()
-            if screen.confirm() is not None:  # the theme's "buy", else the dialogue's sound
+            station = screen.workstation()
+            result = screen.confirm()
+            if result is not None and getattr(result, "success", True):
+                # the station's sound, else the theme's "buy", else the dialogue's
                 bought = theme.sound("buy") if theme is not None else ""
-                self._sound(bought or self.manifest.get("dialogue_confirm_sfx"))
-            elif theme is not None:
-                self._sound(theme.sound("fail"))
+                sound = station.craft_sound or bought
+                self._sound(sound or self.manifest.get("dialogue_confirm_sfx"))
+            else:
+                self._sound(station.fail_sound or (theme.sound("fail") if theme else ""))
 
     def _list_screen_input(self):
         if self.input.just_pressed("cancel") or self.input.just_pressed("confirm"):

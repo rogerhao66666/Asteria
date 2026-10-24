@@ -1,0 +1,16 @@
+{
+  "driver": "cocoa",
+  "shots": [
+    "en_crafting",
+    "en_crafting_gems",
+    "en_crafting_disassemble",
+    "en_crafting_forge",
+    "en_crafting_hidden",
+    "zh_crafting",
+    "zh_crafting_gems",
+    "zh_crafting_disassemble",
+    "zh_crafting_forge",
+    "zh_crafting_hidden"
+  ],
+  "errors": {}
+}

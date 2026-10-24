@@ -1059,6 +1059,7 @@ class Campaign:
         self.crypt()
         self.throne()
         self.supplies_fight()  # D61: after the last boss, so no earlier fight changes
+        self.services()  # U6: the plaza's screens, after every fight the other facts count
         facts = self.finish()
         self.music_room()
         self.new_game_plus()  # last: the game starts over
@@ -1151,6 +1152,134 @@ class Campaign:
         if game.mode == "battle":
             self.fight()
 
+    def opened(self, name):
+        """Talk to ``name``: the window opens the screen its event asked for (``talk`` puts the
+        window back on the field for the script's calls)."""
+        self.rt._service_screen = None
+        self.talk(name)
+        self.rt._frame([], 0.016)
+        screen = self.rt._service_screen
+        assert screen is not None, name
+        self.rt._ui_mode = "service"
+        return screen
+
+    def services(self):
+        """The plaza's screens the way a player uses them (U6): the slinger bounty taken on the
+        Bounty Board, won in the woods and handed in; Mira sent away at the Guild Office and
+        hired again; ten pulls at the Starfall Chest (a fixed seed); a Hi-Potion brewed on the
+        alchemy table's screen; a ring worn from the bag on the equipment doll."""
+        from asteria.runtime.equipment_screen import EquipmentScreen
+
+        game, rt = self.game, self.rt
+        state = game.save.rpg_state
+        # -- the Bounty Board: take the first card, win its fights, hand it in
+        board = self.opened("Bounty Board")
+        quest = board.selected()[0]
+        board.confirm()
+        assert game.quest_log.status(quest.quest_id) == "active", quest.quest_id
+        self.facts["bounties_taken"] += 1
+        rt._service_screen, rt._ui_mode = None, "field"
+        for _ in range(6):
+            if board.board.state(quest) == "ready":
+                break
+            game.start_encounter("woods_patrol")
+            rt._turn_actor = None
+            rt._advance_to_hero_turn()
+            self.fight()
+        stars = state.currencies.get("star_stones", 0)
+        board = self.opened("Bounty Board")
+        board.confirm()  # the same card, now "ready": handed in
+        assert game.quest_log.status(quest.quest_id) == "completed"
+        assert state.currencies.get("star_stones", 0) > stars
+        self.facts["bounties_done"] += 1
+        rt._service_screen, rt._ui_mode = None, "field"
+        # -- the Guild Office: Mira away (half her price back), then hired again
+        office = self.opened("Guild Clerk")
+        office.index = [c.actor_id for c, _a, _s in office.office.rows()].index("hero_02")
+        office.dismiss()
+        assert "hero_02" not in state.party_active_actor_ids
+        gold = state.currencies.get("gold", 0)
+        office.confirm()  # asks once more
+        office.confirm()
+        assert "hero_02" in state.party_active_actor_ids
+        assert state.currencies.get("gold", 0) == gold - 500
+        self.facts["guild_hires"] += 1
+        rt._service_screen, rt._ui_mode = None, "field"
+        # -- the Starfall Chest: ten at once, the same ten every run
+        chest = self.opened("Starfall Chest")
+        chest.action = chest.ACTIONS.index("multi")
+        pulled = chest.confirm(random.Random("campaign"))
+        assert pulled and len(pulled) == 10
+        assert any(p.rarity in ("rare", "mythical") for p, _dup in pulled)  # the guarantee
+        self.facts["gacha_pulls"] += len(pulled)
+        rt._service_screen, rt._ui_mode = None, "field"
+        # -- the alchemy table's screen: one Hi-Potion
+        state.inventory.add("healing_herb", 2)  # a pinch of herbs, if the road used them up
+        before = state.inventory.count("hi_potion")
+        self.talk("Alchemy Table")
+        rt._frame([], 0.016)
+        craft = rt._crafting_screen
+        assert craft is not None and rt._ui_mode == "crafting"
+        ids = [r.recipe_id for r in craft.rows()]
+        craft.index = ids.index("brew_hi_potion")
+        made = craft.confirm(random.Random("brew"))
+        assert made is not None and state.inventory.count("hi_potion") > before, craft.message
+        self.facts["brewed_on_screen"] += 1
+        rt._crafting_screen, rt._ui_mode = None, "field"
+        game.open_crafting_station = None
+        # -- the equipment doll: a ring from the bag on Roger's free hand
+        (ring,) = game.gain_equipment("w_demon_ring")
+        doll = EquipmentScreen(rt, back="field")
+        doll.member = state.party_active_actor_ids.index(HERO)
+        for place, (_slot, _n, worn) in enumerate(doll.places()):  # a free place takes it
+            doll.place = place
+            if worn is None and ring.instance_id in {p.instance_id for p, *_ in doll.candidates()}:
+                break
+        doll.focus = "list"
+        doll.row = [p.instance_id for p, _ok, _r in doll.candidates()].index(ring.instance_id)
+        doll.wear()
+        worn = {p.instance_id for slot in state.loadouts[HERO].slot_ids()
+                for p in state.loadouts[HERO].equipped(slot)}  # fmt: skip
+        assert ring.instance_id in worn, doll.message
+        self.facts["doll_worn"] += 1
+        self.enhance_on_screen(ring)
+        self.log("   plaza: bounty, guild, ten pulls, a brew, a ring worn, socketed, refined")
+
+    def enhance_on_screen(self, ring):
+        """The enhance screen as a player works it: a ruby into the new ring's free socket
+        (Enter on the ring, the socket, the ruby), then one refine of the ring (its own roll)."""
+        from asteria.runtime.enhance_screen import TABS, EnhanceScreen
+
+        game, rt = self.game, self.rt
+        state = game.save.rpg_state
+        state.inventory.add("ruby_item", 1)
+        screen = EnhanceScreen(rt, back="field")
+        screen.member = state.party_active_actor_ids.index(HERO)
+        screen.tab = TABS.index("sockets")
+        screen.rows["gear"] = [p.instance_id for _s, p in screen.gear()].index(ring.instance_id)
+        screen.confirm()  # the ring: its sockets
+        free = [n for n, (_s, held, open_) in enumerate(screen.sockets()) if open_ and not held]
+        screen.rows["sockets"] = free[0]
+        screen.confirm()  # the socket: what the bag has for it
+        screen.rows["choices"] = [i.item_id for i, _a, _n in screen.choices()].index("ruby_item")
+        before = len(ring.attachments)
+        screen.confirm()  # the ruby goes in
+        assert len(ring.attachments) == before + 1, screen.message
+        self.facts["screen_sockets"] += 1
+        screen.tab, screen.focus = TABS.index("refine"), "gear"
+        assert game.refine_rules_for(ring) is not None
+        state.inventory.add("iron_ore", 1)  # the Smith's material
+        kept = getattr(game, "refine_rng", None)
+        game.refine_rng = random.Random("enhance_screen")  # the fights' rolls stay as they were
+        try:
+            level = ring.refine_level
+            screen.confirm()
+        finally:
+            game.refine_rng = kept
+        assert screen.message, "no refine outcome shown"
+        self.facts["screen_refines"] += 1
+        self.log(f"   enhance screen: ruby socketed, refine +{level} -> +{ring.refine_level}")
+
     def finish(self):
         game = self.game
         state = game.save.rpg_state
@@ -1181,6 +1310,8 @@ REQUIRED = (
     "ring_sockets", "used_attack_ring", "used_valiant_slash", "used_arsenal_storm",
     "used_wind_bolt", "used_earth_bolt", "equip_offers", "guarded_blows", "dodged_blows",
     "critical_blows", "breaks", "boss_breaks", "status_ticks", "titan_cleaver",
+    "bounties_taken", "bounties_done", "guild_hires", "gacha_pulls", "brewed_on_screen",
+    "doll_worn", "screen_sockets", "screen_refines",
 )  # fmt: skip
 
 

@@ -221,6 +221,7 @@ class PlayableTestRuntime(
         self._quest_return = "field"
         self._capture_menu = False
         self._crafting_screen = None
+        self._service_screen = None
         self._list_scroll = 0
         self.settings = GameSettings.load(self._settings_path())
         settings_options = list(GameSettings.OPTIONS)
@@ -524,6 +525,12 @@ class PlayableTestRuntime(
         """Process one frame of input, event programs and drawing (no flip)."""
         self._frame_dt = float(dt)
         self._clock_seconds += float(dt)
+        if (  # the time played (saved with the world: card, save); a network game's is not
+            self._ui_mode != "title"
+            and not self._multiplayer_connected()
+            and not self._network_gameplay_frozen()
+        ):
+            self.game.world.add_counter("play.seconds", float(dt))
         self._adopt_new_game_plus()
         self._update_resource_scope()
         self._update_popups(float(dt))
@@ -650,8 +657,16 @@ class PlayableTestRuntime(
             self._shop_input()
             self._draw_shop()
         elif self._ui_mode == "crafting":
-            self._crafting_input()
+            self._crafting_input(events)
             self._draw_crafting()
+        elif self._ui_mode == "service":  # a quest board, recruiting office or gacha (U5)
+            screen = self._service_screen
+            screen.handle(dt, events)
+            if screen.closed:
+                self._service_screen = None
+                self._ui_mode = screen.back
+            else:
+                screen.draw()
         elif self._ui_mode in ("achievements", "bestiary"):
             self._list_screen_input()
             self._draw_list_screen(self._ui_mode)
@@ -729,6 +744,20 @@ class PlayableTestRuntime(
                 )
             ):
                 self._open_crafting(self.game.open_crafting_station, back="field")
+            service = getattr(self.game, "open_service", None)
+            if (
+                self._ui_mode == "field"
+                and service
+                and not (
+                    getattr(self, "_network_event_busy", False)
+                    if self._multiplayer_connected()
+                    else self.game.event_busy
+                )
+            ):
+                from asteria.runtime.service_screens import open_service
+
+                self.game.open_service = None
+                open_service(self, *service, back="field")
             if self.game.mode == "field" and self._ui_mode == "field":
                 if not self._multiplayer_connected():
                     with self.profiler.section("update"):

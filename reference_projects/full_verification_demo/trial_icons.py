@@ -344,3 +344,27 @@ def _skill_pictures(context, folder):
             states[state_id] = dataclasses.replace(
                 record, icon_id=pick("necromancer", f"state_{state_id}.png")
             )
+
+
+def first_frames(project, root):
+    """An icon picture that is a pickup's animation strip (square frames side by side, as the
+    Lucifer Pickups' herbs and ores) shows its first frame: the asset gets that ``region``
+    (the file stays whole). Returns the asset ids changed."""
+    from PIL import Image
+
+    changed = []
+    assets = project.assets
+    for asset in assets.query(kind="icon"):
+        meta = dict(asset.metadata)
+        if meta.get("region") or meta.get("atlas"):
+            continue
+        path = root / asset.source.uri
+        if not path.is_file():
+            continue
+        width, height = Image.open(path).size
+        if height and width >= 4 * height and width % height == 0:  # a long sword is 2:1
+            region = {"x": 0, "y": 0, "width": height, "height": height}
+            metadata = (*asset.metadata, ("region", region))
+            assets.register(dataclasses.replace(asset, metadata=metadata), replace=True)
+            changed.append(asset.asset_id)
+    return changed

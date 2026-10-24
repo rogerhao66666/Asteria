@@ -6,6 +6,30 @@ whole sentences of quest and stat descriptions. ``LINES``: dialogue lines and ch
 """
 
 WORDS = {
+    # -- the workstations and their tabs (U4) -------------------------------------------------
+    "Alchemy Table": "煉金台",
+    "Forge": "鍛造爐",
+    "Potions": "藥水",
+    "Gems": "寶石",
+    "Fusion": "融合",
+    "Cards": "卡片",
+    "Ingots": "金屬錠",
+    "Throwing": "投擲物",
+    "Orbs": "寶珠",
+    "Fine": "精良",
+    # -- the quest board, guild office and Starfall Chest (U5) --------------------------------
+    "Bounty Board": "懸賞告示板",
+    "Guild Clerk": "公會職員",
+    "Guild Office": "公會事務所",
+    "Starfall Chest": "星落寶箱",
+    "Slinger Bounty": "投石兵懸賞",
+    "Herb Delivery": "藥草運送",
+    "Hunter Cull": "獵手掃蕩",
+    "Vaelor's Bounty": "維勒爾懸賞",
+    "Mythical": "神話",
+    "Hunt": "討伐",
+    "Delivery": "運送",
+    "star_stones": "星石",
     # -- people, places, factions -------------------------------------------------------------
     "Roger": "羅傑",
     "Mira": "米菈",
@@ -816,6 +840,29 @@ WORDS = {
 }
 
 DESCRIPTION = {
+    # -- the quest board, guild office and Starfall Chest (U5) --------------------------------
+    "Goblin slingers keep stoning the road carts. Three of them, and the guild pays.": (
+        "哥布林投石兵一直朝路上的貨車丟石頭。打倒三隻，公會就付錢。"
+    ),
+    "The apothecary is short of healing herbs. Bring three before they wilt.": (
+        "藥師的療傷草不夠了。趁草還沒枯萎，送三株過去。"
+    ),
+    "Skeleton hunters shoot from the catacomb dark. Put two of them down.": (
+        "骷髏獵手躲在地下墓穴的黑暗裡放箭。打倒兩隻。"
+    ),
+    "Vaelor holds the throne. The guild's richest bounty.": (
+        "維勒爾佔據了王座。這是公會賞金最高的懸賞。"
+    ),
+    "Hearthfold's bounties. Take up to three; report back here.": (
+        "爐心鎮的懸賞。最多同時接三件，完成後回這裡回報。"
+    ),
+    "Adventurers looking for a party.": "正在找隊伍的冒險者。",
+    "Star stones buy a chest. Most hold supplies; some hold legends.": (
+        "用星石開寶箱。大多是補給品，少數藏著傳說。"
+    ),
+    "A cleric who heals before you ask.": "你還沒開口，她就先替你治療的牧師。",
+    "Raises the dead, and their bones fight for you.": "喚起亡者，讓他們的骸骨為你而戰。",
+    "Pays in blood for power. Asks star stones.": "以鮮血換取力量。要價是星石。",
     # heads of skill descriptions
     "Physical": "物理",
     "Magic": "魔法",

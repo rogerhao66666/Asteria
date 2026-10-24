@@ -37,6 +37,11 @@ DATA_GROUPS = (
     ("Data: quests", ("quests",)),
     ("Data: shops", ("shops",)),
     ("Data: crafting recipes", ("composition_recipes",)),
+    ("Data: workstations", ("workstations",)),
+    (
+        "Data: quest boards, recruiting, gacha",
+        ("quest_boards", "recruit_offices", "gacha_banners"),
+    ),  # fmt: skip
     ("Data: skill trees", ("progression_graphs",)),
     ("Data: progression tracks", ("progression_tracks",)),
     ("Data: stats", ("derived_stats",)),
@@ -50,9 +55,13 @@ SLOTS_GROUP = "Data: equipment slots"
 STATS_GROUP = "Data: stats used by the data"
 CREDITS_GROUP = "Data: credits"
 TAGS_GROUP = "Data: tags shown in menus"
+QUALITY_GROUP = "Data: crafting qualities"
 SPEAKERS_GROUP = "Dialogue: who speaks"
 LINES_GROUP = "Dialogue: lines and choices"
-NESTED = ("objectives", "nodes")  # quest objectives, skill-tree / growth nodes
+RECRUIT_GROUP = "Data: recruiting notes"
+CATEGORY_GROUP = "Data: quest card categories"
+# quest objectives, skill-tree / growth nodes, workstation tabs, gacha rarities
+NESTED = ("objectives", "nodes", "categories", "rarities")
 # a text that is only \\T[key] codes already comes from the locale tables: it needs no key
 _ONLY_TABLE_CODES = re.compile(r"^(\s*\\T\[[^\]]+\]\s*)+$")
 
@@ -102,6 +111,11 @@ def _instructions(project):
             yield program_id, index, instruction
 
 
+def recruit_note_key(office_id, actor_id):
+    """The locale key of a recruiting office's note about one candidate."""
+    return key("recruit", f"{office_id}.{actor_id}", "description")
+
+
 def currency_ids(project):
     db = getattr(project, "rpg_database", None)
     ids = set()
@@ -113,6 +127,12 @@ def currency_ids(project):
     for shop in (getattr(db, "shops", None) or {}).values():
         for entry in getattr(shop, "entries", ()):
             ids.update(getattr(entry, "prices", None) or {})
+    for quest in (getattr(db, "quests", None) or {}).values():  # bounties pay in any (U5)
+        ids.update(getattr(getattr(quest, "reward", None), "currencies", None) or {})
+    for office in (getattr(db, "recruit_offices", None) or {}).values():
+        ids.update(c.currency for c in office.candidates)
+    for banner in (getattr(db, "gacha_banners", None) or {}).values():
+        ids.add(banner.currency)
     return sorted(ids)
 
 
@@ -236,6 +256,24 @@ def data_groups(project):
     tags = [(key("tag", t), words(t)) for t in menu_tags(project)]
     if tags:  # what a socket takes, what a set bonus gives (U3)
         groups.append((TAGS_GROUP, tags))
+    recipes = (getattr(getattr(project, "rpg_database", None), "composition_recipes", None)
+               or {}).values()  # fmt: skip
+    qualities = sorted({t.quality for r in recipes for t in r.quality_tiers})
+    if qualities:  # the crafting screen's quality tiers (U4)
+        groups.append((QUALITY_GROUP, [(key("quality", q), q) for q in qualities]))
+    db = getattr(project, "rpg_database", None)
+    notes = [
+        (recruit_note_key(o.office_id, c.actor_id), c.note)
+        for o in (getattr(db, "recruit_offices", None) or {}).values()
+        for c in o.candidates
+        if c.note
+    ]
+    if notes:  # the recruiting office's line about each candidate (U5)
+        groups.append((RECRUIT_GROUP, notes))
+    quests = (getattr(db, "quests", None) or {}).values()
+    categories = sorted({q.category for q in quests if getattr(q, "category", "")})
+    if categories:  # the corner of a quest card (U5)
+        groups.append((CATEGORY_GROUP, [(key("quest_category", c), c) for c in categories]))
     speakers, lines = {}, {}
     for _program_id, _index, instruction in _instructions(project):
         args = instruction.args

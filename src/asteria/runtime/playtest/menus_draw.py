@@ -101,52 +101,10 @@ class MenusDrawMixin:
 
     def _draw_crafting(self):
         screen = self._crafting_screen
-        station = screen.station if screen is not None else ""
-        c = self.menu_canvas("crafting", {"station.name": station.replace("_", " ").title()})
-        self._draw_backdrop(canvas=c)
         if screen is None:
+            self._draw_backdrop(canvas=self.menu_canvas("crafting"))
             return
-        c.panel("frame", (60, 40, self.width - 120, self.height - 80))
-        tr = self.game.tr
-        title = tr("pause.crafting", "Crafting") + (
-            f" — {screen.station.replace('_', ' ').title()}" if screen.station else ""
-        )
-        c.text("title", title, 90, 54, size=30, color=c.tone("title", TITLE))
-        rows = screen.rows()
-        if not rows:
-            empty = tr("crafting.none", "No known recipes here.")
-            c.text("empty", empty, 90, 110, size=22, color=c.tone("muted", MUTED))
-        at = c.place("rows", (90, 104, self.width - 180, self.height - 150 - 104), 56)
-        y = at.y(104)
-        for i, row in enumerate(rows):
-            if y > at.bottom:
-                break
-            selected = i == screen.index
-            normal = c.color("rows", c.tone("text", TEXT))
-            color = c.tone("selected", PICKED) if selected else normal if row.craftable else GREY
-            name = f"{row.name}  ->  {row.outputs}"
-            self.menu_row(
-                name, at.x(90), y, selected=selected, size=c.size("rows", 22), color=color
-            )
-            y += 26
-            materials = "   ".join(f"{name} {have}/{need}" for name, need, have in row.materials)
-            muted = c.tone("muted", MUTED)
-            self.text(materials, at.x(120), y, size=17, color=muted if row.craftable else LACKING)
-            y += at.row - 26
-        hidden = screen.undiscovered()
-        if hidden:
-            self.text(
-                tr("crafting.hidden", "??? {count} recipe(s) not yet discovered", count=hidden),
-                at.x(90),
-                self.height - 128,
-                size=18,
-                color=(150, 155, 175),
-            )
-        if screen.message:
-            c.text("message", screen.message, 90, self.height - 100, size=20, color=TITLE)
-        hint = tr("crafting.hint", "Up/Down: select   Enter: craft   Esc: back")
-        c.text("hint", hint, 90, self.height - 72, size=18, color=c.tone("muted", MUTED))
-        c.finish()
+        screen.draw(self)
 
     def _draw_list_screen(self, kind):
         c = self.menu_canvas(kind)

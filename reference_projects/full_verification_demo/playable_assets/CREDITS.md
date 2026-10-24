@@ -10,6 +10,8 @@
 | `audio/crypt_theme.ogg` | Foozle Eerie Space Music (`Foozle_M0001`: track 2), copied unmodified, renamed | Foozle | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `icons_7soul/*.png` (the added weapons, armour, accessories and supplies, D61) | "496 pixel art icons for medieval/fantasy RPG" (https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg), copied unmodified from `asset_library/opengameart/7Soul_496_RPG_Icons` | Henrique Lazarini (7Soul1) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 | `battle/fx_*.png` (19 skill effects) | Foozle Pixel Magic Effects (`Foozle_2DE0001`): Explosion, Water Geyser, Molten Spear, Wind, Tornado, Portal strips, tinted and scaled | Foozle (lordfitoi) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
+| `chests/*.png` (Starfall Chest) | Foozle Chest and Key Pack (`Foozle_2DO0002`): closed and opened chests with glows | Foozle (lordfitoi) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
+| `portraits/hero_0*.png` (Guild Office) | First idle frame of each Lucifer hero | Foozle (lordfitoi) | [CC0 1.0](http://creativecommons.org/publicdomain/zero/1.0/) |
 
 ## Licensing
 

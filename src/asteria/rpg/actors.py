@@ -823,6 +823,10 @@ class RpgDatabase:
         self.battle_options = {}  # rpg.extras BattleOptions
         self.ability_loadout_rules = {}  # rpg.ability_loadout AbilityLoadoutRules
         self.doodads = {}  # rpg.doodads DoodadDefinition
+        self.workstations = {}  # rpg.workstations WorkstationDefinition (U4)
+        self.quest_boards = {}  # rpg.boards QuestBoardDefinition (U5)
+        self.recruit_offices = {}  # rpg.boards RecruitOfficeDefinition (U5)
+        self.gacha_banners = {}  # rpg.gacha GachaBanner (U5)
         self.world_interactions = {}
         self.drop_tables = {}
         self.rarities = {}  # rpg.loot RarityDefinition; empty = loot.DEFAULT_RARITIES
@@ -1223,6 +1227,10 @@ class RpgDatabase:
             ("battle_options", self.battle_options),
             ("ability_loadout_rules", self.ability_loadout_rules),
             ("doodads", self.doodads),
+            ("workstations", self.workstations),
+            ("quest_boards", self.quest_boards),
+            ("recruit_offices", self.recruit_offices),
+            ("gacha_banners", self.gacha_banners),
         )
         return {
             name: [store[k].to_data() for k in sorted(store)] for name, store in stores if store
@@ -1277,6 +1285,32 @@ class RpgDatabase:
         from .doodads import DoodadDefinition
 
         return self._add_keyed(self.doodads, value, DoodadDefinition, "doodad_id", "doodad")
+
+    def add_workstation(self, value):
+        from .workstations import WorkstationDefinition
+
+        return self._add_keyed(
+            self.workstations, value, WorkstationDefinition, "station_id", "workstation"
+        )
+
+    def add_quest_board(self, value):
+        from .boards import QuestBoardDefinition
+
+        return self._add_keyed(
+            self.quest_boards, value, QuestBoardDefinition, "board_id", "quest board"
+        )
+
+    def add_recruit_office(self, value):
+        from .boards import RecruitOfficeDefinition
+
+        return self._add_keyed(
+            self.recruit_offices, value, RecruitOfficeDefinition, "office_id", "recruiting office"
+        )
+
+    def add_gacha_banner(self, value):
+        from .gacha import GachaBanner
+
+        return self._add_keyed(self.gacha_banners, value, GachaBanner, "banner_id", "gacha banner")
 
     def add_durability_rules(self, value):
         from .durability import DurabilityRules
@@ -2062,4 +2096,17 @@ class RpgDatabase:
 
             for x in data.get("doodads", ()):
                 result.add_doodad(DoodadDefinition.from_data(x))
+            from .workstations import WorkstationDefinition
+
+            for x in data.get("workstations", ()):
+                result.add_workstation(WorkstationDefinition.from_data(x))
+            from .boards import QuestBoardDefinition, RecruitOfficeDefinition
+            from .gacha import GachaBanner
+
+            for x in data.get("quest_boards", ()):
+                result.add_quest_board(QuestBoardDefinition.from_data(x))
+            for x in data.get("recruit_offices", ()):
+                result.add_recruit_office(RecruitOfficeDefinition.from_data(x))
+            for x in data.get("gacha_banners", ()):
+                result.add_gacha_banner(GachaBanner.from_data(x))
         return result

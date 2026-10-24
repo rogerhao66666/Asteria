@@ -27,6 +27,9 @@ STANDARD_WORLD_COMMANDS = (
     "ADD_COUNTER",
     "LEARN_RECIPE",
     "OPEN_CRAFTING",
+    "OPEN_QUEST_BOARD",
+    "OPEN_RECRUIT",
+    "OPEN_GACHA",
     "PLAY_BGM",
     "STOP_BGM",
     "PLAY_SE",
@@ -87,6 +90,9 @@ WORLD_COMMAND_ARGUMENTS = {
     "ADD_COUNTER": ("counter_id", "amount"),
     "LEARN_RECIPE": ("recipe_id",),
     "OPEN_CRAFTING": ("station",),
+    "OPEN_QUEST_BOARD": ("board_id",),
+    "OPEN_RECRUIT": ("office_id",),
+    "OPEN_GACHA": ("banner_id",),
     "PLAY_BGM": ("asset_id", "fade", "volume"),
     "STOP_BGM": ("fade",),
     "PLAY_SE": ("asset_id", "volume"),
@@ -311,6 +317,18 @@ def register_standard_world_commands(router, session):
     def open_crafting(command):
         session.open_crafting_station = str(command.args.get("station") or "")
         return session.open_crafting_station
+
+    def open_service(kind, arg, store):
+        # a quest board, a recruiting office or a gacha banner (U5): the runtime opens its
+        # screen once the event is done (``session.open_service``)
+        def handler(command):
+            record_id = str(_required(command, arg))
+            if record_id not in getattr(session.project.rpg_database, store):
+                raise WorldCommandError(f"unknown {kind}: {record_id}")
+            session.open_service = (kind, record_id)
+            return session.open_service
+
+        return handler
 
     router.register(
         "SET_NPC",
@@ -633,6 +651,9 @@ def register_standard_world_commands(router, session):
         router.register(command_name, timer_command(method))
     router.register("LEARN_RECIPE", learn_recipe)
     router.register("OPEN_CRAFTING", open_crafting)
+    router.register("OPEN_QUEST_BOARD", open_service("quest_board", "board_id", "quest_boards"))
+    router.register("OPEN_RECRUIT", open_service("recruit", "office_id", "recruit_offices"))
+    router.register("OPEN_GACHA", open_service("gacha", "banner_id", "gacha_banners"))
     router.register(
         "ADD_COUNTER",
         lambda c: session.add_counter(str(_required(c, "counter_id")), _amount(c, "amount", 1)),

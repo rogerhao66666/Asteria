@@ -23,7 +23,14 @@ ITEMS = (
     "mithril_ingot",
     "ice_orb_item",
     "card_knight_item",
+    "healing_herb",
+    "bat_wing",
+    "scorpion_claw",
+    "coal",
+    "ruby_item",
 )
+# left undiscovered: the crafting screens show a ??? row (U4)
+HIDDEN_RECIPES = ("brew_elixir", "forge_ice_orb")
 
 
 BAG = ("a_mithril_mail", "w_saint_staff", "hd_plate_helmet", "lg_wizard_leggings")
@@ -37,8 +44,9 @@ def prepare(game):
     for item_id in ITEMS:
         state.inventory.add(item_id, 3)
     db = game.project.rpg_database
-    for recipe_id in db.composition_recipes:  # every recipe known: the crafting list fills
-        game.learn_recipe(recipe_id)
+    for recipe_id in db.composition_recipes:  # the recipes known: the crafting lists fill
+        if recipe_id not in HIDDEN_RECIPES:
+            game.learn_recipe(recipe_id)
     for quest_id in db.quests:  # those that can start now (others wait on earlier quests)
         try:
             game.start_quest(quest_id)
@@ -64,6 +72,7 @@ def reset(runtime):
     game.close_shop()
     runtime._shop_screen = None
     game.open_crafting_station = None
+    runtime._service_screen = None
     game.battle = None
     game.mode = "field"
 
@@ -140,8 +149,40 @@ def screens(runtime):
             WorldCommand("GIVE_EQUIPMENT", {"equipment_id": "w_demon_ring"})
         )
 
+    def craft(station, tab, recipe_id="", quantity=1):
+        def setup():
+            runtime._open_crafting(station, back="field")
+            screen = runtime._crafting_screen
+            screen.tab = tab
+            ids = [r.recipe_id for r in screen.rows()]
+            screen.index = ids.index(recipe_id) if recipe_id in ids else 0
+            screen.quantity = quantity
+
+        return setup
+
     def extra(kind):
         return mode("extra", _extra_screen=lambda: kind(runtime))
+
+    def service(kind, record_id, **state):  # the board, the guild office, the chest (U5)
+        def setup():
+            from asteria.runtime.service_screens import open_service
+
+            screen = open_service(runtime, kind, record_id)
+            for name, value in state.items():
+                setattr(screen, name, value)
+
+        return setup
+
+    def pulled():  # ten pulls with a fixed seed, the prizes shown
+        import random
+
+        from asteria.runtime.service_screens import open_service
+
+        game.save.rpg_state.currencies["star_stones"] = 300.0
+        screen = open_service(runtime, "gacha", "starfall")
+        screen.action = 1
+        screen.confirm(random.Random(5))
+        screen.page = "results"
 
     return [
         ("title", mode("title")),
@@ -181,7 +222,19 @@ def screens(runtime):
             ),
         ),
         ("enhance_growth", _gear(runtime, "enhance", tab=3)),
-        ("crafting", lambda: runtime._open_crafting("", back="field")),
+        ("crafting", craft("alchemy", 0, "brew_hi_potion")),
+        ("crafting_gems", craft("alchemy", 1)),
+        ("crafting_disassemble", craft("alchemy", 4)),
+        ("crafting_forge", craft("forge", 1, "forge_iron_ball", quantity=3)),
+        ("crafting_hidden", craft("forge", 2, "forge_ice_orb")),
+        ("board", service("quest_board", "hearthfold_board")),
+        ("board_flipped", service("quest_board", "hearthfold_board", flipped=True)),
+        ("recruit", service("recruit", "hearthfold_guild")),
+        ("recruit_ask", service("recruit", "hearthfold_guild", asking=True)),
+        ("gacha", service("gacha", "starfall")),
+        ("gacha_results", pulled),
+        ("gacha_rates", service("gacha", "starfall", page="rates")),
+        ("gacha_history", service("gacha", "starfall", page="history")),
         ("shop_buy", shop("buy")),
         ("shop_sell", shop("sell")),
         ("quests", mode("quests", _quest_return="field")),

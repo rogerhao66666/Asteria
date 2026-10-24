@@ -297,7 +297,10 @@ def test_the_data_groups_list_every_records_name_and_description():
     assert "data.quest.q_patrol.name" in dict(groups["Data: quests"])
     maps = dict(groups[dt.MAPS_GROUP])
     assert maps["data.map.4ca2db1c-f03a-51a8-aac9-3f85718155ee.name"] == "Hearthfold"
-    assert dict(groups[dt.CURRENCY_GROUP]) == {"data.currency.gold.name": "gold"}
+    assert dict(groups[dt.CURRENCY_GROUP]) == {
+        "data.currency.gold.name": "gold",
+        "data.currency.star_stones.name": "star_stones",  # the bounties and the chest's (U5)
+    }
     assert "data.speaker.Warden Thessaly.name" in dict(groups[dt.SPEAKERS_GROUP])
     every = [k for _t, rows in groups.items() for k, _e in rows]
     assert len(every) == len(set(every))  # one row per key
