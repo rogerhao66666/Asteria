@@ -109,3 +109,19 @@ def test_an_icon_picker_fills_its_list_when_opened(app):
     assert not picker.combo.itemIcon(picker.combo.currentIndex()).isNull()  # with its picture
     assert picker.combo.findData("forged:fire") > 0  # a search fills the whole list
     assert picker.text() == "icon.ether_leaf"  # and keeps the choice
+
+
+def test_help_shows_on_hover_only(app):
+    from PySide6.QtWidgets import QLabel
+
+    from asteria.editor.record_vocabulary import CATEGORY_HELP, HELP
+
+    _project, _document, family = _family("abilities", "add_mend")
+    form = family.editor
+    texts = [label.text() for label in form.findChildren(QLabel)]
+    assert HELP["description"] not in texts  # not printed under the field any more
+    assert CATEGORY_HELP["abilities"] not in texts  # nor beside the section's title
+    (title,) = [lb for lb in form.findChildren(QLabel) if lb.text() == "Description  ⓘ"]
+    assert title.toolTip().startswith(HELP["description"])  # on hover instead
+    marks = [lb for lb in form.findChildren(QLabel) if lb.objectName() == "FormSectionHelp"]
+    assert any(m.toolTip() == CATEGORY_HELP["abilities"] for m in marks)

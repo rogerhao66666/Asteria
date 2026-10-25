@@ -5,7 +5,8 @@ a number box (chances as percentages), a drop-down of the records it refers to (
 nothing is typed by hand), tag chips with suggestions, a stat table whose stats come from a
 list, cards for lists of entries (add, duplicate, move, remove) and sections for nested parts.
 The name and icon head the form; internal ids and rarely used fields wait under *Advanced*.
-Every field has its help on hover (and a short hint under it). Edits are reported through
+Every field's help shows on hover (an ⓘ marks the ones that have it; nothing is printed under
+the fields, so the form stays short). Edits are reported through
 ``changed``; the host applies them (and shows a problem with ``set_error``).
 
 The form only edits plain record data; each record type's own decoder still validates it.
@@ -741,10 +742,14 @@ class Section(QFrame):
         layout.setSpacing(4)
         head = QHBoxLayout()
         head.addWidget(self.toggle)
-        if hint:
-            head.addWidget(_small(hint), 1)
-        else:
-            head.addStretch(1)
+        if hint:  # the section's help on hover, like a field's
+            mark = QLabel("ⓘ")
+            mark.setObjectName("FormSectionHelp")
+            mark.setToolTip(hint)
+            mark.setStyleSheet("color: #8b8e98;")
+            self.toggle.setToolTip(hint)
+            head.addWidget(mark)
+        head.addStretch(1)
         layout.addLayout(head)
         layout.addWidget(self.body)
         layout.addWidget(self.more_button, 0, Qt.AlignLeft)
@@ -780,7 +785,6 @@ class Section(QFrame):
         widget.setToolTip(widget.toolTip() or tip.strip())
         holder = QVBoxLayout()
         if self.columns:
-            help_text = ""  # a card stays compact: its help is the field's tooltip
             self._grid_place(title, label, widget, holder)
         elif self.compact:
             holder.addWidget(title)
@@ -805,15 +809,6 @@ class Section(QFrame):
             self.form.addWidget(title, row, 0, Qt.AlignTop)
             self.form.addLayout(holder, row, 1)
         holder.setSpacing(LABEL_GAP)
-        if help_text and _is_wide(widget) and not isinstance(widget, ChipList):
-            # a table's hint above it, not under its Add button
-            hint = _small(help_text)
-            holder.addWidget(hint)
-            help_text = ""
-            if not self.columns and not self.compact:
-                # the label reads level with its hint: "Base Stats  ⓘ  Starting numbers…", the
-                # table below (level with neither, it stood crooked between the two)
-                title.setFixedHeight(_first_line_height(hint))
         if isinstance(widget, (NumberBox, QCheckBox, ColorButton)):
             line = QHBoxLayout()  # a small control stays small
             line.addWidget(widget)
@@ -821,8 +816,6 @@ class Section(QFrame):
             holder.addLayout(line)
         else:
             holder.addWidget(widget)
-        if help_text:
-            holder.addWidget(_small(help_text))
 
     def _grid_place(self, title, label, widget, holder):
         """Label above the field; a small field takes the next free column, a wide one (a list,

@@ -3512,3 +3512,23 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 復原標籤「Game Folder Settings」和其他復原標籤一樣沒有翻譯。
 
 **狀態：** 已提交。
+
+## D81 — 資料表單的說明只在滑鼠移上去時顯示（2026-10-25）
+
+**使用者要求：** 看到技能表單「說明 ⓘ」底下印著「Shown to players in menus.」，問 Description 要寫什麼，接著說：「description 或者其他的那種驚嘆號說明文，都改成使用者滑鼠移到那個上面會顯示、移開就沒有的那種，不用直接顯示在 GUI 上面。」
+
+**回答：** Description 是給玩家看的說明。戰鬥中游標停在這個技能上時，顯示在說明列（`battle_commands.py` 的 `detail=game.description_of(...)`），可以用 `data.ability.<id>.description` 翻譯。
+
+**做了什麼（`editor/record_form.py`）：**
+- 欄位的說明不再印在欄位底下或表格上方，只在標籤上的 ⓘ 提示裡出現（滑鼠移上去顯示，移開就消失；欄位本身也有同一個提示）。提示照樣跟著介面語言翻譯。
+- 分區標題旁的說明（例如「基本」旁的「技能與攻擊：目標、消耗、命中與效果」）也改成標題後面一個 ⓘ，滑鼠移上去才顯示。
+- 表單因此變短，一個畫面看得到更多欄位。其他頁面沒有用 ⓘ 說明，不受影響。
+
+**驗證：**
+- 新測試 `test_record_form.py::test_help_shows_on_hover_only`：技能表單裡找不到說明文字的標籤，「Description ⓘ」的提示以說明開頭，分區的 ⓘ 有分區說明。
+- 截圖（Cocoa，中英文）：`docs/audits/evidence/hover_help/editor_skill_en.png`、`editor_skill_zh.png`。提示是獨立的小視窗，截圖拍不到，靠測試確認。
+
+**還沒做或已知的限制：**
+- 生物畫面頁（D78）選中設定時，樹下方仍會顯示該設定的說明（那不是 ⓘ 說明，而是選中項目的說明欄）；要不要也改成只用滑鼠提示，等使用者決定。
+
+**狀態：** 已提交。
