@@ -3457,3 +3457,33 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 遊戲資料夾設定的分區名稱照檔案的鍵名（`progression_rewards`、`audio` 沒有中文名稱），設定沒有逐一說明；寫回檔案不在編輯器的復原紀錄裡（按取消可放棄）。
 
 **狀態：** 未提交（等使用者）。
+
+## D79 — 綠寶石推到第二個道館：搶回得文貨物、布魯尼出航、武斗道館的黑暗（2026-10-25）
+
+**使用者要求：** 「commit 完後繼續」——D74、D75 提交（db6ada42）之後接著做下一批；照之前的方向把劇情往下推。
+
+**引擎（通用，編輯器拿得到）：**
+- **黑暗與照明**：世界指令 `SET_LIGHT`（`radius` 世界單位、`speed` 每秒、`off`）：田野除了玩家周圍的圓之外全黑；`speed` 讓圓慢慢變大或變小，`off` 時變大到看不見再關掉。照明屬於設定它的場景（換到別的地方就不暗，回來還是暗，地圖進場腳本會重設）。條件 `rpg` `light`：圓還在變的時候是 "moving"。
+- **`SET_POSITION` 沒給的軸留在原地**：只寫 `permanent` 就是「它現在站哪就永遠站哪」。
+
+**私人的綠寶石專案：**
+- 戶外地圖加上 116 號道路、105、106 號水路與釣鎮，經由出入口連到釣鎮的房子、道館、寶可夢中心、石之洞窟、Rusturf 隧道（還有隧道另一頭的地圖，之後才會用到）。
+- **同一格的多個觸發點**：原作在同一格依序找第一個條件成立的觸發點（`GetCoordEventScriptAtPosition`）；之前每個觸發點各自一個實體，引擎只會觸發其中 id 最小的那個，條件不成立就什麼都不做（卡那茲的「貨物拿回來了」因此不會觸發）。現在一格合成一個實體、一個程式，依序判斷。
+- 劇本翻譯補上：`copyobjectxytoperm`、`setflashlevel`／`animateflash`（`field_screen_effect.c` 的半徑表；`animateflash` 每幀 1 像素，等它變完）、`pokenavcall`（爸爸的來電，不等按鍵）、開始選單教學（`ScriptMenu_CreateStartMenuForPokenavTutorial`：照原作順序的開始選單選項，選 POKéNAV 才繼續）；`requires_flash` 的地圖（石之洞窟 B1F、B2F）進去就暗。
+- 開始選單多了 POKéNAV 這一列（拿到之後才出現；POKéNAV 畫面還沒做）。
+- 新歌：釣鎮、出航、紫堇鎮、封印之間。
+- 實機檢查共用的 `tools/live_kit.py`（開視窗、按鍵、對話、戰鬥、放置玩家；`ASTERIA_DRY=1` 用同樣的步驟無頭跑）；`badge_live_check.py` 最後把遊戲存到 `evidence/saves` 第 1 格，`knuckle_live_check.py` 從那裡接著玩。
+
+**測試：** `tests/test_light_and_positions.py`（4 項）：照明立刻設定與慢慢變亮並等待、照明只屬於它的場景、田野畫面畫出黑暗與照亮的圓、`SET_POSITION` 保留沒給的軸。
+
+**實機證據：** `AsteriaEmerald/tools/knuckle_live_check.py`（Cocoa 960×640、`ASTERIA_MUTE=1`、只用按鍵），從 `badge_live_check.py` 存下的岩石徽章之後接著玩，19 張截圖、23 項檢查全部通過（`evidence/knuckle_b11/knuckle_results.json`）：卡那茲的水艇隊手下搶走貨物、116 號道路布魯尼拜託救 PEEKO、Rusturf 隧道手下後退並對戰、拿回得文貨物、員工帶到 3F、石先生給 POKéNAV 與信、走出得文公司：研究員加上 MATCH CALL、開始選單教學（選 POKéNAV 那一列）、南出口小遙對戰、布魯尼小屋「出航」、坐船到釣鎮（「Ahoy!」）、武斗道館一進去只剩半徑 24 的光圈、阿武戰、拳頭徽章、燈全亮、TM 健美。注入：從存檔開始、用傳送跳過走路與樓梯、對手 HP 設 1（手下、小遙、阿武）、直接走到阿武面前（道館訓練家沒打）。
+
+**回歸：** 全部測試 3446 通過、1 略過；劇情 43/43（觸發點合併後改用 `LittlerootTown trigger 1`）、第一道館 20/20。
+
+**限制：**
+- POKéNAV 畫面還沒有（教學裡選了 POKéNAV 之後直接跳過畫面）；Match Call 只登記，不能打電話。
+- 武斗道館的燈：照原作每打贏一個訓練家亮一級，但檢查是直接走到阿武面前（訓練家沒打）。
+- 往紫堇鎮的 Rusturf 隧道另一頭要碎岩（HM），還沒做。
+- 出航時的船與海浪只是格子路線，沒有原作的船身晃動。
+
+**狀態：** 未提交（等使用者）。

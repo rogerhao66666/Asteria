@@ -564,6 +564,13 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 生物畫面頁 | `MenuPreview.render_creature(畫面, 設定)`（借設定畫一次再還原）；`creature_screens_dialog.help_for`（說明取自畫面模組的 docstring）；開始選單、商店、輸入名字的 `engine_defaults`；`[x, y, w, h]` 位置 |
 | 遊戲資料夾設定 | `editor/game_folder_settings_dialog.py`：`playable_test_manifest.json` 的每個分區用設定樹編輯，確定才寫回（格式不變，不會建立新檔）；執行 ▸ 遊戲資料夾設定…、版面頁按鈕 |
 
+### D79 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 照明 | 世界指令 `SET_LIGHT`（`radius`、`speed`、`off`）；屬於它的場景；條件 `rpg` `light` |
+| 位置 | `SET_POSITION` 沒給的 `x`／`y` 留在原地（只給 `permanent`＝記住現在的位置） |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
