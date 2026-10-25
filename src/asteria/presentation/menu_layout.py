@@ -870,6 +870,15 @@ SCREENS += (
             ("numbers", "text", "Damage and healing numbers: colour, size, or hidden"),
             ("result", "panel", "The victory / defeat panel"),
             ("target", "image", "The target cursor: colour, or hidden"),
+            # one card on its own, after its group (party order; over-the-head bars likewise)
+            *(
+                (f"party_hud.{n}", "panel", f"Party card {n} on its own: move, size, skin")
+                for n in range(1, 7)
+            ),
+            *(
+                (f"overhead.{n}", "text", f"Name and bars over fighter {n} on their own")
+                for n in range(1, 7)
+            ),
         ],
         group="game",
     ),

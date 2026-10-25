@@ -35,7 +35,8 @@ class NpcStateMixin:
         currency: ``currency:<id>``), ``job:<actor>:<class>``, ``party:<actor>``,
         ``reputation:<faction>``, ``quest:<id>`` (its status), ``pets`` (the party's size) and
         ``shop`` (the shop open now, "" when none), ``name_input`` / ``picture_choice``
-        ("open" while a name is entered / a pictured choice is made)."""
+        ("open" while a name is entered / a pictured choice is made) and ``light`` ("moving"
+        while SET_LIGHT's circle changes)."""
         kind, _, rest = str(name).partition(":")
         state = self.save.rpg_state
         if kind == "level":
@@ -48,6 +49,8 @@ class NpcStateMixin:
             return self.open_shop_id or ""
         if kind == "name_input":  # "open" while the name screen waits for a name, else ""
             return "open" if getattr(self, "name_input_request", None) else ""
+        if kind == "light":  # "moving" while SET_LIGHT's circle grows or shrinks, else ""
+            return "moving" if self.light_moving() else ""
         if kind == "picture_choice":  # "open" while a PICTURE_CHOICE waits, else ""
             return "open" if getattr(self, "picture_choice_request", None) else ""
         if kind == "gold":

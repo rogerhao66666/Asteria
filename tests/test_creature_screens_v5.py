@@ -146,7 +146,7 @@ def test_the_settings_tree_lists_places_and_keeps_only_what_differs(monkeypatch)
     QApplication.instance() or QApplication([])
     defaults = engine_defaults("battle.creature_screen")
     assert "foe_box" in defaults["layout"] and defaults["colours"]
-    assert engine_defaults("field.name_input") == {}
+    assert engine_defaults("field.picture_choices") == {}
     data = {"layout": {"foe_box": [1, 2]}, "background": "bg.png"}
     full = merged(data, defaults)
     assert full["layout"]["foe_box"] == [1, 2] and len(full["layout"]) == len(defaults["layout"])
@@ -220,3 +220,88 @@ def test_the_start_menu_draws_the_same_from_a_record_as_from_the_manifest(monkey
     off = CreatureScreenSettings("field.creature_menu", {"entries": []}, enabled=False)
     with_off = drawn({"field": {"creature_menu": menu}, "battle": {}}, [off])
     assert with_off == from_manifest_
+
+
+def test_a_shop_set_up_only_in_the_project_opens_from_an_event(monkeypatch):
+    pytest.importorskip("pygame")
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    sys.path.insert(0, str(DEMO))
+    import run_trial_smoke as smoke
+    import trial_creatures
+
+    from asteria.rpg.economy import ShopDefinition, ShopEntry
+    from asteria.rpg.items import ItemDefinition
+    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
+    project, game = smoke.load()
+    trial_creatures.install(project)
+    shop = CreatureScreenSettings("field.creature_shop", {"map_front_at": [72, 72]})
+    project.battle_presentation_library.set("creature_screen", shop.screen_id, shop)
+    rt = PlayableTestRuntime(project, game.save, DEMO, width=960, height=640)
+    rt.manifest.get("field", {}).pop("creature_shop", None)  # only the project says so
+    rt.open()
+    rt._ui_mode = "field"
+    try:
+        db = rt.project.rpg_database
+        db.add_item(ItemDefinition("test_potion", "POTION"))
+        db.add_shop(ShopDefinition("test_mart", "MART", [
+            ShopEntry("test_potion", buy_prices={"gold": 300.0})
+        ]))  # fmt: skip
+        rt.game.open_shop("test_mart")
+        for _ in range(2):
+            rt._frame([], 1 / 60)
+        assert rt._ui_mode == "creature_shop"
+        assert rt._creature_shop.shop_settings == {"map_front_at": [72, 72]}
+    finally:
+        rt.close()
+
+
+def test_every_screen_lists_its_engine_places_and_explains_its_settings():
+    from asteria.editor.creature_screens_dialog import engine_defaults, help_for, is_point
+
+    assert engine_defaults("field.creature_shop")["places"]["list"] == [112, 16, 120, 128]
+    assert "places" in engine_defaults("field.creature_menu")["summary"]
+    assert engine_defaults("field.name_input")["pages"][0]["label"] == "UPPER"
+    assert engine_defaults("field.picture_choices") == {}
+    assert is_point("list", [112, 16, 120, 128], "places")  # a window's inside: x, y, w, h
+    assert not is_point("size", [1, 2, 3, 4], "layout")
+    assert "start menu's rows" in help_for("field.creature_menu", ("entries",))
+    # a row's field: the sentence about its own table, not another table's same name
+    assert "badges" in help_for("field.creature_menu", ("card", "badges", 0, "switch"))
+    assert help_for("field.creature_menu", ("no_such_setting",)) == ""
+
+
+def test_the_preview_draws_a_creature_screen_with_lent_settings(monkeypatch):
+    pytest.importorskip("pygame")
+    monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
+    monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
+    sys.path.insert(0, str(DEMO))
+    import run_trial_smoke as smoke
+    import trial_creatures
+
+    from asteria.runtime.menu_preview import MenuPreview
+
+    project, _game = smoke.load()
+    trial_creatures.install(project, party_size=3)
+    preview = MenuPreview(project, DEMO)
+    library = project.battle_presentation_library
+    try:
+        menu = CreatureScreenSettings(
+            "field.creature_menu", {"entries": [{"id": "bag", "label": "BAG", "screen": "bag"}]}
+        )
+        surface = preview.render_creature("field.creature_menu", menu)
+        assert surface.get_size() == (240, 160)
+        assert library.get("creature_screen", "field.creature_menu") is None  # only lent
+        moved = CreatureScreenSettings(
+            "field.creature_menu", {**menu.data, "start_at": [20, 40], "start_width": 80}
+        )
+        other = preview.render_creature("field.creature_menu", moved)
+        assert other.get_view("2").raw != surface.get_view("2").raw  # the window moved
+        library.set("creature_screen", "field.creature_menu", moved)
+        preview.render_creature("field.creature_menu", None)  # the manifest's for a moment
+        assert library.get("creature_screen", "field.creature_menu") == moved  # given back
+        # a screen that cannot be shown here: no picture, nothing breaks
+        assert preview.render_creature("field.picture_choices", None) is None
+    finally:
+        preview.close()

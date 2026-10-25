@@ -1041,10 +1041,14 @@
   "Gains": "獲得",
   "Game Adapter": "遊戲轉接器",
   "Game Data": "遊戲資料",
+  "Game Folder Settings": "遊戲資料夾設定",
+  "Game Folder Settings…": "遊戲資料夾設定…",
   "Game Rules Template": "遊戲規則範本",
   "Game Start": "遊戲開始",
   "Game State": "遊戲狀態",
   "Game Systems": "遊戲系統",
+  "Game folder settings": "遊戲資料夾設定",
+  "Game folder settings…": "遊戲資料夾設定…",
   "Game over": "遊戲結束",
   "Gameplay Event": "遊戲事件",
   "Gameplay Library": "遊戲玩法庫",
@@ -1061,6 +1065,7 @@
   "Gene Prefix": "個體值前綴",
   "Gene Sets (one picked per creature)": "個體組合（每隻隨機挑一組）",
   "Gene × (gene prefix and coefficient)": "個體值 ×（前綴與係數）",
+  "General": "一般",
   "General Battle Rules": "一般戰鬥規則",
   "Genes (its own numbers)": "個體值（牠自己的數值）",
   "Getting back up": "起身中",
@@ -2611,6 +2616,7 @@
   "The recipes": "配方",
   "The recipes, each with its product's icon": "配方，各附成品圖示",
   "The save slots": "存檔欄位",
+  "The screen as the game draws it (240 × 160): drag a dot": "遊戲畫出來的畫面（240 × 160）：拖曳圓點",
   "The screen corner or edge x and y are measured from": "x 與 y 從畫面的哪個角或邊開始量",
   "The screen's frame": "畫面的框",
   "The screen's tint when the player falls": "玩家倒下時的畫面色調",
@@ -2640,6 +2646,7 @@
   "The worn strip's label": "已穿戴列的標籤",
   "Theme": "主題",
   "Things in the bag: potions, materials, keys.": "背包中的東西：藥水、材料、鑰匙。",
+  "This game folder has no playable_test_manifest.json: all of its settings are in the project.": "這個遊戲資料夾沒有 playable_test_manifest.json：所有設定都在專案裡。",
   "This hit's share of the skill's damage (1 = full).": "這次命中佔技能傷害的比例（1 = 全部）。",
   "This project's own keys": "專案自訂的鍵",
   "Threshold": "門檻",
@@ -3030,6 +3037,7 @@
   "phases": "階段",
   "picture": "圖片",
   "placement": "站位",
+  "playable_test_manifest.json in the game folder: the settings templates and older games keep outside the project. Right click a row to add, duplicate or remove settings.": "遊戲資料夾裡的 playable_test_manifest.json：範本與舊遊戲放在專案外的設定。在一列上按右鍵可以新增、複製或移除設定。",
   "portrait": "肖像",
   "prerequisite": "前置條件",
   "price": "價格",
@@ -3324,6 +3332,18 @@
   [
    "Read from the manifest: (?P<n>.+)\\.",
    "已從 manifest 讀入：{n}。"
+  ],
+  [
+   "Could not draw the screen: (?P<e>.+)",
+   "無法畫出畫面：{e}"
+  ],
+  [
+   "Party card (?P<n>\\d+) on its own: move, size, skin",
+   "第 {n} 張隊伍卡片單獨放：移動、大小、外觀"
+  ],
+  [
+   "Name and bars over fighter (?P<n>\\d+) on their own",
+   "第 {n} 個戰鬥者頭上的名字與條單獨放"
   ]
  ]
 }

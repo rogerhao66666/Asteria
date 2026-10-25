@@ -211,3 +211,23 @@ def document_for():
         return document
 
     return make
+
+
+def test_the_choice_window_grows_to_hold_every_row(runtime):
+    request = ChoiceRequest("Which?", tuple(DialogueChoice(w, n) for n, w in
+                                            enumerate(("One", "Two", "Three"))))  # fmt: skip
+    boxes = runtime.__dict__.setdefault("_menu_boxes", {})
+    _draw(runtime, request)
+    assert boxes["dialogue_choice"]["box"] == (60, 310, 840, 130)  # the engine's: as before
+    _layout(runtime, "dialogue_choice", MenuElement("choices", "list", columns=1, row_height=50))
+    _draw(runtime, request)
+    # three rows of 50 from y 356: the window reaches 6 under the last (512)
+    assert boxes["dialogue_choice"]["box"] == (60, 310, 840, 202)
+    _layout(
+        runtime,
+        "dialogue_choice",
+        MenuElement("choices", "list", columns=1, row_height=50),
+        MenuElement("box", "panel", rect=(40, 300, 500, 100)),
+    )
+    _draw(runtime, request)
+    assert boxes["dialogue_choice"]["box"] == (40, 300, 500, 100)  # placed: kept as it is

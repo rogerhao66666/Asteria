@@ -555,6 +555,15 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 生物畫面 | 演出庫類別 `creature_screen`（記錄 id＝manifest 路徑：`battle.creature_screen`、`field.creature_menu`、`field.creature_shop`、`field.name_input`、`field.picture_choices`）；`presentation/creature_screens.CreatureScreenSettings`；`creature_settings(runtime, 畫面)` 先讀專案再讀 manifest；`creature_battle_on(runtime)` |
 | 編輯器 | 版面頁「生物畫面…」（`editor/creature_screens_dialog.py`）：設定樹（圖片、音效、字型、顏色、位置、數字、是／否、文字、表格、清單；右鍵新增／複製／移除）、240 × 160 位置預覽可拖曳、一鍵從 manifest 轉入；控制器 `set_creature_screen`、`read_creature_manifest`、`import_creature_manifest` |
 
+### D78 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 選項框 | 沒有被作者放置的 `dialogue_choice.box` 會長到包住提問與每一列（`dialogue_screen._grown`） |
+| 戰鬥版面 | `party_hud.<n>`、`overhead.<n>`：單張卡片在整組之後單獨移動、縮放、換外觀、隱藏（`battle_layout.PER_MEMBER`）；`layout_boxes` 有每張卡的外框 |
+| 生物畫面頁 | `MenuPreview.render_creature(畫面, 設定)`（借設定畫一次再還原）；`creature_screens_dialog.help_for`（說明取自畫面模組的 docstring）；開始選單、商店、輸入名字的 `engine_defaults`；`[x, y, w, h]` 位置 |
+| 遊戲資料夾設定 | `editor/game_folder_settings_dialog.py`：`playable_test_manifest.json` 的每個分區用設定樹編輯，確定才寫回（格式不變，不會建立新檔）；執行 ▸ 遊戲資料夾設定…、版面頁按鈕 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

@@ -130,9 +130,11 @@ def _draw_choice(rt, request):
     rows = max(1, -(-len(choices) // max(1, columns)))
     area = (84, rt.height - 184, cell * columns, row * rows)
     box, _portrait = rt._dialogue_layout(None)  # the message window, as for a line
+    place = c.place("choices", area, row)
+    if c.element("box") is None or c.element("box").rect is None:
+        box = _grown(c, box, place, rows, row)  # taller rows or more of them: room for all
     c.panel("box", box, fill=(10, 14, 24, 235), border=(240, 201, 93))
     c.text("prompt", prompt, 84, rt.height - 218, size=22, color=(255, 220, 124))
-    place = c.place("choices", area, row)
     element = c.element("choices")
     look = element is not None and (element.selection_skin or element.selection_fill)
     cursor = rt._choice_index(request)
@@ -148,6 +150,23 @@ def _draw_choice(rt, request):
         rt.text(f"{mark}{i}. {game.line_text(choice)}", cx, cy, size=size, color=color,
                 font=font)  # fmt: skip
     c.finish()
+
+
+def _grown(c, box, place, rows, row):
+    """The window behind a choice made tall enough for the prompt and every row of options
+    (the engine's own sizes fit as they are: 12 pixels above the prompt, 6 under the last
+    row). A box the author placed keeps its size."""
+    from asteria.presentation.menu_layout import resolve_rect
+
+    height = c.rt.height
+    prompt = c.element("prompt")
+    prompt_y = height - 218
+    if prompt is not None and prompt.rect is not None:
+        prompt_y = resolve_rect(prompt.rect, prompt.anchor, c.area)[1]
+    first = place.y(height - 184)
+    top = min(box[1], prompt_y - 12, first - 12)
+    bottom = min(height, max(box[1] + box[3], first + rows * row + 6))
+    return box[0], top, box[2], bottom - top
 
 
 __all__ = ["draw_message_window"]

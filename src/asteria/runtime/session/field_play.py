@@ -606,11 +606,13 @@ class FieldPlayMixin:
         return entity.id
 
     def set_entity_position(self, entity_key, x, y, *, facing=None, permanent=False):
-        """Put an entity on ``(x, y)``; ``permanent`` keeps it there whenever its scene loads
-        (saved as ``pos.<entity id>``)."""
+        """Put an entity on ``(x, y)`` (``None``: where it is on that axis); ``permanent``
+        keeps it there whenever its scene loads (saved as ``pos.<entity id>``)."""
         entity = self._sequence_entity(entity_key)
         transform = entity.get(Transform)
-        transform.x, transform.y = float(x), float(y)
+        x = transform.x if x is None else float(x)
+        y = transform.y if y is None else float(y)
+        transform.x, transform.y = x, y
         if entity is self.player:
             self.save.player_position = (transform.x, transform.y)
             self.player_story_moves += 1
@@ -634,6 +636,7 @@ class FieldPlayMixin:
     def _story_frame(self, dt):
         """Every field frame, events running or not: routes walk, entities follow their
         visibility switch and their look variable, kept positions hold."""
+        self._light_frame(dt)  # SET_LIGHT growing or shrinking
         from asteria.runtime.grid_actors import (
             GridMover2DComponent,
             LookByVariable2DComponent,

@@ -1,0 +1,40 @@
+{
+ "pixel_identity_no_layout": {
+  "tour_battle_hud": "89 compared; differ: none",
+  "message_windows": "6 compared; differ: none",
+  "against": "HEAD ed2bc517 (git archive), fixed clock"
+ },
+ "battle_frame_ms_octopath_cocoa_two_runs": {
+  "HEAD": [
+   {
+    "no_layout_p95": 1.78,
+    "layout_p95": 1.63,
+    "layout_cards_p95": 1.62
+   },
+   {
+    "no_layout_p95": 2.45,
+    "layout_p95": 2.75,
+    "layout_cards_p95": 2.71
+   }
+  ],
+  "now": [
+   {
+    "no_layout_p95": 2.03,
+    "layout_p95": 1.68,
+    "layout_cards_p95": 1.71
+   },
+   {
+    "no_layout_p95": 1.77,
+    "layout_p95": 1.7,
+    "layout_cards_p95": 1.69
+   }
+  ]
+ },
+ "creature_render_ms_emerald": {
+  "battle.creature_screen": 525,
+  "field.creature_menu": 9,
+  "field.creature_shop": 15,
+  "field.name_input": 21,
+  "field.picture_choices": 15
+ }
+}

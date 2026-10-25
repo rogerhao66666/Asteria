@@ -46,6 +46,45 @@ def test_a_group_moves_and_scales_as_one_and_its_words_follow():
     assert screen.boxes["menu"] == (10, 20, 160, 60)
 
 
+def test_one_party_card_is_placed_on_its_own_after_its_group():
+    lists, tags = _lists(
+        (BattleUiPanel("hud:a", 240, 30, 70, 40, "hud", "hana"), "party_hud"),
+        (BattleUiPanel("hud:b", 240, 80, 70, 40, "hud", "ren"), "party_hud"),
+        (BattleUiPanel("hud:c", 240, 130, 70, 40, "hud", "sol"), "party_hud"),
+        texts=[
+            (BattleUiText("Hana", 244, 34, member_id="hana"), "party_hud"),
+            (BattleUiText("Ren", 244, 84, member_id="ren"), "party_hud"),
+        ],
+    )
+    layout = MenuLayout(
+        "battle",
+        (
+            MenuElement("party_hud", "panel", rect=(200, 30, 0, 0)),  # all 40 to the left
+            MenuElement("party_hud.2", "panel", rect=(10, 10, 140, 0), fill=PURPLE),
+            MenuElement("party_hud.3", "panel", visible=False),
+        ),
+    )
+    screen = BattleScreenLayout(layout, (320, 180))
+    out = screen.apply(lists, tags)
+    first, second = out["panel"]  # the third card is hidden
+    assert (first.x, first.y) == (200, 30)  # moved with its group
+    assert (second.x, second.y, second.width, second.height) == (10, 10, 140, 40)
+    assert second.fill == PURPLE  # its own look
+    assert [(t.text, t.x, t.y) for t in out["text"]] == [("Hana", 204, 34), ("Ren", 18, 14)]
+    assert screen.boxes["party_hud.1"] == (200, 30, 70, 40)  # outlined for the editor
+    assert screen.boxes["party_hud.2"] == (10, 10, 140, 40)
+
+
+def test_without_card_elements_the_cards_stay_as_their_group_left_them():
+    lists, tags = _lists(
+        (BattleUiPanel("hud:a", 240, 30, 70, 40, "hud", "hana"), "party_hud"),
+        (BattleUiPanel("hud:b", 240, 80, 70, 40, "hud", "ren"), "party_hud"),
+    )
+    layout = MenuLayout("battle", (MenuElement("party_hud", "panel", rect=(200, 30, 0, 0)),))
+    out = BattleScreenLayout(layout, (320, 180)).apply(lists, tags)
+    assert [(p.x, p.y) for p in out["panel"]] == [(200, 30), (200, 80)]
+
+
 def test_hidden_groups_go_and_the_authors_pieces_come():
     lists, tags = _lists(
         (BattleUiPanel("turn:0", 100, 4, 120, 16, "timeline"), "timeline"),

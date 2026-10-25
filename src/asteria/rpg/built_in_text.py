@@ -284,6 +284,7 @@ GROUPS = (
             ("dialogue.sample_yes", "Yes, gladly"),  # the editor's sample choice (V2)
             ("dialogue.sample_no", "Not now"),
             ("dialogue.sample_ask", "Tell me more"),
+            ("dialogue.sample_name", "YOUR NAME?"),  # the editor's sample name screen (V5)
         ),
     ),
     (

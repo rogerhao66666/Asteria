@@ -147,6 +147,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "SET_TILE": ("layer", "x", "y", "tile", "permanent"),
     "NAME_INPUT": ("target", "max_length", "title", "default", "initial"),
     "PICTURE_CHOICE": ("layout", "variable"),
+    "SET_LIGHT": ("radius", "speed", "off"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
     "SET_ENTITY_ICON": ("entity", "icon_id"),
     "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
@@ -631,10 +632,11 @@ def register_standard_world_commands(router, session):
             raise WorldCommandError(f"GRID_ROUTE: {exc}") from exc
 
     def set_position(command):
+        args = command.args  # an axis left out stays where the entity is
         return session.set_entity_position(
             _entity_or_self(command),
-            _amount(command, "x", 0.0),
-            _amount(command, "y", 0.0),
+            _amount(command, "x", 0.0) if "x" in args else None,
+            _amount(command, "y", 0.0) if "y" in args else None,
             facing=command.args.get("facing") or None,
             permanent=bool(command.args.get("permanent")),
         )
@@ -696,6 +698,15 @@ def register_standard_world_commands(router, session):
         ("SET_RESPAWN", set_respawn),
         ("SET_TILE", set_tile),
         ("NAME_INPUT", name_input),
+        (
+            "SET_LIGHT",
+            lambda c: session.set_light(
+                None
+                if c.args.get("off") or c.args.get("radius") in (None, "")
+                else _amount(c, "radius", 0.0),
+                speed=_amount(c, "speed", 0.0),
+            ),
+        ),
         (
             "PICTURE_CHOICE",
             lambda c: session.request_picture_choice(

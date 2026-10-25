@@ -102,6 +102,70 @@ class MenuPreview:
         self._reset()
         return surface, boxes
 
+    def render_creature(self, screen_id, settings):
+        """A creature game's screen (``battle.creature_screen``, ``field.creature_menu``...)
+        drawn once at its own 240 x 160 with ``settings`` (a ``CreatureScreenSettings``; None:
+        the manifest's), for the editor's Creature screens page. The project keeps its own
+        record: this one is only lent for the drawing. None when the screen cannot be shown
+        (no encounter, no creature to send out...)."""
+        rt = self.runtime
+        library = self.project.battle_presentation_library
+        records = library._records.setdefault("creature_screen", {})
+        own = records.get(screen_id)
+        if settings is None:
+            records.pop(screen_id, None)
+        else:
+            records[screen_id] = settings
+        try:
+            screen = self._creature_screen(screen_id)
+            return None if screen is None else screen.surface.copy()
+        finally:
+            if own is None:
+                records.pop(screen_id, None)
+            else:
+                records[screen_id] = own
+            rt._creature_battle = None
+            self._reset()
+
+    def _creature_screen(self, screen_id):
+        from asteria.presentation.creature_screens import creature_battle_on, creature_settings
+
+        rt = self.runtime
+        game = rt.game
+        self._reset()
+        if screen_id == "battle.creature_screen":
+            encounters = tuple(self.project.rpg_database.encounters)
+            if not encounters or not creature_battle_on(rt) or not game.party_pets():
+                return None
+            game.start_encounter(encounters[0])
+            for _ in range(200):  # the creatures come out, the commands open
+                rt._frame([], 1 / 60)
+            return rt._creature_battle
+        if screen_id == "field.creature_menu":
+            from asteria.runtime.creature_menu import CreatureMenuScreen
+
+            screen = CreatureMenuScreen(rt)
+        elif screen_id == "field.creature_shop":
+            from asteria.runtime.creature_shop import CreatureShopScreen
+
+            screen = CreatureShopScreen(rt)
+        elif screen_id == "field.name_input":
+            from asteria.runtime.name_input import NameInputScreen
+
+            title = game.tr("dialogue.sample_name", "YOUR NAME?")
+            screen = NameInputScreen(rt, {"target": "variable:name", "title": title})
+        elif screen_id == "field.picture_choices":
+            from asteria.runtime.picture_choice import PictureChoiceScreen
+
+            layouts = creature_settings(rt, screen_id)
+            if not layouts:
+                return None
+            screen = PictureChoiceScreen(rt, {"layout": next(iter(layouts)), "variable": "x"})
+        else:
+            raise KeyError(f"unknown creature screen: {screen_id}")
+        screen.draw()
+        return screen
+
     def _reset(self):
         rt = self.runtime
         game = rt.game

@@ -1073,6 +1073,10 @@ class AsteriaEditorWindow(QMainWindow):
         self.restart_play_action.triggered.connect(self.restart_play)
         run_menu.addAction(self.restart_play_action)
         run_menu.addAction(self.stop_action)
+        run_menu.addSeparator()
+        run_menu.addAction(  # the game folder's own settings file, in a settings tree
+            "Game Folder Settings…", lambda: self.menu_layout_editor.edit_game_folder_settings()
+        )
 
         help_menu = self.menuBar().addMenu("&Help")
         self.controls_action = QAction("Controls and Shortcuts", self)

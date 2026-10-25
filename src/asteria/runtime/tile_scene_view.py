@@ -737,6 +737,24 @@ class TileSceneView:
             if covers:
                 self._draw_cover(screen, entity, t)
         self._layer(screen, "above")
+        self._draw_darkness(screen)
+
+    def _draw_darkness(self, screen):
+        """SET_LIGHT: black but for the lit circle round the player."""
+        radius = self.session.light_radius() if hasattr(self.session, "light_radius") else None
+        if radius is None:
+            return
+        t = self.session.player.get(Transform)
+        cx, cy = self.world_to_screen(t.x, t.y - 8)  # the player's middle
+        r = radius * self.camera.zoom
+        w, h = screen.get_size()
+        if r * r >= max(cx, w - cx) ** 2 + max(cy, h - cy) ** 2:
+            return  # the circle covers the whole screen
+        dark = self.pg.Surface((w, h), self.pg.SRCALPHA)
+        dark.fill((0, 0, 0, 255))
+        if r > 0:
+            self.pg.draw.circle(dark, (0, 0, 0, 0), (round(cx), round(cy)), round(r))
+        screen.blit(dark, (0, 0))
 
     def _draw_skeleton_texture(self, screen, draw):
         """Draw a skeletal slot with the same pivot and rotation as TextureDraw."""

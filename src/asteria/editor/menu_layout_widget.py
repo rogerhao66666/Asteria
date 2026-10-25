@@ -915,6 +915,7 @@ class MenuLayoutWorkspace(QWidget):
             "Bitmap fonts…": self._bitmap_fonts,
             "Picture message window…": self._dialogue_window,
             "Creature screens…": self._creature_screens,
+            "Game folder settings…": self.edit_game_folder_settings,
             "Open in game": self._open_in_game,
         }
         bar = QHBoxLayout()  # what to edit; the screen's actions on the row under it
@@ -1287,12 +1288,51 @@ class MenuLayoutWorkspace(QWidget):
             current,
             self,
             convert=lambda: self.controller.read_creature_manifest(root),
+            render=self._render_creature,
         )
         if dialog.exec() != QDialog.Accepted:
             return
         for screen_id, settings in dialog.changes().items():
             self.controller.set_creature_screen(screen_id, settings)
         self._after_change()
+
+    def edit_game_folder_settings(self):
+        """The game folder's own settings file in a settings tree (Game folder settings…)."""
+        from .game_folder_settings_dialog import GameFolderSettingsDialog, manifest_path
+
+        root = _project_root(self.document)
+        if not manifest_path(root).is_file():
+            QMessageBox.information(
+                self,
+                "Game folder settings",
+                "This game folder has no playable_test_manifest.json: all of its settings "
+                "are in the project.",
+            )
+            return False
+        dialog = GameFolderSettingsDialog(self.document, root, self)
+        if dialog.exec() != QDialog.Accepted or not dialog.changed:
+            return False
+        if self._preview is not None:  # the preview read the old file: started again
+            self._preview.close()
+            self._preview = None
+        self._after_change()
+        return True
+
+    def _render_creature(self, screen_id, settings):
+        """The creature screen drawn by the game's own code with ``settings`` (None: the
+        manifest's), as a picture for the Creature screens page; None when it cannot be."""
+        preview = self.preview()
+        if preview is None:
+            return None
+        surface = preview.render_creature(screen_id, settings)
+        if surface is None:
+            return None
+        import pygame
+
+        width, height = surface.get_size()
+        data = pygame.image.tobytes(surface, "RGB")
+        image = QImage(data, width, height, width * 3, QImage.Format_RGB888).copy()
+        return QPixmap.fromImage(image)
 
     def _open_in_game(self):
         if self.open_in_game is not None:

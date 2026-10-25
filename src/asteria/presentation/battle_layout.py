@@ -14,6 +14,11 @@ coordinates (the profile's virtual size, 320 x 180 by default):
   ``selection_fill`` the chosen row's frame, ``color`` / ``size`` its words;
 - the author's own elements (``extra.``) add pictures, panels and words.
 
+One card of the party HUD or one set of overhead bars can be placed on its own as well:
+``party_hud.1`` is the first party member's card, ``party_hud.2`` the second (in the order the
+composer drew them), ``overhead.1``... the bars over the heads. Such an element moves, scales,
+restyles or hides that card after its group was laid out.
+
 Without a ``battle`` layout nothing here runs: the frame is the composer's, untouched.
 """
 
@@ -24,6 +29,7 @@ from dataclasses import replace
 from .menu_layout import resolve_rect
 from .ui_skin import NinePatch
 
+PER_MEMBER = ("party_hud", "overhead")  # groups whose cards can be placed one by one
 GROUPS = (
     "party_hud",
     "overhead",
@@ -109,17 +115,68 @@ class BattleScreenLayout:
             target = (rx, ry, rw if rw > 0 else box[2], rh if rh > 0 else box[3])
             self.boxes[group] = target
             moves[group] = (box, target, element)
-        out = {}
+        out, out_tags = {}, {}
         for kind, items in lists.items():
-            kept = []
+            kept, kept_tags = [], []
             for item, group in zip(items, tags[kind], strict=True):
                 element = elements.get(group)
                 if element is not None and not element.visible:
                     continue
                 move = moves.get(group)
                 kept.append(item if move is None else self._moved(kind, item, *move))
-            out[kind] = kept
+                kept_tags.append(group)
+            out[kind], out_tags[kind] = kept, kept_tags
+        out = self._cards(out, out_tags, elements)
         self._extras(out)
+        return out
+
+    def _cards(self, lists, tags, elements):
+        """One card of a per-member group (``party_hud.2``...) placed on its own."""
+        slots = {}  # (group, member id) -> "group.n", numbered in drawing order
+        counts = {}
+        for kind in ("panel", "gauge", "portrait", "text", "icon"):
+            for item, group in zip(lists[kind], tags[kind], strict=True):
+                member = getattr(item, "member_id", "")
+                if group in PER_MEMBER and member and (group, member) not in slots:
+                    counts[group] = counts.get(group, 0) + 1
+                    slots[(group, member)] = f"{group}.{counts[group]}"
+
+        def slot(item, group):
+            return slots.get((group, getattr(item, "member_id", "")))
+
+        by_slot = {}
+        for kind, items in lists.items():
+            for item, group in zip(items, tags[kind], strict=True):
+                name = slot(item, group)
+                if name is not None:
+                    by_slot.setdefault(name, []).append((kind, item))
+        moves = {}
+        for name, items in by_slot.items():
+            element, box = elements.get(name), _bounds(items)
+            if box is None:
+                continue
+            self.boxes[name] = box  # the editor outlines every card, placed or not
+            if element is None or not element.visible:
+                continue
+            target = box
+            if element.rect is not None:
+                rx, ry, rw, rh = resolve_rect(element.rect, element.anchor, self.size)
+                target = (rx, ry, rw if rw > 0 else box[2], rh if rh > 0 else box[3])
+            self.boxes[name] = target
+            moves[name] = (box, target, element)
+        if not moves and not any(name in elements for name in by_slot):
+            return lists  # no card placed on its own: as the groups left them
+        out = {}
+        for kind, items in lists.items():
+            kept = []
+            for item, group in zip(items, tags[kind], strict=True):
+                name = slot(item, group)
+                element = elements.get(name) if name else None
+                if element is not None and not element.visible:
+                    continue
+                move = moves.get(name)
+                kept.append(item if move is None else self._moved(kind, item, *move))
+            out[kind] = kept
         return out
 
     @staticmethod

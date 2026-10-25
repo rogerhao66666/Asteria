@@ -204,6 +204,7 @@ class GameSessionRuntime(
         self.audio_status = {"me": False, "se": False}
         runtime_save.event_context.providers["audio"] = self._audio_value
         self._tile_changes = {}  # scene id -> {"layer|x|y": tile} (SET_TILE, this visit)
+        self.light = {}  # SET_LIGHT: the lit circle of a dark place (and its scene)
         self.tile_changes_version = 0
         from asteria.runtime.npc_state import apply_npc_states
 

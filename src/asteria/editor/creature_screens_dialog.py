@@ -17,7 +17,7 @@ from __future__ import annotations
 import copy
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -49,17 +49,75 @@ SOUND_EXT = (".ogg", ".wav", ".mp3")
 SCALE = 3  # the preview's pixels per screen pixel
 
 
+def _listed(places):
+    return {k: (list(v) if v is not None else None) for k, v in places.items()}
+
+
 def engine_defaults(screen_id):
     """The settings a screen draws with when the project says nothing: listed so an author
-    can change them by name (only the battle has named points and text colours)."""
-    if screen_id != "battle.creature_screen":
-        return {}
-    from asteria.runtime.creature_battle import COLOURS, LAYOUT
+    can change them by name (the battle's places and text colours, the start menu's summary
+    and trainer card places, the shop's windows, the name screen's letter pages)."""
+    if screen_id == "battle.creature_screen":
+        from asteria.runtime.creature_battle import COLOURS, LAYOUT
 
-    return {
-        "layout": {k: list(v) for k, v in LAYOUT.items()},
-        "colours": {k: [list(a), list(b)] for k, (a, b) in COLOURS.items()},
-    }
+        return {
+            "layout": {k: list(v) for k, v in LAYOUT.items()},
+            "colours": {k: [list(a), list(b)] for k, (a, b) in COLOURS.items()},
+        }
+    if screen_id == "field.creature_menu":
+        from asteria.runtime.creature_menu import CARD_PLACES, SUMMARY_PLACES
+
+        return {
+            "summary": {"places": _listed(SUMMARY_PLACES)},
+            "card": {"places": _listed(CARD_PLACES)},
+        }
+    if screen_id == "field.creature_shop":
+        from asteria.runtime.creature_shop import PLACES
+
+        return {"places": _listed(PLACES)}
+    if screen_id == "field.name_input":
+        from asteria.runtime.name_input import DEFAULT_PAGES
+
+        return {"pages": [{"label": p["label"], "rows": list(p["rows"])} for p in DEFAULT_PAGES]}
+    return {}
+
+
+MODULES = {  # where each screen's settings are described (the help shown in the editor)
+    "battle.creature_screen": "asteria.runtime.creature_battle",
+    "field.creature_menu": "asteria.runtime.creature_menu",
+    "field.creature_shop": "asteria.runtime.creature_shop",
+    "field.name_input": "asteria.runtime.name_input",
+    "field.picture_choices": "asteria.runtime.picture_choice",
+}
+
+
+def _names(sentence, key):
+    """``key`` as a setting (``key``) or as a field of a row (``{"key", ...}``)."""
+    return f"``{key}``" in sentence or f'"{key}"' in sentence
+
+
+def help_for(screen_id, path):
+    """What the screen's own description says about the setting at ``path`` (the sentence
+    naming it as ``key``, the nearest named key upwards for a row), or ""."""
+    import importlib
+    import re
+
+    module = MODULES.get(screen_id)
+    if module is None:
+        return ""
+    words = " ".join((importlib.import_module(module).__doc__ or "").split())
+    keys = [k for k in path if isinstance(k, str)]
+    sentences = re.split(r"(?<=\.)\s+|;\s+|\s\*\s", words)  # sentences, clauses, bullets
+    for depth in range(len(keys) - 1, -1, -1):  # the deepest key first
+        key, parents = keys[depth], keys[:depth]
+        named = [t for t in sentences if _names(t, key)]
+        if named:  # one naming its table too first, then one naming it as a setting
+            best = min(
+                named,
+                key=lambda t: (not any(_names(t, k) for k in parents), f"``{key}``" not in t),
+            )
+            return best.strip(" -;").replace("``", "")  # the description's code marks
+    return ""
 
 
 def merged(data, defaults):
@@ -89,10 +147,14 @@ def stripped(data, defaults):
 
 
 def is_point(key, value, parent_key=""):
-    numbers = isinstance(value, list) and len(value) == 2
+    """A place: ``[x, y]`` named ``at`` / ``*_at`` / ``*_box`` or in ``layout`` / ``places``;
+    ``[x, y, w, h]`` (a window's inside) in ``places`` too."""
+    numbers = isinstance(value, list) and len(value) in (2, 4)
     numbers = numbers and all(isinstance(v, (int, float)) for v in value)
+    if numbers and len(value) == 4:
+        return parent_key == "places"
     named = str(key) == "at" or str(key).endswith(("_at", "_box"))
-    return numbers and (named or parent_key == "layout")
+    return numbers and (named or parent_key in ("layout", "places"))
 
 
 def is_colour(key, value, parent_key=""):
@@ -132,12 +194,16 @@ class PointField(QWidget):
 
     def __init__(self, value, parent=None):
         super().__init__(parent)
-        self.x, self.y = QSpinBox(), QSpinBox()
+        names = ("x", "y", "w", "h")[: len(value)]  # a place, or a window's inside
+        self.boxes = [QSpinBox() for _ in names]
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        for name, box in (("x", self.x), ("y", self.y)):
+        for name, box in zip(names, self.boxes, strict=True):
             box.setRange(-2000, 4000)
-            box.setMinimumWidth(72)
+            box.setMinimumWidth(64)
+            if len(names) == 4:  # four in a row: typed or wheeled, no arrows taking the room
+                box.setButtonSymbols(QSpinBox.NoButtons)
+                box.setMinimumWidth(48)
             layout.addWidget(QLabel(name))
             layout.addWidget(box)
             box.valueChanged.connect(self.changed)
@@ -145,10 +211,10 @@ class PointField(QWidget):
         self.set(value)
 
     def value(self):
-        return [self.x.value(), self.y.value()]
+        return [box.value() for box in self.boxes]
 
     def set(self, value):
-        for box, v in ((self.x, value[0]), (self.y, value[1])):
+        for box, v in zip(self.boxes, value, strict=False):
             box.blockSignals(True)
             box.setValue(int(v))
             box.blockSignals(False)
@@ -217,9 +283,14 @@ class PointCanvas(QWidget):
         painter.fillRect(self.rect(), QColor(24, 28, 40))
         if not self.picture.isNull():
             painter.drawPixmap(0, 0, self.picture.scaled(self.size(), Qt.IgnoreAspectRatio))
-        for path, label, (x, y) in self.points:
+        for path, label, xy in self.points:
+            x, y = xy[0], xy[1]
             hot = path == self.chosen
             colour = QColor(255, 210, 90) if hot else QColor(120, 200, 255)
+            if len(xy) == 4:  # a window's inside: its outline too
+                painter.setPen(QPen(colour, 2 if hot else 1, Qt.DashLine))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(int(x * SCALE), int(y * SCALE), xy[2] * SCALE, xy[3] * SCALE)
             painter.setPen(QPen(QColor(0, 0, 0), 1))
             painter.setBrush(colour)
             centre = QPoint(int(x * SCALE), int(y * SCALE))
@@ -231,7 +302,7 @@ class PointCanvas(QWidget):
 
     def _hit(self, pos):
         best, near = None, 12.0
-        for path, _label, (x, y) in self.points:
+        for path, _label, (x, y, *_size) in self.points:
             d = ((x * SCALE - pos.x()) ** 2 + (y * SCALE - pos.y()) ** 2) ** 0.5
             if d < near:
                 best, near = path, d
@@ -251,8 +322,9 @@ class PointCanvas(QWidget):
             self.setToolTip(next((lb for p, lb, _xy in self.points if p == near), ""))
             return
         value = [round(pos.x() / SCALE), round(pos.y() / SCALE)]
-        for i, (path, label, _xy) in enumerate(self.points):
+        for i, (path, label, xy) in enumerate(self.points):
             if path == self.dragging:
+                value += list(xy[2:])  # a window keeps its size
                 self.points[i] = (path, label, value)
         self.moved.emit(self.dragging, value)
         self.update()
@@ -275,6 +347,7 @@ class SettingsTree(QTreeWidget):
         self.customContextMenuRequested.connect(self._menu)
         self.data = {}
         self.fields = {}  # path -> widget
+        self.screen_id = ""  # whose description the settings' help comes from
 
     def load(self, data):
         self.data = copy.deepcopy(data)
@@ -314,6 +387,7 @@ class SettingsTree(QTreeWidget):
                 label += f"  {name}" if name else ""
             item = QTreeWidgetItem(parent, [label, ""])
             item.setData(0, Qt.UserRole, here)
+            item.setToolTip(0, help_for(self.screen_id, here))
             widget = self._field(key, child, here, parent_key)
             if widget is not None:
                 self.setItemWidget(item, 1, widget)
@@ -491,12 +565,22 @@ class SettingsTree(QTreeWidget):
 class CreatureScreensDialog(QDialog):
     """``changes()`` after OK: ``{screen_id: CreatureScreenSettings | None}``."""
 
-    def __init__(self, document, current, parent=None, *, convert=None):
+    def __init__(self, document, current, parent=None, *, convert=None, render=None):
         super().__init__(parent)
         self.setWindowTitle("Creature Screens")
         self.resize(1500, 860)
         self.document = document
         self.convert = convert  # () -> {screen_id: CreatureScreenSettings} (the manifest's)
+        # (screen_id, settings) -> QPixmap of the screen drawn by the game, or None
+        self.render = render
+        self.drawn = QPixmap()
+        self.redraw = QTimer(self)
+        self.redraw.setSingleShot(True)
+        self.redraw.setInterval(150)  # typing in a field: drawn once it pauses
+        self.redraw.timeout.connect(self._draw_screen)
+        self.help = QLabel()
+        self.help.setObjectName("SettingHelp")
+        self.help.setWordWrap(True)
         self.work = {k: v for k, v in dict(current).items() if v is not None}
         self.original = dict(self.work)
         self.screen_id = ""
@@ -530,10 +614,11 @@ class CreatureScreensDialog(QDialog):
         column.setContentsMargins(0, 0, 0, 0)
         column.addWidget(self.enabled)
         column.addWidget(self.tree, 1)
+        column.addWidget(self.help)
         right = QWidget()
         side = QVBoxLayout(right)
         side.setContentsMargins(0, 0, 0, 0)
-        side.addWidget(QLabel("Places on the screen (240 × 160): drag a dot"))
+        side.addWidget(QLabel("The screen as the game draws it (240 × 160): drag a dot"))
         side.addWidget(self.canvas)
         side.addWidget(self.status)
         side.addStretch(1)
@@ -577,6 +662,9 @@ class CreatureScreensDialog(QDialog):
         self.enabled.setEnabled(has)
         self.enabled.blockSignals(False)
         defaults = engine_defaults(self.screen_id)
+        self.tree.screen_id = self.screen_id
+        self.drawn = QPixmap()  # another screen: drawn again
+        self.help.setText("")
         self.tree.setEnabled(has)
         self.tree.load(merged(settings.data, defaults) if has else {})
         self.status.setText(
@@ -601,20 +689,44 @@ class CreatureScreensDialog(QDialog):
         self._points()
 
     def _points(self):
+        chosen = self.tree.currentItem()
+        chosen = chosen.data(0, Qt.UserRole) if chosen is not None else None
+        self.canvas.show_points(self._picture(), self.tree.points(), chosen)
+        if self.render is not None:
+            self.redraw.start()
+
+    def _picture(self):
+        """The screen drawn by the game, else its ``background`` picture, else nothing."""
+        if not self.drawn.isNull():
+            return self.drawn
         from .menu_layout_widget import _project_root
 
         background = self.tree.data.get("background")
-        picture = QPixmap()
         if isinstance(background, str) and background:
             path = _project_root(self.document) / background
-            picture = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
-        chosen = self.tree.currentItem()
-        chosen = chosen.data(0, Qt.UserRole) if chosen is not None else None
-        self.canvas.show_points(picture, self.tree.points(), chosen)
+            if Path(path).is_file():
+                return QPixmap(str(path))
+        return QPixmap()
+
+    def _draw_screen(self):
+        """The game's own drawing of the screen with the settings as they are now."""
+        if self.render is None or not self.screen_id:
+            return
+        settings = self.work.get(self.screen_id)
+        try:
+            drawn = self.render(self.screen_id, settings)
+        except Exception as error:  # noqa: BLE001 - a half-typed setting: the dots stay
+            drawn = None
+            self.status.setText(f"Could not draw the screen: {error}")
+        self.drawn = drawn if drawn is not None else QPixmap()
+        self.canvas.picture = self._picture()
+        self.canvas.update()
 
     def _tree_picked(self, item, _old):
-        self.canvas.chosen = item.data(0, Qt.UserRole) if item is not None else None
+        path = item.data(0, Qt.UserRole) if item is not None else None
+        self.canvas.chosen = path
         self.canvas.update()
+        self.help.setText(help_for(self.screen_id, path) if path else "")
 
     def _canvas_picked(self, path):
         item = self.tree.item_of(path)
