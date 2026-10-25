@@ -22,8 +22,14 @@ class TitleBuildMixin:
         c = self.menu_canvas("title", {"game.title": self.manifest.get("title", "")})
         layout = c.layout
         if layout is None or (layout.background_color is None and not layout.background_image):
-            bg = self.load_image(self.manifest["field"]["background"])
-            self.screen.blit(self.pg.transform.smoothscale(bg, (self.width, self.height)), (0, 0))
+            background = self.manifest.get("field", {}).get("background")
+            if background:  # else a plain backdrop (a game without a field picture)
+                bg = self.load_image(background)
+                self.screen.blit(
+                    self.pg.transform.smoothscale(bg, (self.width, self.height)), (0, 0)
+                )
+            else:
+                self.screen.fill((12, 14, 20))
             dim = 150 if layout is None or layout.dim < 0 else layout.dim
             shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
             shade.fill((5, 8, 16, dim))
