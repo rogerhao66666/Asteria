@@ -811,9 +811,33 @@ def _branch_rules(palette):
     )
 
 
+TOOLTIP_DELAY_MS = 120  # help (the ⓘ marks) shows almost at once; Qt's own wait was 700 ms
+
+
+def _quick_tooltips(app):
+    """The application's style wrapped once so tooltips appear after ``TOOLTIP_DELAY_MS``."""
+    from PySide6.QtWidgets import QProxyStyle, QStyle, QStyleFactory
+
+    if getattr(app, "_asteria_quick_tips", None) is not None:
+        return
+
+    class QuickTipStyle(QProxyStyle):
+        def styleHint(self, hint, option=None, widget=None, data=None):  # noqa: N802 - Qt
+            if hint == QStyle.SH_ToolTip_WakeUpDelay:
+                return TOOLTIP_DELAY_MS
+            return super().styleHint(hint, option, widget, data)
+
+    # a QProxyStyle owns the style it wraps: give it its own, made from the current one's name
+    base = QStyleFactory.create(app.style().name()) or QStyleFactory.create("Fusion")
+    style = QuickTipStyle(base)
+    app.setStyle(style)
+    app._asteria_quick_tips = style
+
+
 def apply_asteria_theme(app, name=None):
     palette = PALETTES.get(name or DEFAULT_PALETTE, GRAPHITE)
     CURRENT["palette"] = palette
+    _quick_tooltips(app)
     app.setPalette(
         qt_palette(palette)
     )  # what the style draws itself (tree arrows, check marks...)

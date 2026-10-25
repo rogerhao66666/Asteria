@@ -594,6 +594,12 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 條件／等待 | `rpg` `pressed:`／`held:`（`a|b`）、`rpg` `saves`；`WAIT` 的 `until`＋`seconds`（`events/vm.py`） |
 | 訊息 | `\V[play.time]`、`\V[creatures.owned]`（`session.messages._message_word`） |
 
+### D83 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 編輯器 | 滑鼠提示 120 ms 出現（`theme.TOOLTIP_DELAY_MS`，`_quick_tooltips` 的 `QProxyStyle`） |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

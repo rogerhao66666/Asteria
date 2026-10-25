@@ -150,3 +150,17 @@ def test_saved_palette_name_falls_back_to_the_default():
     assert palette_name(None) == DEFAULT_PALETTE
     assert palette_name(Settings({"editor/theme": "twilight"})) == "twilight"
     assert palette_name(Settings({"editor/theme": "neon"})) == DEFAULT_PALETTE
+
+
+def test_tooltips_show_quickly_and_the_theme_can_be_applied_again(monkeypatch):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QStyle
+
+    from asteria.editor.theme import TOOLTIP_DELAY_MS, apply_asteria_theme
+
+    app = QApplication.instance() or QApplication([])
+    apply_asteria_theme(app)
+    wrapped = app._asteria_quick_tips
+    apply_asteria_theme(app)  # another palette: the style is not wrapped twice
+    assert app._asteria_quick_tips is wrapped
+    assert app.style().styleHint(QStyle.SH_ToolTip_WakeUpDelay) == TOOLTIP_DELAY_MS < 700
