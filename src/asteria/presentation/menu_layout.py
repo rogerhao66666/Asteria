@@ -55,6 +55,7 @@ KINDS = (
     "hint",  # the key hints line
 )
 IMAGE_MODES = ("stretch", "fit", "center", "tile")
+FRAME_AXES = ("x", "y")  # an animation strip's frames run left to right, or top to bottom
 ALIGNS = ("", "left", "center", "right")
 EXTRA = "extra."  # the author's own elements
 DESIGN_SIZE = (1280, 720)
@@ -168,6 +169,10 @@ class MenuElement:
     cell: int = 0
     gap: int = -1
     slots: tuple = ()  # MenuSlotPlace for a doll
+    frames: int = 0  # the picture is a strip of this many frames (0 / 1: a still picture)
+    frame_axis: str = "x"  # the strip runs left to right ("x") or top to bottom ("y")
+    fps: float = 0.0  # frames a second (0: the screen picks the frame, e.g. a cooldown)
+    bitmap_font: str = ""  # a bitmap font (``MenuBitmapFont``) for the element's words
 
     def __post_init__(self):
         element_id = str(self.element_id).strip()
@@ -201,6 +206,13 @@ class MenuElement:
             s if isinstance(s, MenuSlotPlace) else MenuSlotPlace.from_data(s) for s in self.slots
         )
         object.__setattr__(self, "slots", slots)
+        if self.frame_axis not in FRAME_AXES:
+            raise ValueError(f"frame_axis must be one of {FRAME_AXES}")
+        if int(self.frames or 0) < 0 or float(self.fps or 0) < 0:
+            raise ValueError("frames and fps must be >= 0")
+        object.__setattr__(self, "frames", int(self.frames or 0))
+        object.__setattr__(self, "fps", float(self.fps or 0))
+        object.__setattr__(self, "bitmap_font", str(self.bitmap_font or "").strip())
 
     @property
     def extra(self):
@@ -346,9 +358,11 @@ class MenuTheme:
     cursor_image: str = ""
     rarity_colors: tuple = ()  # ((rarity_id, colour), ...) over the rarities' own colours
     sounds: tuple = ()  # ((role, sound asset), ...) roles in SOUND_ROLES
+    bitmap_font: str = ""  # a bitmap font for every menu's words (what it lacks: the fonts)
+    resource_colors: tuple = ()  # ((resource, colour), ...): orbs and bars of that resource
 
     def __post_init__(self):
-        for name in ("font_latin", "font_cjk", "cursor_image"):
+        for name in ("font_latin", "font_cjk", "cursor_image", "bitmap_font"):
             object.__setattr__(self, name, str(getattr(self, name) or "").strip())
         if not float(self.font_scale) > 0:
             raise ValueError("font_scale must be > 0")
@@ -365,6 +379,13 @@ class MenuTheme:
             "rarity_colors",
             tuple((str(k), _color(v, "rarity colour")) for k, v in rarity),
         )
+        colours = self.resource_colors
+        colours = colours.items() if isinstance(colours, dict) else colours
+        object.__setattr__(
+            self,
+            "resource_colors",
+            tuple((str(k), _color(v, "resource colour")) for k, v in colours),
+        )
         sounds = self.sounds.items() if isinstance(self.sounds, dict) else self.sounds
         sounds = tuple((str(k), str(v)) for k, v in sounds if str(v).strip())
         for role, _asset in sounds:
@@ -378,6 +399,9 @@ class MenuTheme:
     def rarity_color(self, rarity_id):
         return dict(self.rarity_colors).get(str(rarity_id))
 
+    def resource_color(self, resource):
+        return dict(self.resource_colors).get(str(resource))
+
     def to_data(self):
         data = {}
         empty = MenuTheme()
@@ -387,7 +411,7 @@ class MenuTheme:
                 continue
             if isinstance(value, NinePatch):
                 value = value.to_data()
-            elif name in ("rarity_colors", "sounds"):
+            elif name in ("rarity_colors", "sounds", "resource_colors"):
                 value = {k: (list(v) if isinstance(v, tuple) else v) for k, v in value}
             elif isinstance(value, tuple):
                 value = list(value)
@@ -402,6 +426,90 @@ class MenuTheme:
         return cls(**dict(data))
 
 
+FONT_COLOURS = ("tint", "keep", "two_tone")
+EMPTY_CELL = "⬚"  # in a bitmap font's rows: a cell with no character
+
+
+@dataclass(frozen=True, slots=True)
+class MenuBitmapFont:
+    """A font drawn by hand: one picture cut into cells of ``cell_width`` x ``cell_height``,
+    ``rows`` saying which character each cell holds (one string per row of cells, left to
+    right; ``EMPTY_CELL`` skips a cell). How far the pen moves after a glyph is measured from
+    its drawn pixels (plus ``spacing``) unless ``fixed_width``; ``widths`` overrides single
+    characters. ``colours``: ``tint`` draws every visible pixel in the text colour (white
+    glyphs), ``keep`` draws the picture's own colours, ``two_tone`` makes white the text colour
+    and mid grey the shadow colour (the creature screens' fonts). Characters the font lacks are
+    drawn in the menu fonts, so Chinese still shows."""
+
+    font_id: str
+    image: str = ""
+    cell_width: int = 8
+    cell_height: int = 8
+    rows: tuple = ()
+    spacing: int = 1
+    space_width: int = 0  # 0: half a cell
+    line: int = 0  # the line's height (0: a cell's height)
+    fixed_width: bool = False
+    widths: tuple = ()  # ((character, width), ...)
+    colours: str = "tint"
+    scale: int = 0  # whole-pixel scale (0: as near the asked text size as a whole number)
+
+    def __post_init__(self):
+        font_id = str(self.font_id).strip()
+        if not font_id:
+            raise ValueError("a bitmap font needs a font_id")
+        object.__setattr__(self, "font_id", font_id)
+        object.__setattr__(self, "image", str(self.image or "").strip())
+        for name in ("cell_width", "cell_height"):
+            value = int(getattr(self, name))
+            if value < 1:
+                raise ValueError(f"{name} must be >= 1")
+            object.__setattr__(self, name, value)
+        for name in ("space_width", "line", "scale"):
+            value = int(getattr(self, name) or 0)
+            if value < 0:
+                raise ValueError(f"{name} must be >= 0")
+            object.__setattr__(self, name, value)
+        object.__setattr__(self, "spacing", int(self.spacing))
+        rows = (self.rows,) if isinstance(self.rows, str) else self.rows
+        object.__setattr__(self, "rows", tuple(str(r) for r in rows))
+        object.__setattr__(self, "fixed_width", bool(self.fixed_width))
+        widths = self.widths.items() if isinstance(self.widths, dict) else self.widths
+        object.__setattr__(self, "widths", tuple((str(k), int(v)) for k, v in widths if str(k)))
+        if self.colours not in FONT_COLOURS:
+            raise ValueError(f"colours must be one of {FONT_COLOURS}")
+
+    def cells(self):
+        """``{character: (column, row)}``: where each character's cell is."""
+        out = {}
+        for row, chars in enumerate(self.rows):
+            for column, char in enumerate(chars):
+                if char != EMPTY_CELL and char not in out:
+                    out[char] = (column, row)
+        return out
+
+    def to_data(self):
+        data = {"font_id": self.font_id}
+        empty = MenuBitmapFont("_")
+        for name in MenuBitmapFont.__dataclass_fields__:
+            value = getattr(self, name)
+            if name == "font_id" or value == getattr(empty, name):
+                continue
+            if name == "widths":
+                value = {k: v for k, v in value}
+            elif isinstance(value, tuple):
+                value = list(value)
+            data[name] = value
+        return data
+
+    @classmethod
+    def from_data(cls, data):
+        unknown = set(data) - set(cls.__dataclass_fields__)
+        if unknown:
+            raise ValueError("unknown bitmap font fields: " + ", ".join(sorted(unknown)))
+        return cls(**dict(data))
+
+
 @dataclass(frozen=True, slots=True)
 class ScreenSpec:
     """What one screen offers a layout: its own elements ``(id, kind, description)`` and the
@@ -413,10 +521,14 @@ class ScreenSpec:
     fields: tuple = ()
     sample: str = ""  # how the editor opens it with sample data (``menu_preview``)
     notes: tuple = field(default=())
+    size: tuple | None = None  # its own resolution (a 240x160 screen); None: the window's
+    group: str = "menu"  # "menu" or "game" (drawn during play: HUD, dialogue, battle)
 
 
-def _spec(screen_id, title, elements, fields=(), sample=""):
-    return ScreenSpec(screen_id, title, tuple(elements), tuple(fields), sample or screen_id)
+def _spec(screen_id, title, elements, fields=(), sample="", size=None, group="menu"):
+    return ScreenSpec(
+        screen_id, title, tuple(elements), tuple(fields), sample or screen_id, (), size, group
+    )
 
 
 _HINT = ("hint", "hint", "Key hints")
@@ -536,6 +648,14 @@ SCREENS = (
             ("trees", "text", "Which tree of how many"),
             ("detail", "detail", "The chosen node"),
             _HINT,
+            ("node_locked", "image", "A node that cannot be learned yet (its frame)"),
+            ("node_available", "image", "A node that can be learned now"),
+            ("node_learned", "image", "A node learned (not at its last rank)"),
+            ("node_maxed", "image", "A node at its last rank"),
+            ("node_selected", "image", "The frame over the chosen node"),
+            ("link_met", "panel", "A line to a met prerequisite (colour; size: width)"),
+            ("link_unmet", "panel", "A line to a prerequisite not met yet"),
+            ("points_icon", "image", "A picture before the points to spend"),
         ],
         ("member.name",),
     ),
@@ -672,6 +792,88 @@ SCREENS = (
         sample="field",
     ),
 )
+# drawn during play (V2-V5): the same layouts, listed under "During play" in the editor
+SCREENS += (
+    _spec(
+        "dialogue",
+        "Dialogue window",
+        [
+            ("window", "panel", "The message window"),
+            ("speaker", "text", "Who speaks"),
+            ("name_box", "panel", "A box behind the speaker's name (drawn when it has a look)"),
+            ("portrait", "portrait", "Where the face or bust goes"),
+            ("text", "text", "The line: text area, size, colour, line height, letters a second"),
+            ("continue", "hint", "The continue words"),
+            ("arrow", "image", "A 'next' arrow once the line is written out (a strip)"),
+        ],
+        ("speaker", "text"),
+        group="game",
+    ),
+    _spec(
+        "dialogue_choice",
+        "Dialogue choice",
+        [
+            ("box", "panel", "The window behind the prompt and options"),
+            ("prompt", "text", "The question"),
+            ("choices", "list", "The options: columns, cell width, row height, chosen frame"),
+        ],
+        ("prompt",),
+        group="game",
+    ),
+    _spec(
+        "hud_action",
+        "Action RPG HUD",
+        [
+            ("orb_life", "gauge", "The life orb: its frame picture; fill / text colour: liquid"),
+            ("orb_life_fill", "image", "The life orb's liquid picture (shown up to its level)"),
+            ("orb_life_empty", "image", "The empty life orb's picture"),
+            ("orb_life_title", "text", "The life orb's name"),
+            ("orb_life_value", "text", "The life orb's numbers"),
+            ("orb_second", "gauge", "The second resource's orb"),
+            ("orb_second_fill", "image", "Its liquid picture"),
+            ("orb_second_empty", "image", "Its empty picture"),
+            ("orb_second_title", "text", "Its name"),
+            ("orb_second_value", "text", "Its numbers"),
+            ("life_bar", "gauge", "Life as a bar instead (place it; hide the orb)"),
+            ("second_bar", "gauge", "The second resource as a bar"),
+            ("plate", "panel", "The action bar's plate (the slots go with it)"),
+            ("slot_main", "image", "A large slot (attack, dodge): frame picture, cell size"),
+            ("slot", "image", "A skill slot: frame picture, cell size, gap"),
+            ("keycap", "image", "The key on a slot: picture or colours, text colour"),
+            ("cooldown", "image", "The cooldown: a strip whose frame follows the time"),
+            ("badge", "panel", "A count badge (items left, stacks)"),
+            ("cost", "panel", "A skill's cost"),
+            ("exp", "gauge", "The experience strip"),
+            ("level", "text", "The level on it"),
+            ("statuses", "grid", "The player's statuses: place, cell size, gap"),
+            ("status_buff", "image", "A boon's frame"),
+            ("status_debuff", "image", "A harm's frame"),
+            ("resource_bars", "list", "The other resources' bars: first bar, row height"),
+            ("hint", "hint", "The controls line at the top"),
+            ("target", "panel", "The locked-on enemy's frame"),
+            ("banner", "text", "The big words in the middle (level up...)"),
+            ("fell", "panel", "The screen's tint when the player falls"),
+            ("fell_text", "text", "The fell words"),
+        ],
+        group="game",
+    ),
+    _spec(
+        "battle",
+        "Battle screen",
+        [
+            ("party_hud", "panel", "The party's cards: move / size (0: as laid out), skin"),
+            ("overhead", "text", "The names and bars over the fighters (moved as one)"),
+            ("menu", "list", "The command menu and its skill / item pages; selection skin"),
+            ("help", "panel", "The help box over the menu"),
+            ("workflow", "panel", "The target and step lists of a chosen command"),
+            ("timeline", "panel", "The turn order bar"),
+            ("numbers", "text", "Damage and healing numbers: colour, size, or hidden"),
+            ("result", "panel", "The victory / defeat panel"),
+            ("target", "image", "The target cursor: colour, or hidden"),
+        ],
+        group="game",
+    ),
+)
 SCREEN_IDS = tuple(s.screen_id for s in SCREENS)
 
 
@@ -684,3 +886,9 @@ def base_screen(screen_id):
 def screen_spec(screen_id):
     base = base_screen(screen_id)
     return next((s for s in SCREENS if s.screen_id == base), None)
+
+
+def screen_size(screen_id, window):
+    """The size a screen's layout is measured in: its own resolution, else ``window``."""
+    spec = screen_spec(screen_id)
+    return tuple(spec.size) if spec is not None and spec.size else tuple(window)

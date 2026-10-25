@@ -67,6 +67,8 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
+from asteria.presentation.creature_screens import creature_settings
+
 W, H = 240, 160
 BOX_TOP = 112  # the message window takes the bottom 48 rows
 # where things stand in a one-on-one battle (pokeemerald's singles coordinates): the centres
@@ -160,7 +162,8 @@ class CreatureBattleScreen:
         self.rt = runtime
         self.game = runtime.game
         self.pg = runtime.pg
-        self.settings = dict(runtime.manifest.get("battle", {}).get("creature_screen", {}))
+        # the project's settings (Creature screens…), else the manifest's (V5)
+        self.settings = creature_settings(runtime, "battle.creature_screen")
         # opaque pixels with an alpha channel: the window's surface keeps per-pixel alpha, and a
         # plain surface blitted onto it left alpha 0 (frames captured as see-through)
         self.surface = self.pg.Surface((W, H), self.pg.SRCALPHA)

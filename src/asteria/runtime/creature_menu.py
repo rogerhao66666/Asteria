@@ -39,6 +39,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import CreatureBattleScreen, H, W
 
 OVERLAY_PHASES = ("start", "save")  # drawn over the field
@@ -89,8 +90,11 @@ class CreatureMenuScreen(CreatureBattleScreen):
 
     def __init__(self, runtime, screen="start"):
         super().__init__(runtime)
-        self.menu = dict(runtime.manifest.get("field", {}).get("creature_menu", {}))
-        self.dialogue = dict(runtime.manifest.get("dialogue", {}))
+        self.menu = creature_settings(runtime, "field.creature_menu")  # project, else manifest
+        settings = getattr(runtime, "dialogue_settings", None)  # the picture window (V2)
+        self.dialogue = dict(
+            settings() if settings is not None else runtime.manifest.get("dialogue", {})
+        )
         self.phase = screen
         self.cursor = self.list_cursor = self.pocket = 0
         self.action_cursor = 0

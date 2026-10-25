@@ -58,6 +58,7 @@ from PySide6.QtWidgets import (
 from asteria.presentation.menu_layout import (
     ALIGNS,
     ANCHORS,
+    FRAME_AXES,
     IMAGE_MODES,
     SOUND_ROLES,
     MenuElement,
@@ -536,6 +537,7 @@ class ElementInspector(QWidget):
         place, size = QHBoxLayout(), QHBoxLayout()  # two rows: four boxes hid their digits
         for row, name, box in ((place, "x", self.x), (place, "y", self.y),
                                (size, "w", self.w), (size, "h", self.h)):  # fmt: skip
+            # room for "-4000" beside the theme's arrows (3 digits were cut to 2)
             box.setMinimumWidth(72)
             row.addWidget(QLabel(name))
             row.addWidget(box, 1)
@@ -549,6 +551,23 @@ class ElementInspector(QWidget):
             self.image_mode.addItem(mode, mode)
         self.fill, self.border, self.color = ColorField(), ColorField(), ColorField()
         self.font = AssetField(document, "font")
+        self.bitmap_font = QComboBox()
+        self.bitmap_font.setToolTip(
+            "A font drawn by hand (Bitmap fonts…); what it lacks: the font"
+        )
+        self.set_fonts(())
+        self.frames = _spin(0, 256)
+        self.frames.setSpecialValueText("still picture")
+        self.frames.setToolTip("The picture is a strip of this many frames")
+        self.frame_axis = QComboBox()
+        self.frame_axis.setProperty("i18n_choices", True)
+        for axis, label in zip(FRAME_AXES, ("left to right", "top to bottom"), strict=True):
+            self.frame_axis.addItem(label, axis)
+        self.fps = QDoubleSpinBox()
+        self.fps.setRange(0.0, 60.0)
+        self.fps.setSingleStep(1.0)
+        self.fps.setSpecialValueText("the screen's")
+        self.fps.setToolTip("Frames a second; the screen's: it picks the frame (a cooldown)")
         self.font_size = _spin(0, 200)
         self.font_size.setSpecialValueText("engine's")
         self.align = QComboBox()
@@ -574,10 +593,14 @@ class ElementInspector(QWidget):
         form.addRow("Frame (nine-patch)", self.skin)
         form.addRow("Picture", self.image)
         form.addRow("Picture fit", self.image_mode)
+        form.addRow("Animation frames", self.frames)
+        form.addRow("Frames run", self.frame_axis)
+        form.addRow("Frames (or letters) a second", self.fps)
         form.addRow("Fill", self.fill)
         form.addRow("Border", self.border)
         form.addRow("Text colour", self.color)
         form.addRow("Font", self.font)
+        form.addRow("Bitmap font", self.bitmap_font)
         form.addRow("Text size", self.font_size)
         form.addRow("Align", self.align)
         form.addRow("Words", self.words)
@@ -604,9 +627,18 @@ class ElementInspector(QWidget):
             self.columns,
             self.cell,
             self.gap,
+            self.frames,
+            self.fps,
         ):
             widget.valueChanged.connect(self._later)  # fmt: skip
-        for widget in (self.anchor, self.image_mode, self.align, self.binding):
+        for widget in (
+            self.anchor,
+            self.image_mode,
+            self.align,
+            self.binding,
+            self.bitmap_font,
+            self.frame_axis,
+        ):
             widget.currentIndexChanged.connect(self._later)
         for widget in (self.engine_place, self.visible):
             widget.toggled.connect(self._later)
@@ -628,6 +660,17 @@ class ElementInspector(QWidget):
     def _later(self, *_):
         if not self._loading:
             self._timer.start()
+
+    def set_fonts(self, font_ids):
+        """The project's bitmap fonts offered in the "Bitmap font" box."""
+        current = self.bitmap_font.currentData() or ""
+        self.bitmap_font.blockSignals(True)
+        self.bitmap_font.clear()
+        self.bitmap_font.addItem("none", "")
+        for font_id in font_ids:
+            self.bitmap_font.addItem(font_id, font_id)
+        self.bitmap_font.setCurrentIndex(max(0, self.bitmap_font.findData(current)))
+        self.bitmap_font.blockSignals(False)
 
     def _place_enabled(self, engine):
         for widget in (self.x, self.y, self.w, self.h, self.anchor):
@@ -659,6 +702,12 @@ class ElementInspector(QWidget):
         self.border.setColor(element.border)
         self.color.setColor(element.color)
         self.font.setText(element.font)
+        if element.bitmap_font and self.bitmap_font.findData(element.bitmap_font) < 0:
+            self.bitmap_font.addItem(element.bitmap_font, element.bitmap_font)  # gone: kept
+        self.bitmap_font.setCurrentIndex(max(0, self.bitmap_font.findData(element.bitmap_font)))
+        self.frames.setValue(element.frames)
+        self.frame_axis.setCurrentIndex(max(0, self.frame_axis.findData(element.frame_axis)))
+        self.fps.setValue(element.fps)
         self.font_size.setValue(element.size)
         self.align.setCurrentIndex(max(0, self.align.findData(element.align)))
         self.words.setText(element.text)
@@ -709,13 +758,17 @@ class ElementInspector(QWidget):
             selection_skin=self.selection_skin.patch(),
             selection_fill=self.selection_fill.color(),
             slots=self.slots.places(),
+            frames=self.frames.value(),
+            frame_axis=self.frame_axis.currentData(),
+            fps=self.fps.value(),
+            bitmap_font=self.bitmap_font.currentData() or "",
         )
 
 
 class MenuThemeDialog(QDialog):
     """The project-wide menu theme: fonts, text colours, frames, cursor, rarities, sounds."""
 
-    def __init__(self, document, theme, rarities=(), parent=None):
+    def __init__(self, document, theme, rarities=(), parent=None, fonts=()):
         super().__init__(parent)
         self.setWindowTitle("Menu Theme")
         self.resize(560, 640)
@@ -745,6 +798,13 @@ class MenuThemeDialog(QDialog):
         form.addRow("Latin font", self.font_latin)
         form.addRow("Chinese / Japanese / Korean font", self.font_cjk)
         form.addRow("Font scale", self.font_scale)
+        self.bitmap_font = QComboBox()
+        self.bitmap_font.addItem("none", "")
+        for font_id in fonts:
+            self.bitmap_font.addItem(font_id, font_id)
+        self.bitmap_font.setCurrentIndex(max(0, self.bitmap_font.findData(theme.bitmap_font)))
+        self.bitmap_font.setToolTip("Every menu's words in a font drawn by hand")
+        form.addRow("Bitmap font", self.bitmap_font)
         for label, field in self.colors.values():
             form.addRow(label, field)
         form.addRow("Every menu frame", self.panel_skin)
@@ -757,6 +817,14 @@ class MenuThemeDialog(QDialog):
             field.setColor(own.get(rarity_id))
             self.rarities[rarity_id] = field
             form.addRow(f"Rarity: {name}", field)
+        self.resources = {}
+        own = dict(theme.resource_colors)
+        for resource in self._resource_names(document, own):
+            field = ColorField()
+            field.setColor(own.get(resource))
+            field.setToolTip("Its orb and bars (the action RPG HUD); none: guessed from its name")
+            self.resources[resource] = field
+            form.addRow(f"Resource: {resource}", field)
         self.sounds = {}
         own = dict(theme.sounds)
         for role in SOUND_ROLES:
@@ -776,6 +844,18 @@ class MenuThemeDialog(QDialog):
         layout.addWidget(scroll, 1)
         layout.addWidget(buttons)
 
+    @staticmethod
+    def _resource_names(document, own):
+        """The project's battle resources (and any the theme already colours)."""
+        names = set(own)
+        try:
+            from .record_vocabulary import vocabulary_for
+
+            names.update(c.value for c in vocabulary_for(document).choices("resources"))
+        except Exception:  # noqa: BLE001 - no project: only the theme's own
+            pass
+        return sorted(str(n) for n in names if n)
+
     def theme(self):
         return MenuTheme(
             font_latin=self.font_latin.text(),
@@ -784,6 +864,8 @@ class MenuThemeDialog(QDialog):
             panel_skin=self.panel_skin.patch(),
             selection_skin=self.selection_skin.patch(),
             cursor_image=self.cursor.text(),
+            bitmap_font=self.bitmap_font.currentData() or "",
+            resource_colors=tuple((k, f.color()) for k, f in self.resources.items() if f.color()),
             rarity_colors=tuple((k, f.color()) for k, f in self.rarities.items() if f.color()),
             sounds=tuple((k, f.text()) for k, f in self.sounds.items() if f.text()),
             **{name: field.color() for name, (_label, field) in self.colors.items()},
@@ -830,6 +912,9 @@ class MenuLayoutWorkspace(QWidget):
             "Copy from…": self._copy,
             "Background…": self._background,
             "Menu theme…": self._theme,
+            "Bitmap fonts…": self._bitmap_fonts,
+            "Picture message window…": self._dialogue_window,
+            "Creature screens…": self._creature_screens,
             "Open in game": self._open_in_game,
         }
         bar = QHBoxLayout()  # what to edit; the screen's actions on the row under it
@@ -886,7 +971,16 @@ class MenuLayoutWorkspace(QWidget):
         if project is None:
             self.screen_list.blockSignals(False)
             return
+        from asteria.presentation.menu_layout import screen_spec as spec_of
+
+        group = "menu"
         for screen_id, title, custom in self.controller.screens():
+            if spec_of(screen_id).group != group:  # the screens drawn during play
+                group = spec_of(screen_id).group
+                header = QListWidgetItem("During play")
+                header.setFlags(Qt.NoItemFlags)
+                header.setData(Qt.UserRole + 1, "During play")
+                self.screen_list.addItem(header)
             item = QListWidgetItem(("● " if custom else "   ") + title)
             item.setData(Qt.UserRole, screen_id)
             item.setData(Qt.UserRole + 1, title)  # the English, shown in the editor's language
@@ -904,6 +998,7 @@ class MenuLayoutWorkspace(QWidget):
             self.language.addItem(locale, locale)
         self.language.setCurrentIndex(max(0, self.language.findData(current)))
         self.language.blockSignals(False)
+        self.inspector.set_fonts([k for k, _f in self.controller.fonts()])
         self._fill_elements()
         self.refresh_preview()
 
@@ -960,6 +1055,9 @@ class MenuLayoutWorkspace(QWidget):
 
         for row in range(self.screen_list.count()):
             item = self.screen_list.item(row)
+            if item.data(Qt.UserRole) is None:  # a group's heading
+                item.setText(translate(str(item.data(Qt.UserRole + 1))))
+                continue
             if custom is None:
                 marked = item.text().startswith("●")
             else:
@@ -988,8 +1086,10 @@ class MenuLayoutWorkspace(QWidget):
         width, height = surface.get_size()
         data = pygame.image.tobytes(surface, "RGB")
         image = QImage(data, width, height, width * 3, QImage.Format_RGB888).copy()
-        self.inspector.size = (width, height)
-        self.boxes = boxes
+        # the canvas shows pixels; the layout (and the inspector) works in the screen's units
+        self.unit = unit = getattr(preview, "unit", 1.0) or 1.0
+        self.inspector.size = (round(width / unit), round(height / unit))
+        self.boxes = {k: tuple(round(v / unit) for v in r) for k, r in boxes.items()}
         self.canvas.show_screen(image, boxes, self.element_id)
         custom = self.controller.layout(self.screen_id) is not None
         self.status.setText(
@@ -1001,7 +1101,7 @@ class MenuLayoutWorkspace(QWidget):
     # --- reacting ----------------------------------------------------------------------
     def _screen_chosen(self, row):
         item = self.screen_list.item(row)
-        if item is None:
+        if item is None or item.data(Qt.UserRole) is None:
             return
         self.screen_id = item.data(Qt.UserRole)
         self.element_id = ""
@@ -1023,6 +1123,8 @@ class MenuLayoutWorkspace(QWidget):
 
     def _moved(self, element_id, rect):
         element = self.controller.element(self.screen_id, element_id)
+        unit = getattr(self, "unit", 1.0)
+        rect = tuple(round(v / unit) for v in rect)
         anchored = anchored_rect(rect, element.anchor, self.inspector.size)
         if element.rect is None and tuple(rect) == tuple(self.boxes.get(element_id, ())):
             return  # a click, not a move
@@ -1134,10 +1236,63 @@ class MenuLayoutWorkspace(QWidget):
             (r.rarity_id, r.display_name or r.rarity_id)
             for r in project.rpg_database.loot_rarities().values()
         ]
-        dialog = MenuThemeDialog(self.document, self.controller.theme(), rarities, self)
+        fonts = [k for k, _f in self.controller.fonts()]
+        dialog = MenuThemeDialog(self.document, self.controller.theme(), rarities, self, fonts)
         if dialog.exec() == QDialog.Accepted:
             self.controller.set_theme(dialog.theme())
             self._after_change()
+
+    def _bitmap_fonts(self):
+        from .bitmap_font_dialog import BitmapFontDialog
+
+        dialog = BitmapFontDialog(self.document, self.controller.fonts(), self)
+        if dialog.exec() != QDialog.Accepted:
+            return
+        for font_id in dialog.removed():
+            self.controller.remove_font(font_id)
+        for font, old_id in dialog.fonts():
+            self.controller.set_font(font, old_id)
+        self.inspector.set_fonts([k for k, _f in self.controller.fonts()])
+        self._after_change()
+
+    def _dialogue_window(self):
+        from .dialogue_window_dialog import DialogueWindowDialog
+
+        fonts = [k for k, _f in self.controller.fonts()]
+        root = _project_root(self.document)
+        dialog = DialogueWindowDialog(
+            self.document,
+            self.controller.dialogue_window(),
+            fonts,
+            self,
+            convert=lambda: self.controller.import_dialogue_manifest(root),
+        )
+        if dialog.exec() != QDialog.Accepted:
+            return
+        style = dialog.style()
+        if style != self.controller.dialogue_window():
+            self.controller.set_dialogue_window(style)
+        self.inspector.set_fonts([k for k, _f in self.controller.fonts()])
+        self._after_change()
+
+    def _creature_screens(self):
+        from asteria.presentation.creature_screens import SCREENS
+
+        from .creature_screens_dialog import CreatureScreensDialog
+
+        root = _project_root(self.document)
+        current = {k: self.controller.creature_screen(k) for k in SCREENS}
+        dialog = CreatureScreensDialog(
+            self.document,
+            current,
+            self,
+            convert=lambda: self.controller.read_creature_manifest(root),
+        )
+        if dialog.exec() != QDialog.Accepted:
+            return
+        for screen_id, settings in dialog.changes().items():
+            self.controller.set_creature_screen(screen_id, settings)
+        self._after_change()
 
     def _open_in_game(self):
         if self.open_in_game is not None:

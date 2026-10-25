@@ -281,6 +281,9 @@ GROUPS = (
         (
             ("dialogue.continue", "Enter / E: continue"),
             ("dialogue.choose", "Choose"),
+            ("dialogue.sample_yes", "Yes, gladly"),  # the editor's sample choice (V2)
+            ("dialogue.sample_no", "Not now"),
+            ("dialogue.sample_ask", "Tell me more"),
         ),
     ),
     (

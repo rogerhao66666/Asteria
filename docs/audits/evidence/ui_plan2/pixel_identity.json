@@ -1,0 +1,1 @@
+{"head_vs_now_without_layouts": {"tour_battle_hud": "89 compared; differ: none", "dialogue": "6 compared; differ: none"}, "note": "HEAD = git archive of commit 3120b784 src; now = working tree (includes other sessions uncommitted changes); headless dummy driver, clock fixed"}

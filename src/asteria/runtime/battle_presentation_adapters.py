@@ -1487,11 +1487,29 @@ class CanonicalBattleAdapter:
         self._view_camera = self.screen.camera_feedback.camera_view(base)
         self._ui_backend.screen = self.host.screen  # the world layer, until the textures are drawn
         world_then_ui = _WorldThenUi(self, textures)
+        composer = self.screen.composer
+        menu_layout = getattr(self.host, "menu_layout", None)
+        composer.screen_layout = None if menu_layout is None else menu_layout("battle")
+        if composer.screen_layout is None and getattr(self.host, "_menu_preview", False):
+            from asteria.presentation.menu_layout import MenuLayout
+
+            composer.screen_layout = MenuLayout("battle", ())  # the editor: boxes, same look
         result = self.screen.render(
             base, ui_renderer=self.renderer, texture_renderer=world_then_ui
         )
         if not world_then_ui.done:
             world_then_ui.finish()
+        if composer.layout_boxes:  # in screen pixels, as the menus' (the editor reads them)
+            ui = self._ui_backend.scale
+            host = self.host
+            if not isinstance(getattr(host, "_menu_boxes", None), dict):
+                host._menu_boxes = {}
+            host._menu_boxes["battle"] = {
+                k: tuple(round(v * ui) for v in box) for k, box in composer.layout_boxes.items()
+            }
+            if not isinstance(getattr(host, "_menu_units", None), dict):
+                host._menu_units = {}
+            host._menu_units["battle"] = ui  # the screen pixels of one battle unit
         self.audio_cues.extend(result.audio_cues)
         return result
 

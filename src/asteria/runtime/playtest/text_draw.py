@@ -19,9 +19,13 @@ class TextDrawMixin:
         """The width in pixels of ``value`` drawn at ``size`` (the face ``text`` uses)."""
         return self.text_size(value, size)[0]
 
-    def text_size(self, value, size=20):
+    def text_size(self, value, size=20, font=None):
         """``(width, height)`` in pixels of ``value`` drawn at ``size``, in the face ``text``
         draws it with (a system CJK face for Chinese, Japanese or Korean)."""
+        sheet = self.bitmap_font_for(font)
+        if sheet is not None and sheet.covers(value):
+            scale = sheet.scale_for(size)
+            return sheet.width(value, scale), sheet.line * scale
         from asteria.platform.pygame_battle_ui import cjk_size, contains_cjk, font_for_text
 
         f, cjk_path = self._font_face(size)
@@ -48,6 +52,21 @@ class TextDrawMixin:
             return None
         return themes.get("default") or themes[min(themes)]
 
+    def dialogue_settings(self):
+        """The picture message window's settings (V2): the project's ``dialogue_window``
+        record when it is on, else the game folder manifest's ``dialogue`` (``{}``: the
+        ordinary message window)."""
+        project = getattr(self, "project", None)
+        library = getattr(project, "battle_presentation_library", None)
+        style = getattr(library, "_records", {}).get("dialogue_window", {}).get("default")
+        if style is not None:
+            cached = self.__dict__.get("_dialogue_style")
+            if cached is None or cached[0] is not style:  # edited: read again
+                cached = self._dialogue_style = (style, style.settings())
+            if cached[1] is not None:
+                return cached[1]
+        return self.manifest.get("dialogue", {})
+
     def menu_sounds(self):
         """The menu theme's sounds for this frame: ``open`` when a menu opens over the field,
         ``move`` / ``confirm`` / ``cancel`` for the keys pressed in a menu (the shop plays
@@ -67,10 +86,40 @@ class TextDrawMixin:
         elif pressed("confirm") and mode != "shop":
             self._sound(theme.sound("confirm"))
 
-    def menu_canvas(self, screen_id, fields=None):
+    def menu_canvas(self, screen_id, fields=None, size=None, target=None):
         from asteria.runtime.menu_canvas import MenuCanvas
 
-        return MenuCanvas(self, screen_id, fields)
+        return MenuCanvas(self, screen_id, fields, size=size, target=target)
+
+    def bitmap_font(self, font_id):
+        """The project's bitmap font ``font_id`` ready to draw (``SheetFont``), or None when
+        there is no such font or its picture is missing."""
+        project = getattr(self, "project", None)
+        library = getattr(project, "battle_presentation_library", None)
+        spec = getattr(library, "_records", {}).get("bitmap_font", {}).get(str(font_id))
+        if spec is None or not spec.image:
+            return None
+        fonts = self.__dict__.setdefault("_bitmap_fonts", {})
+        found = fonts.get(spec.font_id)
+        if found is None or found.spec is not spec:  # edited in the editor: made again
+            sheet = self.skin_image(spec.image)
+            if sheet is None:
+                return None
+            from asteria.graphics.bitmap_font import SheetFont
+
+            found = fonts[spec.font_id] = SheetFont(self.pg, spec, sheet)
+        return found
+
+    def bitmap_font_for(self, font):
+        """The bitmap font ``text`` draws ``font`` with: ``bitmap:<id>`` names one, no font
+        means the menu theme's (when it has one), anything else is a TTF / OTF."""
+        if font:
+            text = str(font)
+            return self.bitmap_font(text[7:]) if text.startswith("bitmap:") else None
+        theme = self.menu_theme()
+        if theme is None or not theme.bitmap_font:
+            return None
+        return self.bitmap_font(theme.bitmap_font)
 
     def scaled_image(self, image, size):
         """``image`` scaled to ``size`` (cached: menu pictures repeat every frame)."""
@@ -123,7 +172,14 @@ class TextDrawMixin:
         any pygame rect attribute (``"midleft"``, ``"midright"``, ``"bottomright"``...) placed at
         the point - so a label can sit on the same horizontal line as a bar. Text drawn in the
         CJK face (Chinese...) is placed where the built-in face's line would be, centred on the
-        same height as its capitals, so menu cursors and mixed rows stay level."""
+        same height as its capitals, so menu cursors and mixed rows stay level. A bitmap font
+        (``font="bitmap:<id>"``, or the menu theme's) draws the words it has every glyph of;
+        other words fall back to the fonts."""
+        sheet = self.bitmap_font_for(font)
+        if sheet is not None and sheet.covers(value):
+            return self._bitmap_text(sheet, value, x, y, size, color, center, anchor)
+        if font and str(font).startswith("bitmap:"):
+            font = None  # the words it lacks: the menu fonts
         f, cjk_path = self._font_face(size, font)
         from asteria.platform.pygame_battle_ui import (
             cjk_size,
@@ -180,6 +236,25 @@ class TextDrawMixin:
             if anchor or center:  # a title or hint keeps inside its line (no cursor beside it)
                 top = max(top, rect.y - shift[2])
             rect = self.pg.Rect(rect.x, top, *surf.get_size())
+        self.screen.blit(surf, rect)
+        return rect
+
+    def _bitmap_text(self, sheet, value, x, y, size, color, center, anchor):
+        scale = sheet.scale_for(size)
+        key = ("bitmap", id(sheet), str(value), scale, tuple(color))
+        cache = self.__dict__.setdefault("_text_cache", {})
+        surf = cache.get(key)
+        if surf is None:
+            if len(cache) > 2048:
+                cache.clear()
+            surf = cache[key] = sheet.surface(value, tuple(color)[:3], None, scale)
+        rect = surf.get_rect()
+        if anchor:
+            setattr(rect, anchor, (int(x), int(y)))
+        elif center:
+            rect.center = (int(x), int(y))
+        else:
+            rect.topleft = (int(x), int(y))
         self.screen.blit(surf, rect)
         return rect
 

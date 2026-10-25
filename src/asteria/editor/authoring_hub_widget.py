@@ -324,7 +324,9 @@ class StructuredRecordEditor(QTreeWidget):
             item.setData(1, Qt.UserRole, deepcopy(value))
             item.setFlags(item.flags() | Qt.ItemIsEditable)
             key = path[-1] if path else None
-            if key == "icon_id" and isinstance(value, str) and self.icon_library is not None:
+            from .image_tools import picture_field
+
+            if picture_field(key) and isinstance(value, str) and self.icon_library is not None:
                 self._icon_widget(item, value)
             elif isinstance(key, str) and key in self.field_choices and isinstance(value, str):
                 self._choice_widget(item, value, self.field_choices[key]())

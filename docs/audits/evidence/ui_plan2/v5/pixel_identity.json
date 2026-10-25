@@ -1,0 +1,6 @@
+{
+ "note": "AsteriaEmerald, headless 960x640, fixed clock and seed; frames: start menu, shop, battle 30/120/399",
+ "manifest_vs_records": "5 compared; differ: none",
+ "v5_reads_vs_old_manifest_reads": "5 compared; differ: none",
+ "head_vs_now": "menu identical; shop not at HEAD (creature_shop.py is the Pokemon session's uncommitted file); battle text typing differs by a few letters, caused by other uncommitted work (the old-read run equals now)"
+}

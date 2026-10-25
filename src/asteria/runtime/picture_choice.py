@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import math
 
+from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import H, W
 from asteria.runtime.creature_menu import CreatureMenuScreen
 
@@ -33,7 +34,7 @@ class PictureChoiceScreen(CreatureMenuScreen):
     def __init__(self, runtime, request):
         super().__init__(runtime, "pick")
         self.request = dict(request)
-        layouts = runtime.manifest.get("field", {}).get("picture_choices", {})
+        layouts = creature_settings(runtime, "field.picture_choices")
         self.layout = dict(layouts.get(self.request.get("layout", ""), {}))
         self.options = list(self.layout.get("options") or [])
         self.index = int(self.layout.get("start", 0) or 0) % max(1, len(self.options))

@@ -395,7 +395,7 @@ QComboBox QLineEdit, QComboBox QLineEdit:focus, QComboBox QLineEdit:hover {
     background: transparent; border: 0; border-radius: 0; margin: 0; padding: 0;
 }
 /* a number box as tall as a text box (26 px: 18 + padding + border); its arrows fit inside */
-QAbstractSpinBox { padding-right: 30px; min-height: 18px; }
+QAbstractSpinBox { padding-right: 0px; min-height: 18px; }
 QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {
     subcontrol-origin: padding; width: 26px;
     background: $raised; border: 0; border-left: 1px solid $border_strong;

@@ -19,8 +19,11 @@ from .support import (  # noqa: F401 - the names the moved methods use
 
 class BattleFlowMixin:
     def _creature_style(self):
-        """The manifest asks for the one-on-one creature battle screen (``battle.style``)."""
-        return self.manifest.get("battle", {}).get("style") == "creature"
+        """The one-on-one creature battle screen: the project's Creature battle settings are
+        on, or the manifest's ``battle.style`` is ``creature``."""
+        from asteria.presentation.creature_screens import creature_battle_on
+
+        return creature_battle_on(self)
 
     def _battle_actor(self):
         return None if self.game.battle is None else self._turn_actor

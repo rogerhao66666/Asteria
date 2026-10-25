@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 656 個鍵，29 組。
+共 659 個鍵，29 組。
 
 ## Creature battle
 
@@ -200,6 +200,9 @@
 | --- | --- | --- |
 | `dialogue.continue` | Enter / E: continue | Enter／E：繼續 |
 | `dialogue.choose` | Choose | 請選擇 |
+| `dialogue.sample_yes` | Yes, gladly | 好，樂意之至 |
+| `dialogue.sample_no` | Not now | 現在不要 |
+| `dialogue.sample_ask` | Tell me more | 再多說一點 |
 
 ## Pause menu
 

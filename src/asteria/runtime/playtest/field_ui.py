@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
+from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.collision import CollisionWorld
 
 from .support import (  # noqa: F401 - the names the moved methods use
@@ -461,60 +462,19 @@ class FieldUiMixin:
         if request is None:
             return
         line = getattr(request, "line", None)
-        if held and self.manifest.get("dialogue", {}).get("window"):
+        if held and self.dialogue_settings().get("window"):
             self._draw_dialogue_window(line, held=True)
             return
-        if self.manifest.get("dialogue", {}).get("window"):
+        if self.dialogue_settings().get("window"):
             if line is not None:
                 self._draw_dialogue_window(line)
                 return
-            if self.manifest["dialogue"].get("choice_frame"):
+            if self.dialogue_settings().get("choice_frame"):
                 self._draw_choice_window(request)
                 return
-        box, portrait = self._dialogue_layout(line)
-        if portrait is not None and portrait[2] == "bust":  # stands behind the window
-            self.screen.blit(portrait[0], portrait[1])
-        self.panel(box, fill=(10, 14, 24, 235), border=(240, 201, 93))
-        x, y, w, h = box
-        if line is not None:
-            text_x = x + 24
-            hint_x, hint_anchor = self.width - 250, None
-            if portrait is not None and portrait[2] == "face":
-                picture, at, _, room = portrait
-                self.screen.blit(picture, at)
-                if line.portrait_side == "left":
-                    text_x = room[0] + room[2] + 18  # the text starts after the face's square
-                else:  # the hint ends before the face
-                    hint_x, hint_anchor = room[0] - 14, "topright"
-            if line.speaker:
-                speaker = self.game.expand_message(self.game.speaker_of(line), plain=True)
-                self.text(speaker, text_x, y + 12, size=24, color=(255, 220, 124))
-            self._draw_message(self.game.expand_message(self.game.line_text(line)), text_x, y + 46)
-            self.text(
-                self.game.tr("dialogue.continue", "Enter / E: continue"),
-                hint_x,
-                y + h - 28,
-                size=18,
-                color=(170, 210, 240),
-                anchor=hint_anchor,
-            )
-            return
-        self.text(
-            self.game.prompt_of(request) or self.game.tr("dialogue.choose", "Choose"),
-            84,
-            self.height - 218,
-            size=22,
-            color=(255, 220, 124),
-        )
-        cursor = self._choice_index(request)
-        for i, choice in enumerate(request.choices[:9], 1):
-            mark = "> " if i - 1 == cursor else "   "
-            self.text(
-                f"{mark}{i}. {self.game.line_text(choice)}",
-                84 + ((i - 1) % 3) * 270,
-                self.height - 184 + ((i - 1) // 3) * 26,
-                size=20,
-            )
+        from asteria.runtime.dialogue_screen import draw_message_window
+
+        draw_message_window(self, request, line)  # through the dialogue layouts (V2)
 
     def _grid_steps(self, request):
         pg = self.pg
@@ -535,7 +495,7 @@ class FieldUiMixin:
         the box's right and bottom edges in window pixels, unless the choice gives ``box_at``,
         its inside's top left; ``choice_line_height``), a pointer at the option under the
         cursor."""
-        settings = self.manifest["dialogue"]
+        settings = self.dialogue_settings()
         self._draw_dialogue_window(None, text=self.game.prompt_of(request))
         cache = self.__dict__.setdefault("_dialogue_window_cache", {})
         frame = cache.get("choice_frame")
@@ -601,13 +561,18 @@ class FieldUiMixin:
         text it lacks is drawn in a system face), ``colours`` ``[letter, shadow]``, ``speed``
         (letters a second, 0 = all at once), ``arrow`` (a strip of frames under each other,
         ``arrow_size`` ``[w, h]``) shown at ``arrow_at`` once the line is written out."""
-        settings = self.manifest.get("dialogue", {})
+        settings = self.dialogue_settings()
         cache = self.__dict__.setdefault("_dialogue_window_cache", {})
+        if cache.get("settings") is not settings:  # another window (edited in the editor)
+            cache.clear()
+            cache["settings"] = settings
         if "window" not in cache:
             cache["window"] = self.load_image(settings["window"])
             cache["arrow"] = self.load_image(settings["arrow"]) if settings.get("arrow") else None
             cache["font"] = None
-            if settings.get("font"):
+            if settings.get("font_id"):  # the project's bitmap font (Bitmap fonts…)
+                cache["font"] = self.bitmap_font(settings["font_id"])
+            elif settings.get("font"):
                 from asteria.graphics.bitmap_font import BitmapFont
 
                 cache["font"] = BitmapFont(self.pg, self.path(settings["font"]))
@@ -657,7 +622,7 @@ class FieldUiMixin:
         if arrow is not None and shown >= len(text) and not held:  # held: no key awaited
             aw, ah = settings.get("arrow_size", (8, 16))
             frames = max(1, arrow.get_height() // ah)
-            frame = (self.pg.time.get_ticks() // 160) % frames
+            frame = (self.pg.time.get_ticks() // int(settings.get("arrow_frame_ms", 160))) % frames
             ax, ay = settings.get("arrow_at", (220, 24))
             surface.blit(arrow, (ax, ay), (0, frame * ah, aw, ah))
         big = self.pg.transform.scale(surface, (ww * scale, wh * scale))
@@ -775,13 +740,17 @@ class FieldUiMixin:
         )
         self.screen.blit(big, (round(ax * scale), round((ay - offset) * scale)))
 
-    def _draw_message(self, text, x, y, *, size=22):
+    def _draw_message(self, text, x, y, *, size=22, step=None, color=None, font=None, limit=None):
         """Draw a message whose data codes are expanded: colour and size spans, icons as boxes,
-        ``\\n`` starts a new line."""
-        from asteria.presentation.message_codes import parse_message
+        ``\\n`` starts a new line. A layout (V2) may give the line ``step``, the plain text's
+        ``color``, a ``font`` and ``limit`` (how many letters are typed out so far)."""
+        from asteria.presentation.message_codes import DEFAULT_PALETTE, parse_message
 
         left, top = x, y
+        step = step or size + 6
         for span in parse_message(text):
+            if limit is not None and limit <= 0:
+                break
             if span.icon is not None:
                 icon_id = self.game.message_icon(span.icon)
                 if not (icon_id and self._draw_icon(icon_id, left, top, size)):
@@ -789,12 +758,16 @@ class FieldUiMixin:
                     self.pg.draw.rect(self.screen, span.color, box, 2, 3)
                 left += size
                 continue
+            plain = span.color == DEFAULT_PALETTE[0]  # no colour code: the layout's colour
+            tint = color if color is not None and plain else span.color
             for number, part in enumerate(span.text.split("\n")):
                 if number:
-                    left, top = x, top + size + 6
+                    left, top = x, top + step
+                if limit is not None:
+                    part, limit = part[: max(0, limit)], limit - len(part) - 1
                 if part:
                     rect = self.text(
-                        part, left, top, size=size + 6 * span.size_steps, color=span.color
+                        part, left, top, size=size + 6 * span.size_steps, color=tint, font=font
                     )
                     left = rect.right
 
@@ -810,7 +783,8 @@ class FieldUiMixin:
         if getattr(request, "line", None) is not None:
             if self.input.just_pressed("confirm") or self.input.just_pressed("interact"):
                 self.game.acknowledge_dialogue()
-                self._sound(self.manifest.get("dialogue_confirm_sfx"))
+                sound = self.dialogue_settings().get("confirm_sound")
+                self._sound(sound or self.manifest.get("dialogue_confirm_sfx"))
             return True
         choices = getattr(request, "choices", None) or ()
         cursor = self._choice_index(request)
@@ -837,7 +811,7 @@ class FieldUiMixin:
             self.game.cancel_choice()  # the choice's own answer to the cancel key
         elif (
             choices
-            and self.manifest.get("dialogue", {}).get("cancel_picks_last")
+            and self.dialogue_settings().get("cancel_picks_last")
             and self.input.just_pressed("cancel")
         ):
             self.game.choose(len(choices) - 1)  # B on YES / NO answers NO
@@ -935,7 +909,7 @@ class FieldUiMixin:
         if self.input.just_pressed("menu") and self.settings.developer_menu:
             self._ui_mode = "build"
         if self.input.just_pressed("cancel"):
-            if self.manifest.get("field", {}).get("creature_menu"):  # the game's own menu
+            if creature_settings(self, "field.creature_menu"):  # the game's own menu
                 from asteria.runtime.creature_menu import CreatureMenuScreen
 
                 self._creature_menu = CreatureMenuScreen(self)

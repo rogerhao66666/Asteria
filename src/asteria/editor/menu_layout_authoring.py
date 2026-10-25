@@ -13,6 +13,7 @@ from dataclasses import replace
 from asteria.presentation.menu_layout import (
     EXTRA,
     SCREEN_IDS,
+    MenuBitmapFont,
     MenuElement,
     MenuLayout,
     MenuTheme,
@@ -38,7 +39,7 @@ VARIANTS = {
 
 
 class MenuLayoutAuthoringController:
-    LAYOUT, THEME = "menu_layout", "menu_theme"
+    LAYOUT, THEME, FONT = "menu_layout", "menu_theme", "bitmap_font"
 
     def __init__(self, document):
         self.document = document
@@ -175,6 +176,124 @@ class MenuLayoutAuthoringController:
 
     def change_theme(self, **fields):
         self.set_theme(replace(self.theme() or MenuTheme(), **fields))
+
+    # --- bitmap fonts (V1) ---------------------------------------------------------------
+    def fonts(self):
+        """The project's bitmap fonts ``[(font_id, MenuBitmapFont)]``."""
+        return [(k, self.library.require(self.FONT, k)) for k in self.library.ids(self.FONT)]
+
+    def font(self, font_id):
+        return self.library.get(self.FONT, font_id)
+
+    def set_font(self, font, old_id=None):
+        """Add or change a bitmap font (``old_id``: the id it had, when it is renamed)."""
+        if not isinstance(font, MenuBitmapFont):
+            raise TypeError("a MenuBitmapFont is required")
+        if old_id and old_id != font.font_id:
+            if self.font(font.font_id) is not None:
+                raise MenuLayoutAuthoringError(f"there is already a font {font.font_id}")
+            self.remove_font(old_id)
+        old = self.font(font.font_id)
+        self.document.execute(
+            _ProfileCommand(
+                self.library, self.FONT, font.font_id, font, old, f"Bitmap font {font.font_id}"
+            )
+        )
+
+    def remove_font(self, font_id):
+        old = self.font(font_id)
+        if old is not None:
+            self.document.execute(
+                _ProfileCommand(
+                    self.library, self.FONT, font_id, None, old, f"Remove bitmap font {font_id}"
+                )
+            )
+
+    # --- the picture message window (V2) --------------------------------------------------
+    def dialogue_window(self):
+        return self.library.get("dialogue_window", "default")
+
+    def set_dialogue_window(self, style):
+        """The picture message window (a ``DialogueWindowStyle``, None: none)."""
+        old = self.dialogue_window()
+        self.document.execute(
+            _ProfileCommand(
+                self.library, "dialogue_window", "default", style, old, "Picture message window"
+            )
+        )
+
+    def import_dialogue_manifest(self, root):
+        """The game folder manifest's ``dialogue`` window turned into project data: its font
+        becomes a bitmap font, its settings the picture window. Returns the window, or None
+        when the manifest has none."""
+        import json
+        from pathlib import Path
+
+        from asteria.graphics.bitmap_font import spec_from_legacy
+        from asteria.presentation.dialogue_window import DialogueWindowStyle
+
+        path = Path(root) / "playable_test_manifest.json"
+        if not path.is_file():
+            return None
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        dialogue = manifest.get("dialogue") or {}
+        if not dialogue.get("window"):
+            return None
+        font_id = ""
+        if dialogue.get("font"):
+            font_path = Path(root) / dialogue["font"]
+            data = json.loads(font_path.read_text(encoding="utf-8"))
+            image = (font_path.parent / data["image"]).relative_to(Path(root)).as_posix()
+            font_id, n = "dialogue", 2
+            while self.font(font_id) is not None:
+                font_id, n = f"dialogue_{n}", n + 1
+            self.set_font(spec_from_legacy(data, image, font_id))
+        style = DialogueWindowStyle.from_manifest(
+            dialogue, font_id, manifest.get("dialogue_confirm_sfx") or ""
+        )
+        self.set_dialogue_window(style)
+        return style
+
+    # --- the creature game's own screens (V5) ---------------------------------------------
+    def creature_screen(self, screen_id):
+        """The project's settings of a creature screen (``CreatureScreenSettings``), or None."""
+        return self.library.get("creature_screen", screen_id)
+
+    def set_creature_screen(self, screen_id, settings):
+        """A creature screen's settings (None: removed; the manifest's are drawn again)."""
+        from asteria.presentation.creature_screens import SCREENS
+
+        old = self.creature_screen(screen_id)
+        if settings == old:
+            return
+        self.document.execute(
+            _ProfileCommand(
+                self.library, "creature_screen", screen_id, settings, old, SCREENS[screen_id]
+            )
+        )
+
+    @staticmethod
+    def read_creature_manifest(root):
+        """The creature screens the game folder's manifest sets up, as project data
+        ``{screen_id: CreatureScreenSettings}`` (nothing is changed yet)."""
+        import json
+        from pathlib import Path
+
+        from asteria.presentation.creature_screens import from_manifest
+
+        path = Path(root) / "playable_test_manifest.json"
+        if not path.is_file():
+            return {}
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        return {s.screen_id: s for s in from_manifest(manifest)}
+
+    def import_creature_manifest(self, root):
+        """Every creature screen of the game folder's manifest turned into project data (each
+        kept as it is, ready to edit). Returns the screen ids converted."""
+        found = self.read_creature_manifest(root)
+        for screen_id, settings in found.items():
+            self.set_creature_screen(screen_id, settings)
+        return list(found)
 
     # --- helpers ------------------------------------------------------------------------
     def _screen(self, screen_id):

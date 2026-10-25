@@ -1,0 +1,437 @@
+{
+  "driver": "cocoa",
+  "budget_ms": 16.67,
+  "slow": {},
+  "times": {
+    "en_title": {
+      "mean": 3.16,
+      "p95": 3.23,
+      "max": 3.27
+    },
+    "en_field": {
+      "mean": 1.93,
+      "p95": 2.49,
+      "max": 3.55
+    },
+    "en_pause": {
+      "mean": 3.29,
+      "p95": 3.33,
+      "max": 3.37
+    },
+    "en_settings": {
+      "mean": 3.13,
+      "p95": 3.22,
+      "max": 3.25
+    },
+    "en_controls": {
+      "mean": 3.87,
+      "p95": 3.99,
+      "max": 4.01
+    },
+    "en_save_slots": {
+      "mean": 3.73,
+      "p95": 4.06,
+      "max": 4.12
+    },
+    "en_status": {
+      "mean": 4.59,
+      "p95": 4.71,
+      "max": 4.76
+    },
+    "en_status_items": {
+      "mean": 4.48,
+      "p95": 4.71,
+      "max": 4.83
+    },
+    "en_status_equipment": {
+      "mean": 4.27,
+      "p95": 4.41,
+      "max": 4.54
+    },
+    "en_status_skills": {
+      "mean": 4.93,
+      "p95": 5.21,
+      "max": 5.62
+    },
+    "en_bag": {
+      "mean": 0.82,
+      "p95": 0.83,
+      "max": 0.89
+    },
+    "en_skill_tree": {
+      "mean": 1.22,
+      "p95": 1.28,
+      "max": 1.33
+    },
+    "en_build": {
+      "mean": 3.6,
+      "p95": 3.83,
+      "max": 3.98
+    },
+    "en_equipment": {
+      "mean": 3.71,
+      "p95": 3.93,
+      "max": 3.95
+    },
+    "en_equipment_list": {
+      "mean": 5.44,
+      "p95": 5.69,
+      "max": 5.84
+    },
+    "en_enhance_refine": {
+      "mean": 2.48,
+      "p95": 2.57,
+      "max": 2.65
+    },
+    "en_enhance_sockets": {
+      "mean": 2.57,
+      "p95": 2.76,
+      "max": 2.84
+    },
+    "en_enhance_cards": {
+      "mean": 2.43,
+      "p95": 2.5,
+      "max": 2.57
+    },
+    "en_enhance_growth": {
+      "mean": 2.43,
+      "p95": 2.55,
+      "max": 2.6
+    },
+    "en_crafting": {
+      "mean": 5.32,
+      "p95": 5.62,
+      "max": 5.66
+    },
+    "en_crafting_gems": {
+      "mean": 5.53,
+      "p95": 5.84,
+      "max": 5.88
+    },
+    "en_crafting_disassemble": {
+      "mean": 5.37,
+      "p95": 5.65,
+      "max": 5.81
+    },
+    "en_crafting_forge": {
+      "mean": 5.08,
+      "p95": 5.35,
+      "max": 5.43
+    },
+    "en_crafting_hidden": {
+      "mean": 4.98,
+      "p95": 5.23,
+      "max": 5.34
+    },
+    "en_board": {
+      "mean": 5.35,
+      "p95": 5.61,
+      "max": 5.68
+    },
+    "en_board_flipped": {
+      "mean": 5.61,
+      "p95": 5.72,
+      "max": 5.91
+    },
+    "en_recruit": {
+      "mean": 4.96,
+      "p95": 5.18,
+      "max": 5.33
+    },
+    "en_recruit_ask": {
+      "mean": 5.01,
+      "p95": 5.31,
+      "max": 5.39
+    },
+    "en_gacha": {
+      "mean": 4.9,
+      "p95": 5.09,
+      "max": 5.12
+    },
+    "en_gacha_results": {
+      "mean": 4.4,
+      "p95": 4.58,
+      "max": 4.99
+    },
+    "en_gacha_rates": {
+      "mean": 4.78,
+      "p95": 4.96,
+      "max": 5.05
+    },
+    "en_gacha_history": {
+      "mean": 4.68,
+      "p95": 4.87,
+      "max": 4.93
+    },
+    "en_shop_buy": {
+      "mean": 4.34,
+      "p95": 4.56,
+      "max": 4.7
+    },
+    "en_shop_sell": {
+      "mean": 4.25,
+      "p95": 4.31,
+      "max": 4.53
+    },
+    "en_quests": {
+      "mean": 4.0,
+      "p95": 4.21,
+      "max": 4.31
+    },
+    "en_pets": {
+      "mean": 0.44,
+      "p95": 0.46,
+      "max": 0.5
+    },
+    "en_achievements": {
+      "mean": 3.91,
+      "p95": 4.15,
+      "max": 4.17
+    },
+    "en_bestiary": {
+      "mean": 3.82,
+      "p95": 4.06,
+      "max": 4.22
+    },
+    "en_backlog": {
+      "mean": 0.31,
+      "p95": 0.32,
+      "max": 0.33
+    },
+    "en_music": {
+      "mean": 0.32,
+      "p95": 0.33,
+      "max": 0.33
+    },
+    "en_credits": {
+      "mean": 0.32,
+      "p95": 0.33,
+      "max": 0.33
+    },
+    "en_ability_slots": {
+      "mean": 1.27,
+      "p95": 1.28,
+      "max": 1.36
+    },
+    "en_equip_offer": {
+      "mean": 1.78,
+      "p95": 1.88,
+      "max": 1.9
+    },
+    "zh_title": {
+      "mean": 3.23,
+      "p95": 3.39,
+      "max": 3.56
+    },
+    "zh_field": {
+      "mean": 1.77,
+      "p95": 1.83,
+      "max": 1.88
+    },
+    "zh_pause": {
+      "mean": 3.32,
+      "p95": 3.47,
+      "max": 3.59
+    },
+    "zh_settings": {
+      "mean": 3.2,
+      "p95": 3.28,
+      "max": 3.55
+    },
+    "zh_controls": {
+      "mean": 4.02,
+      "p95": 4.22,
+      "max": 4.26
+    },
+    "zh_save_slots": {
+      "mean": 3.75,
+      "p95": 3.92,
+      "max": 4.02
+    },
+    "zh_status": {
+      "mean": 4.68,
+      "p95": 4.97,
+      "max": 5.07
+    },
+    "zh_status_items": {
+      "mean": 4.53,
+      "p95": 4.75,
+      "max": 4.86
+    },
+    "zh_status_equipment": {
+      "mean": 4.24,
+      "p95": 4.47,
+      "max": 4.58
+    },
+    "zh_status_skills": {
+      "mean": 4.94,
+      "p95": 5.07,
+      "max": 5.28
+    },
+    "zh_bag": {
+      "mean": 0.84,
+      "p95": 0.96,
+      "max": 1.02
+    },
+    "zh_skill_tree": {
+      "mean": 1.23,
+      "p95": 1.24,
+      "max": 1.25
+    },
+    "zh_build": {
+      "mean": 3.59,
+      "p95": 3.69,
+      "max": 3.83
+    },
+    "zh_equipment": {
+      "mean": 3.77,
+      "p95": 4.01,
+      "max": 4.19
+    },
+    "zh_equipment_list": {
+      "mean": 5.49,
+      "p95": 5.7,
+      "max": 5.91
+    },
+    "zh_enhance_refine": {
+      "mean": 2.58,
+      "p95": 2.88,
+      "max": 3.11
+    },
+    "zh_enhance_sockets": {
+      "mean": 2.61,
+      "p95": 2.77,
+      "max": 2.83
+    },
+    "zh_enhance_cards": {
+      "mean": 2.52,
+      "p95": 2.65,
+      "max": 2.69
+    },
+    "zh_enhance_growth": {
+      "mean": 2.63,
+      "p95": 2.71,
+      "max": 13.56
+    },
+    "zh_crafting": {
+      "mean": 5.31,
+      "p95": 5.56,
+      "max": 5.65
+    },
+    "zh_crafting_gems": {
+      "mean": 5.51,
+      "p95": 5.78,
+      "max": 5.88
+    },
+    "zh_crafting_disassemble": {
+      "mean": 5.4,
+      "p95": 5.65,
+      "max": 5.7
+    },
+    "zh_crafting_forge": {
+      "mean": 5.17,
+      "p95": 5.41,
+      "max": 5.43
+    },
+    "zh_crafting_hidden": {
+      "mean": 4.83,
+      "p95": 4.9,
+      "max": 5.17
+    },
+    "zh_board": {
+      "mean": 5.29,
+      "p95": 5.55,
+      "max": 5.56
+    },
+    "zh_board_flipped": {
+      "mean": 5.57,
+      "p95": 5.86,
+      "max": 5.92
+    },
+    "zh_recruit": {
+      "mean": 5.05,
+      "p95": 5.27,
+      "max": 5.29
+    },
+    "zh_recruit_ask": {
+      "mean": 5.13,
+      "p95": 5.38,
+      "max": 5.55
+    },
+    "zh_gacha": {
+      "mean": 4.94,
+      "p95": 5.22,
+      "max": 5.26
+    },
+    "zh_gacha_results": {
+      "mean": 4.31,
+      "p95": 4.51,
+      "max": 4.59
+    },
+    "zh_gacha_rates": {
+      "mean": 4.85,
+      "p95": 5.09,
+      "max": 5.37
+    },
+    "zh_gacha_history": {
+      "mean": 4.83,
+      "p95": 5.04,
+      "max": 5.07
+    },
+    "zh_shop_buy": {
+      "mean": 4.34,
+      "p95": 4.52,
+      "max": 4.65
+    },
+    "zh_shop_sell": {
+      "mean": 4.37,
+      "p95": 4.58,
+      "max": 4.88
+    },
+    "zh_quests": {
+      "mean": 4.05,
+      "p95": 4.23,
+      "max": 4.31
+    },
+    "zh_pets": {
+      "mean": 0.45,
+      "p95": 0.46,
+      "max": 0.46
+    },
+    "zh_achievements": {
+      "mean": 4.18,
+      "p95": 4.34,
+      "max": 4.47
+    },
+    "zh_bestiary": {
+      "mean": 4.09,
+      "p95": 4.17,
+      "max": 4.24
+    },
+    "zh_backlog": {
+      "mean": 0.35,
+      "p95": 0.36,
+      "max": 0.37
+    },
+    "zh_music": {
+      "mean": 0.37,
+      "p95": 0.37,
+      "max": 0.96
+    },
+    "zh_credits": {
+      "mean": 0.33,
+      "p95": 0.37,
+      "max": 0.38
+    },
+    "zh_ability_slots": {
+      "mean": 1.37,
+      "p95": 1.45,
+      "max": 1.56
+    },
+    "zh_equip_offer": {
+      "mean": 1.91,
+      "p95": 2.06,
+      "max": 2.16
+    }
+  }
+}

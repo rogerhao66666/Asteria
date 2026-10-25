@@ -256,17 +256,21 @@ class BattleUiRenderer:
 
         def on_top(role):  # the command menu and its rows are drawn last, over any HUD
             role = str(role)
-            return role.startswith(("interaction:", "button", "action", "workflow_"))
+            return role.startswith(
+                ("interaction:", "button", "action", "workflow_", "layout:over")
+            )
 
         def panel(item):
             fill, border = t.panel_style(item.role)
+            if item.fill is not None or item.border is not None:  # a battle layout's (V4)
+                fill, border = item.fill or fill, item.border or border
             style = {
                 "fill": fill,
                 "border": border,
                 "radius": t.panel_radius,
                 "border_width": t.border_width,
             }
-            skin = t.panel_skin(item.role)
+            skin = t.panel_skin(item.role) if item.skin is None else item.skin or None
             if skin is not None:  # backends without skins never see the argument
                 style["skin"] = skin
             b.draw_panel(item, **style)
@@ -291,10 +295,12 @@ class BattleUiRenderer:
                     b.draw_icon(icon)
             if not layer:
                 for marker in frame.markers:
-                    b.draw_marker(marker, color=t.target_primary if marker.primary else t.target)
+                    color = t.target_primary if marker.primary else t.target
+                    b.draw_marker(marker, color=marker.color or color)
             for text in frame.texts:
                 if on_top(text.role) == layer:
-                    b.draw_text(text, color=t.text_color(text.role), size=t.text_size(text.role))
+                    color = text.color or t.text_color(text.role)
+                    b.draw_text(text, color=color, size=text.size or t.text_size(text.role))
 
         for effect in frame.vfx:
             b.draw_vfx(effect)

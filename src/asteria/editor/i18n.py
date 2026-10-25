@@ -29,6 +29,7 @@ from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QAbstractButton,
+    QAbstractSpinBox,
     QApplication,
     QComboBox,
     QDockWidget,
@@ -60,6 +61,7 @@ _TIP = "_i18n_tip"
 _PLACEHOLDER = "_i18n_placeholder"
 _TITLE = "_i18n_title"
 _HEADERS = "_i18n_headers"
+_SPECIAL = "_i18n_special"  # a spin box's words for its lowest value ("engine's")
 _ITEM_SOURCE = Qt.UserRole + 731  # the English of a fixed-choice list item
 _tables = {}
 _collected = None  # a set while collecting the English shown (see collect())
@@ -267,6 +269,7 @@ def _install_wrappers():
     _wrap(QWidget, "setWindowTitle", _TITLE)  # docks and dialogs too
     for cls in (QLineEdit, QPlainTextEdit, QTextEdit):
         _wrap(cls, "setPlaceholderText", _PLACEHOLDER)
+    _wrap(QAbstractSpinBox, "setSpecialValueText", _SPECIAL)
     _wrap(QAction, "setText", _SOURCE)
     _wrap(QAction, "setToolTip", _TIP)
     _wrap(QAction, "setStatusTip", "_i18n_status")
@@ -374,6 +377,9 @@ def retranslate(obj, language=None):
     if isinstance(obj, (QLineEdit, QPlainTextEdit, QTextEdit)) and obj.placeholderText():
         setter = type(obj).setPlaceholderText.__wrapped__
         put(_PLACEHOLDER, obj.placeholderText(), lambda t: setter(obj, t))
+    if isinstance(obj, QAbstractSpinBox) and obj.specialValueText():
+        special = QAbstractSpinBox.setSpecialValueText.__wrapped__
+        put(_SPECIAL, obj.specialValueText(), lambda t: special(obj, t))
     if isinstance(obj, QTabWidget):
         for i in range(obj.count()):
             page = obj.widget(i)

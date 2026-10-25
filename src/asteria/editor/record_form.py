@@ -47,6 +47,7 @@ from PySide6.QtWidgets import (
 )
 
 from .i18n import english
+from .image_tools import picture_field
 from .record_vocabulary import (
     CATEGORY_HELP,
     HELP,
@@ -1147,7 +1148,7 @@ class RecordForm(QScrollArea):
             box = NumberBox(value, integer=isinstance(value, int), percent=is_chance_field(skey))
             box.valueChanged.connect(lambda _v, b=box: self._set(data, key, b.number()))
             return box
-        if skey == "icon_id" and self.icon_library is not None:
+        if picture_field(skey) and self.icon_library is not None:
             from .game_systems_widget import _IconPicker
 
             picker = _IconPicker(self.icon_library)

@@ -91,6 +91,9 @@ def test_all_presentation_categories_are_project_owned_and_authorable():
         "rpg_party_screen",
         "menu_layout",  # authored on Presentation ▸ Menu Screens ▸ Layout (U2)
         "menu_theme",
+        "bitmap_font",  # Menu Screens ▸ Layout ▸ Bitmap fonts… (V1)
+        "dialogue_window",  # Menu Screens ▸ Layout ▸ Dialogue window ▸ Picture window… (V2)
+        "creature_screen",  # Menu Screens ▸ Layout ▸ Creature screens… (V5)
     }
     assert doc.commands.can_undo
 

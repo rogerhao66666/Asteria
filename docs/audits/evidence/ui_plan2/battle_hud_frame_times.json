@@ -1,0 +1,22 @@
+{
+ "battle_no_layout": {
+  "mean": 0.93,
+  "p95": 0.97,
+  "max": 1.05
+ },
+ "battle_layout": {
+  "mean": 0.85,
+  "p95": 0.88,
+  "max": 2.45
+ },
+ "hud_no_layout": {
+  "mean": 2.74,
+  "p95": 2.82,
+  "max": 2.86
+ },
+ "hud_layout": {
+  "mean": 2.97,
+  "p95": 3.02,
+  "max": 3.49
+ }
+}

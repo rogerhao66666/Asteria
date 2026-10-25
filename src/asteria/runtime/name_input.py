@@ -25,6 +25,7 @@ with nothing typed).
 
 from __future__ import annotations
 
+from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import CreatureBattleScreen, H, W
 
 DEFAULT_PAGES = (
@@ -42,7 +43,7 @@ class NameInputScreen(CreatureBattleScreen):
     def __init__(self, runtime, request):
         super().__init__(runtime)
         self.request = dict(request)
-        self.skin = dict(runtime.manifest.get("field", {}).get("name_input", {}))
+        self.skin = creature_settings(runtime, "field.name_input")
         self.pages = list(self.skin.get("pages") or DEFAULT_PAGES)
         self.page = int(self.request.get("page", 0) or 0) % len(self.pages)
         self.text = str(self.request.get("initial", "") or "")

@@ -468,21 +468,24 @@ class ActionHud:
 
     def draw_overlay(self, rt):
         game = rt.game
-        self.bottom.draw(rt, game)  # orbs, action bar, statuses (runtime/hud_bottom.py)
+        # orbs, action bar, statuses (runtime/hud_bottom.py), through the hud_action layout
+        c = self.bottom.draw(rt, game)
         target = game.scene.get_entity(self._lock_id(game)) if self._lock_id(game) else None
         if target is not None:  # the locked-on enemy: name, life, statuses with names and time
             from .hud_bottom import draw_target_frame
 
-            draw_target_frame(rt, game, target)
+            draw_target_frame(rt, game, target, c)
         text, left = self.banner
         if left > 0:
-            rt.text(text, rt.width / 2, 70, size=40, color=(255, 220, 124), center=True)
+            c.text("banner", text, rt.width / 2, 70, size=40, color=(255, 220, 124), center=True)
         down = getattr(game, "player_down", 0.0)
         if down > 0:
-            shade = rt.pg.Surface((rt.width, rt.height), rt.pg.SRCALPHA)
-            shade.fill((20, 0, 0, 120))
-            rt.screen.blit(shade, (0, 0))
-            rt.text(
+            if not c.picture("fell", (0, 0, rt.width, rt.height)):
+                shade = rt.pg.Surface((rt.width, rt.height), rt.pg.SRCALPHA)
+                shade.fill((20, 0, 0, 120))
+                rt.screen.blit(shade, (0, 0))
+            c.text(
+                "fell_text",
                 game.tr("action.fell", "You fell — back in {seconds}s", seconds=f"{down:.1f}"),
                 rt.width / 2,
                 rt.height / 2,
@@ -490,6 +493,7 @@ class ActionHud:
                 color=(255, 200, 200),
                 center=True,
             )
+        c.finish()
 
 
 def _has_sprite(entity):

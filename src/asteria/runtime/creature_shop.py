@@ -19,6 +19,7 @@ the bag. Drawn at the game's own resolution (240 x 160) like the start menu
 
 from __future__ import annotations
 
+from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import H, W
 from asteria.runtime.creature_menu import CreatureMenuScreen
 
@@ -41,7 +42,7 @@ MAP_PHASES = ("buy", "buy_count", "buy_confirm", "buy_note")  # the map behind t
 class CreatureShopScreen(CreatureMenuScreen):
     def __init__(self, runtime):
         super().__init__(runtime, "menu")
-        self.shop_settings = dict(runtime.manifest.get("field", {}).get("creature_shop", {}))
+        self.shop_settings = creature_settings(runtime, "field.creature_shop")
         places = {k: tuple(v) for k, v in (self.shop_settings.get("places") or {}).items()}
         self.places = {**PLACES, **places}
         self.menu_cursor = 0

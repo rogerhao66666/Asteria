@@ -9,13 +9,18 @@ exactly what the screen drew before.
 ``begin()`` draws the layout's background and the author's elements under the screen (layer
 below 0), ``finish()`` those over it. ``boxes`` keeps where each element was drawn, so the
 editor can outline and drag them.
+
+A screen drawn at its own resolution (the creature screens' 240x160, then scaled up) passes
+``size`` (what anchors measure from) and ``target`` (the small surface its pictures go on).
+A picture that is a strip of frames (``frames``, ``frame_axis``, ``fps``) shows one frame at a
+time: by the clock, or the frame the screen asks for (a cooldown's fill).
 """
 
 from __future__ import annotations
 
 import re
 
-from asteria.presentation.menu_layout import resolve_rect
+from asteria.presentation.menu_layout import resolve_rect, screen_spec
 
 _FIELD = re.compile(r"\{([A-Za-z0-9_.]+)\}")
 
@@ -40,16 +45,30 @@ class Place:
 
 
 class MenuCanvas:
-    def __init__(self, runtime, screen_id, fields=None):
+    def __init__(self, runtime, screen_id, fields=None, *, size=None, target=None):
         self.rt = runtime
         self.screen_id = screen_id
         self.layout = runtime.menu_layout(screen_id)
         self.theme = runtime.menu_theme()
         self.fields = dict(fields or {})
         self.boxes = {}
+        if size is None:
+            spec = screen_spec(screen_id)
+            size = spec.size if spec is not None and spec.size else None
+        self.own_size = tuple(size) if size else None  # None: the window's, read when drawn
+        self.target = target
         recorder = getattr(runtime, "_menu_boxes", None)
         if recorder is not None:  # the editor's preview reads them back
             recorder[screen_id] = self.boxes
+
+    @property
+    def area(self):
+        """``(width, height)`` the layout's rectangles are measured in."""
+        return self.own_size or (self.rt.width, self.rt.height)
+
+    @property
+    def screen(self):
+        return self.target if self.target is not None else self.rt.screen
 
     # --- the screen's own elements ------------------------------------------------------
     def element(self, element_id):
@@ -63,7 +82,7 @@ class MenuCanvas:
         """The element's rectangle: the layout's (from its anchor) or ``default``."""
         element = self.element(element_id)
         if element is not None and element.rect is not None:
-            rect = resolve_rect(element.rect, element.anchor, (self.rt.width, self.rt.height))
+            rect = resolve_rect(element.rect, element.anchor, self.area)
         else:
             rect = tuple(int(v) for v in default)
         self._box(element_id, rect)
@@ -143,13 +162,11 @@ class MenuCanvas:
             return rect
         size = element.size or size
         color = element.color or color
-        font = element.font or None
+        font = self.font_of(element)
         if element.text:
             value = self.words(element.text)
         if element.rect is not None:
-            rx, ry, rw, rh = resolve_rect(
-                element.rect, element.anchor, (self.rt.width, self.rt.height)
-            )
+            rx, ry, rw, rh = resolve_rect(element.rect, element.anchor, self.area)
             align = element.align or "left"
             if align == "center":
                 place = {"anchor": "midtop"}
@@ -177,7 +194,7 @@ class MenuCanvas:
             scale = max(1, min(4, int(h * 0.8 // max(1, ih))))
             size = (iw * scale, ih * scale)
             picture = self.rt.scaled_image(image, size)
-            self.rt.screen.blit(picture, (x - size[0] - 4, y + (h - size[1]) // 2))
+            self.screen.blit(picture, (x - size[0] - 4, y + (h - size[1]) // 2))
 
     def _highlight(self, element_id, rect, default):
         element = self.element(element_id)
@@ -192,10 +209,10 @@ class MenuCanvas:
             if image is not None:
                 from asteria.presentation.ui_skin import draw_nine_patch
 
-                draw_nine_patch(self.rt.pg, self.rt.screen, image, tuple(map(int, rect)), skin)
+                draw_nine_patch(self.rt.pg, self.screen, image, tuple(map(int, rect)), skin)
                 return
         if fill is not None:
-            self.rt.pg.draw.rect(self.rt.screen, fill, rect, border_radius=4)
+            self.rt.pg.draw.rect(self.screen, fill, rect, border_radius=4)
             return
         default()
 
@@ -228,11 +245,11 @@ class MenuCanvas:
         layout = self.layout
         if layout is None:
             return dim_default
-        size = (self.rt.width, self.rt.height)
+        size = self.area
         if layout.music:  # played while the screen is open; the field's comes back after
             self.rt._music(layout.music)
         if layout.background_color is not None:
-            self.rt.screen.fill(layout.background_color)
+            self.screen.fill(layout.background_color)
         if layout.background_image:
             self._image(layout.background_image, (0, 0, *size), layout.background_mode)
         self._extras(lambda layer: layer < 0)
@@ -247,7 +264,7 @@ class MenuCanvas:
         for element in sorted(elements, key=lambda e: e.layer):
             if element.rect is None:
                 continue
-            rect = resolve_rect(element.rect, element.anchor, (self.rt.width, self.rt.height))
+            rect = resolve_rect(element.rect, element.anchor, self.area)
             self._box(element.element_id, rect)
             self._draw_extra(element, rect)
 
@@ -279,29 +296,40 @@ class MenuCanvas:
             size = element.size or 20
             color = element.color or self._theme_color("text_color", (245, 245, 250))
             align = element.align or "left"
+            font = self.font_of(element)
             if align == "center":
                 rt.text(words, rect[0] + rect[2] / 2, rect[1], size=size, color=color,
-                        font=element.font or None, anchor="midtop")  # fmt: skip
+                        font=font, anchor="midtop")  # fmt: skip
             elif align == "right":
                 rt.text(words, rect[0] + rect[2], rect[1], size=size, color=color,
-                        font=element.font or None, anchor="topright")  # fmt: skip
+                        font=font, anchor="topright")  # fmt: skip
             else:
-                rt.text(words, rect[0], rect[1], size=size, color=color, font=element.font or None)
+                rt.text(words, rect[0], rect[1], size=size, color=color, font=font)
+
+    @staticmethod
+    def font_of(element):
+        """The ``font`` argument of ``rt.text`` for an element: its bitmap font, its font
+        file, or None (the menu theme's)."""
+        if element is None:
+            return None
+        if element.bitmap_font:
+            return "bitmap:" + element.bitmap_font
+        return element.font or None
 
     def _theme_color(self, name, default):
         value = getattr(self.theme, name, None) if self.theme is not None else None
         return value or default
 
-    def _draw_look(self, element, rect):
+    def _draw_look(self, element, rect, frame=None, mode=None):
         if element.skin is not None:
             image = self.rt.skin_image(element.skin.asset_id)
             if image is not None:
                 from asteria.presentation.ui_skin import draw_nine_patch
 
-                draw_nine_patch(self.rt.pg, self.rt.screen, image, tuple(rect), element.skin)
+                draw_nine_patch(self.rt.pg, self.screen, image, tuple(rect), element.skin)
                 return
         if element.image:
-            if self._image(element.image, rect, element.image_mode):
+            if self._image(element.image, rect, mode or element.image_mode, element, frame):
                 return
         if element.fill or element.border:
             self._plain_panel(rect, element.fill or (0, 0, 0, 0), element.border)
@@ -312,15 +340,68 @@ class MenuCanvas:
         if fill and (len(fill) == 3 or fill[3] > 0):
             surface = pg.Surface((max(1, w), max(1, h)), pg.SRCALPHA)
             surface.fill(fill)
-            self.rt.screen.blit(surface, (x, y))
+            self.screen.blit(surface, (x, y))
         if border:
-            pg.draw.rect(self.rt.screen, border, (x, y, w, h), 2, border_radius=6)
+            pg.draw.rect(self.screen, border, (x, y, w, h), 2, border_radius=6)
 
-    def _image(self, asset_id, rect, mode="stretch"):
+    def strip_frame(self, image, element, frame=None):
+        """One frame of a strip picture: ``frame`` when the screen picks it (a fraction
+        0-1 of the strip, e.g. a cooldown, or a whole frame number), else by the clock at the
+        element's ``fps``. A still picture comes back as it is."""
+        count = element.frames if element is not None else 0
+        if count <= 1:
+            return image
+        iw, ih = image.get_size()
+        if frame is None:
+            ticks = self.rt.pg.time.get_ticks() / 1000.0
+            index = int(ticks * element.fps) if element.fps > 0 else 0
+        elif isinstance(frame, float):
+            index = min(count - 1, int(max(0.0, frame) * count))
+        else:
+            index = int(frame)
+        index %= count
+        if element.frame_axis == "y":
+            step = ih // count
+            area = (0, index * step, iw, step)
+        else:
+            step = iw // count
+            area = (index * step, 0, step, ih)
+        if step <= 0:
+            return image
+        return image.subsurface(self.rt.pg.Rect(area))
+
+    def picture(
+        self, element_id, rect, frame=None, mode=None, *, repeated=False, pictures_only=False
+    ):
+        """Draw the element's own picture or frame (skin, picture or colours) at ``rect``
+        (moved by the layout); False when the layout gives it no look, so the screen draws
+        its own. Screens offer their pieces (a node's frame, an orb, a keycap) this way. A
+        ``repeated`` piece (every node, every slot) stays where the screen puts it;
+        ``pictures_only``: the element's colours mean something else there (an orb's liquid),
+        so only a nine-patch or a picture counts as its look."""
+        element = self.element(element_id)
+        if repeated:
+            self._box(element_id, rect)
+        else:
+            rect = self.rect(element_id, rect)
+        if element is None:
+            return False
+        if not element.visible:
+            return True  # hidden: nothing drawn, and not the screen's own either
+        colours = not pictures_only and (element.fill or element.border)
+        if not (element.skin or element.image or colours):
+            return False
+        if pictures_only and not element.skin:
+            return self._image(element.image, rect, mode or element.image_mode, element, frame)
+        self._draw_look(element, rect, frame, mode)
+        return True
+
+    def _image(self, asset_id, rect, mode="stretch", element=None, frame=None):
         image = self.rt.skin_image(asset_id)
         if image is None:
             return False
-        pg, screen = self.rt.pg, self.rt.screen
+        image = self.strip_frame(image, element, frame)
+        pg, screen = self.rt.pg, self.screen
         x, y, w, h = (int(v) for v in rect)
         iw, ih = image.get_size()
         if w <= 0 or h <= 0 or iw <= 0 or ih <= 0:

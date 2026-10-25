@@ -419,7 +419,10 @@ class SkillTreeScreen:
             size=21,
             color=(190, 205, 230),
         )
-        c.text("points", balances, rt.width - 36 - 300, 30, size=24, color=(140, 230, 170))
+        drawn = c.text("points", balances, rt.width - 36 - 300, 30, size=24, color=(140, 230, 170))
+        if drawn is not None and c.element("points_icon") is not None:
+            side = drawn.height
+            c.picture("points_icon", (drawn.x - side - 6, drawn.y, side, side), mode="fit")
         count = len(self.graphs())
         if count > 1:
             c.text(
@@ -442,27 +445,35 @@ class SkillTreeScreen:
         node_w, node_h = NODE_W * zoom, NODE_H * zoom
         previous_clip = screen.get_clip()
         screen.set_clip(area)  # a long tree scrolls under the header and the details
+        links = {  # the lines' colours and widths: the layout's, else the engine's
+            True: (c.color("link_met", (150, 200, 160)), c.size("link_met", 3)),
+            False: (c.color("link_unmet", (80, 88, 110)), c.size("link_unmet", 3)),
+        }
         for node in graph.nodes:
             cx, cy = self.node_point(graph, node.node_id)
             for req in node.prerequisites + node.any_prerequisites:
                 px, py = self.node_point(graph, req.node_id)
                 met = allocation.rank(graph.graph_id, req.node_id) >= req.minimum_rank
-                color = (150, 200, 160) if met else (80, 88, 110)
+                link = links[met]
                 pg.draw.line(
-                    screen, color, (int(px), int(py)), (int(cx), int(cy)), max(1, round(3 * zoom))
-                )
+                    screen, link[0], (int(px), int(py)), (int(cx), int(cy)),
+                    max(1, round(link[1] * zoom)),
+                )  # fmt: skip
         for node in graph.nodes:
             cx, cy = self.node_point(graph, node.node_id)
             rect = pg.Rect(int(cx - node_w / 2), int(cy - node_h / 2), int(node_w), int(node_h))
             if not rect.colliderect(area):
                 continue
             status = self.status(graph, node)
-            pg.draw.rect(screen, COLORS[status], rect, border_radius=max(2, round(8 * zoom)))
             selected = node.node_id == self.node_id
-            border = (255, 220, 124) if selected else (150, 160, 190)
-            pg.draw.rect(
-                screen, border, rect, 3 if selected else 1, border_radius=max(2, round(8 * zoom))
-            )
+            # the author's frame for the node's status, else the engine's
+            if not c.picture(f"node_{status}", rect, repeated=True):
+                pg.draw.rect(screen, COLORS[status], rect, border_radius=max(2, round(8 * zoom)))
+                border = (255, 220, 124) if selected else (150, 160, 190)
+                radius = max(2, round(8 * zoom))
+                pg.draw.rect(screen, border, rect, 3 if selected else 1, border_radius=radius)
+            if selected:
+                c.picture("node_selected", rect, repeated=True)
             rank = allocation.rank(graph.graph_id, node.node_id)
             text_color = (245, 245, 250) if status != "locked" else (150, 156, 172)
             icon_size = max(8, round(ICON * zoom))

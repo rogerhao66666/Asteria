@@ -608,7 +608,10 @@ def test_the_hud_shows_keycaps_orbs_statuses_and_item_counts(demo):
     badges = []
     hud = demo.action_hud.bottom
     original = hud._badge
-    hud._badge = lambda rt, x, y, text, *a: (badges.append(text), original(rt, x, y, text, *a))
+    hud._badge = lambda rt, x, y, text, *a, **k: (
+        badges.append(text),
+        original(rt, x, y, text, *a, **k),
+    )
     _frames(demo, 3)
     assert "3" in badges  # the potion's item count sits in a corner badge
     assert hud.hint_left < hud.HINT_SECONDS  # the control hint is counting down

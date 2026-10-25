@@ -36,6 +36,20 @@ SIMPLE_FIXES = {
 }
 
 
+# fields holding a picture of the author's own: every one gets a picker with Browse… (V1);
+# asset ids (``*_asset_id``) pick from the imported assets instead, portraits from portraits/
+PICTURE_KEYS = frozenset(
+    ("icon_id", "image", "picture", "portrait", "card_image", "sprite", "background")
+)
+PICTURE_SUFFIXES = ("_image", "_icon", "_picture", "_background")
+
+
+def picture_field(key):
+    """Whether a record field named ``key`` holds a picture file or icon id."""
+    key = str(key or "")
+    return key in PICTURE_KEYS or key.endswith(PICTURE_SUFFIXES)
+
+
 def project_root(document):
     path = getattr(document, "file_path", None)
     return Path(path).parent if path else Path.cwd()

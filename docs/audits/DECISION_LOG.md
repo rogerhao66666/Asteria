@@ -3346,3 +3346,82 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 商店賣東西用的是開始選單的背包畫面（原作的賣出也是背包，但標題列與數量視窗的位置不完全一樣）。
 
 **狀態：** 未提交（等使用者）。
+
+## D76 — 遊戲中畫面的版面：點陣字、對話框、動作 RPG HUD、戰鬥畫面（UI_PLAN_2 V1–V4、V6）（2026-10-25）
+
+使用者 2026-10-25 核准 `UI_PLAN_2_2026-10-25.md`：照 V1→V6 的順序做、戰鬥畫面用建議的自由度（現有元件可移動、縮放、換外觀、隱藏，加作者自己的裝飾；戰鬥邏輯不動）；V5（生物畫面）等寶可夢 session 這輪結束後再做。也要求「所有設定都在 GUI 改，不用寫 JSON」與「手繪素材適用任何介面與圖示」。
+
+**做了什麼：**
+- **V1 共用基礎：**
+  - `ScreenSpec.size`（畫面自己的解析度，版面座標用它）與 `group`（編輯器清單分「選單」與「遊戲進行中」）。
+  - 元件的動畫條：`frames`、`frame_axis`、`fps`；`MenuCanvas.strip_frame` 依畫面給的進度（冷卻）或時鐘選格。
+  - 點陣字 `MenuBitmapFont`（演出庫類別 `bitmap_font`，只在有資料時寫入，舊專案檔不變）：字寬從畫出的像素量；三種顏色模式；字圖沒有的字改用一般字型。編輯器「點陣字型…」對話框：字圖、格子、每列字元（可插入空格 `⬚`）、個別字寬表、切格預覽（每格標出字元）、遊戲中的樣子。
+  - 技能樹的節點外框（鎖住、可學、已學、滿級、選中）、連線顏色與線寬、點數圖示都能換成作者的圖。
+  - `picture_field()`：通用表單裡所有放圖的欄位都有預覽與「選擇…」；`success_image`、`battle_background` 改成圖片選擇器。
+- **V2 對話框：**
+  - 一般視窗走 `dialogue`／`dialogue_choice` 版面：視窗、名字與名字框、頭像位置、台詞（文字區、字級、顏色、點陣字、行高、每秒字數）、繼續提示、箭頭動畫條；選項的欄數、格寬、行高、選中外框（有外框時不畫「>」）。
+  - 圖片視窗搬進專案資料 `DialogueWindowStyle`（類別 `dialogue_window`），編輯器「圖片對話視窗…」每個欄位都能改；「從遊戲資料夾的 manifest 轉入」一鍵轉換（字型 JSON 轉成點陣字），測試確認轉換後逐像素相同。
+- **V3 動作 RPG HUD（`hud_action`，30 個元件）：** 兩顆球（外框、液體、空球的圖，名稱與數值字）或改成條；底板帶著技能格移動；技能格與大技能格的外框、格子大小、間距；按鍵帽；冷卻動畫條；徽章；消耗；經驗、等級；狀態格；其他資源條；上方提示；鎖定框；橫幅；倒下的色調與字。`MenuTheme.resource_colors` 讓作者指定每種資源的顏色（取代依名稱猜）。
+- **V4 戰鬥畫面（`battle`）：**
+  - `presentation/battle_layout.py`：composer 照舊排好之後，依組整組處理——隊伍卡片、頭上名字與條、指令選單（含技能與道具頁）、說明框、目標與步驟清單、行動順序列、傷害數字、結果面板、目標游標。
+  - 可移動（x、y）、縮放（寬高 0＝引擎大小，所以拖曳就是移動）、換外觀（九宮格、圖、填色、外框；選中列有自己的外觀）、改字色字級、隱藏；作者自己的圖、面板、文字（`key:` 可翻譯；圖層 < 0 在下面）。
+  - 戰鬥 HUD 的「只在變化時重排」（D48）不變：沒有 `battle` 版面時這一步完全不跑。
+  - 編輯器預覽會開一場範例戰鬥（第一個遭遇）；版面座標是戰鬥的虛擬座標，畫布用 `MenuPreview.unit` 換算像素，預覽完的戰鬥直接丟掉不結算。
+- **編輯器順便修的：**
+  - 主題的數字框右側 padding 和上下箭頭重複扣寬，73 px 寬的框只剩 8 px 文字區（「590」只看到「59」）；改成 padding 0 後同寬有 38 px，箭頭仍在框內。影響整個編輯器的數字框。
+  - 數字框的「特殊值文字」（例如「引擎預設」「半格」）現在也跟著介面語言切換（`i18n` 包裝 `setSpecialValueText`）。
+  - 新增的編輯器文字都有繁中（`zh_TW.json` 約 135 條、3 條格式）。
+- **遊戲文字：** 預覽用的範例選項改用自己的鍵 `dialogue.sample_yes`／`sample_no`／`sample_ask`（原本借用 `title.new_game`，英文不一致被測試抓到），zh-TW 各一條，Full Verification 的 zh-TW 表也補了這 3 條。
+
+**驗證：**
+- 新測試：`test_ui_layout_v1.py`（10）、`test_picture_fields.py`（4）、`test_dialogue_layout_v2.py`（7）、`test_hud_layout_v3.py`（6）、`test_battle_layout_v4.py`（5），共 32 個通過。
+- **沒有版面時逐像素不變**（HEAD 的 src 與現在的 src 各畫一次、固定時鐘）：UI 導覽 43 個畫面中英文、Octopath 戰鬥兩幀、Diablo HUD 共 89 張，加上對話框（台詞、無名字台詞、選項）中英文 6 張，全部相同。
+  - 比對時抓到一個回歸：選項框背後的視窗面板在 V2 不見了；已修，修完重比為相同。
+- **每幀時間**（真實 Cocoa 視窗）：選單 86 個畫面都在 16.7 ms 內，最慢翻面告示板 95 百分位 5.86 ms；Octopath 戰鬥沒版面 0.97 ms、有版面 0.88 ms（95 百分位）；Diablo HUD 沒版面 2.82 ms、有版面 3.02 ms。
+- 真實視窗截圖（中英文，引擎樣子與作者版面各一）：對話、選項、技能樹、戰鬥（Full Verification）、HUD（Diablo）。
+- 編輯器截圖（Cocoa，中英文）：技能樹、對話、選項、戰鬥、HUD 版面頁，點陣字型、圖片對話視窗、選單主題三個對話框。
+- 圖示與圖片的匯入檢查：遊戲系統表單、內附專案裡所有放圖的鍵、通用資料樹、版面屬性欄都由 `test_picture_fields.py` 守著（新增欄位沒有選擇器會失敗）；角色、戰鬥圖、圖塊這類資源是從「素材 ▸ 匯入」進來的檔案（`uri`／`source_path`），本來就有自己的檔案選擇。
+- 證據：`docs/audits/evidence/ui_plan2/`（截圖、`pixel_identity.json`、`menu_frame_times.json`、`battle_hud_frame_times.json`）。
+
+**還沒做或已知的限制：**
+- **V5 生物畫面**：寶可夢 session 結束後做完，見 D77。
+- 舊的 manifest 字型如果沒有空白字，轉成點陣字後空白寬度會用半格，與原本略有不同。
+- 範本裡只在 manifest 的欄位（`field.background`、`player_sheet`、`entity_sprites`，舊的試玩 manifest）沒有搬。
+- 選項框的預設大小是訊息視窗的大小，作者把行高調大時要自己把框拉大（不會自動長高）。
+- 戰鬥版面一組只能整組移動；組裡的單一列（例如只移動某張隊伍卡片）不能分開放。
+
+**狀態：** 未提交（等使用者）。
+
+## D77 — 生物遊戲自己的畫面搬進專案資料，編輯器可改（UI_PLAN_2 V5）（2026-10-25）
+
+使用者核准 UI_PLAN_2 時說 V5「等寶可夢 session 這輪結束後由你做」；那個 session 做完 D74、D75 後通知可以開始。
+
+**做了什麼：**
+- **專案資料：** 一對一生物戰鬥、開始選單、生物商店、輸入名字、圖片選項，五個畫面的設定原本只寫在遊戲資料夾的 `playable_test_manifest.json`。現在放在演出庫的新類別 `creature_screen`（一個畫面一筆，記錄 id 就是它取代的 manifest 路徑，例如 `battle.creature_screen`），只在有資料時寫入，舊專案檔不變。
+  - `presentation/creature_screens.py`：`CreatureScreenSettings`（`data` 保持 manifest 原本的形狀；`enabled` 關掉時留著記錄但改用 manifest）。
+  - `creature_settings(runtime, 畫面)`：專案的記錄開著就用它，否則用 manifest（舊遊戲照常跑）；回傳複本，畫面改自己的不會動到專案。
+  - `creature_battle_on(runtime)`：戰鬥記錄開著，或 manifest 的 `battle.style` 是 `creature`。
+  - 畫面讀取改走它：`creature_battle.py`、`creature_menu.py`（對話視窗也改走 `rt.dialogue_settings()`，D76 留下的尾巴）、`creature_shop.py`、`name_input.py`、`picture_choice.py`、`field_ui.py`、`battle_flow._creature_style`。
+  - `playable_test_runtime.py` 三處 `manifest["battle"]` 改成 `.get`，manifest 沒有 `battle` 的遊戲也能開。
+- **編輯器：** 簡報 ▸ 選單畫面 ▸ 版面的新按鈕「生物畫面…」：
+  - 左邊五個畫面（● 表示專案有自己的設定）；「使用這些設定」開關。
+  - 中間是每個設定的樹，依種類給欄位：圖片（預覽、選擇…、素材庫…）、音效與字型檔、顏色按鈕、位置 (x, y)、數字、是／否、文字；表格與清單可展開，右鍵可新增一列、複製這一列、移除、新增設定（選種類）。戰鬥的 `layout` 位置與 `colours` 文字顏色即使專案沒寫也列出引擎預設，作者可直接改；存檔時只留下和預設不同的。
+  - 右邊是畫面的 240 × 160 預覽：背景圖上畫出每個位置的圓點，拖曳就改座標，和樹的選取互相連動；只標出選中點的名字（其他點滑過才顯示），避免名字疊在一起。
+  - 「從遊戲資料夾的 manifest 轉入」一次轉入五個畫面；「為這個畫面建立設定」「移除這個畫面的設定」。每個畫面的變更都是一個可復原的步驟（`MenuLayoutAuthoringController.set_creature_screen`、`read_creature_manifest`、`import_creature_manifest`）。
+  - 編輯器新文字都有繁中（23 條、4 條格式）。
+
+**驗證：**
+- 新測試 `test_creature_screens_v5.py`（7）：記錄來回存讀、沒資料不寫入、專案優先與關掉後退回 manifest、戰鬥開關、manifest 轉換、編輯器轉入與復原、設定樹的位置／拖曳／新增列／移除與只存差異、開始選單從記錄畫出來與從 manifest 畫出來逐位元組相同。寶可夢 session 指定要保持綠燈的四個測試檔照樣通過。
+- **逐像素**（AsteriaEmerald，960×640，固定時鐘與亂數；開始選單、商店、戰鬥第 30／120／399 幀）：
+  - 用 manifest 與轉成專案記錄（並從 manifest 刪掉那幾段）：5 張相同。
+  - V5 的讀法與舊的直接讀 manifest：5 張相同。
+  - 和 HEAD 比：選單相同；商店在 HEAD 還不存在（寶可夢 session 未提交的檔案）；戰鬥訊息的打字進度差幾個字，來自工作區其他未提交的改動（舊讀法也一樣），不是 V5。
+- **每幀時間**（真實 Cocoa 視窗）：開始選單中位數 3.05 ms、95 百分位 3.14 ms；戰鬥 1.20／1.22 ms；用 manifest 時 3.06／1.20 ms，沒有差別。
+- 編輯器截圖（Cocoa，中英文）：版面頁、生物戰鬥（位置展開）、開始選單。Full Verification 的截圖放 `docs/audits/evidence/ui_plan2/v5/`；AsteriaEmerald 的截圖與遊戲畫面只放在本機暫存（那是私人專案的美術，不進這個 repo）。
+
+**還沒做或已知的限制：**
+- 設定樹照 manifest 的鍵名顯示（例如 `foe_box`、`state_messages`），沒有逐一寫說明；種類是從鍵名與值推測的（`*_at`、`*_box`、`colour`、圖片副檔名）。
+- 位置預覽只畫背景圖與圓點，不是真的把畫面畫出來；要看實際樣子仍用「在遊戲中開啟」。
+- 戰鬥以外的畫面沒有引擎預設可列，專案沒寫的設定要用「新增設定」自己加。
+
+**狀態：** 未提交（等使用者）。

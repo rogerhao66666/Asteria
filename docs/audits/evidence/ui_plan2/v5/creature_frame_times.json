@@ -1,0 +1,35 @@
+{
+ "note": "AsteriaEmerald (private game, not in this repo), real Cocoa window 960x640, fixed clock",
+ "records": {
+  "menu": {
+   "frames": 120,
+   "median_ms": 3.05,
+   "p95_ms": 3.14,
+   "max_ms": 4.58
+  },
+  "battle": {
+   "frames": 400,
+   "median_ms": 1.2,
+   "p95_ms": 1.22,
+   "max_ms": 3.6
+  },
+  "video_driver": "cocoa",
+  "mode": "records"
+ },
+ "manifest": {
+  "menu": {
+   "frames": 120,
+   "median_ms": 3.06,
+   "p95_ms": 3.13,
+   "max_ms": 4.13
+  },
+  "battle": {
+   "frames": 400,
+   "median_ms": 1.2,
+   "p95_ms": 1.22,
+   "max_ms": 2.66
+  },
+  "video_driver": "cocoa",
+  "mode": "manifest"
+ }
+}

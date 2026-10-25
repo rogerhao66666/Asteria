@@ -82,14 +82,22 @@ class MenuPreview:
         self._reset()
         rt._menu_boxes.clear()
         rt._menu_style_cache = None
+        rt._menu_preview = True  # the battle screen says where its groups are (no layout too)
         open_menu_screen(rt, screen_id)
         for _ in range(2):
             rt._frame([], 0.0)
+        request = rt.__dict__.pop("_preview_request", None)
+        if request is not None:  # a message window: drawn over the field with a sample
+            from asteria.runtime.dialogue_screen import draw_message_window
+
+            draw_message_window(rt, request, getattr(request, "line", None))
         from asteria.presentation.menu_layout import base_screen
 
         # a station without its own layout yet draws through the shared one
         found = rt._menu_boxes.get(screen_id) or rt._menu_boxes.get(base_screen(screen_id), {})
         boxes = dict(found)
+        # screen pixels a layout unit takes (the battle's own coordinates are smaller)
+        self.unit = float(rt.__dict__.get("_menu_units", {}).get(base_screen(screen_id), 1.0))
         surface = rt.capture()
         self._reset()
         return surface, boxes
@@ -97,6 +105,12 @@ class MenuPreview:
     def _reset(self):
         rt = self.runtime
         game = rt.game
+        if game.mode == "battle":  # the battle preview's fight: left without its outcome
+            game.battle = None
+            game.mode = "field"
+            game.encounter_id = None
+            game._enemy_ids = ()
+            game.interaction.reset()
         rt._ui_mode = "field"
         game.close_shop()
         rt._shop_screen = None
@@ -188,6 +202,25 @@ def open_menu_screen(rt, screen_id):
             "ability_slots": extras_screens.AbilitySlotsScreen,
         }[screen_id]
         rt._extra_screen, rt._ui_mode = kind(rt), "extra"
+    elif screen_id == "hud_action":
+        rt._ui_mode = "field"
+        if not game.action_scene:
+            raise KeyError("the game starts on a map without action play: no action RPG HUD")
+        hud = rt.action_hud.bottom
+        hud.hint_left = hud.HINT_SECONDS  # the controls line shows
+    elif screen_id == "battle":
+        encounters = tuple(game.project.rpg_database.encounters)
+        if not encounters:
+            raise KeyError("the project has no encounter to show the battle screen with")
+        rt._ui_mode = "field"
+        game.start_encounter(encounters[0])
+        rt._battle_presentation.begin()
+        rt._advance_to_hero_turn()
+        for _ in range(240):  # the camera and the figures settle, the menu opens
+            rt._frame([], 1 / 60)
+    elif screen_id in ("dialogue", "dialogue_choice"):
+        rt._ui_mode = "field"
+        rt._preview_request = sample_dialogue(game, screen_id, rt.resource_root)
     elif screen_id == "equip_offer":
         from asteria.runtime.session.support import EquipOffer
 
@@ -199,3 +232,35 @@ def open_menu_screen(rt, screen_id):
             game.equip_offers.append(offer)
     else:
         raise KeyError(f"unknown menu screen: {screen_id}")
+
+
+def sample_dialogue(game, screen_id, root=None):
+    """A line (with the first picture of the game's ``portraits`` folder as its face) or a
+    choice to show a message window with."""
+    from asteria.events.dialogue import (
+        ChoiceRequest,
+        DialogueChoice,
+        DialogueLine,
+        DialogueRequest,
+    )
+
+    tr = game.tr
+    if screen_id == "dialogue_choice":
+        words = [
+            tr("dialogue.sample_yes", "Yes, gladly"),
+            tr("dialogue.sample_no", "Not now"),
+            tr("dialogue.sample_ask", "Tell me more"),
+        ]
+        choices = tuple(DialogueChoice(w, n) for n, w in enumerate(words))
+        return ChoiceRequest(tr("dialogue.choose", "Choose"), choices)
+    from pathlib import Path
+
+    portrait = ""
+    for folder in ("portraits", "playable_assets/portraits"):
+        found = sorted(Path(root or ".").joinpath(folder).glob("*.png"))
+        if found:
+            portrait = f"{folder}/{found[0].name}"
+            break
+    speaker = game.name_of(next(iter(game.project.rpg_database.actors.values()), None), "Roger")
+    text = tr("status.empty", "Nothing here yet.") + "\n" + tr("backlog.title", "Message Log")
+    return DialogueRequest(DialogueLine(text, speaker, portrait or ""))

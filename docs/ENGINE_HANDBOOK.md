@@ -535,6 +535,26 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 道具 | 標籤 `teaches:<能力>`、`reusable`；種族 `teachable`；`game.teaching_check`；`ItemDefinition.description` |
 | 商店 | `field.creature_shop`：`runtime/creature_shop.py`（BUY／SELL／QUIT、購買畫面、數量、YES／NO、`buy_sound`、`bonus`、`map_front_at`）；條件 `rpg` `shop` |
 
+### D76 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 版面基礎 | `ScreenSpec.size`（畫面自己的解析度）與 `group`（`menu`／`game`，編輯器清單的「遊戲進行中」標題）；`MenuElement.frames`／`frame_axis`／`fps`（動畫條）、`bitmap_font`；`MenuCanvas(size=, target=)`、`picture()`、`strip_frame()`、`font_of()` |
+| 點陣字 | `MenuBitmapFont`（演出庫類別 `bitmap_font`）：字圖、格子大小、每列的字（`⬚` 空格）、字距、空白寬、行高、等寬、個別字寬、顏色（`tint`／`keep`／`two_tone`）、像素倍率；`graphics/bitmap_font.SheetFont`；`rt.text(font="bitmap:<id>")`，主題 `MenuTheme.bitmap_font`；字圖沒有的字改用一般字型 |
+| 對話框 | 畫面 `dialogue`（視窗、名字、名字框、頭像、台詞、繼續提示、箭頭）與 `dialogue_choice`（框、提問、選項）；`runtime/dialogue_screen.py`；圖片視窗 `presentation/dialogue_window.DialogueWindowStyle`（演出庫類別 `dialogue_window`，`default`），`rt.dialogue_settings()` 先讀專案再讀 manifest；編輯器一鍵從 manifest 轉入（逐像素相同） |
+| 動作 RPG HUD | 畫面 `hud_action`（30 個元件：兩顆球的外框／液體／空球／名稱／數值、改成條、底板、技能格、按鍵帽、冷卻動畫條、徽章、消耗、經驗、等級、狀態格、其他資源條、提示、鎖定框、橫幅、倒下）；`MenuTheme.resource_colors` 取代依名稱猜的顏色 |
+| 戰鬥畫面 | 畫面 `battle`：`presentation/battle_layout.BattleScreenLayout` 把排好的指令依組（`party_hud`、`overhead`、`menu`、`help`、`workflow`、`timeline`、`numbers`、`result`、`target`）整組移動、縮放（0＝引擎大小）、換外觀、改字色字級、隱藏，加作者自己的元件；單位是戰鬥虛擬座標，編輯器依 `MenuPreview.unit` 換算；沒有版面時不跑 |
+| 技能樹 | `node_locked`／`node_available`／`node_learned`／`node_maxed`／`node_selected` 的圖、`link_met`／`link_unmet` 的顏色與線寬、`points_icon` |
+| 圖片欄位 | `editor/image_tools.picture_field(key)`：所有通用表單的圖片欄位（`icon_id`、`image`、`portrait`、`*_image`、`*_icon`、`*_background`…）都有預覽與「選擇…」 |
+| 編輯器 | 版面頁新按鈕「點陣字型…」「圖片對話視窗…」；主題的「點陣字型」與「資源顏色」；屬性欄的動畫格數、方向、每秒格數；數字框的上下箭頭不再吃掉文字區（主題 `QAbstractSpinBox` 右側 padding 0） |
+
+### D77 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 生物畫面 | 演出庫類別 `creature_screen`（記錄 id＝manifest 路徑：`battle.creature_screen`、`field.creature_menu`、`field.creature_shop`、`field.name_input`、`field.picture_choices`）；`presentation/creature_screens.CreatureScreenSettings`；`creature_settings(runtime, 畫面)` 先讀專案再讀 manifest；`creature_battle_on(runtime)` |
+| 編輯器 | 版面頁「生物畫面…」（`editor/creature_screens_dialog.py`）：設定樹（圖片、音效、字型、顏色、位置、數字、是／否、文字、表格、清單；右鍵新增／複製／移除）、240 × 160 位置預覽可拖曳、一鍵從 manifest 轉入；控制器 `set_creature_screen`、`read_creature_manifest`、`import_creature_manifest` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

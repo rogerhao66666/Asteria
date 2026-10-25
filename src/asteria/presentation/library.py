@@ -27,7 +27,9 @@ from .battle_sideview_template import BattleSideviewTemplateProfile, BattleSidev
 from .battle_ui import BattleUiLayoutProfile
 from .battle_ui_polish import BattleUiPolishProfile
 from .battle_ui_renderer import BattleUiTheme
-from .menu_layout import MenuLayout, MenuTheme
+from .creature_screens import CreatureScreenSettings
+from .dialogue_window import DialogueWindowStyle
+from .menu_layout import MenuBitmapFont, MenuLayout, MenuTheme
 from .rpg_ability_screen import AbilityScreenProfile
 from .rpg_character_screen import CharacterScreenProfile
 from .rpg_equipment_screen import EquipmentScreenProfile
@@ -78,9 +80,18 @@ class BattlePresentationLibrary:
         "rpg_party_screen",
         "menu_layout",  # one per menu screen, keyed by its screen id (U2)
         "menu_theme",
+        "bitmap_font",  # fonts drawn by hand, keyed by font id (V1)
+        "dialogue_window",  # the picture message window, record "default" (V2)
+        "creature_screen",  # a creature game's own screens, by manifest path (V5)
     )
     # written only when they hold something: older project files stay byte-identical
-    OPTIONAL_CATEGORIES = ("menu_layout", "menu_theme")
+    OPTIONAL_CATEGORIES = (
+        "menu_layout",
+        "menu_theme",
+        "bitmap_font",
+        "dialogue_window",
+        "creature_screen",
+    )
 
     def __init__(self):
         self._records = {k: {} for k in self.CATEGORIES}
@@ -163,6 +174,9 @@ class BattlePresentationLibrary:
             "rpg_party_screen": PartyScreenProfile,
             "menu_layout": MenuLayout,
             "menu_theme": MenuTheme,
+            "bitmap_font": MenuBitmapFont,
+            "dialogue_window": DialogueWindowStyle,
+            "creature_screen": CreatureScreenSettings,
         }[category]
 
     def _validate_type(self, category, value):

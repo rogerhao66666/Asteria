@@ -816,7 +816,9 @@ class PlayableTestRuntime(
 
             self._creature_battle = CreatureBattleScreen(self)
             self._end_temporary_music()
-            self._music(self._creature_battle.music("start") or self.manifest["battle"].get("bgm"))
+            self._music(
+                self._creature_battle.music("start") or self.manifest.get("battle", {}).get("bgm")
+            )
             self._creature_battle.draw()
         elif self.game.mode == "battle" or self._victory:
             if self.game.mode == "battle":
@@ -856,10 +858,12 @@ class PlayableTestRuntime(
 
                 self._picture_choice = PictureChoiceScreen(self, self.game.picture_choice_request)
                 self._ui_mode = "picture_choice"
+            from asteria.presentation.creature_screens import creature_settings
+
             if (  # a shop in the game's own art opens at once: the event waits for it
                 self._ui_mode == "field"
                 and self.game.open_shop_id
-                and self.manifest.get("field", {}).get("creature_shop")
+                and creature_settings(self, "field.creature_shop")
                 and self.game.pending_dialogue is None
             ):
                 from asteria.runtime.creature_shop import CreatureShopScreen
@@ -942,13 +946,14 @@ class PlayableTestRuntime(
                 self._creature_battle = CreatureBattleScreen(self)
                 self._end_temporary_music()
                 self._music(
-                    self._creature_battle.music("start") or self.manifest["battle"].get("bgm")
+                    self._creature_battle.music("start")
+                    or self.manifest.get("battle", {}).get("bgm")
                 )
                 self._creature_battle.draw()
             elif self.game.mode == "battle":
                 self._turn_actor = None
                 self._battle_presentation.begin()
-                self._music(self.manifest["battle"].get("bgm"))
+                self._music(self.manifest.get("battle", {}).get("bgm"))
                 self._advance_to_hero_turn()
                 self._present_battle(dt)
             else:

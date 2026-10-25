@@ -169,6 +169,8 @@ class BattleUiText:
     role: str = "body"
     align: str = "left"
     member_id: str = ""
+    color: tuple | None = None  # a battle layout's (V4) colour; None: the theme's
+    size: int = 0  # a battle layout's text size; 0: the theme's
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,6 +182,9 @@ class BattleUiPanel:
     height: float
     role: str = "panel"
     member_id: str = ""
+    skin: object = None  # a battle layout's (V4) nine-patch; None: the theme's, False: none
+    fill: tuple | None = None
+    border: tuple | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +221,7 @@ class BattleUiMarker:
     x: float
     y: float
     primary: bool = False
+    color: tuple | None = None  # a battle layout's (V4) colour; None: the backend's
 
 
 @dataclass(frozen=True, slots=True)
@@ -360,6 +366,8 @@ class BattleUiComposer:
         # a menu row's name and cost are fitted by their real widths
         self.text_width = None
         self._category_names = {}  # a menu category (id) -> the name drawn for it
+        self.screen_layout = None  # the author's ``battle`` MenuLayout (V4); None: as composed
+        self.layout_boxes = {}  # group -> (x, y, w, h) after that layout, last frame
         self._translate = None  # (key, english, **params) -> text: the screen's own words
         self._portraits = {}  # member_id: (portrait, small portrait) its party card may show
         self.portrait_boxes = {}  # member_id: (x, y, w, h) of its card's portrait, this frame
@@ -1938,19 +1946,24 @@ class BattleUiComposer:
             hud_members, side_by_member, placement_by_member, focus_member_id
         )
         self.portrait_boxes = {p.member_id: (p.x, p.y, p.width, p.height) for p in portraits}
+        marks = [(len(panels), len(texts), len(icons))]  # where each group's commands end
         pw, tw, iw = self._workflow_commands(action_workflow)
         panels.extend(pw)
         texts.extend(tw)
         icons.extend(iw)
+        marks.append((len(panels), len(texts), len(icons)))
         if action_workflow is None:
             pa, ta, ia = self._action_menu_commands(action_menu)
             panels.extend(pa)
             texts.extend(ta)
             icons.extend(ia)
+        marks.append((len(panels), len(texts), len(icons)))
         p2, t2 = self._timeline_commands(timeline)
         panels.extend(p2)
         texts.extend(t2)
+        marks.append((len(panels), len(texts), len(icons)))
         texts.extend(self._feedback_commands(camera, feedback))
+        marks.append((len(panels), len(texts), len(icons)))
         p3, t3 = self._result_commands(result)
         panels.extend(p3)
         texts.extend(t3)
@@ -1977,6 +1990,11 @@ class BattleUiComposer:
                     ),
                 )
             )
+        self.layout_boxes = {}
+        if self.screen_layout is not None:  # the author's battle layout (V4): groups moved
+            panels, texts, gauges, icons, portraits, markers = self._laid_out(
+                marks, panels, texts, gauges, icons, portraits, markers
+            )
         return BattleUiFrame(
             self.scene.scene_id,
             battle_frame.background_asset_id,
@@ -1989,4 +2007,62 @@ class BattleUiComposer:
             vfx,
             screen_fx,
             tuple(portraits),
+        )
+
+    def _laid_out(self, marks, panels, texts, gauges, icons, portraits, markers):
+        """The frame's commands after the ``battle`` layout (``battle_layout``): each tagged
+        with its group by where compose() put it, then moved, restyled or hidden."""
+        from .battle_layout import BattleScreenLayout
+
+        names = ("party_hud", "workflow", "menu", "timeline", "numbers", "result")
+
+        def tag(count, slot):
+            groups = []
+            for end, group in zip([m[slot] for m in marks] + [count], names, strict=True):
+                groups += [group] * (end - len(groups))
+            return groups
+
+        overhead = set(self.overhead_labels)
+        text_tags = tag(len(texts), 1)
+        boxed_help = any(p.panel_id == "action_help" for p in panels)  # else: the menu's footer
+        for i, text in enumerate(texts):
+            if text_tags[i] == "party_hud" and text.role == "overhead_name":
+                text_tags[i] = "overhead"
+            elif boxed_help and text_tags[i] == "menu" and text.role == "action_detail":
+                text_tags[i] = "help"
+        panel_tags = tag(len(panels), 0)
+        for i, panel in enumerate(panels):
+            if panel.panel_id == "action_help":
+                panel_tags[i] = "help"
+        gauge_tags = []
+        for gauge in gauges:  # the overhead bars come first, the party's after
+            lead = not gauge_tags or gauge_tags[-1] == "overhead"
+            gauge_tags.append("overhead" if lead and gauge.member_id in overhead else "party_hud")
+        lists = {
+            "panel": list(panels),
+            "text": list(texts),
+            "gauge": list(gauges),
+            "icon": list(icons),
+            "portrait": list(portraits),
+            "marker": list(markers),
+        }
+        tags = {
+            "panel": panel_tags,
+            "text": text_tags,
+            "gauge": gauge_tags,
+            "icon": tag(len(icons), 2),
+            "portrait": ["party_hud"] * len(portraits),
+            "marker": ["target"] * len(markers),
+        }
+        size = (self.layout.virtual_width, self.layout.virtual_height)
+        screen = BattleScreenLayout(self.screen_layout, size, self._tr)
+        applied = screen.apply(lists, tags)
+        self.layout_boxes = screen.boxes
+        return (
+            applied["panel"],
+            applied["text"],
+            applied["gauge"],
+            applied["icon"],
+            applied["portrait"],
+            tuple(applied["marker"]),
         )

@@ -198,7 +198,13 @@ def test_the_preview_draws_every_screen_and_where_its_elements_are(monkeypatch):
     preview = MenuPreview(document.project, DEMO)
     try:
         for screen_id in SCREEN_IDS:
-            surface, boxes = preview.render(screen_id, "zh-TW" if screen_id == "shop" else None)
+            try:
+                surface, boxes = preview.render(
+                    screen_id, "zh-TW" if screen_id == "shop" else None
+                )
+            except KeyError:  # a screen the demo has no use for (the action RPG HUD)
+                assert screen_spec(screen_id).group == "game", screen_id
+                continue
             assert surface.get_size() == (1280, 720)
             assert boxes, screen_id
         _surface, boxes = preview.render("equipment")
@@ -226,8 +232,9 @@ def test_the_layout_page_outlines_moves_and_edits_elements(monkeypatch):
         page.rebuild()
         assert not page.boxes  # hidden: nothing drawn yet
         page.show()
-        # and a layout per workstation, quest board, recruiting office and gacha banner
-        assert page.screen_list.count() == len(SCREEN_IDS) + 5
+        # and a layout per workstation, quest board, recruiting office and gacha banner, and
+        # the "During play" heading
+        assert page.screen_list.count() == len(SCREEN_IDS) + 5 + 1
         assert set(page.canvas.boxes) >= {"frame", "options", "title"}
         frame = page.boxes["frame"]
         page.pick("frame")
