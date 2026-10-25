@@ -14,3 +14,7 @@ VSCODE_QUICK_GUIDE.md
 *.so
 *.dll
 /local_reference/paid_assets/
+
+# the private Pokémon Emerald remake and its reference checkout (never in the repo)
+/local_reference/AsteriaEmerald/
+/local_reference/pokeemerald/
