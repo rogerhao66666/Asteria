@@ -668,6 +668,24 @@ def _cycle(p, c):  # a refresh loop
     p.drawPath(_poly([(19, 3), (20.5, 9.5), (14, 8.5), (19, 3)]))
 
 
+def _undo(p, c):  # an arrow curving back to the left
+    p.setBrush(Qt.NoBrush)
+    path = QPainterPath(QPointF(19, 18))
+    path.cubicTo(QPointF(19, 11), QPointF(14, 9.5), QPointF(8, 10))
+    p.drawPath(path)
+    p.setBrush(QColor(c))
+    p.drawPath(_poly([(4, 10), (9.5, 5.5), (9.5, 14.5), (4, 10)]))
+
+
+def _redo(p, c):  # the same arrow, to the right
+    p.setBrush(Qt.NoBrush)
+    path = QPainterPath(QPointF(5, 18))
+    path.cubicTo(QPointF(5, 11), QPointF(10, 9.5), QPointF(16, 10))
+    p.drawPath(path)
+    p.setBrush(QColor(c))
+    p.drawPath(_poly([(20, 10), (14.5, 5.5), (14.5, 14.5), (20, 10)]))
+
+
 def _doodad(p, c):  # a small tree
     p.setBrush(_fill(c))
     p.drawEllipse(QPointF(12, 9), 6.5, 6)
@@ -776,6 +794,8 @@ DRAWINGS = {
     "pin": _pin,
     "hammer": _hammer,
     "cycle": _cycle,
+    "undo": _undo,
+    "redo": _redo,
     "doodad": _doodad,
     "net": _net,
     "interact": _hand_icon,

@@ -45,6 +45,7 @@ from .project_empty_state import ProjectEmptyState
 from .record_form import Picker
 from .responsive_form import ResponsiveForm, ResponsiveSplit
 from .ui_fit import fit_combo_to_items
+from .undo_buttons import UndoRedoButtons
 
 _BIG = 1_000_000_000
 
@@ -952,7 +953,7 @@ class GameSystemsEditorWidget(QWidget):
         self.simulation.setWordWrap(True)
         self.simulation.setTextInteractionFlags(Qt.TextSelectableByMouse)
         buttons.addStretch(1)
-        buttons.addWidget(QLabel("Changes apply as you edit  ·  Ctrl+Z undoes"))
+        buttons.addWidget(UndoRedoButtons())  # edits apply on their own: a step back or on
         split = QSplitter()
         split.addWidget(authoring_sidebar("Game Systems", self.browser, header=self.kind_box))
         split.addWidget(self.scroll)

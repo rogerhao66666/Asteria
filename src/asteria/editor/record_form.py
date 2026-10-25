@@ -18,10 +18,11 @@ import re
 from copy import deepcopy
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QCheckBox,
     QColorDialog,
     QComboBox,
@@ -43,6 +44,7 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyleOptionComboBox,
     QToolButton,
+    QToolTip,
     QVBoxLayout,
     QWidget,
 )
@@ -68,6 +70,9 @@ from .record_vocabulary import (
 )
 
 FORMAT_KEYS = ("schema", "version")
+# written by another view of the same record, not typed here: a skill tree's node positions
+# come from dragging its nodes in the graph view (Save Graph Layout)
+OWN_VIEW_KEYS = ("node_positions",)
 NAME_KEYS = ("display_name", "name", "label", "title")
 _SCALARS = (str, int, float, bool, type(None))
 _LIST_TEMPLATES = {  # what a new entry of an empty list starts as
@@ -152,6 +157,38 @@ def _small(text, color="#8b8e98"):
     label = QLabel(text)
     label.setWordWrap(True)
     label.setStyleSheet(f"color: {color}; font-size: 11px;")
+    return label
+
+
+class _HelpTip(QObject):
+    """A label's tooltip shown right beside the end of its text (the ⓘ), wherever the mouse
+    entered it, instead of under the pointer."""
+
+    def eventFilter(self, obj, event):  # noqa: N802 - Qt
+        if event.type() != QEvent.ToolTip or not obj.toolTip():
+            return False
+        text_width = obj.fontMetrics().horizontalAdvance(obj.text())
+        area = obj.contentsRect()
+        if obj.alignment() & Qt.AlignRight:
+            end = area.right()
+        else:
+            end = min(area.right(), area.left() + text_width)
+        at = obj.mapToGlobal(QPoint(end + 6, -4))
+        QToolTip.showText(at, obj.toolTip(), obj)
+        for tip in QApplication.topLevelWidgets():  # Qt adds its pointer offset: undone
+            if tip.isVisible() and tip.metaObject().className() == "QTipLabel":
+                tip.move(at)
+        return True
+
+
+_HELP_TIPS = []  # the one filter, made once a QApplication exists
+
+
+def _help_tip(label):
+    """``label``'s tooltip opens beside its ⓘ."""
+    if not _HELP_TIPS:
+        _HELP_TIPS.append(_HelpTip())
+    label.installEventFilter(_HELP_TIPS[0])
     return label
 
 
@@ -747,8 +784,7 @@ class Section(QFrame):
             mark.setObjectName("FormSectionHelp")
             mark.setToolTip(hint)
             mark.setStyleSheet("color: #8b8e98;")
-            self.toggle.setToolTip(hint)
-            head.addWidget(mark)
+            head.addWidget(_help_tip(mark))
         head.addStretch(1)
         layout.addLayout(head)
         layout.addWidget(self.body)
@@ -781,8 +817,8 @@ class Section(QFrame):
         title = QLabel(label + ("  ⓘ" if help_text else ""))
         title.setObjectName("FormFieldLabel")
         tip = (help_text + "\n\n" if help_text else "") + (f"data: {key}" if key else "")
-        title.setToolTip(tip.strip())
-        widget.setToolTip(widget.toolTip() or tip.strip())
+        title.setToolTip(tip.strip())  # beside the ⓘ: not over the field, far from the mark
+        _help_tip(title)
         holder = QVBoxLayout()
         if self.columns:
             self._grid_place(title, label, widget, holder)
@@ -990,7 +1026,7 @@ class RecordForm(QScrollArea):
         advanced = Section("Advanced", collapsed=True, hint="Filled in for you; rarely changed.")
         nested = []
         for key, value in data.items():
-            if key in FORMAT_KEYS or key in (record_id_key, name_key):
+            if key in FORMAT_KEYS or key in OWN_VIEW_KEYS or key in (record_id_key, name_key):
                 continue
             if key == "icon_id":
                 continue
@@ -1590,6 +1626,9 @@ def _first_line_height(widget):
     if isinstance(widget, QLabel):
         widget.ensurePolished()  # its own small font, not the default one
         return widget.fontMetrics().height()
+    first = widget.layout().itemAt(0) if widget.layout() is not None else None
+    if isinstance(widget, CardList) and first is not None and isinstance(first.widget(), QLabel):
+        return _first_line_height(first.widget())  # "No entries yet." / "12 entries..."
     if isinstance(widget, ChipList):
         chip = widget.findChild(QToolButton)
         return max(22, chip.sizeHint().height() if chip is not None else 24)

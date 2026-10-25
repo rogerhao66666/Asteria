@@ -590,7 +590,7 @@ QToolButton#LayerControlButton:pressed { background: $panel; }
 
 /* -- labels
 -------------------------------------------------------------------------------------- */
-QLabel { color: $text; }
+QLabel { color: $text; qproperty-indent: 0; }  /* padding counts as a frame: no hidden indent */
 QLabel#SectionLabel { color: $text_dim; font-size: 11px; font-weight: 800; padding: 3px 1px; }
 QLabel#MutedLabel { color: $text_muted; padding: 2px 1px; }
 QLabel#FieldLabel { color: $text_dim; font-size: 11px; font-weight: 600; padding: 0 1px; }
@@ -693,7 +693,6 @@ QToolButton#FormMoreButton {{ border: none; color: {p.text_muted}; padding: 2px;
 QToolButton#FormMoreButton:hover {{ color: {p.primary_hi}; }}
 QLabel#FormError {{ background: {p.danger_bg}; color: {p.danger_text};
     border: 1px solid {p.danger_border}; border-radius: 6px; padding: 6px 8px; }}
-QLabel#FormSavedHint {{ color: {p.text_muted}; }}
 """
 
 

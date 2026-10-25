@@ -125,3 +125,29 @@ def test_help_shows_on_hover_only(app):
     assert title.toolTip().startswith(HELP["description"])  # on hover instead
     marks = [lb for lb in form.findChildren(QLabel) if lb.objectName() == "FormSectionHelp"]
     assert any(m.toolTip() == CATEGORY_HELP["abilities"] for m in marks)
+
+
+def test_a_help_tooltip_opens_beside_its_mark(app):
+    from PySide6.QtCore import QEvent, QPoint
+    from PySide6.QtGui import QHelpEvent
+    from PySide6.QtWidgets import QLabel, QToolTip
+
+    _project, _document, family = _family("actors", "hero_01")
+    family.editor.show()
+    (title,) = [lb for lb in family.editor.findChildren(QLabel) if lb.text() == "Base Stats  ⓘ"]
+    inside = QPoint(2, title.height() - 2)  # the mouse at the label's far corner
+    event = QHelpEvent(QEvent.ToolTip, inside, title.mapToGlobal(inside))
+    assert app.sendEvent(title, event)  # handled: placed by the label, not by the pointer
+    assert QToolTip.text() == title.toolTip()
+    assert title.toolTip().startswith("Starting numbers")
+    QToolTip.hideText()
+
+
+def test_graph_positions_are_left_to_the_graph_view(app):
+    from PySide6.QtWidgets import QLabel
+
+    project, _document, family = _family("graphs", "brave_tree")
+    texts = [label.text() for label in family.editor.findChildren(QLabel)]
+    assert not any("Positions in the graph view" in t for t in texts)  # dragged, not typed
+    family.auto_apply()  # an edit elsewhere keeps the saved positions as they were
+    assert project.rpg_database.progression_graphs["brave_tree"] is not None

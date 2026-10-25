@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWi
 from .game_start_authoring import GameStartAuthoringError
 from .game_systems_widget import RecordForm
 from .project_empty_state import ProjectEmptyState
+from .undo_buttons import UndoRedoButtons
 
 
 class GameStartEditorWidget(QWidget):
@@ -31,7 +32,7 @@ class GameStartEditorWidget(QWidget):
         self._unannounced = False
         buttons = QHBoxLayout()
         buttons.addStretch(1)
-        buttons.addWidget(QLabel("Changes apply as you edit  ·  Ctrl+Z undoes"))
+        buttons.addWidget(UndoRedoButtons())  # edits apply on their own: a step back or on
         layout = QVBoxLayout(self)
         layout.addWidget(self.scroll, 1)
         layout.addWidget(self.status)

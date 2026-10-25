@@ -600,6 +600,14 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 |---|---|
 | 編輯器 | 滑鼠提示 120 ms 出現（`theme.TOOLTIP_DELAY_MS`，`_quick_tooltips` 的 `QProxyStyle`） |
 
+### D84 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 資料表單 | 說明提示固定在 ⓘ 右邊（`record_form._HelpTip`）；`OWN_VIEW_KEYS`（`node_positions` 只由技能樹圖表檢視寫入）；清單欄位的標籤對齊清單第一行 |
+| 頁面底部 | `editor/undo_buttons.UndoRedoButtons`：跟著視窗的 `undo_action`／`redo_action`；圖示 `undo`、`redo` |
+| 標籤 | 全域 `QLabel { qproperty-indent: 0; }`：樣式表的 padding 不再讓 Qt 自動內縮 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

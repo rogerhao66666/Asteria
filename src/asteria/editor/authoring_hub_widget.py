@@ -1019,9 +1019,10 @@ class AdapterFamilyWidget(QWidget):
         actions.addWidget(self.view_button)
         actions.addWidget(self.save_layout_button)
         actions.addStretch(1)
-        self.saved_label = QLabel("Changes apply as you edit  ·  Ctrl+Z undoes")
-        self.saved_label.setObjectName("FormSavedHint")
-        actions.addWidget(self.saved_label)
+        from .undo_buttons import UndoRedoButtons
+
+        self.undo_buttons = UndoRedoButtons()  # edits apply on their own: a step back or on
+        actions.addWidget(self.undo_buttons)
         actions.addWidget(self.duplicate_button)
         actions.addWidget(self.delete_button)
         self.apply_button.hide()  # kept for scripts; edits apply on their own

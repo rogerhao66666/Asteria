@@ -164,3 +164,17 @@ def test_tooltips_show_quickly_and_the_theme_can_be_applied_again(monkeypatch):
     apply_asteria_theme(app)  # another palette: the style is not wrapped twice
     assert app._asteria_quick_tips is wrapped
     assert app.style().styleHint(QStyle.SH_ToolTip_WakeUpDelay) == TOOLTIP_DELAY_MS < 700
+
+
+def test_a_padded_label_has_no_hidden_indent(monkeypatch):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QLabel
+
+    from asteria.editor.theme import apply_asteria_theme
+
+    app = QApplication.instance() or QApplication([])
+    apply_asteria_theme(app)
+    title = QLabel("BP")
+    title.setObjectName("FormTitle")  # its padding counts as a frame: Qt would indent it
+    title.ensurePolished()
+    assert title.frameWidth() > 0 and title.indent() == 0  # level with the line under it
