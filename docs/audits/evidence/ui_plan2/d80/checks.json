@@ -1,0 +1,107 @@
+{
+ "batch": "D80",
+ "fv_creature_dialog": {
+  "platform": "cocoa",
+  "en_menu": [
+   "summary: pages (a background per page: info, skills, moves), the creature's picture at pic",
+   true,
+   6
+  ],
+  "en_battle": [
+   "layout moves any point of LAYOUT and colours any text colour pair of COLOURS.",
+   false,
+   5
+  ],
+  "en_shop": [
+   "places: {name: [x, y]} over PLACES (window insides and text spots, in the screen's pixels)",
+   true,
+   8
+  ],
+  "zh_TW_menu": [
+   "summary：pages（每頁一張背景：info、skills、moves），生物的圖在 picture_at，文字在 places 的各個位置（見 SUMMARY_PLACES",
+   true,
+   8
+  ],
+  "zh_TW_battle": [
+   "layout 可移動 LAYOUT 的任何點，並替 COLOURS 的任何文字顏色組上色。",
+   false,
+   3
+  ],
+  "zh_TW_shop": [
+   "places：在 PLACES 上覆寫 {名稱: [x, y]}（視窗內側與文字位置，以畫面像素計）。",
+   true,
+   6
+  ]
+ },
+ "fv_game_folder_settings": {
+  "platform": "cocoa",
+  "en_sections": [
+   "General",
+   "Field (field)",
+   "Battle (battle)",
+   "Controls (controls)",
+   "Progression rewards (progression_rewards)",
+   "Audio (audio)"
+  ],
+  "zh_TW_sections": [
+   "一般",
+   "場景（field）",
+   "戰鬥（battle）",
+   "操作（controls）",
+   "成長獎勵（progression_rewards）",
+   "音訊（audio）"
+  ]
+ },
+ "emerald_creature_dialog_local_only": {
+  "platform": "cocoa",
+  "en_menu": [
+   "entries: the start menu's rows in order - {\"id\", \"label\", \"screen\", \"switch\"}.",
+   true,
+   8
+  ],
+  "en_battle": [
+   "layout moves any point of LAYOUT and colours any text colour pair of COLOURS.",
+   true,
+   9
+  ],
+  "en_shop": [
+   "places: {name: [x, y]} over PLACES (window insides and text spots, in the screen's pixels)",
+   true,
+   9
+  ],
+  "zh_TW_menu": [
+   "entries：開始選單的各列，依序——{\"id\", \"label\", \"screen\", \"switch\"}。",
+   true,
+   8
+  ],
+  "zh_TW_battle": [
+   "layout 可移動 LAYOUT 的任何點，並替 COLOURS 的任何文字顏色組上色。",
+   true,
+   9
+  ],
+  "zh_TW_shop": [
+   "places：在 PLACES 上覆寫 {名稱: [x, y]}（視窗內側與文字位置，以畫面像素計）。",
+   true,
+   8
+  ]
+ },
+ "battle_preview_ms_emerald": {
+  "before_warm": [
+   144,
+   141,
+   140,
+   141
+  ],
+  "after_warm": [
+   6,
+   4,
+   3,
+   4
+  ],
+  "pixels_identical": true
+ },
+ "menu_over_field_fv": {
+  "min_alpha_left_part": 255,
+  "non_black_samples": "344/345"
+ }
+}

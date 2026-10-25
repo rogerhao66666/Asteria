@@ -292,6 +292,9 @@ def test_the_preview_draws_a_creature_screen_with_lent_settings(monkeypatch):
         )
         surface = preview.render_creature("field.creature_menu", menu)
         assert surface.get_size() == (240, 160)
+        beside = [surface.get_at((x, y)) for x in range(0, 100, 7) for y in range(0, 160, 7)]
+        assert min(c.a for c in beside) == 255  # the field under the window, as in the game
+        assert sum(c[:3] != (0, 0, 0) for c in beside) > len(beside) // 2  # not a black field
         assert library.get("creature_screen", "field.creature_menu") is None  # only lent
         moved = CreatureScreenSettings(
             "field.creature_menu", {**menu.data, "start_at": [20, 40], "start_width": 80}
@@ -305,3 +308,27 @@ def test_the_preview_draws_a_creature_screen_with_lent_settings(monkeypatch):
         assert preview.render_creature("field.picture_choices", None) is None
     finally:
         preview.close()
+
+
+def test_every_setting_help_sentence_has_chinese():
+    import importlib
+    import re
+
+    from asteria.editor import i18n
+    from asteria.editor.creature_screens_dialog import MODULES, help_for
+
+    missing = []
+    for module in MODULES.values():
+        words = " ".join((importlib.import_module(module).__doc__ or "").split())
+        for part in re.split(r"(?<=\.)\s+|;\s+|\s\*\s", words):  # as help_for splits
+            if "``" in part or '"' in part:
+                sentence = part.strip(" -;*").replace("``", "")
+                if i18n.translate(sentence, "zh_TW") == sentence:
+                    missing.append(sentence)
+    assert missing == []
+    shown = i18n.CURRENT["language"]
+    try:
+        i18n.CURRENT["language"] = "zh_TW"
+        assert "開始選單" in help_for("field.creature_menu", ("entries",))
+    finally:
+        i18n.CURRENT["language"] = shown

@@ -571,6 +571,13 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 照明 | 世界指令 `SET_LIGHT`（`radius`、`speed`、`off`）；屬於它的場景；條件 `rpg` `light` |
 | 位置 | `SET_POSITION` 沒給的 `x`／`y` 留在原地（只給 `permanent`＝記住現在的位置） |
 
+### D80 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 生物畫面頁 | `help_for` 經過編輯器翻譯（說明句子都在 `zh_TW.json`，測試逐句檢查）；戰鬥預覽只推進 `CreatureBattleScreen.update`，最後畫一次；開始選單、商店的預覽疊在野外上（`MenuPreview._over_field`） |
+| 遊戲資料夾設定 | 分區名稱 `TITLES`／`title_of`；寫回是 `WriteGameFolderSettingsCommand`（可復原）；版面頁的預覽在檔案內容變了時重開（`_folder_settings`） |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

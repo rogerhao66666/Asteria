@@ -885,6 +885,7 @@ class MenuLayoutWorkspace(QWidget):
         self.open_in_game = open_in_game
         self._preview = None
         self._preview_project = None
+        self._preview_folder = None  # the game folder's settings file the preview read
         self._stale = True  # the preview waits until the page is shown
         self.screen_id = "shop"
         self.element_id = ""
@@ -1035,14 +1036,29 @@ class MenuLayoutWorkspace(QWidget):
         project = self.document.project
         if project is None or project.game_start is None:
             return None
-        if self._preview is None or self._preview_project is not project:
+        folder = self._folder_settings()
+        if (
+            self._preview is None
+            or self._preview_project is not project
+            or self._preview_folder != folder  # the game folder's file changed (or undone)
+        ):
             if self._preview is not None:
                 self._preview.close()
             from asteria.runtime.menu_preview import MenuPreview
 
             self._preview = MenuPreview(project, _project_root(self.document))
             self._preview_project = project
+            self._preview_folder = folder
         return self._preview
+
+    def _folder_settings(self):
+        """The game folder's settings file as the preview read it (None: none there)."""
+        from .game_folder_settings_dialog import manifest_path
+
+        try:
+            return manifest_path(_project_root(self.document)).read_bytes()
+        except OSError:
+            return None
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -1312,10 +1328,7 @@ class MenuLayoutWorkspace(QWidget):
         dialog = GameFolderSettingsDialog(self.document, root, self)
         if dialog.exec() != QDialog.Accepted or not dialog.changed:
             return False
-        if self._preview is not None:  # the preview read the old file: started again
-            self._preview.close()
-            self._preview = None
-        self._after_change()
+        self._after_change()  # the preview reads the new file (Edit ▸ Undo: the old one)
         return True
 
     def _render_creature(self, screen_id, settings):

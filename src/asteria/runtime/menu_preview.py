@@ -118,7 +118,11 @@ class MenuPreview:
             records[screen_id] = settings
         try:
             screen = self._creature_screen(screen_id)
-            return None if screen is None else screen.surface.copy()
+            if screen is None:
+                return None
+            if screen_id in ("field.creature_menu", "field.creature_shop"):
+                return self._over_field(screen.surface)
+            return screen.surface.copy()
         finally:
             if own is None:
                 records.pop(screen_id, None)
@@ -126,6 +130,25 @@ class MenuPreview:
                 records[screen_id] = own
             rt._creature_battle = None
             self._reset()
+
+    def _over_field(self, surface):
+        """``surface`` (the screen's 240 x 160, see-through where the field shows) over the
+        field as the game draws it under the start menu or the shop's window."""
+        rt = self.runtime
+        pg = rt.pg
+        view = getattr(rt, "tile_view", None)
+        if view is not None:
+            view.follow(0.0)  # the camera on the player, as when the screen opened
+        rt._draw_field(False)
+        width, height = surface.get_size()
+        sw, sh = rt.screen.get_size()
+        scale = max(1, min(sw // width, sh // height))
+        area = pg.Rect(
+            (sw - width * scale) // 2, (sh - height * scale) // 2, width * scale, height * scale
+        ).clip(rt.screen.get_rect())
+        out = pg.transform.scale(rt.screen.subsurface(area), (width, height)).convert_alpha()
+        out.blit(surface, (0, 0))
+        return out
 
     def _creature_screen(self, screen_id):
         from asteria.presentation.creature_screens import creature_battle_on, creature_settings
@@ -138,9 +161,14 @@ class MenuPreview:
             if not encounters or not creature_battle_on(rt) or not game.party_pets():
                 return None
             game.start_encounter(encounters[0])
-            for _ in range(200):  # the creatures come out, the commands open
-                rt._frame([], 1 / 60)
-            return rt._creature_battle
+            rt._frame([], 1 / 60)  # the runtime opens the battle screen
+            screen = rt._creature_battle
+            if screen is None:
+                return None
+            for _ in range(200):  # the creatures come out, the commands open: no drawing
+                screen.update(1 / 60)
+            screen.draw()
+            return screen
         if screen_id == "field.creature_menu":
             from asteria.runtime.creature_menu import CreatureMenuScreen
 

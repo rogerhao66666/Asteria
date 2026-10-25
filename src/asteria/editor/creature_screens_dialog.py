@@ -98,7 +98,8 @@ def _names(sentence, key):
 
 def help_for(screen_id, path):
     """What the screen's own description says about the setting at ``path`` (the sentence
-    naming it as ``key``, the nearest named key upwards for a row), or ""."""
+    naming it as ``key``, the nearest named key upwards for a row) in the editor's language,
+    or ""."""
     import importlib
     import re
 
@@ -116,7 +117,7 @@ def help_for(screen_id, path):
                 named,
                 key=lambda t: (not any(_names(t, k) for k in parents), f"``{key}``" not in t),
             )
-            return best.strip(" -;").replace("``", "")  # the description's code marks
+            return translate(best.strip(" -;*").replace("``", ""))  # without its code marks
     return ""
 
 
