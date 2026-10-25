@@ -100,6 +100,9 @@ class ChoiceRequest:
     local_name: str = ""
     prompt_key: str = ""  # the prompt's translation key (D60)
     box_at: tuple[int, int] | None = None  # where a game's own choice box goes (its pixels)
+    cursor: int = 0  # the choice the pointer starts on
+    cancel: tuple = ()  # (value,): the cancel key gives that value (else it does nothing)
+    columns: int = 1  # options side by side (a grid: up / down move a whole row)
 
     def __init__(
         self,
@@ -110,6 +113,9 @@ class ChoiceRequest:
         local_name: str = "",
         prompt_key: str = "",
         box_at=None,
+        cursor=0,
+        cancel=(),
+        columns=1,
     ):
         items = tuple(choices)
         if not items:
@@ -124,6 +130,10 @@ class ChoiceRequest:
         if box_at is not None:
             box_at = (int(box_at[0]), int(box_at[1]))
         object.__setattr__(self, "box_at", box_at)
+        cursor = int(cursor or 0)
+        object.__setattr__(self, "cursor", cursor if 0 <= cursor < len(items) else 0)
+        object.__setattr__(self, "cancel", tuple(cancel)[:1])
+        object.__setattr__(self, "columns", max(1, int(columns or 1)))
 
     def to_data(self):
         data = {
@@ -138,6 +148,12 @@ class ChoiceRequest:
             data["prompt_key"] = self.prompt_key
         if self.box_at is not None:
             data["box_at"] = list(self.box_at)
+        if self.cursor:
+            data["cursor"] = self.cursor
+        if self.cancel:
+            data["cancel"] = {"value": self.cancel[0]}
+        if self.columns > 1:
+            data["columns"] = self.columns
         return data
 
     @classmethod
@@ -150,7 +166,8 @@ class ChoiceRequest:
             "variable_name",
             "local_name",
         }
-        if not expected <= set(data) or set(data) - expected - {"prompt_key", "box_at"}:
+        optional = {"prompt_key", "box_at", "cursor", "cancel", "columns"}
+        if not expected <= set(data) or set(data) - expected - optional:
             raise ValueError("invalid choice request")
         if data["schema"] != "asteria.choice_request" or data["version"] != 1:
             raise ValueError("unsupported choice request")
@@ -163,6 +180,9 @@ class ChoiceRequest:
             local_name=data["local_name"],
             prompt_key=str(data.get("prompt_key", "")),
             box_at=data.get("box_at"),
+            cursor=int(data.get("cursor", 0)),
+            cancel=(data["cancel"]["value"],) if "cancel" in data else (),
+            columns=int(data.get("columns", 1)),
         )
 
 
@@ -170,6 +190,9 @@ class ChoiceRequest:
 class DialogueRuntimeState:
     dialogue: DialogueRequest | None = None
     choice: ChoiceRequest | None = None
+    # a line shown without waiting for a key (DIALOGUE ``wait`` false): the event goes on; it
+    # stays in the message window until the next line or choice, or the event's end
+    held: DialogueRequest | None = None
 
     @property
     def blocked(self) -> bool:
@@ -178,6 +201,7 @@ class DialogueRuntimeState:
     def clear(self) -> None:
         self.dialogue = None
         self.choice = None
+        self.held = None
 
     def to_data(self):
         return {

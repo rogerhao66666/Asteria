@@ -34,6 +34,7 @@ STANDARD_WORLD_COMMANDS = (
     "STOP_BGM",
     "RESTORE_BGM",
     "PLAY_SE",
+    "PLAY_ME",
     "SCREEN_FADE",
     "CAMERA_FOCUS",
     "CAMERA_RELEASE",
@@ -70,6 +71,7 @@ PRESENTATION_COMMANDS = (
     "STOP_BGM",
     "RESTORE_BGM",
     "PLAY_SE",
+    "PLAY_ME",
     "SCREEN_FADE",
     "CAMERA_FOCUS",
     "CAMERA_RELEASE",
@@ -101,6 +103,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "STOP_BGM": ("fade",),
     "RESTORE_BGM": (),
     "PLAY_SE": ("asset_id", "volume"),
+    "PLAY_ME": ("asset_id", "volume"),
     "SCREEN_FADE": ("to", "duration", "color"),
     "PLAY_VFX": ("asset_id", "entity", "x", "y", "scale", "anchor"),
     "PLAY_ACTION": ("entity", "timeline_id"),
@@ -141,6 +144,9 @@ WORLD_COMMAND_ARGUMENTS = {
     "SET_MOVEMENT": ("entity", "behaviour", "facing"),
     "PARTY_STASH": (),
     "PARTY_RESTORE": (),
+    "SET_TILE": ("layer", "x", "y", "tile", "permanent"),
+    "NAME_INPUT": ("target", "max_length", "title", "default", "initial"),
+    "PICTURE_CHOICE": ("layout", "variable"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
     "SET_ENTITY_ICON": ("entity", "icon_id"),
     "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
@@ -280,7 +286,36 @@ def register_standard_world_commands(router, session):
 
     def presentation_request(command):
         session.presentation_requests.append(command)
+        # a fanfare / sound a host plays: WAIT until ``audio`` ``me`` / ``se`` is off
+        kind = {"PLAY_ME": "me", "PLAY_SE": "se"}.get(command.name)
+        if kind is not None and getattr(session, "plays_audio", False):
+            session.audio_status[kind] = True
         return command
+
+    def name_input(command):
+        args = command.args
+        try:
+            return session.request_name_input(
+                _required(command, "target"),
+                max_length=int(_amount(command, "max_length", 7)),
+                title=args.get("title", ""),
+                default=args.get("default", ""),
+                initial=args.get("initial", ""),
+            )
+        except Exception as exc:  # noqa: BLE001 - a wrong target: the event's error
+            raise WorldCommandError(f"NAME_INPUT: {exc}") from exc
+
+    def set_tile(command):
+        try:
+            return session.set_tile(
+                _required(command, "layer"),
+                int(_amount(command, "x", 0)),
+                int(_amount(command, "y", 0)),
+                int(_amount(command, "tile", -1)),
+                permanent=bool(command.args.get("permanent", False)),
+            )
+        except (TypeError, ValueError) as exc:
+            raise WorldCommandError(f"SET_TILE: {exc}") from exc
 
     def summon(command):
         enemy_id, actor_id = (
@@ -659,6 +694,14 @@ def register_standard_world_commands(router, session):
         ("GIVE_PET", give_pet),
         ("SET_LOOK", set_look),
         ("SET_RESPAWN", set_respawn),
+        ("SET_TILE", set_tile),
+        ("NAME_INPUT", name_input),
+        (
+            "PICTURE_CHOICE",
+            lambda c: session.request_picture_choice(
+                _required(c, "layout"), c.args.get("variable", "")
+            ),
+        ),
     ):
         router.register(name, handler)
     router.register("SHOW_BALLOON", show_balloon)

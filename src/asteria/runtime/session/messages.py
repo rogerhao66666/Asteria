@@ -156,6 +156,67 @@ class MessagesMixin:
 
         return speaker_name(self.data_lookup, line.speaker)
 
+    def request_name_input(self, target, *, max_length=7, title="", default="", initial=""):
+        """NAME_INPUT: the name screen opens (the host draws it); ``finish_name_input`` gives
+        the name to ``target`` - ``variable:<name>`` or ``pet:last`` / ``pet:<instance id>``."""
+        target = str(target or "")
+        if not target.startswith(("variable:", "pet:")):
+            raise GameSessionError("NAME_INPUT target is variable:<name> or pet:<id>")
+        self.name_input_request = {
+            "target": target,
+            "max_length": int(max_length or 7),
+            "title": str(title or ""),
+            "default": str(default or ""),
+            "initial": str(initial or ""),
+        }
+        return self.name_input_request
+
+    def name_input_pet(self):
+        """The creature being named by the open name screen, or None."""
+        request = getattr(self, "name_input_request", None) or {}
+        target = str(request.get("target", ""))
+        if not target.startswith("pet:"):
+            return None
+        pets = list(self.pets())
+        if target == "pet:last":
+            return pets[-1] if pets else None
+        return next((p for p in pets if p.instance_id == target[4:]), None)
+
+    def finish_name_input(self, name):
+        """The name screen's answer: the variable or the creature's nickname gets ``name``."""
+        request = getattr(self, "name_input_request", None)
+        if not request:
+            return False
+        target = request["target"]
+        if target.startswith("variable:"):
+            self.save.event_context.set_variable(target[len("variable:") :], str(name))
+        else:
+            pet = self.name_input_pet()
+            if pet is not None:
+                pet.nickname = str(name)
+        self.name_input_request = None
+        return True
+
+    def request_picture_choice(self, layout, variable):
+        """PICTURE_CHOICE: the host shows the layout's pictured options; the chosen one's value
+        goes to ``variable`` (``finish_picture_choice``)."""
+        self.picture_choice_request = {"layout": str(layout), "variable": str(variable)}
+        return self.picture_choice_request
+
+    def finish_picture_choice(self, value):
+        request = getattr(self, "picture_choice_request", None)
+        if not request:
+            return False
+        if request["variable"] and value is not None:
+            self.save.event_context.set_variable(request["variable"], value)
+        self.picture_choice_request = None
+        return True
+
+    @property
+    def held_dialogue(self):
+        """The line shown without waiting for a key (DIALOGUE ``wait`` false), or None."""
+        return next((r.dialogue.held for r in self._all_runners() if r.dialogue.held), None)
+
     def prompt_of(self, request):
         """A choice's prompt in the player's language (its ``prompt_key``), else as written."""
         from asteria.rpg.data_text import text_by_key
@@ -304,6 +365,15 @@ class MessagesMixin:
         selected = runner.choose(index)
         self.update_events(0.0)
         return selected
+
+    def cancel_choice(self):
+        """The cancel key on the waiting choice: its ``cancel`` value when it has one (True),
+        else nothing happens (False)."""
+        runner = self._dialogue_runner()
+        if runner is None or not runner.cancel_choice():
+            return False
+        self.update_events(0.0)
+        return True
 
     def update_events(self, dt=0.0):
         """Advance running event programs. Failures stop that event and are kept in

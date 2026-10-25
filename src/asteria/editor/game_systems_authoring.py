@@ -216,6 +216,12 @@ FORMS = {
         F("tags", "Tags", "string_list", default=()),
         F("evolutions", "Evolutions", "table", fields=_PET_EVOLUTION, default=()),
         F("learnset", "Learned Abilities", "table", fields=_PET_MOVE, default=()),
+        F(
+            "teachable",
+            "Abilities Items Can Teach (items tagged teaches:<ability>)",
+            "string_list",
+            default=(),
+        ),
         F("affinity_per_battle", "Affinity Gained Per Battle", "float", default=0.0),
         F("max_affinity", "Highest Affinity", "float", default=100.0),
         F("battle_unit", "Fights As Its Own Battle Unit", "bool", default=False),

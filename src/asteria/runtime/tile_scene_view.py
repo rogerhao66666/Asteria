@@ -23,6 +23,7 @@ from math import floor
 
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
+from asteria.graphics.tilemap import TileChunk, TileLayer, TileMap
 
 from .camera import Camera2D
 from .components2d import (
@@ -137,7 +138,31 @@ class TileSceneView:
         scene = self.session.scene
         binding = tilemap_binding(scene)
         self.scene_id = scene.id
-        self.tilemap = self.resources.get(binding.tilemap_asset_id, "tilemap")
+        source = self.resources.get(binding.tilemap_asset_id, "tilemap")
+        # the map as loaded, and this view's own copy that SET_TILE changes (chunk by chunk:
+        # the loaded map is shared and stays as authored)
+        self._source_tilemap = source
+        self.tilemap = TileMap(
+            source.tileset,
+            source.tile_width,
+            source.tile_height,
+            source.chunk_width,
+            source.chunk_height,
+            [
+                TileLayer(
+                    layer.name,
+                    layer.order,
+                    layer.visible,
+                    layer.opacity,
+                    layer.collision_enabled,
+                    dict(layer.chunks),
+                )
+                for layer in source.layers
+            ],
+        )
+        self._tiles_version = None
+        self._tiles_applied = {}  # (layer, x, y) -> tile now in the copy
+        self._owned_chunks = set()  # (layer name, cx, cy) copied from the loaded map
         self.tileset = self.resources.get(self.tilemap.tileset.asset_id, "tileset")
         self.tile_sheet = self.resources.get(self.tileset.sprite_sheet.asset_id, "sprite_sheet")
         tw, th = self.tilemap.tile_width, self.tilemap.tile_height
@@ -207,6 +232,8 @@ class TileSceneView:
             if spec is not None and spec.active:
                 zoom = spec.zoom
         self.camera = Camera2D(width=self.width, height=self.height, zoom=zoom)
+        self._sync_tiles()
+        self.player_at = None  # (x, y) in the view's world units: the camera puts the player
         self._animated = {}
         self._ahead = (0.0, 0.0)  # the camera's look-ahead offset (CombatScene.camera_look_ahead)
         self.follow(0.0)
@@ -215,6 +242,10 @@ class TileSceneView:
     def follow(self, dt):
         t = self.session.player.get(Transform)
         view_w, view_h = self.width / self.camera.zoom, self.height / self.camera.zoom
+        at = getattr(self, "player_at", None)
+        if at is not None:  # a screen that wants the player at a spot of the view (a shop)
+            self.camera.x, self.camera.y = t.x - at[0], t.y - at[1]
+            return
         x0, y0, x1, y1 = self.bounds
         want_x = t.x + self._ahead[0] - view_w / 2
         want_y = t.y + self._ahead[1] - view_h / 2
@@ -244,6 +275,7 @@ class TileSceneView:
         running = actions.running if actions is not None else {}
         from .character_control import CharacterController2DComponent
 
+        self._sync_tiles()
         self._apply_class_looks()
         self._advance_tiles(dt)
         self._look_ahead(dt)
@@ -503,6 +535,44 @@ class TileSceneView:
             image = self._frames[key] = self.pg.transform.scale(piece, size)
         sx, sy = self.camera.world_to_screen(cell[0] * tw, cell[1] * th)
         screen.blit(image, (round(sx), round(sy)))
+
+    def _sync_tiles(self):
+        """The session's tile changes (SET_TILE) put in this view's copy of the map; a change
+        that is gone gets the loaded tile back. Only the touched chunks are drawn again."""
+        version = getattr(self.session, "tile_changes_version", None)
+        if version is None or version == self._tiles_version:
+            return
+        self._tiles_version = version
+        wanted = self.session.tile_changes(self.scene_id)
+        layers = {layer.name: layer for layer in self.tilemap.layers}
+        sources = {layer.name: layer for layer in self._source_tilemap.layers}
+        query = TileMapQuery(self._source_tilemap)
+        for cell in [c for c in self._tiles_applied if c not in wanted]:
+            name, x, y = cell
+            self._put_tile(layers[name], x, y, query.tile_at(sources[name], x, y))
+            del self._tiles_applied[cell]
+        for cell, tile in wanted.items():
+            name, x, y = cell
+            if name in layers and self._tiles_applied.get(cell) != tile:
+                self._put_tile(layers[name], x, y, tile)
+                self._tiles_applied[cell] = tile
+
+    def _put_tile(self, layer, x, y, tile):
+        cw, ch = self.tilemap.chunk_width, self.tilemap.chunk_height
+        cx, cy = x // cw, y // ch
+        key = (layer.name, cx, cy)
+        chunk = layer.chunks.get((cx, cy))
+        if key not in self._owned_chunks:
+            chunk = (
+                TileChunk.empty(cx, cy, cw, ch)
+                if chunk is None
+                else TileChunk(cx, cy, chunk.width, chunk.height, list(chunk.tiles))
+            )
+            layer.chunks[(cx, cy)] = chunk
+            self._owned_chunks.add(key)
+        chunk.set(x - cx * cw, y - cy * ch, int(tile))
+        for group in ("below", "above"):
+            self._chunk_cache.pop((group, cx, cy), None)
 
     def _animation_phase(self):
         """The frame every tile animation is on now (one entry per distinct animation)."""

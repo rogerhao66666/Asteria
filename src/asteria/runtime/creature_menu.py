@@ -71,6 +71,18 @@ CARD_PLACES = {  # the trainer card's words (pokeemerald's Hoenn card)
 }
 
 
+def taught_ability(item):
+    from asteria.runtime.session.pets import taught_ability as taught
+
+    return taught(item)
+
+
+def _me(asset_id):
+    from asteria.events.world_commands import WorldCommand
+
+    return WorldCommand("PLAY_ME", {"asset_id": str(asset_id)})
+
+
 class CreatureMenuScreen(CreatureBattleScreen):
     """Made when the start menu opens; each frame ``update(dt, events)`` then ``draw()``;
     ``done`` turns true when the player is back on the field."""
@@ -92,6 +104,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
         self.option_cursor = 0
         self._dex = None
         self.target_item, self.list_cursor_saved = "", 0
+        self.teach_lines, self.teach_ask = [], ""  # a TM's lines, then its question
 
     def _remember_hp(self):  # no battle: nothing to remember
         return None
@@ -341,7 +354,20 @@ class CreatureMenuScreen(CreatureBattleScreen):
         items = self.pocket_items()
         item_id = items[self.list_cursor][0] if self.list_cursor < len(items) else ""
         item = self.game.project.rpg_database.items.get(item_id) if item_id else None
-        if choice == "use" and item is not None and self._usable_on_pets(item):
+        if choice == "use" and item is not None and taught_ability(item):
+            # party_menu.c: "Booted up a TM." / "It contained ..." / "Teach ... ?" YES / NO
+            move = self._move_name(taught_ability(item))
+            self.phase, self.target_item, self.list_cursor_saved = (
+                "bag_teach",
+                item_id,
+                (self.list_cursor),
+            )
+            self.teach_lines = [
+                self.tr("creature.menu.tm_booted", "Booted up a TM."),
+                self.tr("creature.menu.tm_contained", "It contained\n{move}.", move=move),
+            ]
+            self.note, self.action_cursor = self.teach_lines.pop(0), 0
+        elif choice == "use" and item is not None and self._usable_on_pets(item):
             self.phase, self.target_item, self.list_cursor_saved = (
                 "bag_target",
                 item_id,
@@ -362,6 +388,47 @@ class CreatureMenuScreen(CreatureBattleScreen):
             self.list_cursor = min(self.list_cursor, max(0, len(self.pocket_items()) - 1))
         else:
             self.phase = "bag"
+
+    def _move_name(self, ability_id):
+        ability = self.game.project.gameplay_library.abilities.get(ability_id)
+        return self.game.name_of(ability, ability_id) if ability is not None else ability_id
+
+    def _input_bag_teach(self):
+        """The TM's lines, then YES / NO; YES chooses the creature to teach."""
+        item = self.game.project.rpg_database.items.get(self.target_item)
+        move = self._move_name(taught_ability(item)) if item is not None else ""
+        if self.note:
+            if self._pressed("confirm") or self._pressed("cancel"):
+                if self.teach_lines:
+                    self.note = self.teach_lines.pop(0)
+                else:
+                    self.note = ""
+                    self.teach_ask = self.tr(
+                        "creature.menu.teach_ask", "Teach {move}\nto a POKéMON?", move=move
+                    )
+            return
+        if self._pressed("move_up") or self._pressed("move_down"):
+            self.action_cursor = 1 - self.action_cursor
+        if self._pressed("cancel") or (self._pressed("confirm") and self.action_cursor == 1):
+            self.phase, self.list_cursor = "bag", self.list_cursor_saved
+        elif self._pressed("confirm"):
+            self.phase, self.list_cursor = "bag_target", 0
+            self.party_note = self.tr(
+                "creature.menu.teach_which", "Teach which POKéMON?", move=move
+            )
+
+    def slot_label(self, pet):
+        """ABLE / NOT ABLE / LEARNED over a slot while a TM is chosen (party_menu.c)."""
+        if self.phase != "bag_target" or not self.target_item:
+            return None
+        check = self.game.teaching_check(pet, self.target_item)
+        if check == "able":
+            return self.tr("creature.menu.able", "ABLE")
+        if check == "not_able":
+            return self.tr("creature.menu.not_able", "NOT ABLE")
+        if check == "learned":
+            return self.tr("creature.menu.learned", "LEARNED")
+        return None
 
     @staticmethod
     def _usable_on_pets(item):
@@ -386,6 +453,8 @@ class CreatureMenuScreen(CreatureBattleScreen):
         if not self._pressed("confirm"):
             return
         pet = pets[self.list_cursor]
+        if self._teach_result(pet):
+            return
         hp = self.game.rules.knockout_resource_id
         before = self._pet_health(pet, None)[0]
         used = self.game.use_item_on_pet(pet, self.target_item)
@@ -403,6 +472,36 @@ class CreatureMenuScreen(CreatureBattleScreen):
             self.note = self.tr("creature.menu.cured", "{name} was cured.",
                                 name=self.game.pet_display(pet))  # fmt: skip
         _ = hp
+
+    def _teach_result(self, pet):
+        """A TM on the chosen creature: learned, known already, not compatible, or (its
+        moves full) the field's forget-a-move prompt takes over. False: not a TM."""
+        item = self.game.project.rpg_database.items.get(self.target_item)
+        ability = taught_ability(item) if item is not None else ""
+        if not ability:
+            return False
+        name, move = self.game.pet_display(pet), self._move_name(ability)
+        check = self.game.teaching_check(pet, self.target_item)
+        if check == "learned":
+            self.note = self.tr("creature.menu.already_knows", "{name} already knows\n{move}.",
+                                name=name, move=move)  # fmt: skip
+        elif check != "able":
+            self.note = self.tr(
+                "creature.menu.not_compatible",
+                "{name} and {move}\nare not compatible.",
+                name=name,
+                move=move,
+            )
+        elif self.game.use_item_on_pet(pet, self.target_item):
+            if any(a == ability for _p, a in self.game.pending_pet_moves()):
+                self.done = True  # the field asks which move to forget
+                return True
+            self.note = self.tr("creature.menu.learned_move", "{name} learned\n{move}!",
+                                name=name, move=move)  # fmt: skip
+            sound = (self.menu.get("bag") or {}).get("learned_sound")
+            if sound:
+                self.game.presentation_requests.append(_me(sound))
+        return True
 
     # -- the trainer card, options, the dex ---------------------------------------------------
     def _input_card(self):
@@ -772,6 +871,15 @@ class CreatureMenuScreen(CreatureBattleScreen):
         super()._draw_party()
         if self.note:
             self._message_window(self.note)
+
+    def _draw_bag_teach(self):
+        self._draw_bag()
+        if self.note:
+            self._message_window(self.note)
+            return
+        self._message_window(getattr(self, "teach_ask", ""))
+        rows = [self.tr("creature.yes", "YES"), self.tr("creature.no", "NO")]
+        self._list_window(rows, self.action_cursor, W - 2, H - 48)
 
     def _draw_bag_action(self):
         self._draw_bag()

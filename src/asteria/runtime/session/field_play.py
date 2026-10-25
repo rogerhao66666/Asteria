@@ -650,6 +650,7 @@ class FieldPlayMixin:
         if getattr(self, "_story_scene", None) != self.scene.id:  # a scene just loaded
             self._story_scene = self.scene.id
             self.route_hidden.clear()  # hidden by a route or SHOW_ENTITY: until the scene changes
+            self._forget_tile_changes()  # SET_TILE without permanent: until the scene changes
             context = self.save.event_context
             for entity in self.scene.entities():
                 kept = context.get_variable(f"{self.POSITION_PREFIX}{entity.id}")

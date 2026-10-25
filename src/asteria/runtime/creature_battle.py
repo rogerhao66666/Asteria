@@ -2087,6 +2087,10 @@ class CreatureBattleScreen:
             image = image.subsurface((0, 0, image.get_width(), image.get_width()))
         return image
 
+    def slot_label(self, pet):
+        """Words shown in a party slot instead of its HP (None: the HP)."""
+        return None
+
     def _draw_party(self):
         main, self.font = self.font, self.font_small
         try:
@@ -2132,6 +2136,10 @@ class CreatureBattleScreen:
             self._text(pet.name(species), x + name_at[0], y + name_at[1], letter, shadow)
             level = self.tr("creature.level", "Lv{level}", level=pet.level)
             self._text(level, x + level_at[0], y + level_at[1], letter, shadow)
+            label = self.slot_label(pet)
+            if label is not None:  # ABLE / NOT ABLE... in place of the HP (a TM chosen)
+                self._text(label, x + top_at[0], y + hp_at[1], letter, shadow, anchor="topright")
+                continue
             self._text(
                 f"{current:.0f}", x + hp_at[0], y + hp_at[1], letter, shadow, anchor="topright"
             )

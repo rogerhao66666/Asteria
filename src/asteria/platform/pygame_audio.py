@@ -74,6 +74,15 @@ class PygameAudioDevice:
         if handle is not None:
             handle.set_volume(volume)
 
+    def pause_music(self):
+        self.pg.mixer.music.pause()
+
+    def resume_music(self):
+        self.pg.mixer.music.unpause()
+
+    def sound_busy(self, handle):
+        return handle is not None and bool(handle.get_busy())
+
 
 def open_audio_device(pg):
     """A pygame device when an output device can be opened, else a recording device.

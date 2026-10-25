@@ -91,6 +91,7 @@ class EventEditorWidget(QWidget):
         for text, kind in [
             ("Dialogue", "dialogue"),
             ("Choice", "choice"),
+            ("Wait", "wait"),
             ("If", "if"),
             ("Switch", "switch"),
             ("Variable", "variable"),

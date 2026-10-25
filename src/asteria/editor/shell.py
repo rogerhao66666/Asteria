@@ -1423,8 +1423,25 @@ class AsteriaEditorWindow(QMainWindow):
         dialog = DialogueCommandDialog(args, document=self.document, parent=self)
         return dialog.result_args() if dialog.exec() == DialogueCommandDialog.Accepted else None
 
+    def _choice_dialog(self, args=None):
+        """Modal Choice editor (prompt, options, variable, start, cancel, box); returns CHOICE
+        args or None (tests replace this)."""
+        from .choice_command_dialog import ChoiceCommandDialog
+
+        dialog = ChoiceCommandDialog(args, parent=self)
+        return dialog.result_args() if dialog.exec() == ChoiceCommandDialog.Accepted else None
+
+    def _wait_dialog(self, args=None):
+        """Modal Wait editor (seconds, or until a condition); returns WAIT args or None (tests
+        replace this)."""
+        from .wait_command_dialog import WaitCommandDialog
+
+        dialog = WaitCommandDialog(args, parent=self)
+        return dialog.result_args() if dialog.exec() == WaitCommandDialog.Accepted else None
+
     def _event_edit_command(self, index):
-        """Open the specialized editor for dialogue, sequence and picture instructions."""
+        """Open the specialized editor for dialogue, choice, wait, sequence and picture
+        instructions."""
         from .event_flow_authoring import EventFlowAuthoring
         from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
 
@@ -1443,12 +1460,17 @@ class AsteriaEditorWindow(QMainWindow):
             EventFlowAuthoring(self.document).replace_sequence(
                 binding.program_id, index, **_sequence_kwargs(args)
             )
-        elif instruction.opcode == "DIALOGUE":
-            args = self._dialogue_dialog(instruction.args)
+        elif instruction.opcode in ("DIALOGUE", "CHOICE", "WAIT"):
+            edit = {
+                "DIALOGUE": self._dialogue_dialog,
+                "CHOICE": self._choice_dialog,
+                "WAIT": self._wait_dialog,
+            }[instruction.opcode]
+            args = edit(instruction.args)
             if args is None:
                 return False
             rows = list(program.instructions)
-            rows[index] = EventInstruction("DIALOGUE", args)
+            rows[index] = EventInstruction(instruction.opcode, args)
             self.document.execute(
                 ReplaceEventProgramCommand(
                     project.event_programs,
@@ -1497,20 +1519,11 @@ class AsteriaEditorWindow(QMainWindow):
             args = self._dialogue_dialog()
             return None if args is None else EventInstruction("DIALOGUE", args)
         if kind == "choice":
-            prompt, ok = QInputDialog.getText(self, "Choice", "Prompt:")
-            if not ok:
-                return None
-            return EventInstruction(
-                "CHOICE",
-                {
-                    "prompt": prompt,
-                    "choices": [
-                        {"text": "Option 1", "value": 1},
-                        {"text": "Option 2", "value": 2},
-                    ],
-                    "variable_name": "choice",
-                },
-            )
+            args = self._choice_dialog()
+            return None if args is None else EventInstruction("CHOICE", args)
+        if kind == "wait":
+            args = self._wait_dialog()
+            return None if args is None else EventInstruction("WAIT", args)
         if kind == "if":
             name, ok = QInputDialog.getText(self, "If", "Switch name:")
             if not ok or not name.strip():

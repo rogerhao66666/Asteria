@@ -454,9 +454,16 @@ class FieldUiMixin:
             if self._multiplayer_connected()
             else self.game.pending_dialogue
         )
+        held = False
+        if request is None and not self._multiplayer_connected():
+            request = self.game.held_dialogue  # shown without waiting for a key
+            held = request is not None
         if request is None:
             return
         line = getattr(request, "line", None)
+        if held and self.manifest.get("dialogue", {}).get("window"):
+            self._draw_dialogue_window(line, held=True)
+            return
         if self.manifest.get("dialogue", {}).get("window"):
             if line is not None:
                 self._draw_dialogue_window(line)
@@ -509,10 +516,16 @@ class FieldUiMixin:
                 size=20,
             )
 
+    def _grid_steps(self, request):
+        pg = self.pg
+        return {pg.K_LEFT: -1, pg.K_RIGHT: 1, pg.K_UP: -request.columns,
+                pg.K_DOWN: request.columns}  # fmt: skip
+
     def _choice_index(self, request):
-        """The choice under the cursor (arrow keys move it; a new choice starts at the top)."""
-        if getattr(self, "_choice_request", None) is not request:
-            self._choice_request, self._choice_cursor = request, 0
+        """The choice under the cursor (arrow keys move it; a new one starts on its ``cursor``)."""
+        if getattr(self, "_choice_request", None) is not request:  # its own start (cursor)
+            self._choice_request = request
+            self._choice_cursor = getattr(request, "cursor", 0)
         return self._choice_cursor
 
     def _draw_choice_window(self, request):
@@ -536,7 +549,10 @@ class FieldUiMixin:
         names = [self.game.expand_message(self.game.line_text(c), plain=True) for c in
                  request.choices]  # fmt: skip
         width = max((font.width(n) if font is not None else len(n) * 6) for n in names) + 16
-        inner = (width + 7) // 8 * 8, len(names) * step
+        columns = max(1, getattr(request, "columns", 1))
+        rows = (len(names) + columns - 1) // columns
+        column = (width + 7) // 8 * 8  # a grid's options side by side, a column each
+        inner = column * columns, rows * step
         ww, wh = window.get_size()
         right = int(settings.get("choice_right", ww - 24))
         bottom = int(settings.get("choice_bottom", 160 - wh))
@@ -560,15 +576,15 @@ class FieldUiMixin:
             box.blit(frame, (0, y), (0, piece, piece, piece))
             box.blit(frame, (bw - piece, y), (2 * piece, piece, piece, piece))
         cursor = self._choice_index(request)
-        for row, name in enumerate(names):
-            ty = 8 + row * step
+        for index, name in enumerate(names):
+            tx, ty = 16 + index % columns * column, 8 + index // columns * step
             if font is not None and font.covers(name):
-                font.render(box, name, 16, ty, letter, shadow)
+                font.render(box, name, tx, ty, letter, shadow)
             else:
                 face = self.pg.font.Font(None, 16)
-                box.blit(face.render(name, False, letter), (16, ty))
-            if row == cursor:  # the pointer (menu.c's arrow)
-                tip = [(9, ty + 3), (9, ty + 11), (13, ty + 7)]
+                box.blit(face.render(name, False, letter), (tx, ty))
+            if index == cursor:  # the pointer (menu.c's arrow)
+                tip = [(tx - 7, ty + 3), (tx - 7, ty + 11), (tx - 3, ty + 7)]
                 self.pg.draw.polygon(box, shadow, [(x + 1, y + 1) for x, y in tip])
                 self.pg.draw.polygon(box, letter, tip)
         scale = max(1, self.width // ww)
@@ -578,7 +594,7 @@ class FieldUiMixin:
             big, (left, self.height - wh * scale - (160 - wh - bottom) * scale - bh * scale)
         )
 
-    def _draw_dialogue_window(self, line, text=None):
+    def _draw_dialogue_window(self, line, text=None, held=False):
         """``dialogue.window``: the game's own message window, drawn at its own resolution and
         scaled by whole pixels. ``window`` is the picture (placed at the bottom of the screen),
         ``text_area`` ``[x, y, w, h]`` in it, ``line_height``, ``font`` (a bitmap font JSON;
@@ -638,7 +654,7 @@ class FieldUiMixin:
                 image = face.render(part, False, letter)
                 surface.blit(face.render(part, False, shadow), (x0 + 1, y0 + row * step + 1))
                 surface.blit(image, (x0, y0 + row * step))
-        if arrow is not None and shown >= len(text):
+        if arrow is not None and shown >= len(text) and not held:  # held: no key awaited
             aw, ah = settings.get("arrow_size", (8, 16))
             frames = max(1, arrow.get_height() // ah)
             frame = (self.pg.time.get_ticks() // 160) % frames
@@ -806,12 +822,19 @@ class FieldUiMixin:
                 if index < len(choices):
                     self.game.choose(index)
                     return True
+            elif getattr(request, "columns", 1) > 1 and event.key in self._grid_steps(request):
+                # a grid: left / right one option, up / down a row (no wrapping)
+                moved = cursor + self._grid_steps(request)[event.key]
+                if 0 <= moved < len(choices):
+                    self._choice_cursor = cursor = moved
             elif event.key in (self.pg.K_UP, self.pg.K_LEFT):
                 self._choice_cursor = cursor = (cursor - 1) % len(choices)
             elif event.key in (self.pg.K_DOWN, self.pg.K_RIGHT):
                 self._choice_cursor = cursor = (cursor + 1) % len(choices)
         if choices and (self.input.just_pressed("confirm") or self.input.just_pressed("interact")):
             self.game.choose(cursor)
+        elif choices and getattr(request, "cancel", ()) and self.input.just_pressed("cancel"):
+            self.game.cancel_choice()  # the choice's own answer to the cancel key
         elif (
             choices
             and self.manifest.get("dialogue", {}).get("cancel_picks_last")

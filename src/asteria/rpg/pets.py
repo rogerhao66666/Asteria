@@ -266,6 +266,7 @@ class PetSpeciesDefinition:
     capture_rate: float = 0.0
     visual_profile_id: str = ""
     back_visual_profile_id: str = ""
+    teachable: tuple = ()  # abilities an item tagged ``teaches:<ability>`` can teach it
 
     def __init__(
         self,
@@ -291,6 +292,7 @@ class PetSpeciesDefinition:
         capture_rate=0.0,
         visual_profile_id="",
         back_visual_profile_id="",
+        teachable=(),
     ):
         species_id = _text(species_id, "species_id")
         max_level, exp_base = int(max_level), float(exp_base)
@@ -339,6 +341,9 @@ class PetSpeciesDefinition:
             if not isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be >= 0")
             object.__setattr__(self, name, value)
+        object.__setattr__(
+            self, "teachable", tuple(dict.fromkeys(str(a).strip() for a in teachable if a))
+        )
         object.__setattr__(
             self, "visual_profile_id", _text(visual_profile_id, "visual", required=False)
         )
@@ -436,6 +441,7 @@ class PetSpeciesDefinition:
                 if self.back_visual_profile_id
                 else {}
             ),
+            **({"teachable": list(self.teachable)} if self.teachable else {}),
         }
 
     @classmethod
@@ -464,6 +470,7 @@ class PetSpeciesDefinition:
             capture_rate=data.get("capture_rate", 0.0),
             visual_profile_id=data.get("visual_profile_id", ""),
             back_visual_profile_id=data.get("back_visual_profile_id", ""),
+            teachable=data.get("teachable", ()),
         )
 
 

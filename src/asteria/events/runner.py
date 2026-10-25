@@ -211,6 +211,10 @@ class EventRunner:
 
             if instruction.opcode == "DIALOGUE":
                 self._open_dialogue(instruction)
+                if instruction.args.get("wait", True) is False:  # shown, the event goes on
+                    self.dialogue.held, self.dialogue.dialogue = self.dialogue.dialogue, None
+                    continue
+                self.dialogue.held = None
                 break
 
             if instruction.opcode == "CHOICE":
@@ -371,13 +375,24 @@ class EventRunner:
             choices.append(
                 DialogueChoice(str(item["text"]), item["value"], str(item.get("text_key", "")))
             )
-        self.dialogue.choice = ChoiceRequest(
+        prompt, prompt_key = (
             str(instruction.args.get("prompt", "")),
+            str(instruction.args.get("prompt_key", "")),
+        )
+        if not prompt and self.dialogue.held is not None:  # the line shown before stays
+            prompt, prompt_key = self.dialogue.held.line.text, self.dialogue.held.line.text_key
+        self.dialogue.held = None
+        self.dialogue.choice = ChoiceRequest(
+            prompt,
             choices,
             variable_name=str(instruction.args.get("variable_name", "")),
             local_name=str(instruction.args.get("local_name", "")),
-            prompt_key=str(instruction.args.get("prompt_key", "")),
+            prompt_key=prompt_key,
             box_at=instruction.args.get("box_at"),
+            cursor=int(instruction.args.get("cursor", 0) or 0),
+            # ``cancel``: the value the cancel key gives (no key: cancel does nothing)
+            cancel=(instruction.args["cancel"],) if "cancel" in instruction.args else (),
+            columns=int(instruction.args.get("columns", 1) or 1),
         )
 
     def acknowledge_dialogue(self):
@@ -405,6 +420,20 @@ class EventRunner:
             )
         self.dialogue.choice = None
         return selected
+
+    def cancel_choice(self):
+        """The cancel key on a choice that allows it: its ``cancel`` value is the answer.
+        Returns False (nothing happens) for a choice without one."""
+        request = self.dialogue.choice
+        if request is None or not request.cancel:
+            return False
+        value = request.cancel[0]
+        if request.variable_name:
+            self.context.set_variable(request.variable_name, value)
+        if request.local_name and self.active is not None and self.active.local_scope_id:
+            self.context.set_local(self.active.local_scope_id, request.local_name, value)
+        self.dialogue.choice = None
+        return True
 
     def clear_completed(self) -> bool:
         if self.vm is None or self.sequence_active:

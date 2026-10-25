@@ -23,6 +23,20 @@ class AudioDevice(Protocol):
     def play_sound(self, path: str, *, loops: int, fade_ms: int, volume: float) -> object: ...
     def stop_sound(self, handle: object, *, fade_ms: int) -> None: ...
     def set_sound_volume(self, handle: object, volume: float) -> None: ...
+    def pause_music(self) -> None: ...
+    def resume_music(self) -> None: ...
+    def sound_busy(self, handle: object) -> bool: ...
+
+
+def _wav_seconds(path):
+    """How long a .wav plays (0 for anything else): the silent device waits as long."""
+    import wave
+
+    try:
+        with wave.open(str(path), "rb") as data:
+            return data.getnframes() / float(data.getframerate())
+    except (OSError, EOFError, wave.Error):
+        return 0.0
 
 
 @dataclass(slots=True)
@@ -31,6 +45,7 @@ class RecordingAudioDevice:
 
     calls: list = field(default_factory=list)
     _next: int = 0
+    _ends: dict = field(default_factory=dict)  # handle -> when the sound would end
 
     def play_music(self, path, *, loops, fade_ms, volume):
         self.calls.append(("play_music", path, loops, fade_ms, round(volume, 4)))
@@ -42,8 +57,11 @@ class RecordingAudioDevice:
         self.calls.append(("music_volume", round(volume, 4)))
 
     def play_sound(self, path, *, loops, fade_ms, volume):
+        import time
+
         self._next += 1
         self.calls.append(("play_sound", path, loops, fade_ms, round(volume, 4)))
+        self._ends[self._next] = time.monotonic() + (_wav_seconds(path) if loops == 0 else 0.0)
         return self._next
 
     def stop_sound(self, handle, *, fade_ms):
@@ -51,6 +69,18 @@ class RecordingAudioDevice:
 
     def set_sound_volume(self, handle, volume):
         self.calls.append(("sound_volume", handle, round(volume, 4)))
+
+    def pause_music(self):
+        self.calls.append(("pause_music",))
+
+    def resume_music(self):
+        self.calls.append(("resume_music",))
+
+    def sound_busy(self, handle):
+        """A one-shot sound plays as long as its file (silently): waits keep their timing."""
+        import time
+
+        return time.monotonic() < self._ends.get(handle, 0.0)
 
 
 class AudioMixer:
@@ -62,6 +92,8 @@ class AudioMixer:
         self._music_volume = 1.0
         self._ambient: dict[str, tuple[object, float]] = {}
         self.missing: list[str] = []
+        self._me = None  # the fanfare playing (PLAY_ME), the music paused under it
+        self._se = None  # the last sound effect (PLAY_SE)
 
     # -- volume -----------------------------------------------------------
     def _bus_volume(self, bus):
@@ -93,6 +125,9 @@ class AudioMixer:
             return False
         if self.music_asset_id is not None:
             self.device.stop_music(fade_ms=int(fade_in * 1000))
+        if self._me is not None:  # a track started under a fanfare: the jingle ends here
+            self.device.stop_sound(self._me, fade_ms=0)
+            self._me = None
         self._music_volume = max(0.0, min(1.0, float(volume)))
         self.device.play_music(
             path,
@@ -145,9 +180,41 @@ class AudioMixer:
             volume=max(0.0, min(1.0, float(volume))) * self._bus_volume(bus),
         )
 
+    # -- fanfares (a music effect, "ME") -------------------------------------
+    def play_me(self, asset_id, *, volume=1.0):
+        """Play a short jingle once with the music paused; the music goes on where it was when
+        the jingle ends (``update``)."""
+        path = self._path(asset_id)
+        if path is None:
+            return None
+        if self._me is None and self.music_asset_id is not None:
+            self.device.pause_music()
+        elif self._me is not None:
+            self.device.stop_sound(self._me, fade_ms=0)
+        self._me = self.device.play_sound(
+            path,
+            loops=0,
+            fade_ms=0,
+            volume=max(0.0, min(1.0, float(volume))) * self._bus_volume("bgm"),
+        )
+        return self._me
+
+    def me_playing(self):
+        return self._me is not None and bool(self.device.sound_busy(self._me))
+
+    def se_playing(self):
+        return self._se is not None and bool(self.device.sound_busy(self._se))
+
+    def update(self):
+        """A fanfare that ended gives the music back."""
+        if self._me is not None and not self.device.sound_busy(self._me):
+            self._me = None
+            if self.music_asset_id is not None:
+                self.device.resume_music()
+
     # -- WORLD command requests from event programs ------------------------
     def handle_world_request(self, command):
-        """Apply a PLAY_BGM / STOP_BGM / PLAY_SE request queued by GameSessionRuntime."""
+        """Apply a PLAY_BGM / STOP_BGM / PLAY_SE / PLAY_ME request queued by GameSessionRuntime."""
         args = command.args
         name = command.name
         if name == "PLAY_BGM":
@@ -159,7 +226,12 @@ class AudioMixer:
         if name == "STOP_BGM":
             return self.stop_music(fade_out=float(args.get("fade", 0.0)))
         if name == "PLAY_SE":
-            return self.play_effect(
+            self._se = self.play_effect(
+                str(args.get("asset_id", "")), volume=float(args.get("volume", 1.0))
+            )
+            return self._se
+        if name == "PLAY_ME":
+            return self.play_me(
                 str(args.get("asset_id", "")), volume=float(args.get("volume", 1.0))
             )
         return None

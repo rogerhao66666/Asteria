@@ -20,6 +20,14 @@ from .support import (  # noqa: F401 - the names the moved methods use
 PET_MEMBER_PREFIX = "pet:"
 
 
+def taught_ability(item):
+    """The ability an item tagged ``teaches:<ability>`` teaches (a TM), else ""."""
+    for tag in getattr(item, "tags", ()) or ():
+        if str(tag).startswith("teaches:"):
+            return str(tag)[len("teaches:") :].strip()
+    return ""
+
+
 class SpeciesFoe:
     """What a foe generated from a pet species looks like where an enemy definition is read
     (names, tags, rewards): the species' name and tags, no abilities of its own (the unit
@@ -244,6 +252,8 @@ class PetsMixin:
             return False
         if self.save.rpg_state.inventory.count(item.item_id) < 1:
             return False
+        if taught_ability(item):
+            return self._teach_with_item(pet, item)
         knockout = self.rules.knockout_resource_id
         tops = self.pet_resources_at(pet)
         if knockout in tops and pet.resources.get(knockout, tops[knockout]) <= 0:
@@ -263,6 +273,36 @@ class PetsMixin:
         if cured:
             pet.states = [state for state in pet.states if state not in cured]
         self.save.rpg_state.inventory.remove(item.item_id, 1)
+        return True
+
+    def teaching_check(self, pet, item_id):
+        """What an item tagged ``teaches:<ability>`` would do to ``pet``: ``able``,
+        ``learned`` (it knows it), ``not_able`` (not in its species' ``teachable``), or ""
+        for an item that teaches nothing."""
+        item = self.project.rpg_database.items.get(str(item_id))
+        ability = taught_ability(item) if item is not None else ""
+        if not ability:
+            return ""
+        species = self.pet_species(pet)
+        if species is None or ability not in species.teachable:
+            return "not_able"
+        return "learned" if ability in self.pet_moves(pet) else "able"
+
+    def _teach_with_item(self, pet, item):
+        """A teaching item on a creature able to learn it: learned (the item is used up
+        unless tagged ``reusable``), or, with the moves full, the game asks which move to
+        forget (``pending_pet_moves``) and the item goes once that is answered."""
+        if self.teaching_check(pet, item.item_id) != "able":
+            return False
+        ability = taught_ability(item)
+        self._teaching = dict(getattr(self, "_teaching", {}))
+        self._teaching[(pet.instance_id, ability)] = item.item_id
+        if self.learn_pet_move(pet.instance_id, ability):
+            return True
+        self._teaching[(pet.instance_id, ability)] = item.item_id  # until the answer
+        pending = list(getattr(self, "_pending_pet_moves", []))
+        pending.append((pet.instance_id, ability))
+        self._pending_pet_moves = pending
         return True
 
     def stash_pets(self):
@@ -416,8 +456,17 @@ class PetsMixin:
             if x != (pet.instance_id, ability_id)
         ]
         self._pending_pet_moves = pending
+        teaching = getattr(self, "_teaching", {})
+        item_id = teaching.pop((pet.instance_id, ability_id), "")
         if ability_id in pet.moves:
             return True
+        learned = self._learn_pet_move(pet, ability_id, forget_ability_id)
+        item = self.project.rpg_database.items.get(item_id) if item_id else None
+        if learned and item is not None and "reusable" not in item.tags:
+            self.save.rpg_state.inventory.remove(item_id, 1)  # a taught move uses the item up
+        return learned
+
+    def _learn_pet_move(self, pet, ability_id, forget_ability_id):
         rules = self.pet_rules
         species = self.pet_species(pet)
         moves = list(pet.moves or pet.known_moves(species, rules.max_moves if rules else 0))

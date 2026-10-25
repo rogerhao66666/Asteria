@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 628 個鍵，29 組。
+共 656 個鍵，29 組。
 
 ## Creature battle
 
@@ -116,6 +116,34 @@
 | `creature.menu.no_effect` | It won't have any effect. | 沒有任何效果。 |
 | `creature.menu.hp_restored` | {name}'s HP was restored by {amount} point(s). | {name}的HP回復了{amount}點。 |
 | `creature.menu.cured` | {name} was cured. | {name}恢復了。 |
+| `creature.menu.tm_booted` | Booted up a TM. | 啟動了招式學習器。 |
+| `creature.menu.tm_contained` | It contained {move}. | 裡面記錄著 {move}。 |
+| `creature.menu.teach_ask` | Teach {move} to a POKéMON? | 要讓寶可夢學會 {move}嗎？ |
+| `creature.menu.teach_which` | Teach which POKéMON? | 要讓哪一隻學？ |
+| `creature.menu.able` | ABLE | 可以學 |
+| `creature.menu.not_able` | NOT ABLE | 不能學 |
+| `creature.menu.learned` | LEARNED | 已學會 |
+| `creature.menu.already_knows` | {name} already knows {move}. | {name}已經會 {move}了。 |
+| `creature.menu.not_compatible` | {name} and {move} are not compatible. | {name}和{move} 不相容。 |
+| `creature.menu.learned_move` | {name} learned {move}! | {name}學會了 {move}！ |
+| `creature.shop.greeting` | How may I serve you? | 歡迎光臨！ 請問需要什麼？ |
+| `creature.shop.buy` | BUY | 購買 |
+| `creature.shop.sell` | SELL | 賣出 |
+| `creature.shop.quit` | QUIT | 離開 |
+| `creature.shop.what_to_sell` | What would you like to sell? | 要賣什麼呢？ |
+| `creature.shop.anything_else` | Is there anything else I can help you with? | 還有什麼需要 幫忙的嗎？ |
+| `creature.shop.no_money` | You don't have enough money. | 你的錢不夠喔。 |
+| `creature.shop.how_many` | {item}? Certainly. How many would you like? | {item}嗎？好的。 要買幾個呢？ |
+| `creature.shop.confirm` | {item}? And you wanted {count}? That will be {money}. | {item}要{count}個嗎？ 總共是{money}。 |
+| `creature.shop.thank_you` | Here you go! Thank you very much. | 給你！ 非常感謝！ |
+| `creature.shop.bonus` | I'll throw in a PREMIER BALL, too. | 再送你一顆紀念球！ |
+| `creature.shop.cant_buy` | {item}? Oh, no. I can't buy that. | {item}？啊， 這個我不能收。 |
+| `creature.shop.how_many_sell` | {item}? How many would you like to sell? | {item}嗎？ 要賣幾個呢？ |
+| `creature.shop.can_pay` | I can pay {money}. Would that be okay? | 可以給你{money}， 這樣可以嗎？ |
+| `creature.shop.sold` | Turned over the {item} and received {money}. | 交出了{item}， 得到了{money}。 |
+| `creature.shop.cancel` | CANCEL | 取消 |
+| `creature.shop.quit_shopping` | Quit shopping. | 不買了。 |
+| `creature.shop.in_bag` | IN BAG: {count} | 背包裡：{count} |
 | `creature.card.name` | NAME:  | 名字： |
 | `creature.card.id` | IDNo. | ID號碼 |
 | `creature.card.money` | MONEY | 金錢 |

@@ -33,7 +33,9 @@ class NpcStateMixin:
     def _rpg_value(self, name):
         """The ``rpg`` condition source: ``level:<actor>``, ``item:<id>``, ``gold`` (any
         currency: ``currency:<id>``), ``job:<actor>:<class>``, ``party:<actor>``,
-        ``reputation:<faction>``, ``quest:<id>`` (its status) and ``pets`` (the party's size)."""
+        ``reputation:<faction>``, ``quest:<id>`` (its status), ``pets`` (the party's size) and
+        ``shop`` (the shop open now, "" when none), ``name_input`` / ``picture_choice``
+        ("open" while a name is entered / a pictured choice is made)."""
         kind, _, rest = str(name).partition(":")
         state = self.save.rpg_state
         if kind == "level":
@@ -42,6 +44,12 @@ class NpcStateMixin:
             return state.inventory.count(rest)
         if kind == "pets":  # how many creatures travel with the player
             return len(self.party_pets())
+        if kind == "shop":  # the shop open now ("" when none): WAIT until it is ""
+            return self.open_shop_id or ""
+        if kind == "name_input":  # "open" while the name screen waits for a name, else ""
+            return "open" if getattr(self, "name_input_request", None) else ""
+        if kind == "picture_choice":  # "open" while a PICTURE_CHOICE waits, else ""
+            return "open" if getattr(self, "picture_choice_request", None) else ""
         if kind == "gold":
             return state.currencies.get("gold", 0.0)
         if kind == "currency":
@@ -57,6 +65,13 @@ class NpcStateMixin:
             progress = state.quests.get(rest)
             return "inactive" if progress is None else progress.status
         raise ValueError(f"unknown rpg condition: {name}")
+
+    def _audio_value(self, name):
+        """The ``audio`` condition source: ``me`` (a fanfare plays, PLAY_ME) and ``se`` (the
+        last sound effect, PLAY_SE, still sounds)."""
+        if name not in self.audio_status:
+            raise ValueError(f"unknown audio condition: {name}")
+        return bool(self.audio_status[name])
 
     def _npc_value(self, name):
         npc_id, _, key = str(name).partition(".")

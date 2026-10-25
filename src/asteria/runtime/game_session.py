@@ -18,6 +18,7 @@ from asteria.runtime.session.field_play import FieldPlayMixin
 from asteria.runtime.session.gear import GearMixin
 from asteria.runtime.session.interactions import InteractionsMixin
 from asteria.runtime.session.inventory_use import InventoryUseMixin
+from asteria.runtime.session.map_tiles import MapTilesMixin
 from asteria.runtime.session.messages import MessagesMixin
 from asteria.runtime.session.npc_state import NpcStateMixin
 from asteria.runtime.session.party import PartyMixin
@@ -59,6 +60,7 @@ class GameSessionRuntime(
     TurnsMixin,
     EconomyMixin,
     InteractionsMixin,
+    MapTilesMixin,
     RewardsMixin,
 ):
     """Generic Project + GameRuntimeSave integration runtime.
@@ -152,6 +154,8 @@ class GameSessionRuntime(
         self.entity_animation = {}
         self.scene_events = None
         self.open_shop_id = None
+        self.name_input_request = None  # NAME_INPUT: the name screen's request while open
+        self.picture_choice_request = None  # PICTURE_CHOICE: the layout and the variable
         self.pet_storage_requested = False  # PET_STORAGE asked for the party / box screen
         self._pending_pet_moves = []  # (pet instance id, ability id) learned past max_moves
         self._species_foes = {}  # enemy member id -> the creature record of a species foe
@@ -194,6 +198,13 @@ class GameSessionRuntime(
         # WLD-02: saved NPC state (visibility, position, flags...) and the "npc" condition source
         runtime_save.event_context.providers["npc"] = self._npc_value
         runtime_save.event_context.providers["rpg"] = self._rpg_value
+        # the "audio" condition source: ``me`` / ``se`` while a fanfare / sound plays (a host
+        # that plays sound sets ``plays_audio`` and clears them; headless they never wait)
+        self.plays_audio = False
+        self.audio_status = {"me": False, "se": False}
+        runtime_save.event_context.providers["audio"] = self._audio_value
+        self._tile_changes = {}  # scene id -> {"layer|x|y": tile} (SET_TILE, this visit)
+        self.tile_changes_version = 0
         from asteria.runtime.npc_state import apply_npc_states
 
         apply_npc_states(self.scene, self.world, self.entity_facing)

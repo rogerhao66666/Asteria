@@ -299,11 +299,13 @@ class ItemDefinition:
     # whether taking it out again destroys it (default: it returns to the bag)
     attachment_id: str = ""
     destroyed_on_removal: bool = False
+    description: str = ""  # what menus and shops say about it; written only when set
     OPTIONAL_DATA = {
         "icon_id": "",
         "battle_ability": "",
         "attachment_id": "",
         "destroyed_on_removal": False,
+        "description": "",
     }
 
     def __init__(
@@ -318,6 +320,7 @@ class ItemDefinition:
         battle_ability="",
         attachment_id="",
         destroyed_on_removal=False,
+        description="",
     ):
         item_id = _id(item_id, "item_id")
         stack_limit = int(stack_limit)
@@ -335,6 +338,7 @@ class ItemDefinition:
         object.__setattr__(self, "battle_ability", str(battle_ability or "").strip())
         object.__setattr__(self, "attachment_id", str(attachment_id or "").strip())
         object.__setattr__(self, "destroyed_on_removal", bool(destroyed_on_removal))
+        object.__setattr__(self, "description", str(description or ""))
 
     def to_data(self):
         return {
@@ -349,6 +353,7 @@ class ItemDefinition:
             **({"battle_ability": self.battle_ability} if self.battle_ability else {}),
             **({"attachment_id": self.attachment_id} if self.attachment_id else {}),
             **({"destroyed_on_removal": True} if self.destroyed_on_removal else {}),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -370,6 +375,7 @@ class ItemDefinition:
             battle_ability=data.get("battle_ability", ""),
             attachment_id=data.get("attachment_id", ""),
             destroyed_on_removal=bool(data.get("destroyed_on_removal", False)),
+            description=data.get("description", ""),
         )
 
 

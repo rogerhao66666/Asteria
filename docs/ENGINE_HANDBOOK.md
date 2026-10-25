@@ -516,6 +516,25 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 規則 | Pet Rules `exp_whole`（經驗值取整數） |
 | 開始選單 | 背包「使用」選生物；訓練家卡片的 `badges` |
 
+### D74 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 聲音 | 世界指令 `PLAY_ME`（短曲：音樂暫停、播完接著放）；條件來源 `audio`（`me`、`se`）讓事件等短曲／音效放完 |
+| 圖塊 | 世界指令 `SET_TILE`（`layer`、`x`、`y`、`tile`、`permanent`）；這次造訪或永久（存檔 `world.systems` 的 `tiles.<場景>`）；碰撞圖層會開路／擋路 |
+| 選項 | `CHOICE` 的 `cursor`、`cancel`（取消鍵的值）、`columns`（格狀）；`game.cancel_choice()` |
+| 編輯器 | 事件的「選項」與「等待」對話框（等待可選秒數或條件：switch、variable、rpg、npc、battle、audio） |
+
+### D75 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 對話 | `DIALOGUE` 的 `wait: false`（字留著、事件繼續；`game.held_dialogue`）；沒提示的 `CHOICE` 用這句當提示 |
+| 取名字 | 世界指令 `NAME_INPUT`（`target` `variable:<x>` / `pet:last`、`max_length`、`title`、`default`）；畫面 `runtime/name_input.py`、`field.name_input`；條件 `rpg` `name_input` |
+| 圖片選擇 | 世界指令 `PICTURE_CHOICE`（`layout`、`variable`）；畫面 `runtime/picture_choice.py`、`field.picture_choices.<layout>`；條件 `rpg` `picture_choice` |
+| 道具 | 標籤 `teaches:<能力>`、`reusable`；種族 `teachable`；`game.teaching_check`；`ItemDefinition.description` |
+| 商店 | `field.creature_shop`：`runtime/creature_shop.py`（BUY／SELL／QUIT、購買畫面、數量、YES／NO、`buy_sound`、`bonus`、`map_front_at`）；條件 `rpg` `shop` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

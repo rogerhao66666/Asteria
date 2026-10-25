@@ -215,6 +215,9 @@ class PlayableTestRuntime(
         self._extra_screen = None
         self._pets_screen = None
         self._creature_menu = None  # field.creature_menu: the start menu and its screens
+        self._creature_shop = None  # field.creature_shop: a shop in the game's own art
+        self._name_input = None  # NAME_INPUT: the name screen
+        self._picture_choice = None  # PICTURE_CHOICE: a choice of pictured options
         self._game_over_menu = MenuCursor(
             GAME_OVER_OPTIONS, keys=text_keys("game_over", GAME_OVER_OPTIONS)
         )
@@ -514,6 +517,44 @@ class PlayableTestRuntime(
             self.close()
         return 0
 
+    def _creature_shop_frame(self, dt, events):
+        """``field.creature_shop``: the screen over the field; on its buy screen the field's
+        camera puts the cell the player faces at ``map_front_at`` (the map beside the goods)."""
+        from asteria.runtime.creature_shop import MAP_PHASES
+
+        shop = self._creature_shop
+        shop.update(dt, events)
+        view = getattr(self, "tile_view", None)
+        if shop.done:
+            self._creature_shop = None
+            self._ui_mode = "field"
+            if view is not None:
+                view.player_at = None
+            self._draw_field(False)
+            return
+        if view is not None:
+            front = shop.shop_settings.get("map_front_at")
+            if front and shop.phase in MAP_PHASES:
+                dx, dy = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}.get(
+                    self.game.facing, (0, -1)
+                )
+                tile = view.tilemap.tile_width
+                view.player_at = (front[0] - dx * tile, front[1] - dy * tile)
+            else:
+                view.player_at = None
+            view.follow(0.0)  # the field does not update under a screen: place it now
+        if shop.phase in ("menu", *MAP_PHASES):
+            self._draw_field(False)
+        shop.draw()
+
+    def _audio_status(self):
+        """Fanfares end and give the music back; the ``audio`` condition source (``me``,
+        ``se``) tells the event programs waiting for them."""
+        self.audio.update()
+        self.game.plays_audio = True
+        status = self.game.audio_status
+        status["me"], status["se"] = self.audio.me_playing(), self.audio.se_playing()
+
     def step(self, dt, events=None):
         """One whole frame: pygame's events (or ``events``), the game, drawing and the flip,
         with the profiler's frame around it. ``run`` calls it after waiting for the frame's
@@ -609,6 +650,7 @@ class PlayableTestRuntime(
                     self._bgm_override = ""
                 elif request.name == "RESTORE_BGM":  # back to the area's own music
                     self._bgm_override, self._bgm_temporary = None, False
+        self._audio_status()
         for cue in getattr(self._battle_presentation, "audio_cues", ()):
             self._sound(dict(cue.payload).get("asset_id"))
         if hasattr(self._battle_presentation, "audio_cues"):
@@ -706,6 +748,24 @@ class PlayableTestRuntime(
                 if menu.phase in OVERLAY_PHASES:
                     self._draw_field(False)
                 menu.draw()
+        elif self._ui_mode == "name_input":  # NAME_INPUT: entering a name
+            self._name_input.update(dt, events)
+            if self._name_input.done:
+                self._name_input = None
+                self._ui_mode = "field"
+                self._draw_field(False)
+            else:
+                self._name_input.draw()
+        elif self._ui_mode == "picture_choice":  # PICTURE_CHOICE: pictured options
+            self._picture_choice.update(dt, events)
+            if self._picture_choice.done:
+                self._picture_choice = None
+                self._ui_mode = "field"
+                self._draw_field(False)
+            else:
+                self._picture_choice.draw()
+        elif self._ui_mode == "creature_shop":  # a shop in the game's own art
+            self._creature_shop_frame(dt, events)
         elif self._ui_mode == "pets":
             self._pets_screen.handle(dt, events)
             if self._pets_screen.closed:
@@ -778,6 +838,34 @@ class PlayableTestRuntime(
             if not self._multiplayer_connected():
                 with self.profiler.section("events"):
                     self.game.update_events(dt)
+            if (  # NAME_INPUT: the name screen (the event waits for the name)
+                self._ui_mode == "field"
+                and self.game.name_input_request
+                and self.game.pending_dialogue is None
+            ):
+                from asteria.runtime.name_input import NameInputScreen
+
+                self._name_input = NameInputScreen(self, self.game.name_input_request)
+                self._ui_mode = "name_input"
+            if (  # PICTURE_CHOICE: the pictured options (the event waits for the choice)
+                self._ui_mode == "field"
+                and self.game.picture_choice_request
+                and self.game.pending_dialogue is None
+            ):
+                from asteria.runtime.picture_choice import PictureChoiceScreen
+
+                self._picture_choice = PictureChoiceScreen(self, self.game.picture_choice_request)
+                self._ui_mode = "picture_choice"
+            if (  # a shop in the game's own art opens at once: the event waits for it
+                self._ui_mode == "field"
+                and self.game.open_shop_id
+                and self.manifest.get("field", {}).get("creature_shop")
+                and self.game.pending_dialogue is None
+            ):
+                from asteria.runtime.creature_shop import CreatureShopScreen
+
+                self._creature_shop = CreatureShopScreen(self)
+                self._ui_mode = "creature_shop"
             if (
                 self._ui_mode == "field"
                 and self.game.open_shop_id
