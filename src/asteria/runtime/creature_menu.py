@@ -96,6 +96,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
             settings() if settings is not None else runtime.manifest.get("dialogue", {})
         )
         self.phase = screen
+        self.alone = False  # opened at one screen by itself (open_alone), not from the START menu
         self.cursor = self.list_cursor = self.pocket = 0
         self.action_cursor = 0
         self.switch_from = None
@@ -129,6 +130,11 @@ class CreatureMenuScreen(CreatureBattleScreen):
         if not rows:
             rows = [("exit", self.tr("menu.exit", "EXIT"), "close")]
         return rows
+
+    def open_alone(self, screen):
+        """Open at ``screen`` by itself (from a title screen): leaving it closes the menu."""
+        self.open(screen)
+        self.alone = True
 
     def open(self, screen):
         if screen == "close":
@@ -173,6 +179,8 @@ class CreatureMenuScreen(CreatureBattleScreen):
             self.open(rows[min(self.cursor, len(rows) - 1)][2])
 
     def _back(self):
+        if self.alone:  # opened at this screen (a title's OPTION): leaving it closes the menu
+            self.done = True
         self.phase = "start"
 
     # -- the party --------------------------------------------------------------------------

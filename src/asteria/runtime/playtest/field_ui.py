@@ -179,9 +179,12 @@ class FieldUiMixin:
         return True
 
     def _picture_image(self, picture):
-        """The sub-image of a picture's asset for its sprite-sheet cell, or ``None``."""
+        """The sub-image of a picture's asset for its sprite-sheet cell (or its words drawn),
+        or ``None``."""
         from asteria.runtime.menu_icons import icon_source
 
+        if picture.text:
+            return self._text_picture(picture)
         source = icon_source(self.project, picture.asset_id)
         if source is None:
             return None
@@ -191,6 +194,51 @@ class FieldUiMixin:
             return None
         x, y, w, h = picture.cell(*image.get_size())
         return image.subsurface(self.pg.Rect(x, y, w, h).clip(image.get_rect()))
+
+    def _text_picture_font(self, font_id):
+        """A text picture's font: the bitmap font ``font_id``, else the message window's."""
+        if font_id:
+            return self.bitmap_font(font_id)
+        settings = self.dialogue_settings() or {}
+        if settings.get("font_id"):
+            return self.bitmap_font(settings["font_id"])
+        if settings.get("font"):
+            from asteria.graphics.bitmap_font import BitmapFont
+
+            fonts = self.__dict__.setdefault("_text_picture_fonts", {})
+            if settings["font"] not in fonts:
+                fonts[settings["font"]] = BitmapFont(self.pg, self.path(settings["font"]))
+            return fonts[settings["font"]]
+        return None
+
+    def _text_picture(self, picture):
+        """A picture's words (\\V[...] filled in) at the font's own size, a line under the
+        other; kept while they stay the same."""
+        text = self.game.expand_message(picture.text, plain=True)
+        key = (text, picture.font, picture.text_color, picture.shadow_color)
+        cache = self.__dict__.setdefault("_text_pictures", {})
+        if key in cache:
+            return cache[key]
+        font = self._text_picture_font(picture.font)
+        lines = text.split("\n")
+        if font is not None and font.covers(text):
+            step = int(getattr(font, "line", 16))
+            width = max(1, max(font.width(line) for line in lines))
+            image = self.pg.Surface((width, step * len(lines)), self.pg.SRCALPHA)
+            for row, line in enumerate(lines):
+                font.render(image, line, 0, row * step, picture.text_color, picture.shadow_color)
+        else:  # words the font lacks: a system face
+            face = self.pg.font.Font(None, 16)
+            parts = [face.render(line, False, picture.text_color) for line in lines]
+            image = self.pg.Surface(
+                (max(1, max(p.get_width() for p in parts)), 16 * len(parts)), self.pg.SRCALPHA
+            )
+            for row, part in enumerate(parts):
+                image.blit(part, (0, row * 16))
+        if len(cache) > 256:  # (a clock's words change every second)
+            cache.clear()
+        cache[key] = image
+        return image
 
     def _picture_size(self, picture):
         image = self._picture_image(picture)
@@ -209,12 +257,53 @@ class FieldUiMixin:
             image = self._picture_image(picture)
             if image is None or picture.opacity <= 0:
                 continue
+            image = self._picture_motion(image, picture)
             w, h = image.get_size()
             image = resized(self.pg, image, (round(w * picture.scale), round(h * picture.scale)))
-            if picture.opacity < 1.0:
+            if picture.tint > 0:  # mixed: colour x (1 - tint) + tint_color x tint
+                image = image.copy()
+                keep = round(255 * (1 - picture.tint))
+                add = tuple(round(c * picture.tint) for c in picture.tint_color)
+                image.fill((keep, keep, keep), special_flags=self.pg.BLEND_RGB_MULT)
+                image.fill(add, special_flags=self.pg.BLEND_RGB_ADD)
+            if picture.blend == "add":  # its colours x alpha x opacity added (a glow)
+                glow = self.pg.Surface(image.get_size())
+                glow.blit(image, (0, 0))
+                keep = round(255 * picture.opacity)
+                glow.fill((keep, keep, keep), special_flags=self.pg.BLEND_RGB_MULT)
+                image, flags = glow, self.pg.BLEND_RGB_ADD
+            else:
+                flags = 0
+            if picture.opacity < 1.0 and not flags:
                 image = image.copy()
                 image.set_alpha(round(255 * picture.opacity))
-            self.screen.blit(image, (round(picture.x), round(picture.y)))
+            x = picture.x  # words: their x is their left, right end or middle
+            x -= {"right": image.get_width(), "center": image.get_width() / 2}.get(
+                picture.text_align if picture.text else "left", 0
+            )
+            self.screen.blit(image, (round(x), round(picture.y)), special_flags=flags)
+
+    def _picture_motion(self, image, picture):
+        """The cell with its content scrolled (wrapping round) and its rows waved, at the
+        image's own pixels (as a console's background scrolls and its scanlines shift)."""
+        dx, dy = picture.scroll_offset()
+        if not (dx or dy or picture.wave_amplitude):
+            return image
+        w, h = image.get_size()
+        ox, oy = round(dx) % w, round(dy) % h
+        rolled = self.pg.Surface((w, h), self.pg.SRCALPHA)
+        for x in (ox - w, ox):  # the content moves by (ox, oy): the rest comes round
+            for y in (oy - h, oy):
+                rolled.blit(image, (x, y))
+        if not picture.wave_amplitude:
+            return rolled
+        waved = self.pg.Surface((w, h), self.pg.SRCALPHA)
+        for row in range(h):
+            shift = round(picture.wave_offset(row)) % w  # the row wraps round too
+            strip = self.pg.Rect(0, row, w, 1)
+            waved.blit(rolled, (shift, row), strip)
+            waved.blit(rolled, (shift - w, row), strip)
+        return waved
 
     def _click_picture(self, x, y):
         return self.game.click_picture(x, y, self._picture_size)
@@ -494,10 +583,13 @@ class FieldUiMixin:
         border pieces; ``choice_fill``: the inside colour; ``choice_right`` / ``choice_bottom``:
         the box's right and bottom edges in window pixels, unless the choice gives ``box_at``,
         its inside's top left; ``choice_line_height``), a pointer at the option under the
-        cursor."""
+        cursor. The box comes once the prompt is written out (``choice_after_text``: false
+        shows it at once)."""
         settings = self.dialogue_settings()
         self._draw_dialogue_window(None, text=self.game.prompt_of(request))
         cache = self.__dict__.setdefault("_dialogue_window_cache", {})
+        if not self._choice_ready():
+            return
         frame = cache.get("choice_frame")
         if frame is None:
             frame = cache["choice_frame"] = self.load_image(settings["choice_frame"])
@@ -560,7 +652,8 @@ class FieldUiMixin:
         ``text_area`` ``[x, y, w, h]`` in it, ``line_height``, ``font`` (a bitmap font JSON;
         text it lacks is drawn in a system face), ``colours`` ``[letter, shadow]``, ``speed``
         (letters a second, 0 = all at once), ``arrow`` (a strip of frames under each other,
-        ``arrow_size`` ``[w, h]``) shown at ``arrow_at`` once the line is written out."""
+        ``arrow_size`` ``[w, h]``) shown at ``arrow_at`` once the line is written out; ``rows``
+        lines show at once (2), a longer line scrolls up as it is written."""
         settings = self.dialogue_settings()
         cache = self.__dict__.setdefault("_dialogue_window_cache", {})
         if cache.get("settings") is not settings:  # another window (edited in the editor)
@@ -585,10 +678,13 @@ class FieldUiMixin:
         else:
             line = ("text", text)  # a prompt: typed out like a line
         text = self.game.expand_message(text, plain=True)
-        if cache.get("line") is not line and not (
+        if cache.get("held") and cache.get("text") == text:  # a held line now awaited
+            cache["line"] = line  # (waitbuttonpress): written out already, not typed again
+        elif cache.get("line") is not line and not (
             isinstance(line, tuple) and cache.get("line") == line  # the same prompt
         ):
             cache["line"], cache["start"] = line, self.pg.time.get_ticks()
+        cache["held"], cache["text"] = held, text
         speed = float(settings.get("speed", 40))
         speeds = settings.get("speeds")  # letters a second by the option.text_speed choice
         if speeds:
@@ -597,15 +693,19 @@ class FieldUiMixin:
         shown = len(text)
         if speed > 0:
             shown = int((self.pg.time.get_ticks() - cache["start"]) / 1000 * speed)
+        cache["written"] = shown >= len(text)  # a choice's box waits for its prompt
         x0, y0, _w, _h = settings.get("text_area", (16, 8, 216, 32))
         step = int(settings.get("line_height", 16))
         letter, shadow = (
             tuple(c) for c in settings.get("colours", ((98, 98, 98), (213, 213, 205)))
         )
-        left = shown
-        for row, words in enumerate(text.split("\n")[:2]):
-            part = words[: max(0, left)]
+        typed, left = [], shown  # lines begun so far; past ``rows`` the window scrolls up
+        for words in text.split("\n"):
+            if left <= 0 and typed:
+                break
+            typed.append(words[: max(0, left)])
             left -= len(words) + 1
+        for row, part in enumerate(typed[-int(settings.get("rows", 2)) :]):
             if not part:
                 continue
             if font is not None and font.covers(part):
@@ -771,6 +871,15 @@ class FieldUiMixin:
                     )
                     left = rect.right
 
+    def _choice_ready(self):
+        """Whether a choice in the game's own windows takes keys: once its prompt is written out
+        (``dialogue.choice_after_text``, true unless set false; other windows: at once)."""
+        settings = self.dialogue_settings()
+        if not settings.get("window") or not settings.get("choice_after_text", True):
+            return True
+        cache = self.__dict__.get("_dialogue_window_cache", {})
+        return cache.get("written", True)
+
     def _dialogue_input(self, events):
         """Route keys to a waiting dialogue/choice. Returns True when one is open."""
         request = (
@@ -787,6 +896,8 @@ class FieldUiMixin:
                 self._sound(sound or self.manifest.get("dialogue_confirm_sfx"))
             return True
         choices = getattr(request, "choices", None) or ()
+        if choices and not self._choice_ready():
+            return True  # its box is not up yet: the prompt is still being written
         cursor = self._choice_index(request)
         for event in events:
             if event.type != self.pg.KEYDOWN or not choices:
@@ -805,6 +916,13 @@ class FieldUiMixin:
                 self._choice_cursor = cursor = (cursor - 1) % len(choices)
             elif event.key in (self.pg.K_DOWN, self.pg.K_RIGHT):
                 self._choice_cursor = cursor = (cursor + 1) % len(choices)
+        if (
+            choices
+            and cursor != getattr(self, "_choice_hovered", (None, None))[1]
+            and (getattr(self, "_choice_hovered", (None, None))[0] is request)
+        ):
+            self.game.hover_choice(cursor)  # the pointer moved: the choice's hover commands
+        self._choice_hovered = (request, cursor)
         if choices and (self.input.just_pressed("confirm") or self.input.just_pressed("interact")):
             self.game.choose(cursor)
         elif choices and getattr(request, "cancel", ()) and self.input.just_pressed("cancel"):

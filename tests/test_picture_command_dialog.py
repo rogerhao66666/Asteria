@@ -56,7 +56,10 @@ def test_move_frame_and_erase_dialogs_only_emit_supported_fields(app):
     )
     try:
         args = dialog.result_args()
-        assert set(args) == {"picture_id", "x", "y", "scale", "opacity", "duration", "easing"}
+        assert set(args) == {
+            "picture_id", "x", "y", "scale", "opacity", "tint", "tint_color", "duration",
+            "easing", "delay",
+        }  # fmt: skip
         assert args["duration"] == 1.25
 
         dialog.command.setCurrentText("SET_PICTURE_FRAME")

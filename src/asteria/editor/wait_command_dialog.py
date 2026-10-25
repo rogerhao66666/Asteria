@@ -1,6 +1,7 @@
 """The Wait command's editor: a number of seconds, or until a condition holds (a switch, a
 variable, the party (``rpg``), a person (``npc``), the battle, or ``audio``: a fanfare ``me`` /
-a sound ``se`` still playing)."""
+a sound ``se`` still playing); or until it holds but no longer than the seconds (a title that
+moves on by itself unless a key is pressed)."""
 
 from PySide6.QtWidgets import (
     QComboBox,
@@ -16,7 +17,7 @@ SOURCES = ("switch", "variable", "rpg", "npc", "battle", "audio")
 HINTS = {
     "switch": "a switch name (route.<person>.done: that person's route was walked)",
     "variable": "a variable name",
-    "rpg": "pets · gold · item:<id> · level:<actor> · quest:<id>",
+    "rpg": "pets · gold · item:<id> · level:<actor> · quest:<id> · pressed:confirm · saves",
     "npc": "<npc>.visible · <npc>.mood · <npc>.flag.<name>",
     "battle": "running · round · hp_ratio:<member or enemy>",
     "audio": "me (a fanfare plays) · se (a sound plays)",
@@ -46,7 +47,8 @@ class WaitCommandDialog(QDialog):
         self.mode = QComboBox()
         self.mode.addItem("Seconds", "seconds")
         self.mode.addItem("Until a condition holds", "until")
-        self.mode.setCurrentIndex(1 if until else 0)
+        self.mode.addItem("Until a condition holds, at most the seconds", "until_or_seconds")
+        self.mode.setCurrentIndex((2 if "seconds" in args else 1) if until else 0)
         self.seconds = QDoubleSpinBox()
         self.seconds.setRange(0.0, 3600.0)
         self.seconds.setDecimals(3)
@@ -85,7 +87,7 @@ class WaitCommandDialog(QDialog):
     def result_args(self):
         if self.mode.currentData() == "seconds":
             return {"seconds": round(self.seconds.value(), 4)}
-        return {
+        out = {
             "until": {
                 "source": self.source.currentText(),
                 "name": self.name.text().strip(),
@@ -94,6 +96,9 @@ class WaitCommandDialog(QDialog):
                 "scope_id": None,
             }
         }
+        if self.mode.currentData() == "until_or_seconds":
+            out["seconds"] = round(self.seconds.value(), 4)
+        return out
 
 
 __all__ = ["WaitCommandDialog", "SOURCES"]

@@ -82,8 +82,15 @@ class EventVM:
             return self.state.status
         until = getattr(self, "_until", None)
         if until is not None:  # WAIT until: still waiting while the condition is false
-            if not until.evaluate(self.context):
+            if until.evaluate(self.context):
+                self.state.wait_remaining = 0.0
+            elif not getattr(self, "_until_limit", False):
                 return self.state.status
+            elif self.state.wait_remaining - dt > 0.0:  # (seconds too: the time runs out)
+                self.state.wait_remaining -= dt
+                return self.state.status
+            else:
+                self.state.wait_remaining = 0.0
             self._until = None
         remaining = max(0.0, self.state.wait_remaining - dt)
         self.state.wait_remaining = remaining
@@ -183,10 +190,12 @@ class EventVM:
             if not isinstance(raw_condition, dict):
                 raise EventVMError("WAIT until requires a condition")
             condition = EventCondition.from_data(raw_condition)
+            limit = instruction.args.get("seconds")  # with seconds too: whichever comes first
             if not condition.evaluate(self.context):
                 self._until = condition
+                self._until_limit = limit is not None and float(limit) >= 0.0
                 self.state.status = EventVMStatus.WAITING
-                self.state.wait_remaining = 0.0
+                self.state.wait_remaining = float(limit) if self._until_limit else 0.0
             elif self.state.pc >= len(self.program):
                 self.state.status = EventVMStatus.COMPLETED
 

@@ -35,8 +35,10 @@ class NpcStateMixin:
         currency: ``currency:<id>``), ``job:<actor>:<class>``, ``party:<actor>``,
         ``reputation:<faction>``, ``quest:<id>`` (its status), ``pets`` (the party's size) and
         ``shop`` (the shop open now, "" when none), ``name_input`` / ``picture_choice``
-        ("open" while a name is entered / a pictured choice is made) and ``light`` ("moving"
-        while SET_LIGHT's circle changes)."""
+        ("open" while a name is entered / a pictured choice is made), ``light`` ("moving"
+        while SET_LIGHT's circle changes), ``pressed:<action>`` / ``held:<action>`` (a control
+        - confirm, cancel, menu... - pressed this frame / held now; ``a|b``: any of them) and
+        ``saves`` (how many save slots hold a game, as the title screen found them)."""
         kind, _, rest = str(name).partition(":")
         state = self.save.rpg_state
         if kind == "level":
@@ -49,6 +51,11 @@ class NpcStateMixin:
             return self.open_shop_id or ""
         if kind == "name_input":  # "open" while the name screen waits for a name, else ""
             return "open" if getattr(self, "name_input_request", None) else ""
+        if kind in ("pressed", "held"):  # the host's controls this frame (a|b: any of them)
+            found = getattr(self, "input_actions", {}).get(kind, ())
+            return any(action in found for action in rest.split("|"))
+        if kind == "saves":
+            return int(getattr(self, "saves_used", 0))
         if kind == "light":  # "moving" while SET_LIGHT's circle grows or shrinks, else ""
             return "moving" if self.light_moving() else ""
         if kind == "picture_choice":  # "open" while a PICTURE_CHOICE waits, else ""

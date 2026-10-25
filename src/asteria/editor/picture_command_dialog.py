@@ -4,6 +4,7 @@ from pathlib import Path
 
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -73,6 +74,21 @@ class PictureCommandDialog(QDialog):
             "rows",
             "layer",
             "click_event",
+            "tint",
+            "tint_color",
+            "frame_rate",
+            "frame_loop",
+            "scroll_x",
+            "scroll_y",
+            "wave_amplitude",
+            "wave_length",
+            "wave_speed",
+            "blend",
+            "text",
+            "font",
+            "text_color",
+            "shadow_color",
+            "text_align",
         },
         "MOVE_PICTURE": {
             "picture_id",
@@ -80,8 +96,11 @@ class PictureCommandDialog(QDialog):
             "y",
             "scale",
             "opacity",
+            "tint",
+            "tint_color",
             "duration",
             "easing",
+            "delay",
         },
         "SET_PICTURE_FRAME": {"picture_id", "frame"},
         "ERASE_PICTURE": {"picture_id"},
@@ -105,12 +124,37 @@ class PictureCommandDialog(QDialog):
         self.y = self._float("y", 0, form_box)
         self.picture_scale = self._float("scale", 1, form_box, maximum=100)
         self.opacity = self._float("opacity", 1, form_box, maximum=1)
+        self.tint = self._float("tint", 0, form_box, maximum=1)
+        self.tint_color = QLineEdit(self._text("tint_color", ""), form_box)
+        self.tint_color.setPlaceholderText("255, 255, 255")
         self.frame = self._int("frame", 0, form_box)
         self.columns = self._int("columns", 1, form_box, minimum=1)
         self.rows = self._int("rows", 1, form_box, minimum=1)
+        self.frame_rate = self._float("frame_rate", 0, form_box, maximum=240)
+        self.frame_loop = QCheckBox(form_box)
+        self.frame_loop.setChecked(
+            str(self._initial_args.get("frame_loop", True)).lower() not in ("false", "0", "no")
+        )
+        self.scroll_x = self._float("scroll_x", 0, form_box)
+        self.scroll_y = self._float("scroll_y", 0, form_box)
+        self.wave_amplitude = self._float("wave_amplitude", 0, form_box)
+        self.wave_length = self._float("wave_length", 64, form_box)
+        self.wave_speed = self._float("wave_speed", 0, form_box)
+        self.blend = QComboBox(form_box)
+        self.blend.addItems(("normal", "add"))
+        self.blend.setCurrentText(self._text("blend", "normal"))
+        self.words = QLineEdit(self._text("text", ""), form_box)
+        self.font = QLineEdit(self._text("font", ""), form_box)
+        self.text_color = QLineEdit(self._text("text_color", ""), form_box)
+        self.text_color.setPlaceholderText("255, 255, 255")
+        self.shadow_color = QLineEdit(self._text("shadow_color", ""), form_box)
+        self.text_align = QComboBox(form_box)
+        self.text_align.addItems(("left", "right", "center"))
+        self.text_align.setCurrentText(self._text("text_align", "left"))
         self.layer = QLineEdit(self._text("layer", "screen"), form_box)
         self.click_event = QLineEdit(self._text("click_event", ""), form_box)
         self.duration = self._float("duration", 0, form_box, maximum=3600)
+        self.delay = self._float("delay", 0, form_box, maximum=3600)
         self.easing = QComboBox(form_box)
         self.easing.addItems(("linear", "ease_in", "ease_out", "ease_in_out"))
         self.easing.setCurrentText(self._text("easing", "linear"))
@@ -122,13 +166,29 @@ class PictureCommandDialog(QDialog):
             "y": self.y,
             "scale": self.picture_scale,
             "opacity": self.opacity,
+            "tint": self.tint,
+            "tint_color": self.tint_color,
             "frame": self.frame,
             "columns": self.columns,
             "rows": self.rows,
+            "frame_rate": self.frame_rate,
+            "frame_loop": self.frame_loop,
+            "scroll_x": self.scroll_x,
+            "scroll_y": self.scroll_y,
+            "wave_amplitude": self.wave_amplitude,
+            "wave_length": self.wave_length,
+            "wave_speed": self.wave_speed,
+            "blend": self.blend,
+            "text": self.words,
+            "font": self.font,
+            "text_color": self.text_color,
+            "shadow_color": self.shadow_color,
+            "text_align": self.text_align,
             "layer": self.layer,
             "click_event": self.click_event,
             "duration": self.duration,
             "easing": self.easing,
+            "delay": self.delay,
         }
         labels = {
             "command": "Command",
@@ -138,13 +198,29 @@ class PictureCommandDialog(QDialog):
             "y": "Y",
             "scale": "Scale",
             "opacity": "Opacity",
+            "tint": "Tint (0 = own colours, 1 = all tint colour)",
+            "tint_color": "Tint colour (r, g, b; empty = white)",
             "frame": "Frame",
             "columns": "Sheet columns",
             "rows": "Sheet rows",
+            "frame_rate": "Cells a second (0 = still)",
+            "frame_loop": "Cells start again (off = play once, keep the last)",
+            "scroll_x": "Scroll right (image pixels a second, wraps round)",
+            "scroll_y": "Scroll down (image pixels a second, wraps round)",
+            "wave_amplitude": "Wave: rows shifted by up to (image pixels)",
+            "wave_length": "Wave: rows to a whole wave",
+            "wave_speed": "Wave: rows a second it travels up",
+            "blend": "Blend (add = its colours added: a glow)",
+            "text": "Words instead of an image (\\V[name] fills in a variable)",
+            "font": "Bitmap font ID (empty = the message window's)",
+            "text_color": "Letter colour (r, g, b; empty = white)",
+            "shadow_color": "Shadow colour (r, g, b; empty = none)",
+            "text_align": "Words' X is their (left / right end / middle)",
             "layer": "Layer",
             "click_event": "Click event",
             "duration": "Move duration (seconds)",
             "easing": "Easing",
+            "delay": "Start after (seconds)",
         }
         for name, field in self._form_fields.items():
             form.addRow(labels[name], field)
@@ -219,12 +295,28 @@ class PictureCommandDialog(QDialog):
             "y": self.y.value(),
             "scale": self.picture_scale.value(),
             "opacity": self.opacity.value(),
+            "tint": self.tint.value(),
+            "tint_color": self.tint_color.text().strip(),
             "frame": self.frame.value(),
             "columns": self.columns.value(),
             "rows": self.rows.value(),
+            "frame_rate": self.frame_rate.value(),
+            "frame_loop": self.frame_loop.isChecked(),
+            "scroll_x": self.scroll_x.value(),
+            "scroll_y": self.scroll_y.value(),
+            "wave_amplitude": self.wave_amplitude.value(),
+            "wave_length": self.wave_length.value(),
+            "wave_speed": self.wave_speed.value(),
+            "blend": self.blend.currentText(),
+            "text": self.words.text(),
+            "font": self.font.text().strip(),
+            "text_color": self.text_color.text().strip(),
+            "shadow_color": self.shadow_color.text().strip(),
+            "text_align": self.text_align.currentText(),
             "layer": self.layer.text().strip(),
             "click_event": self.click_event.text().strip(),
             "duration": self.duration.value(),
             "easing": self.easing.currentText(),
+            "delay": self.delay.value(),
         }
         return {name: all_values[name] for name in self._fields[command]}

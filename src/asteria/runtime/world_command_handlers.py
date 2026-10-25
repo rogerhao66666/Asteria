@@ -10,6 +10,7 @@ depends on an audio or render backend.
 from __future__ import annotations
 
 from asteria.core import Transform
+from asteria.runtime.pictures import MOTION as PICTURE_MOTION
 
 STANDARD_WORLD_COMMANDS = (
     "START_ENCOUNTER",
@@ -148,6 +149,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "NAME_INPUT": ("target", "max_length", "title", "default", "initial"),
     "PICTURE_CHOICE": ("layout", "variable"),
     "SET_LIGHT": ("radius", "speed", "off"),
+    "TITLE_COMMAND": ("action", "screen"),
     "SHOW_BALLOON": ("entity", "balloon", "duration_ms"),
     "SET_ENTITY_ICON": ("entity", "icon_id"),
     "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
@@ -166,8 +168,34 @@ WORLD_COMMAND_ARGUMENTS = {
         "rows",
         "layer",
         "click_event",
+        "tint",
+        "tint_color",
+        "frame_rate",
+        "frame_loop",
+        "scroll_x",
+        "scroll_y",
+        "wave_amplitude",
+        "wave_length",
+        "wave_speed",
+        "blend",
+        "text",
+        "font",
+        "text_color",
+        "shadow_color",
+        "text_align",
     ),
-    "MOVE_PICTURE": ("picture_id", "x", "y", "scale", "opacity", "duration", "easing"),
+    "MOVE_PICTURE": (
+        "picture_id",
+        "x",
+        "y",
+        "scale",
+        "opacity",
+        "tint",
+        "tint_color",
+        "duration",
+        "easing",
+        "delay",
+    ),  # fmt: skip
     "SET_PICTURE_FRAME": ("picture_id", "frame"),
     "ERASE_PICTURE": ("picture_id",),
     "TIMER_START": ("timer_id", "seconds", "on_expire", "count_up", "show"),
@@ -187,6 +215,13 @@ def _required(command, key):
     if value is None or (isinstance(value, str) and not value.strip()):
         raise WorldCommandError(f"{command.name} requires {key}")
     return value
+
+
+def _flag(value):
+    """A yes / no argument: a bool, or text such as "false" / "0" / "no"."""
+    if isinstance(value, str):
+        return value.strip().lower() not in ("false", "0", "no", "off", "")
+    return bool(value)
 
 
 def _amount(command, key, default):
@@ -699,6 +734,10 @@ def register_standard_world_commands(router, session):
         ("SET_TILE", set_tile),
         ("NAME_INPUT", name_input),
         (
+            "TITLE_COMMAND",
+            lambda c: session.request_title(_required(c, "action"), c.args.get("screen", "")),
+        ),  # fmt: skip
+        (
             "SET_LIGHT",
             lambda c: session.set_light(
                 None
@@ -737,7 +776,7 @@ def register_standard_world_commands(router, session):
                 if name == "show":
                     return session.pictures.show(
                         picture_id,
-                        _required(command, "asset_id"),
+                        args.get("asset_id", ""),  # or words: text
                         _amount(command, "x", 0),
                         _amount(command, "y", 0),
                         scale=_amount(command, "scale", 1.0),
@@ -747,6 +786,25 @@ def register_standard_world_commands(router, session):
                         rows=int(_amount(command, "rows", 1)),
                         layer=int(_amount(command, "layer", 0)),
                         click_event=str(args.get("click_event", "")),
+                        tint=_amount(command, "tint", 0.0),
+                        tint_color=args.get("tint_color") or None,
+                        frame_rate=_amount(command, "frame_rate", 0.0),
+                        text=str(args.get("text", "") or ""),
+                        font=str(args.get("font", "") or ""),
+                        text_color=args.get("text_color") or None,
+                        shadow_color=args.get("shadow_color") or None,
+                        text_align=str(args.get("text_align", "left") or "left"),
+                        **{
+                            key: (
+                                _flag(args[key])
+                                if key == "frame_loop"
+                                else str(args[key])
+                                if key == "blend"
+                                else _amount(command, key, default)
+                            )
+                            for key, default in PICTURE_MOTION.items()
+                            if key in args and args[key] not in ("", None)
+                        },
                     )
                 if name == "move":
                     pick = lambda key: _amount(command, key, 0) if key in args else None  # noqa: E731
@@ -756,8 +814,11 @@ def register_standard_world_commands(router, session):
                         y=pick("y"),
                         scale=pick("scale"),
                         opacity=pick("opacity"),
+                        tint=pick("tint"),
+                        tint_color=args.get("tint_color") or None,
                         duration=_amount(command, "duration", 0.0),
                         easing=str(args.get("easing", "linear")),
+                        delay=_amount(command, "delay", 0.0),
                     )
                 if name == "frame":
                     return session.pictures.set_frame(

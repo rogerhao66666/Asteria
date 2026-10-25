@@ -373,7 +373,12 @@ class EventRunner:
             if not isinstance(item, dict) or "text" not in item or "value" not in item:
                 raise EventRunnerError("invalid CHOICE entry")
             choices.append(
-                DialogueChoice(str(item["text"]), item["value"], str(item.get("text_key", "")))
+                DialogueChoice(
+                    str(item["text"]),
+                    item["value"],
+                    str(item.get("text_key", "")),
+                    tuple(item.get("hover", ())),
+                )
             )
         prompt, prompt_key = (
             str(instruction.args.get("prompt", "")),
@@ -420,6 +425,18 @@ class EventRunner:
             )
         self.dialogue.choice = None
         return selected
+
+    def hover_choice(self, index):
+        """The pointer came to choice ``index``: its ``hover`` world commands run now."""
+        request = self.dialogue.choice
+        if request is None or not 0 <= int(index) < len(request.choices):
+            return False
+        source_id = self.active.source_entity_id if self.active is not None else ""
+        for hover in request.choices[int(index)].hover:
+            command = WorldCommand(str(hover["command"]), dict(hover.get("args") or {}),
+                                   source_entity_id=source_id)  # fmt: skip
+            self.world_commands.dispatch(command)
+        return True
 
     def cancel_choice(self):
         """The cancel key on a choice that allows it: its ``cancel`` value is the answer.

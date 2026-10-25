@@ -156,6 +156,31 @@ class MessagesMixin:
 
         return speaker_name(self.data_lookup, line.speaker)
 
+    TITLE_ACTIONS = ("new_game", "continue", "load", "screen", "quit")
+
+    def request_title(self, action, screen=""):
+        """TITLE_COMMAND, from a title screen's event program (``title_screen.program``): the
+        host starts a new game, continues the latest save, opens the load slots, opens a game
+        menu ``screen`` by itself (``options``, ``dex``...; leaving it comes back to the title)
+        or quits."""
+        action = str(action or "")
+        if action not in self.TITLE_ACTIONS:
+            raise GameSessionError(f"TITLE_COMMAND action is one of {self.TITLE_ACTIONS}")
+        if action == "screen" and not str(screen or ""):
+            raise GameSessionError("TITLE_COMMAND screen needs the screen to open")
+        self.title_request = {"action": action, "screen": str(screen or "")}
+        return self.title_request
+
+    def update_title(self, dt=0.0):
+        """A title screen's frame: its event program and the pictures only (no scene, common
+        or timer events: no game has started)."""
+        try:
+            self.events.update(dt)
+        except Exception as exc:  # noqa: BLE001 - a broken title: kept in event_errors
+            self.event_errors.append(exc)
+            self.events.stop()
+        self.pictures.update(dt)
+
     def request_name_input(self, target, *, max_length=7, title="", default="", initial=""):
         """NAME_INPUT: the name screen opens (the host draws it); ``finish_name_input`` gives
         the name to ``target`` - ``variable:<name>`` or ``pet:last`` / ``pet:<instance id>``."""
@@ -255,7 +280,7 @@ class MessagesMixin:
 
         def variable(name):
             value = context.get_variable(name)
-            return None if value is None else value
+            return self._message_word(name) if value is None else value
 
         def party(index):
             ids = state.party_active_actor_ids
@@ -276,6 +301,18 @@ class MessagesMixin:
             macros=dict(settings.macros) if settings else None,
             translate=self.localizer.lookup,
         )
+
+    def _message_word(self, name):
+        """The words ``\\V[...]`` has for a name no variable holds: ``play.time`` (the time
+        played, ``h:mm``) and ``creatures.owned`` (species owned now or ever caught)."""
+        if name == "play.time":
+            seconds = int(self.world.counters.get("play.seconds", 0.0))
+            return f"{seconds // 3600}:{seconds % 3600 // 60:02d}"
+        if name == "creatures.owned":
+            owned = {p.species_id for p in self.pets()}
+            owned |= {k for k, v in self.world.bestiary.items() if v.get("captured", 0) > 0}
+            return len(owned)
+        return None
 
     def expand_message(self, text, *, plain=False):
         """A message with its data codes replaced; ``plain`` also drops the formatting codes."""
@@ -365,6 +402,18 @@ class MessagesMixin:
         selected = runner.choose(index)
         self.update_events(0.0)
         return selected
+
+    def hover_choice(self, index):
+        """The pointer came to choice ``index`` of the waiting choice: its ``hover`` commands
+        run (errors are kept in ``event_errors``)."""
+        runner = self._dialogue_runner()
+        if runner is None:
+            return False
+        try:
+            return runner.hover_choice(index)
+        except Exception as exc:  # noqa: BLE001 - a wrong hover command: the event's error
+            self.event_errors.append(exc)
+            return False
 
     def cancel_choice(self):
         """The cancel key on the waiting choice: its ``cancel`` value when it has one (True),

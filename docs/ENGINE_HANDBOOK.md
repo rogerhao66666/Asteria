@@ -584,6 +584,16 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 |---|---|
 | 資料表單 | 欄位與分區的說明只在 ⓘ 的滑鼠提示裡（`Section` 的 `FormSectionHelp`），不再印在表單上 |
 
+### D82 新增（2026-10-25；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 圖片 | `tint`／`tint_color`、`MOVE_PICTURE` 的 `delay`、`frame_rate`／`frame_loop`、`scroll_x`／`scroll_y`、`wave_*`、`blend`（`add`）、文字圖片 `text`／`font`／`text_color`／`shadow_color`／`text_align`（`runtime/pictures.py`，畫在 `field_ui._draw_pictures`、`_picture_motion`、`_text_picture`） |
+| 選項 | `CHOICE` 選項的 `hover`（`DialogueChoice.hover`、`runner.hover_choice`）；選項框等提問打完（`dialogue.choice_after_text`、`field_ui._choice_ready`）；超過兩行往上捲；同一句不重打 |
+| 標題畫面 | 遊戲資料夾的 `title_screen.program`（`playtest/title_build.py` 的 `_title_program_frame`）；`TITLE_COMMAND`（`session.request_title`）；`CreatureMenuScreen.open_alone` |
+| 條件／等待 | `rpg` `pressed:`／`held:`（`a|b`）、`rpg` `saves`；`WAIT` 的 `until`＋`seconds`（`events/vm.py`） |
+| 訊息 | `\V[play.time]`、`\V[creatures.owned]`（`session.messages._message_word`） |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

@@ -42,6 +42,7 @@ class MenusInputMixin:
         self._defeat = False
         self._shop_screen = None
         self.audio.stop_music(fade_out=0.3)
+        self._title_running = ""  # a title made as an event program starts again
         self._ui_mode = "title"
 
     # -- status menu (UI-01) ----------------------------------------------------------------------

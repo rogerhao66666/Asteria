@@ -584,6 +584,11 @@ class PlayableTestRuntime(
         with self.profiler.section("input"):
             self.input_source.handle_events(events)
             self.input.update(self.input_source.raw_state())
+            held = {a for a, v in self.input.current.actions.items() if v > 0}
+            self.game.input_actions = {  # rpg pressed:<action> / held:<action> conditions
+                "held": held,
+                "pressed": {a for a in held if self.input.just_pressed(a)},
+            }
         if self._network_gameplay_frozen():
             for event in events:
                 if event.type == self.pg.QUIT:
@@ -661,8 +666,8 @@ class PlayableTestRuntime(
             elif event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE:
                 if self._ui_mode == "build":
                     self._ui_mode = "field"
-                elif self._ui_mode == "title":
-                    self.running = False
+                elif self._ui_mode == "title" and not self._title_program():
+                    self.running = False  # (a title made as an event program uses the key)
             elif (
                 event.type == self.pg.KEYDOWN
                 and event.key == self.pg.K_F5
@@ -671,7 +676,9 @@ class PlayableTestRuntime(
                 self.save_playtest()
 
         self.menu_sounds()  # the menu theme's open / move / confirm / cancel sounds (U2)
-        if self._ui_mode == "title":
+        if self._ui_mode == "title" and self._title_program():
+            self._title_program_frame(events, dt, self._title_program())
+        elif self._ui_mode == "title":
             for event in events:
                 if event.type == self.pg.KEYDOWN and event.key == self.pg.K_n:
                     self._ui_mode = "field"
@@ -740,8 +747,10 @@ class PlayableTestRuntime(
             menu.update(dt, events)
             if menu.done:
                 self._creature_menu = None
-                self._ui_mode = "field"
-                self._draw_field(False)
+                self._ui_mode = getattr(self, "_creature_menu_back", "field")
+                self._creature_menu_back = "field"
+                if self._ui_mode == "field":
+                    self._draw_field(False)
             else:
                 from asteria.runtime.creature_menu import OVERLAY_PHASES
 

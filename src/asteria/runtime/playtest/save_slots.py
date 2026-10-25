@@ -58,6 +58,7 @@ class SaveSlotsMixin:
                     self.game = GameSessionRuntime(self.project, value)
                     self._victory = self._defeat = False
                     self._ui_mode = "field"
+                    self._title_running = ""  # (a title made as an event program has ended)
                     self.message = self.game.tr(
                         "slots.loaded", "Loaded slot {slot}", slot=menu.slot
                     )

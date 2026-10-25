@@ -44,6 +44,7 @@ TITLES = {  # the sections the engine reads, named in the list (their key after 
     "progression_rewards": "Progression rewards",
     "render": "Rendering",
     "title": "Title screen",
+    "title_screen": "Title screen program",  # program: the event program that is the title
 }
 
 

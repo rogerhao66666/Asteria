@@ -83,6 +83,89 @@ class TitleBuildMixin:
         )
         c.finish()
 
+    # -- a title screen run by an event program (title_screen.program) ---------------------
+    def _title_program(self):
+        """The event program that is the title screen (the game folder's
+        ``title_screen.program``), or "" for the engine's own title."""
+        settings = self.manifest.get("title_screen")
+        return str(settings.get("program") or "") if isinstance(settings, dict) else ""
+
+    def _title_slots(self):
+        from asteria.runtime.save_slots import SaveSlots
+
+        return SaveSlots(self.resource_root / "saves", self.project)
+
+    def _latest_slot(self):
+        """The save slot written last, or None when no slot holds a game."""
+        slots = self._title_slots()
+        found = [
+            (slots.path(s).stat().st_mtime, s) for s in slots.slots() if slots.path(s).exists()
+        ]
+        return max(found)[1] if found else None
+
+    def _start_title_program(self, program):
+        """The title's program starts in the latest save (so its words can show that game:
+        the player's name, time, badges...), or in a new game when there is none."""
+        slot = self._latest_slot()
+        if slot is not None:
+            try:
+                self.save = self._title_slots().load(slot)
+                self.game = GameSessionRuntime(self.project, self.save)
+            except (OSError, ValueError, KeyError, TypeError):
+                pass  # an unreadable save: the title runs in the game it has
+        slots = self._title_slots()
+        self.game.saves_used = sum(1 for s in slots.slots() if slots.path(s).exists())
+        self.game.title_request = None
+        self.game.events.start(program, replace=True)
+        self._title_running = program
+
+    def _title_program_frame(self, events, dt, program):
+        """One frame of a title screen made as an event program: its pictures, sounds and
+        choices; TITLE_COMMAND says where it goes."""
+        if getattr(self, "_title_running", "") != program:
+            self._start_title_program(program)
+        game = self.game
+        self._dialogue_input(events)
+        game.update_title(dt)
+        self.field_effects.update(dt)
+        self.screen.fill((0, 0, 0))
+        self._draw_pictures()
+        self._draw_dialogue()
+        alpha = self.field_effects.fade_alpha
+        if alpha > 0:
+            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+            shade.fill((*self.field_effects.fade_color, int(alpha * 255)))
+            self.screen.blit(shade, (0, 0))
+        request, game.title_request = getattr(game, "title_request", None), None
+        if request is not None:
+            self._title_action(request)
+
+    def _title_action(self, request):
+        action = request["action"]
+        if action == "quit":
+            self.running = False
+            return
+        if action == "load":
+            self.open_slots("load", back="title")
+            return
+        if action == "screen":
+            from asteria.runtime.creature_menu import CreatureMenuScreen
+
+            self._creature_menu = CreatureMenuScreen(self)
+            self._creature_menu.open_alone(request["screen"])
+            self._creature_menu_back = "title"
+            self._ui_mode = "creature_menu"
+            return
+        slot = self._latest_slot() if action == "continue" else None
+        if slot is not None:  # the save again, as it was written (the title changed nothing)
+            self.save = self._title_slots().load(slot)
+        elif self.project.game_start is not None:
+            self.save = self.project.game_start.instantiate(self.project)
+        self.game = GameSessionRuntime(self.project, self.save)
+        self.field_effects.fade_alpha = 0.0
+        self._title_running = ""
+        self._ui_mode = "field"
+
     def _load_player_save(self):
         if self._multiplayer_connected() or self._network_gameplay_frozen():
             self._server_save_command("load")

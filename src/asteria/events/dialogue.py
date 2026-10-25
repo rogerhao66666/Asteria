@@ -52,23 +52,36 @@ class DialogueChoice:
     text: str
     value: object
     text_key: str = ""  # its translation's key in the locale tables (D60)
+    # world commands ({"command", "args"}) run when the pointer comes to this choice (a picture
+    # that changes with it: the boy or the girl, the class looked at)
+    hover: tuple = ()
 
     def __post_init__(self):
         if not str(self.text):
             raise ValueError("choice text is required")
+        hover = tuple(dict(h) for h in self.hover or ())
+        if any("command" not in h for h in hover):
+            raise ValueError("a hover command needs its command")
+        object.__setattr__(self, "hover", hover)
 
     def to_data(self):
         data = {"text": str(self.text), "value": self.value}
         if self.text_key:  # written only when set
             data["text_key"] = str(self.text_key)
+        if self.hover:
+            data["hover"] = [dict(h) for h in self.hover]
         return data
 
     @classmethod
     def from_data(cls, data):
-        if not {"text", "value"} <= set(data) or set(data) - {"text", "value", "text_key"}:
+        keys = {"text", "value", "text_key", "hover"}
+        if not {"text", "value"} <= set(data) or set(data) - keys:
             raise ValueError("invalid dialogue choice")
         return cls(
-            text=str(data["text"]), value=data["value"], text_key=str(data.get("text_key", ""))
+            text=str(data["text"]),
+            value=data["value"],
+            text_key=str(data.get("text_key", "")),
+            hover=tuple(data.get("hover", ())),
         )
 
 
