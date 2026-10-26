@@ -5,7 +5,7 @@ from __future__ import annotations
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
 from asteria.presentation.creature_screens import creature_settings
-from asteria.runtime.collision import CollisionWorld
+from asteria.runtime.collision import CollisionWorld, box_blocked, feet_box
 
 from .support import (  # noqa: F401 - the names the moved methods use
     BESTIARY_TAG_KINDS,
@@ -999,7 +999,7 @@ class FieldUiMixin:
             moving = self._grid_field_step(dx, dy, dt)
         elif moving:
             mag = max(1.0, (dx * dx + dy * dy) ** 0.5)
-            speed = 36.0
+            speed = float(self.manifest.get("field", {}).get("walk_speed", 0) or 36.0)
             pt = self.game.player.get(Transform)
             blocked = CollisionWorld.from_scene(self.game.scene).blocking_query(
                 exclude={self.game.player.id}
@@ -1013,12 +1013,14 @@ class FieldUiMixin:
                 walls = self.game._tile_blocking.get(self.game.scene.id)
                 blocked = CombinedQuery(blocked, walls)
                 x0, y0, x1, y1 = self.tile_view.bounds
-                x_range, y_range, speed = (x0 + 6, x1 - 6), (y0 + 6, y1 - 2), 64.0
+                x_range, y_range = (x0 + 6, x1 - 6), (y0 + 6, y1 - 2)
+                speed = float(self.manifest.get("field", {}).get("walk_speed", 0) or 64.0)
+            feet = feet_box(self.game.player)
             nx = max(x_range[0], min(x_range[1], pt.x + dx / mag * speed * dt))
-            if not blocked.collides_world_point(nx, pt.y):
+            if not box_blocked(blocked, nx, pt.y, feet):
                 pt.x = nx
             ny = max(y_range[0], min(y_range[1], pt.y + dy / mag * speed * dt))
-            if not blocked.collides_world_point(pt.x, ny):
+            if not box_blocked(blocked, pt.x, ny, feet):
                 pt.y = ny
             self.game.save.player_position = (pt.x, pt.y)
             if abs(dx) > abs(dy):

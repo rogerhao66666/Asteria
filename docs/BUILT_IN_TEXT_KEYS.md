@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 661 個鍵，29 組。
+共 683 個鍵，29 組。
 
 ## Creature battle
 
@@ -210,7 +210,9 @@
 | 鍵 | English | 引擎的繁體中文 |
 | --- | --- | --- |
 | `pause.resume` | Resume | 繼續遊戲 |
-| `pause.status` | Status / Items / Equipment / Skills | 狀態／道具／裝備／技能 |
+| `pause.status` | Status | 狀態 |
+| `pause.items` | Items | 道具 |
+| `pause.skills` | Skills | 技能 |
 | `pause.equipment` | Equipment | 裝備 |
 | `pause.enhance` | Enhance | 強化 |
 | `pause.achievements` | Achievements | 成就 |
@@ -307,6 +309,26 @@
 | `status.equipped` | Equipped {name} | 裝備了 {name} |
 | `status.unequipped` | Unequipped {name} | 卸下了 {name} |
 | `status.nothing_to_unequip` | Nothing to unequip | 沒有可卸下的裝備 |
+| `status.profile` | Character | 角色 |
+| `status.level` | Lv {level} | Lv {level} |
+| `status.exp` | EXP {value} | 經驗值 {value} |
+| `status.ability_points` | Ability Points | 能力點數 |
+| `status.no_stat_graph` | — | — |
+| `status.details` | Details | 詳細能力 |
+| `status.raised` | {name} +1 | {name} +1 |
+| `status.cannot_raise` | {name} can't be raised ({reason}) | {name} 無法提升（{reason}） |
+| `status.reason.max_rank` | at its highest | 已達上限 |
+| `status.reason.no_points` | no points left | 點數不足 |
+| `status.items.all` | All | 全部 |
+| `status.items.items` | Items | 道具 |
+| `status.items.equipment` | Equipment | 裝備 |
+| `status.items.usable` | Usable | 可使用 |
+| `status.filter` | F  Filter: {name} | F  篩選：{name} |
+| `status.filter.none` | All | 全部 |
+| `status.hint.status` | Up/Down: choose   Enter / Right: +1   Q / E: member   Esc: back | 上／下：選擇   Enter／右：+1   Q／E：換角色   Esc：返回 |
+| `status.hint.tabs` | Tab: next tab | Tab：下一頁 |
+| `status.hint.items` | Left/Right: tab   F: filter   Up/Down: choose   Enter: use   Esc: back | 左／右：分類   F：篩選   上／下：選擇   Enter：使用   Esc：返回 |
+| `status.hint.page` | Up/Down: choose   Enter: use / equip   Esc: back | 上／下：選擇   Enter：使用／裝備   Esc：返回 |
 
 ## Quest log
 

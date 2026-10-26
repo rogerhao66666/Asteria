@@ -48,6 +48,7 @@ DATA_GROUPS = (
     ("Data: factions and achievements", ("factions", "achievements")),
     ("Data: world interactions", ("world_interactions",)),
     ("Data: party setups and drop tables", ("party_setups", "drop_tables")),
+    ("Data: menu pages (item tabs and filters)", ("menu_rules",)),
 )
 MAPS_GROUP = "Data: map names"
 CURRENCY_GROUP = "Data: currencies"
@@ -60,8 +61,9 @@ SPEAKERS_GROUP = "Dialogue: who speaks"
 LINES_GROUP = "Dialogue: lines and choices"
 RECRUIT_GROUP = "Data: recruiting notes"
 CATEGORY_GROUP = "Data: quest card categories"
-# quest objectives, skill-tree / growth nodes, workstation tabs, gacha rarities
-NESTED = ("objectives", "nodes", "categories", "rarities")
+# quest objectives, skill-tree / growth nodes, workstation tabs, gacha rarities, the Items
+# page's tabs and filters
+NESTED = ("objectives", "nodes", "categories", "rarities", "item_categories", "item_filters")
 # a text that is only \\T[key] codes already comes from the locale tables: it needs no key
 _ONLY_TABLE_CODES = re.compile(r"^(\s*\\T\[[^\]]+\]\s*)+$")
 

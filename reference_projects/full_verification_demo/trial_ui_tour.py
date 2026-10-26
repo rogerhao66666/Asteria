@@ -62,6 +62,9 @@ def prepare(game):
     (scepter,) = game.gain_equipment("w_bone_scepter")  # a piece that grows: the growth page
     game.wear_from_bag("hero_01", scepter.instance_id, "weapon", 0)
     game.equip_offers.clear()
+    allocation = state.progression_allocations.get("hero_01")
+    if allocation is not None:  # the Status page's + have points to spend (D87)
+        allocation.grant("stat_points", 5)
     game.backlog.add("Warden Thessaly", "The road north is yours to clear.")
     game.backlog.add("Roger", "Then I'll clear it.")
 
@@ -135,6 +138,14 @@ def screens(runtime):
 
         return setup
 
+    def page(name, category=0, item_filter=-1):  # a pause entry's page of its own (D87)
+        def setup():
+            runtime._open_pause_page(name)
+            runtime.status_menu.category = category
+            runtime.status_menu.filter = item_filter
+
+        return setup
+
     def shop(tab):
         def setup():
             game.open_shop("remedy_shop")
@@ -195,6 +206,9 @@ def screens(runtime):
         ("status_items", status("items")),
         ("status_equipment", status("equipment")),
         ("status_skills", status("skills")),
+        ("page_status", page("status")),
+        ("page_items", page("items")),
+        ("page_items_potions", page("items", 1, 1)),
         ("bag", mode("bag", _bag_screen=lambda: BagScreen(runtime))),
         ("skill_tree", mode("skills", _skill_tree=lambda: SkillTreeScreen(runtime))),
         ("build", mode("build")),

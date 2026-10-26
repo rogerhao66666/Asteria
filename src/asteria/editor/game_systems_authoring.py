@@ -39,6 +39,7 @@ from asteria.rpg.items import EQUIP_OFFERS, INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
+from asteria.rpg.menu_rules import NO_STAT_GRAPH, PAUSE_ENTRIES, MenuRules
 from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.pets import EXP_SHARES, LEVEL_UP_HEALS, PetRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
@@ -112,6 +113,18 @@ def F(key, label, kind, **values):  # noqa: N802 - short spec constructor
     return FormField(key, label, kind, **values)
 
 
+_ITEM_CATEGORY = (  # a tab of the Items page (D87)
+    F("category_id", "Tab ID", "text", default="all"),
+    F("display_name", "Tab Name", "text", default=""),
+    F("tags", "Items With Any of These Tags (none: every item)", "string_list", default=()),
+    F("icon_id", "Icon", "icon", default=""),
+)
+_ITEM_FILTER = (  # what the Items page's F key narrows a tab to (D87)
+    F("filter_id", "Filter ID", "text", default="usable"),
+    F("display_name", "Filter Name", "text", default=""),
+    F("tags", "Items With All of These Tags", "string_list", default=()),
+    F("usable", "Only Items the Menu Can Use", "bool", default=False),
+)
 _MODIFIER = (
     F("modifier_id", "Modifier ID", "text", default="bonus"),
     F("stat", "Stat", "text", default="power"),
@@ -952,6 +965,34 @@ D26_FORMS = {
         F("enabled_switch", "Usable While Switch Is On (empty: always)", "text", default=""),
         F("order", "Order", "int", default=0),
     ),
+    "menu_rules": (
+        F("rules_id", "Rules ID", "id"),
+        F("display_name", "Name", "text", default=""),
+        F(
+            "pause_entries",
+            "Pause Menu Pages, in Order (none ticked: the engine's order; drag to reorder)",
+            "ref_list",
+            source="pause_entries",
+            default=(),
+        ),
+        F(
+            "stat_graph",
+            "Stat Points Are Spent In (empty: the graph tagged attributes; - : no +)",
+            "optional_ref",
+            source="stat_graphs",
+            empty_label="(the graph tagged attributes)",
+            default="",
+        ),
+        F(
+            "stat_rows",
+            "Detail Stats of the Status Page, in Order (none ticked: every stat formula)",
+            "ref_list",
+            source="stats",
+            default=(),
+        ),
+        F("item_categories", "Item Page Tabs", "table", fields=_ITEM_CATEGORY, default=()),
+        F("item_filters", "Item Page Filters (F)", "table", fields=_ITEM_FILTER, default=()),
+    ),
     "doodads": (
         F("doodad_id", "Doodad ID", "id"),
         F("sprite_sheet_asset_id", "Sprite Sheet", "text", default=""),
@@ -966,6 +1007,12 @@ D26_FORMS = {
     ),
 }
 FORMS.update(D26_FORMS)
+
+
+def _stat_label(db, stat_id):
+    rule = db.derived_stats.get(stat_id)
+    name = getattr(rule, "display_name", "") if rule is not None else ""
+    return f"{name} ({stat_id})" if name and name != stat_id else stat_id
 
 
 def _dict_rows(mapping, key_name, value_name):
@@ -1257,6 +1304,7 @@ def _templates():
         "world_interactions": lambda key, c: WorldInteraction(key, key),
         "drop_tables": lambda key, c: DropTable(key, key),
         "inventory_rules": lambda key, c: InventoryRules(key, key),
+        "menu_rules": lambda key, c: MenuRules(key, key),
         "battle_extension_rules": lambda key, c: BattleExtensionRules(key),
         "enemy_level_rules": lambda key, c: EnemyLevelRules(key),
         "map_rule_sets": lambda key, c: MapRuleSet(key),
@@ -1366,6 +1414,7 @@ KINDS = (
         AbilityLoadoutRules,
     ),
     _Kind("menu_entries", "Pause Menu Entries", "menu_entries", "entry_id", MenuEntry),
+    _Kind("menu_rules", "Menu Pages (status, items)", "menu_rules", "rules_id", MenuRules),
     _Kind("doodads", "Doodads", "doodads", "doodad_id", DoodadDefinition),
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
@@ -1472,6 +1521,21 @@ class GameSystemsAuthoringController:
             return tuple(sorted(self.project.event_programs.ids()))
         if source == "carry_parts":
             return tuple(CARRY)
+        if source == "pause_entries":  # the built-in pages of the pause menu (D87)
+            from asteria.runtime.game_menus import PAUSE_WORDS
+
+            return tuple((e, PAUSE_WORDS.get(e, e)) for e in PAUSE_ENTRIES)
+        if source == "stat_graphs":
+            graphs = db.progression_graphs
+            return (NO_STAT_GRAPH,) + tuple(
+                (g, graphs[g].display_name or g) for g in sorted(graphs)
+            )
+        if source == "stats":  # the stat formulas' stats, then every stat the data names
+            from .data_translation import stat_ids
+
+            known = list(db.derived_stats)
+            known += [s for s in stat_ids(self.project) if s not in known]
+            return tuple((s, (db.derived_stats.get(s) or s) and _stat_label(db, s)) for s in known)
         if source == "goods":  # what a shop can sell: items, then equipment (D61)
             return tuple(sorted(db.items)) + tuple(sorted(db.equipment))
         stores = {

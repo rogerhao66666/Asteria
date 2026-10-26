@@ -137,7 +137,7 @@ def messages_and_extras(c):
 DOODADS = {  # id: (exterior prop, solid footprint w, h)
     "grave": ("grave", 18.0, 8.0),
     "grave_cross": ("grave_cross", 14.0, 8.0),
-    "bush": ("bush", 0.0, 0.0),
+    "bush": ("bush", 20.0, 10.0),  # the bush blocks its own foot
 }
 TOWN_DOODADS = (("grave", 40.0, 380.0), ("grave_cross", 72.0, 380.0), ("bush", 640.0, 60.0))
 

@@ -756,7 +756,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | `rt.capture()` | 玩家看到的這一幀（pygame Surface）。 |
 | `rt.close()` | 關閉視窗。 |
 | `rt.save_playtest()` | 把試玩的自動存檔寫進 `saves/`。 |
-| `rt.open_status_menu(back='field')` | 打開狀態選單。 |
+| `rt.open_status_menu(back='field', page=None)` | 打開狀態選單。 |
 | `rt.open_equipment_screen(back='field')` | 打開裝備（紙娃娃）畫面。 |
 | `rt.open_enhance_screen(back='field')` | 打開強化畫面（精煉、鑲嵌…）。 |
 | `rt.open_slots(mode, back='pause')` | 打開存檔／讀檔欄（`mode` 是 `save` 或 `load`）。 |

@@ -804,7 +804,7 @@ Opens a pygame window over a project and its save, draws every screen and turns 
 | `rt.capture()` | The frame as the player sees it (a pygame Surface). |
 | `rt.close()` | Close the window. |
 | `rt.save_playtest()` | Write the play-test autosave into `saves/`. |
-| `rt.open_status_menu(back='field')` | Open the status menu. |
+| `rt.open_status_menu(back='field', page=None)` | Open the status menu. |
 | `rt.open_equipment_screen(back='field')` | Open the equipment (paper doll) screen. |
 | `rt.open_enhance_screen(back='field')` | Open the enhance screen (refine, sockets…). |
 | `rt.open_slots(mode, back='pause')` | Open the save / load slots (`mode` is `save` or `load`). |

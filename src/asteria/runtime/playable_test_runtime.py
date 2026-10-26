@@ -17,7 +17,6 @@ from asteria.runtime.field_presentation import (
 )
 from asteria.runtime.game_menus import (
     GAME_OVER_OPTIONS,
-    PAUSE_OPTIONS,
     GameSettings,
     MenuCursor,
     ShopScreen,
@@ -32,6 +31,8 @@ from asteria.runtime.playtest.capture import CaptureMixin
 from asteria.runtime.playtest.environment import EnvironmentMixin
 from asteria.runtime.playtest.field_ui import FieldUiMixin
 from asteria.runtime.playtest.field_view import FieldViewMixin
+from asteria.runtime.playtest.menu_fit import MenuFitMixin
+from asteria.runtime.playtest.menu_pages import MenuPagesMixin
 from asteria.runtime.playtest.menus_draw import MenusDrawMixin
 from asteria.runtime.playtest.menus_input import MenusInputMixin
 from asteria.runtime.playtest.multiplayer import MultiplayerMixin
@@ -68,6 +69,8 @@ class PlayableTestRuntime(
     MenusInputMixin,
     SaveSlotsMixin,
     MenusDrawMixin,
+    MenuFitMixin,
+    MenuPagesMixin,
     CaptureMixin,
 ):
     """Small human-operable pygame adapter for serialized Asteria reference games.
@@ -180,37 +183,7 @@ class PlayableTestRuntime(
         self.profiler = NullProfiler()
         self._drawing = False
         self._wrap_draw_methods()
-        options = list(PAUSE_OPTIONS)
-        db = self.project.rpg_database
-        loadouts = getattr(self.save.rpg_state, "loadouts", None)
-        gear = []
-        if loadouts:  # U3: the paper doll, and the enhance screen when gear can change
-            gear.append(("equipment", "Equipment"))
-            if db.refine_rules or any(e.sockets or e.growth_id for e in db.equipment.values()):
-                gear.append(("enhance", "Enhance"))
-        options[2:2] = gear
-        if getattr(self.project.rpg_database, "pet_species", None):  # a game with pets
-            options.insert(2 + len(gear), ("pets", "Pets"))
-        extras = []
-        if self.game.message_settings is not None and self.game.message_settings.backlog_limit:
-            extras.append(("backlog", "Message Log"))
-        if db.ability_loadout_rules:
-            extras.append(("skill_slots", "Skill Slots"))
-        if db.music_tracks:
-            extras.append(("music", "Music Room"))
-        if db.credits_pages:
-            extras.append(("credits", "Credits"))
-        for entry in sorted(db.menu_entries.values(), key=lambda e: (e.order, e.entry_id)):
-            extras.append((f"entry:{entry.entry_id}", entry.label))
-        for entry in extras:  # in order, before Settings
-            options.insert(next(i for i, o in enumerate(options) if o[0] == "settings"), entry)
-        icons = {
-            f"entry:{e.entry_id}": e.icon_id for e in db.menu_entries.values() if e.icon_id
-        }  # project-defined entries may carry an icon
-        built_in = [o for o in options if not o[0].startswith("entry:")]
-        keys = text_keys("pause", built_in)
-        # the project's own entries keep their label unless a table words it (pause.entry.<id>)
-        keys.update({f"entry:{e}": f"pause.entry.{e}" for e in db.menu_entries})
+        options, icons, keys = self._pause_options()  # D87: rpg.menu_rules
         self._pause_menu = MenuCursor(options, icons, keys=keys)
         self._extra_screen = None
         self._pets_screen = None
@@ -721,7 +694,8 @@ class PlayableTestRuntime(
             if screen.closed:
                 self._ui_mode = screen.back
             else:
-                screen.draw()
+                with self.menu_fit():
+                    screen.draw()
         elif self._ui_mode == "pause":
             self._pause_input()
             self._draw_overlay_menu(self.game.tr("pause.heading", "Paused"), self._pause_menu)
@@ -733,16 +707,20 @@ class PlayableTestRuntime(
             self._draw_controls()
         elif self._ui_mode == "status":
             self._status_input(events)
-            self._draw_status_menu()
+            with self.menu_fit():
+                self._draw_status_menu()
         elif self._ui_mode == "quests":
             self._quests_input()
-            self._draw_quests()
+            with self.menu_fit():
+                self._draw_quests()
         elif self._ui_mode == "shop":
             self._shop_input()
-            self._draw_shop()
+            with self.menu_fit():
+                self._draw_shop()
         elif self._ui_mode == "crafting":
             self._crafting_input(events)
-            self._draw_crafting()
+            with self.menu_fit():
+                self._draw_crafting()
         elif self._ui_mode == "service":  # a quest board, recruiting office or gacha (U5)
             screen = self._service_screen
             screen.handle(dt, events)
@@ -750,10 +728,12 @@ class PlayableTestRuntime(
                 self._service_screen = None
                 self._ui_mode = screen.back
             else:
-                screen.draw()
+                with self.menu_fit():
+                    screen.draw()
         elif self._ui_mode in ("achievements", "bestiary"):
             self._list_screen_input()
-            self._draw_list_screen(self._ui_mode)
+            with self.menu_fit():
+                self._draw_list_screen(self._ui_mode)
         elif self._ui_mode == "settings":
             self._settings_input()
             self._draw_settings()
@@ -762,13 +742,15 @@ class PlayableTestRuntime(
             if self._bag_screen.closed:
                 self._ui_mode = "field"
             else:
-                self._bag_screen.draw()
+                with self.menu_fit():
+                    self._bag_screen.draw()
         elif self._ui_mode == "extra":
             self._extra_screen.handle(dt, events)
             if self._extra_screen.closed:
                 self._ui_mode = "pause"
             else:
-                self._extra_screen.draw()
+                with self.menu_fit():
+                    self._extra_screen.draw()
         elif self._ui_mode == "creature_menu":  # the start menu in the game's own art
             menu = self._creature_menu
             menu.update(dt, events)
@@ -807,7 +789,8 @@ class PlayableTestRuntime(
             if self._pets_screen.closed:
                 self._ui_mode = getattr(self._pets_screen, "back", "pause")
             else:
-                self._pets_screen.draw()
+                with self.menu_fit():
+                    self._pets_screen.draw()
         elif self._ui_mode == "learn":  # a creature learned a move past its limit
             self._learn_input(events)
             self._draw_field(False)
@@ -815,7 +798,7 @@ class PlayableTestRuntime(
         elif self._ui_mode == "skills":
             self._skill_tree.handle(dt, events)
             if self._skill_tree.closed:
-                self._ui_mode = "field"
+                self._ui_mode = getattr(self._skill_tree, "back", "field")
             else:
                 self._skill_tree.draw()
         elif self._ui_mode == "game_over":

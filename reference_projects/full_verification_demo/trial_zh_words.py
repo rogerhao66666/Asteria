@@ -6,6 +6,16 @@ whole sentences of quest and stat descriptions. ``LINES``: dialogue lines and ch
 """
 
 WORDS = {
+    # -- Menu Pages: the Items page's tabs and filters (D87) ------------------------------------
+    "Trial menu pages": "試煉選單頁面",
+    "All": "全部",
+    "Consumables": "消耗品",
+    "Throwables": "投擲物",
+    "Materials": "素材",
+    "Weapons": "武器",
+    "Armour": "防具",
+    "Usable now": "現在可用",
+    "Uniques": "獨特裝備",
     # -- the workstations and their tabs (U4) -------------------------------------------------
     "Alchemy Table": "煉金台",
     "Forge": "鍛造爐",

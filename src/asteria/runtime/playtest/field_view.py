@@ -27,6 +27,8 @@ from .support import (  # noqa: F401 - the names the moved methods use
     walking_row_index,
 )
 
+FIELD_HINT_PANEL = 92  # screen pixels the play-test's hint panel covers at the field's foot
+
 
 class FieldViewMixin:
     @property
@@ -175,6 +177,10 @@ class FieldViewMixin:
                 view.jump_shadow_offset = float(field.get("jump_shadow_offset", 4.0))
         elif view.scene_id != scene.id:
             view.load()
+        # the hint panel over the field's bottom (field.test_hints): the camera keeps the map
+        # above it, so no figure is left under the panel (D87)
+        hints = self.manifest.get("field", {}).get("test_hints", True)
+        view.inset_bottom = FIELD_HINT_PANEL if hints and not self.game.action_scene else 0
         if self._multiplayer_connected():
             # Network snapshots already choose each guest's own class appearance.
             if not hasattr(view, "_offline_class_looks"):

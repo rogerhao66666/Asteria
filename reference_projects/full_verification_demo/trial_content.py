@@ -2270,6 +2270,10 @@ def write_manifest(c):
         manifest["field"]["bgm"] = "town_theme"
         manifest["battle"]["bgm"] = "battle_theme"
     manifest["battle"]["victory_aftermath"] = True
+    # a walk's pace in world units a second (the figures' walks keep step: Animator2D.stride)
+    manifest["field"]["walk_speed"] = 48.0
+    # the size the menu screens are made for: a smaller window shows them shrunk to fit (D87)
+    manifest.setdefault("render", {})["menu_size"] = [1280, 720]
     sprites = manifest["field"]["entity_sprites"]
     sprites["Vaelor"] = sprites.pop(
         "Astral Tyrant", {"sprite": "playable_assets/boss_field.png", "size": [96, 96]}

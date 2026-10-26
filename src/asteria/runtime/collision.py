@@ -763,6 +763,36 @@ class CombinedQuery:
         return any(q.collides_world_point(x, y) for q in self.queries)
 
 
+def feet_box(entity):
+    """``(half_width, half_height, offset_x, offset_y)`` of an entity's own solid collider (the
+    place it stands on), or None when it has none (then only its position point blocks)."""
+    collider = entity.try_get(Collider2DComponent)
+    if collider is None or not collider.enabled or collider.is_trigger:
+        return None
+    if collider.shape == "circle":
+        half = half_h = float(collider.radius)
+    else:
+        half, half_h = float(collider.width) / 2, float(collider.height) / 2
+    return half, half_h, float(collider.offset_x), float(collider.offset_y)
+
+
+def box_blocked(query, x, y, box):
+    """Whether ``query`` blocks a body at ``(x, y)`` with ``box`` (``feet_box``): its corners,
+    edge middles and centre are tested, so a body cannot slide half into a person or a
+    wall the way a single point can. ``box`` None tests the point alone."""
+    if box is None:
+        return query.collides_world_point(x, y)
+    half_w, half_h, ox, oy = box
+    cx, cy = x + ox, y + oy
+    # a hair inside the edges: two bodies that just touch are not stuck in each other
+    half_w, half_h = max(0.0, half_w - 0.01), max(0.0, half_h - 0.01)
+    return any(
+        query.collides_world_point(px, py)
+        for py in (cy + half_h, cy, cy - half_h)
+        for px in (cx - half_w, cx, cx + half_w)
+    )
+
+
 class CollisionSystem(System):
     """Rebuilds the collision world each update and reports contacts and trigger events.
 

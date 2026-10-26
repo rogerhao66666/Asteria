@@ -154,7 +154,8 @@
       }
     },
     "player_render_width": 128,
-    "bgm": "town_theme"
+    "bgm": "town_theme",
+    "walk_speed": 48.0
   },
   "battle": {
     "background": "playable_assets/battle_background.png",
@@ -1012,5 +1013,11 @@
     "crypt_theme": "playable_assets/audio/crypt_theme.ogg",
     "throne_theme": "playable_assets/audio/throne_theme.ogg"
   },
-  "dialogue_confirm_sfx": "confirm"
+  "dialogue_confirm_sfx": "confirm",
+  "render": {
+    "menu_size": [
+      1280,
+      720
+    ]
+  }
 }

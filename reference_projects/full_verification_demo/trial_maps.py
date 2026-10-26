@@ -71,7 +71,13 @@ class Assets:
         image.save(path)
         return self._add(key, "texture", f"{key}.png", name)
 
-    def sheet(self, key, image, frames, name, pivot=(0.5, 1.0), scaling=None):
+    def sheet(self, key, image, frames, name, pivot="feet", scaling=None):
+        """A sprite sheet; ``pivot`` "feet" stands each frame on the lowest row its art
+        reaches (empty rows under the feet would lift the figure off its place)."""
+        if pivot == "feet":
+            from asteria.graphics.character_placement import feet_pivot_y
+
+            pivot = (0.5, feet_pivot_y(image, frames))
         texture = self.texture(key, image, name)
         self._json(
             f"{key}_sheet.json",
@@ -262,6 +268,14 @@ def world(command, **args):
     return EventInstruction("WORLD", {"command": command, "args": args})
 
 
+# one whole walk of the 48 px Lucifer figures carries them this far (two steps of about 12
+# px): their walks play as far as they move, so the feet do not slide (Animator2D.stride)
+STRIDE = 24.0
+# a person's feet box: as wide as the figures' bodies, so two of them never stand inside each
+# other (10 let a 20 px body slide half over its neighbour)
+BODY = 14.0
+
+
 class SceneBuilder:
     def __init__(self, project, key, name):
         self.project, self.key = project, key
@@ -274,9 +288,9 @@ class SceneBuilder:
         entity.add_component(Transform(x, y))
         return self.scene.add_entity(entity)
 
-    def look(self, entity, sheet, clips):
+    def look(self, entity, sheet, clips, stride=STRIDE):
         entity.add_component(_set(SpriteRenderer2D(), sprite_sheet_asset_id=sheet))
-        entity.add_component(_set(Animator2DComponent(), clip_set_id=clips))
+        entity.add_component(_set(Animator2DComponent(), clip_set_id=clips, stride=stride))
 
     def setup(self, tilemap, zoom=3.0):
         holder = self.entity("Map", -40, -8)
@@ -307,7 +321,7 @@ class SceneBuilder:
         entity = self.entity(name, *xy)
         self.look(entity, *look)
         if solid:
-            entity.add_component(_set(Collider2DComponent(), width=10, height=8))
+            entity.add_component(_set(Collider2DComponent(), width=BODY, height=8))
         return entity
 
     def door(self, name, xy, to_scene, to_xy, facing, weather=None, music=None, switches=()):
@@ -774,7 +788,7 @@ def build_world(c, story):
     hero = town.entity("Player", *places["town"]["start"])
     town.look(hero, *looks["hero_warrior"])
     # the same feet box as every other character: it shows (and blocks) where the hero stands
-    hero.add_component(_set(Collider2DComponent(), width=10, height=8))
+    hero.add_component(_set(Collider2DComponent(), width=BODY, height=8))
     town.door(
         "Road East",
         places["town"]["to_woods"],

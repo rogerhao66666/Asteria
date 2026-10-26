@@ -90,6 +90,8 @@ def furnish(assets, town, home, home_places):
     x0, y0, x1, y1 = LOT
     house = town.entity("Roger's House", (x0 + x1) * 8.0, y1 * 16.0)  # stands on its lot
     town.look(house, *picture(assets, "home_outside", "TilesetHouse.png", (0, 0, 64, 48), "House"))
+    # the walls block: nobody walks through the house, its door is reached from the front
+    house.add_component(maps._set(Collider2DComponent(), width=60, height=40, offset_y=-22))
     door_x = (x0 + x1) * 8.0
     town.door(
         "House Door",

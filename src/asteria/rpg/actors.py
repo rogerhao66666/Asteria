@@ -821,6 +821,7 @@ class RpgDatabase:
         self.music_tracks = {}  # rpg.extras MusicTrack
         self.credits_pages = {}  # rpg.extras CreditsPage
         self.menu_entries = {}  # rpg.extras MenuEntry
+        self.menu_rules = {}  # rpg.menu_rules MenuRules (D87)
         self.battle_options = {}  # rpg.extras BattleOptions
         self.ability_loadout_rules = {}  # rpg.ability_loadout AbilityLoadoutRules
         self.doodads = {}  # rpg.doodads DoodadDefinition
@@ -1225,6 +1226,7 @@ class RpgDatabase:
             ("music_tracks", self.music_tracks),
             ("credits_pages", self.credits_pages),
             ("menu_entries", self.menu_entries),
+            ("menu_rules", self.menu_rules),
             ("battle_options", self.battle_options),
             ("pet_rules", self.pet_rules),
             ("ability_loadout_rules", self.ability_loadout_rules),
@@ -1287,6 +1289,11 @@ class RpgDatabase:
         from .extras import MenuEntry
 
         return self._add_keyed(self.menu_entries, value, MenuEntry, "entry_id", "menu entry")
+
+    def add_menu_rules(self, value):
+        from .menu_rules import MenuRules
+
+        return self._add_keyed(self.menu_rules, value, MenuRules, "rules_id", "menu rules")
 
     def add_doodad(self, value):
         from .doodads import DoodadDefinition
@@ -2124,6 +2131,10 @@ class RpgDatabase:
                 result.add_pet_rules(PetRules.from_data(x))
             for x in data.get("menu_entries", ()):
                 result.add_menu_entry(MenuEntry.from_data(x))
+            from .menu_rules import MenuRules
+
+            for x in data.get("menu_rules", ()):
+                result.add_menu_rules(MenuRules.from_data(x))
             from .doodads import DoodadDefinition
 
             for x in data.get("doodads", ()):

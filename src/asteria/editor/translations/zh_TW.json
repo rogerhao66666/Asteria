@@ -3253,7 +3253,21 @@
   "− Place": "− 格位",
   "− Track": "− 軌道",
   "● Local server stopped": "● 本機伺服器已停止",
-  "● Not connected": "● 未連線"
+  "● Not connected": "● 未連線",
+  "Pause Menu Pages, in Order (none ticked: the engine's order; drag to reorder)": "暫停選單頁面與順序（都不勾：引擎的順序；拖曳可調順序）",
+  "Stat Points Are Spent In (empty: the graph tagged attributes; - : no +)": "能力點數加在（空白：標籤為 attributes 的成長圖；-：不顯示 +）",
+  "(the graph tagged attributes)": "（標籤為 attributes 的成長圖）",
+  "Detail Stats of the Status Page, in Order (none ticked: every stat formula)": "狀態頁的詳細能力與順序（都不勾：所有能力公式）",
+  "Item Page Tabs": "道具頁分類",
+  "Item Page Filters (F)": "道具頁篩選（F）",
+  "Tab Name": "分類名稱",
+  "Items With Any of These Tags (none: every item)": "帶有任一標籤的道具（不填：所有道具）",
+  "Filter ID": "篩選 ID",
+  "Filter Name": "篩選名稱",
+  "Items With All of These Tags": "帶有全部標籤的道具",
+  "Only Items the Menu Can Use": "只留選單中能使用的道具",
+  "Menu Pages (status, items)": "選單頁面（狀態、道具）",
+  "Data: menu pages (item tabs and filters)": "資料：選單頁面（道具分類與篩選）"
  },
  "patterns": [
   [

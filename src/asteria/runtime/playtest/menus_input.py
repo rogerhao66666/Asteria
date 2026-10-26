@@ -46,10 +46,11 @@ class MenusInputMixin:
         self._ui_mode = "title"
 
     # -- status menu (UI-01) ----------------------------------------------------------------------
-    def open_status_menu(self, back="field"):
+    def open_status_menu(self, back="field", page=None):
+        """The status menu: its four tabs, or ``page`` alone (a pause entry of its own, D87)."""
         from asteria.runtime.status_menu import StatusMenu
 
-        self.status_menu = StatusMenu(self.game)
+        self.status_menu = StatusMenu(self.game, page)
         self._status_back = back
         self._ui_mode = "status"
 
@@ -60,8 +61,22 @@ class MenusInputMixin:
                 continue
             if event.key in (self.pg.K_ESCAPE, self.pg.K_i):
                 self._ui_mode = self._status_back
+            elif event.key == self.pg.K_TAB and menu.single and menu.tab == "items":
+                pointed = getattr(menu, "point_category", None)
+                if getattr(event, "pointer", False) and pointed is not None:
+                    menu.category, menu.row = pointed, 0  # the tab the mouse clicked
+                else:
+                    menu.next_category(-1 if getattr(event, "mod", 0) & self.pg.KMOD_SHIFT else 1)
             elif event.key == self.pg.K_TAB:
                 menu.next_tab(-1 if getattr(event, "mod", 0) & self.pg.KMOD_SHIFT else 1)
+            elif event.key in (self.pg.K_LEFT, self.pg.K_RIGHT) and menu.tab == "items":
+                menu.next_category(-1 if event.key == self.pg.K_LEFT else 1)
+            elif event.key == self.pg.K_f and menu.tab == "items":
+                menu.next_filter()
+            elif event.key == self.pg.K_RIGHT and menu.tab == "status":
+                rows = menu.stat_rows()
+                if rows:
+                    menu.allocate_stat(rows[menu.row % len(rows)].node_id)
             elif event.key in (self.pg.K_q, self.pg.K_PAGEUP):
                 menu.next_actor(-1)
             elif event.key in (self.pg.K_e, self.pg.K_PAGEDOWN):
@@ -95,7 +110,10 @@ class MenusInputMixin:
         tr = self.game.tr
         c.panel("frame", (24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
         tabs = c.place("tabs", (44, 36, 150 * len(TABS), 30), 150)
-        if c.shown("tabs"):
+        if menu.single:  # a page of its own: its name where the tabs were
+            title = tr(TAB_WORDS[menu.tab], menu.tab.title())
+            c.text("title", title, 44, 34, size=30, color=c.tone("title", (255, 220, 124)))
+        elif c.shown("tabs"):
             x = tabs.x(44)
             for tab in TABS:
                 label = tr(TAB_WORDS[tab], tab.title())
@@ -113,9 +131,23 @@ class MenusInputMixin:
         member = tr("status.member", "Q / E  {name}", name=name)
         c.text("member", member, self.width - 330, 40, size=20, color=(170, 220, 255))
         self.hotspot((self.width - 336, 34, 300, 32), key="e")  # a click: the next member
+        if menu.tab == "status":
+            self._draw_status_page(c, menu, 84)
+            hint = tr(
+                "status.hint.status",
+                "Up/Down: choose   Enter / Right: +1   Q / E: member   Esc: back",
+            )
+            if not menu.single:
+                hint = tr("status.hint.tabs", "Tab: next tab") + "   " + hint
+            self._status_footer(c, menu, hint)
+            return
+        top = 88
+        if menu.tab == "items":
+            self._draw_item_tabs(c, menu, 80)
+            top = 128
         rows = menu.rows()
         icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
-        at = c.place("rows", (40, 88, self.width - 80, 14 * 28), 28)
+        at = c.place("rows", (40, top, self.width - 80, (self.height - top - 110) // 28 * 28), 28)
         icon_size = c.icon_size("rows", 22)
         label_x = at.x(56) + (icon_size + 8 if any(icons) else 0)
         fit = max(1, at.rect[3] // at.row)
@@ -123,7 +155,7 @@ class MenusInputMixin:
         size = c.size("rows", 20)
         normal = c.color("rows", c.tone("text", (210, 215, 225)))
         for i, (_kind, _key, label, detail) in enumerate(rows[start : start + fit]):
-            y = at.y(92) + i * at.row
+            y = at.y(top + 4) + i * at.row
             selected = start + i == menu.row
             row_box = (at.x(40), y - 4, at.rect[2], at.row - 2)
             self.hotspot(row_box, lambda row=start + i: setattr(menu, "row", row))
@@ -143,11 +175,23 @@ class MenusInputMixin:
             self.text(detail, detail_x, y, size=size, color=c.tone("muted", (170, 210, 240)))
         if not rows:
             empty = tr("status.empty", "Nothing here yet.")
-            c.text("empty", empty, 56, 92, size=20, color=(150, 160, 180))
-        hint = tr(
-            "status.hint",
-            "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
-        )
+            c.text("empty", empty, 56, top + 4, size=20, color=(150, 160, 180))
+        if menu.single and menu.tab == "items":
+            hint = tr(
+                "status.hint.items",
+                "Left/Right: tab   F: filter   Up/Down: choose   Enter: use   Esc: back",
+            )
+        elif menu.single:
+            hint = tr("status.hint.page", "Up/Down: choose   Enter: use / equip   Esc: back")
+        else:
+            hint = tr(
+                "status.hint",
+                "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
+            )
+        self._status_footer(c, menu, hint)
+
+    def _status_footer(self, c, menu, hint):
+        """The status menu's key hint and last message."""
         c.text("hint", hint, 44, self.height - 60, size=18, color=c.tone("muted", (170, 210, 240)))
         if menu.message:
             c.text("message", menu.message, 44, self.height - 88, size=19, color=(255, 226, 129))
@@ -183,10 +227,8 @@ class MenusInputMixin:
         choice = self._pause_menu.selected
         if choice == "resume":
             self._ui_mode = "field"
-        elif choice == "status":
-            self.open_status_menu(back="pause")
-        elif choice == "equipment":
-            self.open_equipment_screen(back="pause")
+        elif choice in ("status", "items", "equipment", "skills"):
+            self._open_pause_page(choice)
         elif choice == "enhance":
             self.open_enhance_screen(back="pause")
         elif choice in ("backlog", "music", "credits", "skill_slots"):

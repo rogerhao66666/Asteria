@@ -79,6 +79,44 @@ QUESTS = (
 )
 
 
+def menu_pages():
+    """Game Systems ▸ Menu Pages (D87): STR / DEX / INT / LUK / VIT raised on the Status page,
+    the Items page's tabs and filters (by the items' tags; "equipment" is every piece of gear)."""
+    from asteria.rpg.menu_rules import ItemCategory, ItemFilter, MenuRules
+
+    return MenuRules(
+        "trial_menu",
+        "Trial menu pages",
+        stat_graph="attributes",
+        stat_rows=(
+            "power",
+            "magic",
+            "defense",
+            "magic_defense",
+            "accuracy",
+            "evade",
+            "crit",
+            "crit_damage",
+            "speed",
+        ),
+        item_categories=(
+            ItemCategory("all", "All"),
+            ItemCategory(
+                "consumables", "Consumables", ("consumable", "potion", "cure", "concoction")
+            ),
+            ItemCategory("throwables", "Throwables", ("throwable",)),
+            ItemCategory("materials", "Materials", ("material",)),
+            ItemCategory("weapons", "Weapons", ("weapon",)),
+            ItemCategory("armour", "Armour", ("armor", "head", "legs", "feet", "accessory")),
+        ),
+        item_filters=(
+            ItemFilter("usable", "Usable now", usable=True),
+            ItemFilter("potions", "Potions", ("potion",)),
+            ItemFilter("uniques", "Uniques", ("unique",)),
+        ),
+    )
+
+
 def systems(c):
     """Factions, the quest chain, achievements, bag rules, world interactions, behaviour trees,
     battle objectives and weather rules."""
@@ -225,6 +263,7 @@ def systems(c):
             equip_offer="empty_slot",  # new gear: asked to wear it when a hand / place is free
         )
     )
+    db.add_menu_rules(menu_pages())  # D87: the Status table, the Items tabs
     for interaction in (
         WorldInteraction(
             "search_cache",
@@ -482,7 +521,7 @@ def woods(builders, looks, places):
             ],
         ),
     )
-    cache = scene.npc("Old Cache", maps.world_xy(31, 21), looks["necromancer"], solid=False)
+    cache = scene.npc("Old Cache", maps.world_xy(31, 21), looks["necromancer"])
     scene.program(
         cache,
         "story.cache",
@@ -652,7 +691,7 @@ def crypt(builders, looks, places):
         ),
         waiting="The Ancient holds the hall below. I cannot pass it alone.",
     )
-    vault = scene.npc("Sealed Vault", maps.world_xy(12, 17), looks["necromancer"], solid=False)
+    vault = scene.npc("Sealed Vault", maps.world_xy(12, 17), looks["necromancer"])
     scene.program(
         vault,
         "story.vault",
@@ -682,7 +721,7 @@ def crypt(builders, looks, places):
 
 def throne(builders, looks, places):
     scene = builders["throne"]
-    banner = scene.npc("Victory Banner", maps.world_xy(6, 8), looks["warrior"], solid=False)
+    banner = scene.npc("Victory Banner", maps.world_xy(6, 8), looks["warrior"])
 
     def on(name):
         return EventCondition("switch", name, "==", True, None).to_data()

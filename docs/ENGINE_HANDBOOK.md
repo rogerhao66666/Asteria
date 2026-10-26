@@ -627,6 +627,18 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | API 章節 | `scripts/manual_api_list.py` 從原始碼產生第 15 章（簽名、opcode、世界指令）；`--check` 檢查是否過期；引擎 API 改了要重跑 |
 | 測試 | `tests/test_user_manual.py`：API 章節與程式碼一致、每個 API 目標都存在、圖片都在、目錄連結都指到標題 |
 
+### D87 新增（2026-10-26；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 選單縮進視窗 | `runtime/playtest/menu_fit.py`：`with self.menu_fit():` 包住選單畫面的繪製，視窗小於 `render.menu_size`（預設 1280×720，`[0, 0]` 關）時畫在大畫布再縮進來，滑鼠區域一起縮；背景用 `window_drawing()` 畫在視窗上。新的選單畫面照 1280×720 排版並放進 `FIT_MODES` |
+| 碰撞 | `collision.feet_box(entity)`／`box_blocked(query, x, y, box)`：用實心 Collider2D 的框擋路（地圖行走） |
+| 走路 | `Animator2D.stride`（v2）：走一個步幅播完走路動畫，0＝照時間；`field.walk_speed`（遊戲資料夾設定）；`character_placement.feet_pivot_y` 算腳底樞紐 |
+| 鏡頭 | `TileSceneView.inset_bottom`：底部被蓋住的像素（試玩提示框 `FIELD_HINT_PANEL` = 92） |
+| 暫停選單 | `rpg/menu_rules.py` `MenuRules`（遊戲系統 ▸ Menu Pages）：`pause_entries`（`PAUSE_ENTRIES` 的順序）、`stat_graph`、`stat_rows`、`item_categories`、`item_filters`；`runtime/playtest/menu_pages.py` 組暫停選單、開各頁、畫狀態頁表格與道具分類列 |
+| 狀態選單 | `StatusMenu(game, page)`：`single` 單頁；`stat_rows()`／`allocate_stat()`／`detail_rows()`；`categories()`／`filters()`／`next_category()`／`next_filter()`；道具隱含標籤 `item`／`equipment` |
+| FV 示範 | `trial_d87.py` 修補現有資料（可重跑）；`trial_story.menu_pages()` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

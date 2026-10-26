@@ -12,19 +12,31 @@ from dataclasses import dataclass
 
 from asteria.rpg.built_in_text import translated
 
-PAUSE_OPTIONS = (
-    ("resume", "Resume"),
-    ("status", "Status / Items / Equipment / Skills"),
-    ("quests", "Quest Log"),
-    ("crafting", "Crafting"),
-    ("achievements", "Achievements"),
-    ("bestiary", "Bestiary"),
-    ("settings", "Settings"),
-    ("save", "Save Game"),
-    ("load", "Load Game"),
-    ("title", "Return to Title"),
-    ("quit", "Quit"),
-)
+# the English of every built-in pause entry (``rpg.menu_rules.PAUSE_ENTRIES``); a game shows
+# those it can use, in the engine's order or the one Game Systems ▸ Menu Pages sets (D87)
+PAUSE_WORDS = {
+    "resume": "Resume",
+    "status": "Status",
+    "items": "Items",
+    "equipment": "Equipment",
+    "enhance": "Enhance",
+    "skills": "Skills",
+    "pets": "Pets",
+    "quests": "Quest Log",
+    "crafting": "Crafting",
+    "achievements": "Achievements",
+    "bestiary": "Bestiary",
+    "backlog": "Message Log",
+    "skill_slots": "Skill Slots",
+    "music": "Music Room",
+    "credits": "Credits",
+    "settings": "Settings",
+    "save": "Save Game",
+    "load": "Load Game",
+    "title": "Return to Title",
+    "quit": "Quit",
+}
+PAUSE_OPTIONS = tuple(PAUSE_WORDS.items())
 GAME_OVER_OPTIONS = (("load", "Load Last Save"), ("title", "Return to Title"))
 
 

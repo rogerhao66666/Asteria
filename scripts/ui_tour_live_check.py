@@ -1,6 +1,6 @@
 """Real-window tour of every menu screen of the Full Verification demo (macOS, Cocoa).
 
-    ASTERIA_MUTE=1 python scripts/ui_tour_live_check.py OUTPUT_DIR [NAME,NAME...]
+    ASTERIA_MUTE=1 python scripts/ui_tour_live_check.py OUTPUT_DIR [NAME,NAME...] [--size WxH]
 
 Each screen is opened the way the game opens it and pictured in English and Traditional
 Chinese: title, pause, settings, controls, save slots, the status menu's four pages, the bag,
@@ -10,7 +10,8 @@ rates, history), a shop and its sell tab, the quest log, pets, achievements, bes
 backlog, music room, credits, ability slots, an equip offer, a battle and its item list,
 victory and game over.
 ``results.json`` lists the screens. Names after the folder (``crafting,shop``) picture only the
-screens whose names start with one of them.
+screens whose names start with one of them. ``--size 960x540`` pictures them in a window of
+that size (1280x720 when not given; 960x540 is the play-test window's own default).
 """
 
 from __future__ import annotations
@@ -25,8 +26,9 @@ REPO = Path(__file__).resolve().parents[1]
 DEMO = REPO / "reference_projects" / "full_verification_demo"
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(DEMO))
-for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "QT_QPA_PLATFORM"):
-    os.environ.pop(key, None)
+if not os.environ.get("ASTERIA_TOUR_HEADLESS"):  # a real window unless asked otherwise
+    for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "QT_QPA_PLATFORM"):
+        os.environ.pop(key, None)
 
 
 def _helpers():
@@ -47,13 +49,18 @@ def main(argv=None):
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     argv = list(sys.argv[1:] if argv is None else argv)
+    size = (1280, 720)
+    if "--size" in argv:
+        at = argv.index("--size")
+        size = tuple(int(v) for v in argv[at + 1].lower().split("x"))
+        del argv[at : at + 2]
     out = Path(argv[0] if argv else REPO / "docs" / "audits" / "evidence" / "ui_tour")
     out.mkdir(parents=True, exist_ok=True)
     only = tuple(argv[1].split(",")) if len(argv) > 1 else ()
     pump = _helpers()._pump
     project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
     runtime = PlayableTestRuntime(
-        project, project.game_start.instantiate(project), DEMO, width=1280, height=720
+        project, project.game_start.instantiate(project), DEMO, width=size[0], height=size[1]
     )
     runtime.open()
     driver = pygame.display.get_driver()

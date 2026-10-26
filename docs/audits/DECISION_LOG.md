@@ -3742,3 +3742,49 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 手冊是 Markdown；沒有做 PDF 或網頁版。
 
 **狀態：** 已提交。
+
+## D87 — 選單塞進小視窗、人物用腳擋路、走路跟上移動、暫停選單分頁、能力值表格（2026-10-26）
+
+**使用者回報（由主工作階段轉交，加上使用者直接留言）：** FV 示範在 960×540 的視窗裡，星落寶箱的提示壓到「抽 1 次」、按鈕與機率框被切掉；主角穿過 NPC 與房子；地圖下方的「Field Test」提示框擋住整排 NPC；戰士走路腳幾乎沒動、畫面卻移動很快。使用者再補：裝備畫面也被切掉，「被截掉的問題 GUI 需要自己處理」；暫停選單的「狀態／道具／裝備／技能」和另外的裝備、技能重複，應該各自一項；沒有能力值加點，要做成楓之谷那種表格；道具要自己一頁，能分類、能篩選；以上都要能在編輯器設定。
+
+**原因（逐一查證）：**
+- 選單畫面（裝備、強化、製作、商店、懸賞板、公會、寶箱、狀態、任務、背包、寵物…）的版面是照 1280×720 寫死的常數，試玩視窗預設 960×540，右邊與下面就超出去。
+- 地圖行走（非動作場景，`field_ui._field_input`）只拿一個點去撞牆，身體可以滑進別人身體一半；房子、名人堂牌、勝利旗、舊寶藏、封印寶庫、草叢沒有碰撞框。
+- Lucifer 戰士的圖格底下有 8 列透明，樞紐在圖格底邊，所以畫出來比站的位置高 8 px，排序與「站在屋頂上」都錯。
+- 走路動畫照時鐘播（8 格 × 0.1 秒），步幅約 24 px，但每秒走 64 px：一圈動畫走了 51 px，腳在地上滑。
+- 提示框蓋住畫面最下面 92 px，鏡頭卻當作整個視窗都看得到。
+
+**做了什麼（引擎通用，作者都能在編輯器改）：**
+- **選單自動縮進視窗**（新檔 `runtime/playtest/menu_fit.py`）：清單裡的選單畫面在視窗比設計尺寸小時，畫在同比例、至少設計尺寸的畫布上，再平滑縮進視窗；這一幀標的滑鼠區域一起縮放，點到的就是看到的；後面的地圖／戰鬥直接畫在視窗上（`window_drawing`）。設計尺寸是 `render.menu_size`（遊戲資料夾設定 ▸ Rendering，預設 `[1280, 720]`，`[0, 0]` 關掉）。技能樹自己讀滑鼠位置，不縮。
+- **寶箱畫面**依畫面大小排版（`service_screens.gacha_places`），按鈕固定在下方、提示在按鈕下面。
+- **用腳的碰撞框擋路**（`collision.feet_box`／`box_blocked`）：有實心 Collider2D 的角色用框的四角、邊中點與中心去測，沒有框就照舊用一點。
+- **走路照距離播**（`Animator2D` v2 的 `stride`「Walk Stride」，編輯器 Inspector 可改）：大於 0 時，走一個步幅播完整個走路動畫；0 照舊用時間。走路速度改成遊戲資料夾設定 `field.walk_speed`（預設 36／磁磚地圖 64，跟以前一樣）。
+- **站在腳上**（`character_placement.feet_pivot_y`）：算出整張圖格裡最低的不透明列，當作樞紐高度。
+- **提示框不擋地圖**（`TileSceneView.inset_bottom`）：試玩提示框顯示時，鏡頭把最下面 92 px 當作看不到，地圖的最後幾排會捲到提示框上面。
+- **暫停選單分頁**（新檔 `rpg/menu_rules.py`、`runtime/playtest/menu_pages.py`）：狀態、道具、裝備、技能各自一項。裝備開紙娃娃畫面；技能有技能樹就開技能樹（關掉回到暫停選單），沒有就開技能清單；狀態、道具是單獨一頁、沒有分頁列。`PAUSE_WORDS` 列出全部內建項目，遊戲用不到的（沒寵物就沒「寵物」…）自動不顯示。
+- **能力值表格（狀態頁）**：左上是角色（名字、等級、職業、經驗值、HP／MP 條），左下是「能力點數」：剩餘點數，加上能力成長圖每個節點一列（名稱、目前數值、等級／上限、綠色 +）；Enter、→ 鍵或點 + 加 1 點（`game.allocate_progression`），點數不夠或已滿時說明原因。右邊是「詳細能力」兩欄表格。
+- **道具頁分類與篩選**：上方是分類分頁（左右鍵、Tab、點選），右上是篩選（F 或點選，循環：無 → 每個篩選 → 無）。每個道具除了自己的標籤，還帶 `item` 或 `equipment`。沒設定時：全部／道具／裝備，篩選是「可使用」。
+- **編輯器：遊戲系統 ▸ 選單頁面（Menu Pages）**：暫停選單項目與順序（勾選＋拖曳）、能力點數加在哪張成長圖（空白＝標籤 attributes 的那張，`-`＝不顯示 +）、詳細能力列與順序、道具頁分類表（ID、名稱、標籤、圖示）、篩選表（ID、名稱、標籤、只留可使用）。資料翻譯（D60）新增「資料：選單頁面」群組（`data.item_category.<id>.name`、`data.item_filter.<id>.name`）。
+- **狀態選單技能頁**顯示技能名稱而不是 id（`attack_ring`），裝備頁的部位用 `game.slot_name`。
+- **新內建字**：`pause.items`、`pause.skills`、`status.profile`、`status.ability_points`、`status.details`、`status.items.*`、`status.filter*`、`status.hint.*`、`status.raised`、`status.cannot_raise`、`status.reason.max_rank`／`no_points`…；`pause.status` 改為「Status／狀態」。`docs/BUILT_IN_TEXT_KEYS.md` 已重產。
+
+**FV 示範資料**（`build_project.py` 已無法重現現有資料，所以用 `trial_d87.py` 修補，可重複執行；原始碼 `trial_maps.py`、`trial_home.py`、`trial_world.py`、`trial_story.py`、`trial_systems.py`、`trial_content.py` 同步改好）：
+- 50 張人物圖格的樞紐改在腳底（戰士 0.8542）；所有 Animator2D 的 `stride` = 24；人的腳框寬 10 → 14。
+- 房子（60×40，往上 22）、名人堂、勝利旗、舊寶藏、封印寶庫、草叢加上碰撞框。
+- `field.walk_speed` = 48、`render.menu_size` = [1280, 720]。
+- 選單頁面 `trial_menu`：能力點數加在 `attributes`；詳細能力 9 項；道具分類「全部、消耗品、投擲物、素材、武器、防具」；篩選「現在可用、藥水、獨特裝備」；中文翻譯；zh-TW 表補上引擎新字。
+- `trial_ui_tour.py` 新增 `page_status`、`page_items`、`page_items_potions` 三個畫面。
+
+**驗證：**
+- 新測試 `tests/test_menu_pages.py`（10 項）、`tests/test_field_fit_d87.py`（9 項）。
+- 全套測試：3525 passed、1 skipped（7 分 17 秒）；`ruff check`、`ruff format --check` 通過。使用手冊的 API 章節已重產（`open_status_menu` 多了 `page`）。
+- 真實 Cocoa 視窗（`driver: cocoa`）960×540 的修改前（HEAD 的副本）／修改後截圖，中英各一套：`docs/audits/evidence/d87/before/`、`after/`。地圖（起點、房子、Mira、地圖底部、連續四格走路）與選單（寶箱四個畫面、裝備、強化四頁、製作五頁、懸賞板、公會、商店、任務、背包、寵物、狀態四頁、暫停、技能樹，以及新的狀態頁、道具頁）。
+- 實測位置（`*_field.json`）：往上走進房子的牆，修改前停在 y=112.5（站在屋頂上），修改後停在 116（門前）；往左走進 Mira（x=88），修改前停在 93.3（身體疊在她身上），修改後停在 102.4（站在旁邊）。
+
+**還沒做或已知的限制：**
+- 技能樹不縮放（它自己讀滑鼠的拖曳與縮放）；在 960×540 下仍以視窗大小排版。
+- FV 的道具都是戰鬥中使用（`battle_ability`），沒有 `use_effects`，所以「現在可用」篩選在選單裡是空的——這是資料本身，不是錯。
+- 經驗值只顯示累積值，沒有「距下一級」，因為升級門檻是呼叫 `grant_actor_experience` 的人決定的。
+- `build_project.py` 仍無法重現現有的 FV 資料（早就如此，這批沒有修）。
+
+**狀態：** 未提交（等使用者決定）。

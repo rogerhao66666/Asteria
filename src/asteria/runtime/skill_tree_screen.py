@@ -118,6 +118,7 @@ class SkillTreeScreen:
         self.graph_index = 0
         self.node_id = None
         self.closed = False
+        self.back = "field"  # the mode it returns to (the pause menu when opened there)
         self.message, self.message_left = "", 0.0
         self.zoom, self.origin = 1.0, [0.0, 0.0]  # screen position of the graph's (0, 0)
         self._view_for = None  # the graph the view was fitted to

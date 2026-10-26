@@ -1,0 +1,19 @@
+{
+ "start": [
+  608.0,
+  152.0
+ ],
+ "up_into_house_wall": [
+  588.0,
+  116.0
+ ],
+ "below_vesper": [
+  120.0,
+  120.0
+ ],
+ "left_into_mira": [
+  102.4,
+  136.0
+ ],
+ "driver": "cocoa"
+}

@@ -59,6 +59,9 @@ KINDS = {
     "RecruitOfficeDefinition": ("recruit_office", "office_id"),
     "GachaBanner": ("gacha_banner", "banner_id"),
     "GachaRarity": ("gacha_rarity", "rarity_id"),
+    "MenuRules": ("menu_rules", "rules_id"),
+    "ItemCategory": ("item_category", "category_id"),
+    "ItemFilter": ("item_filter", "filter_id"),
 }
 FIELDS = ("name", "description")
 PREFIX = "data."

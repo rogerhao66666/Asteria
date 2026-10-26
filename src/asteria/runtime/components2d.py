@@ -96,12 +96,24 @@ def _camera2d_v1_to_v2(fields):
 
 @component_schema(
     type_name="asteria.Animator2D",
-    version=1,
+    version=2,
     fields=(
         Field("clip_set_id", str, "", label="Animation Set"),
         Field("default_clip", str, "idle_down", label="Default Clip"),
         Field("speed", float, 1.0, minimum=0.01),
         Field("playing", bool, True),
+        Field(
+            "stride",
+            float,
+            0.0,
+            minimum=0.0,
+            label="Walk Stride",
+            tooltip=(
+                "World units one whole walk clip carries the figure (two steps). Set, the walk "
+                "plays as far as the figure moves, so its feet keep pace with the ground at "
+                "any speed; 0 plays the walk by its frame times."
+            ),
+        ),
     ),
 )
 class Animator2DComponent(Component):
@@ -111,6 +123,12 @@ class Animator2DComponent(Component):
         self.default_clip = "idle_down"
         self.speed = 1.0
         self.playing = True
+        self.stride = 0.0
+
+
+@component_migration("asteria.Animator2D", from_version=1)
+def _animator2d_v1_to_v2(fields):
+    return fields  # v2 adds stride (0 keeps v1's timed walk)
 
 
 @component_schema(

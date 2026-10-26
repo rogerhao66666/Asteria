@@ -315,15 +315,16 @@ class MenusDrawMixin:
         or picture replaces it, and its ``dim`` sets how dark (U2)."""
         layout = canvas.layout if canvas is not None else None
         if layout is None or (layout.background_color is None and not layout.background_image):
-            if base == "battle":
-                self._battle_presentation.draw()  # the canonical battle screen as it was left
-            else:
-                self._draw_field(False)
-            dim = 170 if layout is None or layout.dim < 0 else layout.dim
-            if dim:
-                shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-                shade.fill((5, 8, 16, dim))
-                self.screen.blit(shade, (0, 0))
+            with self.window_drawing():  # a fitted menu's map keeps the window's size (D87)
+                if base == "battle":
+                    self._battle_presentation.draw()  # the battle screen as it was left
+                else:
+                    self._draw_field(False)
+                dim = 170 if layout is None or layout.dim < 0 else layout.dim
+                if dim:
+                    shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+                    shade.fill((5, 8, 16, dim))
+                    self.screen.blit(shade, (0, 0))
         if canvas is not None:
             canvas.begin()
 

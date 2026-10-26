@@ -212,7 +212,7 @@ def people(builders, looks, maps):
             ),
         ],
     )
-    plaque = town.npc("Hall of Heroes", maps.world_xy(26, 21), looks["warrior"], solid=False)
+    plaque = town.npc("Hall of Heroes", maps.world_xy(26, 21), looks["warrior"])
     town.program(
         plaque,
         "story.plaque",

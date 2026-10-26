@@ -763,6 +763,18 @@ class RecruitScreen(ServiceScreen):
 BANNER = (48, 80, 760, 380)
 RATES = (824, 80, 408, 380)
 BUTTONS = (48, 476, 1184, 72)
+
+
+def gacha_places(width, height):
+    """The banner, rates and buttons of the gacha page in a ``width`` x ``height`` screen:
+    the buttons sit above the hint line, the banner and the rates fill what is above them."""
+    buttons = (48, height - 148, width - 96, 72)
+    tall = max(120, buttons[1] - 16 - 80)
+    rates_w = round((width - 112) * RATES[2] / (BUTTONS[2] - 16))
+    banner = (48, 80, width - 112 - rates_w, tall)
+    return banner, (width - 48 - rates_w, 80, rates_w, tall), buttons
+
+
 RESULTS = (88, 100, 1104, 460)
 
 
@@ -919,9 +931,11 @@ class GachaScreen(ServiceScreen):
         rt, game = self.rt, self.game
         tr = game.tr
         if not canvas.shown("banner"):
-            canvas.rect("banner", BANNER)
+            canvas.rect("banner", gacha_places(rt.width, rt.height)[0])
             return
-        x, y, w, h = canvas.panel("banner", BANNER, fill=(22, 18, 40, 240))
+        x, y, w, h = canvas.panel(
+            "banner", gacha_places(rt.width, rt.height)[0], fill=(22, 18, 40, 240)
+        )
         if self.banner.banner_image:
             canvas._image(self.banner.banner_image, (x + 4, y + 4, w - 8, h - 8), "fit")
         about = game.description_of(self.banner)
@@ -993,9 +1007,11 @@ class GachaScreen(ServiceScreen):
         rt, game = self.rt, self.game
         tr = game.tr
         if not canvas.shown("rates"):
-            canvas.rect("rates", RATES)
+            canvas.rect("rates", gacha_places(rt.width, rt.height)[1])
             return
-        x, y, w, h = canvas.panel("rates", RATES, fill=(16, 20, 32, 240))
+        x, y, w, h = canvas.panel(
+            "rates", gacha_places(rt.width, rt.height)[1], fill=(16, 20, 32, 240)
+        )
         rt.text(tr("gacha.rates", "Rates"), x + 16, y + 12, size=20, color=TITLE)
         top = y + 48
         for rarity, chance, prizes in reversed(self.banner.rates()):
@@ -1023,9 +1039,9 @@ class GachaScreen(ServiceScreen):
         rt, game = self.rt, self.game
         tr = game.tr
         if not canvas.shown("buttons"):
-            canvas.rect("buttons", BUTTONS)
+            canvas.rect("buttons", gacha_places(rt.width, rt.height)[2])
             return
-        x, y, w, h = canvas.rect("buttons", BUTTONS)
+        x, y, w, h = canvas.rect("buttons", gacha_places(rt.width, rt.height)[2])
         b = self.banner
         labels = {
             "single": (tr("gacha.single", "Pull x1"), self.money(b.currency, b.single_cost)),

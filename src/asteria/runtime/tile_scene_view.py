@@ -79,10 +79,16 @@ class _Animated:
         self.last = None
         self.facing = "down"
 
-    def update(self, dt, position, facing, attacking):
-        moved = self.last is not None and (
-            abs(position[0] - self.last[0]) + abs(position[1] - self.last[1]) > 1e-3
-        )
+    def update(self, dt, position, facing, attacking, stride=0.0, speed=1.0):
+        """``stride`` (world units of one whole walk clip, ``Animator2D.stride``): the walk
+        plays by the distance moved, so the feet keep pace with the ground; 0 plays it by its
+        frame times. ``speed`` scales the clip clock."""
+        distance = 0.0
+        if self.last is not None:
+            distance = (
+                (position[0] - self.last[0]) ** 2 + (position[1] - self.last[1]) ** 2
+            ) ** 0.5
+        moved = distance > 1e-3
         self.last = position
         if facing:
             self.facing = facing
@@ -90,9 +96,15 @@ class _Animated:
         if attacking and f"attack_{self.facing}" in self.clips.clips:
             name = f"attack_{self.facing}"
         if name != self.clip:
+            # a step taken from standing starts on the clip's first frame; the stride's part
+            # of this move is not lost
             self.clip, self.time = name, 0.0
-        else:
-            self.time += dt
+        if name.startswith("walk_") and stride > 0:
+            clip = self.clips.clips.get(name)
+            total = sum(k.duration for k in clip.keyframes) if clip is not None else 0.0
+            self.time += distance / stride * total
+        elif name == self.clip:
+            self.time += dt * max(0.01, float(speed or 1.0))
 
     def frame(self):
         clip = self.clips.clips.get(self.clip)
@@ -120,6 +132,9 @@ class TileSceneView:
         self._skeleton_runtime = SkeletonSceneRuntime()
         self.jump_shadow = None  # a picture drawn under a hopping player (set by the game)
         self.jump_shadow_offset = 4.0  # world units below the player's position
+        # screen pixels at the bottom a panel covers (the play-test's hint panel): the camera
+        # centres the player in what is left and can show the map's last rows above it
+        self.inset_bottom = 0
         self.load()
 
     # -- loading ---------------------------------------------------------------------------------
@@ -241,7 +256,8 @@ class TileSceneView:
     # -- camera ----------------------------------------------------------------------------------
     def follow(self, dt):
         t = self.session.player.get(Transform)
-        view_w, view_h = self.width / self.camera.zoom, self.height / self.camera.zoom
+        inset = max(0.0, min(float(self.inset_bottom), self.height / 2))
+        view_w, view_h = self.width / self.camera.zoom, (self.height - inset) / self.camera.zoom
         at = getattr(self, "player_at", None)
         if at is not None:  # a screen that wants the player at a spot of the view (a shop)
             self.camera.x, self.camera.y = t.x - at[0], t.y - at[1]
@@ -308,7 +324,14 @@ class TileSceneView:
             if entity is self.session.player and controller is None:
                 facing = self.session.facing
             t = entity.get(Transform)
-            state.update(dt, (t.x, t.y), facing, entity.id in running)
+            state.update(
+                dt,
+                (t.x, t.y),
+                facing,
+                entity.id in running,
+                float(getattr(animator, "stride", 0.0) or 0.0),
+                float(getattr(animator, "speed", 1.0) or 1.0),
+            )
         self.follow(dt)
 
     def _look_ahead(self, dt):
