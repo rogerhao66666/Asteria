@@ -3787,4 +3787,4 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 經驗值只顯示累積值，沒有「距下一級」，因為升級門檻是呼叫 `grant_actor_experience` 的人決定的。
 - `build_project.py` 仍無法重現現有的 FV 資料（早就如此，這批沒有修）。
 
-**狀態：** 未提交（等使用者決定）。
+**狀態：** 已提交（a3eefc8c，未推送）。
