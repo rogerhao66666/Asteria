@@ -300,11 +300,26 @@ class TextDrawMixin:
         points = ((x, centre - half), (x + width, centre), (x, centre + half))
         self.pg.draw.polygon(self.screen, color, [(round(a), round(b)) for a, b in points])
 
-    def menu_row(self, label, x, y, *, selected, size=20, color=(245, 245, 250)):
-        """One menu row: the cursor when ``selected``, the label after the cursor's room."""
+    def menu_row(
+        self, label, x, y, *, selected, size=20, color=(245, 245, 250), pick=None, width=0
+    ):
+        """One menu row: the cursor when ``selected``, the label after the cursor's room.
+        ``pick`` (moves the cursor here) makes the row a mouse hotspot ``width`` wide (0:
+        as wide as its words)."""
         if selected:
             self.menu_mark(x, y, size=size, color=color)
-        return self.text(label, x + self.menu_mark_room(size), y, size=size, color=color)
+        rect = self.text(label, x + self.menu_mark_room(size), y, size=size, color=color)
+        if pick is not None:
+            right = x + width if width else rect.right
+            self.hotspot((x - 6, y - 4, right - x + 12, rect.height + 8), pick)
+        return rect
+
+    def hotspot(self, rect, pick=None, *, key="return"):
+        """A place the mouse can point at this frame (``asteria.runtime.pointer``): hovering
+        runs ``pick``, a left click runs it and presses ``key``."""
+        pointer = self.__dict__.get("pointer")
+        if pointer is not None:
+            pointer.add(rect, pick, key=key)
 
     def _skin_theme(self):
         """The project's battle UI theme (its skin also frames the host's own menus)."""

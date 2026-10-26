@@ -347,6 +347,7 @@ class QuestBoardScreen(ServiceScreen):
                 r, c = divmod(k, columns)
                 places.append((k, (x + c * (cw + gap), y + (r - first_row) * (ch + gap), cw, ch)))
         for k, rect in places:
+            self.rt.hotspot(rect, lambda k=k: setattr(self, "index", k))  # a click: Enter
             self.draw_card(canvas, cards[k], rect, k == self.index)
 
     def draw_card(self, canvas, card, rect, chosen):
@@ -688,6 +689,7 @@ class RecruitScreen(ServiceScreen):
         for n, (candidate, actor, state) in enumerate(rows[first : first + visible]):
             ry = y + 8 + n * row_h
             rect = (x + 6, ry, w - 12, row_h - 6)
+            rt.hotspot(rect, lambda k=first + n: setattr(self, "index", k))
             if first + n == self.index:
                 canvas.selection(
                     "rows", rect,
@@ -889,6 +891,8 @@ class GachaScreen(ServiceScreen):
         canvas.text("wallet", self.money(self.banner.currency), rt.width - 48, 40, size=20,
                     color=TEXT, anchor="topright")  # fmt: skip
         tr = game.tr
+        if self.page != "banner":  # a click skips the show / goes back to the banner
+            rt.hotspot((0, 0, rt.width, rt.height))
         if self.page == "show":
             self.draw_show(canvas)
             hint = tr("gacha.hint.show", "Enter: skip")
@@ -1036,6 +1040,7 @@ class GachaScreen(ServiceScreen):
         bw = (w - gap * (len(self.ACTIONS) - 1)) // len(self.ACTIONS)
         for n, action in enumerate(self.ACTIONS):
             rect = (x + n * (bw + gap), y, bw, h)
+            rt.hotspot(rect, lambda n=n: setattr(self, "action", n))
             enabled = action not in ("single", "multi") or self.gacha.can_pay(action == "multi")
             if n == self.action:
                 canvas.selection(

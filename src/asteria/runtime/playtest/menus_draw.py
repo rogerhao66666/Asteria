@@ -34,6 +34,11 @@ class MenusDrawMixin:
         menu = self.controls_menu
         for event in events:
             if menu.capturing is not None:
+                pointer = getattr(event, "pointer", False)  # a click is not the key bound
+                if pointer and not (
+                    event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE
+                ):
+                    continue  # (a right click still cancels)
                 if event.type == self.pg.KEYDOWN and event.key == self.pg.K_ESCAPE:
                     menu.cancel_capture()
                 elif event.type == self.pg.KEYDOWN:
@@ -91,7 +96,16 @@ class MenusDrawMixin:
                 else c.color("options", c.tone("text", TEXT))
             )
             name = menu.action_name(action)
-            self.menu_row(name, at.x(90), y, selected=selected, size=size, color=color)
+            self.menu_row(
+                name,
+                at.x(90),
+                y,
+                selected=selected,
+                size=size,
+                color=color,
+                pick=None if menu.capturing else lambda i=i: setattr(menu, "row", i),
+                width=self.width - 180,
+            )
             self.text(bindings, at.x(self.width / 2), y, size=size, color=c.tone("muted", MUTED))
         hint = menu.message or tr(
             "controls.hint", "Enter: rebind   Backspace: reset action   Esc: save and back"
@@ -163,6 +177,7 @@ class MenusDrawMixin:
             empty = tr("status.empty", "Nothing here yet.")
             c.text("empty", empty, 90, 110, size=22, color=c.tone("muted", MUTED))
         self._list_scroll = min(self._list_scroll, max(0, len(lines) - 1))
+        self.hotspot((60, 40, self.width - 120, self.height - 80), key="")  # the wheel scrolls
         at = c.place("rows", (90, 104, self.width - 180, self.height - 110 - 104), 24)
         icon_size = c.icon_size("rows", 24)
         y = at.y(104)
@@ -262,14 +277,28 @@ class MenusDrawMixin:
                 else c.color("options", c.tone("text", TEXT))
             )
             row_y = at.y(y + 76) + i * at.row
-            self.menu_row(label, at.x(x + 40), row_y, selected=selected, size=size, color=color)
+            self.menu_row(
+                label,
+                at.x(x + 40),
+                row_y,
+                selected=selected,
+                size=size,
+                color=color,
+                pick=lambda i=i: setattr(cursor, "index", i),
+                width=360,
+            )
             if key == "language":
                 value = self._language_name()
             else:
                 value = self.settings.value_text(key, tr)
             if value:
                 shown = f"< {value} >" if selected else value
-                self.text(shown, at.x(x + 300), row_y, size=size, color=color)
+                rect = self.text(shown, at.x(x + 300), row_y, size=size, color=color)
+                if selected:  # its arrows: a click on "<" or ">" is Left or Right
+                    half = rect.width / 2
+                    self.hotspot((rect.x - 6, rect.y - 4, half + 6, rect.height + 8), key="left")
+                    right = (rect.x + half, rect.y - 4, half + 6, rect.height + 8)
+                    self.hotspot(right, key="right")
         c.text(
             "hint",
             tr("settings.hint", "Left/Right: change   Esc: save and back"),
@@ -301,19 +330,37 @@ class MenusDrawMixin:
     def _draw_overlay_menu(self, title, cursor, base="field", screen_id="pause"):
         c = self.menu_canvas(screen_id, self._menu_fields())
         self._draw_backdrop(base, canvas=c)
-        height = 90 + 34 * len(cursor.options)
+        # a menu longer than the window scrolls when the cursor leaves the rows shown (so the
+        # row under the pointer stays put), "n/total" by the title (D85)
+        fit = max(1, min(len(cursor.options), (self.height - 130) // 34))
+        tops = self.__dict__.setdefault("_overlay_tops", {})
+        first = min(tops.get(screen_id, 0), cursor.index)
+        first = max(first, cursor.index - fit + 1, 0)
+        first = tops[screen_id] = min(first, max(0, len(cursor.options) - fit))
+        height = 90 + 34 * fit
         shift = 30 if cursor.icons else 0  # room for the rows' icons: the panel grows with it
         x, y = self.width / 2 - 170 - shift / 2, self.height / 2 - height / 2
         x, y, width, height = c.panel("frame", (x, y, 340 + shift, height))
         middle = x + width / 2
         c.text("title", title, middle, y + 18, size=34, color=c.tone("title", TITLE), center=True)
         labels = cursor.labels(self.game.tr)
-        at = c.place("options", (x + 36, y + 68, width - 72, 34 * len(labels)), 34)
+        if len(labels) > fit:
+            where = f"{min(cursor.index, len(labels) - 1) + 1}/{len(labels)}"
+            c.text(
+                "count",
+                where,
+                x + width - 18,
+                y + 14,
+                size=18,
+                color=c.tone("muted", MUTED),
+                anchor="topright",
+            )
+        at = c.place("options", (x + 36, y + 68, width - 72, 34 * fit), 34)
         size = c.size("options", 24)
         icon = c.icon_size("options", 26)
-        for i, (option_id, label) in enumerate(labels):
+        for i, (option_id, label) in enumerate(labels[first : first + fit], first):
             selected = i == cursor.index
-            row_y = at.y(y + 68) + i * at.row
+            row_y = at.y(y + 68) + (i - first) * at.row
             if option_id in cursor.icons:
                 self._draw_icon(cursor.icons[option_id], round(at.x(x + 36)), round(row_y), icon)
             normal = c.color("options", c.tone("text", TEXT))
@@ -324,6 +371,8 @@ class MenusDrawMixin:
                 selected=selected,
                 size=size,
                 color=c.tone("selected", PICKED) if selected else normal,
+                pick=lambda i=i: setattr(cursor, "index", i),
+                width=width - 72 - shift,
             )
         if self.message and self.pg.time.get_ticks() < self.message_until:
             self.text(
@@ -366,6 +415,7 @@ class MenusDrawMixin:
             "title", title, self.width / 2, 56, size=32, color=c.tone("title", TITLE), center=True
         )
         rows = quest_rows(self.game)
+        self.hotspot((60, 40, self.width - 120, self.height - 80), key="")  # a click: nothing
         if not rows:
             none = tr("quests.none", "No quests yet.")
             c.text("empty", none, 90, 110, size=22, color=c.tone("muted", MUTED))
@@ -441,12 +491,17 @@ class MenusDrawMixin:
         tabs = c.place("tabs", (self.width - 300, 60, 200, 30), 100)
         if c.shown("tabs"):
             for i, tab in enumerate(("buy", "sell")):
-                self.text(
+                rect = self.text(
                     tr(f"shop.{tab}", tab.title()),
                     tabs.x(self.width - 300) + i * tabs.row,
                     tabs.y(60),
                     size=c.size("tabs", 24),
                     color=c.tone("selected", PICKED) if screen.tab == tab else (130, 140, 160),
+                )
+                self.hotspot(  # a click on the other tab switches to it
+                    rect.inflate(12, 8),
+                    lambda tab=tab: screen.tab != tab and screen.switch_tab(),
+                    key="",
                 )
         from asteria.runtime.menu_icons import record_icon_id
 
@@ -483,6 +538,8 @@ class MenusDrawMixin:
             color = c.tone("selected", PICKED) if selected else normal if row.available else DIM
             if selected:
                 self.menu_mark(at.x(72), y, size=size, color=color)
+            row_box = (at.x(66), y - 4, self.width - 120 - at.x(66) + 60, at.row)
+            self.hotspot(row_box, lambda i=i: setattr(screen, "index", i))
             self._draw_icon(icons[i], at.x(90), y - 2, icon_size)
             self.text(row.name, name_x, y, size=size, color=color)
             self.text(row.price, at.x(420), y, size=size, color=color)

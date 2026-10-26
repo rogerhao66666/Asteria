@@ -78,6 +78,7 @@ class BacklogScreen(_Screen):
             c.finish()
             return
         at = c.place("rows", (36, 100, rt.width - 72, rt.height - 140), 38)
+        rt.hotspot(at.rect, key="")  # the wheel scrolls the log; a click does nothing
         size = c.size("rows", 22)
         y = at.y(100)
         for offset, entry in enumerate(entries):
@@ -145,6 +146,9 @@ class MusicRoomScreen(_Screen):
         for i, (track, _) in enumerate(rows):
             open_ = self.unlocked(track)
             y = at.y(100) + i * at.row
+            rt.hotspot(
+                (at.x(22), y - 4, at.rect[2], at.row), lambda i=i: setattr(self, "index", i)
+            )
             selected = i == min(self.index, len(rows) - 1)
             name = track.name if open_ else self.tr("music.locked", "? ? ?")
             normal = c.color("rows", c.tone("text", (190, 196, 210)))
@@ -193,6 +197,7 @@ class CreditsScreen(_Screen):
             c.finish()
             return
         page = pages[min(self.index, len(pages) - 1)]
+        rt.hotspot((0, 0, rt.width, rt.height))  # a click turns the page
         from asteria.rpg.data_text import credits_key, text_by_key
 
         lookup = self.game.data_lookup
@@ -304,6 +309,7 @@ class AbilitySlotsScreen(_Screen):
             capacity=capacity,
         )
         c.text("member", slots, 36, 96, size=24, color=c.tone("text", (255, 255, 255)))
+        rt.hotspot((30, 90, rt.width / 2, 34), key="right")  # a click: the next member
         learned = self.learned(actor_id)
         if not learned:
             empty = self.tr("skill_slots.nothing", "Nothing learned yet.")
@@ -322,7 +328,9 @@ class AbilitySlotsScreen(_Screen):
             y = at.y(140) + row * at.row
             shown = rt._draw_icon(getattr(definition, "icon_id", ""), at.x(36), y - 3, icon)
             x = at.x(72 if shown else 36)
-            rt.menu_row(label, x, y, selected=current, size=size, color=color)
+            rt.menu_row(label, x, y, selected=current, size=size, color=color,
+                        pick=lambda row=row: setattr(self, "index", row),
+                        width=at.right - x)  # fmt: skip
             mark = self.tr("skill_slots.equipped", "EQUIPPED") if on else ""
             rt.text(mark, at.right - 164, y, size=20, color=GOOD)
         if self.message_left > 0:

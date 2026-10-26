@@ -22,6 +22,7 @@ from __future__ import annotations
 from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import H, W
 from asteria.runtime.creature_menu import CreatureMenuScreen
+from asteria.runtime.pointer import hand_over
 
 PLACES = {  # shop.c's window templates (insides) and print spots, in 240 x 160 pixels
     "menu": (24, 16),  # BUY / SELL / QUIT
@@ -308,6 +309,9 @@ class CreatureShopScreen(CreatureMenuScreen):
         s = self.surface
         see_through = self.phase in OVERLAY_PHASES or self.phase in MAP_PHASES
         s.fill((0, 0, 0, 0) if see_through else (0, 0, 0, 255))
+        self._spots = []  # what the mouse can point at (D85)
+        if self.phase in ("buy_note", "sell_note"):
+            self._spot((0, 0, W, H))  # a click reads on
         if self.phase == "menu":
             self._draw_menu()
         elif self.phase in MAP_PHASES:
@@ -325,7 +329,9 @@ class CreatureShopScreen(CreatureMenuScreen):
         if not see_through:
             screen.fill((0, 0, 0, 255))
         big = self.pg.transform.scale(s, (W * scale, H * scale))
-        screen.blit(big, ((sw - W * scale) // 2, (sh - H * scale) // 2))
+        left, top = (sw - W * scale) // 2, (sh - H * scale) // 2
+        screen.blit(big, (left, top))
+        hand_over(self.rt, self._spots, scale, left, top)
 
     def _draw_menu(self):
         letter, shadow = self._menu_colours()
@@ -334,6 +340,7 @@ class CreatureShopScreen(CreatureMenuScreen):
         width = (max(self.text_width(r) for r in rows) + 16 + 7) // 8 * 8
         self._frame((x - 8, y - 8, width + 8, 16 * len(rows)))
         for row, label in enumerate(rows):
+            self._spot((x - 8, y - 8 + row * 16, width + 8, 16), "menu_cursor", row)
             self._text(label, x, y - 8 + row * 16 + 1, letter, shadow)
             if row == self.menu_cursor:
                 self._cursor(x - 8, y - 8 + row * 16 + 3)
@@ -359,6 +366,8 @@ class CreatureShopScreen(CreatureMenuScreen):
         for row, (_item_id, name, price) in enumerate(names[self.buy_scroll :][:rows]):
             index = self.buy_scroll + row
             y = ly + row * 16 + 1
+            if self.phase == "buy":
+                self._spot((lx, y - 2, lw + 8, 16), "buy_cursor", index)
             self._text(name, lx + 8, y, letter, shadow)
             if price is not None:
                 self._text(f"{self.currency()}{price}", lx + lw, y, letter, shadow,
@@ -397,6 +406,8 @@ class CreatureShopScreen(CreatureMenuScreen):
         letter, shadow = self._menu_colours()
         qx, qy, qw, qh = self.places["quantity"]
         self._frame((qx, qy, qw, qh))
+        if self.phase in ("buy_count", "sell_count"):  # the wheel counts, a click: Enter
+            self._spot((qx - 4, qy - 4, qw + 8, qh + 8))
         self._text(f"×{count:02d}", qx, qy + 1, letter, shadow)
         self._text(f"{self.currency()}{total}", qx + qw - 1, qy + 1, letter, shadow,
                    anchor="topright")  # fmt: skip
@@ -407,6 +418,7 @@ class CreatureShopScreen(CreatureMenuScreen):
         rows = [self.tr("creature.yes", "YES"), self.tr("creature.no", "NO")]
         self._frame((x, y, 40, 32))
         for row, label in enumerate(rows):
+            self._spot((x, y + row * 16, 40, 16), "yes", row)
             self._text(label, x + 8, y + row * 16 + 1, letter, shadow)
             if row == self.yes:
                 self._cursor(x, y + row * 16 + 3)

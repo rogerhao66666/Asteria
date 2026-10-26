@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFormLayout,
     QFrame,
@@ -28,6 +29,7 @@ from asteria.runtime.input_map import DEVICES, InputActionMap, InputBinding
 from asteria.runtime.input_rebinding import describe_binding
 
 from .authoring_sidebar import authoring_sidebar
+from .record_form import _help_tip
 from .record_vocabulary import words as _words
 
 
@@ -76,10 +78,28 @@ class InputMapAuthoring:
             data = m.to_data()
             data["actions"].pop(action_id)
             m.__init__(
-                {a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()}
+                {a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()},
+                mouse=m.mouse,
+                click_move=m.click_move,
             )
 
         self._commit(change, f"Remove action {action_id}")
+
+    def set_mouse(self, on):
+        """Menus, dialogue and battles answer the mouse (on) or only keys and pads (off)."""
+
+        def change(m):
+            m.mouse = bool(on)
+
+        self._commit(change, "Mouse control on" if on else "Mouse control off")
+
+    def set_click_move(self, on):
+        """A left click on the map walks the player there (on) or does nothing (off)."""
+
+        def change(m):
+            m.click_move = bool(on)
+
+        self._commit(change, "Click to move on" if on else "Click to move off")
 
     def add_binding(self, action_id, binding, *, exclusive=False):
         self._commit(
@@ -127,6 +147,35 @@ class InputMapWidget(QWidget):
             "Defaults for the project; players can rebind in the game (Settings → Controls)."
         )
         self.status.setWordWrap(True)
+        self.mouse = QCheckBox("Mouse control")
+        self.mouse.setObjectName("InputMapMouse")
+        self.mouse.toggled.connect(self._mouse_toggled)
+        mouse_help = QLabel("ⓘ")
+        mouse_help.setObjectName("InputMapMouseHelp")
+        mouse_help.setStyleSheet("color: #8b8e98;")
+        mouse_help.setToolTip(
+            "Menus, dialogue and battles answer the mouse: pointing at a row moves the cursor "
+            "there, a left click chooses it, a right click goes back, the wheel moves up and "
+            "down. Off: only keys and pads. Clicks on pictures and map figures with click "
+            "events work either way."
+        )
+        self.click_move = QCheckBox("Click to move")
+        self.click_move.setObjectName("InputMapClickMove")
+        self.click_move.toggled.connect(self._click_move_toggled)
+        move_help = QLabel("ⓘ")
+        move_help.setObjectName("InputMapClickMoveHelp")
+        move_help.setStyleSheet("color: #8b8e98;")
+        move_help.setToolTip(
+            "A left click on the map walks the player there around walls and figures. A key "
+            "press stops the walk. Needs Mouse control."
+        )
+        mouse_row = QHBoxLayout()
+        mouse_row.addWidget(self.mouse)
+        mouse_row.addWidget(_help_tip(mouse_help))
+        mouse_row.addSpacing(16)
+        mouse_row.addWidget(self.click_move)
+        mouse_row.addWidget(_help_tip(move_help))
+        mouse_row.addStretch(1)
         form = QFormLayout()
         form.addRow("Device", self.device)
         form.addRow("Code", self.code)
@@ -154,6 +203,7 @@ class InputMapWidget(QWidget):
         body.addWidget(left_panel, 1)
         body.addWidget(right_panel, 2)
         layout = QVBoxLayout(self)
+        layout.addLayout(mouse_row)
         layout.addLayout(body, 1)
         layout.addWidget(self.status)
         self.refresh()
@@ -168,6 +218,13 @@ class InputMapWidget(QWidget):
         if self.api.document.project is None:
             return
         current = select or self.action_id
+        self.mouse.blockSignals(True)
+        self.mouse.setChecked(self.api.input_map.mouse)
+        self.mouse.blockSignals(False)
+        self.click_move.blockSignals(True)
+        self.click_move.setChecked(self.api.input_map.click_move)
+        self.click_move.setEnabled(self.api.input_map.mouse)
+        self.click_move.blockSignals(False)
         ids = list(self.api.input_map.actions())
         self.actions.blockSignals(True)
         from .ui_fit import fill_named
@@ -194,6 +251,14 @@ class InputMapWidget(QWidget):
         self.refresh()
         self.changed.emit()
         return True
+
+    def _mouse_toggled(self, on):
+        if on != self.api.input_map.mouse:
+            self._try(lambda: self.api.set_mouse(on))
+
+    def _click_move_toggled(self, on):
+        if on != self.api.input_map.click_move:
+            self._try(lambda: self.api.set_click_move(on))
 
     def remove_selected_binding(self):
         row = self.bindings.currentRow()

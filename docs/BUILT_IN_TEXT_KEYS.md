@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 660 個鍵，29 組。
+共 661 個鍵，29 組。
 
 ## Creature battle
 
@@ -266,6 +266,7 @@
 | `controls.press` | Press a key or pad button for {action} (Esc cancels) | 請按下要給「{action}」的按鍵或手把按鈕（Esc 取消） |
 | `controls.title` | Controls | 按鍵設定 |
 | `controls.hint` | Enter: rebind   Backspace: reset action   Esc: save and back | Enter：重新設定   Backspace：恢復此項預設   Esc：儲存並返回 |
+| `hint.mouse` | Click: choose   Right click: back | 點擊：選擇   右鍵：返回 |
 
 ## Save and load
 

@@ -205,6 +205,7 @@ class PetsScreen:
             for i, pet in enumerate(other):  # the other column, dimmed
                 y = top + i * (row_h + 8)
                 rect = pg.Rect(ox, y, width, row_h)
+                self._spot(rect, "storage" if self.column == "party" else "party", i)
                 pg.draw.rect(screen, (16, 19, 30), rect, border_radius=8)
                 pg.draw.rect(screen, (50, 56, 72), rect, 1, 8)
                 self._row(pet, rect, selected=False, active=active, dim=True)
@@ -212,6 +213,7 @@ class PetsScreen:
         for i, pet in enumerate(pets):
             y = top + i * (row_h + 8)
             rect = pg.Rect(x0, y, width, row_h)
+            self._spot(rect, self.column, i)
             selected = i == min(self.index, len(pets) - 1)
             if element is not None and (element.skin or element.image):
                 c._draw_look(element, tuple(rect))  # the layout's row picture
@@ -229,6 +231,15 @@ class PetsScreen:
             self._row(pet, rect, selected=selected, active=active, dim=False)
         self._footer()
         c.finish()
+
+    def _spot(self, rect, column, index):
+        """A pet's row as a mouse hotspot (D85): pointing picks it (in either column), a click
+        is Enter; nothing while a name is being typed."""
+        if self.renaming is None:
+            self.rt.hotspot(tuple(rect), lambda: self._point(column, index))
+
+    def _point(self, column, index):
+        self.column, self.index = column, index
 
     def _row(self, pet, rect, *, selected, active, dim):
         rt, pg, screen, game, tr = self.rt, self.rt.pg, self.rt.screen, self.game, self.game.tr

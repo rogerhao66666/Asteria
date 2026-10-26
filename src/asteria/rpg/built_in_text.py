@@ -347,6 +347,7 @@ GROUPS = (
             ("controls.press", "Press a key or pad button for {action} (Esc cancels)"),
             ("controls.title", "Controls"),
             ("controls.hint", "Enter: rebind   Backspace: reset action   Esc: save and back"),
+            ("hint.mouse", "Click: choose   Right click: back"),
         ),
     ),
     (

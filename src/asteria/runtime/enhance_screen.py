@@ -171,10 +171,7 @@ class EnhanceScreen:
             else 0
         )
         if turn:
-            self.tab = (self.tab + turn) % len(TABS)
-            self.focus = "gear"
-            self.rows.update(sockets=0, choices=0, nodes=0)
-            self._first_fitting()
+            self._open_tab((self.tab + turn) % len(TABS))
             return
         if inp.just_pressed("cancel"):
             back = {"choices": "sockets", "sockets": "gear", "nodes": "gear"}
@@ -198,6 +195,19 @@ class EnhanceScreen:
             self._run(self.take_out)
         elif inp.just_pressed("confirm"):
             self._run(self.confirm)
+
+    def _open_tab(self, tab):
+        if tab == self.tab:
+            return
+        self.tab = tab
+        self.focus = "gear"
+        self.rows.update(sockets=0, choices=0, nodes=0)
+        self._first_fitting()
+
+    def _point(self, focus, row):
+        """The mouse over a row of a list (D85): that list takes the cursor, at the row."""
+        self.focus = focus
+        self.rows[focus] = row
 
     def _run(self, action):
         try:
@@ -364,6 +374,7 @@ class EnhanceScreen:
         title = canvas.tone("title", TITLE)
         for n, page in enumerate(TABS):
             rect = (place.x(48) + n * (width + gap), place.y(76), width, 34)
+            rt.hotspot(rect, lambda n=n: self._open_tab(n), key="")  # a click opens the page
             if n == self.tab:
                 canvas.selection(
                     "tabs", rect,
@@ -396,6 +407,7 @@ class EnhanceScreen:
             k = first + n
             ry = top + n * row_h
             rect = (x + 6, ry - 2, w - 12, row_h - 4)
+            rt.hotspot(rect, lambda k=k: self._point(focus, k))
             if k == chosen:
                 active = self.focus == focus
                 canvas.selection(

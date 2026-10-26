@@ -68,6 +68,7 @@
   "controls.press": "請按下要給「{action}」的按鍵或手把按鈕（Esc 取消）",
   "controls.title": "按鍵設定",
   "controls.hint": "Enter：重新設定   Backspace：恢復此項預設   Esc：儲存並返回",
+  "hint.mouse": "點擊：選擇   右鍵：返回",
   "slots.loaded": "已讀取存檔 {slot}",
   "slots.autosave": "自動存檔（F5）",
   "slots.slot": "存檔 {slot}",

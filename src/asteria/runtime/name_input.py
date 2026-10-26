@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import CreatureBattleScreen, H, W
+from asteria.runtime.pointer import hand_over
 
 DEFAULT_PAGES = (
     {"label": "UPPER", "rows": ("ABCDEF .", "GHIJKL ,", "MNOPQRS ", "TUVWXYZ ")},
@@ -198,8 +199,29 @@ class NameInputScreen(CreatureBattleScreen):
         sw, sh = screen.get_size()
         scale = max(1, min(sw // W, sh // H))
         screen.fill((0, 0, 0, 255))
-        screen.blit(self.pg.transform.scale(s, (W * scale, H * scale)),
-                    ((sw - W * scale) // 2, (sh - H * scale) // 2))  # fmt: skip
+        left, top = (sw - W * scale) // 2, (sh - H * scale) // 2
+        screen.blit(self.pg.transform.scale(s, (W * scale, H * scale)), (left, top))
+        hand_over(self.rt, self._key_spots(kx, ky, step), scale, left, top)
+
+    def _key_spots(self, kx, ky, step):
+        """Every letter and the three buttons as mouse hotspots (D85): pointing moves the
+        cursor there, a click presses it (types the letter, PAGE / BACK / OK)."""
+
+        def to(cx, cy):
+            return lambda: (setattr(self, "cx", cx), setattr(self, "cy", cy))
+
+        columns, spots = self.columns(), []
+        for row, keys in enumerate(self.rows()):
+            for col, char in enumerate(keys[: len(columns)]):
+                if char != " ":
+                    x, y = kx + columns[col] + 14, ky + row * step + 7
+                    spots.append(((x - 8, y - step // 2, 16, step), to(col, row), "return"))
+        places = self.skin.get("buttons_at") or {"page": (204, 83), "back": (204, 116),
+                                                  "ok": (204, 140)}  # fmt: skip
+        for name, cy in (("page", 0), ("back", 1), ("ok", 3)):
+            x, y = places.get(name, (204, 83))
+            spots.append(((x - 26, y - 10, 52, 20), to(len(columns), cy), "return"))
+        return spots
 
     def _page_colours(self):
         per_page = self.skin.get("keys_colours") or []

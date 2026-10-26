@@ -150,6 +150,13 @@ class BagScreen:
         index = self.index + dx + dy * columns
         self.index = max(0, min(len(bag) - 1, index))
 
+    def _point(self, worn, index):
+        """The mouse is over a worn piece (``worn``) or a piece in the bag (D85)."""
+        if worn:
+            self.in_worn, self.worn_index = True, index
+        else:
+            self.in_worn, self.index = False, index
+
     def activate(self):
         game = self.game
         item, slot_id, worn = self.selected()
@@ -282,6 +289,10 @@ class BagScreen:
         worn = canvas.place("worn", (left, top + 28, len(slots) * (cell + gap), cell))
         if canvas.shown("worn"):
             for k, (slot_id, item) in enumerate(slots):
+                rt.hotspot(  # a click on a worn piece takes it off (Enter)
+                    (worn.x(left) + k * (cell + gap), worn.y(top + 28), cell, cell),
+                    lambda k=k: self._point(True, k),
+                )
                 self._cell(
                     worn.x(left) + k * (cell + gap),
                     worn.y(top + 28),
@@ -310,6 +321,9 @@ class BagScreen:
             for c in range(columns):
                 k = r * columns + c
                 item = bag[k] if k < len(bag) else None
+                if item is not None:  # a click on a piece in the bag puts it on
+                    box = (grid.x(left) + c * (cell + gap), grid.y(grid_top) + r * (cell + gap))
+                    rt.hotspot((*box, cell, cell), lambda k=k: self._point(False, k))
                 self._cell(
                     grid.x(left) + c * (cell + gap),
                     grid.y(grid_top) + r * (cell + gap),

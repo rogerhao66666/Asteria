@@ -68,6 +68,7 @@ import random
 from pathlib import Path
 
 from asteria.presentation.creature_screens import creature_settings
+from asteria.runtime.pointer import hand_over
 
 W, H = 240, 160
 BOX_TOP = 112  # the message window takes the bottom 48 rows
@@ -1599,7 +1600,50 @@ class CreatureBattleScreen:
         scale = max(1, min(sw // W, sh // H))
         screen.fill((0, 0, 0, 255))
         big = self.pg.transform.scale(s, (W * scale, H * scale))
-        screen.blit(big, ((sw - W * scale) // 2, (sh - H * scale) // 2))
+        left, top = (sw - W * scale) // 2, (sh - H * scale) // 2
+        screen.blit(big, (left, top))
+        hand_over(self.rt, self._pointer_spots(), scale, left, top)
+
+    def _pointer_spots(self):
+        """``[(rect, pick, key)]`` in the screen's own pixels: what the mouse can point at in
+        this phase (D85) - a command, a move, YES / NO, a party slot, a bag row; else the
+        whole screen, where a click reads on."""
+        phase = self.phase
+
+        def to(attr, value):
+            return lambda: setattr(self, attr, value)
+
+        if phase == "command" and not self.auto_choices:
+            return [((CMD_X[i % 2] - 9, (ROW_1, ROW_2)[i // 2] - 3, 56, 16), to("cursor", i),
+                     "return") for i in range(4)]  # fmt: skip
+        if phase == "fight":
+            count = len(self._moves())
+            return [((MOVE_X[i % 2] - 9, (ROW_1, ROW_2)[i // 2] - 3, 72, 16),
+                     to("list_cursor", i), "return") for i in range(count)]  # fmt: skip
+        if phase == "yesno":
+            x, y = self.layout.get("yes_no", (200, 72))
+            prompt = self.prompt if isinstance(self.prompt, dict) else {}
+            return [((x, y + 6 + row * 16, 40, 16), lambda row=row: prompt.update(cursor=row),
+                     "return") for row in (0, 1)]  # fmt: skip
+        if phase == "party":
+            count = len(self._party())
+            spots = [(self.PARTY_SLOTS[i], to("list_cursor", i), "return") for i in range(count)]
+            if not self.forced_switch:  # CANCEL
+                spots.append(((*self.PARTY_CANCEL, 56, 24), to("list_cursor", count), "return"))
+            return spots
+        if phase == "bag":
+            items = self._bag_items()
+            if self._bag_art("background") is None:  # the drawn bag: its own places
+                spots = [((8, 8, 40, 18), None, "left"), ((48, 8, 40, 18), None, "right")]
+                return spots + [((96, 10 + i * 15, 140, 15), to("list_cursor", i), "return")
+                                for i in range(min(6, len(items)))]  # fmt: skip
+            left, top, width = self.BAG_LIST
+            (lx, ly), (rx, ry) = self.BAG_ARROWS
+            spots = [((lx - 4, ly - 4, 16, 20), None, "left"),
+                     ((rx - 4, ry - 4, 16, 20), None, "right")]  # fmt: skip
+            return spots + [((left, top - 1 + i * 16, width, 16), to("list_cursor", i), "return")
+                            for i in range(min(8, len(items) + 1))]  # fmt: skip
+        return [((0, 0, W, H), None, "return")]
 
     def _draw_background(self):
         pg, s = self.pg, self.surface

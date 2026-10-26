@@ -41,6 +41,7 @@ from pathlib import Path
 
 from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import CreatureBattleScreen, H, W
+from asteria.runtime.pointer import hand_over
 
 OVERLAY_PHASES = ("start", "save")  # drawn over the field
 PLAY_SECONDS = "play.seconds"  # the world counter of the time played (the card, the save)
@@ -617,6 +618,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
         s = self.surface
         overlay = self.phase in OVERLAY_PHASES
         s.fill((0, 0, 0, 0) if overlay else (0, 0, 0, 255))
+        self._spots = []  # what the mouse can point at, marked as the phase draws (D85)
         draw = getattr(self, f"_draw_{self.phase}", None)
         if draw is not None:
             draw()
@@ -626,7 +628,33 @@ class CreatureMenuScreen(CreatureBattleScreen):
         if not overlay:
             screen.fill((0, 0, 0, 255))
         big = self.pg.transform.scale(s, (W * scale, H * scale))
-        screen.blit(big, ((sw - W * scale) // 2, (sh - H * scale) // 2))
+        left, top = (sw - W * scale) // 2, (sh - H * scale) // 2
+        screen.blit(big, (left, top))
+        hand_over(self.rt, self._menu_spots() + self._spots, scale, left, top)
+
+    def _spot(self, rect, attr=None, value=0, key="return"):
+        """Mark a place the mouse can point at: pointing sets ``attr`` to ``value`` (None:
+        nothing), a left click presses ``key``."""
+        pick = None if attr is None else (lambda: setattr(self, attr, value))
+        self._spots.append((tuple(rect), pick, key))
+
+    def _menu_spots(self):
+        """The phase's hotspots that are not marked while drawing: the party slots (the battle
+        screen's), else the whole screen for a page a click reads on from."""
+        phase = self.phase
+        if phase in ("party", "bag_target"):
+            count = len(self._party())
+            spots = [(self.PARTY_SLOTS[i], self._to("list_cursor", i), "return")
+                     for i in range(min(count, len(self.PARTY_SLOTS)))]  # fmt: skip
+            return spots + [((*self.PARTY_CANCEL, 56, 24), self._to("list_cursor", count),
+                             "return")]  # fmt: skip
+        saved = phase == "save" and (self.save_step or ["ask"])[0] == "saved"
+        if phase in ("summary", "card", "dex_entry") or saved:
+            return [((0, 0, W, H), None, "return")]
+        return []
+
+    def _to(self, attr, value):
+        return lambda: setattr(self, attr, value)
 
     def _menu_colours(self):
         colours = self.dialogue.get("colours") or ((98, 98, 98), (213, 213, 205))
@@ -670,6 +698,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
         x, y = right - 8 - width, bottom - 8 - height
         self._frame((x, y, width, height))
         for row, label in enumerate(rows):
+            self._spot((x, y + row * 16, width, 16), "action_cursor", row)
             self._text(label, x + 8, y + row * 16 + 1, letter, shadow)
             if row == cursor:
                 self._cursor(x, y + row * 16 + 3)
@@ -703,6 +732,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
         width = int(self.menu.get("start_width", 56))
         self._frame((x, y, width, 16 * len(rows) + 16))
         for row, (_id, label, _screen) in enumerate(rows):
+            self._spot((x, y + row * 16 + 7, width, 16), "cursor", row)
             self._text(label, x + 8, y + row * 16 + 9 - 1, letter, shadow)
             if row == self.cursor:
                 self._cursor(x, y + row * 16 + 9 + 2)
@@ -851,6 +881,10 @@ class CreatureMenuScreen(CreatureBattleScreen):
         if arrow is not None and int(self.time * 3) % 2:
             s.blit(arrow, self.BAG_ARROWS[0])
             s.blit(pg.transform.flip(arrow, True, False), self.BAG_ARROWS[1])
+        (lx, ly), (rx, ry) = self.BAG_ARROWS  # a click beside the pocket: the next pocket
+        if self.phase == "bag":
+            self._spot((lx - 4, ly - 4, 16, 20), key="left")
+            self._spot((rx - 4, ry - 4, 16, 20), key="right")
         db = self.game.project.rpg_database
         items = self.pocket_items()
         left, top, width = self.BAG_LIST
@@ -860,6 +894,8 @@ class CreatureMenuScreen(CreatureBattleScreen):
         for row, (_item, name, count) in enumerate(rows[self.bag_scroll : self.bag_scroll + 6]):
             index = self.bag_scroll + row
             y = top + 1 + row * 16
+            if self.phase == "bag":
+                self._spot((left, y - 2, width, 16), "list_cursor", index)
             self._text(name, left + 8, y, ink, ink_shadow)
             if count:
                 self._text(count, left + width - 4, y, ink, ink_shadow, anchor="topright")
@@ -977,6 +1013,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
         value_shadow = tuple(settings.get("values_shadow", shadow))
         for row, option in enumerate(rows):
             y = 41 + row * 16
+            self._spot((16, y - 1, W - 32, 16), "option_cursor", row, key="right")  # next value
             self._text(str(option.get("label", "")), 24, y, letter, shadow)
             values = list(option.get("values") or ())
             value = self.option_value(option["id"])
@@ -990,6 +1027,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
             if row == self.option_cursor:
                 self._cursor(16, y + 2)
         y = 41 + len(rows) * 16
+        self._spot((16, y - 1, W - 32, 16), "option_cursor", len(rows))
         self._text(self.tr("creature.cancel", "CANCEL"), 24, y, letter, shadow)
         if self.option_cursor == len(rows):
             self._cursor(16, y + 2)
@@ -1017,6 +1055,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
             entry = rows[index]
             seen, owned = self.dex_status(entry["species"])
             ty = y + row * 16
+            self._spot((x - 8, ty - 2, 112, 16), "list_cursor", index)
             self._text(f"No{int(entry['number']):03d}", x, ty, ink, ink_shadow)
             if owned and ball is not None:
                 s.blit(ball, (x + 36, ty + 3))

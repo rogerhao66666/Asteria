@@ -101,10 +101,18 @@ class MenusInputMixin:
                 label = tr(TAB_WORDS[tab], tab.title())
                 active = tab == menu.tab
                 color = c.tone("selected", (255, 220, 120)) if active else (150, 160, 180)
-                self.text(label, x, tabs.y(36), size=c.size("tabs", 24), color=color)
+                rect = self.text(label, x, tabs.y(36), size=c.size("tabs", 24), color=color)
+                self.hotspot(  # a click opens the tab
+                    rect.inflate(12, 8),
+                    lambda tab=tab: (
+                        tab != menu.tab and menu.next_tab(TABS.index(tab) - TABS.index(menu.tab))
+                    ),
+                    key="",
+                )
                 x += tabs.row
         member = tr("status.member", "Q / E  {name}", name=name)
         c.text("member", member, self.width - 330, 40, size=20, color=(170, 220, 255))
+        self.hotspot((self.width - 336, 34, 300, 32), key="e")  # a click: the next member
         rows = menu.rows()
         icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
         at = c.place("rows", (40, 88, self.width - 80, 14 * 28), 28)
@@ -117,6 +125,8 @@ class MenusInputMixin:
         for i, (_kind, _key, label, detail) in enumerate(rows[start : start + fit]):
             y = at.y(92) + i * at.row
             selected = start + i == menu.row
+            row_box = (at.x(40), y - 4, at.rect[2], at.row - 2)
+            self.hotspot(row_box, lambda row=start + i: setattr(menu, "row", row))
             if selected:
                 band = (at.x(40), y - 4, at.rect[2], at.row - 2)
                 c.selection(

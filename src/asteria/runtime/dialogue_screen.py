@@ -146,6 +146,9 @@ def _draw_choice(rt, request):
         cy = place.y(rt.height - 184 + ((i - 1) // columns) * row)
         if look and i - 1 == cursor:
             c.selection("choices", (cx - 6, cy - 2, cell - 12, row), lambda: None)
+        rt.hotspot(
+            (cx - 6, cy - 2, cell - 12, row), lambda i=i: setattr(rt, "_choice_cursor", i - 1)
+        )
         mark = "> " if i - 1 == cursor and not look else "   "
         rt.text(f"{mark}{i}. {game.line_text(choice)}", cx, cy, size=size, color=color,
                 font=font)  # fmt: skip

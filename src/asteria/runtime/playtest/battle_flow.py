@@ -160,6 +160,7 @@ class BattleFlowMixin:
             if screen is not None and self._victory and not self._presentation_busy():
                 screen.update(dt)
                 screen.draw(self)
+                self.hotspot((0, 0, self.width, self.height))  # a click: the next page / on
         self._flush_victory_audio()
 
     def _draw_battle_extras(self):

@@ -193,6 +193,19 @@ class EquipmentScreen:
             if inp.just_pressed("confirm"):
                 self.wear()
 
+    def _pointer(self, focus, index):
+        """Pointing at a place on the doll or a piece in the list (D85): the cursor goes there,
+        a click is Enter (opens what fits / puts it on)."""
+
+        def pick():
+            self.focus = focus
+            if focus == "doll":
+                self.place = index
+            else:
+                self.row = index
+
+        return pick
+
     def wear(self):
         game = self.game
         slot_id, index, worn = self.chosen()
@@ -337,6 +350,7 @@ class EquipmentScreen:
             label = game.slot_name(slot_id)
             if index < len(spots):
                 px, py, pw, ph = spots[index].rect
+                rt.hotspot((x + px, y + py, pw, ph), self._pointer("doll", k))
                 self._slot_cell(
                     (x + px, y + py, pw, ph), piece, label, chosen=k == chosen and
                     self.focus == "doll", placeholder=spots[index].placeholder, bare=bool(own),
@@ -354,6 +368,7 @@ class EquipmentScreen:
                 column, row = n % 2, n // 2
                 cx = left if column == 0 else right
                 cy = y + 24 + row * (cell + 30)
+                rt.hotspot((cx, cy, cell, cell), self._pointer("doll", k))
                 self._slot_cell((cx, cy, cell, cell), piece, label,
                                 chosen=k == chosen and self.focus == "doll")  # fmt: skip
                 anchor = "topleft" if column == 0 else "topright"
@@ -362,6 +377,7 @@ class EquipmentScreen:
             return
         cell = 48  # slots the layout left out: a row under the doll
         for n, (k, _slot, piece, label) in enumerate(loose):
+            rt.hotspot((x + n * (cell + 8), y + h + 10, cell, cell), self._pointer("doll", k))
             self._slot_cell((x + n * (cell + 8), y + h + 10, cell, cell), piece, label,
                             chosen=k == chosen and self.focus == "doll")  # fmt: skip
 
@@ -393,6 +409,7 @@ class EquipmentScreen:
             k = first + n
             ry = top + n * row_h
             rect = (x + 8, ry - 2, w - 16, row_h - 4)
+            rt.hotspot(rect, self._pointer("list", k))
             if self.focus == "list" and k == self.row:
                 canvas.selection(
                     "candidates", rect,

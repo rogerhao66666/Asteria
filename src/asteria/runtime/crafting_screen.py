@@ -240,6 +240,11 @@ class CraftingScreen:
             return 1
         return max(1, min(self.workstation().max_quantity, row.makes))
 
+    def _point(self, row):
+        """The mouse over a recipe (D85): the cursor there (the amount starts again at 1)."""
+        if row != self.index:
+            self.index, self.quantity, self.message = row, 1, ""
+
     def change_quantity(self, delta):
         self.quantity = max(1, min(self.limit(), self.quantity + int(delta)))
 
@@ -382,6 +387,9 @@ class CraftingScreen:
         icons = {c.category_id: c.icon_id for c in station.categories}
         for n, (tab_id, words) in enumerate(self.tabs()):
             rect = (place.x(48) + n * (width + gap), place.y(76), width, 34)
+            rt.hotspot(  # a click opens the tab
+                rect, lambda n=n: n != self.tab and self.switch_tab(n - self.tab), key=""
+            )
             if n == self.tab:
                 canvas.selection(
                     "tabs", rect,
@@ -428,6 +436,7 @@ class CraftingScreen:
         for n, row in enumerate(rows[first : first + visible]):
             ry = top + n * row_h
             rect = (x + 6, ry - 2, w - 12, row_h - 4)
+            rt.hotspot(rect, lambda k=first + n: self._point(k))
             if first + n == chosen:
                 canvas.selection(
                     "rows", rect,

@@ -26,6 +26,7 @@ import math
 from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import H, W
 from asteria.runtime.creature_menu import CreatureMenuScreen
+from asteria.runtime.pointer import hand_over
 
 FRAME = 1 / 59.7275
 
@@ -95,6 +96,7 @@ class PictureChoiceScreen(CreatureMenuScreen):
     def draw(self):
         s = self.surface
         s.fill((0, 0, 0, 255))
+        self._spots = []  # what the mouse can point at (D85)
         for path in self.layout.get("background") or ():
             picture = self._menu_picture(path)
             if picture is not None:
@@ -106,7 +108,11 @@ class PictureChoiceScreen(CreatureMenuScreen):
             picture = self._sheet_frame(item, frame)
             if picture is not None:
                 x, y = option.get("at", (0, 0))
-                s.blit(picture, (x - picture.get_width() // 2, y - picture.get_height() // 2))
+                w, h = picture.get_size()
+                s.blit(picture, (x - w // 2, y - h // 2))
+                if self.phase == "pick":  # pointing picks the option, a click chooses it
+                    self._spots.append(((x - w // 2, y - h // 2, w, h), self._pointer(n),
+                                        "return"))  # fmt: skip
         if self.phase == "pick":
             self._draw_cursor()
             self._draw_label()
@@ -120,8 +126,16 @@ class PictureChoiceScreen(CreatureMenuScreen):
         sw, sh = screen.get_size()
         scale = max(1, min(sw // W, sh // H))
         screen.fill((0, 0, 0, 255))
-        screen.blit(self.pg.transform.scale(s, (W * scale, H * scale)),
-                    ((sw - W * scale) // 2, (sh - H * scale) // 2))  # fmt: skip
+        left, top = (sw - W * scale) // 2, (sh - H * scale) // 2
+        screen.blit(self.pg.transform.scale(s, (W * scale, H * scale)), (left, top))
+        hand_over(self.rt, self._spots, scale, left, top)
+
+    def _pointer(self, index):
+        def pick():
+            if index != self.index:
+                self.index, self.time = index, 0.0
+
+        return pick
 
     def _words(self, text):
         return self.game.expand_message(str(text or ""), plain=True)
@@ -182,6 +196,7 @@ class PictureChoiceScreen(CreatureMenuScreen):
         self._frame((x, y, 32, 32))
         rows = (self.tr("creature.yes", "YES"), self.tr("creature.no", "NO"))
         for row, label in enumerate(rows):
+            self._spot((x, y + row * 16, 32, 16), "yes", row)
             self._text(label, x + 8, y + row * 16 + 1, letter, shadow)
             if row == self.yes:
                 self._cursor(x, y + row * 16 + 3)

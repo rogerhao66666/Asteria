@@ -329,6 +329,9 @@ class PlayableTestRuntime(
         ).items():  # action-scene controls (not saved)
             input_map.set_bindings(action, bindings)
         self.input = InputActionTracker(input_map)
+        from asteria.runtime.pointer import PointerLayer
+
+        self.pointer = PointerLayer(self.pg)  # mouse control: hotspots -> keys (D85)
         from asteria.platform.pygame_audio import open_audio_device
 
         self.audio = AudioMixer(open_audio_device(self.pg), self._audio_path)
@@ -561,10 +564,29 @@ class PlayableTestRuntime(
         time; a browser build calls it from its own async loop (``asteria.export_web``)."""
         self.profiler.begin_frame()
         self._frame(self.pg.event.get() if events is None else events, dt)
+        self._draw_mouse_hint()
         with self.profiler.section("present"):
             self.present()
         self._sample_counters()
         self.profiler.end_frame()
+
+    def _draw_mouse_hint(self):
+        """The mouse's words in the corner of a screen it can pick on, once the player uses
+        it (D85); the author's empty ``hint.mouse`` text turns it off."""
+        pointer = self.pointer
+        if not (pointer.used and pointer.drawn and self.input.input_map.mouse):
+            return
+        words = self.game.tr("hint.mouse", "Click: choose   Right click: back")
+        if words:
+            at = (self.width - 12, self.height - 26)
+            self.text(words, *at, size=15, color=(170, 210, 240), anchor="topright")
+
+    def _pointer_cancels(self):
+        """Whether a right click is Escape here: not on the engine's own title (Escape quits
+        the game) nor in the skill tree (the right button drags its graph)."""
+        if self._ui_mode == "title":
+            return bool(self._title_program())
+        return self._ui_mode != "skills"
 
     def _frame(self, events, dt):
         """Process one frame of input, event programs and drawing (no flip)."""
@@ -582,6 +604,11 @@ class PlayableTestRuntime(
         if self.debug_server is not None:
             self.debug_server.poll()
         with self.profiler.section("input"):
+            events = self.pointer.translate(  # clicks and the wheel as keys (D85)
+                events,
+                enabled=self.input.input_map.mouse,
+                cancel=self._pointer_cancels(),
+            )
             self.input_source.handle_events(events)
             self.input.update(self.input_source.raw_state())
             held = {a for a, v in self.input.current.actions.items() if v > 0}

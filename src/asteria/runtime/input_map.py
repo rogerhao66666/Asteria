@@ -82,8 +82,12 @@ class InputActionMap:
     SCHEMA = "asteria.input_action_map"
     VERSION = 1
 
-    def __init__(self, actions=None):
+    def __init__(self, actions=None, *, mouse=True, click_move=False):
         self._actions: dict[str, tuple[InputBinding, ...]] = {}
+        # menus, dialogue and battles answer the mouse (hover picks, left click confirms,
+        # right click cancels, the wheel moves); the author can turn it off (D85)
+        self.mouse = bool(mouse)
+        self.click_move = bool(click_move)  # a left click on the map walks the player there
         for action_id, bindings in dict(actions or {}).items():
             self.set_bindings(action_id, bindings)
 
@@ -136,6 +140,8 @@ class InputActionMap:
             "schema": self.SCHEMA,
             "version": self.VERSION,
             "actions": {a: [b.to_data() for b in bs] for a, bs in sorted(self._actions.items())},
+            **({} if self.mouse else {"mouse": False}),
+            **({"click_move": True} if self.click_move else {}),
         }
 
     @classmethod
@@ -143,7 +149,9 @@ class InputActionMap:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported input action map")
         return cls(
-            {a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()}
+            {a: [InputBinding.from_data(b) for b in bs] for a, bs in data["actions"].items()},
+            mouse=data.get("mouse", True),
+            click_move=data.get("click_move", False),
         )
 
     @classmethod

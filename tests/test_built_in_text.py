@@ -306,6 +306,7 @@ def _drawn(host, draw):
 
 
 def test_the_pause_and_settings_menus_draw_the_players_language(host):
+    host.height = 900  # room for all 19 rows (a shorter window scrolls them, D85)
     english = _drawn(host, lambda: host._draw_overlay_menu("Paused", host._pause_menu))
     assert "Resume" in english and "Settings" in english
     assert "Make Camp" in english  # the project's own entry, as it wrote it

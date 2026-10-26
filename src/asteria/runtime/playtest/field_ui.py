@@ -551,6 +551,8 @@ class FieldUiMixin:
         if request is None:
             return
         line = getattr(request, "line", None)
+        if not held:  # a click anywhere goes on (a line) or is kept from the map (a choice)
+            self.hotspot((0, 0, self.width, self.height), key="return" if line is not None else "")
         if held and self.dialogue_settings().get("window"):
             self._draw_dialogue_window(line, held=True)
             return
@@ -628,6 +630,7 @@ class FieldUiMixin:
             box.blit(frame, (0, y), (0, piece, piece, piece))
             box.blit(frame, (bw - piece, y), (2 * piece, piece, piece, piece))
         cursor = self._choice_index(request)
+        choice_spots = []  # (option, x, y, width, height) in the box's own pixels
         for index, name in enumerate(names):
             tx, ty = 16 + index % columns * column, 8 + index // columns * step
             if font is not None and font.covers(name):
@@ -635,6 +638,7 @@ class FieldUiMixin:
             else:
                 face = self.pg.font.Font(None, 16)
                 box.blit(face.render(name, False, letter), (tx, ty))
+            choice_spots.append((index, tx - 8, ty, column, step))
             if index == cursor:  # the pointer (menu.c's arrow)
                 tip = [(tx - 7, ty + 3), (tx - 7, ty + 11), (tx - 3, ty + 7)]
                 self.pg.draw.polygon(box, shadow, [(x + 1, y + 1) for x, y in tip])
@@ -642,9 +646,11 @@ class FieldUiMixin:
         scale = max(1, self.width // ww)
         big = self.pg.transform.scale(box, (bw * scale, bh * scale))
         left = (self.width - ww * scale) // 2 + (right - bw) * scale
-        self.screen.blit(
-            big, (left, self.height - wh * scale - (160 - wh - bottom) * scale - bh * scale)
-        )
+        top = self.height - wh * scale - (160 - wh - bottom) * scale - bh * scale
+        self.screen.blit(big, (left, top))
+        for index, x, y, w, h in choice_spots:
+            spot = (left + x * scale, top + y * scale, w * scale, h * scale)
+            self.hotspot(spot, lambda index=index: setattr(self, "_choice_cursor", index))
 
     def _draw_dialogue_window(self, line, text=None, held=False):
         """``dialogue.window``: the game's own message window, drawn at its own resolution and
@@ -942,6 +948,7 @@ class FieldUiMixin:
                     return False
                 if self.game.click_entity(*self._field_world_xy(*event.pos)) is not None:
                     return False
+                self._click_move_to(*event.pos)
         if self.game.cutscene_active:
             if self.game.cutscene_skippable and self.input.just_pressed("cancel"):
                 self.game.skip_cutscene()
@@ -981,7 +988,7 @@ class FieldUiMixin:
         if self.game.action_scene:
             return self._action_input(events, dt)
         # Project input map: keyboard and gamepad (stick / d-pad) both drive movement.
-        dx, dy = self.input.current.movement_vector()
+        dx, dy = self._click_move_vector(*self.input.current.movement_vector(), dt)
         moving = bool(dx or dy)
         connected = self._multiplayer_connected()
         if connected:
@@ -1051,6 +1058,51 @@ class FieldUiMixin:
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
         return moving
+
+    def _click_move_to(self, screen_x, screen_y):
+        """Click to move (``InputActionMap.click_move``, D85): a left click on the map that hit
+        no picture, figure or menu sends the player walking there around what blocks it."""
+        self._click_path = None
+        game = self.game
+        if not (self.input.input_map.mouse and self.input.input_map.click_move):
+            return
+        if game.mode != "field" or game.action_scene or self._multiplayer_connected():
+            return
+        player = game.player.get(Transform)
+        goal = self._field_world_xy(screen_x, screen_y)
+        field = self.manifest.get("field", {})
+        cell = float(field.get("grid_size", 16.0)) if field.get("movement") == "grid" else 16.0
+        path = game.find_path((player.x, player.y), goal, cell_size=cell)
+        if path:
+            self._click_path = [game.scene.id, list(path)[1:] or [goal], 0.0, None]
+
+    def _click_move_vector(self, dx, dy, dt):
+        """The movement of this frame: the keys' (they cancel a walk), else a step along the
+        clicked path toward its next waypoint; a walk that stops getting closer ends."""
+        walk = getattr(self, "_click_path", None)
+        if dx or dy or walk is None:
+            self._click_path = None
+            return dx, dy
+        scene, points, stuck, last = walk
+        player = self.game.player.get(Transform)
+        if scene != self.game.scene.id or self.game.event_busy:
+            self._click_path = None
+            return 0.0, 0.0
+        near = max(2.0, 72.0 * dt)  # within a frame's step of a waypoint: the next one
+        while points and abs(points[0][0] - player.x) + abs(points[0][1] - player.y) <= near:
+            points.pop(0)
+        if not points:
+            self._click_path = None
+            return 0.0, 0.0
+        here = (round(player.x, 1), round(player.y, 1))
+        walk[2] = stuck + dt if here == last else 0.0
+        walk[3] = here
+        if walk[2] > 0.4:  # walked into something the path did not know: stop
+            self._click_path = None
+            return 0.0, 0.0
+        tx, ty = points[0][0] - player.x, points[0][1] - player.y
+        length = max(1e-6, (tx * tx + ty * ty) ** 0.5)
+        return tx / length, ty / length
 
     def _grid_field_step(self, dx, dy, dt):
         """``field.movement: "grid"``: a whole cell a step (runtime/grid_walk.py)."""

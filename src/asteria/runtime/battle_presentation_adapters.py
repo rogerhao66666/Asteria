@@ -1511,7 +1511,45 @@ class CanonicalBattleAdapter:
                 host._menu_units = {}
             host._menu_units["battle"] = ui  # the screen pixels of one battle unit
         self.audio_cues.extend(result.audio_cues)
+        self._pointer_spots(result.frame)
         return result
+
+    _ROW_ROLES = ("action_selected", "action_entry", "action_disabled")
+
+    def _pointer_spots(self, frame):
+        """The command menu's rows (and in target choosing, the combatants) as mouse hotspots
+        (D85): pointing moves the cursor, a click is Enter, a click on the categories Tab."""
+        host, commands = self.host, getattr(self.host, "battle_commands", None)
+        if commands is None or not hasattr(host, "hotspot"):
+            return
+        box = next((p for p in frame.panels if p.panel_id == "action_menu"), None)
+        if box is None:
+            return
+        ui, menu = self._ui_backend.scale, self.screen.action_menu
+        first = menu.view.page * menu.policy.page_size
+        height = self.screen.composer.polish.interaction_row_height
+
+        def spot(x, y, w, h):
+            return x * ui, y * ui, w * ui, h * ui
+
+        for text in frame.texts:
+            if text.role == "action_categories":
+                host.hotspot(spot(box.x, text.y - 2, box.width, height), key="tab")
+        rows = [t for t in frame.texts if t.role in self._ROW_ROLES]
+        for index, text in enumerate(rows):
+            host.hotspot(
+                spot(box.x, text.y - 2, box.width, height),
+                lambda row=first + index: setattr(commands, "cursor", row),
+            )
+        if commands.mode != "target":
+            return
+        for index, entry in enumerate(menu.view.entries):
+            place = self.member_screen_box(entry.action_id)
+            if place is not None:  # the combatant itself: its body, a little wider than tall
+                x, top, feet = place
+                half = max(16.0, (feet - top) * 0.4)
+                pick = lambda row=first + index: setattr(commands, "cursor", row)  # noqa: E731
+                host.hotspot((x - half, top, 2 * half, feet - top), pick)
 
     def _scaled_background(self, background, size):
         """The battlefield picture at ``size``: scaled once while the camera holds still (it was

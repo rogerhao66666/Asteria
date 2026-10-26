@@ -47,9 +47,9 @@ class TitleBuildMixin:
         dx, dy = box[0] - 280, box[1] - 250
         if self._multiplayer_connected() or self._network_gameplay_frozen():
             server = tr("title.server_session", "N   Enter Server Session")
-            self.text(server, 310 + dx, 282 + dy, size=25, color=text)
+            self.hotspot(self.text(server, 310 + dx, 282 + dy, size=25, color=text), key="n")
             reload = tr("title.server_save", "L   Reload Server Save")
-            self.text(reload, 310 + dx, 330 + dy, size=25, color=text)
+            self.hotspot(self.text(reload, 310 + dx, 330 + dy, size=25, color=text), key="l")
             self.text(
                 tr("title.guest", "Guest: {player}", player=self.multiplayer_bridge.player_id),
                 310 + dx,
@@ -60,10 +60,12 @@ class TitleBuildMixin:
             c.finish()
             return
         size = c.size("options", 28)
-        self.text(tr("title.new_game", "N   New Game"), 330 + dx, 282 + dy, size=size, color=text)
-        self.text(
-            tr("title.load_game", "L   Load Game"), 330 + dx, 330 + dy, size=size, color=text
-        )
+        words = tr("title.new_game", "N   New Game")
+        rect = self.text(words, 330 + dx, 282 + dy, size=size, color=text)
+        self.hotspot(rect.inflate(16, 10), key="n")  # a click is the key on the row
+        words = tr("title.load_game", "L   Load Game")
+        rect = self.text(words, 330 + dx, 330 + dy, size=size, color=text)
+        self.hotspot(rect.inflate(16, 10), key="l")
         from asteria.runtime.save_slots import SaveSlots
 
         used = sum(

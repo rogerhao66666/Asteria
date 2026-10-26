@@ -90,6 +90,8 @@ class CaptureMixin:
         self.text(title, self.width / 2, y + 10, size=28, color=_TITLE, center=True)
         for i, row in enumerate(rows, 1):
             self.text(f"{i}. {row}", x + 20, y + 46 + (i - 1) * 30, size=row_size)
+            if i <= 9:  # a click on the row is its number key
+                self.hotspot((x + 8, y + 42 + (i - 1) * 30, width - 16, 30), key=str(i))
         self.text(
             hint, self.width / 2, y + height - 24, size=16, color=(170, 210, 240), center=True
         )

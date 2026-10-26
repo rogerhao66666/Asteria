@@ -84,6 +84,8 @@ class SaveSlotsMixin:
         for i, info in enumerate(rows):
             y = at.y(140) + i * at.row
             selected = i == menu.row
+            row_box = (at.x(120), y - 8, at.rect[2], at.row - 10)
+            self.hotspot(row_box, lambda i=i: setattr(menu, "row", i))
             if selected:
                 band = (at.x(120), y - 8, at.rect[2], at.row - 10)
                 c.selection(
