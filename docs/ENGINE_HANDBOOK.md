@@ -5,6 +5,8 @@
 [`ASTERIA_SPEC.md`](../ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
 不代表現狀。
 
+**給遊戲作者的使用手冊（D86）：** [`manual/USER_MANUAL.zh-TW.md`](manual/USER_MANUAL.zh-TW.md)（英文版 [`manual/USER_MANUAL.en.md`](manual/USER_MANUAL.en.md)）。從安裝到匯出的完整操作說明，附真實截圖；最後一章的 Python API 由 `scripts/manual_api_list.py` 產生。
+
 ---
 
 ## 0. 一句話
@@ -616,6 +618,14 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 開關 | `InputActionMap.mouse`（預設開，關才寫 `"mouse": false`）；編輯器 呈現 ▸ Controls 的「滑鼠操作」 |
 | 點擊移動 | `InputActionMap.click_move`（預設關）：地圖上沒點到東西的左鍵 → `find_path` 走過去（`field_ui._click_move_to`／`_click_move_vector`，按鍵接手）；點可對話人物＝走到範圍內再互動（`_click_talk`）；從上方看的動作場景與連線遊戲也可用，平台場景不用（`_click_move_scene`） |
 | 長選單／提示 | 疊加選單超出視窗會捲動（`_overlay_tops`，游標離開才捲）；用過滑鼠後右下角顯示 `hint.mouse`；等待按鍵時滑鼠換出的按鍵不綁 |
+
+### D86 新增（2026-10-26；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 使用手冊 | `docs/manual/USER_MANUAL.zh-TW.md`、`USER_MANUAL.en.md`：15 章，內容相同；圖片在 `docs/manual/images/`（編輯器取自 Cocoa 真實視窗，遊戲取自 `PlayableTestRuntime` 畫格，中英各一套） |
+| API 章節 | `scripts/manual_api_list.py` 從原始碼產生第 15 章（簽名、opcode、世界指令）；`--check` 檢查是否過期；引擎 API 改了要重跑 |
+| 測試 | `tests/test_user_manual.py`：API 章節與程式碼一致、每個 API 目標都存在、圖片都在、目錄連結都指到標題 |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 
