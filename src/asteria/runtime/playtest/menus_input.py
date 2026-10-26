@@ -59,8 +59,13 @@ class MenusInputMixin:
         for event in events:
             if event.type != self.pg.KEYDOWN:
                 continue
-            if event.key in (self.pg.K_ESCAPE, self.pg.K_i):
+            if event.key in (self.pg.K_ESCAPE, self.pg.K_i) and menu.details_open:
+                menu.details_open = False  # Esc closes the details first
+            elif event.key in (self.pg.K_ESCAPE, self.pg.K_i):
                 self._ui_mode = self._status_back
+            elif event.key == self.pg.K_d and menu.tab == "items":
+                if menu.details_mode == "button":
+                    menu.details_open = not menu.details_open
             elif event.key == self.pg.K_TAB and menu.single and menu.tab == "items":
                 pointed = getattr(menu, "point_category", None)
                 if getattr(event, "pointer", False) and pointed is not None:
@@ -142,12 +147,18 @@ class MenusInputMixin:
             self._status_footer(c, menu, hint)
             return
         top = 88
+        details = menu.details_mode if menu.tab == "items" else "off"
         if menu.tab == "items":
             self._draw_item_tabs(c, menu, 80)
             top = 128
         rows = menu.rows()
+        list_w = self.width - 80
+        if details == "panel":  # the list on the left, the chosen thing's details on the right
+            list_w = int((self.width - 80) * 0.58)
+            panel = (40 + list_w + 12, top - 6, self.width - 92 - list_w, self.height - top - 104)
+            self._draw_item_detail(c, menu, panel)
         icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
-        at = c.place("rows", (40, top, self.width - 80, (self.height - top - 110) // 28 * 28), 28)
+        at = c.place("rows", (40, top, list_w, (self.height - top - 110) // 28 * 28), 28)
         icon_size = c.icon_size("rows", 22)
         label_x = at.x(56) + (icon_size + 8 if any(icons) else 0)
         fit = max(1, at.rect[3] // at.row)
@@ -171,16 +182,26 @@ class MenusInputMixin:
             self._draw_icon(icons[start + i], at.x(56), y - 3, icon_size)
             picked = c.tone("selected", (255, 255, 255))
             self.text(label, label_x, y, size=size, color=picked if selected else normal)
-            detail_x = at.x(40) + at.rect[2] - 380
-            self.text(detail, detail_x, y, size=size, color=c.tone("muted", (170, 210, 240)))
+            self.text(
+                detail,
+                at.x(40) + at.rect[2] - 12,
+                y,
+                size=size,
+                color=c.tone("muted", (170, 210, 240)),
+                anchor="topright",
+            )
         if not rows:
             empty = tr("status.empty", "Nothing here yet.")
             c.text("empty", empty, 56, top + 4, size=20, color=(150, 160, 180))
+        if details == "button":
+            self._draw_details_button(c, menu, rows)
         if menu.single and menu.tab == "items":
             hint = tr(
                 "status.hint.items",
                 "Left/Right: tab   F: filter   Up/Down: choose   Enter: use   Esc: back",
             )
+            if details == "button":
+                hint += "   " + tr("status.hint.details", "D: details")
         elif menu.single:
             hint = tr("status.hint.page", "Up/Down: choose   Enter: use / equip   Esc: back")
         else:
@@ -189,6 +210,20 @@ class MenusInputMixin:
                 "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
             )
         self._status_footer(c, menu, hint)
+
+    def _draw_details_button(self, c, menu, rows):
+        """The Items page's Details button (item_details "button"); open, the details over the
+        list - a click on the button, D, or Esc closes them."""
+        tr = self.game.tr
+        words = tr("status.details_button", "D  Details")
+        x, y = self.width - 48, self.height - 92
+        rect = self.text(words, x - 14, y + 6, size=19, color=(255, 236, 190), anchor="topright")
+        box = rect.inflate(28, 12)
+        self.pg.draw.rect(self.screen, (255, 220, 120), box, 2, border_radius=6)
+        self.hotspot(box, key="d")
+        if menu.details_open and rows:
+            w, h = min(520, self.width - 120), min(380, self.height - 160)
+            self._draw_item_detail(c, menu, ((self.width - w) // 2, 96, w, h))
 
     def _status_footer(self, c, menu, hint):
         """The status menu's key hint and last message."""

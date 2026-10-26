@@ -165,7 +165,15 @@ def test_the_status_page_raises_a_stat_with_its_plus(host):
     host._open_pause_page("status")
     menu = host.status_menu
     rows = menu.stat_rows()
-    assert [r.stat_id for r in rows] == ["str", "dex", "int", "luk", "vitality"]
+    assert [r.stat_id for r in rows] == [
+        "str",
+        "dex",
+        "int",
+        "luk",
+        "vit",
+        "vitality",
+        "technique",
+    ]
     assert menu.stat_points()[0][1] == 5.0
     before = rows[0].value
     assert menu.activate() is True  # Enter on the first row: +1 STR
@@ -193,8 +201,8 @@ def test_the_items_page_has_tabs_and_filters(host):
         or "concoction" in db.items[k].tags
         for k in consumables
     )
-    menu.next_filter()  # usable now: the demo's items are used in battle, none in the menu
-    assert menu.rows() == []
+    menu.next_filter()  # usable now: the potions (D88 gave them a menu use)
+    assert {key for _k, key, _l, _d in menu.rows()} == {"potion", "hi_potion"}
     menu.next_filter()  # potions
     assert {key for _k, key, _l, _d in menu.rows()} <= consumables and menu.rows()
     menu.next_filter()
@@ -215,7 +223,7 @@ def test_the_pages_draw_fitted_in_chinese_with_clicks_where_they_show(host):
         for (x, y, w, h), *_ in [(s.rect,) for s in host.pointer.drawn]
     )
     plus = [s for s in host.pointer.drawn if s.key == "return"]
-    assert len(plus) == 5  # one + per stat
+    assert len(plus) == 7  # one + per stat (STR DEX INT LUK VIT HP MP)
     words = dict(host._pause_menu.labels(host.game.tr))
     assert words["status"] == "狀態" and words["items"] == "道具" and words["skills"] == "技能"
 

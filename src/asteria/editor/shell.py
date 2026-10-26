@@ -2348,6 +2348,26 @@ class AsteriaEditorWindow(QMainWindow):
         self.viewport.refresh()
         return True
 
+    def edit_passability(self, entity, mode):
+        """Make an entity passable, block at its feet or block its whole picture (the
+        Inspector's Passability, D88; one undo step); (ok, error)."""
+        from .image_tools import project_root
+        from .passability import build_passability_command, picture_box
+
+        box = picture_box(self.document.project, project_root(self.document), entity)
+        try:
+            command = build_passability_command(entity, mode, box)
+        except ValueError as exc:
+            return False, str(exc)
+        if command.commands:
+            self.document.execute(command)
+        self._refresh_actions()
+        self._refresh_title()
+        self.viewport.refresh()
+        # rebuilt after the combo's signal returns: the page holding it is replaced
+        QTimer.singleShot(0, lambda e=entity: self.inspector.show_entity(e))
+        return True, None
+
     def edit_component_field(self, component, field_name, raw_value):
         """Set one field of a component from the Inspector (undoable); (ok, error)."""
         try:

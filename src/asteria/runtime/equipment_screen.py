@@ -284,9 +284,10 @@ class EquipmentScreen:
             )  # fmt: skip
         canvas.finish()
 
-    def _slot_cell(self, rect, piece, label, *, chosen, placeholder="", bare=False):
+    def _slot_cell(self, rect, piece, label, *, chosen, placeholder="", bare=False, place=None):
         """One place: its frame (none on a doll picture), the piece's icon or the empty
-        place's picture / name, the highlight when chosen."""
+        place's picture / name, the highlight when chosen. ``place`` (the layout's
+        ``MenuSlotPlace``) sizes, turns and trims the icon."""
         rt = self.rt
         pg, screen = rt.pg, rt.screen
         rect = pg.Rect(rect)
@@ -308,7 +309,7 @@ class EquipmentScreen:
         x, y = rect.x + (rect.w - size) // 2, rect.y + (rect.h - size) // 2
         if piece is not None:
             icon_id = getattr(piece.equipment, "icon_id", "")
-            if not (icon_id and rt._draw_icon(icon_id, x, y, size)):
+            if not (icon_id and self._place_icon(icon_id, rect, place)):
                 words = self.game.name_of(piece.equipment).split()
                 initials = "".join(w[0] for w in words[:2]).upper()
                 rt.text(initials, rect.centerx, rect.centery, size=22, color=color, center=True)
@@ -325,6 +326,24 @@ class EquipmentScreen:
                 rect.inflate(6, 6),
                 lambda: pg.draw.rect(screen, TITLE, rect.inflate(6, 6), 3, border_radius=8),
             )
+
+    def _place_icon(self, icon_id, rect, place):
+        """Draw the worn piece's icon in its place (see ``MenuSlotPlace``); True when drawn."""
+        scale = place.icon_scale if place is not None else 1.0
+        pad = 4  # inside the place's frame
+        box = (max(1, (rect.w - 2 * pad) * scale), max(1, (rect.h - 2 * pad) * scale))
+        icon = self.rt.fitted_icon(
+            icon_id,
+            box,
+            rotate=place.icon_rotate if place is not None else 0,
+            trim=place.icon_trim if place is not None else False,
+            fit=place.icon_fit if place is not None else "fit",
+        )
+        if icon is None:
+            return False
+        w, h = icon.get_size()
+        self.rt.screen.blit(icon, (rect.centerx - w // 2, rect.centery - h // 2))
+        return True
 
     def draw_doll(self, canvas):
         rt = self.rt
@@ -354,6 +373,7 @@ class EquipmentScreen:
                 self._slot_cell(
                     (x + px, y + py, pw, ph), piece, label, chosen=k == chosen and
                     self.focus == "doll", placeholder=spots[index].placeholder, bare=bool(own),
+                    place=spots[index],
                 )  # fmt: skip
             else:
                 loose.append((k, slot_id, piece, label))

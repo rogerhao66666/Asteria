@@ -64,6 +64,9 @@ class BattleSessionRules:
     # expression of ``value`` (that damage), ``source`` and ``target``: a last random spread,
     # whole numbers, a floor of 1... ("" = the damage as it is)
     final_damage_expression: str = ""
+    # the attacker's stat (a percentage) that pierces the target's stats in damage formulas:
+    # 30 leaves 70% of the defence a formula subtracts (D89; "" = none)
+    penetration_stat: str = ""
     # every battle rolls its own dice (seeded from the save's battle count) instead of the
     # same fixed sequence each time
     vary_seed: bool = False
@@ -86,6 +89,7 @@ class BattleSessionRules:
         "battle_counters": {},
         "initiative_expression": "",
         "final_damage_expression": "",
+        "penetration_stat": "",
         "vary_seed": False,
     }
 
@@ -105,6 +109,7 @@ class BattleSessionRules:
         battle_counters=None,
         initiative_expression="",
         final_damage_expression="",
+        penetration_stat="",
         vary_seed=False,
         defeat="game_over",
         defeat_currency="",
@@ -150,6 +155,7 @@ class BattleSessionRules:
 
             check_expression(final_damage_expression, ("value", "source", "target"))
         object.__setattr__(self, "final_damage_expression", final_damage_expression)
+        object.__setattr__(self, "penetration_stat", str(penetration_stat or "").strip())
         object.__setattr__(self, "vary_seed", bool(vary_seed))
         if defeat not in ("game_over", "respawn"):
             raise ValueError("defeat must be game_over or respawn")
@@ -194,6 +200,7 @@ class BattleSessionRules:
                 if self.final_damage_expression
                 else {}
             ),
+            **({"penetration_stat": self.penetration_stat} if self.penetration_stat else {}),
             **({"vary_seed": True} if self.vary_seed else {}),
             **({"defeat": self.defeat} if self.defeat != "game_over" else {}),
             **({"defeat_currency": self.defeat_currency} if self.defeat_currency else {}),
@@ -223,6 +230,7 @@ class BattleSessionRules:
             battle_counters=data.get("battle_counters"),
             initiative_expression=data.get("initiative_expression", ""),
             final_damage_expression=data.get("final_damage_expression", ""),
+            penetration_stat=data.get("penetration_stat", ""),
             vary_seed=data.get("vary_seed", False),
             defeat=data.get("defeat", "game_over"),
             defeat_currency=data.get("defeat_currency", ""),

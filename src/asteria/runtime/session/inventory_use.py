@@ -7,6 +7,7 @@ from dataclasses import replace
 from asteria.rpg import (
     EquipmentGrowthRuntime,
     EquippedItem,
+    RpgActorSnapshot,
 )
 
 from .support import (  # noqa: F401 - the names the moved methods use
@@ -32,6 +33,12 @@ class InventoryUseMixin:
         actor_id, item_id = str(actor_id), str(item_id)
         item = self.project.rpg_database.items.get(item_id)
         snapshot = self.save.rpg_state.actor_snapshots.get(actor_id)
+        in_party = actor_id in self.save.rpg_state.party_actor_ids
+        if snapshot is None and item is not None and in_party:
+            base = self._actor_runtime(actor_id)  # never in a fight yet: its base build (D88)
+            snapshot = RpgActorSnapshot(
+                actor_id, base.stats.to_data(), base.resources.to_data(), base.tags.to_data()
+            )
         if item is None or snapshot is None:
             raise GameSessionError(f"cannot use {item_id} on {actor_id}")
         stats = StatBlock.from_data(snapshot.stats)

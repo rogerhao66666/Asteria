@@ -152,6 +152,9 @@ class FormulaContext:
     source_subject: object = None
     target_subject: object = None
     rng: object = None
+    # what the target's stats count for in the terms: 1 - the source's penetration (D89), so a
+    # 30% penetration leaves 70% of the defence a damage formula subtracts
+    target_stat_scale: float = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -248,7 +251,7 @@ class ValueFormula:
         if term.source == ValueSource.SOURCE_STAT:
             return context.source_stats.get(term.key)
         if term.source == ValueSource.TARGET_STAT:
-            return context.target_stats.get(term.key)
+            return context.target_stats.get(term.key) * context.target_stat_scale
         if term.source == ValueSource.SOURCE_RESOURCE_CURRENT:
             return context.source_resources.current(term.key)
         if term.source == ValueSource.SOURCE_RESOURCE_MAX:

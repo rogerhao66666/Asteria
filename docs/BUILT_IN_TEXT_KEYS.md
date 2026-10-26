@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 683 個鍵，29 組。
+共 699 個鍵，29 組。
 
 ## Creature battle
 
@@ -315,6 +315,22 @@
 | `status.ability_points` | Ability Points | 能力點數 |
 | `status.no_stat_graph` | — | — |
 | `status.details` | Details | 詳細能力 |
+| `status.col.rank` | Rank | 等級 |
+| `status.col.total` | Total | 總計 |
+| `status.col.base` | Base | 基礎 |
+| `status.col.points` | Points | 加點 |
+| `status.col.gear` | Gear | 裝備 |
+| `status.col.gain` | Each + | 每點 |
+| `status.item_info` | About | 說明 |
+| `status.details_button` | D  Details | D  詳細 |
+| `status.hint.details` | D: details | D：詳細 |
+| `status.detail.count` | Owned | 持有 |
+| `status.detail.menu_use` | Use here | 選單可用 |
+| `status.yes` | yes | 是 |
+| `status.detail.battle_use` | In battle | 戰鬥中 |
+| `status.detail.sockets` | Sockets | 插槽 |
+| `status.wear_in_equipment` | Wear it from Equipment | 請從「裝備」穿上 |
+| `status.cannot_use_here` | {name} can't be used from the menu | {name} 無法在選單使用 |
 | `status.raised` | {name} +1 | {name} +1 |
 | `status.cannot_raise` | {name} can't be raised ({reason}) | {name} 無法提升（{reason}） |
 | `status.reason.max_rank` | at its highest | 已達上限 |

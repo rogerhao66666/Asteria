@@ -63,7 +63,15 @@ RECRUIT_GROUP = "Data: recruiting notes"
 CATEGORY_GROUP = "Data: quest card categories"
 # quest objectives, skill-tree / growth nodes, workstation tabs, gacha rarities, the Items
 # page's tabs and filters
-NESTED = ("objectives", "nodes", "categories", "rarities", "item_categories", "item_filters")
+NESTED = (
+    "objectives",
+    "nodes",
+    "categories",
+    "rarities",
+    "item_categories",
+    "item_filters",
+    "stat_groups",
+)
 # a text that is only \\T[key] codes already comes from the locale tables: it needs no key
 _ONLY_TABLE_CODES = re.compile(r"^(\s*\\T\[[^\]]+\]\s*)+$")
 

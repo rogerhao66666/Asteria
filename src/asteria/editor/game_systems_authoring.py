@@ -39,7 +39,13 @@ from asteria.rpg.items import EQUIP_OFFERS, INVENTORY_OVERFLOW, InventoryRules
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
-from asteria.rpg.menu_rules import NO_STAT_GRAPH, PAUSE_ENTRIES, MenuRules
+from asteria.rpg.menu_rules import (
+    ITEM_DETAILS,
+    NO_STAT_GRAPH,
+    PAUSE_ENTRIES,
+    STAT_FORMATS,
+    MenuRules,
+)
 from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.pets import EXP_SHARES, LEVEL_UP_HEALS, PetRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
@@ -124,6 +130,31 @@ _ITEM_FILTER = (  # what the Items page's F key narrows a tab to (D87)
     F("display_name", "Filter Name", "text", default=""),
     F("tags", "Items With All of These Tags", "string_list", default=()),
     F("usable", "Only Items the Menu Can Use", "bool", default=False),
+)
+_STAT_GROUP = (  # a heading of the Status page's detail table (D89)
+    F("group_id", "Group ID", "text", default="attack"),
+    F("display_name", "Group Name", "text", default=""),
+)
+_STAT_LINE = (  # a stat of the Status page's detail table (D89)
+    F("stat_id", "Stat", "ref", source="stats"),
+    F("group", "Group ID (empty: Other)", "text", default=""),
+    F(
+        "format",
+        "Written As (number; percent; range: attack's low ~ high; chance: a battle check's %)",
+        "choice",
+        choices=STAT_FORMATS,
+        default="number",
+    ),
+    F("spread", "Range: Percent Either Way", "float", default=0.0),
+    F("label", "Own Name (empty: the stat's)", "text", default=""),
+    F(
+        "check",
+        "Chance: Battle Check (crit, land...)",
+        "optional_ref",
+        source="outcome_checks",
+        empty_label="(none)",
+        default="",
+    ),
 )
 _MODIFIER = (
     F("modifier_id", "Modifier ID", "text", default="bonus"),
@@ -990,8 +1021,29 @@ D26_FORMS = {
             source="stats",
             default=(),
         ),
+        F(
+            "stat_groups",
+            "Detail Table Groups (Attack, Defence...: a heading each)",
+            "table",
+            fields=_STAT_GROUP,
+            default=(),
+        ),
+        F(
+            "stat_lines",
+            "Detail Table Lines (a stat each, in its group; none: Detail Stats above)",
+            "table",
+            fields=_STAT_LINE,
+            default=(),
+        ),
         F("item_categories", "Item Page Tabs", "table", fields=_ITEM_CATEGORY, default=()),
         F("item_filters", "Item Page Filters (F)", "table", fields=_ITEM_FILTER, default=()),
+        F(
+            "item_details",
+            "Item Details (panel: beside the list; button: Details / D opens it; off)",
+            "choice",
+            choices=ITEM_DETAILS,
+            default="panel",
+        ),
     ),
     "doodads": (
         F("doodad_id", "Doodad ID", "id"),
@@ -1009,9 +1061,10 @@ D26_FORMS = {
 FORMS.update(D26_FORMS)
 
 
-def _stat_label(db, stat_id):
+def _stat_label(db, stat_id, labels=None):
     rule = db.derived_stats.get(stat_id)
     name = getattr(rule, "display_name", "") if rule is not None else ""
+    name = name or (labels or {}).get(stat_id, "")
     return f"{name} ({stat_id})" if name and name != stat_id else stat_id
 
 
@@ -1531,11 +1584,14 @@ class GameSystemsAuthoringController:
                 (g, graphs[g].display_name or g) for g in sorted(graphs)
             )
         if source == "stats":  # the stat formulas' stats, then every stat the data names
-            from .data_translation import stat_ids
+            from .data_translation import _stat_labels, stat_ids
 
             known = list(db.derived_stats)
             known += [s for s in stat_ids(self.project) if s not in known]
-            return tuple((s, (db.derived_stats.get(s) or s) and _stat_label(db, s)) for s in known)
+            labels = _stat_labels(self.project)  # the character screen's names (D89)
+            return tuple((s, _stat_label(db, s, labels)) for s in known)
+        if source == "outcome_checks":  # crit, land, block... (a detail line's chance, D89)
+            return tuple(sorted(db.outcome_checks))
         if source == "goods":  # what a shop can sell: items, then equipment (D61)
             return tuple(sorted(db.items)) + tuple(sorted(db.equipment))
         stores = {

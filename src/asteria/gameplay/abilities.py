@@ -729,11 +729,19 @@ def _effective_stats(subject: GameplaySubject):
     return StatBlock(values)
 
 
-def _formula_context(source: GameplaySubject, target: GameplaySubject | None, rng=None):
+def _formula_context(
+    source: GameplaySubject, target: GameplaySubject | None, rng=None, penetration=""
+):
+    """The formula context of ``source`` acting on ``target``; ``penetration`` is the source's
+    stat (a percentage) that takes that share off the target's stats in the terms (D89)."""
     if target is None:
         target = source
+    source_stats = _effective_stats(source)
+    scale = 1.0
+    if penetration and target is not source:
+        scale = max(0.0, min(1.0, 1.0 - source_stats.get(penetration) / 100.0))
     return FormulaContext(
-        _effective_stats(source),
+        source_stats,
         source.resources,
         source.tags,
         _effective_stats(target),
@@ -742,6 +750,7 @@ def _formula_context(source: GameplaySubject, target: GameplaySubject | None, rn
         source,
         target,
         rng,
+        scale,
     )
 
 
@@ -775,6 +784,8 @@ class AbilityRuntime:
             raise TypeError("registry must be AbilityRegistry")
         self.registry = registry
         self.rng = None  # the dice formula expressions roll (a battle hands its own)
+        # the source's stat that pierces the target's stats in effect formulas (D89; "": none)
+        self.penetration_stat = ""
 
     def execute(
         self,
@@ -893,7 +904,9 @@ class AbilityRuntime:
                         staged_target.stats,
                         staged_target.resources,
                         staged_target.tags,
-                        formula_context=_formula_context(staged_source, staged_target, self.rng),
+                        formula_context=_formula_context(
+                            staged_source, staged_target, self.rng, self.penetration_stat
+                        ),
                         value_transform=transform,
                     )
                     effect_results.append((target.target_id, result))

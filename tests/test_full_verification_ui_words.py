@@ -19,7 +19,7 @@ sys.path.insert(0, str(DEMO))
 KEPT = {
     "ASTERIA", "RPG", "Enter", "Esc", "Tab", "Shift", "Space", "Delete", "Backspace", "WASD",
     "Up", "Down", "Left", "Right", "Ctrl", "Alt", "Return", "Escape", "PageUp", "PageDown",
-    "Lv", "HP", "MP", "SP", "AP", "JP", "EXP", "STR", "DEX", "INT", "LUK", "VIT", "Wheel",
+    "Lv", "HP", "MP", "SP", "AP", "BP", "JP", "EXP", "STR", "DEX", "INT", "LUK", "VIT", "Wheel",
 }  # fmt: skip
 WORD = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*")
 FUNCTION_KEY = re.compile(r"^F\d{1,2}$")

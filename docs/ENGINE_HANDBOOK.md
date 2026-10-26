@@ -639,6 +639,27 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 狀態選單 | `StatusMenu(game, page)`：`single` 單頁；`stat_rows()`／`allocate_stat()`／`detail_rows()`；`categories()`／`filters()`／`next_category()`／`next_filter()`；道具隱含標籤 `item`／`equipment` |
 | FV 示範 | `trial_d87.py` 修補現有資料（可重跑）；`trial_story.menu_pages()` |
 
+### D88 新增（2026-10-26；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 通行設定 | `editor/passability.py`：`passability(entity)` 是 `through`／`feet`／`picture`；`picture_box`、`passability_preview`、`build_passability_command`（一次復原）；Inspector 的 Passability 區塊與 `shell.edit_passability` |
+| 碰撞 | `Collider2D.fit`（v4）：`custom`／`picture`；`character_placement.picture_box(image, frames)` 算整張圖的框 |
+| 裝備格圖示 | `MenuSlotPlace.icon_scale`／`icon_rotate`／`icon_trim`／`icon_fit`；`resources.fitted_icon(icon, box, …)`；選單版面預覽用 `MenuPreview._dress` 幫成員穿上範例裝備 |
+| 道具詳細 | `MenuRules.item_details`（`panel`／`button`／`off`）；`StatusMenu.detail()` → `ItemDetail`；`menu_pages._draw_item_detail`；背包裡的裝備是 `piece` 列 |
+| 道具使用 | `use_item` 幫沒打過仗的隊員建立快照；選單不能用的道具先說明原因 |
+| FV 示範 | `trial_d88.py`（可重跑）：物件整張圖阻擋、紙娃娃裁邊、藥水選單效果、道具說明 |
+
+### D89 新增（2026-10-26；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 能力值表 | `GameSessionRuntime.stat_breakdown(actor_id)` → `{name: (total, base, points, gear)}`；`StatRow.base/points/gear/gain`；`menu_pages._draw_stat_table`（`STAT_COLUMNS`、`_stat_headers`） |
+| 詳細屬性 | `MenuRules.stat_groups`（`StatGroup`）、`stat_lines`（`StatLine`：`number`／`percent`／`range`＋`spread`／`chance`＋`check`）；`StatusMenu.detail_groups()` → `DetailLine`；`_draw_stat_details` |
+| 穿透 | `BattleSessionRules.penetration_stat`；`FormulaContext.target_stat_scale`；`AbilityRuntime.penetration_stat` |
+| 編輯器 | 遊戲系統 ▸ 選單頁面：Detail Table Groups／Lines 兩個表格；`references("outcome_checks")`；Stat 下拉用角色畫面的名稱 |
+| FV 示範 | `trial_d89.py`（可重跑）：VIT／HP／MP 加點、新屬性與規則、裝備屬性、五組詳細表格；`run_campaign.py` 輸了讀檔重打（`RETRIES`） |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

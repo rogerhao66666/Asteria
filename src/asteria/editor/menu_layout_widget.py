@@ -324,15 +324,36 @@ class PatchField(QWidget):
 
 class SlotsField(QWidget):
     """A doll's places: which slot, where on the picture (x, y from the doll's corner), the
-    picture of the empty place. The n-th row of a slot shows its n-th piece."""
+    picture of the empty place, and how the worn piece's icon fills the place (D88: size, turn,
+    empty edges cut, fit). The n-th row of a slot shows its n-th piece."""
 
     changed = Signal()
-    HEADERS = ("Slot", "X", "Y", "W", "H", "Empty picture")
+    HEADERS = (
+        "Slot",
+        "X",
+        "Y",
+        "W",
+        "H",
+        "Empty picture",
+        "Icon size",
+        "Icon turn °",
+        "Cut icon edges",
+        "Icon fit",
+    )
+    TIPS = {
+        "Icon size": "1 = as big as fits inside the place; 0.5 = half; up to 4.",
+        "Icon turn °": "Degrees counter-clockwise; -45 lays a diagonal sword flat.",
+        "Cut icon edges": "yes: the icon's empty border is cut, so its picture fills the place.",
+        "Icon fit": "fit: keeps its shape; stretch: fills the place's width and height.",
+    }
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.table = QTableWidget(0, len(self.HEADERS))
         self.table.setHorizontalHeaderLabels(self.HEADERS)
+        for column, header in enumerate(self.HEADERS):
+            if header in self.TIPS:
+                self.table.horizontalHeaderItem(column).setToolTip(self.TIPS[header])
         self.table.verticalHeader().setVisible(False)
         self.table.setMinimumHeight(150)
         self.table.cellChanged.connect(lambda *_: self.changed.emit())
@@ -359,16 +380,35 @@ class SlotsField(QWidget):
                 continue
             try:
                 rect = tuple(int(float(v or 0)) for v in words[1:5])
+                place = MenuSlotPlace(
+                    words[0],
+                    rect,
+                    words[5],
+                    float(words[6] or 1.0),
+                    int(float(words[7] or 0)),
+                    words[8].lower() in ("yes", "true", "1", "y"),
+                    words[9] or "fit",
+                )
             except ValueError:
                 continue
-            out.append(MenuSlotPlace(words[0], rect, words[5]))
+            out.append(place)
         return tuple(out)
 
     def setPlaces(self, places):  # noqa: N802 - Qt-style
         self.table.blockSignals(True)
         self.table.setRowCount(0)
         for place in places:
-            self._row((place.slot_id, *place.rect, place.placeholder))
+            self._row(
+                (
+                    place.slot_id,
+                    *place.rect,
+                    place.placeholder,
+                    f"{place.icon_scale:g}",
+                    place.icon_rotate if place.icon_rotate <= 180 else place.icon_rotate - 360,
+                    "yes" if place.icon_trim else "no",
+                    place.icon_fit,
+                )
+            )
         self.table.blockSignals(False)
 
     def _row(self, values):
@@ -378,7 +418,7 @@ class SlotsField(QWidget):
             self.table.setItem(row, column, QTableWidgetItem(str(value)))
 
     def _add(self):
-        self._row(("weapon", 0, 0, 64, 64, ""))
+        self._row(("weapon", 0, 0, 64, 64, "", "1", 0, "no", "fit"))
         self.changed.emit()
 
     def _remove(self):

@@ -9420,7 +9420,8 @@
                     64,
                     64
                   ],
-                  "slot_id": "head"
+                  "slot_id": "head",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9429,7 +9430,8 @@
                     64,
                     64
                   ],
-                  "slot_id": "armor"
+                  "slot_id": "armor",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9438,7 +9440,8 @@
                     64,
                     64
                   ],
-                  "slot_id": "legs"
+                  "slot_id": "legs",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9447,7 +9450,8 @@
                     64,
                     64
                   ],
-                  "slot_id": "feet"
+                  "slot_id": "feet",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9456,7 +9460,8 @@
                     64,
                     64
                   ],
-                  "slot_id": "accessory"
+                  "slot_id": "accessory",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9465,7 +9470,8 @@
                     128,
                     64
                   ],
-                  "slot_id": "weapon"
+                  "slot_id": "weapon",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9474,7 +9480,8 @@
                     64,
                     64
                   ],
-                  "slot_id": "weapon"
+                  "slot_id": "weapon",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9483,7 +9490,8 @@
                     32,
                     32
                   ],
-                  "slot_id": "accessory"
+                  "slot_id": "accessory",
+                  "icon_trim": true
                 },
                 {
                   "rect": [
@@ -9492,7 +9500,8 @@
                     32,
                     32
                   ],
-                  "slot_id": "form"
+                  "slot_id": "form",
+                  "icon_trim": true
                 }
               ]
             },
@@ -38052,8 +38061,13 @@
           "slot_labels": {},
           "stat_labels": {
             "accuracy": "Accuracy",
+            "boss_damage": "Boss Damage %",
+            "bp_bonus": "BP Bonus %",
+            "bp_power": "Skill Boost per BP %",
+            "break_damage": "Break Damage %",
             "crit": "Critical Rate",
             "crit_damage": "Critical Damage %",
+            "damage_bonus": "Damage %",
             "dark_attack": "Dark Attack %",
             "dark_resist": "Dark Resist %",
             "defense": "Physical Defence",
@@ -38061,6 +38075,7 @@
             "earth_attack": "Earth Attack %",
             "earth_resist": "Earth Resist %",
             "evade": "Evasion",
+            "final_damage": "Final Damage %",
             "fire_attack": "Fire Attack %",
             "fire_resist": "Fire Resist %",
             "ice_attack": "Ice Attack %",
@@ -38074,9 +38089,13 @@
             "luk": "LUK",
             "magic": "Magic Attack",
             "magic_defense": "Magic Defence",
+            "penetration": "Penetration %",
             "power": "Physical Attack",
-            "speed": "Speed",
+            "speed": "Action Speed",
+            "status_resist": "Status Resistance %",
             "str": "STR",
+            "vit": "VIT",
+            "weakness_damage": "Weakness Damage %",
             "wind_attack": "Wind Attack %",
             "wind_resist": "Wind Resist %"
           },
@@ -78918,7 +78937,8 @@
           "magic": 30.0,
           "power": 40.0,
           "speed": 40.0,
-          "str": 12.0
+          "str": 12.0,
+          "vit": 8.0
         },
         "class_assignments": [
           {
@@ -78981,7 +79001,8 @@
           "magic": 38.0,
           "power": 15.0,
           "speed": 42.0,
-          "str": 4.0
+          "str": 4.0,
+          "vit": 6.0
         },
         "class_assignments": [
           {
@@ -79045,7 +79066,8 @@
           "magic": 40.0,
           "power": 12.0,
           "speed": 44.0,
-          "str": 5.0
+          "str": 5.0,
+          "vit": 10.0
         },
         "class_assignments": [
           {
@@ -79108,7 +79130,8 @@
           "magic": 22.0,
           "power": 36.0,
           "speed": 58.0,
-          "str": 8.0
+          "str": 8.0,
+          "vit": 5.0
         },
         "class_assignments": [
           {
@@ -79164,7 +79187,8 @@
           "magic": 20.0,
           "power": 40.0,
           "speed": 90.0,
-          "str": 10.0
+          "str": 10.0,
+          "vit": 9.0
         },
         "class_assignments": [
           {
@@ -81216,7 +81240,9 @@
         "rules_id": "trial",
         "schema": "asteria.rpg.battle_session_rules",
         "shield_resource_id": "shield",
-        "version": 1
+        "version": 1,
+        "penetration_stat": "penetration",
+        "final_damage_expression": "value * (0.9 + random() * 0.2)"
       },
       {
         "boost_cost_per_level": 1.0,
@@ -81227,7 +81253,9 @@
         "rules_id": "vigil_gauntlet",
         "schema": "asteria.rpg.battle_session_rules",
         "shield_resource_id": "shield",
-        "version": 1
+        "version": 1,
+        "penetration_stat": "penetration",
+        "final_damage_expression": "value * (0.9 + random() * 0.2)"
       }
     ],
     "battle_state_policies": [
@@ -81307,7 +81335,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "bleed",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81325,7 +81355,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "blind",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81361,7 +81393,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "burn",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81380,7 +81414,9 @@
         "source_stat_terms": {},
         "state_id": "charm",
         "target_override": "random_ally",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81399,7 +81435,9 @@
         "source_stat_terms": {},
         "state_id": "confuse",
         "target_override": "random_any",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81435,7 +81473,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "defense_down",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81455,7 +81495,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "doom",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81619,7 +81661,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "freeze",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ready",
         "version": 1
@@ -81691,7 +81735,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "magic_down",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81745,7 +81791,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "poison",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81763,7 +81811,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "power_down",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81801,7 +81851,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "silence",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81821,7 +81873,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "sleep",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ready",
         "version": 1
@@ -81839,7 +81893,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "slow",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ended",
         "version": 1
@@ -81913,7 +81969,9 @@
         "schema": "asteria.rpg.battle_state_policy",
         "source_stat_terms": {},
         "state_id": "stun",
-        "target_stat_terms": {},
+        "target_stat_terms": {
+          "status_resist": -0.01
+        },
         "tick_amount": 1.0,
         "tick_trigger": "rpg.battle.turn_ready",
         "version": 1
@@ -89718,6 +89776,21 @@
       },
       {
         "applies_to": "actors",
+        "maximum": 0.0,
+        "minimum": 0.0,
+        "order": 2,
+        "schema": "asteria.rpg.derived_stat",
+        "version": 1,
+        "stat_id": "bp_power",
+        "display_name": "Skill Boost per BP %",
+        "terms": {
+          "bp_bonus": 1.0
+        },
+        "base": 100.0,
+        "description": "What each BP spent on a boost adds to a skill (100% + BP bonus)"
+      },
+      {
+        "applies_to": "actors",
         "base": 0.0,
         "description": "+0.3% critical chance a point",
         "display_name": "Critical Rate",
@@ -89760,7 +89833,8 @@
         "stat_id": "defense",
         "terms": {
           "dex": 0.5,
-          "str": 1.0
+          "str": 1.0,
+          "vit": 1.5
         },
         "version": 1
       },
@@ -89809,7 +89883,8 @@
         "terms": {
           "defense": 0.5,
           "int": 1.0,
-          "luk": 0.5
+          "luk": 0.5,
+          "vit": 1.0
         },
         "version": 1
       },
@@ -89833,7 +89908,7 @@
         "applies_to": "actors",
         "base": 0.0,
         "description": "Acts sooner and more often",
-        "display_name": "Speed",
+        "display_name": "Action Speed",
         "maximum": 0.0,
         "minimum": 0.0,
         "order": 0,
@@ -89843,6 +89918,21 @@
           "dex": 0.3
         },
         "version": 1
+      },
+      {
+        "applies_to": "actors",
+        "maximum": 0.0,
+        "minimum": 0.0,
+        "order": 2,
+        "schema": "asteria.rpg.derived_stat",
+        "version": 1,
+        "stat_id": "status_resist",
+        "display_name": "Status Resistance %",
+        "terms": {
+          "vit": 0.5
+        },
+        "base": 0.0,
+        "description": "Lowers a bad state's chance to land"
       }
     ],
     "disassembly_recipes": [
@@ -91782,6 +91872,15 @@
             "required_tags": [],
             "stat": "light_resist",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_archon_robe.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "rarity": "legendary",
@@ -91839,6 +91938,15 @@
             "required_tags": [],
             "stat": "fire_attack",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_blood_amulet.bp_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "bp_bonus",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -91895,6 +92003,15 @@
             "required_tags": [],
             "stat": "dark_resist",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_bone_mail.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 5.0
           }
         ],
         "rarity": "legendary",
@@ -91952,6 +92069,15 @@
             "required_tags": [],
             "stat": "ice_resist",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_celestial_plate.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 3.0
           }
         ],
         "rarity": "mythic",
@@ -92000,6 +92126,15 @@
             "required_tags": [],
             "stat": "lightning_resist",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_chain_mail.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 8.0
           }
         ],
         "required_capabilities": [],
@@ -92038,6 +92173,15 @@
             "required_tags": [],
             "stat": "power",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_copper_ring.boss_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "boss_damage",
+            "value": 5.0
           }
         ],
         "rarity": "common",
@@ -92104,6 +92248,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 18.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_dawn_robe.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 4.0
           }
         ],
         "required_capabilities": [],
@@ -92161,6 +92314,15 @@
             "required_tags": [],
             "stat": "wind_attack",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_feather_charm.break_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "break_damage",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -92225,6 +92387,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 14.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_grave_shroud.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -92273,6 +92444,15 @@
             "required_tags": [],
             "stat": "evade",
             "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_guardian_medal.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 5.0
           }
         ],
         "rarity": "legendary",
@@ -92319,6 +92499,15 @@
             "priority": 0,
             "required_tags": [],
             "stat": "accuracy",
+            "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_hawk_eye.bp_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "bp_bonus",
             "value": 15.0
           }
         ],
@@ -92393,6 +92582,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_holy_symbol.boss_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "boss_damage",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -92440,6 +92638,15 @@
             "required_tags": [],
             "stat": "power",
             "value": 9.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_hunters_charm.break_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "break_damage",
+            "value": 20.0
           }
         ],
         "rarity": "rare",
@@ -92487,6 +92694,15 @@
             "required_tags": [],
             "stat": "earth_resist",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_iron_ring.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -92542,6 +92758,15 @@
             "required_tags": [],
             "stat": "earth_resist",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_knight_plate.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 6.0
           }
         ],
         "required_capabilities": [],
@@ -92598,6 +92823,15 @@
             "required_tags": [],
             "stat": "wind_resist",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_leather_vest.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 5.0
           }
         ],
         "required_capabilities": [],
@@ -92717,6 +92951,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_life_amulet.bp_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "bp_bonus",
+            "value": 20.0
           }
         ],
         "required_capabilities": [],
@@ -92772,6 +93015,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_linen_robe.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "required_capabilities": [],
@@ -92828,6 +93080,15 @@
             "required_tags": [],
             "stat": "fire_resist",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_mage_robe.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 8.0
           }
         ],
         "rarity": "magic",
@@ -92877,6 +93138,15 @@
             "required_tags": [],
             "stat": "lightning_resist",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_mithril_mail.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 3.0
           }
         ],
         "rarity": "rare",
@@ -92943,6 +93213,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_moon_pendant.boss_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "boss_damage",
+            "value": 15.0
           }
         ],
         "required_capabilities": [],
@@ -92989,6 +93268,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_moonstone_necklace.break_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "break_damage",
+            "value": 10.0
           }
         ],
         "rarity": "legendary",
@@ -93036,6 +93324,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_padded_jerkin.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 10.0
           }
         ],
         "rarity": "common",
@@ -93085,6 +93382,15 @@
             "required_tags": [],
             "stat": "dark_attack",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_phylactery.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 15.0
           }
         ],
         "required_capabilities": [],
@@ -93141,6 +93447,15 @@
             "required_tags": [],
             "stat": "wind_resist",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_ranger_coat.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 4.0
           }
         ],
         "rarity": "rare",
@@ -93198,6 +93513,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 16.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_royal_medal.bp_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "bp_bonus",
+            "value": 25.0
           }
         ],
         "rarity": "mythic",
@@ -93245,6 +93569,15 @@
             "required_tags": [],
             "stat": "fire_attack",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_ruby_ring.boss_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "boss_damage",
+            "value": 5.0
           }
         ],
         "required_capabilities": [],
@@ -93291,6 +93624,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 9.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_sages_pendant.break_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "break_damage",
+            "value": 20.0
           }
         ],
         "rarity": "rare",
@@ -93346,6 +93688,15 @@
             "priority": 0,
             "required_tags": [],
             "stat": "earth_resist",
+            "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_scale_mail.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
             "value": 5.0
           }
         ],
@@ -93414,6 +93765,15 @@
             "required_tags": [],
             "stat": "wind_resist",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_shadow_garb.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 6.0
           }
         ],
         "required_capabilities": [],
@@ -93488,6 +93848,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 16.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_silk_robe.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 8.0
           }
         ],
         "required_capabilities": [],
@@ -93526,6 +93895,15 @@
             "required_tags": [],
             "stat": "magic",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_silver_ring.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 5.0
           }
         ],
         "rarity": "magic",
@@ -93556,6 +93934,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_swift_medal.bp_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "bp_bonus",
+            "value": 10.0
           }
         ],
         "rarity": "magic",
@@ -93595,6 +93982,15 @@
             "required_tags": [],
             "stat": "crit_damage",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_warden_charm.boss_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "boss_damage",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -93625,6 +94021,15 @@
             "required_tags": [],
             "stat": "defense",
             "value": 22.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_warden_plate.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "required_capabilities": [],
@@ -93664,6 +94069,15 @@
             "required_tags": [],
             "stat": "lightning_resist",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_warden_ring.break_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "break_damage",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -93712,6 +94126,15 @@
             "required_tags": [],
             "stat": "fire_resist",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "a_zealot_mail.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 10.0
           }
         ],
         "required_capabilities": [],
@@ -93803,6 +94226,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 2.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_chain_boots.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 1.0
           }
         ],
         "rarity": "common",
@@ -93862,6 +94294,15 @@
             "required_tags": [],
             "stat": "evade",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_explorer_boots.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 5.0
           }
         ],
         "rarity": "rare",
@@ -93911,6 +94352,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_plate_boots.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "rarity": "rare",
@@ -93969,6 +94419,15 @@
             "required_tags": [],
             "stat": "magic",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "ft_wizard_shoes.status_resist.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "status_resist",
+            "value": 5.0
           }
         ],
         "rarity": "magic",
@@ -94010,6 +94469,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 2.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_chain_helmet.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 1.0
           }
         ],
         "rarity": "common",
@@ -94069,6 +94537,15 @@
             "required_tags": [],
             "stat": "evade",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_explorer_ushanka.final_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "final_damage",
+            "value": 2.0
           }
         ],
         "rarity": "rare",
@@ -94118,6 +94595,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_plate_helmet.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "rarity": "rare",
@@ -94167,6 +94653,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_royal_helmet.final_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "final_damage",
+            "value": 3.0
           }
         ],
         "rarity": "legendary",
@@ -94225,6 +94720,15 @@
             "required_tags": [],
             "stat": "magic",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "hd_wizard_hat.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 3.0
           }
         ],
         "rarity": "magic",
@@ -94266,6 +94770,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_chain_leggings.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "rarity": "magic",
@@ -94325,6 +94838,15 @@
             "required_tags": [],
             "stat": "evade",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_explorer_leggings.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 3.0
           }
         ],
         "rarity": "rare",
@@ -94392,6 +94914,15 @@
             "required_tags": [],
             "stat": "evade",
             "value": 2.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_leggings.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "rarity": "common",
@@ -94433,6 +94964,15 @@
             "required_tags": [],
             "stat": "magic_defense",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_plate_leggings.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 3.0
           }
         ],
         "rarity": "rare",
@@ -94491,6 +95031,15 @@
             "required_tags": [],
             "stat": "magic",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "lg_wizard_leggings.vit.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "vit",
+            "value": 2.0
           }
         ],
         "rarity": "magic",
@@ -94534,6 +95083,15 @@
             "required_tags": [],
             "stat": "fire_attack",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_ash_staff.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 5.0
           }
         ],
         "rarity": "rare",
@@ -94581,7 +95139,17 @@
         ],
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_axe.png",
-        "modifiers": [],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_axe.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 3.0
+          }
+        ],
         "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -94622,6 +95190,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_battle_axe.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 10.0
           }
         ],
         "rarity": "magic",
@@ -94681,6 +95258,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_bloodreaver.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 8.0
           }
         ],
         "rarity": "rare",
@@ -94745,6 +95331,15 @@
             "required_tags": [],
             "stat": "dark_attack",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_bone_scepter.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 5.0
           }
         ],
         "rarity": "mythic",
@@ -94820,6 +95415,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 5.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_book_of_prayers.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 15.0
           }
         ],
         "rarity": "rare",
@@ -94866,7 +95470,17 @@
         ],
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_bow.png",
-        "modifiers": [],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_bow.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 12.0
+          }
+        ],
         "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -94916,6 +95530,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_brawler_gloves.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 8.0
           }
         ],
         "rarity": "magic",
@@ -94975,6 +95598,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_codex_of_frost.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 20.0
           }
         ],
         "rarity": "mythic",
@@ -95021,7 +95653,17 @@
         ],
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_dagger.png",
-        "modifiers": [],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_dagger.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 15.0
+          }
+        ],
         "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -95143,6 +95785,15 @@
             "required_tags": [],
             "stat": "earth_attack",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_demon_ring.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 3.0
           }
         ],
         "rarity": "mythic",
@@ -95245,6 +95896,15 @@
             "required_tags": [],
             "stat": "wind_attack",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_dragoon_lance.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 10.0
           }
         ],
         "rarity": "rare",
@@ -95310,6 +95970,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_field_guide.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 5.0
           }
         ],
         "rarity": "magic",
@@ -95378,6 +96047,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_frostfang.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 5.0
           }
         ],
         "rarity": "mythic",
@@ -95451,6 +96129,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_grimoire_of_flames.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 15.0
           }
         ],
         "rarity": "legendary",
@@ -95524,6 +96211,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_harpoon.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 8.0
           }
         ],
         "rarity": "magic",
@@ -95583,6 +96279,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_infernal_edge.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 8.0
           }
         ],
         "rarity": "mythic",
@@ -95665,6 +96370,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_iron_knuckles.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 20.0
           }
         ],
         "rarity": "rare",
@@ -95729,6 +96443,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_jade_staff.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 12.0
           }
         ],
         "rarity": "magic",
@@ -95778,6 +96501,15 @@
             "priority": 0,
             "required_tags": [],
             "stat": "crit",
+            "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_knights_blade.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
             "value": 3.0
           }
         ],
@@ -95838,6 +96570,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_kris.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 10.0
           }
         ],
         "rarity": "legendary",
@@ -95894,6 +96635,15 @@
             "required_tags": [],
             "stat": "power",
             "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_leather_wraps.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 15.0
           }
         ],
         "rarity": "common",
@@ -95945,6 +96695,15 @@
             "required_tags": [],
             "stat": "wind_attack",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_longbow.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 5.0
           }
         ],
         "rarity": "rare",
@@ -96019,6 +96778,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_main_gauche.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 15.0
           }
         ],
         "rarity": "magic",
@@ -96069,6 +96837,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_partisan.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 5.0
           }
         ],
         "rarity": "magic",
@@ -96137,6 +96914,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_phoenix_bow.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 8.0
           }
         ],
         "rarity": "legendary",
@@ -96192,6 +96978,15 @@
             "required_tags": [],
             "stat": "magic",
             "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_primer.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 20.0
           }
         ],
         "rarity": "common",
@@ -96243,6 +97038,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 3.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_recurve_bow.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 8.0
           }
         ],
         "rarity": "magic",
@@ -96302,6 +97106,15 @@
             "required_tags": [],
             "stat": "dark_attack",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_ritual_kris.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 3.0
           }
         ],
         "rarity": "rare",
@@ -96368,6 +97181,15 @@
             "required_tags": [],
             "stat": "light_attack",
             "value": 20.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_saint_staff.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 10.0
           }
         ],
         "rarity": "rare",
@@ -96452,6 +97274,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_shadow_star.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 12.0
           }
         ],
         "rarity": "legendary",
@@ -96534,6 +97365,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 4.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_shuriken.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 5.0
           }
         ],
         "rarity": "rare",
@@ -96607,6 +97447,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_skypiercer.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 15.0
           }
         ],
         "rarity": "mythic",
@@ -96653,7 +97502,17 @@
         ],
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_spear.png",
-        "modifiers": [],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_spear.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 15.0
+          }
+        ],
         "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -96676,7 +97535,17 @@
         ],
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_staff.png",
-        "modifiers": [],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_staff.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 8.0
+          }
+        ],
         "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -96735,6 +97604,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_starfall_bow.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 20.0
           }
         ],
         "rarity": "mythic",
@@ -96790,6 +97668,15 @@
             "required_tags": [],
             "stat": "power",
             "value": 30.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_steel_sword.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 5.0
           }
         ],
         "rarity": "common",
@@ -96873,6 +97760,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_storm_gauntlets.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 3.0
           }
         ],
         "rarity": "legendary",
@@ -96946,6 +97842,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_sun_staff.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 10.0
           }
         ],
         "rarity": "legendary",
@@ -97011,6 +97916,15 @@
             "required_tags": [],
             "stat": "light_attack",
             "value": 10.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_sunbrand.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 8.0
           }
         ],
         "rarity": "rare",
@@ -97086,6 +98000,15 @@
             "required_tags": [],
             "stat": "light_attack",
             "value": 25.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_sunbrand_ex.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 5.0
           }
         ],
         "rarity": "legendary",
@@ -97133,7 +98056,17 @@
         ],
         "growth_id": null,
         "icon_id": "playable_assets/lucifer/icons/w_sword.png",
-        "modifiers": [],
+        "modifiers": [
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_sword.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 15.0
+          }
+        ],
         "rarity": "common",
         "required_capabilities": [],
         "schema": "asteria.rpg.equipment",
@@ -97164,6 +98097,15 @@
             "priority": 0,
             "required_tags": [],
             "stat": "power",
+            "value": 12.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_throwing_axe.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
             "value": 12.0
           }
         ],
@@ -97216,6 +98158,15 @@
             "required_tags": [],
             "stat": "crit",
             "value": 6.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_tide_trident.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 8.0
           }
         ],
         "rarity": "legendary",
@@ -97298,6 +98249,15 @@
             "required_tags": [],
             "stat": "earth_attack",
             "value": 25.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_titan_cleaver.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 20.0
           }
         ],
         "rarity": "mythic",
@@ -97381,6 +98341,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_titan_fists.penetration.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "penetration",
+            "value": 15.0
           }
         ],
         "rarity": "mythic",
@@ -97463,6 +98432,15 @@
             "required_tags": [],
             "stat": "speed",
             "value": 8.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_void_star.damage_bonus.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "damage_bonus",
+            "value": 3.0
           }
         ],
         "rarity": "mythic",
@@ -97527,6 +98505,15 @@
             "required_tags": [],
             "stat": "earth_attack",
             "value": 15.0
+          },
+          {
+            "blocked_tags": [],
+            "modifier_id": "w_war_axe.weakness_damage.d89",
+            "operation": "add",
+            "priority": 0,
+            "required_tags": [],
+            "stat": "weakness_damage",
+            "value": 10.0
           }
         ],
         "rarity": "legendary",
@@ -99380,7 +100367,10 @@
         "target_stat_terms": {},
         "target_tags_all": [],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "bp_bonus": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -99401,7 +100391,10 @@
         "target_stat_terms": {},
         "target_tags_all": [],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "bp_bonus": 0.02
+        }
       },
       {
         "blocked_source_tags": [],
@@ -99421,6 +100414,32 @@
         "source_tags_any": [],
         "target_stat_terms": {},
         "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1,
+        "multiplier_source_terms": {
+          "bp_bonus": 0.03
+        }
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "multiplier_source_terms": {
+          "boss_damage": 0.01
+        },
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "boss_damage",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [
+          "boss"
+        ],
         "target_tags_any": [],
         "version": 1
       },
@@ -99442,7 +100461,10 @@
           "state.broken"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "break_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -99510,6 +100532,27 @@
         "source_tags_all": [
           "outcome.crit"
         ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "multiplier_source_terms": {
+          "damage_bonus": 0.01
+        },
+        "outcome_tags": [],
+        "priority": 0,
+        "rule_id": "damage_bonus",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [],
         "source_tags_any": [],
         "target_stat_terms": {},
         "target_tags_all": [],
@@ -99733,6 +100776,27 @@
         "source_tags_all": [
           "outcome.evade"
         ],
+        "source_tags_any": [],
+        "target_stat_terms": {},
+        "target_tags_all": [],
+        "target_tags_any": [],
+        "version": 1
+      },
+      {
+        "blocked_source_tags": [],
+        "blocked_target_tags": [],
+        "disposition": "normal",
+        "flat_delta": 0.0,
+        "multiplier": 1.0,
+        "multiplier_source_terms": {
+          "final_damage": 0.01
+        },
+        "outcome_tags": [],
+        "priority": -5,
+        "rule_id": "final_damage",
+        "schema": "asteria.rpg.interaction_rule",
+        "source_stat_terms": {},
+        "source_tags_all": [],
         "source_tags_any": [],
         "target_stat_terms": {},
         "target_tags_all": [],
@@ -100418,7 +101482,10 @@
           "weak.axe"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100442,7 +101509,10 @@
           "weak.bow"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100466,7 +101536,10 @@
           "weak.dagger"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100490,7 +101563,10 @@
           "weak.dark"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100514,7 +101590,10 @@
           "weak.earth"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100538,7 +101617,10 @@
           "weak.fire"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100562,7 +101644,10 @@
           "weak.ice"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100586,7 +101671,10 @@
           "weak.light"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100610,7 +101698,10 @@
           "weak.lightning"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100634,7 +101725,10 @@
           "weak.spear"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100658,7 +101752,10 @@
           "weak.staff"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100682,7 +101779,10 @@
           "weak.sword"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       },
       {
         "blocked_source_tags": [],
@@ -100706,7 +101806,10 @@
           "weak.wind"
         ],
         "target_tags_any": [],
-        "version": 1
+        "version": 1,
+        "multiplier_source_terms": {
+          "weakness_damage": 0.01
+        }
       }
     ],
     "inventory_rules": [
@@ -100737,7 +101840,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures a bad state. Used in battle."
       },
       {
         "display_name": "Alchemy Salt",
@@ -100749,7 +101853,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "attachment_id": "amethyst",
@@ -100760,7 +101865,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "display_name": "Ancient Thread",
@@ -100772,7 +101878,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "use_antidote",
@@ -100786,7 +101893,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures Poison. Used in battle."
       },
       {
         "display_name": "Bat Wing",
@@ -100798,7 +101906,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Blessed Scroll",
@@ -100820,7 +101929,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "use_burn_salve",
@@ -100834,7 +101944,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures a bad state. Used in battle."
       },
       {
         "attachment_id": "card_acolyte",
@@ -100846,7 +101957,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_ancient",
@@ -100858,7 +101970,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_beast",
@@ -100870,7 +101983,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_golem",
@@ -100882,7 +101996,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_hunter",
@@ -100894,7 +102009,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_knight",
@@ -100906,7 +102022,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_sage",
@@ -100918,7 +102035,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_scholar",
@@ -100930,7 +102048,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_slayer",
@@ -100942,7 +102061,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_slinger",
@@ -100954,7 +102074,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_vaelor",
@@ -100966,7 +102087,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_vampire",
@@ -100978,7 +102100,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_wanderer",
@@ -100990,7 +102113,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "card_wolf",
@@ -101002,7 +102126,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A monster card. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "charm_falcon",
@@ -101013,7 +102138,8 @@
         "stack_limit": 9,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A charm. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "charm_lion",
@@ -101024,7 +102150,8 @@
         "stack_limit": 9,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A charm. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "charm_owl",
@@ -101035,7 +102162,8 @@
         "stack_limit": 9,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A charm. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "charm_serpent",
@@ -101046,7 +102174,8 @@
         "stack_limit": 9,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A charm. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "charm_tortoise",
@@ -101057,7 +102186,8 @@
         "stack_limit": 9,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A charm. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "attachment_id": "charm_viper",
@@ -101068,7 +102198,8 @@
         "stack_limit": 9,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A charm. Put it into a piece of gear at the Forge (Cards)."
       },
       {
         "battle_ability": "use_clotting_draught",
@@ -101082,7 +102213,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures a bad state. Used in battle."
       },
       {
         "display_name": "Coal",
@@ -101094,7 +102226,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "throw_dark_bomb",
@@ -101107,7 +102240,8 @@
           "throwable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "attachment_id": "dark_orb",
@@ -101118,7 +102252,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "attachment_id": "diamond",
@@ -101129,7 +102264,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "attachment_id": "earth_orb",
@@ -101140,7 +102276,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "battle_ability": "use_echo_herb",
@@ -101154,7 +102291,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures a bad state. Used in battle."
       },
       {
         "battle_ability": "use_elixir",
@@ -101167,8 +102305,29 @@
           "consumable",
           "potion"
         ],
-        "use_effects": [],
-        "version": 2
+        "use_effects": [
+          {
+            "blocked_tags": [],
+            "effect_id": "elixir.menu",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "vitality",
+                "value": 9999.0
+              },
+              {
+                "kind": "resource_delta",
+                "target": "technique",
+                "value": 999.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "version": 2,
+        "description": "Restores all HP and MP."
       },
       {
         "attachment_id": "emerald",
@@ -101179,7 +102338,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "battle_ability": "use_ether",
@@ -101192,8 +102352,24 @@
           "consumable",
           "potion"
         ],
-        "use_effects": [],
-        "version": 2
+        "use_effects": [
+          {
+            "blocked_tags": [],
+            "effect_id": "ether.menu",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "technique",
+                "value": 60.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "version": 2,
+        "description": "A blue tonic that restores MP."
       },
       {
         "battle_ability": "draught_ether",
@@ -101206,7 +102382,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Brewed at the Alchemy Table; used in battle."
       },
       {
         "display_name": "Ether Leaf",
@@ -101232,7 +102409,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures a bad state. Used in battle."
       },
       {
         "display_name": "Fine Fabric",
@@ -101244,7 +102422,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "bomb_fire",
@@ -101257,7 +102436,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "display_name": "Fire Dust",
@@ -101269,7 +102449,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "attachment_id": "fire_orb",
@@ -101280,7 +102461,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "attachment_id": "flawless_amethyst",
@@ -101291,7 +102473,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "attachment_id": "flawless_diamond",
@@ -101302,7 +102485,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "attachment_id": "flawless_emerald",
@@ -101313,7 +102497,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "attachment_id": "flawless_onyx",
@@ -101324,7 +102509,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "attachment_id": "flawless_ruby",
@@ -101335,7 +102521,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "attachment_id": "flawless_sapphire",
@@ -101346,7 +102533,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "attachment_id": "flawless_topaz",
@@ -101357,7 +102545,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A flawless gem for a gear socket: stronger than the plain one."
       },
       {
         "display_name": "Focus Stone",
@@ -101369,7 +102558,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "bomb_ice",
@@ -101382,7 +102572,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "display_name": "Gold Ingot",
@@ -101394,7 +102585,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Guardian Scale",
@@ -101406,7 +102598,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Healing Herb",
@@ -101418,7 +102611,8 @@
           "consumable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A bitter herb for brewing salves at the Alchemy Table."
       },
       {
         "battle_ability": "salve_heal",
@@ -101431,7 +102625,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Brewed at the Alchemy Table; used in battle."
       },
       {
         "battle_ability": "use_hi_ether",
@@ -101444,8 +102639,24 @@
           "consumable",
           "potion"
         ],
-        "use_effects": [],
-        "version": 2
+        "use_effects": [
+          {
+            "blocked_tags": [],
+            "effect_id": "hi_ether.menu",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "technique",
+                "value": 180.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "version": 2,
+        "description": "A strong blue tonic that restores a lot of MP."
       },
       {
         "battle_ability": "use_hi_potion",
@@ -101458,8 +102669,24 @@
           "consumable",
           "potion"
         ],
-        "use_effects": [],
-        "version": 2
+        "use_effects": [
+          {
+            "blocked_tags": [],
+            "effect_id": "hi_potion.menu",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "vitality",
+                "value": 1500.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "version": 2,
+        "description": "A stronger potion: restores a lot of HP."
       },
       {
         "battle_ability": "throw_holy_bomb",
@@ -101472,7 +102699,8 @@
           "throwable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "battle_ability": "water_holy",
@@ -101485,7 +102713,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Brewed at the Alchemy Table; used in battle."
       },
       {
         "display_name": "Ice Crystal",
@@ -101497,7 +102726,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "attachment_id": "ice_orb",
@@ -101508,7 +102738,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "battle_ability": "throw_iron_ball",
@@ -101521,7 +102752,8 @@
           "throwable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A throwing weapon for battle."
       },
       {
         "display_name": "Iron Ore",
@@ -101533,7 +102765,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "attachment_id": "light_orb",
@@ -101544,7 +102777,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "attachment_id": "lightning_orb",
@@ -101555,7 +102789,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "battle_ability": "use_mega_potion",
@@ -101568,8 +102803,24 @@
           "consumable",
           "potion"
         ],
-        "use_effects": [],
-        "version": 2
+        "use_effects": [
+          {
+            "blocked_tags": [],
+            "effect_id": "mega_potion.menu",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "vitality",
+                "value": 4000.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "version": 2,
+        "description": "The strongest potion: restores almost all HP."
       },
       {
         "display_name": "Mithril Ingot",
@@ -101581,7 +102832,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Moon Shard",
@@ -101593,7 +102845,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "attachment_id": "onyx",
@@ -101604,7 +102857,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "display_name": "Phoenix Seed",
@@ -101629,7 +102883,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Brewed at the Alchemy Table; used in battle."
       },
       {
         "battle_ability": "vial_poison",
@@ -101642,7 +102897,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Brewed at the Alchemy Table; used in battle."
       },
       {
         "battle_ability": "use_potion",
@@ -101655,8 +102911,24 @@
           "consumable",
           "potion"
         ],
-        "use_effects": [],
-        "version": 2
+        "use_effects": [
+          {
+            "blocked_tags": [],
+            "effect_id": "potion.menu",
+            "operations": [
+              {
+                "kind": "resource_delta",
+                "target": "vitality",
+                "value": 500.0
+              }
+            ],
+            "required_tags": [],
+            "schema": "asteria.effect",
+            "version": 1
+          }
+        ],
+        "version": 2,
+        "description": "A red potion that closes wounds. Use it in the menu or in battle."
       },
       {
         "battle_ability": "use_remedy",
@@ -101670,7 +102942,8 @@
           "cure"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Cures most bad states. Used in battle."
       },
       {
         "attachment_id": "ruby",
@@ -101681,7 +102954,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "attachment_id": "sapphire",
@@ -101692,7 +102966,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "display_name": "Scorpion Claw",
@@ -101704,7 +102979,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Sharp Fang",
@@ -101716,7 +102992,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Silver Ore",
@@ -101728,7 +103005,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "bomb_smoke",
@@ -101741,7 +103019,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "display_name": "Storm Core",
@@ -101753,7 +103032,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "flask_storm",
@@ -101766,7 +103046,8 @@
           "concoction"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Brewed at the Alchemy Table; used in battle."
       },
       {
         "battle_ability": "throw_throwing_rock",
@@ -101779,7 +103060,8 @@
           "throwable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A throwing weapon for battle."
       },
       {
         "battle_ability": "throw_thunder_bomb",
@@ -101792,7 +103074,8 @@
           "throwable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "attachment_id": "topaz",
@@ -101803,7 +103086,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A gem for a gear socket (Forge, Sockets)."
       },
       {
         "display_name": "Venom Sac",
@@ -101815,7 +103099,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "battle_ability": "throw_wind_bomb",
@@ -101828,7 +103113,8 @@
           "throwable"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "Thrown at the foes in battle."
       },
       {
         "attachment_id": "wind_orb",
@@ -101839,7 +103125,8 @@
         "stack_limit": 20,
         "tags": [],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "An elemental orb for a gear socket."
       },
       {
         "display_name": "Wisp Essence",
@@ -101851,7 +103138,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       },
       {
         "display_name": "Wolf Fur",
@@ -101863,7 +103151,8 @@
           "material"
         ],
         "use_effects": [],
-        "version": 2
+        "version": 2,
+        "description": "A crafting material for the Forge and the Alchemy Table."
       }
     ],
     "job_point_rules": [
@@ -104209,8 +105498,7 @@
           "data.stat.magic_defense.name": "\u9b54\u6cd5\u9632\u79a6",
           "data.stat.power.description": "\u7269\u7406\u653b\u64ca\u9020\u6210\u66f4\u591a\u50b7\u5bb3",
           "data.stat.power.name": "\u7269\u7406\u653b\u64ca",
-          "data.stat.speed.description": "\u66f4\u65e9\u3001\u66f4\u983b\u7e41\u5730\u884c\u52d5",
-          "data.stat.speed.name": "\u901f\u5ea6",
+          "data.stat.speed.name": "\u884c\u52d5\u901f\u5ea6",
           "data.stat.str.name": "\u529b\u91cf",
           "data.stat.wind_attack.name": "\u98a8\u5c6c\u6027\u653b\u64ca %",
           "data.stat.wind_resist.name": "\u98a8\u5c6c\u6027\u6297\u6027 %",
@@ -104797,7 +106085,134 @@
           "data.item_category.armour.name": "\u9632\u5177",
           "data.item_filter.usable.name": "\u73fe\u5728\u53ef\u7528",
           "data.item_filter.potions.name": "\u85e5\u6c34",
-          "data.item_filter.uniques.name": "\u7368\u7279\u88dd\u5099"
+          "data.item_filter.uniques.name": "\u7368\u7279\u88dd\u5099",
+          "data.item.alchemy_salt.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.amethyst_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.ancient_thread.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.antidote.description": "\u89e3\u9664\u4e2d\u6bd2\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.bat_wing.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.boss_emblem.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.card_acolyte_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_ancient_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_beast_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_golem_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_hunter_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_knight_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_sage_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_scholar_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_slayer_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_slinger_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_vaelor_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_vampire_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_wanderer_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.card_wolf_item.description": "\u9b54\u7269\u5361\u7247\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.charm_falcon_item.description": "\u8b77\u7b26\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.charm_lion_item.description": "\u8b77\u7b26\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.charm_owl_item.description": "\u8b77\u7b26\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.charm_serpent_item.description": "\u8b77\u7b26\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.charm_tortoise_item.description": "\u8b77\u7b26\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.charm_viper_item.description": "\u8b77\u7b26\u3002\u53ef\u5728\u935b\u9020\u53f0\uff08\u5361\u7247\uff09\u63d2\u5165\u88dd\u5099\u3002",
+          "data.item.coal.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.dark_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.dark_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.diamond_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.earth_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.elixir.description": "\u5b8c\u5168\u6062\u5fa9\u751f\u547d\u8207\u9b54\u529b\u3002",
+          "data.item.emerald_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.ether.description": "\u85cd\u8272\u88dc\u5291\uff0c\u6062\u5fa9\u9b54\u529b\u3002",
+          "data.item.fine_fabric.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.fire_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.fire_dust.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.fire_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.flawless_amethyst_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.flawless_diamond_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.flawless_emerald_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.flawless_onyx_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.flawless_ruby_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.flawless_sapphire_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.flawless_topaz_item.description": "\u7121\u7455\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff0c\u6bd4\u4e00\u822c\u5bf6\u77f3\u66f4\u5f37\u3002",
+          "data.item.focus_stone.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.frost_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.gold_ingot.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.guardian_scale.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.healing_herb.description": "\u82e6\u5473\u7684\u85e5\u8349\uff0c\u53ef\u5728\u7149\u91d1\u684c\u8abf\u88fd\u85e5\u818f\u3002",
+          "data.item.hi_ether.description": "\u5f37\u6548\u85cd\u8272\u88dc\u5291\uff0c\u5927\u91cf\u6062\u5fa9\u9b54\u529b\u3002",
+          "data.item.hi_potion.description": "\u6548\u679c\u66f4\u5f37\u7684\u85e5\u6c34\uff0c\u5927\u91cf\u6062\u5fa9\u751f\u547d\u3002",
+          "data.item.holy_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.ice_crystal.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.ice_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.iron_ball.description": "\u6230\u9b25\u7528\u7684\u6295\u64f2\u6b66\u5668\u3002",
+          "data.item.iron_ore.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.light_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.lightning_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.mega_potion.description": "\u6700\u5f37\u7684\u85e5\u6c34\uff0c\u5e7e\u4e4e\u6062\u5fa9\u5168\u90e8\u751f\u547d\u3002",
+          "data.item.mithril_ingot.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.moon_shard.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.onyx_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.potion.description": "\u7d05\u8272\u85e5\u6c34\uff0c\u80fd\u8b93\u50b7\u53e3\u7652\u5408\u3002\u9078\u55ae\u8207\u6230\u9b25\u4e2d\u90fd\u80fd\u4f7f\u7528\u3002",
+          "data.item.remedy.description": "\u89e3\u9664\u5927\u90e8\u5206\u7570\u5e38\u72c0\u614b\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.ruby_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.sapphire_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.scorpion_claw.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.sharp_fang.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.silver_ore.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.smoke_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.storm_core.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.throwing_rock.description": "\u6230\u9b25\u7528\u7684\u6295\u64f2\u6b66\u5668\u3002",
+          "data.item.thunder_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.topaz_item.description": "\u5bf6\u77f3\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\uff08\u935b\u9020\u53f0\u30fb\u63d2\u69fd\uff09\u3002",
+          "data.item.venom_sac.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.wind_bomb.description": "\u6230\u9b25\u4e2d\u6295\u5411\u6575\u4eba\u3002",
+          "data.item.wind_orb_item.description": "\u5c6c\u6027\u5bf6\u73e0\uff0c\u53ef\u9472\u5165\u88dd\u5099\u7684\u63d2\u69fd\u3002",
+          "data.item.wisp_essence.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.wolf_fur.description": "\u88fd\u4f5c\u7d20\u6750\uff0c\u7528\u65bc\u935b\u9020\u53f0\u8207\u7149\u91d1\u684c\u3002",
+          "data.item.alarm_clock.description": "\u89e3\u9664\u7570\u5e38\u72c0\u614b\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.burn_salve.description": "\u89e3\u9664\u7570\u5e38\u72c0\u614b\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.clotting_draught.description": "\u89e3\u9664\u7570\u5e38\u72c0\u614b\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.echo_herb.description": "\u89e3\u9664\u7570\u5e38\u72c0\u614b\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.ether_draught.description": "\u5728\u7149\u91d1\u684c\u8abf\u88fd\uff0c\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.eye_drops.description": "\u89e3\u9664\u7570\u5e38\u72c0\u614b\u3002\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.healing_salve.description": "\u5728\u7149\u91d1\u684c\u8abf\u88fd\uff0c\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.holy_water.description": "\u5728\u7149\u91d1\u684c\u8abf\u88fd\uff0c\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.phoenix_tonic.description": "\u5728\u7149\u91d1\u684c\u8abf\u88fd\uff0c\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.poison_vial.description": "\u5728\u7149\u91d1\u684c\u8abf\u88fd\uff0c\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "data.item.storm_flask.description": "\u5728\u7149\u91d1\u684c\u8abf\u88fd\uff0c\u6230\u9b25\u4e2d\u4f7f\u7528\u3002",
+          "status.item_info": "\u8aaa\u660e",
+          "status.details_button": "D  \u8a73\u7d30",
+          "status.hint.details": "D\uff1a\u8a73\u7d30",
+          "status.detail.count": "\u6301\u6709",
+          "status.detail.menu_use": "\u9078\u55ae\u53ef\u7528",
+          "status.yes": "\u662f",
+          "status.detail.battle_use": "\u6230\u9b25\u4e2d",
+          "status.detail.sockets": "\u63d2\u69fd",
+          "status.wear_in_equipment": "\u8acb\u5f9e\u300c\u88dd\u5099\u300d\u7a7f\u4e0a",
+          "status.cannot_use_here": "{name} \u7121\u6cd5\u5728\u9078\u55ae\u4f7f\u7528",
+          "data.stat.vit.name": "\u9ad4\u529b",
+          "data.stat.penetration.name": "\u7a7f\u900f %",
+          "data.stat.bp_bonus.name": "BP \u52a0\u6210 %",
+          "data.stat.bp_power.name": "\u6bcf BP \u6280\u80fd\u5f37\u5316 %",
+          "data.stat.weakness_damage.name": "\u5f31\u9ede\u50b7\u5bb3 %",
+          "data.stat.break_damage.name": "\u7834\u9632\u50b7\u5bb3 %",
+          "data.stat.boss_damage.name": "\u9996\u9818\u50b7\u5bb3 %",
+          "data.stat.damage_bonus.name": "\u50b7\u5bb3 %",
+          "data.stat.final_damage.name": "\u6700\u7d42\u50b7\u5bb3 %",
+          "data.stat.status_resist.name": "\u7570\u5e38\u6297\u6027 %",
+          "data.stat_group.attack.name": "\u653b\u64ca",
+          "data.stat_group.defence.name": "\u9632\u79a6",
+          "data.stat_group.battle.name": "\u6230\u9b25",
+          "data.stat_group.element_attack.name": "\u5c6c\u6027\u653b\u64ca",
+          "data.stat_group.element_resist.name": "\u5c6c\u6027\u6297\u6027",
+          "data.skill_tree_node.attr_hp.name": "HP",
+          "data.skill_tree_node.attr_mp.name": "MP",
+          "status.col.rank": "\u7b49\u7d1a",
+          "status.col.total": "\u7e3d\u8a08",
+          "status.col.base": "\u57fa\u790e",
+          "status.col.points": "\u52a0\u9ede",
+          "status.col.gear": "\u88dd\u5099",
+          "status.col.gain": "\u6bcf\u9ede",
+          "data.stat.bp_power.description": "\u6bcf\u6d88\u8017 1 BP \u5f37\u5316\u6280\u80fd\u6642\u63d0\u5347\u7684\u6548\u679c\uff08100% + BP \u52a0\u6210\uff09",
+          "data.stat.status_resist.description": "\u964d\u4f4e\u7570\u5e38\u72c0\u614b\u547d\u4e2d\u81ea\u5df1\u7684\u6a5f\u7387",
+          "data.stat.speed.description": "\u66f4\u65e9\u3001\u66f4\u983b\u7e41\u5730\u884c\u52d5"
         },
         "locale": "zh-TW"
       }
@@ -112533,8 +113948,474 @@
                 "granted_abilities": [],
                 "granted_capabilities": [],
                 "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {},
+                "stat_bonuses": {
+                  "vit": 1.0
+                },
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "any_prerequisites": [],
+            "display_name": "HP",
+            "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_attr_str.png",
+            "max_rank": 50,
+            "node_id": "attr_hp",
+            "prerequisites": [],
+            "rank_costs": [
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112544,7 +114425,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112554,7 +114435,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112564,7 +114445,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112574,7 +114455,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112584,7 +114465,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112594,7 +114475,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112604,7 +114485,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112614,7 +114495,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112624,7 +114505,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112634,7 +114515,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112644,7 +114525,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112654,7 +114535,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112664,7 +114545,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112674,7 +114555,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112684,7 +114565,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112694,7 +114575,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112704,7 +114585,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112714,7 +114595,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112724,7 +114605,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112734,7 +114615,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112744,7 +114625,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112754,7 +114635,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112764,7 +114645,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112774,7 +114655,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112784,7 +114665,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112794,7 +114675,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112804,7 +114685,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112814,7 +114695,7 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -112824,7 +114705,873 @@
                 "granted_capabilities": [],
                 "granted_tags": [],
                 "resource_bonuses": {
-                  "vitality": 70.0
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "vitality": 100.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              }
+            ],
+            "schema": "asteria.rpg.progression_node",
+            "tags": [],
+            "version": 1
+          },
+          {
+            "any_prerequisites": [],
+            "display_name": "MP",
+            "exclusive_group": null,
+            "icon_id": "playable_assets/lucifer/icons/node_attr_str.png",
+            "max_rank": 50,
+            "node_id": "attr_mp",
+            "prerequisites": [],
+            "rank_costs": [
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              },
+              {
+                "stat_points": 1.0
+              }
+            ],
+            "rewards": [
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
+                },
+                "stat_bonuses": {},
+                "unlocked_passives": []
+              },
+              {
+                "granted_abilities": [],
+                "granted_capabilities": [],
+                "granted_tags": [],
+                "resource_bonuses": {
+                  "technique": 30.0
                 },
                 "stat_bonuses": {},
                 "unlocked_passives": []
@@ -143682,6 +146429,192 @@
               "unique"
             ]
           }
+        ],
+        "stat_groups": [
+          {
+            "group_id": "attack",
+            "display_name": "Attack"
+          },
+          {
+            "group_id": "defence",
+            "display_name": "Defence"
+          },
+          {
+            "group_id": "battle",
+            "display_name": "Battle"
+          },
+          {
+            "group_id": "element_attack",
+            "display_name": "Element Attack"
+          },
+          {
+            "group_id": "element_resist",
+            "display_name": "Element Resistance"
+          }
+        ],
+        "stat_lines": [
+          {
+            "stat_id": "power",
+            "group": "attack",
+            "format": "range",
+            "spread": 10.0
+          },
+          {
+            "stat_id": "magic",
+            "group": "attack",
+            "format": "range",
+            "spread": 10.0
+          },
+          {
+            "stat_id": "damage_bonus",
+            "group": "attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "final_damage",
+            "group": "attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "boss_damage",
+            "group": "attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "penetration",
+            "group": "attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "crit",
+            "group": "attack",
+            "format": "chance",
+            "check": "crit"
+          },
+          {
+            "stat_id": "crit_damage",
+            "group": "attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "lifesteal",
+            "group": "attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "defense",
+            "group": "defence"
+          },
+          {
+            "stat_id": "magic_defense",
+            "group": "defence"
+          },
+          {
+            "stat_id": "evade",
+            "group": "defence",
+            "format": "chance",
+            "check": "land"
+          },
+          {
+            "stat_id": "status_resist",
+            "group": "defence",
+            "format": "percent"
+          },
+          {
+            "stat_id": "speed",
+            "group": "battle"
+          },
+          {
+            "stat_id": "accuracy",
+            "group": "battle",
+            "format": "chance",
+            "check": "land"
+          },
+          {
+            "stat_id": "bp_power",
+            "group": "battle",
+            "format": "percent"
+          },
+          {
+            "stat_id": "weakness_damage",
+            "group": "battle",
+            "format": "percent"
+          },
+          {
+            "stat_id": "break_damage",
+            "group": "battle",
+            "format": "percent"
+          },
+          {
+            "stat_id": "fire_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "ice_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "lightning_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "wind_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "earth_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "light_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "dark_attack",
+            "group": "element_attack",
+            "format": "percent"
+          },
+          {
+            "stat_id": "fire_resist",
+            "group": "element_resist",
+            "format": "percent"
+          },
+          {
+            "stat_id": "ice_resist",
+            "group": "element_resist",
+            "format": "percent"
+          },
+          {
+            "stat_id": "lightning_resist",
+            "group": "element_resist",
+            "format": "percent"
+          },
+          {
+            "stat_id": "wind_resist",
+            "group": "element_resist",
+            "format": "percent"
+          },
+          {
+            "stat_id": "earth_resist",
+            "group": "element_resist",
+            "format": "percent"
+          },
+          {
+            "stat_id": "light_resist",
+            "group": "element_resist",
+            "format": "percent"
+          },
+          {
+            "stat_id": "dark_resist",
+            "group": "element_resist",
+            "format": "percent"
+          }
         ]
       }
     ]
@@ -144313,20 +147246,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 40.0,
+                "fit": "picture",
+                "height": 48.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": -22.0,
+                "offset_y": -24.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 60.0
+                "width": 64.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -146675,20 +149609,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 24.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -12.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 24.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -146726,20 +149661,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 21.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
-                "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_x": 0.5,
+                "offset_y": -10.5,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 18.0
+                "width": 21.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -146777,20 +149713,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 32.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
-                "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_x": 0.5,
+                "offset_y": -16.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 21.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -146828,20 +149765,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 10.0,
+                "fit": "picture",
+                "height": 31.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -15.5,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 20.0
+                "width": 24.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -147112,20 +150050,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 16.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -8.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
                 "width": 14.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -147186,20 +150125,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 24.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -12.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 24.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -147260,20 +150200,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 21.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
-                "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_x": -0.5,
+                "offset_y": -10.5,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 21.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -147408,20 +150349,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 21.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -10.5,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 48.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -148076,20 +151018,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 23.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -11.5,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 24.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -148723,20 +151666,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 21.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -10.5,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 48.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -149045,20 +151989,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 8.0,
+                "fit": "picture",
+                "height": 24.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": 0.0,
+                "offset_y": -12.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 14.0
+                "width": 24.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -149219,20 +152164,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 10.0,
+                "fit": "picture",
+                "height": 22.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
-                "offset_x": 0.0,
-                "offset_y": -5.0,
+                "offset_x": -0.5,
+                "offset_y": -11.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 26.0
+                "width": 45.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -149293,20 +152239,21 @@
             {
               "fields": {
                 "enabled": true,
-                "height": 40.0,
+                "fit": "picture",
+                "height": 48.0,
                 "is_trigger": false,
                 "ladder": false,
                 "layer": 0,
                 "mask": 4294967295,
                 "offset_x": 0.0,
-                "offset_y": -20.0,
+                "offset_y": -24.0,
                 "one_way": false,
                 "radius": 8.0,
                 "shape": "box",
-                "width": 28.0
+                "width": 32.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {

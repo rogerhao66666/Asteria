@@ -126,6 +126,42 @@ class ResourceMixin:
         except (OSError, ValueError, self.pg.error):
             return None
 
+    def fitted_icon(self, icon_id, box, *, rotate=0, trim=False, fit="fit"):
+        """The icon ``icon_id`` made to fill ``box`` (w, h): turned ``rotate`` degrees, its empty
+        edges cut when ``trim``, then fitted inside keeping its shape ("fit") or stretched to
+        the box ("stretch"); pixel art grows by whole pixels where it can (D88). None when
+        there is no such icon."""
+        width, height = (max(1, int(v)) for v in box)
+        key = ("fitted", str(icon_id or ""), width, height, int(rotate), bool(trim), fit)
+        cache = self._icon_cache
+        if key in cache:
+            return cache[key]
+        pg = self.pg
+        source = self.particle_image(icon_id) if icon_id else None  # the icon at its own size
+        if source is None and icon_id:
+            source = self.icon_image(icon_id, 64)  # an engine-drawn icon
+        if source is None:
+            cache[key] = None
+            return None
+        if rotate:
+            source = pg.transform.rotate(source, rotate)
+        if trim:
+            bounds = source.get_bounding_rect()
+            if bounds.w and bounds.h:
+                source = source.subsurface(bounds)
+        w, h = source.get_size()
+        if fit == "stretch":
+            target = (width, height)
+        else:
+            scale = min(width / w, height / h)
+            if scale >= 1 and int(scale) / scale >= 0.85:
+                scale = int(scale)  # whole pixels (crisp pixel art) when it costs little size
+            target = (max(1, round(w * scale)), max(1, round(h * scale)))
+        grow = target[0] >= w and target[1] >= h
+        icon = (pg.transform.scale if grow else pg.transform.smoothscale)(source, target)
+        cache[key] = icon
+        return icon
+
     def _draw_icon(self, icon_id, x, y, size=22):
         """Draw the icon centred in a ``size`` box at (x, y); True when one was drawn."""
         icon = self.icon_image(icon_id, size) if icon_id else None

@@ -191,6 +191,7 @@ class Campaign:
         """Walk into a foe in view: the encounter starts."""
         from asteria.core import Transform
 
+        self.engage(name)
         entity = self.find(name)
         point = entity.get(Transform)
         player = self.game.player.get(Transform)
@@ -281,6 +282,8 @@ class Campaign:
             relation = str(game.ability_relation(ability_id)).upper()
             if "OPPONENT" in relation:
                 targets = (self.rng.choice(foes),)
+                if self.absorbed(ability_id, targets[0]):
+                    continue  # a player does not heal the foe with its own element
             elif "ALLY" in relation and "ALL" not in relation:
                 targets = (weakest,)
             else:
@@ -297,6 +300,46 @@ class Campaign:
                 self.facts[f"used_{ability_id}"] += 1
             return ability_id
         return None
+
+    RETRIES = 3  # a lost fight is played again from the save before it, as a player would
+
+    def engage(self, name):
+        """Keep the save and the foe's figure as they are before the fight (for ``retry``)."""
+        import copy
+
+        from asteria.core.serialization import serialize_entity
+
+        self.game.sync_world_state()
+        figure = copy.deepcopy(serialize_entity(self.find(name)))
+        self.engaged = (name, figure, copy.deepcopy(self.game.save.to_data()))
+        self.tries = 0
+
+    def retry(self):
+        """The party fell: load the save from before the fight, camp and walk into the foe again
+        (the battle's dice are the same; the party's choices are not)."""
+        from asteria.core.serialization import deserialize_entity
+        from asteria.runtime.preview import build_preview_registry
+
+        name, figure, data = self.engaged
+        if self.tries >= self.RETRIES:
+            raise AssertionError("the party was defeated")
+        tries = self.tries + 1
+        self.facts["retries"] += 1
+        self.rt._victory = self.rt._defeat = False
+        self.load(data)
+        self.rest()
+        if self.game.scene.get_entity(figure["id"]) is None:  # a fight took it off the map
+            self.game.scene.add_entity(deserialize_entity(figure, build_preview_registry()))
+        self.touch(name)
+        self.tries = tries
+
+    def absorbed(self, ability_id, foe):
+        """Whether ``foe`` drinks ``ability_id``'s element (its tag "absorb.<element>")."""
+        game = self.game
+        tags = set(game.battle.member(foe).subject.tags.values())
+        definition = game.battle.ability_runtime.registry.get(ability_id)
+        elements = [t.split(".", 1)[1] for t in definition.tags if t.startswith("damage.")]
+        return any(f"absorb.{e}" in tags for e in elements)
 
     def fight(self, limit=400):
         """Play the running battle with the party's skills until it is won."""
@@ -316,7 +359,7 @@ class Campaign:
                 continue
             self.rt._after_hero_action()
             if self.rt._defeat:
-                raise AssertionError("the party was defeated")
+                self.retry()
             if self.rt._victory:
                 break
         assert self.rt._victory, "the battle was not won"
@@ -329,6 +372,7 @@ class Campaign:
 
         game = self.game
         self.resolve()
+        self.engage(name)
         foe = self.find(name).get(Transform)
         player = game.player.get(Transform)
         player.x, player.y = foe.x - distance, foe.y
@@ -626,6 +670,13 @@ class Campaign:
         self.facts["victories"] += 1
         self.heal_if_low()
 
+    def rest(self):
+        """The party camps: everyone back to full health."""
+        from asteria.events.world_commands import WorldCommand
+
+        self.game.world_commands.dispatch(WorldCommand("REST_PARTY", {}))
+        self.facts["camps"] += 1
+
     def heal_if_low(self):
         """A rest between fights (the party camps) when anyone is under half health."""
         from asteria.events.world_commands import WorldCommand
@@ -688,9 +739,9 @@ class Campaign:
         return spent
 
     BUILDS = {  # attribute points, in turn: a player's build per hero
-        "hero_01": ("attr_str", "attr_int", "attr_str", "attr_int", "attr_luk", "attr_vit"),
-        "hero_02": ("attr_int", "attr_int", "attr_luk", "attr_vit"),
-        "hero_03": ("attr_int", "attr_int", "attr_vit", "attr_luk"),
+        "hero_01": ("attr_str", "attr_int", "attr_str", "attr_int", "attr_luk", "attr_hp"),
+        "hero_02": ("attr_int", "attr_int", "attr_luk", "attr_hp"),
+        "hero_03": ("attr_int", "attr_int", "attr_hp", "attr_luk"),
         "hero_04": ("attr_dex", "attr_luk", "attr_str", "attr_dex"),
     }
     HALL = {"hero_02": 0, "hero_04": 6, "hero_03": 3}  # Job Hall menu: advance, advance, train
@@ -866,12 +917,11 @@ class Campaign:
         return Lucky()
 
     def woods(self):
-        game = self.game
         self.note("Whispering Woods: goblins, a tame slinger, the beast, Vesper")
         self.allocate()  # the points the last fights earned
         self.go("Road East")
         assert self.scene_name() == "Whispering Woods"
-        assert game.battle_weather() is not None and game.battle_weather()[0] == "rain"
+        assert self.game.battle_weather() is not None and self.game.battle_weather()[0] == "rain"
         self.talk("Camp Scout")  # before the goblins start roaming toward the road
         self.talk("Old Cache")
         self.facts["interactions"] += 1
@@ -879,7 +929,7 @@ class Campaign:
         from asteria.core import Transform
 
         start = (slinger_3.get(Transform).x, slinger_3.get(Transform).y)
-        player = game.player.get(Transform)
+        player = self.game.player.get(Transform)
         home = (player.x, player.y)
         player.x, player.y = 56 * 16.0, 3 * 16.0  # far off in a corner: the foes roam alone
         self.frames(2)
@@ -890,46 +940,45 @@ class Campaign:
         self.facts["foes_roamed"] = int(now != start)
         # the first group, met in the poison bog: run away from it
         self.bog_and_glade()
-        assert game.escape_unavailable() == ""
-        result = game.attempt_escape(HERO, rng=self.lucky())
-        assert result.succeeded and game.mode == "field"
+        assert self.game.escape_unavailable() == ""
+        result = self.game.attempt_escape(HERO, rng=self.lucky())
+        assert result.succeeded and self.game.mode == "field"
         self.rt._victory = False
         self.rt._turn_actor = None
         self.facts["escapes"] += 1
         self.glade()  # the warden's camp heals what the bog took
         # an ambush of slingers: tame one, then win
         self.touch("Goblin Slinger 2")
-        slinger = next(e for e in game.active_enemy_ids() if e.startswith("goblin_slinger"))
-        assert game.attempt_capture(HERO, slinger, rng=self.lucky())
+        slinger = next(e for e in self.game.active_enemy_ids() if e.startswith("goblin_slinger"))
+        assert self.game.attempt_capture(HERO, slinger, rng=self.lucky())
         self.facts["tamed"] += 1
         self.fight()
         self.strike("Goblin Slinger 3", "field_slash", 16)
         self.fight()
-        pet = game.active_pet()
+        pet = self.game.active_pet()
         assert pet is not None and pet.species_id == "slinger"
-        species = game.pet_species(pet)
+        species = self.game.pet_species(pet)
         while pet.level < 5:
             pet.gain(species, species.exp_per_battle * 4)
         self.facts["pet_level"] = pet.level
-        assert game.evolve_pet(pet.instance_id) == "war_slinger"
+        assert self.game.evolve_pet(pet.instance_id) == "war_slinger"
         self.facts["pet_evolved"] += 1
         self.save_and_reload()
-        game = self.game
         # report to the warden, then the beast
         self.go("Road West")
         self.talk("Warden Thessaly")
-        assert game.quest_log.status("q_patrol") == "completed", game.quest_log.status("q_patrol")
-        assert game.quest_log.status("q_beast") == "active"
+        patrol = self.game.quest_log.status("q_patrol")
+        assert patrol == "completed", patrol
+        assert self.game.quest_log.status("q_beast") == "active"
         self.go("Road East")
         self.touch("Goblin Beast")
-        assert "no_escape" in game.escape_unavailable()
+        assert "no_escape" in self.game.escape_unavailable()
         self.fight()
         self.talk("Vesper")  # she will wait at the guild in town
-        assert "hero_03" not in game.save.rpg_state.party_active_actor_ids
+        assert "hero_03" not in self.game.save.rpg_state.party_active_actor_ids
         self.report("q_beast", "q_crypt", hire=("Vesper", "hero_03"))
 
     def crypt(self):
-        game = self.game
         self.note("Catacombs: skeletons, a locked vault, the Ancient, Cael")
         self.allocate()  # the points the last fights earned
         self.go("Crypt Door")
@@ -942,15 +991,16 @@ class Campaign:
         self.staged("sideview")
         self.menus()
         self.fight()
-        game.set_classes(HERO, ["brave", "rogue"])  # a thief's pick for the sealed vault
+        self.game.set_classes(HERO, ["brave", "rogue"])  # a thief's pick for the sealed vault
         self.facts["job_changes"] += 1
+        self.rest()  # as a player would before a boss
         self.touch("Skeleton Ancient")
-        assert "no_escape" in game.escape_unavailable()
+        assert "no_escape" in self.game.escape_unavailable()
         self.rt._advance_to_hero_turn()
         actor = self.rt._battle_actor()
-        boss = next(e for e in game.active_enemy_ids() if e.startswith("skeleton_ancient"))
-        if "pilfer" in game.battle.member(HERO).ability_ids and actor == HERO:
-            game.use_ability(HERO, "pilfer", (boss,))
+        boss = next(e for e in self.game.active_enemy_ids() if e.startswith("skeleton_ancient"))
+        if "pilfer" in self.game.battle.member(HERO).ability_ids and actor == HERO:
+            self.game.use_ability(HERO, "pilfer", (boss,))
             self.facts["steals"] += 1
             self.rt._after_hero_action()
         self.fight()
@@ -966,10 +1016,9 @@ class Campaign:
         self.go("Crypt Door")
 
     def throne(self):
-        game = self.game
         self.note("Ember Throne: the full party against Vaelor")
         self.allocate()  # the points the last fights earned
-        game.set_classes(HERO, ["brave", "archmage"])  # the Brave and Archmage again
+        self.game.set_classes(HERO, ["brave", "archmage"])  # the Brave and Archmage again
         self.facts["job_changes"] += 1
         self.go("Stairs Up")  # back to town: every companion takes the third job of their line
         self.go("Road West")
@@ -987,7 +1036,7 @@ class Campaign:
         self.reslot()
         self.embers(lit=True)  # the floor round the pool burns while Vaelor lives
         self.touch("Acolyte Vigil")  # hold out eight rounds (round turns, gauntlet rules)
-        assert game.rules.rules_id == "vigil_gauntlet", game.rules.rules_id
+        assert self.game.rules.rules_id == "vigil_gauntlet", self.game.rules.rules_id
         self.staged("portrait")  # the party only in its HUD
         self.fight(limit=300)
         self.facts["vigil_survived"] += 1
@@ -996,7 +1045,7 @@ class Campaign:
         self.talk("Victory Banner", picks=(1,))  # "Not yet": the epilogue first
         self.embers(lit=False)
         self.shot("victory")
-        assert game.save.event_context.get_switch("game.complete")
+        assert self.game.save.event_context.get_switch("game.complete")
         self.facts["game_complete"] = 1
         self.go("Stairs Down")
         self.go("Stairs Up")
@@ -1025,11 +1074,19 @@ class Campaign:
         self.facts["reports"] += 1
         self.go("Road East")
 
-    def save_and_reload(self):
-        """Save, throw the session away and load it again: nothing may change."""
+    def load(self, data):
+        """A new session from the save ``data`` (as Load Game does)."""
         from asteria.runtime.game_save import GameRuntimeSave
         from asteria.runtime.game_session import GameSessionRuntime
 
+        restored = GameRuntimeSave.from_data(data, self.rt.project)
+        self.rt.save = restored
+        self.rt.game = GameSessionRuntime(self.rt.project, restored)
+        self.rt._ui_mode = "field"
+        self.game.refine_rng = self.rng
+
+    def save_and_reload(self):
+        """Save, throw the session away and load it again: nothing may change."""
         game = self.game
         before = (
             tuple(game.save.rpg_state.party_actor_ids),
@@ -1038,11 +1095,7 @@ class Campaign:
             [p.species_id for p in game.save.rpg_state.pets],
         )
         game.sync_world_state()
-        data = game.save.to_data()
-        restored = GameRuntimeSave.from_data(data, self.rt.project)
-        self.rt.save = restored
-        self.rt.game = GameSessionRuntime(self.rt.project, restored)
-        self.rt._ui_mode = "field"
+        self.load(game.save.to_data())
         after = (
             tuple(self.game.save.rpg_state.party_actor_ids),
             self.level(),
@@ -1050,7 +1103,6 @@ class Campaign:
             [p.species_id for p in self.game.save.rpg_state.pets],
         )
         assert after == before, (before, after)
-        self.game.refine_rng = self.rng
         self.facts["save_load"] += 1
 
     def run(self):
@@ -1130,26 +1182,26 @@ class Campaign:
         """A patrol fought with the remedy shop's wares (D61): a Thunder Bomb at a foe, then a
         hero poisoned and cured with an Antidote; the fight is then won as any other. It comes
         after the throne, so the fights the other facts count play out as they always did."""
-        game, rt = self.game, self.rt
-        game.start_encounter("woods_patrol")
+        rt = self.rt
+        self.game.start_encounter("woods_patrol")
         rt._turn_actor = None
         rt._advance_to_hero_turn()
         actor = rt._battle_actor()
         assert actor is not None
-        foe = game.active_enemy_ids()[0]
-        game.use_battle_item(actor, "thunder_bomb", (foe,))
+        foe = self.game.active_enemy_ids()[0]
+        self.game.use_battle_item(actor, "thunder_bomb", (foe,))
         self.facts["thrown_items"] += 1
         rt._after_hero_action()
         rt._advance_to_hero_turn()
         actor = rt._battle_actor()
         if actor is not None:
-            states = game.battle.member(actor).subject.states
+            states = self.game.battle.member(actor).subject.states
             states.apply("poison")
-            game.use_battle_item(actor, "antidote", (actor,))
+            self.game.use_battle_item(actor, "antidote", (actor,))
             assert "poison" not in [s.state_id for s in states.active_states()]
             self.facts["cures_used"] += 1
             rt._after_hero_action()
-        if game.mode == "battle":
+        if self.game.mode == "battle":
             self.fight()
 
     def opened(self, name):

@@ -53,6 +53,7 @@ class MenuPreview:
                 game.gain_equipment(equipment_id)
             except Exception:  # noqa: BLE001
                 pass
+        MenuPreview._dress(game)
         game.equip_offers.clear()
         for recipe_id in db.composition_recipes:
             try:
@@ -71,6 +72,28 @@ class MenuPreview:
                 pass
         game.backlog.add("", game.tr("backlog.title", "Message Log"))
         game.backlog.add("", game.tr("status.empty", "Nothing here yet."))
+
+    @staticmethod
+    def _dress(game):
+        """Every empty place of the first member's slots gets a sample piece, so the
+        equipment screen's preview shows how each place draws a worn icon (D88)."""
+        db = game.project.rpg_database
+        state = game.save.rpg_state
+        party = tuple(state.party_active_actor_ids)
+        loadout = state.loadouts.get(party[0]) if party else None
+        if loadout is None:
+            return
+        for slot_id in loadout.slot_ids():
+            for equipment_id in [e for e, r in db.equipment.items() if r.slot == slot_id]:
+                try:
+                    (piece,) = game.gain_equipment(equipment_id)
+                    if game.wear_from_bag(party[0], piece.instance_id, slot_id) is not None:
+                        break  # the slot was full: it gave a piece back, so stop here
+                except Exception:  # noqa: BLE001 - one this member cannot wear: the next
+                    continue
+                worn = loadout.equipped(slot_id)
+                if len(worn) >= loadout._slots[slot_id].capacity:
+                    break
 
     # --- drawing ------------------------------------------------------------------------
     def render(self, screen_id, locale=None):

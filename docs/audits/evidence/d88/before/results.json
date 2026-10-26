@@ -1,0 +1,14 @@
+{
+  "driver": "cocoa",
+  "shots": [
+    "en_page_items",
+    "en_page_items_potions",
+    "en_equipment",
+    "en_equipment_list",
+    "zh_page_items",
+    "zh_page_items_potions",
+    "zh_equipment",
+    "zh_equipment_list"
+  ],
+  "errors": {}
+}

@@ -1121,3 +1121,24 @@ LINES = {
     "Mail, robes and rings. Try them on.": "鎧甲、長袍和戒指。穿上試試吧。",
     "Potions, bombs and the odd orb.": "藥水、炸彈，還有幾顆寶珠。",
 }
+
+
+def _item_descriptions():
+    """D88's item descriptions (``trial_d88``) are whole sentences of the glossary too."""
+    from trial_d88 import chinese
+
+    return chinese()
+
+
+DESCRIPTION.update(_item_descriptions())
+
+
+def _d89_words():
+    """D89's stat, group and point names and stat descriptions (``trial_d89``)."""
+    from trial_d89 import chinese
+
+    return chinese()
+
+
+for _new, _old in zip(_d89_words(), (WORDS, DESCRIPTION), strict=True):
+    _old.update({k: v for k, v in _new.items() if k not in _old})  # the glossary's own win

@@ -6,6 +6,7 @@ try:
         QComboBox,
         QLabel,
         QLineEdit,
+        QPushButton,
         QTreeWidget,
         QTreeWidgetItem,
         QVBoxLayout,
@@ -356,6 +357,9 @@ class InspectorWidget(QWidget):
         enabled.toggled.connect(lambda on, e=entity: self._entity(e, enabled=on))
         head.add_row("Enabled", enabled)
         column.addWidget(head)
+        passable = self._passability_section(entity)
+        if passable is not None:
+            column.addWidget(passable)
         for component in entity.components():
             try:
                 fields = build_inspector_fields(component)
@@ -365,6 +369,68 @@ class InspectorWidget(QWidget):
                 self._component_section(component, fields, title=type(component).__name__)
             )
         self._show(page, column)
+
+    def _passability_section(self, entity):
+        """Passable, blocks at its feet, or blocks its whole picture (D88), with a picture of
+        what blocks; None for an entity without a picture or a collider."""
+        from asteria.runtime.collision import Collider2DComponent
+        from asteria.runtime.components2d import SpriteRenderer2D
+
+        from .image_tools import project_root
+        from .passability import MODE_LABELS, MODES, passability, passability_preview
+        from .record_form import Section, _wheel_guard
+
+        if (
+            entity.try_get(SpriteRenderer2D) is None
+            and entity.try_get(Collider2DComponent) is None
+        ):
+            return None
+        section = Section("Passability", compact=True)
+        combo = QComboBox()
+        _wheel_guard(combo)
+        for mode in MODES:
+            combo.addItem(MODE_LABELS[mode], mode)
+        combo.setCurrentIndex(MODES.index(passability(entity)))
+        combo.currentIndexChanged.connect(
+            lambda _i, e=entity, c=combo: self._passability(e, c.currentData())
+        )
+        section.add_row(
+            "Player",
+            combo,
+            help_text="Passable: the player walks through it. Blocks at its feet: a solid box "
+            "at its foot (size it in Collider 2D below). Blocks its whole picture: nothing of "
+            "it can be walked into (like an RPG Maker event set to Same as characters).",
+            key="passability",
+        )
+        if passability(entity) == "picture":
+            again = QPushButton("Measure the Picture Again")
+            again.clicked.connect(lambda _c=False, e=entity: self._passability(e, "picture"))
+            section.add_row(
+                "",
+                again,
+                help_text="After changing its picture: the box covers the new one.",
+            )
+        image = passability_preview(self.document.project, project_root(self.document), entity)
+        if image is not None:
+            from .image_tools import _pixmap
+
+            preview = QLabel()
+            preview.setObjectName("PassabilityPreview")
+            preview.setPixmap(_pixmap(image, 180))
+            section.add_row(
+                "Preview",
+                preview,
+                help_text="Red: what blocks the player. Blue cross: where it stands.",
+            )
+        self._passability_combo = combo
+        return section
+
+    def _passability(self, entity, mode):
+        window = self.window()
+        if self._refreshing or not hasattr(window, "edit_passability"):
+            return
+        ok, error = window.edit_passability(entity, mode)
+        self.error.setText("" if ok else "⚠  " + (error or "Invalid value"))
 
     def _component_section(self, component, fields, *, title=None, selected=False):
         from .record_form import Section

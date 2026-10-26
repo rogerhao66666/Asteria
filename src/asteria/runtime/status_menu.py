@@ -37,6 +37,19 @@ ITEM_TAG, EQUIPMENT_TAG = "item", "equipment"
 
 
 @dataclass(frozen=True, slots=True)
+class ItemDetail:
+    """What the Items page shows about the chosen row (D88): its icon big, name, a line of
+    what it is, its description, and ``(label, value)`` facts (count, use, stats...)."""
+
+    icon_id: str
+    name: str
+    kind: str
+    description: str
+    facts: tuple[tuple[str, str], ...]
+    rarity_rgb: tuple | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class StatRow:
     """A row of the Status page's stat table: one node of the stat graph."""
 
@@ -47,6 +60,24 @@ class StatRow:
     rank: int
     max_rank: int
     allowed: bool  # a + would spend a point now
+    gain: float = 0.0  # what the next + adds to ``stat_id`` (a resource: +100 HP...)
+    base: float = 0.0  # the value without points and gear (D89)
+    points: float = 0.0  # what the stat graphs' ranks add
+    gear: float = 0.0  # what the equipment adds
+
+
+@dataclass(frozen=True, slots=True)
+class DetailLine:
+    """A line of the Status page's detail table (D89): the stat's name, its value as the line
+    writes it (``148 ~ 181``, ``25.6%``) and where the value comes from."""
+
+    stat_id: str
+    label: str
+    text: str
+    total: float
+    base: float
+    points: float
+    gear: float
 
 
 PROFILE_CATEGORY = {
@@ -91,6 +122,7 @@ class StatusMenu:
         self.rules = menu_rules(game.project.rpg_database)
         self.category = 0  # the Items page's tab
         self.filter = -1  # the Items page's filter (-1: none)
+        self.details_open = False  # item_details "button": the details over the list
         rules = getattr(game, "rules", None)
         lead = (getattr(rules, "knockout_resource_id", ""),)  # HP first, as in the HUD
         self.screens = {
@@ -183,24 +215,83 @@ class StatusMenu:
         values = {s.stat_id: s.value for s in view.stats} if view is not None else {}
         for resource in view.resources if view is not None else ():  # a rank that adds HP
             values.setdefault(resource.resource_id, resource.maximum)
+        breakdown = self.breakdown()
         rows = []
         for node in graph.nodes:
             reward = node.rewards[0] if node.rewards else None
             bonuses = {**reward.stat_bonuses, **reward.resource_bonuses} if reward else {}
             stat_id = next(iter(bonuses), "")
+            rank = allocation.rank(graph.graph_id, node.node_id)
+            following = node.rewards[min(rank, len(node.rewards) - 1)] if node.rewards else None
+            gains = {**following.stat_bonuses, **following.resource_bonuses} if following else {}
             preview = allocation.preview_allocate(graph.graph_id, node.node_id, 1)
+            _total, base, points, gear = breakdown.get(stat_id, (0.0, 0.0, 0.0, 0.0))
             rows.append(
                 StatRow(
                     node.node_id,
                     stat_id,
                     self.game.name_of(node, node.node_id),
                     values.get(stat_id),
-                    allocation.rank(graph.graph_id, node.node_id),
+                    rank,
                     node.max_rank,
                     not preview.reasons,
+                    float(gains.get(stat_id, 0.0)),
+                    base,
+                    points,
+                    gear,
                 )
             )
         return rows
+
+    def breakdown(self):
+        """``{stat: (total, base, points, gear)}`` of the member (``stat_breakdown``)."""
+        if self.actor_id is None or not hasattr(self.game, "stat_breakdown"):
+            return {}
+        return self.game.stat_breakdown(self.actor_id)
+
+    def detail_groups(self):
+        """The detail table as ``[(heading, [DetailLine...])]`` (D89): Menu Pages'
+        ``stat_lines`` by their groups, in order of first use; without lines, one group of
+        ``detail_rows`` written as numbers."""
+        from asteria.rpg.menu_rules import StatLine
+
+        breakdown = self.breakdown()
+        lines = self.rules.stat_lines if self.rules is not None else ()
+        if not lines:
+            lines = tuple(StatLine(stat_id) for stat_id, _l, _v in self.detail_rows())
+        names = {g.group_id: g for g in (self.rules.stat_groups if self.rules else ())}
+        checks = self.game.project.rpg_database.outcome_checks
+        groups = {}
+        for line in lines:
+            total, base, points, gear = breakdown.get(line.stat_id, (0.0, 0.0, 0.0, 0.0))
+            label = line.label or self._stat_label(line.stat_id)
+            if line.format in ("percent", "chance"):  # the value has its % already
+                label = label.removesuffix("%").rstrip()
+            groups.setdefault(line.group, []).append(
+                DetailLine(
+                    line.stat_id,
+                    label,
+                    line.text(total, checks.get(line.check)),
+                    total,
+                    base,
+                    points,
+                    gear,
+                )
+            )
+        result = []
+        for group_id, found in groups.items():
+            group = names.get(group_id)
+            heading = self.game.name_of(group, group_id) if group is not None else group_id
+            result.append((heading, found))
+        return result
+
+    def _stat_label(self, stat_id):
+        """A stat's name: the stat table's, else its stat formula's, else its id."""
+        label = self.game.stat_name(stat_id)
+        rule = self.game.project.rpg_database.derived_stats.get(stat_id)
+        if label == stat_id and rule is not None:
+            label = self.game.name_of(rule, stat_id)
+        return label
 
     def detail_rows(self):
         """``(stat id, label, value)`` of the Status page's detail table: Menu Pages'
@@ -299,6 +390,11 @@ class StatusMenu:
         self.filter = self.filter + 1 if self.filter + 1 < count else -1
         self.row = 0
 
+    def bag_pieces(self):
+        """The equipment bag's pieces (gear kept as pieces, not counted items), by name."""
+        bag = tuple(getattr(self.game.save.rpg_state, "equipment_bag", ()) or ())
+        return sorted(bag, key=lambda g: (self.game.name_of(g.equipment), g.instance_id))
+
     def item_tags(self, item_id):
         db = self.game.project.rpg_database
         if item_id in db.items:
@@ -307,8 +403,8 @@ class StatusMenu:
             return (*db.equipment[item_id].tags, EQUIPMENT_TAG)
         return ()
 
-    def _keeps(self, item_id, usable):
-        tags = self.item_tags(item_id)
+    def _keeps(self, item_id, usable, tags=None):
+        tags = self.item_tags(item_id) if tags is None else tags
         categories = self.categories()
         if categories and not categories[self.category % len(categories)].holds(tags):
             return False
@@ -381,7 +477,7 @@ class StatusMenu:
         if self.tab == "items":
             equipment = self.game.project.rpg_database.equipment
             usable = "  " + tr("status.usable", "(use)")
-            return [
+            rows = [
                 (
                     "item",
                     i.item_id,
@@ -393,6 +489,17 @@ class StatusMenu:
                 for i in view.items
                 if i.count > 0 and self._keeps(i.item_id, i.usable)
             ]
+            rows += [  # gear kept as pieces (the bag of equipment): its own rows
+                (
+                    "piece",
+                    g.instance_id,
+                    self.game.name_of(g.equipment, g.equipment.equipment_id),
+                    self.game.slot_name(g.equipment.slot),
+                )
+                for g in self.bag_pieces()
+                if self._keeps("", False, (*g.equipment.tags, EQUIPMENT_TAG))
+            ]
+            return rows
         if self.tab == "status":
             rows = [  # the stat table's rows first: they take the cursor
                 ("ap", r.node_id, r.label, "" if r.value is None else f"{r.value:g}")
@@ -457,10 +564,82 @@ class StatusMenu:
         ]
         return rows
 
+    @property
+    def details_mode(self):
+        """How the Items page shows details: Menu Pages' ``item_details``, else "panel"."""
+        return self.rules.item_details if self.rules is not None else "panel"
+
+    def detail(self):
+        """The :class:`ItemDetail` of the Items page's chosen row, or None."""
+        rows = self.rows() if self.tab == "items" else []
+        if not rows:
+            return None
+        kind, key, label, _ = rows[self.row % len(rows)]
+        game, tr = self.game, self.game.tr
+        db = game.project.rpg_database
+        if kind == "piece":
+            piece = next((g for g in self.bag_pieces() if g.instance_id == key), None)
+            if piece is None:
+                return None
+            return self._piece_detail(piece, label)
+        record = db.items.get(key) or db.equipment.get(key)
+        if record is None:
+            return None
+        count = game.save.rpg_state.inventory.count(key)
+        facts = [(tr("status.detail.count", "Owned"), f"{count:g}")]
+        limit = getattr(record, "stack_limit", 0)
+        if limit:
+            facts[0] = (facts[0][0], f"{count:g} / {limit:g}")
+        if getattr(record, "use_effects", ()):
+            facts.append((tr("status.detail.menu_use", "Use here"), tr("status.yes", "yes")))
+        ability_id = getattr(record, "battle_ability", "")
+        if ability_id:
+            ability = self._RECORDS["ability"](game).get(ability_id)
+            facts.append(
+                (tr("status.detail.battle_use", "In battle"), game.name_of(ability, ability_id))
+            )
+        categories = [
+            self.category_name(c)
+            for c in self.categories()
+            if c.tags and c.holds(self.item_tags(key))
+        ]
+        kind_line = "  ·  ".join(categories) or tr("status.items.items", "Items")
+        return ItemDetail(
+            getattr(record, "icon_id", "") or "",
+            label,
+            kind_line,
+            game.description_of(record, ""),
+            tuple(facts),
+        )
+
+    def _piece_detail(self, piece, label):
+        from .bag_screen import _rarity, format_value, stat_totals
+
+        game, tr = self.game, self.game.tr
+        rarity = game.project.rpg_database.loot_rarities().get(_rarity(piece))
+        bits = [game.name_of(rarity) if rarity is not None else tr("bag.common", "Common")]
+        bits.append(game.slot_name(piece.equipment.slot))
+        facts = [
+            (game.stat_name(stat), format_value(value, operation))
+            for (stat, operation), value in sorted(stat_totals(piece).items())
+        ]
+        sockets = piece.equipment.sockets
+        if sockets:
+            filled = sum(1 for s in sockets if s.socket_id in piece.attachments)
+            facts.append((tr("status.detail.sockets", "Sockets"), f"{filled}/{len(sockets)}"))
+        return ItemDetail(
+            getattr(piece.equipment, "icon_id", "") or "",
+            label,
+            "  ·  ".join(b for b in bits if b),
+            game.description_of(piece.equipment, ""),
+            tuple(facts),
+            rarity.rgb() if rarity is not None else None,
+        )
+
     # -- actions ---------------------------------------------------------------------------------
     def row_icons(self):
-        """The icon id of each row of ``rows()`` (``""`` for none): items, equipment, and a slot's
-        first item."""
+        """The icon id of each row of ``rows()`` (``""`` for none): items, equipment, a bag
+        piece's equipment, and a slot's first item."""
         from .menu_icons import record_icon_id
 
         project = self.game.project
@@ -471,10 +650,13 @@ class StatusMenu:
                 if view
                 else {}
             )
+        pieces = {g.instance_id: g.equipment.equipment_id for g in self.bag_pieces()}
         icons = []
         for kind, key, _label, _detail in self.rows():
             if kind == "slot":
                 icons.append(record_icon_id(project, "equipment", firsts.get(key, "")))
+            elif kind == "piece":
+                icons.append(record_icon_id(project, "equipment", pieces.get(key, "")))
             else:
                 icons.append(record_icon_id(project, kind, key))
         return icons
@@ -488,6 +670,16 @@ class StatusMenu:
         tr = self.game.tr
         if kind == "ap":
             return self.allocate_stat(key)
+        if kind == "piece":
+            self.message = tr("status.wear_in_equipment", "Wear it from Equipment")
+            return None
+        if kind == "item" and not getattr(
+            self.game.project.rpg_database.items.get(key), "use_effects", ()
+        ):  # used in battle, or a material: nothing to do here
+            self.message = tr(
+                "status.cannot_use_here", "{name} can't be used from the menu", name=label
+            )
+            return None
         if kind == "item":
             result = self.game.use_item(self.actor_id, key)
             if result.used:

@@ -146,6 +146,14 @@ def screens(runtime):
 
         return setup
 
+    def gear_page():
+        def setup():
+            if not game.save.rpg_state.equipment_bag:
+                game.gain_equipment("w_sunbrand")
+            page("items", 4)()  # Weapons
+
+        return setup
+
     def shop(tab):
         def setup():
             game.open_shop("remedy_shop")
@@ -209,6 +217,7 @@ def screens(runtime):
         ("page_status", page("status")),
         ("page_items", page("items")),
         ("page_items_potions", page("items", 1, 1)),
+        ("page_items_gear", gear_page()),  # a bag piece's details beside the list (D88)
         ("bag", mode("bag", _bag_screen=lambda: BagScreen(runtime))),
         ("skill_tree", mode("skills", _skill_tree=lambda: SkillTreeScreen(runtime))),
         ("build", mode("build")),

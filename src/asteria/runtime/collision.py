@@ -21,12 +21,14 @@ from asteria.core.migration import component_migration
 ALL_LAYERS = 0xFFFFFFFF
 _POINT_SHAPES = {"circle": 1, "slope_right": 2, "slope_left": 3}  # other shapes: boxes
 SHAPES = ("box", "circle", "slope_right", "slope_left")
+# where a collider's size comes from: its own numbers, or the entity's whole picture (D88)
+FITS = ("custom", "picture")
 
 
 @column_storage()
 @component_schema(
     type_name="asteria.Collider2D",
-    version=3,
+    version=4,
     fields=(
         Field(
             "shape",
@@ -67,6 +69,15 @@ SHAPES = ("box", "circle", "slope_right", "slope_left")
             tooltip="A climbable area (side view); it never blocks movement.",
         ),
         Field("enabled", bool, True),
+        Field(
+            "fit",
+            str,
+            "custom",
+            choices=FITS,
+            label="Size From",
+            tooltip="custom: the width / height / offset above; picture: the whole drawn "
+            "picture blocks (the editor's Passability section measures it).",
+        ),
     ),
 )
 class Collider2DComponent(Component):
@@ -84,6 +95,7 @@ class Collider2DComponent(Component):
         self.one_way = False
         self.ladder = False
         self.enabled = True
+        self.fit = "custom"
 
 
 @component_migration("asteria.Collider2D", from_version=1)
@@ -94,6 +106,11 @@ def _collider2d_v1_to_v2(fields):
 @component_migration("asteria.Collider2D", from_version=2)
 def _collider2d_v2_to_v3(fields):
     return fields  # v3 adds slope shapes and ladder (default False)
+
+
+@component_migration("asteria.Collider2D", from_version=3)
+def _collider2d_v3_to_v4(fields):
+    return fields  # v4 adds fit (default "custom": the size as written)
 
 
 @dataclass(frozen=True, slots=True)

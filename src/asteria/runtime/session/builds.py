@@ -46,6 +46,43 @@ class BuildsMixin:
             build = replace(build, abilities=usable)
         return build
 
+    def stat_breakdown(self, actor_id):
+        """Where each stat and resource maximum of ``actor_id`` comes from (D89): ``{name:
+        (total, base, points, gear)}`` - base is the actor, its jobs, level growth and passives;
+        points what its stat graphs' ranks add; gear what its equipment adds (stat formulas
+        included, so 1 STR from gear that makes 2 power counts as gear power)."""
+        actor_id = str(actor_id)
+        db = self.project.rpg_database
+        progress = self.save.rpg_state.actor_progression.get(actor_id)
+        level = 1 if progress is None else int(progress.level)
+        allocations = self.save.rpg_state.progression_allocations.get(actor_id)
+        loadout = self.save.rpg_state.loadouts.get(actor_id)
+
+        def values(with_points, with_gear):
+            build = resolve_actor_build(
+                self._actor_runtime(actor_id),
+                level=level,
+                progression=self.save.rpg_state.progression,
+                allocations=allocations if with_points else None,
+                loadout=loadout if with_gear else None,
+                passives=db.passives,
+                evolution_rules=db.ability_evolutions.values(),
+                derived_stats=db.derived_stats.values(),
+            )
+            found = dict(build.stats.to_data()["values"])
+            for name in build.resources.to_data()["values"]:
+                found[name] = build.resources.maximum(name)
+            return found
+
+        total, no_gear, base = values(True, True), values(True, False), values(False, False)
+        result = {}
+        for name in total.keys() | no_gear.keys() | base.keys():
+            whole = float(total.get(name, 0.0))
+            before_gear = float(no_gear.get(name, 0.0))
+            plain = float(base.get(name, 0.0))
+            result[name] = (whole, plain, before_gear - plain, whole - before_gear)
+        return result
+
     def _actor_runtime(self, actor_id):
         """The actor before any build layer: its definition, its active jobs' base bonuses and
         what its snapshot keeps (resources spent, learned abilities). Level growth, trees, gear,

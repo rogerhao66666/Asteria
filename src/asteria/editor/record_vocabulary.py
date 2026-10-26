@@ -77,6 +77,7 @@ REFERENCES = {  # field name -> vocabulary source
     "source_stat": "stats",
     "opponent_stat": "stats",
     "lifesteal_stat": "stats",
+    "penetration_stat": "stats",
     "slot": "slots",
     "slot_id": "slots",
     "composition_id": "gauges",

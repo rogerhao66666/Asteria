@@ -62,6 +62,7 @@ KINDS = {
     "MenuRules": ("menu_rules", "rules_id"),
     "ItemCategory": ("item_category", "category_id"),
     "ItemFilter": ("item_filter", "filter_id"),
+    "StatGroup": ("stat_group", "group_id"),
 }
 FIELDS = ("name", "description")
 PREFIX = "data."

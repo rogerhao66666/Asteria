@@ -10,6 +10,14 @@
   ``attributes``; ``-`` turns the + off.
 * ``stat_rows`` - the stats of the Status page's detail table, in order. Empty: every stat
   formula's stat (Game Systems ▸ Stat Formulas), then the build's other stats.
+* ``stat_groups`` / ``stat_lines`` - the detail table as a table of groups (D89): each line is
+  a stat in a group, shown as a ``number``, a ``percent`` (``12%``) or a ``range`` (the value
+  ``spread`` percent either way: ``148 ~ 181``, for a damage that rolls), with its own name
+  when ``label`` is set. Lines win over ``stat_rows``; a line's group not in ``stat_groups``
+  is shown under its id. ``chance`` writes the battle chance the stat gives through the outcome
+  check ``check`` (Battle Rules ▸ Outcome Checks): a stat that raises the check's chance shows
+  the chance (crit 5% + 0.3% a point), one that lowers it (a defender's evasion) shows how much
+  it takes off.
 * ``item_categories`` - the Items page's tabs: an item belongs to a tab when it carries any of
   its tags; a tab without tags holds every item. Every bag entry also carries ``item`` or
   ``equipment`` (what kind of record it is). Empty: All, and Items and Equipment when the game
@@ -17,6 +25,9 @@
 * ``item_filters`` - what the Items page's F key narrows the tab to: items with all of the
   filter's tags, and only those usable from the menu when ``usable`` is on. The page always
   starts on "no filter". Empty: one filter, "usable".
+* ``item_details`` - how the Items page shows the chosen thing's picture, description and
+  facts (D88): ``panel`` beside the list, ``button`` a Details button (and D) that opens it
+  over the list, ``off`` not at all.
 """
 
 from __future__ import annotations
@@ -48,6 +59,8 @@ PAUSE_ENTRIES = (
     "quit",
 )
 NO_STAT_GRAPH = "-"
+ITEM_DETAILS = ("panel", "button", "off")
+STAT_FORMATS = ("number", "percent", "range", "chance")
 
 
 def _text(value):
@@ -140,6 +153,120 @@ class ItemFilter:
 
 
 @dataclass(frozen=True, slots=True)
+class StatGroup:
+    """A heading of the Status page's detail table (Attack, Defence, Battle...)."""
+
+    group_id: str
+    display_name: str = ""
+
+    def __init__(self, group_id, display_name=""):
+        group_id = _text(group_id)
+        if not group_id:
+            raise ValueError("a stat group needs an id")
+        object.__setattr__(self, "group_id", group_id)
+        object.__setattr__(self, "display_name", _text(display_name) or group_id)
+
+    def to_data(self):
+        return {"group_id": self.group_id, "display_name": self.display_name}
+
+    @classmethod
+    def from_data(cls, data):
+        return cls(data["group_id"], data.get("display_name", ""))
+
+
+@dataclass(frozen=True, slots=True)
+class StatLine:
+    """One stat of the Status page's detail table: its group, how it is written (``number``,
+    ``percent``, ``range`` of ``spread`` percent either way, ``chance`` through the outcome
+    check ``check``) and its own name (``label``)."""
+
+    stat_id: str
+    group: str = ""
+    format: str = "number"
+    spread: float = 0.0
+    label: str = ""
+    check: str = ""
+
+    def __init__(self, stat_id, group="", format="number", spread=0.0, label="", check=""):
+        stat_id = _text(stat_id)
+        if not stat_id:
+            raise ValueError("a stat line needs a stat")
+        format = _text(format) or "number"
+        if format not in STAT_FORMATS:
+            raise ValueError(f"a stat line's format must be one of {STAT_FORMATS}")
+        spread = float(spread or 0.0)
+        if not 0.0 <= spread < 100.0:
+            raise ValueError("a stat line's spread must be from 0 to below 100 (percent)")
+        object.__setattr__(self, "stat_id", stat_id)
+        object.__setattr__(self, "group", _text(group))
+        object.__setattr__(self, "format", format)
+        object.__setattr__(self, "spread", spread)
+        object.__setattr__(self, "label", _text(label))
+        check = _text(check)
+        if format == "chance" and not check:
+            raise ValueError("a chance line needs an outcome check")
+        object.__setattr__(self, "check", check)
+
+    def text(self, value, check=None):
+        """``value`` as this line writes it (``check``: the OutcomeCheck of a chance line)."""
+        if self.format == "chance":
+            return f"{_short(self.chance(value, check) * 100)}%"
+        if self.format == "percent":
+            return f"{_short(value)}%"
+        if self.format == "range":
+            low = value * (1 - self.spread / 100.0)
+            high = value * (1 + self.spread / 100.0)
+            return f"{_short(low, 0)} ~ {_short(high, 0)}"
+        return _short(value)
+
+    def chance(self, value, check):
+        """The chance (0..1) ``value`` of this stat gives through ``check``: the check's chance
+        when the stat raises it, how much it takes off when the stat lowers it."""
+        if check is None:
+            return 0.0
+        for terms in (check.source_stat_terms, check.target_stat_terms):
+            coefficient = (terms or {}).get(self.stat_id)
+            if coefficient is None:
+                continue
+            if coefficient < 0:
+                return min(1.0, abs(coefficient * value))
+            chance = check.base_chance + coefficient * value
+            return max(check.minimum_chance, min(check.maximum_chance, chance))
+        return check.base_chance
+
+    def to_data(self):
+        data = {"stat_id": self.stat_id}
+        if self.group:
+            data["group"] = self.group
+        if self.format != "number":
+            data["format"] = self.format
+        if self.spread:
+            data["spread"] = self.spread
+        if self.label:
+            data["label"] = self.label
+        if self.check:
+            data["check"] = self.check
+        return data
+
+    @classmethod
+    def from_data(cls, data):
+        return cls(
+            data["stat_id"],
+            data.get("group", ""),
+            data.get("format", "number"),
+            data.get("spread", 0.0),
+            data.get("label", ""),
+            data.get("check", ""),
+        )
+
+
+def _short(value, digits=1):
+    """A number as a menu writes it: whole numbers plain, else ``digits`` decimals."""
+    value = round(float(value), digits)
+    return f"{value:g}" if digits else f"{int(round(value))}"
+
+
+@dataclass(frozen=True, slots=True)
 class MenuRules:
     rules_id: str
     display_name: str = ""
@@ -148,6 +275,9 @@ class MenuRules:
     stat_rows: tuple[str, ...] = ()
     item_categories: tuple[ItemCategory, ...] = ()
     item_filters: tuple[ItemFilter, ...] = ()
+    item_details: str = "panel"
+    stat_groups: tuple[StatGroup, ...] = ()
+    stat_lines: tuple[StatLine, ...] = ()
 
     def __init__(
         self,
@@ -159,6 +289,9 @@ class MenuRules:
         stat_rows=(),
         item_categories=(),
         item_filters=(),
+        item_details="panel",
+        stat_groups=(),
+        stat_lines=(),
     ):
         rules_id = _text(rules_id)
         if not rules_id:
@@ -174,7 +307,14 @@ class MenuRules:
         filters = tuple(
             f if isinstance(f, ItemFilter) else ItemFilter.from_data(f) for f in item_filters or ()
         )
+        groups = tuple(
+            g if isinstance(g, StatGroup) else StatGroup.from_data(g) for g in stat_groups or ()
+        )
+        lines = tuple(
+            x if isinstance(x, StatLine) else StatLine.from_data(x) for x in stat_lines or ()
+        )
         for label, ids in (
+            ("stat group", [g.group_id for g in groups]),
             ("item category", [c.category_id for c in categories]),
             ("item filter", [f.filter_id for f in filters]),
         ):
@@ -188,6 +328,12 @@ class MenuRules:
         s(self, "stat_rows", _tags(stat_rows))
         s(self, "item_categories", categories)
         s(self, "item_filters", filters)
+        details = _text(item_details) or "panel"
+        if details not in ITEM_DETAILS:
+            raise ValueError(f"item_details must be one of {ITEM_DETAILS}")
+        s(self, "item_details", details)
+        s(self, "stat_groups", groups)
+        s(self, "stat_lines", lines)
 
     SCHEMA = "asteria.rpg.menu_rules"
     VERSION = 1
@@ -209,6 +355,12 @@ class MenuRules:
             data["item_categories"] = [c.to_data() for c in self.item_categories]
         if self.item_filters:
             data["item_filters"] = [f.to_data() for f in self.item_filters]
+        if self.item_details != "panel":
+            data["item_details"] = self.item_details
+        if self.stat_groups:
+            data["stat_groups"] = [g.to_data() for g in self.stat_groups]
+        if self.stat_lines:
+            data["stat_lines"] = [x.to_data() for x in self.stat_lines]
         return data
 
     @classmethod
@@ -221,6 +373,9 @@ class MenuRules:
             stat_rows=data.get("stat_rows", ()),
             item_categories=data.get("item_categories", ()),
             item_filters=data.get("item_filters", ()),
+            item_details=data.get("item_details", "panel"),
+            stat_groups=data.get("stat_groups", ()),
+            stat_lines=data.get("stat_lines", ()),
         )
 
 
@@ -231,10 +386,14 @@ def menu_rules(database):
 
 
 __all__ = [
+    "ITEM_DETAILS",
     "NO_STAT_GRAPH",
     "PAUSE_ENTRIES",
+    "STAT_FORMATS",
     "ItemCategory",
     "ItemFilter",
     "MenuRules",
+    "StatGroup",
+    "StatLine",
     "menu_rules",
 ]

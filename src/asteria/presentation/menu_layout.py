@@ -115,11 +115,22 @@ def anchored_rect(rect, anchor, size):
 
 @dataclass(frozen=True, slots=True)
 class MenuSlotPlace:
-    """Where a doll element puts one equipment slot, and the picture of the empty place."""
+    """Where a doll element puts one equipment slot, and the picture of the empty place.
+
+    How the worn piece's icon fills the place (D88): ``icon_scale`` of the place (1 = as big as
+    fits inside it), ``icon_rotate`` degrees counter-clockwise first (-45 lays a diagonal sword
+    flat in a long place), ``icon_trim`` cuts the icon's empty edges so its picture, not its
+    margin, fills the place, ``icon_fit`` "fit" keeps its shape, "stretch" fills the place."""
 
     slot_id: str
     rect: tuple
     placeholder: str = ""
+    icon_scale: float = 1.0
+    icon_rotate: int = 0
+    icon_trim: bool = False
+    icon_fit: str = "fit"
+
+    FITS = ("fit", "stretch")
 
     def __post_init__(self):
         if not str(self.slot_id).strip():
@@ -127,16 +138,42 @@ class MenuSlotPlace:
         object.__setattr__(self, "slot_id", str(self.slot_id).strip())
         object.__setattr__(self, "rect", _rect(self.rect, "slot rect"))
         object.__setattr__(self, "placeholder", str(self.placeholder or "").strip())
+        scale = float(self.icon_scale)
+        if not 0.1 <= scale <= 4.0:
+            raise ValueError("a slot's icon_scale must be between 0.1 and 4")
+        object.__setattr__(self, "icon_scale", scale)
+        object.__setattr__(self, "icon_rotate", int(self.icon_rotate) % 360)
+        object.__setattr__(self, "icon_trim", bool(self.icon_trim))
+        fit = str(self.icon_fit or "fit").strip()
+        if fit not in self.FITS:
+            raise ValueError(f"a slot's icon_fit must be one of {self.FITS}")
+        object.__setattr__(self, "icon_fit", fit)
 
     def to_data(self):
         data = {"slot_id": self.slot_id, "rect": list(self.rect)}
         if self.placeholder:
             data["placeholder"] = self.placeholder
+        if self.icon_scale != 1.0:
+            data["icon_scale"] = self.icon_scale
+        if self.icon_rotate:
+            data["icon_rotate"] = self.icon_rotate
+        if self.icon_trim:
+            data["icon_trim"] = True
+        if self.icon_fit != "fit":
+            data["icon_fit"] = self.icon_fit
         return data
 
     @classmethod
     def from_data(cls, data):
-        return cls(data["slot_id"], data["rect"], data.get("placeholder", ""))
+        return cls(
+            data["slot_id"],
+            data["rect"],
+            data.get("placeholder", ""),
+            data.get("icon_scale", 1.0),
+            data.get("icon_rotate", 0),
+            data.get("icon_trim", False),
+            data.get("icon_fit", "fit"),
+        )
 
 
 @dataclass(frozen=True, slots=True)

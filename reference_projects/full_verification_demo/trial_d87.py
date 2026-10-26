@@ -140,12 +140,17 @@ MENU_ZH = {  # the Chinese of Menu Pages' words (data.<kind>.<id>.name)
 CHANGED_WORDS = ("pause.status",)  # engine words whose meaning changed: the engine's again
 
 
+LATER_FIELDS = ("item_details", "stat_groups", "stat_lines")  # D88 / D89 set them: kept
+
+
 def patch_menu_pages(data):
     sys.path.insert(0, str(HERE))
     from trial_story import menu_pages
 
     db = data["rpg_database"]
     record = menu_pages().to_data()
+    old = next((r for r in db.get("menu_rules", []) if r["rules_id"] == record["rules_id"]), {})
+    record.update({k: old[k] for k in LATER_FIELDS if k in old})
     db["menu_rules"] = [r for r in db.get("menu_rules", []) if r["rules_id"] != record["rules_id"]]
     db["menu_rules"].append(record)
     chinese = engine_translations("zh-TW")

@@ -62,3 +62,25 @@ def feet_pivot_y(image, frames) -> float:
     if lowest <= 0 or height <= 0:
         return 1.0
     return round(min(1.0, lowest / height), 4)
+
+
+def picture_box(image, frames):
+    """``(width, height, offset_x, offset_y)`` of the box that covers every opaque pixel of
+    ``frames`` (``(x, y, w, h, pivot_x, pivot_y)`` in the PIL ``image``), measured from the
+    standing point (each frame's pivot), y down: a collider of this size at this offset
+    blocks the whole picture. None when the frames are empty (D88)."""
+    alpha = image.convert("RGBA").getchannel("A")
+    left = top = right = bottom = None
+    for x, y, w, h, pivot_x, pivot_y in frames:
+        box = alpha.crop((int(x), int(y), int(x + w), int(y + h))).getbbox()
+        if box is None:
+            continue
+        px, py = float(pivot_x) * w, float(pivot_y) * h
+        l, t, r, b = box[0] - px, box[1] - py, box[2] - px, box[3] - py
+        left = l if left is None else min(left, l)
+        top = t if top is None else min(top, t)
+        right = r if right is None else max(right, r)
+        bottom = b if bottom is None else max(bottom, b)
+    if left is None:
+        return None
+    return (right - left, bottom - top, (left + right) / 2, (top + bottom) / 2)

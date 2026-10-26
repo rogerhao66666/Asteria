@@ -1,0 +1,35 @@
+{
+ "platform": "cocoa",
+ "en_starfall": "Blocks its whole picture",
+ "en_mira": "Blocks at its feet",
+ "en_roger": "Blocks its whole picture",
+ "en_slots_columns": [
+  "Slot",
+  "X",
+  "Y",
+  "W",
+  "H",
+  "Empty picture",
+  "Icon size",
+  "Icon turn °",
+  "Cut icon edges",
+  "Icon fit"
+ ],
+ "en_doll": "doll",
+ "zh_starfall": "整張圖阻擋",
+ "zh_mira": "腳下阻擋",
+ "zh_roger": "整張圖阻擋",
+ "zh_slots_columns": [
+  "欄位",
+  "X",
+  "Y",
+  "寬",
+  "高",
+  "空格圖片",
+  "圖示大小",
+  "圖示旋轉 °",
+  "裁掉圖示空白邊",
+  "圖示填滿方式"
+ ],
+ "zh_doll": "doll"
+}

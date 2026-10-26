@@ -328,6 +328,7 @@ class EncountersMixin:
         )
         self.opening = "normal"
         self.battle.final_damage_expression = self.rules.final_damage_expression
+        self.battle.ability_runtime.penetration_stat = self.rules.penetration_stat
         self.battle.knockout_resource_id = self.rules.knockout_resource_id
         self._sync_weather_tags()
         extensions = self.battle.extensions
