@@ -614,7 +614,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 |---|---|
 | 滑鼠 | `runtime/pointer.py`：畫面畫的時候 `rt.hotspot(rect, pick, key=)`，下一幀滑鼠換成按鍵事件（左鍵＝pick＋Enter、右鍵＝Esc、滾輪＝上下）；小畫面用 `hand_over` 換算座標；新畫面要自己標出可指區域 |
 | 開關 | `InputActionMap.mouse`（預設開，關才寫 `"mouse": false`）；編輯器 呈現 ▸ Controls 的「滑鼠操作」 |
-| 點擊移動 | `InputActionMap.click_move`（預設關）：地圖上沒點到東西的左鍵 → `find_path` 走過去（`field_ui._click_move_to`／`_click_move_vector`，按鍵接手） |
+| 點擊移動 | `InputActionMap.click_move`（預設關）：地圖上沒點到東西的左鍵 → `find_path` 走過去（`field_ui._click_move_to`／`_click_move_vector`，按鍵接手）；點可對話人物＝走到範圍內再互動（`_click_talk`）；從上方看的動作場景與連線遊戲也可用，平台場景不用（`_click_move_scene`） |
 | 長選單／提示 | 疊加選單超出視窗會捲動（`_overlay_tops`，游標離開才捲）；用過滑鼠後右下角顯示 `hint.mouse`；等待按鍵時滑鼠換出的按鍵不綁 |
 
 ### 下一步的候選（沒有排序，要使用者決定）

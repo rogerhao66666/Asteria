@@ -483,7 +483,7 @@ def test_click_to_move_walks_the_player_to_the_clicked_spot(runtime):
     _frames(runtime, [])
     player = runtime.game.player.get(Transform)
     start = (player.x, player.y)
-    goal = (start[0] + 32.0, start[1])
+    goal = (start[0] - 32.0, start[1])  # away from the figure on the right (a click on it talks)
     screen = runtime._field_screen_xy(*goal)
     _frames(runtime, [_click(screen)], *[[]] * 30)
     assert (player.x, player.y) == start  # off: a click on the map does nothing
@@ -491,7 +491,7 @@ def test_click_to_move_walks_the_player_to_the_clicked_spot(runtime):
     _frames(runtime, [_click(screen)], *[[]] * 120)
     assert abs(player.x - goal[0]) + abs(player.y - goal[1]) < 12
     assert runtime._click_path is None  # arrived
-    _frames(runtime, [_click(runtime._field_screen_xy(start[0] - 48.0, start[1]))], [], [])
+    _frames(runtime, [_click(runtime._field_screen_xy(*start))], [], [])
     assert runtime._click_path is not None
     key = pg.event.Event(pg.KEYDOWN, key=pg.K_UP, mod=0, unicode="", scancode=0)
     _frames(runtime, [key])
@@ -526,3 +526,48 @@ def test_the_editor_turns_click_to_move_on_with_undo(monkeypatch):
     mark = widget.findChild(QLabel, "InputMapClickMoveHelp")
     assert mark.text() == "ⓘ" and translate("Click to move", "zh_TW") == "點擊移動"
     assert translate(mark.toolTip(), "zh_TW").startswith("在地圖上按左鍵")
+
+
+def test_click_to_move_on_a_figure_walks_up_and_talks(runtime):
+    from asteria.core import Transform
+    from asteria.runtime.components2d import Interaction2DComponent
+
+    runtime._ui_mode = "field"
+    runtime.input.input_map.click_move = True
+    _frames(runtime, [])
+    figure = next(
+        e
+        for e in runtime.game.scene.entities()
+        if e.try_get(Interaction2DComponent) is not None
+        and e.get(Interaction2DComponent).trigger == "action"
+    )
+    spot = figure.get(Transform)
+    player = runtime.game.player.get(Transform)
+    player.x, player.y = spot.x + 80.0, spot.y  # away from it, to its right
+    runtime.game.save.player_position = (player.x, player.y)
+    _frames(runtime, [_click(runtime._field_screen_xy(spot.x, spot.y))])
+    for _ in range(180):
+        _frames(runtime, [])
+        if runtime.game.event_busy:
+            break
+    assert runtime.game.event_busy  # its event started, as the interact key would start it
+    assert runtime.game.facing == "left"  # facing the figure
+    reach = figure.get(Interaction2DComponent).range
+    assert abs(player.x - spot.x) <= reach and player.x > spot.x
+
+
+def test_click_to_move_skips_a_side_view_action_scene(runtime):
+    from asteria.runtime.character_control import CharacterController2DComponent
+
+    game = runtime.game
+    assert runtime._click_move_scene()  # the field
+    controller = CharacterController2DComponent()
+    game.player.add_component(controller)
+    type(game).action_scene = property(lambda self: True)
+    try:
+        controller.mode = "topdown"
+        assert runtime._click_move_scene()  # seen from above: a click walks
+        controller.mode = "platformer"
+        assert not runtime._click_move_scene()  # a platformer's player jumps instead
+    finally:
+        del type(game).action_scene

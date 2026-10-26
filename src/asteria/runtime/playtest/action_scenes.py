@@ -31,8 +31,16 @@ class ActionSceneMixin:
         if not self._multiplayer_connected():
             self.game.prepare_action_player()
         actions = dict(self.input.current.actions)
+        dx, dy = self._click_move_vector(*self.input.current.movement_vector(), dt)
+        if getattr(self, "_click_path", None) is not None:  # walking to a click (D85)
+            for name, value in (
+                ("move_left", -dx),
+                ("move_right", dx),
+                ("move_up", -dy),
+                ("move_down", dy),
+            ):
+                actions[name] = max(0.0, value)
         if self._multiplayer_connected():
-            dx, dy = self.input.current.movement_vector()
             self._predict_multiplayer_player(dx, dy, dt)
             self._send_multiplayer_input(dx, dy, actions)
             self._sync_multiplayer_player()

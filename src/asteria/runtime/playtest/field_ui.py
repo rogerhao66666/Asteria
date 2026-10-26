@@ -1061,31 +1061,74 @@ class FieldUiMixin:
 
     def _click_move_to(self, screen_x, screen_y):
         """Click to move (``InputActionMap.click_move``, D85): a left click on the map that hit
-        no picture, figure or menu sends the player walking there around what blocks it."""
+        no picture, click-event figure or menu sends the player walking there around what
+        blocks it; a click on a figure the player talks to walks up to it and talks."""
         self._click_path = None
         game = self.game
         if not (self.input.input_map.mouse and self.input.input_map.click_move):
             return
-        if game.mode != "field" or game.action_scene or self._multiplayer_connected():
+        if game.mode != "field" or not self._click_move_scene():
             return
         player = game.player.get(Transform)
         goal = self._field_world_xy(screen_x, screen_y)
+        target = self._click_talk_target(*goal)
+        if target is not None:
+            goal = (target.get(Transform).x, target.get(Transform).y)
         field = self.manifest.get("field", {})
         cell = float(field.get("grid_size", 16.0)) if field.get("movement") == "grid" else 16.0
-        path = game.find_path((player.x, player.y), goal, cell_size=cell)
-        if path:
-            self._click_path = [game.scene.id, list(path)[1:] or [goal], 0.0, None]
+        walker = target.id if target is not None else None  # its own collider is the goal
+        path = game.find_path((player.x, player.y), goal, cell_size=cell, walker=walker)
+        if path or target is not None:  # a figure already in reach is talked to at once
+            points = list(path or ())[1:] or [goal]
+            self._click_path = [game.scene.id, points, 0.0, None, walker]
+
+    def _click_move_scene(self):
+        """Whether a click can walk here: the field, a network game's field, and an action
+        scene seen from above (a side-view platformer's player jumps instead)."""
+        if not self.game.action_scene:
+            return True
+        from asteria.runtime.character_control import CharacterController2DComponent
+
+        controller = self.game.player.try_get(CharacterController2DComponent)
+        return controller is None or controller.mode != "platformer"
+
+    def _click_talk_target(self, world_x, world_y):
+        """The figure under a click that the player talks to (an ``action`` interaction with
+        an event), or None."""
+        from asteria.core import world_position
+        from asteria.runtime.components2d import Interaction2DComponent
+
+        best = None
+        for entity in self.game.scene.entities():
+            interaction = entity.try_get(Interaction2DComponent)
+            if entity is self.game.player or not entity.enabled or interaction is None:
+                continue
+            if not interaction.enabled or not interaction.event_program_id:
+                continue
+            if getattr(interaction, "trigger", "action") != "action":
+                continue
+            ex, ey = world_position(entity)
+            distance = abs(ex - world_x) + abs(ey - world_y)
+            if distance <= 16.0 and (best is None or distance < best[0]):
+                best = (distance, entity)
+        return best[1] if best is not None else None
 
     def _click_move_vector(self, dx, dy, dt):
         """The movement of this frame: the keys' (they cancel a walk), else a step along the
-        clicked path toward its next waypoint; a walk that stops getting closer ends."""
+        clicked path toward its next waypoint; a walk that stops getting closer ends. A walk
+        to a figure ends in its talking range, facing it, with the interact press."""
         walk = getattr(self, "_click_path", None)
         if dx or dy or walk is None:
             self._click_path = None
             return dx, dy
-        scene, points, stuck, last = walk
-        player = self.game.player.get(Transform)
-        if scene != self.game.scene.id or self.game.event_busy:
+        scene, points, stuck, last, target_id = walk
+        game = self.game
+        player = game.player.get(Transform)
+        if scene != game.scene.id or game.event_busy or game.mode != "field":
+            self._click_path = None
+            return 0.0, 0.0
+        target = game.scene.get_entity(target_id) if target_id else None
+        if target_id and self._click_talk(target, player):
             self._click_path = None
             return 0.0, 0.0
         near = max(2.0, 72.0 * dt)  # within a frame's step of a waypoint: the next one
@@ -1103,6 +1146,31 @@ class FieldUiMixin:
         tx, ty = points[0][0] - player.x, points[0][1] - player.y
         length = max(1e-6, (tx * tx + ty * ty) ** 0.5)
         return tx / length, ty / length
+
+    def _click_talk(self, target, player):
+        """At the clicked figure (within its range, less a little): face it and press interact,
+        as the key would. True when the walk is over (talked, or the figure is gone)."""
+        from asteria.core import world_position
+        from asteria.runtime.components2d import Interaction2DComponent
+
+        interaction = target.try_get(Interaction2DComponent) if target is not None else None
+        if interaction is None or not target.enabled:
+            return True
+        ex, ey = world_position(target)
+        tx, ty = ex - player.x, ey - player.y
+        if (tx * tx + ty * ty) ** 0.5 > max(4.0, interaction.range - 2.0):
+            return False
+        if abs(tx) > abs(ty):
+            self.game.set_player_facing("right" if tx > 0 else "left")
+        else:
+            self.game.set_player_facing("down" if ty > 0 else "up")
+        if self._multiplayer_connected():
+            self._send_multiplayer_input(0, 0, {"interact": 1.0})
+            return True
+        self.game.field_step({"interact": 1.0})
+        if self.game.mode == "field":
+            self.game.field_step({"interact": 0.0})
+        return True
 
     def _grid_field_step(self, dx, dy, dt):
         """``field.movement: "grid"``: a whole cell a step (runtime/grid_walk.py)."""
