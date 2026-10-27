@@ -56,11 +56,13 @@ def prepare(game):
         game.add_pet(species_id, level=5)
     for equipment_id in BAG:  # the bag's grid and its compare tooltip have something to show
         game.gain_equipment(equipment_id)
+    hands = {"w_demon_ring": "sub_weapon"}  # the ring in the sub-weapon hand (D92)
     for equipment_id in WORN:
         (piece,) = game.gain_equipment(equipment_id)
-        game.wear_from_bag("hero_01", piece.instance_id, piece.equipment.slot)
+        slot_id = hands.get(equipment_id, piece.equipment.slot)
+        game.wear_from_bag("hero_01", piece.instance_id, slot_id)
     (scepter,) = game.gain_equipment("w_bone_scepter")  # a piece that grows: the growth page
-    game.wear_from_bag("hero_01", scepter.instance_id, "weapon", 0)
+    game.wear_from_bag("hero_01", scepter.instance_id, "arsenal")  # carried: it takes two hands
     game.equip_offers.clear()
     allocation = state.progression_allocations.get("hero_01")
     if allocation is not None:  # the Status page's + have points to spend (D87)

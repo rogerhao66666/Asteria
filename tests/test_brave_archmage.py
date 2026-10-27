@@ -22,7 +22,9 @@ def test_roger_is_a_brave_with_an_archmage_sub_job():
     assert list(progress.active_class_ids[:2]) == ["brave", "archmage"]
     db = game.project.rpg_database
     weapons = {t for t in db.classes["brave"].granted_tags if t.startswith("capability.weapon.")}
-    assert weapons == {f"capability.weapon.{w}" for w in brave.WEAPONS}  # every weapon
+    kinds = {t.split(".", 1)[1] for e in db.equipment.values() for t in e.tags if "equip." in t}
+    assert weapons == {f"capability.weapon.{w}" for w in kinds}  # every kind of weapon (D91)
+    assert set(brave.WEAPONS) <= kinds
     growth = db.classes["brave"].level_growth
     assert growth["str"] > 0 and growth["int"] > 0  # STR and INT (power and magic) together
     library = game.project.gameplay_library.abilities

@@ -35,7 +35,14 @@ from asteria.rpg.durability import ON_BREAK, DurabilityRules
 from asteria.rpg.enemy_levels import EnemyLevelRules
 from asteria.rpg.extras import BattleOptions, CreditsPage, MenuEntry, MusicTrack
 from asteria.rpg.gacha import PRIZE_KINDS, GachaBanner, GachaRuntime
-from asteria.rpg.items import EQUIP_OFFERS, INVENTORY_OVERFLOW, InventoryRules
+from asteria.rpg.items import (
+    BATTLE_SWAPS,
+    EQUIP_OFFERS,
+    INVENTORY_OVERFLOW,
+    SLOT_CONFLICTS,
+    EquipmentSlotDefinition,
+    InventoryRules,
+)
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
@@ -43,6 +50,7 @@ from asteria.rpg.menu_rules import (
     ITEM_DETAILS,
     NO_STAT_GRAPH,
     PAUSE_ENTRIES,
+    STAT_COLUMNS,
     STAT_FORMATS,
     MenuRules,
 )
@@ -50,6 +58,8 @@ from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.pets import EXP_SHARES, LEVEL_UP_HEALS, PetRules
 from asteria.rpg.quests import OBJECTIVE_KINDS
 from asteria.rpg.refine import ON_FAIL, RefineRules
+from asteria.rpg.stat_definitions import SET_ON, STAT_DISPLAY, StatDefinition
+from asteria.rpg.tag_definitions import TagDefinition
 from asteria.rpg.workstations import WorkstationDefinition
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
@@ -113,6 +123,7 @@ class FormField:
     default: object = None
     empty_label: str = ""
     toggle_label: str = "Limited"  # the check box of an ``optional_int``
+    help: str = ""  # what the field means and how it counts: an ⓘ beside its label (D91)
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor
@@ -131,29 +142,49 @@ _ITEM_FILTER = (  # what the Items page's F key narrows a tab to (D87)
     F("tags", "Items With All of These Tags", "string_list", default=()),
     F("usable", "Only Items the Menu Can Use", "bool", default=False),
 )
+SET_ON_WORDS = {"actors": "Actors", "classes": "Jobs (growth per level)", "enemies": "Enemies"}
+STAT_COLUMN_WORDS = {
+    "rank": "Rank (ranks taken / highest)",
+    "total": "Total",
+    "base": "Base (actor, jobs, level, passives)",
+    "points": "Points (stat points spent)",
+    "gear": "Gear",
+    "gain": "Each + (what one more point adds)",
+}
 _STAT_GROUP = (  # a heading of the Status page's detail table (D89)
     F("group_id", "Group ID", "text", default="attack"),
     F("display_name", "Group Name", "text", default=""),
 )
 _STAT_LINE = (  # a stat of the Status page's detail table (D89)
     F("stat_id", "Stat", "ref", source="stats"),
-    F("group", "Group ID (empty: Other)", "text", default=""),
+    F("group", "Group ID", "text", default="", help="Empty: the Other group."),
     F(
         "format",
-        "Written As (number; percent; range: attack's low ~ high; chance: a battle check's %)",
+        "Written As",
         "choice",
         choices=STAT_FORMATS,
         default="number",
+        help="Number: the stat as it is (299). Percent: with a % (12.5%). Range: the low ~ high"
+        " an attack rolls, the stat less and plus Spread % (180 ~ 220). Chance: the % a battle"
+        " check gives at this stat (crit 20%). Share: a 0-1 stat as a percent (0.12: 12%).",
     ),
-    F("spread", "Range: Percent Either Way", "float", default=0.0),
-    F("label", "Own Name (empty: the stat's)", "text", default=""),
+    F(
+        "spread",
+        "Spread %",
+        "float",
+        default=0.0,
+        help="Range lines only: how far either way the low and high stand from the stat, in %.",
+    ),
+    F("label", "Own Name", "text", default="", help="Empty: the stat's own name."),
     F(
         "check",
-        "Chance: Battle Check (crit, land...)",
+        "Battle Check",
         "optional_ref",
         source="outcome_checks",
         empty_label="(none)",
         default="",
+        help="Chance lines only: the battle check (Battle Options ▸ Outcome Checks) whose"
+        " chance the line shows, worked out from this stat.",
     ),
 )
 _MODIFIER = (
@@ -322,6 +353,27 @@ FORMS = {
             "choice",
             choices=EQUIP_OFFERS,
             default="never",
+        ),
+        F(
+            "battle_swap",
+            "Swap Carried Weapons in Battle",
+            "choice",
+            choices=BATTLE_SWAPS,
+            default="turn",
+            help="The battle's Swap command takes a piece from a carried slot (Game Systems ▸"
+            " Equipment Slots, Carried) into a worn one. turn: swapping uses the turn. free: the"
+            " hero still acts. off: no Swap command.",
+        ),
+        F(
+            "slot_conflict",
+            "When a Place Is Taken",
+            "choice",
+            choices=SLOT_CONFLICTS,
+            default="take_off",
+            help="Wearing a piece whose place is taken - a two-handed weapon while the sub"
+            " weapon slot holds one (the gear's Also Takes). take_off: the other piece goes back"
+            " to the bag (or the carried slot when swapping). refuse: it cannot be worn until"
+            " the other piece is taken off.",
         ),
     ),
     "drop_tables": (
@@ -893,6 +945,128 @@ D26_FORMS = {
         F("per_enemy", "Points per Defeated Enemy", "float", default=0.0),
         F("secondary", "Share for Each Extra Class (0–1)", "float", default=0.5),
     ),
+    "stat_definitions": (  # what each number of the game is (D91)
+        F("stat_id", "Stat ID", "id", help="The name the data uses: str, power, boss_damage."),
+        F("display_name", "Name", "text", default="", help="Strength, Physical Attack..."),
+        F(
+            "short_name",
+            "Short Name",
+            "text",
+            default="",
+            help="For tight tables: STR, ATK. Empty: the name.",
+        ),
+        F(
+            "display",
+            "Written As",
+            "choice",
+            choices=STAT_DISPLAY,
+            default="number",
+            help="Number: 299. Percent: 12.5% (the stat counts in percent points). Share: a"
+            " 0-1 stat written as a percent (0.12: 12%).",
+        ),
+        F(
+            "set_on",
+            "Set in the Base Stats of",
+            "ref_list",
+            source="stat_set_on",
+            default=(),
+            help="The records whose Base Stats list this stat: an actor's starting stats, a"
+            " job's growth per level, an enemy's stats. A stat none of them sets comes from"
+            " Stat Formulas, gear, passives and points.",
+        ),
+        F("order", "Order", "int", default=0, help="Lower comes first in every list."),
+        F(
+            "description",
+            "What It Means",
+            "multiline",
+            default="",
+            help="The definition, in your words: what the number does in the game.",
+        ),
+        F(
+            "usage",
+            "Where It Comes From and What Reads It",
+            "info",
+            default="",
+            help="Worked out from the whole project: the stat formula, the records and gear"
+            " that set it, the battle checks, rules and skills that read it.",
+        ),
+    ),
+    "equipment_slots": (  # the places gear is worn or carried in (D92)
+        F(
+            "slot_id",
+            "Slot",
+            "id",
+            help="The id gear names in its Slot: weapon, sub_weapon, special. Every hero has"
+            " every slot defined here.",
+        ),
+        F("display_name", "Name", "text", default="", help="What players read: Main Weapon."),
+        F("order", "Order", "int", default=0, help="Lower comes first on the equipment screen."),
+        F(
+            "capacity",
+            "Pieces It Holds (empty = no limit)",
+            "optional_int",
+            default=1,
+            help="How many pieces fit: 1 for a hand, 2 for two rings, 6 carried weapons.",
+        ),
+        F(
+            "accepted_tags",
+            "Also Takes Gear Tagged",
+            "string_list",
+            default=(),
+            help="Gear made for another slot fits too when it carries one of these tags: a sub"
+            " weapon slot taking weapon takes every weapon. Empty: only gear made for this slot.",
+        ),
+        F(
+            "stowed",
+            "Carried, Not Worn",
+            "bool",
+            default=False,
+            help="Its pieces give no stats, skills, tags or set bonuses: they wait to be swapped"
+            " into a worn slot with the battle's Swap command (Inventory Rules ▸ Swap Carried"
+            " Weapons in Battle).",
+        ),
+        F(
+            "required_capabilities",
+            "Only for Heroes With",
+            "string_list",
+            default=(),
+            help="Capabilities (tags) a hero needs to use the slot, from a job's Granted Tags:"
+            " capability.carry_weapons lets only that job carry weapons. Empty: everyone.",
+        ),
+        F(
+            "description",
+            "What It Is For",
+            "multiline",
+            default="",
+            help="In your words, for the people making the game.",
+        ),
+    ),
+    "tag_definitions": (  # what each tag of the game means (D91)
+        F(
+            "tag_id",
+            "Tag",
+            "id",
+            help="The tag the data uses: weapon.sword, weak.fire, no_escape. End it in * for a"
+            " family: rune.* covers every tag starting with rune.",
+        ),
+        F("display_name", "Name", "text", default="", help="What players read: Sword, Fire."),
+        F("order", "Order", "int", default=0, help="Lower comes first in every list."),
+        F(
+            "description",
+            "What It Means",
+            "multiline",
+            default="",
+            help="The definition, in your words: what carrying the tag does in the game.",
+        ),
+        F(
+            "usage",
+            "Who Carries It and What Reads It",
+            "info",
+            default="",
+            help="Worked out from the whole project: what the engine itself does with the tag,"
+            " the records that carry it and the rules that read it.",
+        ),
+    ),
     "derived_stats": (
         F("stat_id", "Stat (the one computed)", "id"),
         F("display_name", "Name", "text", default=""),
@@ -1015,6 +1189,13 @@ D26_FORMS = {
             default="",
         ),
         F(
+            "stat_columns",
+            "Stat Table Columns, in Order (none ticked: every column)",
+            "ref_list",
+            source="stat_columns",
+            default=(),
+        ),
+        F(
             "stat_rows",
             "Detail Stats of the Status Page, in Order (none ticked: every stat formula)",
             "ref_list",
@@ -1062,7 +1243,7 @@ FORMS.update(D26_FORMS)
 
 
 def _stat_label(db, stat_id, labels=None):
-    rule = db.derived_stats.get(stat_id)
+    rule = db.stat_definitions.get(stat_id) or db.derived_stats.get(stat_id)
     name = getattr(rule, "display_name", "") if rule is not None else ""
     name = name or (labels or {}).get(stat_id, "")
     return f"{name} ({stat_id})" if name and name != stat_id else stat_id
@@ -1375,6 +1556,9 @@ def _templates():
         ),  # fmt: skip
         "job_point_rules": lambda key, c: JobPointRules(key),
         "derived_stats": lambda key, c: DerivedStatRule(key),
+        "stat_definitions": lambda key, c: StatDefinition(key),
+        "tag_definitions": lambda key, c: TagDefinition(key),
+        "equipment_slots": lambda key, c: EquipmentSlotDefinition(key),
         "new_game_plus_rules": lambda key, c: NewGamePlusRules(key),
         "locale_tables": lambda key, c: LocaleTable(key),
         "message_settings": lambda key, c: MessageSettings(key),
@@ -1442,6 +1626,11 @@ KINDS = (
     ),  # fmt: skip
     _Kind("gacha_banners", "Gacha Banners", "gacha_banners", "banner_id", GachaBanner),
     _Kind("job_point_rules", "Job Points", "job_point_rules", "rules_id", JobPointRules),
+    _Kind("stat_definitions", "Stats", "stat_definitions", "stat_id", StatDefinition),
+    _Kind("tag_definitions", "Tags", "tag_definitions", "tag_id", TagDefinition),
+    _Kind(
+        "equipment_slots", "Equipment Slots", "equipment_slots", "slot_id", EquipmentSlotDefinition
+    ),
     _Kind(
         "derived_stats",
         "Stat Formulas (derived stats)",
@@ -1469,6 +1658,22 @@ KINDS = (
     _Kind("menu_entries", "Pause Menu Entries", "menu_entries", "entry_id", MenuEntry),
     _Kind("menu_rules", "Menu Pages (status, items)", "menu_rules", "rules_id", MenuRules),
     _Kind("doodads", "Doodads", "doodads", "doodad_id", DoodadDefinition),
+)
+# the order the Game Systems list shows them in (D90): the characters and their stats first,
+# then their gear, battles, the party, the world, and menus and presentation last
+KIND_ORDER = (
+    *("stat_definitions", "derived_stats", "tag_definitions", "job_point_rules"),
+    "ability_loadout_rules",
+    *("menu_rules", "equipment_slots", "equipment_sets", "refine_rules", "durability_rules"),
+    *("disassembly_recipes", "battle_options", "battle_extension_rules", "enemy_level_rules"),
+    *("capture_rules", "drop_tables", "pet_species", "pet_rules", "recruit_offices", "shops"),
+    *("quests", "quest_boards", "factions", "achievements", "world_interactions"),
+    *("map_rule_sets", "workstations", "gacha_banners", "inventory_rules", "menu_entries"),
+    *("message_settings", "music_tracks", "credits_pages", "locale_tables", "doodads"),
+    "new_game_plus_rules",
+)
+KINDS = tuple(
+    sorted(KINDS, key=lambda k: KIND_ORDER.index(k.kind_id) if k.kind_id in KIND_ORDER else 99)
 )
 _BY_ID = {k.kind_id: k for k in KINDS}
 
@@ -1536,7 +1741,9 @@ class GameSystemsAuthoringController:
         return getattr(self.database, self.kind(kind_id).store)
 
     def ids(self, kind_id):
-        return tuple(sorted(self.store(kind_id)))
+        """The records' ids by their ``order`` when they have one (stats, D91), else by id."""
+        store = self.store(kind_id)
+        return tuple(sorted(store, key=lambda k: (getattr(store[k], "order", 0), k)))
 
     def get(self, kind_id, key):
         value = self.store(kind_id).get(str(key))
@@ -1549,7 +1756,23 @@ class GameSystemsAuthoringController:
         data = self.get(kind_id, key).to_data()
         if kind_id in ADAPTERS:
             data = ADAPTERS[kind_id][0](data)
-        return _with_defaults(FORMS[kind_id], data)
+        data = _with_defaults(FORMS[kind_id], data)
+        for f in FORMS[kind_id]:
+            if f.kind == "info":  # worked out, never stored
+                data[f.key] = self.info(kind_id, key)
+        return data
+
+    def info(self, kind_id, key):
+        """The words of a record's read-only ``info`` field."""
+        if kind_id == "stat_definitions":
+            from .stat_usage import stat_usage
+
+            return stat_usage(self.project, key)
+        if kind_id == "tag_definitions":
+            from .tag_usage import tag_usage
+
+            return tag_usage(self.project, key)
+        return ""
 
     def decode(self, kind_id, data):
         try:
@@ -1586,10 +1809,16 @@ class GameSystemsAuthoringController:
         if source == "stats":  # the stat formulas' stats, then every stat the data names
             from .data_translation import _stat_labels, stat_ids
 
-            known = list(db.derived_stats)
+            defined = sorted(db.stat_definitions.values(), key=lambda d: (d.order, d.stat_id))
+            known = [d.stat_id for d in defined]  # Game Systems ▸ Stats first (D91)
+            known += [k for k in db.derived_stats if k not in known]
             known += [s for s in stat_ids(self.project) if s not in known]
             labels = _stat_labels(self.project)  # the character screen's names (D89)
             return tuple((s, _stat_label(db, s, labels)) for s in known)
+        if source == "stat_set_on":  # Game Systems ▸ Stats (D91)
+            return tuple((x, SET_ON_WORDS[x]) for x in SET_ON)
+        if source == "stat_columns":  # the Status page's stat table (D89)
+            return tuple((c, STAT_COLUMN_WORDS[c]) for c in STAT_COLUMNS)
         if source == "outcome_checks":  # crit, land, block... (a detail line's chance, D89)
             return tuple(sorted(db.outcome_checks))
         if source == "goods":  # what a shop can sell: items, then equipment (D61)

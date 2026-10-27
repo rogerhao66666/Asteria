@@ -324,10 +324,12 @@ class PatchField(QWidget):
 
 class SlotsField(QWidget):
     """A doll's places: which slot, where on the picture (x, y from the doll's corner), the
-    picture of the empty place, and how the worn piece's icon fills the place (D88: size, turn,
-    empty edges cut, fit). The n-th row of a slot shows its n-th piece."""
+    picture of the empty place, how the worn piece's icon fills the place (D88: size, turn,
+    empty edges cut, fit) and a picture under the place (D92). The n-th row of a slot shows its
+    n-th piece."""
 
     changed = Signal()
+    PICTURES = (5, 10)  # Empty picture, Back picture: double-click or "Choose picture…"
     HEADERS = (
         "Slot",
         "X",
@@ -339,16 +341,20 @@ class SlotsField(QWidget):
         "Icon turn °",
         "Cut icon edges",
         "Icon fit",
+        "Back picture",
     )
     TIPS = {
         "Icon size": "1 = as big as fits inside the place; 0.5 = half; up to 4.",
         "Icon turn °": "Degrees counter-clockwise; -45 lays a diagonal sword flat.",
         "Cut icon edges": "yes: the icon's empty border is cut, so its picture fills the place.",
         "Icon fit": "fit: keeps its shape; stretch: fills the place's width and height.",
+        "Back picture": "A picture drawn under the place, empty or not, filling it: for places"
+        " off the doll picture.",
     }
 
-    def __init__(self, parent=None):
+    def __init__(self, document=None, parent=None):
         super().__init__(parent)
+        self.document = document
         self.table = QTableWidget(0, len(self.HEADERS))
         self.table.setHorizontalHeaderLabels(self.HEADERS)
         for column, header in enumerate(self.HEADERS):
@@ -357,14 +363,22 @@ class SlotsField(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.setMinimumHeight(150)
         self.table.cellChanged.connect(lambda *_: self.changed.emit())
-        add, remove = QToolButton(), QToolButton()
+        self.table.cellDoubleClicked.connect(self._double_clicked)
+        add, remove, picture = QToolButton(), QToolButton(), QToolButton()
         add.setText("+ Place")
         remove.setText("− Place")
+        picture.setText("Choose picture…")
+        picture.setToolTip(
+            "A file of your own for the chosen row's Empty picture or Back picture (the chosen"
+            " column, else Back picture); double-clicking either cell does the same."
+        )
         add.clicked.connect(self._add)
         remove.clicked.connect(self._remove)
+        picture.clicked.connect(self._choose_current)
         buttons = QHBoxLayout()
         buttons.addWidget(add)
         buttons.addWidget(remove)
+        buttons.addWidget(picture)
         buttons.addStretch(1)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -388,6 +402,7 @@ class SlotsField(QWidget):
                     int(float(words[7] or 0)),
                     words[8].lower() in ("yes", "true", "1", "y"),
                     words[9] or "fit",
+                    words[10],
                 )
             except ValueError:
                 continue
@@ -407,6 +422,7 @@ class SlotsField(QWidget):
                     place.icon_rotate if place.icon_rotate <= 180 else place.icon_rotate - 360,
                     "yes" if place.icon_trim else "no",
                     place.icon_fit,
+                    place.backdrop,
                 )
             )
         self.table.blockSignals(False)
@@ -418,7 +434,7 @@ class SlotsField(QWidget):
             self.table.setItem(row, column, QTableWidgetItem(str(value)))
 
     def _add(self):
-        self._row(("weapon", 0, 0, 64, 64, "", "1", 0, "no", "fit"))
+        self._row(("weapon", 0, 0, 64, 64, "", "1", 0, "no", "fit", ""))
         self.changed.emit()
 
     def _remove(self):
@@ -426,6 +442,23 @@ class SlotsField(QWidget):
         if row >= 0:
             self.table.removeRow(row)
             self.changed.emit()
+
+    def _double_clicked(self, row, column):
+        if column in self.PICTURES:
+            self.choose_picture(row, column)
+
+    def _choose_current(self):
+        row, column = self.table.currentRow(), self.table.currentColumn()
+        if row >= 0:
+            self.choose_picture(row, column if column in self.PICTURES else self.PICTURES[-1])
+
+    def choose_picture(self, row, column, path=None):
+        """Put a picture file in a place's picture cell, imported like every chosen file."""
+        if path is None:
+            root = str(_project_root(self.document))
+            path, _ = QFileDialog.getOpenFileName(self, "Choose a file", root, FILTERS["image"])
+        if path:
+            self.table.setItem(row, column, QTableWidgetItem(import_ui_file(self.document, path)))
 
 
 class ElementBox(QGraphicsRectItem):
@@ -652,7 +685,7 @@ class ElementInspector(QWidget):
         form.addRow("Gap", self.gap)
         form.addRow("Selected row frame", self.selection_skin)
         form.addRow("Selected row colour", self.selection_fill)
-        self.slots = SlotsField()
+        self.slots = SlotsField(document)
         form.addRow("Doll places", self.slots)
         self.form = form
         for widget in (

@@ -147,7 +147,7 @@ def _battle(tables=None, default_locale="en"):
         data["default_locale"] = default_locale
         db.message_settings[settings.settings_id] = MessageSettings.from_data(data)
     game._localizer = None
-    smoke.prepare(game, Counter(), "hero")
+    smoke.prepare(game, Counter(), "brave")
     game.start_encounter("boss_room")
     return game
 

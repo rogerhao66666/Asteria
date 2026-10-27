@@ -57,7 +57,8 @@ def test_the_paper_doll_wears_and_takes_off_what_fits(host):
     places = screen.places()
     slots = [s for s, _i, _p in places]
     assert {"head", "legs", "feet", "weapon", "armor", "accessory", "form"} <= set(slots)
-    assert slots.count("weapon") == 2 and slots.count("accessory") == 2  # Roger holds two
+    assert [slots.count(s) for s in ("special", "weapon", "sub_weapon", "accessory")] == [1] * 4
+    assert slots.count("arsenal") == 6  # the Brave's carried weapons (D92)
     boxes = {p.slot_id for p in host.menu_layout("equipment").element("doll").slots}
     assert boxes == set(slots)  # the demo's doll picture has a place for every slot
     (helmet,) = game.gain_equipment("hd_plate_helmet")
@@ -78,12 +79,14 @@ def test_the_paper_doll_wears_and_takes_off_what_fits(host):
     assert helmet not in game.save.rpg_state.equipment_bag
     _key(host, pg.K_x)
     assert _worn(host, "head") == [] and helmet in game.save.rpg_state.equipment_bag
-    (ring,) = game.gain_equipment("w_demon_ring")  # the free second hand
+    (ring,) = game.gain_equipment("w_demon_ring")  # the free sub-weapon hand
     game.equip_offers.clear()
-    screen.place = [i for i, (s, _n, _p) in enumerate(screen.places()) if s == "weapon"][1]
+    screen.place = [s for s, _n, _p in screen.places()].index("sub_weapon")
     _key(host, pg.K_RETURN)
     _key(host, pg.K_RETURN)
-    assert _worn(host, "weapon") == ["w_sunbrand", "w_demon_ring"]
+    assert _worn(host, "weapon") == ["w_sunbrand"] and _worn(host, "sub_weapon") == [
+        "w_demon_ring"
+    ]
     _key(host, pg.K_ESCAPE)
     assert host._ui_mode == "field"
     host.capture()
@@ -96,10 +99,10 @@ def test_the_enhance_screen_refines_sockets_and_grows(host):
     state.inventory.add("silver_ore", 4)
     state.inventory.add("ice_orb_item", 1)
     state.inventory.add("card_knight_item", 1)
-    for equipment_id in ("w_demon_ring", "w_bone_scepter"):
+    # the ring in the sub-weapon hand, the two-handed scepter carried (D92)
+    for equipment_id, slot_id in (("w_demon_ring", "sub_weapon"), ("w_bone_scepter", "arsenal")):
         (piece,) = game.gain_equipment(equipment_id)
-        game.wear_from_bag("hero_01", piece.instance_id, "weapon", 1 if "ring" in piece.instance_id
-                           else 0)  # fmt: skip
+        game.wear_from_bag("hero_01", piece.instance_id, slot_id)
     game.equip_offers.clear()
     host.open_enhance_screen(back="field")
     screen = host._gear_screen

@@ -29,7 +29,7 @@ SUB_JOBS = (
     "mystic",
     "weapon_master",
     "sage",
-    "hero",
+    "brave",
     "forgemaster",
     "rogue",
     "guardian",
@@ -219,11 +219,25 @@ def fight(game, facts, acc, seed=7, max_rounds=200, encounter="boss_room", crowd
             "gilded_hammer",
             "molten_strike",
             "vampiric_strike",
-            "dark_pact",
             "shadow_feast",
             "blood_rite",
         )
         pool.sort(key=lambda a: not (base(a) in special and used[a] == 0))
+        # until the boss has been broken once, Roger hits a weakness first, as a player breaking
+        # it would (the levelled party kills it before the variety picks empty its 36 shields);
+        # the companions keep to variety, so every job's skills get played
+        foe = game.battle.member(boss) if boss in game.active_enemy_ids() else None
+        if foe is not None and actor == HERO and "state.broken" not in seen_tags:
+            library = game.project.gameplay_library.abilities
+            weak = {t.split(".", 1)[1] for t in foe.subject.tags.values() if t.startswith("weak.")}
+            known = set(library.ids())
+            striking = {
+                a
+                for a in pool
+                if base(a) in known
+                and weak & {t.split(".", 1)[1] for t in library.get(base(a)).tags if "." in t}
+            }
+            pool.sort(key=lambda a: a not in striking)
         guards = ("guard_stance", "rally", "shadow_step", "mend", "arcane_barrier", "bastion")
         resources = game.battle.member(actor).subject.resources
         low = resources.current("vitality") < 0.5 * resources.maximum("vitality")

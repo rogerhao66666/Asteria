@@ -54,10 +54,13 @@ def test_every_kind_names_a_real_record_class_and_its_id_field():
                 }
                 classes[node.name] = fields
     kinds = set()
+    # a stat's definition and its formula name the same stat: one name for both (D91)
+    shared = {"StatDefinition"}
     for class_name, (kind, attribute) in data_text.KINDS.items():
         assert class_name in classes, class_name
         assert attribute in classes[class_name], (class_name, attribute)
-        assert kind not in kinds, kind  # one kind per class: keys never collide
+        if class_name not in shared:
+            assert kind not in kinds, kind  # one kind per class: keys never collide
         kinds.add(kind)
 
 

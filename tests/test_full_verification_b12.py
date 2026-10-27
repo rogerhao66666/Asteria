@@ -18,7 +18,7 @@ HERO, BP, HP, SP = "hero_01", "bp", "vitality", "technique"
 BOSS = "crimson_warlord"
 
 
-def _game(job="hero", encounter="boss_room"):
+def _game(job="brave", encounter="boss_room"):
     _project, game = smoke.load()
     game.refine_rng = random.Random(3)
     smoke.prepare(game, Counter(), job)
@@ -61,7 +61,7 @@ def test_pilfer_steals_once_from_the_boss_then_finds_nothing():
 
 
 def test_an_ultimate_can_be_used_once_per_battle():
-    game = _game("hero")
+    game = _game("brave")
     boss = game.active_enemy_ids()[0]
     pool = game.battle.battle_resources
     pool.change(HERO, BP, 5 - pool.current(HERO, BP))
@@ -74,7 +74,7 @@ def test_an_ultimate_can_be_used_once_per_battle():
 
 
 def test_a_skill_levels_up_with_use_and_the_level_adds_damage():
-    game = _game("hero")
+    game = _game("brave")
     boss = game.active_enemy_ids()[0]
     extensions = game.battle.extensions
     assert extensions.mastery_level(HERO, "dawn_and_dusk") == 0
@@ -87,7 +87,7 @@ def test_a_skill_levels_up_with_use_and_the_level_adds_damage():
 
 
 def test_a_kill_and_a_wound_fill_boost_points():
-    game = _game("hero", "swarm")
+    game = _game("brave", "swarm")
     pool = game.battle.battle_resources
     pool.change(HERO, BP, -pool.current(HERO, BP))
     wisp = next(e for e in game.active_enemy_ids() if not e.startswith(BOSS))
@@ -99,7 +99,7 @@ def test_a_kill_and_a_wound_fill_boost_points():
 
 
 def test_a_goblin_can_be_captured_fights_as_a_unit_and_evolves():
-    game = _game("hero", "woods_ambush")
+    game = _game("brave", "woods_ambush")
     wisp = next(e for e in game.active_enemy_ids() if e.startswith("goblin_slinger"))
     assert game.capture_chance(wisp) is not None
 
@@ -120,7 +120,7 @@ def test_a_goblin_can_be_captured_fights_as_a_unit_and_evolves():
 
 
 def test_quests_achievements_and_enemy_levels():
-    game = _game("hero")
+    game = _game("brave")
     state = game.save.rpg_state
     log = game.quest_log
     for quest_id in ("q_patrol", "q_beast", "q_crypt"):  # the chain before it
@@ -177,7 +177,7 @@ def test_advanced_jobs_wait_for_their_level_and_prerequisite_jobs():
 
 
 def test_skills_evolve_as_the_party_wins_battles():
-    game = _game("hero")
+    game = _game("brave")
     build = lambda: set(game.resolve_actor_build(HERO).abilities)  # noqa: E731
     assert "brave_slash" in build() and "brave_slash_ii" not in build()
     assert "arsenal_barrage_ii" not in build()  # that one waits for rank 3 of the track
@@ -189,7 +189,7 @@ def test_skills_evolve_as_the_party_wins_battles():
 
 def test_a_skill_calls_a_summon_that_fights_beside_the_party():
     _project, game = smoke.load()
-    smoke.prepare(game, Counter(), "hero")
+    smoke.prepare(game, Counter(), "brave")
     game.join_party("hero_03")  # Vesper the necromancer joins in the story
     game.start_encounter("boss_room")
     assert "spirit_knight" not in game.battle.members
@@ -207,7 +207,7 @@ def test_a_skill_calls_a_summon_that_fights_beside_the_party():
 
 
 def test_a_transformation_changes_stats_tags_and_skills_and_can_be_undone():
-    game = _game("hero")
+    game = _game("brave")
     boss = game.active_enemy_ids()[0]
     boss_pool = game.battle.member(boss).subject.resources
 
@@ -237,11 +237,11 @@ def test_a_transformation_changes_stats_tags_and_skills_and_can_be_undone():
 def test_the_swarm_can_be_fled_but_the_warlords_hall_cannot():
     from asteria.runtime.game_session import GameSessionError
 
-    game = _game("hero", "boss_room")
+    game = _game("brave", "boss_room")
     assert "no_escape" in game.escape_unavailable()
     with pytest.raises(GameSessionError, match="cannot escape"):
         game.attempt_escape(HERO)
-    game = _game("hero", "swarm")
+    game = _game("brave", "swarm")
     assert game.escape_unavailable() == "" and 0 < game.escape_chance() <= 1
     rng = random.Random(1)
     for _ in range(50):
@@ -266,7 +266,7 @@ def test_a_save_after_a_fight_with_a_pet_loads_again():
 
 
 def test_a_quest_finished_by_a_fight_is_completed_for_the_events_at_once():
-    game = _game("hero", "woods_ambush")
+    game = _game("brave", "woods_ambush")
     game.start_quest("q_patrol")
     _win(game)  # three slingers
     game.start_encounter("woods_patrol")
@@ -277,7 +277,7 @@ def test_a_quest_finished_by_a_fight_is_completed_for_the_events_at_once():
 
 
 def test_a_fight_can_end_when_its_leader_falls():
-    game = _game("hero", "woods_boss")
+    game = _game("brave", "woods_boss")
     beast = next(e for e in game.active_enemy_ids() if e.startswith("goblin_beast"))
     assert not game.battle.resolve_outcome().finished
     game.battle.member(beast).subject.resources.set_current(HP, 0)
@@ -287,5 +287,5 @@ def test_a_fight_can_end_when_its_leader_falls():
 
 
 def test_a_fight_without_that_leader_is_not_ended_by_his_objective():
-    game = _game("hero", "crypt_patrol")
+    game = _game("brave", "crypt_patrol")
     assert not game.battle.resolve_outcome().finished

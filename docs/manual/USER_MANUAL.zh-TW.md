@@ -845,7 +845,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | `game.line_text(line)` | 台詞或選項翻譯後的文字。 |
 | `game.speaker_of(line)` | 說話者翻譯後的名字。 |
 | `game.map_name(scene_id, own)` | 地圖名稱翻譯後的文字。 |
-| `game.stat_name(stat_id)` | 能力值或資源名稱翻譯後的文字。 |
+| `game.stat_name(stat_id, *, short=False)` | 能力值或資源名稱翻譯後的文字。 |
 | `game.slot_name(slot_id)` | 裝備部位名稱翻譯後的文字。 |
 | `game.tag_name(tag)` | 標籤名稱翻譯後的文字。 |
 

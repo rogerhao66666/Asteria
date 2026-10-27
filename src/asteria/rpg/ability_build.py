@@ -26,6 +26,8 @@ class PassiveDefinition:
     triggers: tuple[GameplayTrigger, ...] = ()
 
     icon_id: str = ""  # a project icon shown in menus; written only when set
+    description: str = ""  # what it does, in the author's words (D91); written only when set
+    OPTIONAL_DATA = {"description": ""}  # shown in the editor while empty
 
     def __init__(
         self,
@@ -37,6 +39,7 @@ class PassiveDefinition:
         granted_abilities=(),
         triggers=(),
         icon_id="",
+        description="",
     ):
         passive_id = _id(passive_id, "passive_id")
         modifiers = tuple(modifiers)
@@ -52,6 +55,7 @@ class PassiveDefinition:
         object.__setattr__(self, "granted_abilities", _ids(granted_abilities, "ability_id"))
         object.__setattr__(self, "triggers", triggers)
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "description", str(description or ""))
 
     def to_data(self):
         return {
@@ -64,6 +68,7 @@ class PassiveDefinition:
             "granted_abilities": list(self.granted_abilities),
             "triggers": [x.to_data() for x in self.triggers],
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -78,6 +83,7 @@ class PassiveDefinition:
             granted_abilities=data["granted_abilities"],
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
             icon_id=data.get("icon_id", ""),
+            description=data.get("description", ""),
         )
 
 

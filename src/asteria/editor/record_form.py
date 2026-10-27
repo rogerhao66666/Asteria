@@ -767,6 +767,7 @@ class Section(QFrame):
             self.form.setColumnStretch(column, 1)
         if columns:
             self.form.setHorizontalSpacing(16)
+            self.form.setVerticalSpacing(LABEL_GAP)  # a label to its field; rows: see below
         self.body.setVisible(not collapsed)
         self.toggle.toggled.connect(self._toggled)
         self._more = []  # (label, widget, help, key) of empty fields, shown on request
@@ -855,38 +856,47 @@ class Section(QFrame):
 
     def _grid_place(self, title, label, widget, holder):
         """Label above the field; a small field takes the next free column, a wide one (a list,
-        long text) a row of its own. A switch carries its label beside its box."""
+        long text) a row of its own. A switch carries its label beside its box.
+
+        Each row of fields is two grid rows (D91): the labels', each label standing on the
+        bottom of its cell, then the fields', each at the top of its own. A label that wraps to
+        two lines or a tall field beside it no longer pushes its neighbours' boxes down."""
         row, column = self._cell
+        span = 1
         if _is_wide(widget):
             if column:
                 row, column = row + 1, 0
-            self.form.addLayout(holder, row, 0, 1, self.columns)
+            span = self.columns
             self._cell = (row + 1, 0)
         else:
             if isinstance(widget, Picker):  # equal columns still show its longest choice
                 widget.setMinimumWidth(max(widget.minimumWidth(), widget.choice_width(220)))
-            self.form.addLayout(holder, row, column, Qt.AlignTop)
-            column += 1
-            self._cell = (row + 1, 0) if column >= self.columns else (row, column)
+            self._cell = (row + 1, 0) if column + 1 >= self.columns else (row, column + 1)
+        holder.setContentsMargins(0, 0, 0, 8)  # room below a row of fields, before the next
+        self.form.addLayout(holder, 2 * row + 1, column, 1, span, Qt.AlignTop)
         if isinstance(widget, QCheckBox) and label:
             widget.setText(label)
-            holder.addSpacing(title.sizeHint().height() + LABEL_GAP)  # level with labelled fields
             # the unused label has no parent: Python frees it (a deleteLater as well would
             # free it twice and crash later)
         else:
-            holder.addWidget(title)
+            self.form.addWidget(title, 2 * row, column, 1, span, Qt.AlignBottom | Qt.AlignLeft)
 
     def add_wide(self, widget):
         if self.columns:
             row, column = self._cell
             row += 1 if column else 0
-            self.form.addWidget(widget, row, 0, 1, self.columns)
+            self.form.addWidget(widget, 2 * row, 0, 2, self.columns)
             self._cell = (row + 1, 0)
             return
         self.form.addWidget(widget, self.form.rowCount(), 0, 1, 2)
 
 
 # -- the form ---------------------------------------------------------------------------------
+# the Base Stats a stat definition's "Set On" narrows (D91): an actor's starting stats, a
+# job's growth per level, an enemy's stats
+BASE_STAT_FIELDS = {"actors": ("base_stats",), "classes": ("level_growth",), "enemies": ("stats",)}
+
+
 class RecordForm(QScrollArea):
     """Edits one record's data with a form; ``record()`` gives the edited data back."""
 
@@ -1264,6 +1274,8 @@ class RecordForm(QScrollArea):
         if isinstance(value, dict) and _number_map(value):
             kind = map_source(skey)
             choices = self.vocabulary.choices(kind) if kind else ()
+            if kind == "stats" and skey in BASE_STAT_FIELDS.get(self.category, ()):
+                choices = self.vocabulary.base_stat_choices(self.category, choices, value)
             noun = {"resources": "resource", "stats": "stat", "items": "item"}.get(kind) or _noun(
                 skey
             )

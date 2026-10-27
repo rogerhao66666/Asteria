@@ -60,6 +60,9 @@ class BattleSessionRules:
     # turn order from an expression of the combatant (``self``) instead of its speed stat:
     # e.g. a speed scaled by a stage counter and halved by a state (gameplay/expressions.py)
     initiative_expression: str = ""
+    # the stat whose value orders the turns when no expression is given (D91: the Speed stat
+    # was the engine's own choice; an author may name SPD, AGI or any stat)
+    initiative_stat: str = "speed"
     # every hit's damage after the interaction rules (weakness, resistance...), from an
     # expression of ``value`` (that damage), ``source`` and ``target``: a last random spread,
     # whole numbers, a floor of 1... ("" = the damage as it is)
@@ -88,6 +91,7 @@ class BattleSessionRules:
         "weakness_outcome_tag": "outcome.weak",
         "battle_counters": {},
         "initiative_expression": "",
+        "initiative_stat": "speed",
         "final_damage_expression": "",
         "penetration_stat": "",
         "vary_seed": False,
@@ -111,6 +115,7 @@ class BattleSessionRules:
         final_damage_expression="",
         penetration_stat="",
         vary_seed=False,
+        initiative_stat="speed",
         defeat="game_over",
         defeat_currency="",
         defeat_currency_loss=0.0,
@@ -149,6 +154,7 @@ class BattleSessionRules:
 
             check_expression(initiative_expression, ("self",))
         object.__setattr__(self, "initiative_expression", initiative_expression)
+        object.__setattr__(self, "initiative_stat", str(initiative_stat or "").strip())
         final_damage_expression = str(final_damage_expression or "").strip()
         if final_damage_expression:
             from asteria.gameplay.expressions import check_expression
@@ -196,6 +202,11 @@ class BattleSessionRules:
                 else {}
             ),
             **(
+                {"initiative_stat": self.initiative_stat}
+                if self.initiative_stat != "speed"
+                else {}
+            ),
+            **(
                 {"final_damage_expression": self.final_damage_expression}
                 if self.final_damage_expression
                 else {}
@@ -229,6 +240,7 @@ class BattleSessionRules:
             weakness_outcome_tag=data.get("weakness_outcome_tag", "outcome.weak"),
             battle_counters=data.get("battle_counters"),
             initiative_expression=data.get("initiative_expression", ""),
+            initiative_stat=data.get("initiative_stat", "speed"),
             final_damage_expression=data.get("final_damage_expression", ""),
             penetration_stat=data.get("penetration_stat", ""),
             vary_seed=data.get("vary_seed", False),

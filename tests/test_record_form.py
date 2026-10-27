@@ -41,7 +41,7 @@ def test_fields_get_friendly_widgets(app):
     _project, _document, family = _family("actors", "hero_01")
     form = family.editor
     stats = [t for t in form.findChildren(AmountTable) if "str" in t.values]
-    assert stats and stats[0].values["str"] == 12  # the base stats, as a table of numbers
+    assert stats and stats[0].values["str"] == 21  # the base stats, as a table of numbers
     chips = [c for c in form.findChildren(ChipList) if "trait.cover" in c.values]
     assert chips  # tags as chips
     pickers = [p for p in form.findChildren(Picker) if p.value() == "brave"]
@@ -59,7 +59,7 @@ def test_an_edit_applies_on_its_own_and_undoes(app):
     family.auto_apply()  # what the timer does a moment after typing stops
     assert project.rpg_database.actors["hero_01"].base_stats["str"] == 20
     document.undo()
-    assert project.rpg_database.actors["hero_01"].base_stats["str"] == 12
+    assert project.rpg_database.actors["hero_01"].base_stats["str"] == 21
 
 
 def test_a_bad_value_is_shown_and_not_applied(app):

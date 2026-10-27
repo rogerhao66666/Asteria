@@ -140,7 +140,8 @@ MENU_ZH = {  # the Chinese of Menu Pages' words (data.<kind>.<id>.name)
 CHANGED_WORDS = ("pause.status",)  # engine words whose meaning changed: the engine's again
 
 
-LATER_FIELDS = ("item_details", "stat_groups", "stat_lines")  # D88 / D89 set them: kept
+# D88 / D89 set them: kept
+LATER_FIELDS = ("item_details", "stat_groups", "stat_lines", "stat_columns")
 
 
 def patch_menu_pages(data):

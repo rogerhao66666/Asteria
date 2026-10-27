@@ -39,6 +39,7 @@ COMMAND_WORDS = {
     "Items": "battle.command.items",
     "Escape": "battle.command.escape",
     "Switch": "battle.command.switch",
+    "Swap": "battle.command.swap",
     "More": "battle.command.more",
     "Back": "battle.command.back",
     "Command": "battle.menu.command",
@@ -92,6 +93,8 @@ class BattleCommands:
         custom = self.custom_categories(actor_id)
         if self.style != "root" and self.switch_rows(actor_id):
             custom = (*custom, "Switch")  # a creature party's bench, before Items
+        if self.style != "root" and self._swaps(actor_id):
+            custom = (*custom, "Swap")  # carried weapons (D92), before Items
         if not custom:
             return base
         head = tuple(c for c in base if c != "Items")
@@ -253,6 +256,10 @@ class BattleCommands:
                 (name, len(abilities.get(name, ())), tr("battle.hint.group", "Abilities"))
             )
         groups.append(("Items", items, tr("battle.hint.items", "Use an item from the bag")))
+        swaps = self._swaps(actor_id)
+        if swaps:
+            hint = tr("battle.hint.swap", "Take up a carried weapon")
+            groups.append(("Swap", len(swaps), hint))
         bench = self.switch_rows(actor_id)
         if bench:
             hint = tr("battle.hint.switch", "Send out another creature")
@@ -318,12 +325,19 @@ class BattleCommands:
 
     def command_rows(self, actor_id):
         """The rows of every category the command list shows, ``{category: rows}`` in menu
-        order: *Attack* (root style), *Skills*, the project's own groups, then *Items*."""
+        order: *Attack* (root style), *Skills*, the project's own groups, *Switch* and *Swap*
+        when there is something to switch or swap (D92), then *Items*."""
         abilities = self._skill_groups(actor_id)
         groups = {"Attack": self.attack_rows(actor_id)} if self.style == "root" else {}
         groups["Skills"] = self._skill_rows(actor_id, "Skills", abilities)
         for name in self.custom_categories(actor_id):  # a project's own menu groups
             groups[name] = self._skill_rows(actor_id, name, abilities)
+        for name, rows in (
+            ("Switch", self.switch_rows(actor_id)),
+            ("Swap", self.swap_rows(actor_id)),
+        ):
+            if rows:
+                groups[name] = rows
         groups["Items"] = self.item_rows()
         return groups
 
@@ -603,7 +617,41 @@ class BattleCommands:
             return self.item_rows()
         if self.category == "Switch":
             return self.switch_rows(actor_id)
+        if self.category == "Swap":
+            return self.swap_rows(actor_id)
         return self.skill_rows(actor_id, self.category)
+
+    def _swaps(self, actor_id):
+        """``[(piece, slot_id)]`` the actor could swap in now; none when the project's inventory
+        rules turn the command off (``battle_swap`` "off")."""
+        options = getattr(self.game, "swap_options", None)
+        rules = self.game.save.rpg_state.inventory.rules
+        if options is None or getattr(rules, "battle_swap", "turn") == "off":
+            return []
+        return options(actor_id)
+
+    def swap_rows(self, actor_id):
+        """One row per carried piece and worn slot it can go into (D92): the piece's name and
+        icon, the slot's name, the piece worn there now as the detail."""
+        game, rows = self.game, []
+        loadout = game.save.rpg_state.loadouts.get(str(actor_id))
+        for piece, slot_id in self._swaps(actor_id):
+            worn = loadout.equipped(slot_id) if loadout is not None else ()
+            now = worn[0].nickname or game.name_of(worn[0].equipment) if worn else ""
+            rows.append(
+                BattleActionEntry(
+                    f"swap:{piece.instance_id}:{slot_id}",
+                    piece.nickname or game.name_of(piece.equipment),
+                    category="Swap",
+                    icon_asset_id=piece.equipment.icon_id or None,
+                    cost_text=game.slot_name(slot_id),
+                    detail=game.tr("battle.swap.instead", "Instead of {item}", item=now)
+                    if now
+                    else game.description_of(piece.equipment),
+                    order=len(rows),
+                )
+            )
+        return rows
 
     def switch_rows(self, actor_id):
         """One row per creature waiting on the bench of the actor's side (creature party)."""
@@ -780,6 +828,16 @@ class BattleCommands:
                 out_id = stage[0] if stage else actor_id
             try:
                 used = self.game.switch_pet(out_id, row.action_id.split(":", 1)[1])
+            except Exception as exc:
+                self.message = translated(exc, self.game.tr)
+                return False
+            self.reset()
+            return used
+        if self.mode == "command" and self.category == "Swap":
+            _swap, rest = row.action_id.split(":", 1)
+            instance_id, slot_id = rest.rsplit(":", 1)
+            try:
+                used = self.game.swap_carried(actor_id, instance_id, slot_id)
             except Exception as exc:
                 self.message = translated(exc, self.game.tr)
                 return False

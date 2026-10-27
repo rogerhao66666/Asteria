@@ -80,6 +80,7 @@ REFERENCES = {  # field name -> vocabulary source
     "penetration_stat": "stats",
     "slot": "slots",
     "slot_id": "slots",
+    "blocks_slots": "slots",
     "composition_id": "gauges",
     "rules_id": None,  # a record's own id
     "source_ability_id": "abilities",
@@ -182,6 +183,8 @@ TECHNICAL = {
 
 # -- the names and help shown beside fields ---------------------------------------------------
 LABELS = {
+    "initiative_stat": "Turn Order Stat",
+    "penetration_stat": "Penetration Stat",
     "display_name": "Name",
     "class_assignments": "Jobs",
     "base_stats": "Base Stats",
@@ -208,6 +211,7 @@ LABELS = {
     "required_capabilities": "Needs (capabilities)",
     "any_capabilities": "Needs one of (capabilities)",
     "forbidden_capabilities": "Not with (capabilities)",
+    "blocks_slots": "Also takes (two-handed)",
     "rarity": "Rarity",
     "stack_limit": "Most in one stack",
     "reward": "Reward",
@@ -385,7 +389,13 @@ HELP = {
     "them higher or lower. A sprite's own Offset Y still lifts a flyer. Off = a record's "
     "positions are used as written.",
     "class_assignments": "The jobs this character has; the first is the main job.",
-    "base_stats": "Starting numbers before jobs, levels, gear and points.",
+    "base_stats": "Starting numbers before jobs, levels, gear and points. The list offers the "
+    "stats Game Systems ▸ Stats sets on this kind of record (an actor: STR, DEX, INT, LUK, VIT, "
+    "SPD).",
+    "initiative_stat": "The stat that orders the turns: every round the highest goes first. "
+    "An Initiative Expression, when given, decides instead.",
+    "penetration_stat": "The attacker's stat (a percent) that ignores that share of the "
+    "target's stats in damage formulas. Empty: no penetration.",
     "base_resources": "HP, MP and other pools at the start.",
     "tags": "Short labels other rules look for (weak.fire, boss, trait.guard...).",
     "abilities": "Skills this one starts with.",
@@ -404,6 +414,9 @@ HELP = {
     "cooldown_turns": "Turns before it can be used again (0 = every turn).",
     "modifiers": "Stat changes while this is worn or active.",
     "sockets": "Holes for gems, cards and charms.",
+    "blocks_slots": "Slots this piece also takes while worn, which must stay empty: a"
+    " two-handed weapon names the sub-weapon slot. What happens to a piece already there is"
+    " the inventory rules' When a Place Is Taken.",
     "rarity": "Its colour and rank name in the bag.",
     "multiplier": "Damage is multiplied by this (1 = unchanged, 2 = double).",
     "flat_delta": "Added to the damage before the multiplier.",
@@ -569,9 +582,14 @@ class ProjectVocabulary:
                 names.update(enemy.resources)
             for name in sorted(names):
                 yield Choice(name, _resource_label(name))
-        elif source == "stats":
-            for name in sorted(self.stats(), key=_stat_order):
-                yield Choice(name, _stat_label(name))
+        elif source == "stats":  # Game Systems ▸ Stats first, by their order (D91)
+            defined = getattr(db, "stat_definitions", {})
+            first = [d.stat_id for d in sorted(defined.values(), key=lambda d: d.order)]
+            rest = sorted((s for s in self.stats() if s not in defined), key=_stat_order)
+            for name in (*first, *rest):
+                record = defined.get(name)
+                label = record.short if record is not None else _stat_label(name)  # STR, SPD
+                yield Choice(name, label)
         elif source == "checks":
             for key in sorted(db.outcome_checks):
                 yield Choice(key, words(key))
@@ -590,8 +608,11 @@ class ProjectVocabulary:
         elif source == "scenes":
             for scene in project.scenes():
                 yield Choice(scene.id, getattr(scene, "name", "") or scene.id)
-        elif source == "slots":
-            slots = {e.slot for e in db.equipment.values()}
+        elif source == "slots":  # the defined equipment slots, then the ones gear names
+            defined = sorted(db.equipment_slots.values(), key=lambda x: (x.order, x.slot_id))
+            for slot in defined:
+                yield Choice(slot.slot_id, slot.display_name or words(slot.slot_id))
+            slots = {e.slot for e in db.equipment.values()} - set(db.equipment_slots)
             for name in sorted(slots):
                 yield Choice(name, words(name))
         elif source == "clips":  # every animation name the project's sprite sheets have
@@ -656,11 +677,26 @@ class ProjectVocabulary:
                 names.update(job.stat_bonuses)
                 names.update(job.level_growth)
             names.update(getattr(db, "derived_stats", {}))
+            names.update(getattr(db, "stat_definitions", {}))
             for record in (*db.equipment.values(), *db.attachments.values()):
                 names.update(m.stat for m in record.modifiers)
         names.discard("")
         self._cache["__stats"] = names
         return names
+
+    def base_stat_choices(self, record_kind, choices, held=()):
+        """``choices`` narrowed to the stats Game Systems ▸ Stats sets on ``record_kind``
+        (D91), in their order, then any other stat ``held`` already has; all of ``choices``
+        when the project defines no stats."""
+        from asteria.rpg.stat_definitions import set_on
+
+        db = getattr(self.project, "rpg_database", None)
+        wanted = set_on(getattr(db, "stat_definitions", {}), record_kind)
+        if wanted is None:
+            return choices
+        by_id = {c.value: c for c in choices}
+        keep = [*wanted, *(k for k in held if k not in wanted)]
+        return tuple(by_id.get(k) or Choice(k, _stat_label(k)) for k in keep)
 
     # -- values already used --------------------------------------------------------------------
     def values_for(self, key):

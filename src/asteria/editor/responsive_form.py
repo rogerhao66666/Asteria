@@ -35,11 +35,21 @@ class _Cell(QWidget):
         size = super().minimumSizeHint()
         layout = self.layout()
         if layout is not None and self.width() > 0 and layout.hasHeightForWidth():
-            size.setHeight(max(size.height(), layout.heightForWidth(self.width())))
+            # the layout's height leaves out the cell's own margins (a span row's 7px on top)
+            margins = self.contentsMargins()
+            width = self.width() - margins.left() - margins.right()
+            needed = layout.heightForWidth(width) + margins.top() + margins.bottom()
+            size.setHeight(max(size.height(), needed))
         return size
 
     def sizeHint(self):  # noqa: N802 - Qt API
         size = super().sizeHint()
+        layout = self.layout()
+        if layout is not None and self.width() > 0 and layout.hasHeightForWidth():
+            # wrapping words or chips guess their height at a narrower width than they get:
+            # the height at this width, not the guess (D91: no gap under a list of chips)
+            size.setHeight(self.minimumSizeHint().height())
+            return size
         size.setHeight(max(size.height(), self.minimumSizeHint().height()))
         return size
 
@@ -49,7 +59,11 @@ class _Cell(QWidget):
             self.updateGeometry()  # a new width can wrap the caption differently
 
 
-def _field_cell(label, widget):
+def _caption_text(label, help_text):
+    return f"{label}  ⓘ" if help_text else label
+
+
+def _field_cell(label, widget, help_text=""):
     """A label above its field (no crowded label column; every field gets the cell's whole
     width)."""
     cell = _Cell()
@@ -61,14 +75,40 @@ def _field_cell(label, widget):
         # level with the fields next to it
         widget.setText(label)
         label = " "
-    caption = QLabel(label)
+    caption = QLabel(_caption_text(label, help_text))
+    caption.setToolTip(help_text)
     caption.setObjectName("FieldLabel")
     caption.setBuddy(widget)
-    caption.setWordWrap(True)
+    # a whole row's caption has the row to itself: no wrapping, and its own height only - a
+    # field below that wraps (chips, words) makes the cell taller, never the caption (D91)
+    caption.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
     box.addWidget(caption)
     box.addWidget(widget)
+    box.addStretch(1)
     cell.caption = caption
     return cell
+
+
+class _Pair:
+    """A label above its field, placed as two grid cells (D91): every label of a row of fields
+    stands on the bottom of the labels' grid row and every field at the top of the fields' row
+    below, so a caption that wraps onto two lines never pushes its own field below the others."""
+
+    def __init__(self, label, widget, help_text=""):
+        if isinstance(widget, QCheckBox) and not widget.text():
+            widget.setText(label)  # a switch carries its own label beside the box
+            label = ""
+        self.caption = QLabel(_caption_text(label, help_text) if label else "")
+        self.caption.setToolTip(help_text)
+        self.caption.setObjectName("FieldLabel")
+        self.caption.setBuddy(widget)
+        self.caption.setWordWrap(True)
+        self.caption.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        self.caption.setContentsMargins(0, 7, 0, 0)  # 7 + the grid's 3: 10 between rows
+        self.field = widget
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API, for ResponsiveForm.minimumSizeHint
+        return self.field.minimumSizeHint()
 
 
 class ResponsiveForm(QWidget):
@@ -80,12 +120,16 @@ class ResponsiveForm(QWidget):
         self.grid = QGridLayout(self)
         self.grid.setContentsMargins(0, 0, 0, 0)
         self.grid.setHorizontalSpacing(16)
-        self.grid.setVerticalSpacing(10)
+        self.grid.setVerticalSpacing(3)  # a caption to its field; rows: the caption's margin
         self.columns = 0
 
-    def add_row(self, label, widget, *, span=False):
-        """``span``: the field takes a whole row (tables of key / amount pairs, long text)."""
-        self.rows.append((_field_cell(label, widget), "span" if span else False))
+    def add_row(self, label, widget, *, span=False, help_text=""):
+        """``span``: the field takes a whole row (tables of key / amount pairs, long text).
+        ``help_text``: what the field means, on hover over an ⓘ after its label."""
+        if span:
+            self.rows.append((_field_cell(label, widget, help_text), "span"))
+        else:
+            self.rows.append((_Pair(label, widget, help_text), False))
         self._place(force=True)
 
     def add_wide(self, widget):
@@ -123,10 +167,13 @@ class ResponsiveForm(QWidget):
             if wide:
                 if col:
                     row, col = row + 1, 0
-                self.grid.addWidget(widget, row, 0, 1, columns)
+                if wide == "span":
+                    widget.setContentsMargins(0, 7, 0, 0)  # as far below as a caption
+                self.grid.addWidget(widget, 2 * row, 0, 2, columns, Qt.AlignTop)
                 row += 1
                 continue
-            self.grid.addWidget(widget, row, col, Qt.AlignTop)  # neighbours line up at the top
+            self.grid.addWidget(widget.caption, 2 * row, col)
+            self.grid.addWidget(widget.field, 2 * row + 1, col, Qt.AlignTop)
             col += 1
             if col == columns:
                 row, col = row + 1, 0
@@ -134,9 +181,8 @@ class ResponsiveForm(QWidget):
             self.grid.setColumnStretch(c, 1)
         for r in range(self.grid.rowCount()):
             self.grid.setRowStretch(r, 0)
-        self.grid.setRowStretch(
-            row + 1, 1
-        )  # fields pack at the top; spare height stays below them
+        # fields pack at the top; spare height stays below them
+        self.grid.setRowStretch(2 * row + 2, 1)
 
 
 class ResponsiveSplit(QWidget):

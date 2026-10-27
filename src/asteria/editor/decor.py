@@ -10,6 +10,8 @@ watches widgets as they appear and gives them an icon and a colour role from the
 * tab titles, and entries of combo boxes marked ``decorate=True`` (database categories), get the
   matching icon
 
+Only the ⓘ marks show a tooltip; every other tooltip is swallowed (``shows_tooltip``).
+
 Wheel input over numeric fields scrolls the surrounding content instead of editing values.
 
 ``compact`` keeps panels narrow so more columns fit on screen (``compact_widget``): combo boxes
@@ -87,7 +89,8 @@ LABEL_RULES = (
     (r"^battle extras", "battle"),
     (r"doodad", "doodad"),
     (r"capture", "net"),
-    (r"stat formula|derived stat", "gauge"),
+    (r"stat formula|derived stat|^stats$", "gauge"),
+    (r"^tags$", "pin"),
     (r"world interactions?", "interact"),
     # workspace sub-tabs
     (r"^scene\b", "scene"),
@@ -341,9 +344,21 @@ def decorate(widget):
             decorate_combo(w)
 
 
+HELP_MARK = "ⓘ"
+
+
+def shows_tooltip(widget):
+    """Only help shows on hover (D90): a widget with an ⓘ in its text (a field's label, a
+    section's mark). Ids, data keys and button explanations stay out of the way."""
+    text = widget.text() if isinstance(widget, (QLabel, QAbstractButton)) else ""
+    return HELP_MARK in str(text or "")
+
+
 class _Decorator(QObject):
     def eventFilter(self, obj, event):
         kind = event.type()
+        if kind == QEvent.ToolTip and isinstance(obj, QWidget) and not shows_tooltip(obj):
+            return True  # swallowed: no tooltip (see ``shows_tooltip``)
         if kind == QEvent.Wheel and isinstance(obj, QAbstractSpinBox):
             # Scrolling never edits a number: hand the wheel to the containing scroll area
             # (a filter that swallows the event stops Qt passing it on to the parent itself).

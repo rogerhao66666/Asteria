@@ -26,7 +26,9 @@ def _game(mode):
 
 
 def _weapons(game):
-    worn = game.save.rpg_state.loadouts[HERO].equipped("weapon")
+    """The main and the sub weapon (D92: one slot each)."""
+    loadout = game.save.rpg_state.loadouts[HERO]
+    worn = loadout.equipped("weapon") + loadout.equipped("sub_weapon")
     return [w.equipment.equipment_id for w in worn]
 
 
@@ -38,16 +40,18 @@ def test_never_asks_and_the_gear_waits_in_the_bag():
 
 def test_a_free_hand_is_offered_the_new_weapon():
     game = _game("empty_slot")
-    assert _weapons(game) == ["w_sunbrand"]  # the second hand is free
-    game.gain_equipment("w_axe")
+    assert _weapons(game) == ["w_sunbrand"]  # the sub-weapon hand is free
+    game.gain_equipment("w_dagger")
     (offer,) = game.equip_offers
-    assert offer.actor_id == HERO and offer.slot_id == "weapon" and not offer.replaces
+    assert offer.actor_id == HERO and offer.slot_id == "sub_weapon" and not offer.replaces
     game.answer_equip_offer(True)
-    assert _weapons(game) == ["w_sunbrand", "w_axe"] and not game.equip_offers
+    assert _weapons(game) == ["w_sunbrand", "w_dagger"] and not game.equip_offers
     bag = game.save.rpg_state.equipment_bag
-    assert not any(g.equipment.equipment_id == "w_axe" for g in bag)
-    game.gain_equipment("w_spear")  # both hands full now: nothing is asked
-    assert not game.equip_offers
+    assert not any(g.equipment.equipment_id == "w_dagger" for g in bag)
+    game.gain_equipment("w_spear")  # both hands full: only the Brave's carried slot is free
+    (offer,) = game.equip_offers
+    assert offer.slot_id == "arsenal"
+    game.answer_equip_offer(False)
     with pytest.raises(GameSessionError):
         game.answer_equip_offer(True)
 
@@ -62,15 +66,15 @@ def test_keeping_it_leaves_the_gear_in_the_bag():
 
 def test_always_offers_a_swap_when_the_places_are_full():
     game = _game("always")
-    game.gain_equipment("w_axe")
+    game.gain_equipment("w_dagger")
     game.answer_equip_offer(True)  # the free hand first
-    game.gain_equipment("w_spear")
+    game.gain_equipment("w_spear")  # two-handed: no hand is free for it
     (offer,) = game.equip_offers
-    assert offer.replaces.startswith("w_sunbrand")  # the first weapon worn would go
+    assert offer.replaces.startswith("w_sunbrand")  # the main weapon would go
     game.answer_equip_offer(True)
-    assert sorted(_weapons(game)) == ["w_axe", "w_spear"]
-    bag = game.save.rpg_state.equipment_bag
-    assert any(g.equipment.equipment_id == "w_sunbrand" for g in bag)
+    assert _weapons(game) == ["w_spear"]  # and the dagger, in the spear's way
+    bag = {g.equipment.equipment_id for g in game.save.rpg_state.equipment_bag}
+    assert {"w_sunbrand", "w_dagger"} <= bag
 
 
 def test_the_rule_is_project_data():

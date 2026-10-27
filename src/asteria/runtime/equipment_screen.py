@@ -60,13 +60,21 @@ class EquipmentScreen:
         return self.game.save.rpg_state.loadouts.get(self.actor_id)
 
     def places(self):
-        """``[(slot_id, index, piece or None)]``: one per piece each slot can hold."""
+        """``[(slot_id, index, piece or None)]``: one per piece each slot can hold, in the
+        slots' ``order``; a slot the member cannot use (``required_capabilities``) is left out
+        unless it still holds something (D92)."""
         loadout = self.loadout()
         if loadout is None:
             return []
+        capabilities = self.game.resolve_actor_build(self.actor_id).capabilities
+        slots = sorted((loadout.slot(x) for x in loadout.slot_ids()),
+                       key=lambda x: (x.order, x.slot_id))  # fmt: skip
         out = []
-        for slot_id in loadout.slot_ids():
+        for slot in slots:
+            slot_id = slot.slot_id
             held = loadout.equipped(slot_id)
+            if not held and not slot.usable_with(capabilities):
+                continue
             capacity = loadout._slots[slot_id].capacity
             count = max(len(held), capacity if capacity is not None else len(held) + 1, 1)
             for index in range(count):
@@ -91,9 +99,7 @@ class EquipmentScreen:
         for piece in self.game.save.rpg_state.equipment_bag:
             # its own slot, or a slot that names tags the piece has (a slot without tags
             # takes pieces made for it only)
-            if piece.equipment.slot != slot_id and not (
-                slot.accepted_tags and slot.accepts(piece.equipment)
-            ):
+            if not slot.takes(piece.equipment):
                 continue
             check = piece.equipment.eligibility(capabilities)
             reason = "; ".join(check.reasons) if not check.allowed else ""
@@ -370,6 +376,9 @@ class EquipmentScreen:
             if index < len(spots):
                 px, py, pw, ph = spots[index].rect
                 rt.hotspot((x + px, y + py, pw, ph), self._pointer("doll", k))
+                backdrop = rt.skin_image(spots[index].backdrop) if spots[index].backdrop else None
+                if backdrop is not None:  # the place's own picture, under it (D92)
+                    rt.screen.blit(rt.scaled_image(backdrop, (pw, ph)), (x + px, y + py))
                 self._slot_cell(
                     (x + px, y + py, pw, ph), piece, label, chosen=k == chosen and
                     self.focus == "doll", placeholder=spots[index].placeholder, bare=bool(own),
@@ -477,6 +486,19 @@ class EquipmentScreen:
             )
         rt.text("  ·  ".join(bits), x + 16, y + 42, size=16, color=muted)
         row = y + 70
+        notes = []
+        if piece.equipment.blocks_slots:  # a two-handed weapon (D92)
+            slots = ", ".join(game.slot_name(x) for x in piece.equipment.blocks_slots)
+            notes.append(tr("equipment.takes_also", "Two-handed: also takes the {slots}",
+                            slots=slots))  # fmt: skip
+        loadout = self.loadout()
+        if loadout is not None and any(piece is g for g in loadout.carried()):
+            notes.append(tr("equipment.carried", "Carried: gives nothing until swapped in"))
+        for note in notes:
+            rt.text(note, x + 16, row, size=16, color=muted)
+            row += 22
+        if notes:
+            row += 4
         header = (
             tr("bag.compared", "Compared with the worn piece")
             if replaced is not None

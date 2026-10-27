@@ -223,10 +223,13 @@ class RpgRuntimeState:
             self.currencies[key] = value
 
     def bind_database(self, database):
-        """Attach database-owned rules (equipment set bonuses) to the saved loadouts."""
+        """Attach database-owned rules to the saved loadouts: the equipment set bonuses and the
+        project's equipment slots (D92)."""
         sets = tuple(database.equipment_sets.values())
+        slots = tuple(getattr(database, "equipment_slots", {}).values())
         for loadout in self.loadouts.values():
             loadout.set_definitions = sets
+            loadout.sync_slots(slots)
         return self
 
     def validate(self, database):

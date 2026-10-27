@@ -166,9 +166,17 @@ class MenuPagesMixin:
             self.text(amount, bar[0] + bar[2] // 2, bar_y + 2, size=16, anchor="midtop")
             bar_y += 28
 
-    # the stat table's columns: (key, words, right edge back from the table's right)
-    STAT_COLUMNS = (("rank", 330), ("total", 268), ("base", 210), ("points", 154))
-    STAT_COLUMNS += (("gear", 98), ("gain", 44))  # each column's right edge, from the table's
+    # where the stat table's columns end, back from its right edge: the last column the first
+    STAT_EDGES = (44, 98, 154, 210, 268, 330)
+
+    @classmethod
+    def _stat_columns(cls, menu):
+        """``[(column, right edge)]`` of the stat table: Menu Pages' ``stat_columns`` (D89),
+        packed from the right so a hidden column leaves no gap."""
+        from asteria.rpg.menu_rules import STAT_COLUMNS
+
+        columns = menu.rules.columns() if menu.rules is not None else STAT_COLUMNS
+        return list(zip(columns, reversed(cls.STAT_EDGES[: len(columns)]), strict=True))
 
     @staticmethod
     def _stat_headers(tr):
@@ -211,7 +219,8 @@ class MenuPagesMixin:
             return ax + aw - edge
 
         headers = self._stat_headers(tr)
-        for key, edge in self.STAT_COLUMNS:
+        columns = self._stat_columns(menu)
+        for key, edge in columns:
             self.text(headers[key], right(edge), ay - 2, size=14, color=muted, anchor="topright")
         pg.draw.line(self.screen, (52, 64, 96), (ax - 4, ay + 18), (ax + aw + 4, ay + 18))
         row_h = min(36, max(28, (ah - 26) // max(1, len(rows))))
@@ -242,7 +251,7 @@ class MenuPagesMixin:
                 "gear": (_signed(row.gear), (130, 190, 255) if row.gear else muted, 17),
                 "gain": (_signed(row.gain) if row.gain else "", (255, 220, 124), 17),
             }
-            for key, edge in self.STAT_COLUMNS:
+            for key, edge in columns:
                 text, tone, size = values[key]
                 self.text(
                     text,

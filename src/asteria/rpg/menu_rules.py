@@ -8,6 +8,9 @@
 * ``stat_graph`` - the progression graph whose ranks the Status page's stat table spends
   points on (STR, DEX, INT, LUK...: one row and one + each). Empty: the first graph tagged
   ``attributes``; ``-`` turns the + off.
+* ``stat_columns`` - the stat table's columns, in order (D89): ``rank`` (ranks taken / the
+  node's highest), ``total``, ``base``, ``points``, ``gear``, ``gain`` (what one more point
+  adds). Empty: every one.
 * ``stat_rows`` - the stats of the Status page's detail table, in order. Empty: every stat
   formula's stat (Game Systems ▸ Stat Formulas), then the build's other stats.
 * ``stat_groups`` / ``stat_lines`` - the detail table as a table of groups (D89): each line is
@@ -60,7 +63,9 @@ PAUSE_ENTRIES = (
 )
 NO_STAT_GRAPH = "-"
 ITEM_DETAILS = ("panel", "button", "off")
-STAT_FORMATS = ("number", "percent", "range", "chance")
+# share: a 0..1 stat (lifesteal 0.12) written as a percent, 12% (D91)
+STAT_FORMATS = ("number", "percent", "range", "chance", "share")
+STAT_COLUMNS = ("rank", "total", "base", "points", "gear", "gain")
 
 
 def _text(value):
@@ -213,6 +218,8 @@ class StatLine:
             return f"{_short(self.chance(value, check) * 100)}%"
         if self.format == "percent":
             return f"{_short(value)}%"
+        if self.format == "share":
+            return f"{_short(value * 100)}%"
         if self.format == "range":
             low = value * (1 - self.spread / 100.0)
             high = value * (1 + self.spread / 100.0)
@@ -278,6 +285,7 @@ class MenuRules:
     item_details: str = "panel"
     stat_groups: tuple[StatGroup, ...] = ()
     stat_lines: tuple[StatLine, ...] = ()
+    stat_columns: tuple[str, ...] = ()
 
     def __init__(
         self,
@@ -292,6 +300,7 @@ class MenuRules:
         item_details="panel",
         stat_groups=(),
         stat_lines=(),
+        stat_columns=(),
     ):
         rules_id = _text(rules_id)
         if not rules_id:
@@ -334,6 +343,15 @@ class MenuRules:
         s(self, "item_details", details)
         s(self, "stat_groups", groups)
         s(self, "stat_lines", lines)
+        columns = _tags(stat_columns)
+        unknown = [c for c in columns if c not in STAT_COLUMNS]
+        if unknown:
+            raise ValueError(f"unknown stat table columns: {', '.join(unknown)}")
+        s(self, "stat_columns", columns)
+
+    def columns(self):
+        """The stat table's columns: ``stat_columns``, else every one."""
+        return self.stat_columns or STAT_COLUMNS
 
     SCHEMA = "asteria.rpg.menu_rules"
     VERSION = 1
@@ -361,6 +379,8 @@ class MenuRules:
             data["stat_groups"] = [g.to_data() for g in self.stat_groups]
         if self.stat_lines:
             data["stat_lines"] = [x.to_data() for x in self.stat_lines]
+        if self.stat_columns:
+            data["stat_columns"] = list(self.stat_columns)
         return data
 
     @classmethod
@@ -376,6 +396,7 @@ class MenuRules:
             item_details=data.get("item_details", "panel"),
             stat_groups=data.get("stat_groups", ()),
             stat_lines=data.get("stat_lines", ()),
+            stat_columns=data.get("stat_columns", ()),
         )
 
 
@@ -389,6 +410,7 @@ __all__ = [
     "ITEM_DETAILS",
     "NO_STAT_GRAPH",
     "PAUSE_ENTRIES",
+    "STAT_COLUMNS",
     "STAT_FORMATS",
     "ItemCategory",
     "ItemFilter",

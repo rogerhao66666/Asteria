@@ -193,11 +193,13 @@ _ACRONYMS = {
 
 
 def _free_id(base, taken, suffix="copy"):
-    """A suggested id for a new or copied record: ``fire_bolt_copy``, ``fire_bolt_copy2``..."""
+    """A suggested id for a new or copied record: ``fire_bolt_copy``, ``fire_bolt_copy2``...;
+    a tag family keeps its ``*`` at the end (``rune.*`` -> ``rune_copy.*``, D91)."""
+    base, family = (base[:-2], ".*") if str(base).endswith(".*") else (base, "")
     base = f"{base}_{suffix}" if base else suffix
-    taken, candidate, number = set(taken), base, 2
+    taken, candidate, number = set(taken), base + family, 2
     while candidate in taken:
-        candidate, number = f"{base}{number}", number + 1
+        candidate, number = f"{base}{number}{family}", number + 1
     return candidate
 
 

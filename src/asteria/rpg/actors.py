@@ -70,7 +70,9 @@ class ClassDefinition:
     # have unlocked; written only when set
     unlock_level: int = 0
     unlock_classes: tuple[str, ...] = ()
+    description: str = ""  # what the job is, in the author's words (D91); written only when set
     OPTIONAL_DATA = {
+        "description": "",
         "icon_id": "",
         "level_growth": {},
         "resource_growth": {},
@@ -92,6 +94,7 @@ class ClassDefinition:
         unlock_level=0,
         unlock_classes=(),
         resource_growth=None,
+        description="",
     ):
         class_id = _id(class_id, "class_id")
         if int(unlock_level) < 0:
@@ -120,6 +123,7 @@ class ClassDefinition:
         object.__setattr__(self, "level_growth", _numbers(level_growth or {}, "stat"))
         growth = _numbers(resource_growth or {}, "resource")
         object.__setattr__(self, "resource_growth", growth)
+        object.__setattr__(self, "description", str(description or ""))
 
     def to_data(self):
         return {
@@ -144,6 +148,7 @@ class ClassDefinition:
             ),
             **({"unlock_level": self.unlock_level} if self.unlock_level else {}),
             **({"unlock_classes": list(self.unlock_classes)} if self.unlock_classes else {}),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -162,6 +167,7 @@ class ClassDefinition:
             unlock_level=data.get("unlock_level", 0),
             unlock_classes=data.get("unlock_classes", ()),
             resource_growth=data.get("resource_growth"),
+            description=data.get("description", ""),
         )
 
 
@@ -264,6 +270,8 @@ class ActorDefinition:
     base_resources: dict[str, dict[str, float]]
     tags: tuple[str, ...]
     abilities: tuple[str, ...]
+    description: str = ""  # who they are, in the author's words (D91); written only when set
+    OPTIONAL_DATA = {"description": ""}  # shown in the editor while empty
 
     def __init__(
         self,
@@ -276,6 +284,7 @@ class ActorDefinition:
         base_resources=None,
         tags=(),
         abilities=(),
+        description="",
     ):
         actor_id = _id(actor_id, "actor_id")
         if class_assignments is not None and class_id is not None:
@@ -301,6 +310,7 @@ class ActorDefinition:
             "abilities",
             tuple(dict.fromkeys(_id(x, "ability_id") for x in abilities)),
         )
+        object.__setattr__(self, "description", str(description or ""))
 
     @property
     def class_id(self):
@@ -331,6 +341,7 @@ class ActorDefinition:
             "base_resources": {k: self.base_resources[k] for k in sorted(self.base_resources)},
             "tags": list(self.tags),
             "abilities": list(self.abilities),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -355,6 +366,7 @@ class ActorDefinition:
             base_resources=data["base_resources"],
             tags=data["tags"],
             abilities=data["abilities"],
+            description=data.get("description", ""),
         )
 
 
@@ -815,6 +827,9 @@ class RpgDatabase:
         self.disassembly_recipes = {}  # rpg.disassembly DisassemblyRecipe, by item id
         self.job_point_rules = {}  # rpg.job_points JobPointRules
         self.derived_stats = {}  # rpg.derived_stats DerivedStatRule, by stat id
+        self.stat_definitions = {}  # rpg.stat_definitions StatDefinition, by stat id (D91)
+        self.tag_definitions = {}  # rpg.tag_definitions TagDefinition, by tag or family (D91)
+        self.equipment_slots = {}  # EquipmentSlotDefinition every hero's loadout uses (D92)
         self.new_game_plus_rules = {}  # rpg.new_game_plus NewGamePlusRules
         self.locale_tables = {}  # rpg.localization LocaleTable, by locale
         self.message_settings = {}  # rpg.localization MessageSettings
@@ -1220,6 +1235,9 @@ class RpgDatabase:
             ("disassembly_recipes", self.disassembly_recipes),
             ("job_point_rules", self.job_point_rules),
             ("derived_stats", self.derived_stats),
+            ("stat_definitions", self.stat_definitions),
+            ("tag_definitions", self.tag_definitions),
+            ("equipment_slots", self.equipment_slots),
             ("new_game_plus_rules", self.new_game_plus_rules),
             ("locale_tables", self.locale_tables),
             ("message_settings", self.message_settings),
@@ -1357,6 +1375,27 @@ class RpgDatabase:
 
         return self._add_keyed(
             self.derived_stats, value, DerivedStatRule, "stat_id", "derived stat"
+        )
+
+    def add_stat_definition(self, value):
+        from .stat_definitions import StatDefinition
+
+        return self._add_keyed(
+            self.stat_definitions, value, StatDefinition, "stat_id", "stat definition"
+        )
+
+    def add_tag_definition(self, value):
+        from .tag_definitions import TagDefinition
+
+        return self._add_keyed(
+            self.tag_definitions, value, TagDefinition, "tag_id", "tag definition"
+        )
+
+    def add_equipment_slot(self, value):
+        from .items import EquipmentSlotDefinition
+
+        return self._add_keyed(
+            self.equipment_slots, value, EquipmentSlotDefinition, "slot_id", "equipment slot"
         )
 
     def add_new_game_plus_rules(self, value):
@@ -2104,6 +2143,18 @@ class RpgDatabase:
 
             for x in data.get("derived_stats", ()):
                 result.add_derived_stat(DerivedStatRule.from_data(x))
+            from .stat_definitions import StatDefinition
+
+            for x in data.get("stat_definitions", ()):
+                result.add_stat_definition(StatDefinition.from_data(x))
+            from .tag_definitions import TagDefinition
+
+            for x in data.get("tag_definitions", ()):
+                result.add_tag_definition(TagDefinition.from_data(x))
+            from .items import EquipmentSlotDefinition
+
+            for x in data.get("equipment_slots", ()):
+                result.add_equipment_slot(EquipmentSlotDefinition.from_data(x))
             for x in data.get("new_game_plus_rules", ()):
                 result.add_new_game_plus_rules(NewGamePlusRules.from_data(x))
             from .extras import CreditsPage, MusicTrack

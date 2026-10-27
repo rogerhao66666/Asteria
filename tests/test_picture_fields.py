@@ -20,6 +20,8 @@ ELSEWHERE = {
     "uri": "an imported asset's file (Assets panel ▸ Import)",
     "source_path": "an imported asset's file (Assets panel ▸ Import)",
     "asset_id": "a nine-patch frame's picture (layout inspector ▸ Frame, Choose… / Library…)",
+    "backdrop": "a doll place's back picture (layout inspector ▸ Doll places, Choose picture…)",
+    "placeholder": "a doll place's empty picture (layout inspector ▸ Doll places, as above)",
 }
 
 
@@ -119,3 +121,15 @@ def test_the_layout_inspector_chooses_every_picture_from_a_file(document):
 
     words = {b.text() for b in inspector.image.findChildren(QToolButton)}
     assert {"Choose…", "Library…"} <= words
+
+
+def test_a_doll_place_picture_is_chosen_not_typed(document):
+    from asteria.editor.menu_layout_widget import SlotsField
+
+    field = SlotsField(document)
+    field._add()
+    picture = REPO / "reference_projects" / "full_verification_demo" / "playable_assets"
+    picture = picture / "lucifer" / "ui" / "slot_cell.png"
+    field.choose_picture(0, 10, str(picture))
+    assert field.places()[0].backdrop.endswith("slot_cell.png")
+    assert not Path(field.places()[0].backdrop).is_absolute()  # a path in the project

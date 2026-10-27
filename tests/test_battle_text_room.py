@@ -28,7 +28,7 @@ def battle(monkeypatch):
         project, project.game_start.instantiate(project), DEMO, width=1280, height=720
     )
     rt.open()
-    smoke.prepare(rt.game, Counter(), "hero")
+    smoke.prepare(rt.game, Counter(), "brave")
     rt._ui_mode = "field"
     rt._frame([], 1 / 60)
     rt.game.start_encounter("boss_room")

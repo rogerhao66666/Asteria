@@ -411,9 +411,13 @@ QAbstractSpinBox::up-button:hover, QAbstractSpinBox::down-button:hover {
     background: $hover;
 }
 QComboBox QAbstractItemView {
-    background: $raised; color: $text; border: 1px solid $border_strong;
-    selection-background-color: $selection; selection-color: $selection_text; outline: 0;
+    background: $raised; color: $text; border: 1px solid $focus; border-radius: 6px;
+    padding: 3px; selection-background-color: $selection; selection-color: $selection_text;
+    outline: 0;
 }
+/* the chosen line stays inside the list's frame: a rounded band with room round it */
+QComboBox QAbstractItemView::item { border-radius: 4px; padding: 1px 4px; }
+QComboBox QAbstractItemView::item:selected { background: $selection; color: $selection_text; }
 QCheckBox, QRadioButton { color: $text; }
 QGroupBox {
     border: 1px solid $border; border-radius: 8px; margin-top: 22px; padding: 8px 5px 5px 5px;
@@ -594,6 +598,10 @@ QLabel { color: $text; qproperty-indent: 0; }  /* padding counts as a frame: no 
 QLabel#SectionLabel { color: $text_dim; font-size: 11px; font-weight: 800; padding: 3px 1px; }
 QLabel#MutedLabel { color: $text_muted; padding: 2px 1px; }
 QLabel#FieldLabel { color: $text_dim; font-size: 11px; font-weight: 600; padding: 0 1px; }
+/* worked-out words beside a record (a stat's sources and uses, D91): read, not edited */
+QLabel#FormInfo {
+    background: $raised; color: $text; border: 1px solid $border; border-radius: 6px;
+}
 QLabel#EmptyStateTitle { color: $text_dim; font-size: 14px; font-weight: 700; }
 QLabel#EmptyStateHint { color: $text_muted; }
 QLabel#ErrorLabel { color: $error; }
@@ -814,7 +822,9 @@ TOOLTIP_DELAY_MS = 120  # help (the ⓘ marks) shows almost at once; Qt's own wa
 
 
 def _quick_tooltips(app):
-    """The application's style wrapped once so tooltips appear after ``TOOLTIP_DELAY_MS``."""
+    """The application's style wrapped once so tooltips appear after ``TOOLTIP_DELAY_MS`` and
+    every drop-down list opens below its box as one piece with it (macOS's own lists open over
+    the box, centred on the chosen line)."""
     from PySide6.QtWidgets import QProxyStyle, QStyle, QStyleFactory
 
     if getattr(app, "_asteria_quick_tips", None) is not None:
@@ -824,7 +834,14 @@ def _quick_tooltips(app):
         def styleHint(self, hint, option=None, widget=None, data=None):  # noqa: N802 - Qt
             if hint == QStyle.SH_ToolTip_WakeUpDelay:
                 return TOOLTIP_DELAY_MS
+            if hint == QStyle.SH_ComboBox_Popup:
+                return 0  # a list below the box, not a menu over it
             return super().styleHint(hint, option, widget, data)
+
+        def subControlRect(self, control, option, sub, widget=None):  # noqa: N802 - Qt
+            if control == QStyle.CC_ComboBox and sub == QStyle.SC_ComboBoxListBoxPopup:
+                return option.rect  # the list hangs from the box's bottom edge, as wide as it
+            return super().subControlRect(control, option, sub, widget)
 
     # a QProxyStyle owns the style it wraps: give it its own, made from the current one's name
     base = QStyleFactory.create(app.style().name()) or QStyleFactory.create("Fusion")

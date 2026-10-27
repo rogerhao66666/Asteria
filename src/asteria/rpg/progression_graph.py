@@ -428,11 +428,15 @@ class ProgressionAllocationRuntime:
         self.balances = _nonnegative_map(balances or {}, "allocation balance")
         self.allocations = {graph_id: {} for graph_id in self.definitions}
         for graph_id, raw_nodes in dict(allocations or {}).items():
+            # a graph or node the project no longer has (an author deleted a job's tree): its
+            # ranks drop with it, a save from before still loads (D91)
             if graph_id not in self.definitions:
-                raise KeyError(f"unknown progression graph: {graph_id}")
+                continue
             graph = self.definitions[graph_id]
             for node_id, raw_rank in dict(raw_nodes).items():
-                node = graph.require_node(node_id)
+                node = graph.node(node_id)
+                if node is None:
+                    continue
                 rank = int(raw_rank)
                 if rank < 0 or rank > node.max_rank:
                     raise ValueError(f"invalid allocation rank for {graph_id}:{node_id}")

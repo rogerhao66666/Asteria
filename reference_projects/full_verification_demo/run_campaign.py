@@ -223,7 +223,6 @@ class Campaign:
         "dragon_form",
         "pass_the_torch",
         "bp_gift",
-        "rekindle",
         "twilight_judgment",
         "word_of_doom",
         "pilfer",
@@ -238,11 +237,11 @@ class Campaign:
         """The next skill of ``actor``: heal the weak, else the least used skill that works."""
         game = self.game
         build = game.battle.member(actor).ability_ids
-        pool = [
+        pool = sorted(  # by name first: where the engine lists a skill (D92) changes nothing
             a
             for a in build
             if not game.ability_unavailable(actor, a) and a not in ("concoct", "rush_blow")
-        ]
+        )
         self.rng.shuffle(pool)
         pool.sort(key=lambda a: (self.used[a], a not in self.FIRST))
         pool.sort(key=lambda a: not (a in self.FIRST and self.used[a] == 0))
@@ -820,7 +819,7 @@ class Campaign:
         self.facts["bought"] += 1
         self.talk("Breaker", picks=(1,))
         self.facts["disassembled"] += 1
-        self.talk("Armory", picks=(0,))  # a bow: asked to wear it in the free hand...
+        self.talk("Armory", picks=(0,))  # a two-handed bow: asked to carry it...
         assert game.equip_offers and game.equip_offers[0].actor_id == HERO, game.equip_offers
         game.answer_equip_offer(False)  # ...kept in the bag (the hand stays free for the ring)
         self.facts["equip_offers"] += 1
@@ -903,8 +902,8 @@ class Campaign:
         game.refresh_actor_combatants(actor_id)
 
     def demon_ring(self):
-        weapons = self.game.save.rpg_state.loadouts[HERO].equipped("weapon")
-        return next((w for w in weapons if w.equipment.equipment_id == "w_demon_ring"), None)
+        worn = self.game.save.rpg_state.loadouts[HERO].working()  # the sub weapon slot (D92)
+        return next((w for w in worn if w.equipment.equipment_id == "w_demon_ring"), None)
 
     def sunbrand(self):
         return self.game.save.rpg_state.loadouts[HERO].equipped("weapon")[0]

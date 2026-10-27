@@ -64,12 +64,18 @@ class BattleEventsMixin:
         return broke
 
     def _apply_break_to_battle(self, actor_id, before):
-        """A weapon that breaks mid-battle stops helping at once: the stats and resource
-        maxima it gave are taken off the fighter and the abilities it granted are blocked."""
+        """A weapon that breaks mid-battle stops helping at once (``_apply_build_change``)."""
+        self._apply_build_change(actor_id, before)
+
+    def _apply_build_change(self, actor_id, before):
+        """Gear changed mid-battle (it broke, or a carried weapon was swapped in, D92): the
+        stats and resource maxima the change gave or took go onto the fighter as a difference
+        (damage taken and battle buffs stay), the abilities it lost are blocked and the ones it
+        gained can be used, and its tags follow."""
         after = self.resolve_actor_build(actor_id)
         member = self.battle.member(actor_id)
         stats, resources = member.subject.stats, member.subject.resources
-        for name in before.stats.names():
+        for name in set(before.stats.names()) | set(after.stats.names()):
             delta = after.stats.get(name) - before.stats.get(name)
             if delta and stats.contains(name):
                 stats.add(name, delta)
@@ -80,8 +86,21 @@ class BattleEventsMixin:
                 )
                 resources.get(name).set_maximum(max(top, resources.get(name).minimum))
         lost = set(before.abilities) - set(after.abilities)
-        if lost:
-            self.battle.blocked_abilities.setdefault(actor_id, set()).update(lost)
+        gained = [a for a in after.abilities if a not in before.abilities]
+        blocked = self.battle.blocked_abilities.setdefault(actor_id, set())
+        blocked.update(lost)
+        blocked.difference_update(gained)
+        if gained:
+            known = tuple(member.ability_ids)
+            self.battle.set_member_abilities(
+                actor_id, known + tuple(a for a in gained if a not in known)
+            )
+        tags = member.subject.tags
+        for tag in set(before.tags.values()) - set(after.tags.values()):
+            if tags.contains(tag):
+                tags.remove(tag)
+        for tag in set(after.tags.values()) - set(before.tags.values()):
+            tags.add(tag)
 
     def _wear_equipment(self, event):
         if self.durability_rules is None:

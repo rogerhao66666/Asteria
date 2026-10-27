@@ -72,20 +72,30 @@ class MessagesMixin:
             labels.update(dict(getattr(profile, attribute, ()) or ()))
         return labels
 
-    def stat_name(self, stat_id):
+    def stat_name(self, stat_id, *, short=False):
         """A stat's (or resource's) name in the player's language: the locale table's
-        ``data.stat.<id>.name``, else the character screen's label, else the id in words."""
-        from asteria.rpg.data_text import stat_name
+        ``data.stat.<id>.name``, else its stat definition's (D91), else the character screen's
+        label, else the id in words. ``short``: the short name (STR) where one is given."""
+        from asteria.rpg.data_text import stat_name, stat_short_name
 
         labels = self._profile_labels("rpg_character_screen", "resource_labels", "stat_labels")
-        return stat_name(self.data_lookup, stat_id, labels)
+        db = getattr(self.project, "rpg_database", None)
+        definition = getattr(db, "stat_definitions", {}).get(str(stat_id))
+        find = stat_short_name if short else stat_name
+        return find(self.data_lookup, stat_id, labels, definition)
 
     def slot_name(self, slot_id):
-        """An equipment slot's name (``data.slot.<id>.name``, else a screen's label)."""
+        """An equipment slot's name (``data.slot.<id>.name``, else the slot definition's name,
+        else a screen's label)."""
         from asteria.rpg.data_text import slot_name
 
         labels = self._profile_labels("rpg_equipment_screen", "slot_labels")
         labels = {**self._profile_labels("rpg_character_screen", "slot_labels"), **labels}
+        db = getattr(self.project, "rpg_database", None)
+        definition = getattr(db, "equipment_slots", {}).get(str(slot_id))
+        own = self.name_of(definition, "") if definition is not None else ""
+        if own:
+            labels[str(slot_id)] = own
         return slot_name(self.data_lookup, slot_id, labels)
 
     def socket_name(self, equipment, socket_id):
@@ -108,10 +118,14 @@ class MessagesMixin:
         return self.tr("socket.number", "Socket {number}", number=number)
 
     def tag_name(self, tag):
-        """A tag's name (a socket accepts "gem", "card"...): ``data.tag.<tag>.name``, else the
-        tag in words (U3)."""
+        """A tag's name (a socket accepts "gem", "card"...): ``data.tag.<tag>.name``, else its
+        definition's name (Game Systems ▸ Tags, D91), else the tag in words (U3)."""
         from asteria.rpg.data_text import key, words
 
+        record = getattr(self.project.rpg_database, "tag_definitions", {}).get(str(tag).lower())
+        named = self.name_of(record, "") if record is not None else ""
+        if named:
+            return named
         lookup = self.data_lookup
         return (lookup(key("tag", tag)) if lookup is not None else None) or words(tag)
 
@@ -136,6 +150,27 @@ class MessagesMixin:
         if currency == "stat_points":
             return self.tr("points.stat_points", "Stat points")
         return words(currency).upper() if len(currency) <= 3 else words(currency)
+
+    def stat_amount(self, stat_id, value, operation="add"):
+        """``value`` of a stat written its way (Game Systems ▸ Stats): ``+12``, ``+3%``,
+        ``x1.6`` (D91)."""
+        from asteria.rpg.effect_text import amount
+
+        definition = getattr(self.project.rpg_database, "stat_definitions", {}).get(stat_id)
+        return amount(value, operation, definition)
+
+    def effect_lines(self, modifiers):
+        """What ``modifiers`` (a passive's, a state's, gear's) do, a line per stat, in the
+        player's language: ``MAG +18``, ``Crit Rate +3% (when Sword)`` (D91)."""
+        from asteria.rpg.effect_text import modifier_lines
+
+        return modifier_lines(
+            modifiers,
+            lambda stat: self.stat_name(stat, short=True),
+            getattr(self.project.rpg_database, "stat_definitions", {}),
+            self.tag_name,
+            self.tr,
+        )
 
     def description_of(self, record, fallback=""):
         """A project record's description in the player's language (D60)."""

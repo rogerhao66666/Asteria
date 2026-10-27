@@ -81,6 +81,8 @@ class AttachmentDefinition:
     growth_id: str | None = None
 
     icon_id: str = ""  # a project icon shown in menus; written only when set
+    description: str = ""  # what it is, in the author's words (D91); written only when set
+    OPTIONAL_DATA = {"description": ""}  # shown in the editor while empty
 
     def __init__(
         self,
@@ -93,6 +95,7 @@ class AttachmentDefinition:
         triggers=(),
         growth_id=None,
         icon_id="",
+        description="",
     ):
         attachment_id = _id(attachment_id, "attachment_id")
         modifiers = tuple(modifiers)
@@ -115,6 +118,7 @@ class AttachmentDefinition:
             self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
+        object.__setattr__(self, "description", str(description or ""))
 
     def to_data(self):
         return {
@@ -128,6 +132,7 @@ class AttachmentDefinition:
             "triggers": [x.to_data() for x in self.triggers],
             "growth_id": self.growth_id,
             **({"icon_id": self.icon_id} if self.icon_id else {}),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -144,6 +149,7 @@ class AttachmentDefinition:
             triggers=[GameplayTrigger.from_data(x) for x in data["triggers"]],
             growth_id=data.get("growth_id") if version >= 2 else None,
             icon_id=data.get("icon_id", ""),
+            description=data.get("description", ""),
         )
 
 
@@ -172,7 +178,11 @@ class EquipmentDefinition:
     icon_id: str = ""  # a project icon asset shown in menus; written only when set
     # a rarity id (Game Data > Rarities): its colour and name in the bag; written only when set
     rarity: str = ""
-    OPTIONAL_DATA = {"icon_id": "", "rarity": ""}
+    description: str = ""  # what it is, in the author's words (D91); written only when set
+    # worn, it also takes these slots, which must stay empty: a two-handed weapon names the
+    # sub-weapon slot (D92); written only when set
+    blocks_slots: tuple[str, ...] = ()
+    OPTIONAL_DATA = {"icon_id": "", "rarity": "", "description": "", "blocks_slots": []}
 
     def __init__(
         self,
@@ -191,6 +201,8 @@ class EquipmentDefinition:
         growth_id=None,
         icon_id="",
         rarity="",
+        description="",
+        blocks_slots=(),
     ):
         equipment_id = _id(equipment_id, "equipment_id")
         modifiers = tuple(modifiers)
@@ -224,6 +236,9 @@ class EquipmentDefinition:
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
         object.__setattr__(self, "rarity", str(rarity or "").strip())
+        object.__setattr__(self, "description", str(description or ""))
+        blocks = tuple(dict.fromkeys(_id(x, "slot") for x in blocks_slots))
+        object.__setattr__(self, "blocks_slots", blocks)
 
     def to_data(self):
         return {
@@ -243,6 +258,8 @@ class EquipmentDefinition:
             "growth_id": self.growth_id,
             **({"icon_id": self.icon_id} if self.icon_id else {}),
             **({"rarity": self.rarity} if self.rarity else {}),
+            **({"description": self.description} if self.description else {}),
+            **({"blocks_slots": list(self.blocks_slots)} if self.blocks_slots else {}),
         }
 
     def eligibility(self, capabilities=()):
@@ -281,6 +298,8 @@ class EquipmentDefinition:
             growth_id=data.get("growth_id") if version >= 3 else None,
             icon_id=data.get("icon_id", ""),
             rarity=data.get("rarity", ""),
+            description=data.get("description", ""),
+            blocks_slots=data.get("blocks_slots", ()),
         )
 
 
@@ -383,6 +402,8 @@ INVENTORY_OVERFLOW = ("fill", "reject")
 # when new gear arrives: never ask (it waits in the equipment bag), ask when a party member has
 # a free place for it, or ask every time (offering to swap what is worn)
 EQUIP_OFFERS = ("never", "empty_slot", "always")
+BATTLE_SWAPS = ("turn", "free", "off")
+SLOT_CONFLICTS = ("take_off", "refuse")
 
 
 @dataclass(frozen=True, slots=True)
@@ -399,6 +420,10 @@ class InventoryRules:
       keeps none of it. What did not fit is reported in ``Inventory.overflow``.
     * ``equip_offer``   - when new gear arrives: ``"never"`` asks nothing, ``"empty_slot"`` asks
       whether to wear it when someone has a free place for it, ``"always"`` also offers to swap.
+    * ``battle_swap``   - the battle's Swap command, a carried piece for a worn one (D92):
+      ``"turn"`` uses the turn, ``"free"`` keeps it, ``"off"`` hides the command
+    * ``slot_conflict`` - wearing a piece whose place is taken (a two-handed weapon while the
+      sub-weapon slot holds one): ``"take_off"`` puts the other piece away, ``"refuse"`` says no
     """
 
     rules_id: str
@@ -408,6 +433,8 @@ class InventoryRules:
     exempt_tags: tuple[str, ...] = ("item.key",)
     overflow: str = "fill"
     equip_offer: str = "never"
+    battle_swap: str = "turn"
+    slot_conflict: str = "take_off"
 
     def __init__(
         self,
@@ -419,6 +446,8 @@ class InventoryRules:
         exempt_tags=("item.key",),
         overflow="fill",
         equip_offer="never",
+        battle_swap="turn",
+        slot_conflict="take_off",
     ):
         if max_kinds is not None:
             max_kinds = int(max_kinds)
@@ -435,6 +464,12 @@ class InventoryRules:
         if equip_offer not in EQUIP_OFFERS:
             raise ValueError(f"equip_offer must be one of {EQUIP_OFFERS}")
         object.__setattr__(self, "equip_offer", equip_offer)
+        if battle_swap not in BATTLE_SWAPS:
+            raise ValueError(f"battle_swap must be one of {BATTLE_SWAPS}")
+        object.__setattr__(self, "battle_swap", battle_swap)
+        if slot_conflict not in SLOT_CONFLICTS:
+            raise ValueError(f"slot_conflict must be one of {SLOT_CONFLICTS}")
+        object.__setattr__(self, "slot_conflict", slot_conflict)
 
     def to_data(self):
         return {
@@ -447,6 +482,8 @@ class InventoryRules:
             "exempt_tags": list(self.exempt_tags),
             "overflow": self.overflow,
             **({"equip_offer": self.equip_offer} if self.equip_offer != "never" else {}),
+            **({"battle_swap": self.battle_swap} if self.battle_swap != "turn" else {}),
+            **({"slot_conflict": self.slot_conflict} if self.slot_conflict != "take_off" else {}),
         }
 
     @classmethod
@@ -461,6 +498,8 @@ class InventoryRules:
             exempt_tags=data.get("exempt_tags", ("item.key",)),
             overflow=data.get("overflow", "fill"),
             equip_offer=data.get("equip_offer", "never"),
+            battle_swap=data.get("battle_swap", "turn"),
+            slot_conflict=data.get("slot_conflict", "take_off"),
         )
 
 
@@ -780,11 +819,42 @@ class EquippedItem:
 
 @dataclass(frozen=True, slots=True)
 class EquipmentSlotDefinition:
+    """A place gear is worn or carried in (D92).
+
+    * ``capacity``              - pieces it holds (``None``: no limit)
+    * ``accepted_tags``         - gear carrying one of these fits too, besides gear whose own
+      ``slot`` is this one (a sub-weapon slot takes every piece tagged ``weapon``)
+    * ``stowed``                - carried, not worn: its pieces give no stats, skills, tags or set
+      bonuses until they are swapped into a worn slot (the battle's Swap command)
+    * ``required_capabilities`` - only a wearer with all of them can use it (a job that carries
+      every weapon grants the capability)
+    * ``display_name``, ``description``, ``order`` - its name, what it is for, its place in lists
+
+    A project's slot definitions (Game Systems ▸ Equipment Slots) replace the same slots of every
+    hero's loadout and add the ones it does not have (``EquipmentLoadout.sync_slots``)."""
+
     slot_id: str
     accepted_tags: tuple[str, ...] = ()
     capacity: int | None = 1
+    display_name: str = ""
+    stowed: bool = False
+    required_capabilities: tuple[str, ...] = ()
+    order: int = 0
+    description: str = ""
+    OPTIONAL_DATA = {"display_name": "", "description": ""}
 
-    def __init__(self, slot_id, *, accepted_tags=(), capacity=1):
+    def __init__(
+        self,
+        slot_id,
+        *,
+        accepted_tags=(),
+        capacity=1,
+        display_name="",
+        stowed=False,
+        required_capabilities=(),
+        order=0,
+        description="",
+    ):
         object.__setattr__(self, "slot_id", _id(slot_id, "slot_id"))
         object.__setattr__(self, "accepted_tags", _tags(accepted_tags))
         if capacity is not None:
@@ -792,24 +862,59 @@ class EquipmentSlotDefinition:
             if capacity < 1:
                 raise ValueError("capacity must be >= 1 or None")
         object.__setattr__(self, "capacity", capacity)
+        object.__setattr__(self, "display_name", str(display_name or ""))
+        object.__setattr__(self, "stowed", bool(stowed))
+        object.__setattr__(self, "required_capabilities", _tags(required_capabilities))
+        object.__setattr__(self, "order", int(order))
+        object.__setattr__(self, "description", str(description or ""))
 
     def to_data(self):
-        return {
+        data = {
             "slot_id": self.slot_id,
             "accepted_tags": list(self.accepted_tags),
             "capacity": self.capacity,
         }
+        if self.display_name:
+            data["display_name"] = self.display_name
+        if self.stowed:
+            data["stowed"] = True
+        if self.required_capabilities:
+            data["required_capabilities"] = list(self.required_capabilities)
+        if self.order:
+            data["order"] = self.order
+        if self.description:
+            data["description"] = self.description
+        return data
 
     @classmethod
     def from_data(cls, data):
         return cls(
             data["slot_id"],
-            accepted_tags=data["accepted_tags"],
-            capacity=data["capacity"],
+            accepted_tags=data.get("accepted_tags", ()),
+            capacity=data.get("capacity", 1),
+            display_name=data.get("display_name", ""),
+            stowed=data.get("stowed", False),
+            required_capabilities=data.get("required_capabilities", ()),
+            order=data.get("order", 0),
+            description=data.get("description", ""),
         )
 
     def accepts(self, equipment):
         return not self.accepted_tags or any(x in equipment.tags for x in self.accepted_tags)
+
+    def takes(self, equipment):
+        """Gear made for this slot, or carrying one of its tags (a slot naming no tags takes
+        only its own gear) - what the equipment screen and the Swap command offer. Never gear
+        that also takes this slot (a two-handed weapon is not a sub weapon)."""
+        if self.slot_id in equipment.blocks_slots:
+            return False
+        if equipment.slot == self.slot_id:
+            return True
+        return bool(self.accepted_tags) and self.accepts(equipment)
+
+    def usable_with(self, capabilities):
+        held = {str(x).strip().lower() for x in capabilities}
+        return all(x in held for x in self.required_capabilities)
 
 
 class EquipmentLoadout:
@@ -869,7 +974,61 @@ class EquipmentLoadout:
             return EquipmentEligibility(False, ("equipment is not compatible with slot",))
         if slot.capacity is not None and len(self._equipped[slot_id]) >= slot.capacity:
             return EquipmentEligibility(False, ("equipment slot is full",))
+        if slot_id in item.equipment.blocks_slots and not slot.stowed:
+            return EquipmentEligibility(False, (f"it takes {slot_id} as well",))
+        if not slot.usable_with(capabilities):
+            missing = ", ".join(slot.required_capabilities)
+            return EquipmentEligibility(False, (f"this slot needs {missing}",))
+        for other, piece in self.conflicts(slot_id, item):
+            return EquipmentEligibility(
+                False, (f"{piece.equipment.equipment_id} in {other} takes the same place",)
+            )
         return item.equipment.eligibility(capabilities)
+
+    def sync_slots(self, definitions):
+        """Use the project's slot definitions (D92): each replaces the loadout's slot of the
+        same id, and a slot the loadout lacks is added empty. Slots no definition names stay
+        as they are, with their pieces."""
+        for definition in definitions:
+            if not isinstance(definition, EquipmentSlotDefinition):
+                raise TypeError("definitions must be EquipmentSlotDefinition values")
+            self._slots[definition.slot_id] = definition
+            self._equipped.setdefault(definition.slot_id, [])
+        return self
+
+    def slot(self, slot_id):
+        """The slot's definition, or ``None``."""
+        return self._slots.get(str(slot_id))
+
+    def conflicts(self, slot_id, item):
+        """``[(slot_id, piece)]`` worn pieces that cannot stay if ``item`` is worn in
+        ``slot_id``: those in the slots it also takes (``blocks_slots``, a two-handed weapon's
+        sub-weapon slot) and those that take ``slot_id`` themselves. A carried slot (``stowed``)
+        is never in the way and puts nothing in the way."""
+        slot_id = str(slot_id)
+        slot = self._slots.get(slot_id)
+        if slot is None or slot.stowed:
+            return []
+        found = []
+        for other in item.equipment.blocks_slots:
+            if other != slot_id and other in self._slots and not self._slots[other].stowed:
+                found.extend((other, piece) for piece in self._equipped[other])
+        for other, pieces in self._equipped.items():
+            if other == slot_id or self._slots[other].stowed:
+                continue
+            for piece in pieces:
+                if slot_id in piece.equipment.blocks_slots and (other, piece) not in found:
+                    found.append((other, piece))
+        return [x for x in found if x[1] is not item]
+
+    def carried(self):
+        """The pieces in carried slots (``stowed``): they give nothing until swapped in."""
+        return tuple(
+            item
+            for key in sorted(self._equipped)
+            if self._slots[key].stowed
+            for item in self._equipped[key]
+        )
 
     def equip(self, slot_id, item, *, capabilities=(), validate_requirements=True):
         slot_id = str(slot_id)
@@ -967,8 +1126,15 @@ class EquipmentLoadout:
         return tuple(item for key in sorted(self._equipped) for item in self._equipped[key])
 
     def working(self):
-        """The equipped items that still work (a broken one stays equipped but gives nothing)."""
-        return tuple(item for item in self.equipped() if not item.broken)
+        """The worn items that still work: a broken one stays equipped but gives nothing, and
+        so does one in a carried slot (``stowed``, D92)."""
+        return tuple(
+            item
+            for key in sorted(self._equipped)
+            if not self._slots[key].stowed
+            for item in self._equipped[key]
+            if not item.broken
+        )
 
     def active_set_bonuses(self):
         """``(set_id, EquipmentSetBonus)`` pairs active for the equipped pieces."""

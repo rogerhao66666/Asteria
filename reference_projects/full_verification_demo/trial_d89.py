@@ -334,6 +334,7 @@ def chinese():
 
 def patch_menu(db):
     rules = next(r for r in db["menu_rules"] if r["rules_id"] == "trial_menu")
+    rules["stat_columns"] = ["total", "base", "points", "gear", "gain"]  # no rank (D89)
     rules["stat_groups"] = [{"group_id": g, "display_name": en} for g, en, _zh, _l in GROUPS]
     rules["stat_lines"] = [
         {

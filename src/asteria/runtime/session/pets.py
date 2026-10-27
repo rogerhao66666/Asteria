@@ -599,8 +599,8 @@ class PetsMixin:
             side,
             subject,
             ability_ids=self.pet_moves(record),
-            initiative=subject.stats.get("speed"),
-            initiative_stat="speed",
+            initiative=subject.stats.get(self.rules.initiative_stat or "speed"),
+            initiative_stat=self.rules.initiative_stat,
             initiative_expression=self.rules.initiative_expression,
         )
 

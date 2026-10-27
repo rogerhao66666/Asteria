@@ -893,7 +893,7 @@ Every word a screen draws goes through `game.tr(key, english)`; the keys are lis
 | `game.line_text(line)` | A dialogue line's or choice's text, translated. |
 | `game.speaker_of(line)` | Who speaks a line, translated. |
 | `game.map_name(scene_id, own)` | A map's name, translated. |
-| `game.stat_name(stat_id)` | A stat's or resource's name, translated. |
+| `game.stat_name(stat_id, *, short=False)` | A stat's or resource's name, translated. |
 | `game.slot_name(slot_id)` | An equipment slot's name, translated. |
 | `game.tag_name(tag)` | A tag's name, translated. |
 

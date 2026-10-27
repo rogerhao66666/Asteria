@@ -386,6 +386,71 @@ def _scripts(document, found):
             )
 
 
+def used_stats(project):
+    """Every stat id the project's data names: base stats, gear, passives, formulas, battle
+    checks, damage and state rules, the Status page's details (D91)."""
+    from .data_translation import stat_ids
+
+    db = project.rpg_database
+    found = set(stat_ids(project))
+    for enemy in db.enemies.values():
+        found.update(enemy.stats)
+    for rule in db.derived_stats.values():
+        found.add(rule.stat_id)
+        found.update(rule.terms)
+    for check in db.outcome_checks.values():
+        found.update(check.source_stat_terms or {})
+        found.update(check.target_stat_terms or {})
+    for rule in db.interaction_rules.values():
+        for terms in (rule.source_stat_terms, rule.target_stat_terms):
+            found.update(terms or {})
+        found.update(rule.multiplier_source_terms or {})
+        found.update(rule.multiplier_target_terms or {})
+    for policy in db.battle_state_policies.values():
+        found.update(policy.target_stat_terms or {})
+    for menu in db.menu_rules.values():
+        found.update(line.stat_id for line in menu.stat_lines)
+    return {s for s in found if s}
+
+
+def _stats(project, found):
+    """A project that defines its stats (Game Systems ▸ Stats) defines every one it uses."""
+    defined = project.rpg_database.stat_definitions
+    if not defined:
+        return  # an older project: its stats are its data's names
+    for stat_id in sorted(used_stats(project) - set(defined)):
+        found.append(
+            Problem(
+                "warning",
+                "Stats",
+                f"stat {stat_id} is used but not defined: add it in Game Systems ▸ Stats",
+                ("game_system", "stat_definitions", ""),
+            )
+        )
+
+
+def _tags(project, found):
+    """A project that defines its tags (Game Systems ▸ Tags) defines every one it uses, alone
+    or by a family (``rune.*``)."""
+    from asteria.rpg.tag_definitions import definition_for
+
+    from .tag_usage import project_tags
+
+    defined = project.rpg_database.tag_definitions
+    if not defined:
+        return  # an older project: its tags are words its rules agree on
+    for tag in sorted(project_tags(project)):
+        if definition_for(defined, tag) is None:
+            found.append(
+                Problem(
+                    "warning",
+                    "Tags",
+                    f"tag {tag} is used but not defined: add it in Game Systems ▸ Tags",
+                    ("game_system", "tag_definitions", ""),
+                )
+            )
+
+
 def collect_problems(document, *, resource_root=None):
     project = document.project
     if project is None:
@@ -396,6 +461,8 @@ def collect_problems(document, *, resource_root=None):
         ("RPG Database", lambda: _references(project, found)),
         ("Field / Events", lambda: _field(project, found)),
         ("Real-Time Combat", lambda: _combat(project, found)),
+        ("Stats", lambda: _stats(project, found)),
+        ("Tags", lambda: _tags(project, found)),
         ("Sprites", lambda: _sprites(document, found, resource_root)),
         ("Action Timeline", lambda: _timelines(document, found)),
         ("Scripts", lambda: _scripts(document, found)),

@@ -120,7 +120,9 @@ class MenuSlotPlace:
     How the worn piece's icon fills the place (D88): ``icon_scale`` of the place (1 = as big as
     fits inside it), ``icon_rotate`` degrees counter-clockwise first (-45 lays a diagonal sword
     flat in a long place), ``icon_trim`` cuts the icon's empty edges so its picture, not its
-    margin, fills the place, ``icon_fit`` "fit" keeps its shape, "stretch" fills the place."""
+    margin, fills the place, ``icon_fit`` "fit" keeps its shape, "stretch" fills the place.
+    ``backdrop``: a picture drawn under the place, empty or not, filling it (D92: a place off
+    the doll picture, the carried weapons' row)."""
 
     slot_id: str
     rect: tuple
@@ -129,6 +131,7 @@ class MenuSlotPlace:
     icon_rotate: int = 0
     icon_trim: bool = False
     icon_fit: str = "fit"
+    backdrop: str = ""
 
     FITS = ("fit", "stretch")
 
@@ -148,6 +151,7 @@ class MenuSlotPlace:
         if fit not in self.FITS:
             raise ValueError(f"a slot's icon_fit must be one of {self.FITS}")
         object.__setattr__(self, "icon_fit", fit)
+        object.__setattr__(self, "backdrop", str(self.backdrop or "").strip())
 
     def to_data(self):
         data = {"slot_id": self.slot_id, "rect": list(self.rect)}
@@ -161,6 +165,8 @@ class MenuSlotPlace:
             data["icon_trim"] = True
         if self.icon_fit != "fit":
             data["icon_fit"] = self.icon_fit
+        if self.backdrop:
+            data["backdrop"] = self.backdrop
         return data
 
     @classmethod
@@ -173,6 +179,7 @@ class MenuSlotPlace:
             data.get("icon_rotate", 0),
             data.get("icon_trim", False),
             data.get("icon_fit", "fit"),
+            data.get("backdrop", ""),
         )
 
 

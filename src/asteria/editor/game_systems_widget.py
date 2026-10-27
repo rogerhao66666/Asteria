@@ -598,13 +598,14 @@ class RecordForm(QWidget):
             self._watch(f, widget)
             self.widgets[f.key] = widget
             if f.kind in ("group", "table", "translations"):  # a caption, the box below it
-                self.grid.add_row(f.label, widget, span=True)
+                self.grid.add_row(f.label, widget, span=True, help_text=f.help)
             else:
                 self.grid.add_row(
                     f.label,
                     widget,
+                    help_text=f.help,
                     # tables and long text (a translation, a description) take a whole row
-                    span=f.kind in ("amounts", "pairs", "ref_list", "multiline")
+                    span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info")
                     or f.key in ("text", "description", "message", "detail"),
                 )
 
@@ -664,12 +665,13 @@ class RecordForm(QWidget):
                  "factions": "faction", "states": "state", "classes": "job",
                  "actors": "character", "currencies": "currency"}  # fmt: skip
         nouns.update({"progression_tracks": "track", "carry_parts": "part"})
+        nouns.update({"stat_set_on": "record", "stat_columns": "column"})
         if source in nouns:
             return nouns[source]
         by_key = {"bonuses": "stat", "growth": "stat", "stat_growth": "stat", "stats": "stat",
                   "terms": "stat", "resource_growth": "resource", "resources": "resource",
                   "capacity_by_level": "level", "thresholds": "level",
-                  "shared_gauges": "gauge"}  # fmt: skip
+                  "shared_gauges": "gauge", "required_capabilities": "capability"}  # fmt: skip
         if f.key in by_key:
             return by_key[f.key]
         word = f.label.split("(")[0].strip().split(" ")[-1].lower()
@@ -722,6 +724,15 @@ class RecordForm(QWidget):
         return list(self._vocabulary().choices(kind)) if kind else []
 
     def _build(self, f):
+        if f.kind == "info":  # worked out by the controller: read, never edited (D91)
+            widget = QLabel()
+            widget.setObjectName("FormInfo")
+            widget.setWordWrap(True)
+            # the inset as margins, not stylesheet padding: Qt counts margins when it works out
+            # how tall the wrapped text is, so no line is cut off
+            widget.setContentsMargins(10, 8, 10, 8)
+            widget.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            return widget
         if f.kind == "id":
             widget = QLineEdit()
             widget.setReadOnly(True)
@@ -824,7 +835,7 @@ class RecordForm(QWidget):
         self._original = copy.deepcopy(data)
         for f in self.fields:
             widget, value = self.widgets[f.key], data.get(f.key, f.default)
-            if f.kind in ("id", "text", "icon"):
+            if f.kind in ("id", "text", "icon", "info"):
                 widget.setText("" if value is None else str(value))
             elif f.kind == "multiline":
                 widget.setPlainText(str(value or ""))
@@ -869,7 +880,9 @@ class RecordForm(QWidget):
         out = copy.deepcopy(self._original)
         for f in self.fields:
             widget = self.widgets[f.key]
-            if f.kind in ("id", "text", "icon"):
+            if f.kind == "info":
+                out.pop(f.key, None)  # worked out, not data
+            elif f.kind in ("id", "text", "icon"):
                 out[f.key] = widget.text().strip()
             elif f.kind == "multiline":
                 out[f.key] = widget.toPlainText()

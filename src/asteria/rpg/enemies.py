@@ -137,6 +137,8 @@ class EnemyDefinition:
     tags: tuple[str, ...]
     abilities: tuple[str, ...]
     reward: RewardDefinition
+    description: str = ""  # what it is, in the author's words (D91); written only when set
+    OPTIONAL_DATA = {"description": ""}  # shown in the editor while empty
 
     def __init__(
         self,
@@ -148,6 +150,7 @@ class EnemyDefinition:
         tags=(),
         abilities=(),
         reward=None,
+        description="",
     ):
         enemy_id = _id(enemy_id, "enemy_id")
 
@@ -176,6 +179,7 @@ class EnemyDefinition:
             tuple(dict.fromkeys(_id(x, "ability_id") for x in abilities)),
         )
         object.__setattr__(self, "reward", reward)
+        object.__setattr__(self, "description", str(description or ""))
 
     def instantiate(self):
         resources = ResourcePool()
@@ -194,6 +198,7 @@ class EnemyDefinition:
             "tags": list(self.tags),
             "abilities": list(self.abilities),
             "reward": self.reward.to_data(),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -208,6 +213,7 @@ class EnemyDefinition:
             tags=data["tags"],
             abilities=data["abilities"],
             reward=RewardDefinition.from_data(data["reward"]),
+            description=data.get("description", ""),
         )
 
 

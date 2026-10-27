@@ -79,22 +79,26 @@ def _english(key, english, **params):
     return english.format(**params) if params else english
 
 
-def describe_reward(reward, labels, names=None, tr=None):
-    """Reward lines; ``names`` maps stat / resource ids to the project's names (STR, HP);
-    ``tr`` (``GameSessionRuntime.tr``) words them in the player's language."""
+def describe_reward(reward, labels, names=None, tr=None, passive=None):
+    """Reward lines; ``names`` maps stat / resource ids to the project's names (STR, HP) and,
+    when it has ``amount(stat, value)``, writes a value the stat's way (+3%); ``tr``
+    (``GameSessionRuntime.tr``) words them in the player's language; ``passive(passive_id)``
+    names a passive with what it does (D91)."""
     names = names or {}
     tr = tr or _english
+    passive = passive or str
+    write = getattr(names, "amount", None) or (lambda _stat, value: f"+{value:g}")
     parts = []
     for stat, value in sorted(reward.stat_bonuses.items()):
-        parts.append(f"{names.get(stat, stat)} +{value:g}")
+        parts.append(f"{names.get(stat, stat)} {write(stat, value)}")
     for name, value in sorted(reward.resource_bonuses.items()):
         label = names.get(name, name)
         parts.append(tr("skill_tree.max", "max {name} +{value}", name=label, value=f"{value:g}"))
     for ability in reward.granted_abilities:
         label = labels.get(ability, {}).get("label") or ability
         parts.append(tr("skill_tree.skill", "Skill: {name}", name=label))
-    for passive in reward.unlocked_passives:
-        parts.append(tr("skill_tree.passive", "Passive: {name}", name=passive))
+    for passive_id in reward.unlocked_passives:
+        parts.append(tr("skill_tree.passive", "Passive: {name}", name=passive(passive_id)))
     parts += [tr("skill_tree.tag", "Tag: {name}", name=t) for t in reward.granted_tags]
     return parts
 
@@ -108,6 +112,20 @@ class StatNames:
 
     def get(self, stat_id, _default=None):
         return self.game.stat_name(stat_id)
+
+    def amount(self, stat_id, value):
+        """``+12`` or ``+3%``: the stat's way of writing it (D91)."""
+        return self.game.stat_amount(stat_id, value)
+
+    def passive(self, passive_id):
+        """``Arcane Focus (MAG +18)``: the passive's name and what it does (D91)."""
+        game = self.game
+        record = game.project.rpg_database.passives.get(passive_id)
+        if record is None:
+            return passive_id
+        effect = ", ".join(game.effect_lines(record.modifiers))
+        name = game.name_of(record, passive_id)
+        return f"{name} ({effect})" if effect else name
 
 
 class SkillTreeScreen:
@@ -590,7 +608,9 @@ class SkillTreeScreen:
             gives = tr("skill_tree.gives", "Next rank gives:")
             rt.text(gives, x + 16, row, size=18, color=(140, 230, 170))
             row += 24
-            for line in describe_reward(node.reward_for_rank(rank + 1), labels, names, tr)[:6]:
+            for line in describe_reward(
+                node.reward_for_rank(rank + 1), labels, names, tr, names.passive
+            )[:6]:
                 rt.text("  " + line, x + 16, row, size=18)
                 row += 22
         if rank:
@@ -600,7 +620,9 @@ class SkillTreeScreen:
             row += 24
             totals = {}
             for r in range(1, rank + 1):
-                for line in describe_reward(node.reward_for_rank(r), labels, names, tr):
+                for line in describe_reward(
+                    node.reward_for_rank(r), labels, names, tr, names.passive
+                ):
                     totals[line] = totals.get(line, 0) + 1
             for line in list(totals)[:5]:
                 rt.text("  " + line, x + 16, row, size=18)

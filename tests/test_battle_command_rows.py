@@ -95,6 +95,9 @@ def _old_root_rows(self, actor_id):
     for name in self.custom_categories(actor_id):
         groups.append((name, len(_old_skill_rows(self, actor_id, name)), "Abilities"))
     groups.append(("Items", len(items), "Use an item from the bag"))
+    swaps = self.swap_rows(actor_id)  # D92: the Brave's carried weapons
+    if swaps:
+        groups.append(("Swap", len(swaps), "Take up a carried weapon"))
     run = self.game.escape_chance()
     if run is not None:
         groups.append(("Escape", 1, f"{round(run * 100)}% to get away"))
@@ -129,7 +132,7 @@ def _old_root_rows(self, actor_id):
 def _old_entries(self, actor_id):
     if self.mode == "root":
         rows = _old_root_rows(self, actor_id)
-    elif self.mode == "command" and self.category not in ("Attack", "Items"):
+    elif self.mode == "command" and self.category not in ("Attack", "Items", "Swap"):
         rows = _old_skill_rows(self, actor_id, self.category)
     else:
         rows = self.rows(actor_id)
@@ -146,7 +149,7 @@ def _old_show(menu, feedback, commands, actor):
         everything = _old_skill_rows(commands, actor)
         for name in commands.custom_categories(actor):
             everything = everything + _old_skill_rows(commands, actor, name)
-        everything = everything + commands.item_rows()
+        everything = everything + commands.swap_rows(actor) + commands.item_rows()
         if commands.style == "root":
             everything = commands.attack_rows(actor) + everything
         menu.show(everything, commands.category, commands.cursor)
@@ -186,7 +189,7 @@ def _frame(commands, actor, pages):
 
 def _game():
     _project, game = smoke.load()
-    smoke.prepare(game, Counter(), "hero")
+    smoke.prepare(game, Counter(), "brave")
     game.join_party(VESPER)
     game.start_encounter("boss_room")
     return game

@@ -4,6 +4,7 @@ own data (a translation's mapping, a refine rule's chance list), not through the
 from pathlib import Path
 
 from asteria.editor import EditorDocument
+from asteria.editor.authoring_hub_widget import _free_id
 from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
 from asteria.project import Project
 
@@ -20,13 +21,14 @@ def test_every_kind_duplicates_and_undoes():
         if not ids or kind.kind_id == "capture_rules":  # keyed by an enemy: copied to another
             continue
         source = ids[0]
-        controller.duplicate(kind.kind_id, source, f"{source}_copy")
-        copy = controller.get(kind.kind_id, f"{source}_copy")
+        new = _free_id(source, ids)  # rune.* -> rune_copy.*
+        controller.duplicate(kind.kind_id, source, new)
+        copy = controller.get(kind.kind_id, new)
         original = controller.get(kind.kind_id, source).to_data()
         same = copy.to_data()
-        assert same.pop(kind.key) == f"{source}_copy" and original.pop(kind.key) == source
+        assert same.pop(kind.key) == new and original.pop(kind.key) == source
         assert same == original
         document.undo()
-        assert f"{source}_copy" not in controller.ids(kind.kind_id)
+        assert new not in controller.ids(kind.kind_id)
         copied += 1
     assert copied >= 20

@@ -252,6 +252,6 @@ def test_the_layout_page_outlines_moves_and_edits_elements(monkeypatch):
         page.rebuild()
         page.pick("doll")
         assert page.inspector.form.isRowVisible(page.inspector.slots)
-        assert len(page.inspector.slots.places()) == 9  # the demo doll's places
+        assert len(page.inspector.slots.places()) == 15  # the demo doll's places (D92: 6 carried)
     finally:
         page.close()

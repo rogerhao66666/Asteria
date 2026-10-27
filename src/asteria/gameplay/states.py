@@ -139,6 +139,8 @@ class StateDefinition:
     icon_id: str = ""
     # a colour (#rrggbb) the afflicted battler is tinted with while the state lasts
     tint: str = ""
+    description: str = ""  # what it does, in the author's words (D91); written only when set
+    OPTIONAL_DATA = {"description": ""}  # shown in the editor while empty
     NESTED_OPTIONAL = {"periodic": PeriodicEffect}  # list fields whose entries have OPTIONAL_DATA
 
     def __init__(
@@ -157,6 +159,7 @@ class StateDefinition:
         display_name="",
         icon_id="",
         tint="",
+        description="",
     ):
         state_id = str(state_id).strip()
         if not state_id:
@@ -198,6 +201,7 @@ class StateDefinition:
         if tint and not re.fullmatch(r"#[0-9a-f]{6}", tint):
             raise ValueError("tint must be a #rrggbb colour")
         object.__setattr__(self, "tint", tint)
+        object.__setattr__(self, "description", str(description or ""))
 
     def tint_rgb(self):
         """The tint as ``(r, g, b)``, or ``None``."""
@@ -220,6 +224,7 @@ class StateDefinition:
             **({"display_name": self.display_name} if self.display_name else {}),
             **({"icon_id": self.icon_id} if self.icon_id else {}),
             **({"tint": self.tint} if self.tint else {}),
+            **({"description": self.description} if self.description else {}),
         }
 
     @classmethod
@@ -245,7 +250,7 @@ class StateDefinition:
             expected = base | {"contributed_tags", "on_expire"}
         else:
             expected = set()
-        if set(data) - {"display_name", "icon_id", "tint"} != expected:
+        if set(data) - {"display_name", "icon_id", "tint", "description"} != expected:
             raise ValueError("invalid state definition")
         if data["schema"] != "asteria.state_definition" or version not in {1, 2, 3}:
             raise ValueError("unsupported state definition")
@@ -263,6 +268,7 @@ class StateDefinition:
             display_name=data.get("display_name", ""),
             icon_id=data.get("icon_id", ""),
             tint=data.get("tint", ""),
+            description=data.get("description", ""),
         )
 
 

@@ -7,6 +7,7 @@ from the record's kind and id:
 
     data.<kind>.<id>.name          the record's display name
     data.<kind>.<id>.description   its description (skills, quests, objectives, achievements...)
+    data.stat.<id>.short           a stat's short name (STR), D91
     data.map.<scene id>.name       a map's name
     data.speaker.<name>.name       who speaks a dialogue line (by the name written in the event)
 
@@ -48,6 +49,9 @@ KINDS = {
     "ProgressionNodeDefinition": ("skill_tree_node", "node_id"),
     "ProgressionTrackDefinition": ("track", "track_id"),
     "DerivedStatRule": ("stat", "stat_id"),
+    "StatDefinition": ("stat", "stat_id"),
+    "TagDefinition": ("tag", "tag_id"),
+    "EquipmentSlotDefinition": ("slot", "slot_id"),
     "FactionDefinition": ("faction", "faction_id"),
     "AchievementDefinition": ("achievement", "achievement_id"),
     "WorldInteraction": ("interaction", "interaction_id"),
@@ -64,7 +68,7 @@ KINDS = {
     "ItemFilter": ("item_filter", "filter_id"),
     "StatGroup": ("stat_group", "group_id"),
 }
-FIELDS = ("name", "description")
+FIELDS = ("name", "description", "short")  # short: a stat's short name, STR (D91)
 PREFIX = "data."
 
 
@@ -147,15 +151,30 @@ def words(identifier):
     return str(identifier).replace("_", " ").replace(".", " ").strip().capitalize()
 
 
-def stat_name(lookup, stat_id, labels=None):
+def stat_name(lookup, stat_id, labels=None, definition=None):
     """A stat's or resource's name (``data.stat.<id>.name``, then ``data.resource.<id>.name``),
-    else the screen profile's label (``labels``), else the id in words (U1)."""
+    else its stat definition's (D91), else the screen profile's label (``labels``), else the id
+    in words (U1)."""
     stat_id = str(stat_id)
     if lookup is not None:
         found = lookup(key("stat", stat_id)) or lookup(key("resource", stat_id))
         if found:
             return found
+    if definition is not None and definition.display_name != stat_id:
+        return definition.display_name
     return (labels or {}).get(stat_id) or words(stat_id)
+
+
+def stat_short_name(lookup, stat_id, labels=None, definition=None):
+    """A stat's short name (``data.stat.<id>.short``, else its definition's ``STR``), else its
+    name (``stat_name``) - for tight tables (D91)."""
+    stat_id = str(stat_id)
+    found = lookup(key("stat", stat_id, "short")) if lookup is not None else None
+    if found:
+        return found
+    if definition is not None and definition.short_name:
+        return definition.short_name
+    return stat_name(lookup, stat_id, labels, definition)
 
 
 def slot_name(lookup, slot_id, labels=None):

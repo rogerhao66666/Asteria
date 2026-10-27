@@ -26,7 +26,7 @@ def smoke_tags():
 HERO, MIRA, BP, HP, SP = "hero_01", "hero_02", "bp", "vitality", "technique"
 
 
-def _game(job="hero", encounter="boss_room"):
+def _game(job="brave", encounter="boss_room"):
     project, game = smoke.load()
     for kind in (*smoke_tags(),):  # a probe rule per damage tag shows which tags a hit carried
         project.rpg_database.interaction_rules[f"probe_{kind}"] = InteractionRule(
@@ -85,22 +85,30 @@ def test_the_companion_stands_beside_the_hero():
     assert "attack_staff" in game.battle.member(MIRA).ability_ids  # her staff
 
 
-def test_the_hero_wields_every_weapon_and_both_light_and_dark():
+def test_the_brave_wields_every_weapon_and_both_light_and_dark():
     project, game = smoke.load()
-    assert {
-        f"capability.weapon.{k}" for k in ("sword", "axe", "spear", "dagger", "bow", "staff")
-    } <= set(project.rpg_database.classes["hero"].granted_tags)
-    game = _game("hero")
-    assert {"dawn_and_dusk", "twilight_judgment", "dark_pact"} <= set(
-        game.battle.member(HERO).ability_ids
+    kinds = ("sword", "axe", "spear", "dagger", "bow", "staff", "book", "fist", "throw")
+    assert {f"capability.weapon.{k}" for k in kinds} <= set(
+        project.rpg_database.classes["brave"].granted_tags
     )
+    game = _game("brave")
+    assert {"dawn_and_dusk", "twilight_judgment"} <= set(game.battle.member(HERO).ability_ids)
+
+
+def test_a_weapon_asks_for_its_kind():  # D91: the jobs' weapon lists decide who wields what
+    project, _game_ = smoke.load()
+    db = project.rpg_database
+    staff = db.equipment["w_staff"]
+    assert staff.any_capabilities == ("capability.weapon.staff",)
+    assert not staff.eligibility(db.classes["knight"].granted_tags).allowed
+    assert staff.eligibility(db.classes["cleric"].granted_tags).allowed
 
 
 @pytest.mark.parametrize(
     "job, skill, form, tag",
     [
-        ("hero", "dawn_and_dusk", "light", "damage.light"),
-        ("hero", "dawn_and_dusk", "dark", "damage.dark"),
+        ("brave", "dawn_and_dusk", "light", "damage.light"),
+        ("brave", "dawn_and_dusk", "dark", "damage.dark"),
         ("weapon_master", "elemental_edge", "fire", "damage.fire"),
         ("weapon_master", "elemental_edge", "ice", "damage.ice"),
         ("sage", "arcane_tome", "lightning", "damage.lightning"),
@@ -124,14 +132,14 @@ def test_a_skill_follows_the_weapon_in_hand():
 
 
 def test_costs_can_be_health_items_and_gold():
-    game = _game("hero")
+    game = _game("brave")
     boss = game.active_enemy_ids()[0]
     _fresh(game)
     pool = game.battle.member(HERO).subject.resources
-    pool.set_current(HP, 650)  # the pact asks for 700 health: it cannot be paid
-    assert game.ability_unavailable(HERO, "dark_pact")
+    pool.set_current(HP, 650)  # the gift asks for 800 health: it cannot be paid
+    assert game.ability_unavailable(HERO, "martyrs_gift")
     pool.set_current(HP, 5000)
-    assert not game.ability_unavailable(HERO, "dark_pact")
+    assert not game.ability_unavailable(HERO, "martyrs_gift")
     game = _game("forgemaster")
     boss = game.active_enemy_ids()[0]
     state = game.save.rpg_state
@@ -147,7 +155,7 @@ def test_costs_can_be_health_items_and_gold():
 
 
 def test_boost_points_can_be_given_moved_and_refilled():
-    game = _game("hero")
+    game = _game("cultist")
     _fresh(game)
     _set_bp(game, HERO, 3)
     _set_bp(game, MIRA, 0)
@@ -160,9 +168,6 @@ def test_boost_points_can_be_given_moved_and_refilled():
     _set_bp(game, MIRA, 0)
     _cast(game, MIRA, "second_breath", None)
     assert pool.current(MIRA, BP) == 2
-    _set_bp(game, HERO, 0)
-    _cast(game, HERO, "rekindle", None)
-    assert pool.current(HERO, BP) == 2
     game.battle.member(HERO).subject.resources.set_current(HP, 2000)
     game.battle.member(MIRA).subject.resources.set_current(HP, 100)
     _set_bp(game, MIRA, 0)
@@ -211,7 +216,7 @@ def test_buff_skills_reach_the_whole_party():
 
 
 def test_ailments_take_the_choice_away():
-    game = _game("hero")
+    game = _game("brave")
     boss = game.active_enemy_ids()[0]
     policies = game.save and smoke.load()[0].rpg_database.battle_state_policies
     assert policies["confuse"].target_override == "random_any"

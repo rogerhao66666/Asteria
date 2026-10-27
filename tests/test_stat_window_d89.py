@@ -219,3 +219,36 @@ def test_the_menu_pages_form_edits_the_detail_table(window):
         "percent",
         "Guard",
     )
+
+
+def test_the_stat_table_shows_the_columns_menu_pages_tick():
+    from asteria.runtime.playtest.menu_pages import MenuPagesMixin
+
+    assert MenuRules("m").columns() == ("rank", "total", "base", "points", "gear", "gain")
+    rules = MenuRules("m", stat_columns=("total", "gain"))
+    assert MenuRules.from_data(rules.to_data()) == rules
+    with pytest.raises(ValueError, match="unknown stat table columns"):
+        MenuRules("m", stat_columns=("stars",))
+
+    class Menu:
+        pass
+
+    menu = Menu()
+    menu.rules = rules
+    assert MenuPagesMixin._stat_columns(menu) == [("total", 98), ("gain", 44)]  # no gap
+
+
+def test_the_demo_hides_the_rank_column(host):
+    host._open_pause_page("status")
+    host.pointer.drawn.clear()
+    drawn = []
+    original = host.text
+
+    def catch(value, *args, **kwargs):
+        drawn.append(str(value))
+        return original(value, *args, **kwargs)
+
+    host.text = catch
+    with host.menu_fit():
+        host._draw_status_menu()
+    assert "Rank" not in drawn and "Total" in drawn and "Each +" in drawn

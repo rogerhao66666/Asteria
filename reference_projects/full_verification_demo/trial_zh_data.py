@@ -159,6 +159,13 @@ def translate(key, english):
     """The Chinese for one row of the Translations page (None when it cannot be made)."""
     if key.startswith("dlg."):
         return LINES.get(english)
+    if key.startswith("data.stat."):  # Game Systems ▸ Stats: their own Chinese (D91)
+        import trial_d91
+
+        stat, field = key[len("data.stat.") :].rsplit(".", 1)
+        row = trial_d91.STATS.get(stat)
+        if row is not None:
+            return {"name": row[2], "short": row[3], "description": row[7]}.get(field)
     if key.endswith(".description"):
         return translate_description(english)
     if key.startswith("data.speaker."):

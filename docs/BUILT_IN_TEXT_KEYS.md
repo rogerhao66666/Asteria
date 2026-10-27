@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 699 個鍵，29 組。
+共 707 個鍵，29 組。
 
 ## Creature battle
 
@@ -587,6 +587,13 @@
 | `battle.hint.group` | Abilities | 技能 |
 | `battle.hint.items` | Use an item from the bag | 使用背包裡的道具 |
 | `battle.hint.switch` | Send out another creature | 換另一隻上場 |
+| `battle.command.swap` | Swap | 換武器 |
+| `battle.hint.swap` | Take up a carried weapon | 拿起攜帶的武器 |
+| `battle.swap.instead` | Instead of {item} | 換下 {item} |
+| `battle.swapped` | {name} takes up {item} | {name} 拿起了 {item} |
+| `gear.slot_taken` | Take {name} off the {slot} first | 請先把{slot}的 {name} 卸下 |
+| `equipment.takes_also` | Two-handed: also takes the {slots} | 雙手：同時佔用{slots} |
+| `equipment.carried` | Carried: gives nothing until swapped in | 攜帶中：換上之前沒有任何效果 |
 | `battle.hint.escape` | {chance}% to get away | {chance}% 機率逃走 |
 | `battle.hint.back` | The first commands | 回到前面的指令 |
 | `battle.hint.more` | More commands | 更多指令 |
@@ -704,6 +711,7 @@
 | `skill_tree.skill` | Skill: {name} | 技能：{name} |
 | `skill_tree.passive` | Passive: {name} | 被動：{name} |
 | `skill_tree.tag` | Tag: {name} | 標籤：{name} |
+| `effect.when` | (when {tags}) | （{tags} 時） |
 | `skill_tree.unmet` | requirements not met | 條件不足 |
 | `skill_tree.cannot_learn` | Cannot learn {name}: {reason} | 無法學習 {name}：{reason} |
 | `skill_tree.learned` | Learned {name} (rank {rank}/{max}) | 學會了 {name}（{rank}/{max} 級） |

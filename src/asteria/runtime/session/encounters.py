@@ -95,14 +95,14 @@ class EncountersMixin:
     def _actor_member(self, actor_id):
         build = self.resolve_actor_build(actor_id)
         subject = self._battle_subject(build.stats, build.resources, build.tags)
-        speed = build.stats.get("speed")
+        speed = build.stats.get(self.rules.initiative_stat or "speed")
         return PartyMember(
             str(actor_id),
             "heroes",
             subject,
             ability_ids=build.abilities,
             initiative=speed,
-            initiative_stat="speed",
+            initiative_stat=self.rules.initiative_stat,
             initiative_expression=self.rules.initiative_expression,
         )
 
@@ -115,7 +115,7 @@ class EncountersMixin:
 
         derived = self.project.rpg_database.derived_stats.values()
         apply_derived_stats(subject.stats, derived, side="enemies")  # after its level
-        speed = subject.stats.get("speed")
+        speed = subject.stats.get(self.rules.initiative_stat or "speed")
         if level:
             self.enemy_levels[f"{enemy_id}:{index}"] = level
         return PartyMember(
@@ -124,7 +124,7 @@ class EncountersMixin:
             subject,
             ability_ids=definition.abilities,
             initiative=speed,
-            initiative_stat="speed",
+            initiative_stat=self.rules.initiative_stat,
             initiative_expression=self.rules.initiative_expression,
         )
 
