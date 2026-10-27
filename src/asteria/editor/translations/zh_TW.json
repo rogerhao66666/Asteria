@@ -3593,7 +3593,10 @@
   "Used by {0}: {1}": "{0} 個地方使用：{1}",
   " and {0} more": " 等另外 {0} 個",
   "Not used yet": "還沒有地方使用",
-  "Revert": "還原"
+  "Revert": "還原",
+  "Starting maximum of the actor": "角色的起始上限",
+  "Added to the maximum once by the job": "職業一次加到上限",
+  "Added to the maximum every level after the first (× level − 1)": "每升一級加到上限一次（×（等級 − 1））"
  },
  "patterns": [
   [

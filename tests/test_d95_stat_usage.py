@@ -47,3 +47,28 @@ def test_a_derived_stat_is_worked_out_last_and_enemies_use_their_own(project):
     text = stat_usage(project, "evade")
     assert text.index("Learned passives") < text.index("Its stat formula, worked out last")
     assert "Enemies use their own number" in text and "Vaelor 3" in text
+
+
+def test_a_resource_card_names_the_resource_and_its_maximum(project):
+    """The HP card read "Where Materials comes from" (a menu page's name took the stat's) and
+    "Nothing sets it yet" (the resource fields were not looked at)."""
+    from asteria.editor.stat_usage import stat_usage
+
+    text = stat_usage(project, "vitality")
+    assert "Where HP comes from" in text and "What HP changes" in text
+    assert "Materials" not in text and "Nothing sets it yet" not in text
+    where = "(Database ▸ Actors ▸ HP, MP and other resources)"
+    assert f"1. Starting maximum of the actor</b> &nbsp;{where}" in text
+    assert "Roger 3200" in text
+    assert "Database ▸ Classes / Jobs ▸ Resource bonuses" in text and "Brave +800" in text
+    assert "Resource growth per level" in text and "Guardian +150" in text
+    assert "Attributes ▸ HP: +100 a rank, up to 50 ranks" in text
+    assert "Attributes ▸ MP: +30 a rank" in stat_usage(project, "technique")
+
+
+def test_every_stat_card_is_headed_by_its_own_name(project):
+    from asteria.editor.stat_usage import _name, stat_usage
+
+    for stat_id in project.rpg_database.stat_definitions:
+        name = _name(project.rpg_database, stat_id)
+        assert f"Where {name} comes from" in stat_usage(project, stat_id).replace("&#x27;", "'")

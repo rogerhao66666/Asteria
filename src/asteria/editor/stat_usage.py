@@ -144,6 +144,11 @@ def _changed_by(table, stat_id):
     return items
 
 
+def _maxima(actor):
+    """An actor's starting resources as ``{id: maximum}``."""
+    return {k: raw["maximum"] for k, raw in actor.base_resources.items()}
+
+
 def _milestones(db, stat_id):
     items = []
     for track in db.progression_tracks.values():
@@ -157,11 +162,14 @@ def _milestones(db, stat_id):
 
 def _tree_nodes(db, stat_id):
     """``Attributes ▸ STR: +1 a rank, up to 30 ranks`` for every skill tree node
-    whose ranks give the stat."""
+    whose ranks give the stat (or add to the resource's maximum)."""
     items = []
     for graph in db.progression_graphs.values():
         for node in graph.nodes:
-            gains = [r.stat_bonuses.get(stat_id, 0.0) for r in node.rewards]
+            gains = [
+                r.stat_bonuses.get(stat_id, 0.0) + r.resource_bonuses.get(stat_id, 0.0)
+                for r in node.rewards
+            ]
             if not any(gains):
                 continue
             name = f"{_record(graph)} ▸ {_record(node)}"
@@ -178,7 +186,8 @@ def _tree_nodes(db, stat_id):
 def _sources(db, data, stat_id):
     """``(step, where, items)`` in the order the game adds them up for a party member: what it
     is, the page that sets it (Database ▸ Actors ▸ Base Stats) and every record there with its
-    number. Steps nothing sets are left out."""
+    number. A resource (HP, MP) is its maximum, set on the resource fields. Steps nothing sets
+    are left out."""
     steps = (
         (
             "Starting value of the actor",
@@ -186,9 +195,19 @@ def _sources(db, data, stat_id):
             _per_record(db.actors, lambda r: r.base_stats, stat_id),
         ),
         (
+            "Starting maximum of the actor",
+            ("Database", "Actors", "HP, MP and other resources"),
+            _per_record(db.actors, _maxima, stat_id),
+        ),
+        (
             "Given once by the job",
             ("Database", "Classes / Jobs", "Stat bonuses"),
             _per_record(db.classes, lambda r: r.stat_bonuses, stat_id, "+"),
+        ),
+        (
+            "Added to the maximum once by the job",
+            ("Database", "Classes / Jobs", "Resource bonuses"),
+            _per_record(db.classes, lambda r: r.resource_bonuses, stat_id, "+"),
         ),
         (
             "Progression ranks",
@@ -199,6 +218,11 @@ def _sources(db, data, stat_id):
             "Gained every level after the first (× level − 1)",
             ("Database", "Classes / Jobs", "Growth per level"),
             _per_record(db.classes, lambda r: r.level_growth, stat_id, "+"),
+        ),
+        (
+            "Added to the maximum every level after the first (× level − 1)",
+            ("Database", "Classes / Jobs", "Resource growth per level"),
+            _per_record(db.classes, lambda r: r.resource_growth, stat_id, "+"),
         ),
         (
             "Points the player spends (skill tree ranks)",
@@ -402,13 +426,13 @@ def stat_usage(project, stat_id):
     effect = _effects(project, db, data, stat_id)
     shown = []
     for page in menu_pages(db).values():  # D96: a menu page's detail tables
-        name = page.display_name
+        page_name = page.display_name  # not ``name``: that is the stat's, used below
         for block in page.blocks:
             if stat_id in block.stat_rows:
-                shown.append(t("Menu page {0}: the detail table", name))
+                shown.append(t("Menu page {0}: the detail table", page_name))
             groups = [ln.group or "other" for ln in block.stat_lines if ln.stat_id == stat_id]
             if groups:
-                shown.append(t("Menu page {0}: details ({1})", name, ", ".join(groups)))
+                shown.append(t("Menu page {0}: details ({1})", page_name, ", ".join(groups)))
     parts = [
         _source_section(name, steps, _enemy_sources(db, stat_id)),
         _section(t("What {0} changes", name), effect or [t("Nothing reads it yet.")]),
