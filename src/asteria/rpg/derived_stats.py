@@ -6,6 +6,10 @@ rule may read a stat an earlier one derived. ``minimum`` keeps the stat at or ab
 ``maximum`` caps it (0 = no cap). ``applies_to`` picks who uses it: party ``actors``, ``enemies``
 or ``all``. Typical use: points in Strength / Dexterity / Intellect / Luck that become attack,
 defence, accuracy, evasion and critical rate.
+
+``expression`` (D94) writes the amount as a formula instead of the base and the terms - any
+arithmetic of ``self.<stat>`` (``self.dex + 0.5 * self.luk``, ``floor(self.str / 10) * 2``);
+left empty, the base and the terms are used.
 """
 
 from __future__ import annotations
@@ -34,6 +38,7 @@ class DerivedStatRule:
     applies_to: str = "actors"
     order: int = 0
     description: str = ""
+    expression: str = ""  # the amount as a formula of ``self`` (D94); empty: base + terms
 
     SCHEMA = "asteria.rpg.derived_stat"
     VERSION = 1
@@ -50,6 +55,7 @@ class DerivedStatRule:
         applies_to="actors",
         order=0,
         description="",
+        expression="",
     ):
         stat_id = str(stat_id).strip()
         if not stat_id:
@@ -74,16 +80,30 @@ class DerivedStatRule:
         s(self, "applies_to", applies_to)
         s(self, "order", int(order))
         s(self, "description", str(description or ""))
+        expression = str(expression or "").strip()
+        if expression:
+            from asteria.gameplay.expressions import check_expression
+
+            check_expression(expression, ("self",))
+        s(self, "expression", expression)
 
     def applies(self, side):
         return self.applies_to == "all" or self.applies_to == side
 
     def amount(self, stats):
-        """What the rule adds to its stat, read from ``stats`` (a StatBlock)."""
+        """What the rule adds to its stat, read from ``stats`` (a StatBlock): its formula when
+        it has one, else the base and the terms."""
+        if self.expression:
+            from asteria.gameplay.expressions import SubjectView, evaluate
+
+            return evaluate(self.expression, {"self": SubjectView(None, stats)})
         return self.base + sum(c * stats.get(k, 0.0) for k, c in self.terms.items())
 
     def formula_text(self):
         """``power = 2 x str + 0.5 x dex`` - for menus and the editor."""
+        if self.expression:
+            text = f"{self.stat_id} += {self.expression}"
+            return text + (f" (at most {self.maximum:g})" if self.maximum else "")
         parts = [f"{c:g} x {k}" for k, c in self.terms.items()]
         if self.base or not parts:
             parts.insert(0, f"{self.base:g}")
@@ -105,6 +125,7 @@ class DerivedStatRule:
             "applies_to": self.applies_to,
             "order": self.order,
             "description": self.description,
+            **({"expression": self.expression} if self.expression else {}),
         }
 
     @classmethod
@@ -121,6 +142,7 @@ class DerivedStatRule:
             applies_to=data.get("applies_to", "actors"),
             order=data.get("order", 0),
             description=data.get("description", ""),
+            expression=data.get("expression", ""),
         )
 
 

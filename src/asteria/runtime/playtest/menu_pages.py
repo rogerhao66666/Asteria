@@ -267,14 +267,12 @@ class MenuPagesMixin:
             pg.draw.rect(
                 self.screen, (150, 200, 160) if row.allowed else (90, 96, 110), plus, 1, 5
             )
-            self.text(
-                "+",
-                plus[0] + 18,
-                plus[1],
-                size=22,
-                anchor="midtop",
-                color=(255, 255, 255) if row.allowed else (130, 136, 150),
-            )
+            # two bars, not a "+" letter: a scaled-down window thinned each row's letter
+            # differently (D93); bars keep every button's cross the same size and centred
+            ink = (255, 255, 255) if row.allowed else (130, 136, 150)
+            mid_x, mid_y = plus[0] + plus[2] // 2, plus[1] + plus[3] // 2
+            pg.draw.rect(self.screen, ink, (mid_x - 7, mid_y - 2, 14, 4))
+            pg.draw.rect(self.screen, ink, (mid_x - 2, mid_y - 7, 4, 14))
             self.hotspot(plus, lambda i=i: setattr(menu, "row", i))  # a click: raise it
 
     def _draw_stat_details(self, c, menu, rect):

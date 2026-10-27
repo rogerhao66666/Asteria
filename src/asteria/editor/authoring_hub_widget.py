@@ -101,7 +101,24 @@ def with_optional_fields(data, value):
                 else x
                 for x in entries
             ]
-    return data
+    return _with_formula_fields(data)
+
+
+def _with_formula_fields(data):
+    """Every record that can hold a formula shows its formula field, however deep it sits (a
+    skill's damage formula inside its effect), empty when unset (D94)."""
+    from asteria.gameplay.expressions import FORMULA_FIELDS
+
+    if isinstance(data, list):
+        return [_with_formula_fields(x) for x in data]
+    if not isinstance(data, dict):
+        return data
+    out = {k: _with_formula_fields(v) for k, v in data.items()}
+    schema = out.get("schema")
+    for (owner, key), _names in FORMULA_FIELDS.items():
+        if owner == schema and key not in out:
+            out[key] = ""
+    return out
 
 
 def _count_heading(label, category_label, count):

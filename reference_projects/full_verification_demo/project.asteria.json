@@ -85405,7 +85405,7 @@
           "capability.weapon.staff",
           "class.archmage"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_archmage.png",
+        "icon_id": "playable_assets/icons_7soul/S_Magic02.png",
         "level_growth": {
           "dex": 0.6,
           "int": 1.9,
@@ -85437,7 +85437,7 @@
           "capability.weapon.staff",
           "class.bishop"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_bishop.png",
+        "icon_id": "playable_assets/icons_7soul/S_Holy08.png",
         "level_growth": {
           "defense": 1.2,
           "dex": 0.4,
@@ -85486,7 +85486,7 @@
           "capability.weapon.throw",
           "class.brave"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_brave.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff08.png",
         "level_growth": {
           "crit": 0.2,
           "defense": 2.0,
@@ -85530,7 +85530,7 @@
           "capability.weapon.staff",
           "class.cleric"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_cleric.png",
+        "icon_id": "playable_assets/icons_7soul/S_Holy03.png",
         "level_growth": {
           "defense": 1.6,
           "dex": 0.7,
@@ -85568,7 +85568,7 @@
           "capability.weapon.dagger",
           "class.cultist"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_cultist.png",
+        "icon_id": "playable_assets/icons_7soul/S_Fire08.png",
         "level_growth": {
           "dex": 1.0,
           "evade": 0.1,
@@ -85601,7 +85601,7 @@
           "capability.weapon.sword",
           "class.death_lord"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_death_lord.png",
+        "icon_id": "playable_assets/icons_7soul/S_Shadow14.png",
         "level_growth": {
           "dex": 0.4,
           "int": 1.8,
@@ -85639,7 +85639,7 @@
           "capability.weapon.throw",
           "class.duelist"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_duelist.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff02.png",
         "level_growth": {
           "crit": 0.15,
           "dex": 1.2,
@@ -85672,7 +85672,7 @@
           "capability.weapon.sword",
           "class.forgemaster"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_forgemaster.png",
+        "icon_id": "playable_assets/icons_7soul/S_Physic01.png",
         "level_growth": {
           "defense": 2.0,
           "dex": 0.4,
@@ -85709,7 +85709,7 @@
           "capability.weapon.sword",
           "class.guardian"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_guardian.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff10.png",
         "level_growth": {
           "defense": 3.4,
           "dex": 0.4,
@@ -85745,7 +85745,7 @@
           "capability.weapon.staff",
           "class.heretic"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_heretic.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff13.png",
         "level_growth": {
           "dex": 0.4,
           "int": 1.0,
@@ -85785,7 +85785,7 @@
           "capability.weapon.sword",
           "class.knight"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_knight.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff03.png",
         "level_growth": {
           "defense": 2.6,
           "dex": 0.6,
@@ -85817,7 +85817,7 @@
           "capability.weapon.staff",
           "class.lich"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_lich.png",
+        "icon_id": "playable_assets/icons_7soul/S_Shadow07.png",
         "level_growth": {
           "dex": 0.4,
           "int": 1.5,
@@ -85852,7 +85852,7 @@
           "capability.weapon.staff",
           "class.mystic"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_mystic.png",
+        "icon_id": "playable_assets/icons_7soul/S_Light03.png",
         "level_growth": {
           "defense": 0.8,
           "dex": 0.65,
@@ -85888,7 +85888,7 @@
           "capability.weapon.staff",
           "class.necromancer"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_necromancer.png",
+        "icon_id": "playable_assets/icons_7soul/S_Shadow16.png",
         "level_growth": {
           "defense": 1.0,
           "dex": 0.65,
@@ -85921,7 +85921,7 @@
           "capability.weapon.staff",
           "class.priest"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_priest.png",
+        "icon_id": "playable_assets/icons_7soul/S_Holy02.png",
         "level_growth": {
           "dex": 0.4,
           "int": 1.3,
@@ -85957,7 +85957,7 @@
           "capability.weapon.throw",
           "class.rogue"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_rogue.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff04.png",
         "level_growth": {
           "crit": 0.2,
           "dex": 1.3,
@@ -85996,7 +85996,7 @@
           "capability.weapon.staff",
           "class.sage"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_sage.png",
+        "icon_id": "playable_assets/icons_7soul/S_Light01.png",
         "level_growth": {
           "defense": 1.2,
           "dex": 0.4,
@@ -86030,7 +86030,7 @@
         "granted_tags": [
           "class.spirit"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_spirit.png",
+        "icon_id": "playable_assets/icons_7soul/S_Ice08.png",
         "resource_bonuses": {},
         "resource_growth": {
           "vitality": 0.0
@@ -86059,7 +86059,7 @@
           "capability.weapon.throw",
           "class.weapon_master"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_weapon_master.png",
+        "icon_id": "playable_assets/icons_7soul/S_Buff14.png",
         "level_growth": {
           "crit": 0.12,
           "dex": 0.9,
@@ -86097,7 +86097,7 @@
           "capability.weapon.fist",
           "class.zealot"
         ],
-        "icon_id": "playable_assets/lucifer/icons/job_zealot.png",
+        "icon_id": "playable_assets/icons_7soul/S_Fire03.png",
         "level_growth": {
           "dex": 0.9,
           "luk": 0.3,
@@ -87475,11 +87475,9 @@
         "order": 0,
         "schema": "asteria.rpg.derived_stat",
         "stat_id": "accuracy",
-        "terms": {
-          "dex": 1.0,
-          "luk": 0.5
-        },
-        "version": 1
+        "terms": {},
+        "version": 1,
+        "expression": "self.dex + 0.5 * self.luk"
       },
       {
         "applies_to": "actors",
@@ -104620,14 +104618,11 @@
         "required_source_tags": [],
         "required_target_tags": [],
         "schema": "asteria.rpg.outcome_check",
-        "source_stat_terms": {
-          "accuracy": 0.003
-        },
+        "source_stat_terms": {},
         "success_tags": [],
-        "target_stat_terms": {
-          "evade": -0.003
-        },
-        "version": 1
+        "target_stat_terms": {},
+        "version": 1,
+        "chance_expression": "0.95 + 0.003 * source.accuracy - 0.003 * target.evade"
       }
     ],
     "party_presentation_policies": [

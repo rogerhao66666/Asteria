@@ -18,6 +18,12 @@ Functions: ``floor ceil round abs min max sqrt clamp(x, lo, hi)``, ``random()`` 
 caller's dice), ``randint(a, b)``, ``stage(n, base)`` - the stage ratio
 ``max(base, base + n) / max(base, base - n)`` (``stage(1, 2)`` is 1.5, ``stage(-1, 2)`` 0.667)
 and ``choose(c, a, b)``.
+
+Where a formula can be written (``FORMULA_FIELDS``, D94): each record kind (its ``schema``) and
+field, with the names its formula may use. A stat read from a subject (``source.dex``) is a
+variable: a project that defines its stats (Game Systems ▸ Stats) may only read the stats it
+defines, and a resource (``source.current("hp")``) only the resources it has -
+``undeclared`` lists the others. A formula left empty uses the record's other fields.
 """
 
 from __future__ import annotations
@@ -45,6 +51,21 @@ _COMPARE = {
     ast.GtE: lambda a, b: a >= b,
 }
 SUBJECT_METHODS = ("current", "maximum", "ratio", "has")
+RESOURCE_METHODS = ("current", "maximum", "ratio")
+SUBJECTS = ("self", "source", "target", "opponent")  # names that stand for a fighter
+# (record schema, field) -> the names its formula may use (D94)
+FORMULA_FIELDS = {
+    ("asteria.rpg.derived_stat", "expression"): ("self",),
+    ("asteria.rpg.outcome_check", "chance_expression"): ("source", "target"),
+    ("asteria.rpg.battle_escape_rule", "chance_expression"): ("source", "opponent", "attempts"),
+    ("asteria.rpg.battle_session_rules", "initiative_expression"): ("self",),
+    ("asteria.rpg.battle_session_rules", "final_damage_expression"): (
+        "value",
+        "source",
+        "target",
+    ),
+    ("asteria.value_formula", "expression"): ("source", "target"),
+}
 
 
 def _power(a, b):
@@ -149,6 +170,43 @@ def check_expression(text, names=()):
             raise ExpressionError(f"unknown name {node.id!r} in {text!r}")
 
 
+def variables(text):
+    """What ``text`` reads: ``(stats, resources)``, each a sorted tuple of the names read from a
+    subject (``source.dex`` reads the stat ``dex``; ``source.current("hp")`` the resource
+    ``hp``). Raises ExpressionError when ``text`` does not parse."""
+    body = compile_expression(text)
+    stats, resources = set(), set()
+    calls = set()
+    for node in ast.walk(body):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            calls.add(id(node.func))
+            name = node.func.attr
+            if name in RESOURCE_METHODS and node.args:
+                arg = node.args[0]
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    resources.add(arg.value)
+    for node in ast.walk(body):
+        if (
+            isinstance(node, ast.Attribute)
+            and id(node) not in calls
+            and isinstance(node.value, ast.Name)
+            and node.value.id in SUBJECTS
+        ):
+            stats.add(node.attr)
+    return tuple(sorted(stats)), tuple(sorted(resources))
+
+
+def undeclared(text, stats, resources=()):
+    """The names ``text`` reads that are not declared: a stat read from a subject that is
+    neither in ``stats`` nor a resource in ``resources`` (``source.hp`` reads the resource's
+    current value), and a resource of ``current / maximum / ratio`` not in ``resources``."""
+    read_stats, read_resources = variables(text)
+    stats, resources = set(stats), set(resources)
+    missing = [n for n in read_stats if n not in stats and n not in resources]
+    missing += [n for n in read_resources if n not in resources]
+    return list(dict.fromkeys(missing))
+
+
 def evaluate(text, names, rng=None):
     """The value of ``text`` with ``names`` (numbers or SubjectViews); ``rng`` rolls
     ``random()`` and ``randint``."""
@@ -227,9 +285,13 @@ def _eval(node, names, functions):
 
 __all__ = [
     "ExpressionError",
+    "FORMULA_FIELDS",
     "FUNCTIONS",
+    "SUBJECTS",
     "SubjectView",
     "check_expression",
     "compile_expression",
     "evaluate",
+    "undeclared",
+    "variables",
 ]

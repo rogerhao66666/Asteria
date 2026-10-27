@@ -451,6 +451,51 @@ def _tags(project, found):
             )
 
 
+def project_formulas(project):
+    """Every formula the project writes: ``(where, text, names)`` - the record (a table and its
+    id) and the names the formula may use (``FORMULA_FIELDS``), however deep it sits."""
+    from asteria.gameplay.expressions import FORMULA_FIELDS
+
+    out = []
+
+    def walk(value, where):
+        if isinstance(value, list):
+            for x in value:
+                walk(x, where)
+        elif isinstance(value, dict):
+            for (owner, key), names in FORMULA_FIELDS.items():
+                text = value.get(key) if value.get("schema") == owner else None
+                if isinstance(text, str) and text.strip():
+                    out.append((where, text.strip(), names))
+            for x in value.values():
+                walk(x, where)
+
+    tables = dict(project.rpg_database.to_data())
+    tables.update({f"lib.{k}": v for k, v in project.gameplay_library.to_data().items()})
+    for table, records in tables.items():
+        if not isinstance(records, list):
+            continue
+        for record in records:
+            if isinstance(record, dict):
+                rid = next((v for k, v in record.items() if k.endswith("_id")), "")
+                walk(record, f"{table.removeprefix('lib.')} {rid}".strip())
+    return out
+
+
+def _formulas(project, found):
+    """Every formula parses and reads only declared variables: a project that defines its stats
+    (Game Systems ▸ Stats) may only read those stats, and resources it has (D94)."""
+    from .formula_field import declared, formula_problem
+    from .record_vocabulary import ProjectVocabulary
+
+    stats, resources, strict = declared(ProjectVocabulary(project))
+    stat_ids, resource_ids = [c.value for c in stats], [c.value for c in resources]
+    for where, text, names in project_formulas(project):
+        problem = formula_problem(text, names, stat_ids, resource_ids, strict)
+        if problem:
+            found.append(Problem("error", "Formulas", f"{where}: {text} - {problem}", ()))
+
+
 def collect_problems(document, *, resource_root=None):
     project = document.project
     if project is None:
@@ -463,6 +508,7 @@ def collect_problems(document, *, resource_root=None):
         ("Real-Time Combat", lambda: _combat(project, found)),
         ("Stats", lambda: _stats(project, found)),
         ("Tags", lambda: _tags(project, found)),
+        ("Formulas", lambda: _formulas(project, found)),
         ("Sprites", lambda: _sprites(document, found, resource_root)),
         ("Action Timeline", lambda: _timelines(document, found)),
         ("Scripts", lambda: _scripts(document, found)),

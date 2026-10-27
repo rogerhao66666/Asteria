@@ -51,8 +51,9 @@ def test_magic_meets_magic_defence_and_elements_have_attack_and_resistance():
     assert "fire_attack" in ring
     assert db.enemies["crimson_warlord"].stats["fire_resist"] == 40
     land = db.outcome_checks["land"]
-    assert land.source_stat_terms == {"accuracy": 0.003}
-    assert land.target_stat_terms == {"evade": -0.003}
+    # D94: the land check reads accuracy and evasion through its formula
+    assert land.chance_expression == "0.95 + 0.003 * source.accuracy - 0.003 * target.evade"
+    assert not land.source_stat_terms and not land.target_stat_terms
 
 
 def test_every_skill_says_physical_or_magic_and_its_element():

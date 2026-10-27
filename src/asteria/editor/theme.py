@@ -144,7 +144,8 @@ WORKSPACE_ACCENTS = {
 _TEMPLATE = Template(
     """
 QMainWindow, QDialog { background: $base; color: $text; }
-QToolTip { background: $raised; color: $text; border: 1px solid $border_strong; padding: 5px 8px;
+QToolTip, QLabel#HelpBox { background: $raised; color: $text; border: 1px solid $border_strong;
+padding: 5px 8px;
 border-radius: 5px; }
 /* -- docks -------------------------------------------------------------------------------------
 */
@@ -459,6 +460,14 @@ QToolButton {
 }
 QToolButton[workspace] { font-weight: 700; }
 QToolButton:hover { background: $hover; color: $text; }
+/* a formula's insert buttons (D94): real buttons, the menu's own arrow hidden (the text has ▾) */
+QToolButton#FormulaName, QToolButton#FormulaFunctions, QToolButton#FormulaOperator {
+    background: $raised; color: $text; border: 1px solid $border_strong; border-radius: 5px;
+    padding: 3px 10px; min-width: 14px; font-family: Menlo, monospace; }
+QToolButton#FormulaName:hover, QToolButton#FormulaFunctions:hover,
+QToolButton#FormulaOperator:hover { background: $hover; }
+QToolButton#FormulaName::menu-indicator, QToolButton#FormulaFunctions::menu-indicator {
+    image: none; width: 0; }
 QToolButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
 QToolButton#WrappingTabButton {
     background: $panel; border: 1px solid $border_strong; border-radius: 0;

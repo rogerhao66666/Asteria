@@ -1070,6 +1070,16 @@ D26_FORMS = {
     "derived_stats": (
         F("stat_id", "Stat (the one computed)", "id"),
         F("display_name", "Name", "text", default=""),
+        F(
+            "expression",
+            "Formula",
+            "formula",
+            choices=("self",),
+            default="",
+            help="What the stat gains, written as a formula of this fighter's stats: self.dex"
+            " + 0.5 * self.luk. Only stats declared in Game Systems ▸ Stats can be read. Empty:"
+            " Read From and Base Amount are used.",
+        ),
         F("terms", "Read From (stat: coefficient)", "amounts", default={}),
         F("base", "Base Amount", "float", default=0.0),
         F("minimum", "Never Below", "float", default=0.0),
@@ -1751,15 +1761,17 @@ class GameSystemsAuthoringController:
             raise GameSystemsAuthoringError(f"unknown {kind_id}: {key}")
         return value
 
-    def form_data(self, kind_id, key):
-        """Canonical data of a record with every form field present."""
+    def form_data(self, kind_id, key, *, info=True):
+        """Canonical data of a record with every form field present; ``info=False`` leaves the
+        worked-out ``info`` fields empty (a list naming its records: each one walks the whole
+        project, a hundred tags took four seconds)."""
         data = self.get(kind_id, key).to_data()
         if kind_id in ADAPTERS:
             data = ADAPTERS[kind_id][0](data)
         data = _with_defaults(FORMS[kind_id], data)
         for f in FORMS[kind_id]:
             if f.kind == "info":  # worked out, never stored
-                data[f.key] = self.info(kind_id, key)
+                data[f.key] = self.info(kind_id, key) if info else ""
         return data
 
     def info(self, kind_id, key):

@@ -76,6 +76,16 @@ def _terms(value, stat_id, found):
 
 
 def _mentions(text, stat_id):
+    """Whether a formula reads ``stat_id`` (``source.dex``, ``self.current("hp")``), or names it
+    as a word."""
+    from asteria.gameplay.expressions import ExpressionError, variables
+
+    try:
+        stats, resources = variables(text)
+    except ExpressionError:
+        stats, resources = (), ()
+    if stat_id in stats or stat_id in resources:
+        return True
     pattern = rf"(?<![\w.]){re.escape(stat_id)}(?!\w)|['\"]{re.escape(stat_id)}['\"]"
     return re.search(pattern, text) is not None
 
@@ -83,7 +93,9 @@ def _mentions(text, stat_id):
 def _sources(db, data, stat_id):
     found = []
     rule = db.derived_stats.get(stat_id)
-    if rule is not None:
+    if rule is not None and rule.expression:  # written as a formula (D94)
+        found.append(t("Stat Formulas: + {0} (for {1})", rule.expression, t(rule.applies_to)))
+    elif rule is not None:
         parts = [f"{c:g} x {_name(db, k)}" for k, c in rule.terms.items()]
         if rule.base or not parts:
             parts.insert(0, f"{rule.base:g}")
@@ -112,7 +124,9 @@ def _sources(db, data, stat_id):
 def _effects(project, db, data, stat_id):
     found = []
     for other in sorted(db.derived_stats.values(), key=lambda r: (r.order, r.stat_id)):
-        if stat_id in other.terms:
+        if other.expression and _mentions(other.expression, stat_id):
+            found.append(t("{0}: {1} (Stat Formulas)", _name(db, other.stat_id), other.expression))
+        elif stat_id in other.terms:
             amount = f"{other.terms[stat_id]:+g}"
             found.append(t("{0} {1} per point (Stat Formulas)", _name(db, other.stat_id), amount))
     for check in sorted(db.outcome_checks.values(), key=lambda c: c.check_id):

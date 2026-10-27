@@ -183,6 +183,10 @@ TECHNICAL = {
 
 # -- the names and help shown beside fields ---------------------------------------------------
 LABELS = {
+    "expression": "Formula",  # a skill's damage, a stat formula (D94)
+    "chance_expression": "Chance Formula",
+    "initiative_expression": "Turn Order Formula",
+    "final_damage_expression": "Final Damage Formula",
     "initiative_stat": "Turn Order Stat",
     "penetration_stat": "Penetration Stat",
     "display_name": "Name",
@@ -363,6 +367,19 @@ LABELS = {
     "transition_duration": "Blend time (s)",
 }
 HELP = {
+    # formulas (D94): typed or built with the buttons; variables are declared stats only
+    "expression": "The amount as a formula of source (the one acting) and target: source.power"
+    " * 2 - target.defense. Only stats declared in Game Systems ▸ Stats can be read. Empty:"
+    " the other fields are used.",
+    "chance_expression": "The chance (0-1) as a formula: 0.95 + 0.003 * source.accuracy -"
+    " 0.003 * target.evade. Only stats declared in Game Systems ▸ Stats can be read. Empty:"
+    " the base chance and the stat terms are used. The lowest and highest chance still apply.",
+    "initiative_expression": "Each fighter's turn order as a formula of self: self.speed +"
+    " random() * 10. Only stats declared in Game Systems ▸ Stats can be read. Empty: the turn"
+    " order stat is used.",
+    "final_damage_expression": "The damage after every rule, as a formula of value (the damage"
+    " so far), source and target: value * (0.9 + random() * 0.2). Only stats declared in Game"
+    " Systems ▸ Stats can be read. Empty: the damage is kept as it is.",
     "display_name": "What players see.",
     "icon_id": "The picture in menus and lists. Pick one, or Browse for your own file.",
     "portrait_style": "Face: a dialogue line's portrait sits inside the message window. "

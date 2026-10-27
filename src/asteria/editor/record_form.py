@@ -22,7 +22,6 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, Si
 from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QApplication,
     QCheckBox,
     QColorDialog,
     QComboBox,
@@ -44,11 +43,11 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyleOptionComboBox,
     QToolButton,
-    QToolTip,
     QVBoxLayout,
     QWidget,
 )
 
+from .decor import hide_help_tip, show_help_tip
 from .i18n import english
 from .image_tools import picture_field
 from .record_vocabulary import (
@@ -160,32 +159,32 @@ def _small(text, color="#8b8e98"):
     return label
 
 
+def _formula_names(data, key):
+    """The names a formula in ``data[key]`` may use, or None when it holds no formula."""
+    from asteria.gameplay.expressions import FORMULA_FIELDS
+
+    schema = data.get("schema") if isinstance(data, dict) else None
+    return FORMULA_FIELDS.get((schema, key))
+
+
 class _HelpTip(QObject):
-    """A label's tooltip shown right beside the end of its text (the ⓘ), wherever the mouse
-    entered it, instead of under the pointer."""
+    """A label's tooltip shown on the left of the label (``decor.show_help_tip``), wherever the
+    mouse entered it, instead of under the pointer."""
 
     def eventFilter(self, obj, event):  # noqa: N802 - Qt
+        if event.type() in (QEvent.Leave, QEvent.Hide, QEvent.MouseButtonPress):
+            hide_help_tip(obj)
+            return False
         if event.type() != QEvent.ToolTip or not obj.toolTip():
             return False
-        text_width = obj.fontMetrics().horizontalAdvance(obj.text())
-        area = obj.contentsRect()
-        if obj.alignment() & Qt.AlignRight:
-            end = area.right()
-        else:
-            end = min(area.right(), area.left() + text_width)
-        at = obj.mapToGlobal(QPoint(end + 6, -4))
-        QToolTip.showText(at, obj.toolTip(), obj)
-        for tip in QApplication.topLevelWidgets():  # Qt adds its pointer offset: undone
-            if tip.isVisible() and tip.metaObject().className() == "QTipLabel":
-                tip.move(at)
-        return True
+        return show_help_tip(obj)
 
 
 _HELP_TIPS = []  # the one filter, made once a QApplication exists
 
 
 def _help_tip(label):
-    """``label``'s tooltip opens beside its ⓘ."""
+    """``label``'s tooltip opens on its left."""
     if not _HELP_TIPS:
         _HELP_TIPS.append(_HelpTip())
     label.installEventFilter(_HELP_TIPS[0])
@@ -818,7 +817,7 @@ class Section(QFrame):
         title = QLabel(label + ("  ⓘ" if help_text else ""))
         title.setObjectName("FormFieldLabel")
         tip = (help_text + "\n\n" if help_text else "") + (f"data: {key}" if key else "")
-        title.setToolTip(tip.strip())  # beside the ⓘ: not over the field, far from the mark
+        title.setToolTip(tip.strip())  # on the label's left: not over the field
         _help_tip(title)
         holder = QVBoxLayout()
         if self.columns:
@@ -1204,6 +1203,16 @@ class RecordForm(QScrollArea):
             picker.setText(str(value or ""))
             picker.changed.connect(lambda p=picker: self._set(data, key, p.text() or None))
             return picker
+        formula = _formula_names(data, skey)
+        if formula is not None and (isinstance(value, str) or value is None):
+            from .formula_field import FormulaField
+
+            field = FormulaField(formula, self.vocabulary)
+            field.setText(value or "")
+            # a formula that does not parse, or reads a stat Game Systems ▸ Stats does not
+            # declare, is shown and not applied: the record keeps its last good one (D94)
+            field.edited.connect(lambda f=field: f.valid() and self._set(data, key, f.text()))
+            return field
         if (isinstance(value, str) or value is None) and skey in _CLIP_KEYS.get(self.category, ()):
             # a pose names one of the sheet's animations: offer them, in words
             picker = Picker(self.vocabulary.choices("clips"), value or "", allow_none=True)

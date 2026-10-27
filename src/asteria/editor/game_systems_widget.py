@@ -605,7 +605,7 @@ class RecordForm(QWidget):
                     widget,
                     help_text=f.help,
                     # tables and long text (a translation, a description) take a whole row
-                    span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info")
+                    span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info", "formula")
                     or f.key in ("text", "description", "message", "detail"),
                 )
 
@@ -631,6 +631,7 @@ class RecordForm(QWidget):
             "group": None,
             "table": "changed",
             "translations": "changed",
+            "formula": "edited",
         }
         if f.kind == "optional_int":
             widget.check.toggled.connect(self._edited)
@@ -737,6 +738,10 @@ class RecordForm(QWidget):
             widget = QLineEdit()
             widget.setReadOnly(True)
             return widget
+        if f.kind == "formula":  # typed or built with buttons, the declared stats only (D94)
+            from .formula_field import FormulaField
+
+            return FormulaField(f.choices, self._vocabulary())
         if f.kind == "text":
             choices = self._text_choices(f.key)
             return _TextPicker(choices) if choices else QLineEdit()
@@ -835,7 +840,7 @@ class RecordForm(QWidget):
         self._original = copy.deepcopy(data)
         for f in self.fields:
             widget, value = self.widgets[f.key], data.get(f.key, f.default)
-            if f.kind in ("id", "text", "icon", "info"):
+            if f.kind in ("id", "text", "icon", "info", "formula"):
                 widget.setText("" if value is None else str(value))
             elif f.kind == "multiline":
                 widget.setPlainText(str(value or ""))
@@ -882,6 +887,10 @@ class RecordForm(QWidget):
             widget = self.widgets[f.key]
             if f.kind == "info":
                 out.pop(f.key, None)  # worked out, not data
+            elif f.kind == "formula":
+                if not widget.valid():  # shown under the field; the page says not applied
+                    raise GameSystemsAuthoringError(f"{f.label}: {widget.problem()}")
+                out[f.key] = widget.text()
             elif f.kind in ("id", "text", "icon"):
                 out[f.key] = widget.text().strip()
             elif f.kind == "multiline":
@@ -1035,7 +1044,7 @@ class GameSystemsEditorWidget(QWidget):
         from .record_vocabulary import words
 
         try:
-            data = self.controller.form_data(self.kind_id, key)
+            data = self.controller.form_data(self.kind_id, key, info=False)
         except (GameSystemsAuthoringError, KeyError, TypeError, ValueError):
             data = {}
         for field in ("display_name", "name", "label", "title"):

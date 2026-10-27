@@ -944,7 +944,8 @@ def _remove_shrine(data):
 
 
 def job_icons(db):
-    """Each job's picture from the demo's gear art (``JOB_ICONS``)."""
+    """Each job's picture from the demo's gear art (``JOB_ICONS``); D93 (``trial_d93.py``)
+    replaced these with figures and emblems."""
     from PIL import Image
 
     def diagonal(path):

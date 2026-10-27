@@ -127,20 +127,59 @@ def test_help_shows_on_hover_only(app):
     assert any(m.toolTip() == CATEGORY_HELP["abilities"] for m in marks)
 
 
-def test_a_help_tooltip_opens_beside_its_mark(app):
+def test_a_help_tooltip_opens_on_the_left_of_its_mark(app):
+    """D93: every ⓘ opens its help in one place - on the left of the label, level with it -
+    wherever the mouse came in (it used to open beside the text's end or under the pointer),
+    and the help goes when the mouse leaves."""
     from PySide6.QtCore import QEvent, QPoint
     from PySide6.QtGui import QHelpEvent
-    from PySide6.QtWidgets import QLabel, QToolTip
+    from PySide6.QtWidgets import QLabel
 
+    from asteria.editor.decor import _text_left, help_box, install
+
+    install(app)
     _project, _document, family = _family("actors", "hero_01")
-    family.editor.show()
+    family.resize(1400, 900)
+    family.move(500, 100)
+    family.show()
     (title,) = [lb for lb in family.editor.findChildren(QLabel) if lb.text() == "Base Stats  ⓘ"]
-    inside = QPoint(2, title.height() - 2)  # the mouse at the label's far corner
-    event = QHelpEvent(QEvent.ToolTip, inside, title.mapToGlobal(inside))
-    assert app.sendEvent(title, event)  # handled: placed by the label, not by the pointer
-    assert QToolTip.text() == title.toolTip()
+    marks = [lb for lb in family.editor.findChildren(QLabel) if lb.text() == "ⓘ"]
+    box = help_box()
+    for label in (title, marks[0]):
+        for inside in (QPoint(2, 2), QPoint(label.width() - 2, label.height() - 2)):
+            event = QHelpEvent(QEvent.ToolTip, inside, label.mapToGlobal(inside))
+            assert app.sendEvent(label, event)
+            assert box.isVisible() and box.text() == label.toolTip()
+            corner = label.mapToGlobal(QPoint(_text_left(label), 0))  # where its words start
+            assert box.geometry().right() < corner.x() and box.y() == corner.y()  # left, level
+            app.sendEvent(label, QEvent(QEvent.Leave))
+            assert not box.isVisible()
     assert title.toolTip().startswith("Starting numbers")
-    QToolTip.hideText()
+    family.close()
+
+
+def test_long_help_wraps_to_the_room_on_the_left(app):
+    from PySide6.QtCore import QEvent, QPoint
+    from PySide6.QtGui import QHelpEvent
+    from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
+
+    from asteria.editor.decor import HELP_WIDTH, help_box, install
+    from asteria.editor.responsive_form import _field_cell
+
+    install(app)
+    window = QWidget()
+    window.setGeometry(560, 200, 400, 120)
+    cell = _field_cell("Order", QLineEdit(), "Lower comes first. " * 40)  # a Game Systems field
+    cell.setParent(window)
+    window.show()
+    (caption,) = [lb for lb in cell.findChildren(QLabel) if "ⓘ" in lb.text()]
+    inside = QPoint(caption.width() - 2, 2)
+    assert app.sendEvent(caption, QHelpEvent(QEvent.ToolTip, inside, caption.mapToGlobal(inside)))
+    box, corner = help_box(), caption.mapToGlobal(QPoint(0, 0))
+    assert box.geometry().right() < corner.x() and box.width() <= HELP_WIDTH
+    assert box.wordWrap() and box.height() > 2 * box.fontMetrics().height()  # wrapped lines
+    window.close()
+    assert not box.isVisible()  # its mark went: so did the help
 
 
 def test_graph_positions_are_left_to_the_graph_view(app):

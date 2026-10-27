@@ -3426,7 +3426,24 @@
   "Take Off": "卸下另一件",
   "Refuse": "拒絕",
   "Choose picture…": "選擇圖片…",
-  "A file of your own for the chosen row's Empty picture or Back picture (the chosen column, else Back picture); double-clicking either cell does the same.": "為選取的那一列選擇空格圖片或底圖（選取的那一欄；否則是底圖）；在這兩格上按兩下也可以。"
+  "A file of your own for the chosen row's Empty picture or Back picture (the chosen column, else Back picture); double-clicking either cell does the same.": "為選取的那一列選擇空格圖片或底圖（選取的那一欄；否則是底圖）；在這兩格上按兩下也可以。",
+  "Formula": "公式",
+  "Chance Formula": "機率公式",
+  "Turn Order Formula": "行動順序公式",
+  "Final Damage Formula": "最終傷害公式",
+  "Functions": "函式",
+  "Not applied": "未套用",
+  "no stats": "沒有讀取屬性",
+  "Reads: {0}": "讀取：{0}",
+  "Not a formula: {0}": "不是有效的公式：{0}",
+  "Not declared in Game Systems ▸ Stats: {0}": "沒有在「遊戲系統 ▸ 屬性」宣告：{0}",
+  "Empty: the other fields are used": "空白：使用其他欄位",
+  "{0}: {1} (Stat Formulas)": "{0}：{1}（屬性公式）",
+  "What the stat gains, written as a formula of this fighter's stats: self.dex + 0.5 * self.luk. Only stats declared in Game Systems ▸ Stats can be read. Empty: Read From and Base Amount are used.": "這個屬性增加多少，用這名戰鬥者的屬性寫成公式：self.dex + 0.5 * self.luk。只能讀取在「遊戲系統 ▸ 屬性」宣告過的屬性。空白：使用「讀取來源」和「基礎數值」。",
+  "The amount as a formula of source (the one acting) and target: source.power * 2 - target.defense. Only stats declared in Game Systems ▸ Stats can be read. Empty: the other fields are used.": "用 source（行動者）和 target（目標）寫成的數值公式：source.power * 2 - target.defense。只能讀取在「遊戲系統 ▸ 屬性」宣告過的屬性。空白：使用其他欄位。",
+  "The chance (0-1) as a formula: 0.95 + 0.003 * source.accuracy - 0.003 * target.evade. Only stats declared in Game Systems ▸ Stats can be read. Empty: the base chance and the stat terms are used. The lowest and highest chance still apply.": "用公式寫的機率（0–1）：0.95 + 0.003 * source.accuracy - 0.003 * target.evade。只能讀取在「遊戲系統 ▸ 屬性」宣告過的屬性。空白：使用基礎機率和屬性係數。最低與最高機率仍然有效。",
+  "Each fighter's turn order as a formula of self: self.speed + random() * 10. Only stats declared in Game Systems ▸ Stats can be read. Empty: the turn order stat is used.": "每名戰鬥者的行動順序，用 self 寫成公式：self.speed + random() * 10。只能讀取在「遊戲系統 ▸ 屬性」宣告過的屬性。空白：使用行動順序屬性。",
+  "The damage after every rule, as a formula of value (the damage so far), source and target: value * (0.9 + random() * 0.2). Only stats declared in Game Systems ▸ Stats can be read. Empty: the damage is kept as it is.": "所有規則之後的傷害，用 value（目前的傷害）、source 和 target 寫成公式：value * (0.9 + random() * 0.2)。只能讀取在「遊戲系統 ▸ 屬性」宣告過的屬性。空白：傷害保持不變。"
  },
  "patterns": [
   [
