@@ -168,7 +168,7 @@ def _formula_names(data, key):
 
 
 class _HelpTip(QObject):
-    """A label's tooltip shown on the left of the label (``decor.show_help_tip``), wherever the
+    """A label's tooltip shown right beside its ⓘ (``decor.show_help_tip``), wherever the
     mouse entered it, instead of under the pointer."""
 
     def eventFilter(self, obj, event):  # noqa: N802 - Qt

@@ -11,9 +11,12 @@ Every sentence is a template the editor's language table translates (``{0}`` the
 from __future__ import annotations
 
 import re
+from dataclasses import fields
+from html import escape
 
 from asteria.rpg.battle_session_rules import BattleSessionRules
 from asteria.rpg.data_text import words
+from asteria.rpg.menu_pages import menu_pages
 
 from .i18n import translate
 
@@ -90,54 +93,180 @@ def _mentions(text, stat_id):
     return re.search(pattern, text) is not None
 
 
+def _number(value, sign=""):
+    text = f"{value:g}"
+    return f"+{text}" if sign and value >= 0 else text
+
+
+def _record(record):
+    """A record's name for the reader: its display name, else its id."""
+    if getattr(record, "display_name", ""):
+        return str(record.display_name)
+    ids = [f.name for f in fields(record) if f.name.endswith("_id")]
+    return str(getattr(record, ids[0])) if ids else ""
+
+
+def _listed(items):
+    """``Roger 21, Mira 1`` - every record, in the editor's list separator."""
+    return translate(", ").join(items)
+
+
+def _where(*steps):
+    """``Database ▸ Actors ▸ Base Stats``: the page an author opens, in the editor's words."""
+    return " ▸ ".join(translate(step) for step in steps)
+
+
+def _modifier(m):
+    if m.operation == "add":
+        return _number(m.value, "+")
+    if m.operation in ("multiply", "mul"):
+        return f"×{m.value:g}"
+    return f"{t(m.operation)} {m.value:g}"
+
+
+def _per_record(table, stats, stat_id, sign=""):
+    """``Name value`` for every record of ``table`` whose ``stats(record)`` names the stat."""
+    items = []
+    for record in table.values():
+        value = (stats(record) or {}).get(stat_id)
+        if value is not None:
+            items.append(f"{_record(record)} {_number(value, sign)}")
+    return items
+
+
+def _changed_by(table, stat_id):
+    """``Name +10`` for every gear piece or passive whose stat changes touch the stat."""
+    items = []
+    for record in table.values():
+        changes = [_modifier(m) for m in record.modifiers if m.stat == stat_id]
+        if changes:
+            items.append(f"{_record(record)} {' '.join(changes)}")
+    return items
+
+
+def _milestones(db, stat_id):
+    items = []
+    for track in db.progression_tracks.values():
+        for milestone in track.milestones:
+            value = milestone.stat_bonuses.get(stat_id)
+            if value:
+                rank = t("rank {0}", milestone.rank)
+                items.append(f"{_record(track)} {rank} {_number(value, '+')}")
+    return items
+
+
+def _tree_nodes(db, stat_id):
+    """``Attributes ▸ STR (Strength): +1 a rank, up to 30 ranks`` for every skill tree node
+    whose ranks give the stat."""
+    items = []
+    for graph in db.progression_graphs.values():
+        for node in graph.nodes:
+            gains = [r.stat_bonuses.get(stat_id, 0.0) for r in node.rewards]
+            if not any(gains):
+                continue
+            name = f"{_record(graph)} ▸ {_record(node)}"
+            if len(gains) == 1:
+                what = t("{0} (one rank)", _number(gains[0], "+"))
+            elif len(set(gains)) == 1:
+                what = t("{0} a rank, up to {1} ranks", _number(gains[0], "+"), len(gains))
+            else:
+                what = t("{0} over {1} ranks", _number(sum(gains), "+"), len(gains))
+            items.append(f"{name}: {what}")
+    return items
+
+
 def _sources(db, data, stat_id):
-    found = []
-    rule = db.derived_stats.get(stat_id)
-    if rule is not None and rule.expression:  # written as a formula (D94)
-        found.append(t("Stat Formulas: + {0} (for {1})", rule.expression, t(rule.applies_to)))
-    elif rule is not None:
-        parts = [f"{c:g} x {_name(db, k)}" for k, c in rule.terms.items()]
-        if rule.base or not parts:
-            parts.insert(0, f"{rule.base:g}")
-        found.append(t("Stat Formulas: + {0} (for {1})", " + ".join(parts), t(rule.applies_to)))
-        if rule.maximum:
-            found.append(t("at most {0}", f"{rule.maximum:g}"))
-    places = (
-        ("actors", "actor", lambda r: r.base_stats),
-        ("enemies", "enemy", lambda r: r.stats),
-        ("classes", "job", lambda r: {**r.stat_bonuses, **r.level_growth}),
+    """``(step, where, items)`` in the order the game adds them up for a party member: what it
+    is, the page that sets it (Database ▸ Actors ▸ Base Stats) and every record there with its
+    number. Steps nothing sets are left out."""
+    steps = (
+        (
+            "Starting value of the actor",
+            ("Database", "Actors", "Base Stats"),
+            _per_record(db.actors, lambda r: r.base_stats, stat_id),
+        ),
+        (
+            "Given once by the job",
+            ("Database", "Classes / Jobs", "Stat bonuses"),
+            _per_record(db.classes, lambda r: r.stat_bonuses, stat_id, "+"),
+        ),
+        (
+            "Progression ranks",
+            ("Database", "Progression Tracks"),
+            _milestones(db, stat_id),
+        ),
+        (
+            "Gained every level after the first (× level − 1)",
+            ("Database", "Classes / Jobs", "Growth per level"),
+            _per_record(db.classes, lambda r: r.level_growth, stat_id, "+"),
+        ),
+        (
+            "Points the player spends (skill tree ranks)",
+            ("Database", "Skill Trees"),
+            _tree_nodes(db, stat_id),
+        ),
+        (
+            "Worn equipment",
+            ("Database", "Equipment", "Stat changes"),
+            _changed_by(db.equipment, stat_id),
+        ),
+        (
+            "Attachments set in the equipment",
+            ("Database", "Attachments", "Stat changes"),
+            _changed_by(db.attachments, stat_id),
+        ),
+        (
+            "Learned passives",
+            ("Database", "Passives", "Stat changes"),
+            _changed_by(db.passives, stat_id),
+        ),
     )
-    for table, noun, stats in places:
-        n = sum(1 for r in getattr(db, table).values() if stat_id in (stats(r) or {}))
-        if n:
-            found.append(t("Base Stats of {0}", _count(n, noun)))
-    gear = (*db.equipment.values(), *db.attachments.values())
-    n = sum(1 for r in gear if any(m.stat == stat_id for m in r.modifiers))
-    if n:
-        found.append(t("added by {0}", _count(n, "gear")))
-    n = sum(1 for p in data.get("passives", ()) if stat_id in str(p))
-    if n:
-        found.append(t("changed by {0}", _count(n, "passive")))
+    found = [(t(step), _where(*where), items) for step, where, items in steps if items]
+    rule = db.derived_stats.get(stat_id)
+    if rule is not None:  # worked out last, from the stats above
+        if rule.expression:  # written as a formula (D94)
+            what = rule.expression
+        else:
+            parts = [f"{c:g} × {_name(db, k)}" for k, c in rule.terms.items()]
+            if rule.base or not parts:
+                parts.insert(0, f"{rule.base:g}")
+            what = " + ".join(parts)
+        what = t("+ {0} (for {1})", what, t(rule.applies_to))
+        if rule.maximum:
+            what += t(", at most {0}", f"{rule.maximum:g}")
+        where = _where("Game Systems", "Stat Formulas", rule.display_name)
+        found.append((t("Its stat formula, worked out last"), where, [what]))
     return found
+
+
+def _enemy_sources(db, stat_id):
+    return _per_record(db.enemies, lambda r: r.stats, stat_id)
 
 
 def _effects(project, db, data, stat_id):
     found = []
     for other in sorted(db.derived_stats.values(), key=lambda r: (r.order, r.stat_id)):
+        where = _where("Game Systems", "Stat Formulas", other.display_name)
         if other.expression and _mentions(other.expression, stat_id):
-            found.append(t("{0}: {1} (Stat Formulas)", _name(db, other.stat_id), other.expression))
+            what = t("{0} = {1}", _name(db, other.stat_id), other.expression)
+            found.append(f"{what}  ({where})")
         elif stat_id in other.terms:
             amount = f"{other.terms[stat_id]:+g}"
-            found.append(t("{0} {1} per point (Stat Formulas)", _name(db, other.stat_id), amount))
+            what = t("{0} {1} for each point of {2}", _name(db, other.stat_id), amount,
+                     _name(db, stat_id))  # fmt: skip
+            found.append(f"{what}  ({where})")
     for check in sorted(db.outcome_checks.values(), key=lambda c: c.check_id):
+        where = _where("Battle Rules", "Chance Checks", words(check.check_id))
         sides = ((SIDES[0], check.source_stat_terms), (SIDES[1], check.target_stat_terms))
         for side, terms in sides:
             if stat_id in (terms or {}):
                 per = f"{terms[stat_id] * 100:+g}%"
-                found.append(t("{0} chance {1} per point of {2}", words(check.check_id), per,
-                               t(side)))  # fmt: skip
+                what = t("{0} chance {1} for each point of {2}", words(check.check_id), per,
+                         t(side))  # fmt: skip
+                found.append(f"{what}  ({where})")
         if check.chance_expression and _mentions(check.chance_expression, stat_id):
-            found.append(t("{0} chance (its expression)", words(check.check_id)))
+            what = t("{0} chance = {1}", words(check.check_id), check.chance_expression)
+            found.append(f"{what}  ({where})")
     rules = []
     for record in db.battle_session_rules.values() or (BattleSessionRules("default"),):
         if record.initiative_stat == stat_id and not record.initiative_expression:
@@ -234,29 +363,59 @@ def _term_keys(value, stat_id, keys):
             _term_keys(v, stat_id, keys)
 
 
+def _section(heading, lines):
+    """A bold heading and its lines, one bullet each (rich text for the info box)."""
+    body = "".join(f"<br>&nbsp;&nbsp;•&nbsp;{escape(line)}" for line in lines)
+    return f"<b>{escape(heading)}</b>{body}"
+
+
+def _source_section(name, steps, enemies):
+    """Where the number comes from, step by step: what each step is, the page to open and every
+    record there with its number."""
+    out = [f"<b>{escape(t('Where {0} comes from', name))}</b>"]
+    if steps:
+        out.append(escape(t("A party member's {0} is these added up, in this order:", name)))
+        for number, (step, where, items) in enumerate(steps, 1):
+            out.append(f"<b>{number}. {escape(step)}</b> &nbsp;({escape(where)})")
+            out += [f"&nbsp;&nbsp;&nbsp;&nbsp;{escape(item)}" for item in items]
+    if enemies:
+        where = _where("Database", "Enemies / Bosses", "Stats")
+        out.append(f"<b>{escape(t('Enemies use their own number'))}</b> &nbsp;({escape(where)})")
+        out.append(f"&nbsp;&nbsp;&nbsp;&nbsp;{escape(_listed(enemies))}")
+    if not steps and not enemies:
+        out.append(escape(t("Nothing sets it yet.")))
+    return "<br>".join(out)
+
+
 def stat_usage(project, stat_id):
-    """Lines of words: where ``stat_id`` comes from, what reads it and where it is shown."""
+    """Rich text in three parts - where ``stat_id``'s number comes from (step by step, every
+    record with its number), what it changes and where it is shown - each line naming the
+    page an author opens."""
     db = project.rpg_database
     stat_id = str(stat_id)
     data = db.to_data()
-    source = _sources(db, data, stat_id)
+    name = _name(db, stat_id)
+    steps = [
+        (step, where, items if ": " in items[0] else [_listed(items)])  # a node a line
+        for step, where, items in _sources(db, data, stat_id)
+    ]
     effect = _effects(project, db, data, stat_id)
     shown = []
-    for menu in db.menu_rules.values():
-        if stat_id in menu.stat_rows:
-            shown.append(t("Status page: the stat table"))
-        groups = [ln.group or "other" for ln in menu.stat_lines if ln.stat_id == stat_id]
-        if groups:
-            shown.append(t("Status page: details ({0})", ", ".join(groups)))
-    lines = [t("Comes from: {0}", "; ".join(source) if source else t("nothing sets it yet"))]
-    if effect:
-        lines.append(t("What it does:"))
-        lines += [f"  • {line}" for line in effect]
-    else:
-        lines.append(t("What it does: nothing reads it yet"))
+    for page in menu_pages(db).values():  # D96: a menu page's detail tables
+        name = page.display_name
+        for block in page.blocks:
+            if stat_id in block.stat_rows:
+                shown.append(t("Menu page {0}: the detail table", name))
+            groups = [ln.group or "other" for ln in block.stat_lines if ln.stat_id == stat_id]
+            if groups:
+                shown.append(t("Menu page {0}: details ({1})", name, ", ".join(groups)))
+    parts = [
+        _source_section(name, steps, _enemy_sources(db, stat_id)),
+        _section(t("What {0} changes", name), effect or [t("Nothing reads it yet.")]),
+    ]
     if shown:
-        lines.append(t("Shown on: {0}", "; ".join(dict.fromkeys(shown))))
-    return "\n".join(lines)
+        parts.append(_section(t("Where {0} is shown", name), list(dict.fromkeys(shown))))
+    return "<br><br>".join(parts)
 
 
 __all__ = ["RULE_FIELDS", "stat_usage"]

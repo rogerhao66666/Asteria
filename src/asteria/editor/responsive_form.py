@@ -131,6 +131,22 @@ class ResponsiveForm(QWidget):
         else:
             self.rows.append((_Pair(label, widget, help_text), False))
         self._place(force=True)
+        return self.rows[-1][0]
+
+    def set_shown(self, row, shown):
+        """Show or hide a row ``add_row`` returned (a field another field's value turns off:
+        D96, a menu block's settings of another kind); hidden rows take no room."""
+        hidden = getattr(self, "_hidden", set())
+        self._hidden = hidden
+        if (id(row) not in hidden) == bool(shown):
+            return
+        if shown:
+            hidden.discard(id(row))
+        else:
+            hidden.add(id(row))
+        for widget in (row.caption, row.field) if isinstance(row, _Pair) else (row,):
+            widget.setVisible(bool(shown))
+        self._place(force=True)
 
     def add_wide(self, widget):
         self.rows.append((widget, True))
@@ -163,7 +179,10 @@ class ResponsiveForm(QWidget):
         for c in range(self.max_columns):
             self.grid.setColumnStretch(c, 0)
         row = col = 0
+        hidden = getattr(self, "_hidden", set())
         for widget, wide in self.rows:
+            if id(widget) in hidden:
+                continue
             if wide:
                 if col:
                     row, col = row + 1, 0

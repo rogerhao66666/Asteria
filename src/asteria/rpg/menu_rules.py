@@ -231,6 +231,8 @@ class StatLine:
         when the stat raises it, how much it takes off when the stat lowers it."""
         if check is None:
             return 0.0
+        if getattr(check, "chance_expression", ""):  # a formula (D94): read it as the terms
+            return self._formula_chance(value, check)
         for terms in (check.source_stat_terms, check.target_stat_terms):
             coefficient = (terms or {}).get(self.stat_id)
             if coefficient is None:
@@ -240,6 +242,32 @@ class StatLine:
             chance = check.base_chance + coefficient * value
             return max(check.minimum_chance, min(check.maximum_chance, chance))
         return check.base_chance
+
+    def _formula_chance(self, value, check):
+        """The chance through ``check``'s formula: with the stat on the user's side, the chance
+        it gives; on the target's side and lowering it, how much it takes off; every other
+        stat 0."""
+        from asteria.gameplay.expressions import SubjectView, evaluate
+        from asteria.gameplay.stats import StatBlock
+
+        def chance(source=None, target=None):
+            names = {
+                "source": SubjectView(None, StatBlock(source or {})),
+                "target": SubjectView(None, StatBlock(target or {})),
+            }
+            return evaluate(check.chance_expression, names, rng=_NoDice())
+
+        def bounded(x):
+            return max(check.minimum_chance, min(check.maximum_chance, x))
+
+        nothing = chance()
+        as_user = chance(source={self.stat_id: value})
+        if as_user != nothing:
+            return bounded(as_user)
+        as_target = chance(target={self.stat_id: value})
+        if as_target < nothing:
+            return min(1.0, nothing - as_target)
+        return bounded(as_target)
 
     def to_data(self):
         data = {"stat_id": self.stat_id}
@@ -265,6 +293,16 @@ class StatLine:
             data.get("label", ""),
             data.get("check", ""),
         )
+
+
+class _NoDice:
+    """A formula's ``random()`` read for a menu: the middle, the same every frame."""
+
+    def random(self):
+        return 0.5
+
+    def randint(self, low, high):
+        return (low + high) // 2
 
 
 def _short(value, digits=1):
@@ -306,7 +344,8 @@ class MenuRules:
         if not rules_id:
             raise ValueError("menu rules need an id")
         entries = _tags(pause_entries)
-        unknown = [e for e in entries if e not in PAUSE_ENTRIES]
+        # ``page:<id>``: a project's own menu page (D96, ``rpg.menu_pages``)
+        unknown = [e for e in entries if e not in PAUSE_ENTRIES and not e.startswith("page:")]
         if unknown:
             raise ValueError(f"unknown pause entries: {', '.join(unknown)}")
         categories = tuple(

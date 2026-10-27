@@ -159,9 +159,16 @@ class _TableField(QGroupBox):
         add, remove = QPushButton("+ Add"), QPushButton("Remove")
         add.clicked.connect(lambda: (self.add_row(), self.changed.emit()))
         remove.clicked.connect(lambda: (self.remove_row(), self.changed.emit()))
+        up, down = QPushButton("↑"), QPushButton("↓")  # rows in order (D96: a page's blocks)
+        up.setToolTip("Move Up")
+        down.setToolTip("Move Down")
+        up.clicked.connect(lambda: self.move_row(-1))
+        down.clicked.connect(lambda: self.move_row(1))
         buttons = QHBoxLayout()
         buttons.addWidget(add)
         buttons.addWidget(remove)
+        buttons.addWidget(up)
+        buttons.addWidget(down)
         buttons.addStretch(1)
         rows = QWidget()
         column = QVBoxLayout(rows)
@@ -196,6 +203,15 @@ class _TableField(QGroupBox):
                     return choice.label
         if value in ("", None):
             return f"(new {first.label.lower()})"
+        if first.kind == "choice":  # a kind of thing (a menu block): in words, with its place
+            from .i18n import translate
+            from .record_vocabulary import words
+
+            text = translate(_choice_words(value, words))
+            second = self.fields[1] if len(self.fields) > 1 else None
+            if second is not None and second.kind == "choice" and row.get(second.key):
+                text += f"  ·  {translate(_choice_words(row[second.key], words))}"
+            return text
         return str(value)
 
     def _commit(self):
@@ -232,6 +248,23 @@ class _TableField(QGroupBox):
         self.list.addItem(self._label(self.rows[-1]))
         self.list.setCurrentRow(len(self.rows) - 1)
         return self.detail
+
+    def move_row(self, step):
+        """Move the chosen row ``step`` places (-1 up, 1 down)."""
+        self._commit()
+        row = self.list.currentRow()
+        to = row + step
+        if not (0 <= row < len(self.rows) and 0 <= to < len(self.rows)):
+            return
+        self.rows[row], self.rows[to] = self.rows[to], self.rows[row]
+        self.list.blockSignals(True)
+        for index in (row, to):
+            self.list.item(index).setText(self._label(self.rows[index]))
+        self._current = to
+        self.list.setCurrentRow(to)
+        self.list.blockSignals(False)
+        self.detail.set_data(self.rows[to])
+        self.changed.emit()
 
     def remove_row(self):
         row = self.list.currentRow()
@@ -593,14 +626,15 @@ class RecordForm(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(self.grid)
+        self._rows = {}  # field key -> its row in the grid (shown or hidden by ``when``)
         for f in self.fields:
             widget = self._build(f)
             self._watch(f, widget)
             self.widgets[f.key] = widget
             if f.kind in ("group", "table", "translations"):  # a caption, the box below it
-                self.grid.add_row(f.label, widget, span=True, help_text=f.help)
+                self._rows[f.key] = self.grid.add_row(f.label, widget, span=True, help_text=f.help)
             else:
-                self.grid.add_row(
+                self._rows[f.key] = self.grid.add_row(
                     f.label,
                     widget,
                     help_text=f.help,
@@ -608,6 +642,23 @@ class RecordForm(QWidget):
                     span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info", "formula")
                     or f.key in ("text", "description", "message", "detail"),
                 )
+
+        for key in {f.when[0] for f in self.fields if f.when}:
+            control = self.widgets.get(key)
+            if isinstance(control, QComboBox):
+                control.currentIndexChanged.connect(self._show_when)
+        self._show_when()
+
+    def _show_when(self, *_args):
+        """Show only the fields whose ``when`` the record's values meet (D96: a menu block
+        shows the settings of its own kind)."""
+        for f in self.fields:
+            if not f.when:
+                continue
+            key, values = f.when
+            control = self.widgets.get(key)
+            value = control.currentData() if isinstance(control, QComboBox) else None
+            self.grid.set_shown(self._rows[f.key], value in values)
 
     def _edited(self, *_args):
         if not self._loading:
@@ -835,6 +886,7 @@ class RecordForm(QWidget):
             self._fill(data)
         finally:
             self._loading = False
+        self._show_when()
 
     def _fill(self, data):
         self._original = copy.deepcopy(data)

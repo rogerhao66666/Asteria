@@ -837,6 +837,7 @@ class RpgDatabase:
         self.credits_pages = {}  # rpg.extras CreditsPage
         self.menu_entries = {}  # rpg.extras MenuEntry
         self.menu_rules = {}  # rpg.menu_rules MenuRules (D87)
+        self.menu_pages = {}  # rpg.menu_pages MenuPage (D96)
         self.battle_options = {}  # rpg.extras BattleOptions
         self.ability_loadout_rules = {}  # rpg.ability_loadout AbilityLoadoutRules
         self.doodads = {}  # rpg.doodads DoodadDefinition
@@ -1245,6 +1246,7 @@ class RpgDatabase:
             ("credits_pages", self.credits_pages),
             ("menu_entries", self.menu_entries),
             ("menu_rules", self.menu_rules),
+            ("menu_pages", self.menu_pages),
             ("battle_options", self.battle_options),
             ("pet_rules", self.pet_rules),
             ("ability_loadout_rules", self.ability_loadout_rules),
@@ -1307,6 +1309,11 @@ class RpgDatabase:
         from .extras import MenuEntry
 
         return self._add_keyed(self.menu_entries, value, MenuEntry, "entry_id", "menu entry")
+
+    def add_menu_page(self, value):
+        from .menu_pages import MenuPage
+
+        return self._add_keyed(self.menu_pages, value, MenuPage, "page_id", "menu page")
 
     def add_menu_rules(self, value):
         from .menu_rules import MenuRules
@@ -2186,6 +2193,10 @@ class RpgDatabase:
 
             for x in data.get("menu_rules", ()):
                 result.add_menu_rules(MenuRules.from_data(x))
+            from .menu_pages import MenuPage
+
+            for x in data.get("menu_pages", ()):
+                result.add_menu_page(MenuPage.from_data(x))
             from .doodads import DoodadDefinition
 
             for x in data.get("doodads", ()):

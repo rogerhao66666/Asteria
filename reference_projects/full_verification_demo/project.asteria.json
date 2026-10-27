@@ -103930,7 +103930,7 @@
           "status.hint.tabs": "Tab\uff1a\u4e0b\u4e00\u9801",
           "status.hint.items": "\u5de6\uff0f\u53f3\uff1a\u5206\u985e   F\uff1a\u7be9\u9078   \u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   Enter\uff1a\u4f7f\u7528   Esc\uff1a\u8fd4\u56de",
           "status.hint.page": "\u4e0a\uff0f\u4e0b\uff1a\u9078\u64c7   Enter\uff1a\u4f7f\u7528\uff0f\u88dd\u5099   Esc\uff1a\u8fd4\u56de",
-          "data.menu_rules.trial_menu.name": "\u8a66\u7149\u9078\u55ae\u9801\u9762",
+          "data.menu_rules.trial_menu.name": "\u66ab\u505c\u9078\u55ae",
           "data.item_category.all.name": "\u5168\u90e8",
           "data.item_category.consumables.name": "\u6d88\u8017\u54c1",
           "data.item_category.throwables.name": "\u6295\u64f2\u7269",
@@ -104363,7 +104363,10 @@
           "battle.swapped": "{name} \u62ff\u8d77\u4e86 {item}",
           "gear.slot_taken": "\u8acb\u5148\u628a{slot}\u7684 {name} \u5378\u4e0b",
           "equipment.takes_also": "\u96d9\u624b\uff1a\u540c\u6642\u4f54\u7528{slots}",
-          "equipment.carried": "\u651c\u5e36\u4e2d\uff1a\u63db\u4e0a\u4e4b\u524d\u6c92\u6709\u4efb\u4f55\u6548\u679c"
+          "equipment.carried": "\u651c\u5e36\u4e2d\uff1a\u63db\u4e0a\u4e4b\u524d\u6c92\u6709\u4efb\u4f55\u6548\u679c",
+          "data.menu_page.status.name": "\u72c0\u614b",
+          "data.menu_page.items.name": "\u9053\u5177",
+          "data.menu_page.materials.name": "\u7d20\u6750"
         },
         "locale": "zh-TW"
       }
@@ -142825,281 +142828,7 @@
         "schema": "asteria.rpg.menu_rules",
         "version": 1,
         "rules_id": "trial_menu",
-        "display_name": "Trial menu pages",
-        "stat_graph": "attributes",
-        "stat_rows": [
-          "power",
-          "magic",
-          "defense",
-          "magic_defense",
-          "accuracy",
-          "evade",
-          "crit",
-          "crit_damage",
-          "speed"
-        ],
-        "item_categories": [
-          {
-            "category_id": "all",
-            "display_name": "All"
-          },
-          {
-            "category_id": "consumables",
-            "display_name": "Consumables",
-            "tags": [
-              "consumable",
-              "potion",
-              "cure",
-              "concoction"
-            ]
-          },
-          {
-            "category_id": "throwables",
-            "display_name": "Throwables",
-            "tags": [
-              "throwable"
-            ]
-          },
-          {
-            "category_id": "materials",
-            "display_name": "Materials",
-            "tags": [
-              "material"
-            ]
-          },
-          {
-            "category_id": "weapons",
-            "display_name": "Weapons",
-            "tags": [
-              "weapon"
-            ]
-          },
-          {
-            "category_id": "armour",
-            "display_name": "Armour",
-            "tags": [
-              "armor",
-              "head",
-              "legs",
-              "feet",
-              "accessory"
-            ]
-          }
-        ],
-        "item_filters": [
-          {
-            "filter_id": "usable",
-            "display_name": "Usable now",
-            "usable": true
-          },
-          {
-            "filter_id": "potions",
-            "display_name": "Potions",
-            "tags": [
-              "potion"
-            ]
-          },
-          {
-            "filter_id": "uniques",
-            "display_name": "Uniques",
-            "tags": [
-              "unique"
-            ]
-          }
-        ],
-        "stat_groups": [
-          {
-            "group_id": "attack",
-            "display_name": "Attack"
-          },
-          {
-            "group_id": "defence",
-            "display_name": "Defence"
-          },
-          {
-            "group_id": "battle",
-            "display_name": "Battle"
-          },
-          {
-            "group_id": "element_attack",
-            "display_name": "Element Attack"
-          },
-          {
-            "group_id": "element_resist",
-            "display_name": "Element Resistance"
-          }
-        ],
-        "stat_lines": [
-          {
-            "stat_id": "power",
-            "group": "attack",
-            "format": "range",
-            "spread": 10.0
-          },
-          {
-            "stat_id": "magic",
-            "group": "attack",
-            "format": "range",
-            "spread": 10.0
-          },
-          {
-            "stat_id": "damage_bonus",
-            "group": "attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "final_damage",
-            "group": "attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "boss_damage",
-            "group": "attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "penetration",
-            "group": "attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "crit",
-            "group": "attack",
-            "format": "chance",
-            "check": "crit"
-          },
-          {
-            "stat_id": "crit_damage",
-            "group": "attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "lifesteal",
-            "group": "attack",
-            "format": "share"
-          },
-          {
-            "stat_id": "defense",
-            "group": "defence"
-          },
-          {
-            "stat_id": "magic_defense",
-            "group": "defence"
-          },
-          {
-            "stat_id": "evade",
-            "group": "defence",
-            "format": "chance",
-            "check": "land"
-          },
-          {
-            "stat_id": "status_resist",
-            "group": "defence",
-            "format": "percent"
-          },
-          {
-            "stat_id": "speed",
-            "group": "battle"
-          },
-          {
-            "stat_id": "accuracy",
-            "group": "battle",
-            "format": "chance",
-            "check": "land"
-          },
-          {
-            "stat_id": "bp_power",
-            "group": "battle",
-            "format": "percent"
-          },
-          {
-            "stat_id": "weakness_damage",
-            "group": "battle",
-            "format": "percent"
-          },
-          {
-            "stat_id": "break_damage",
-            "group": "battle",
-            "format": "percent"
-          },
-          {
-            "stat_id": "fire_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "ice_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "lightning_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "wind_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "earth_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "light_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "dark_attack",
-            "group": "element_attack",
-            "format": "percent"
-          },
-          {
-            "stat_id": "fire_resist",
-            "group": "element_resist",
-            "format": "percent"
-          },
-          {
-            "stat_id": "ice_resist",
-            "group": "element_resist",
-            "format": "percent"
-          },
-          {
-            "stat_id": "lightning_resist",
-            "group": "element_resist",
-            "format": "percent"
-          },
-          {
-            "stat_id": "wind_resist",
-            "group": "element_resist",
-            "format": "percent"
-          },
-          {
-            "stat_id": "earth_resist",
-            "group": "element_resist",
-            "format": "percent"
-          },
-          {
-            "stat_id": "light_resist",
-            "group": "element_resist",
-            "format": "percent"
-          },
-          {
-            "stat_id": "dark_resist",
-            "group": "element_resist",
-            "format": "percent"
-          }
-        ],
-        "stat_columns": [
-          "total",
-          "base",
-          "points",
-          "gear",
-          "gain"
-        ]
+        "display_name": "Pause menu"
       }
     ],
     "stat_definitions": [
@@ -144529,6 +144258,337 @@
           "capability.carry_weapons"
         ],
         "description": "Weapons the hero carries without wearing them: they give nothing until the battle's Swap command takes one up. Only a job with capability.carry_weapons has it."
+      }
+    ],
+    "menu_pages": [
+      {
+        "schema": "asteria.rpg.menu_page",
+        "version": 1,
+        "page_id": "status",
+        "display_name": "Status",
+        "blocks": [
+          {
+            "kind": "profile",
+            "place": "left",
+            "height": 190
+          },
+          {
+            "kind": "stat_points",
+            "place": "left",
+            "stat_graph": "attributes",
+            "stat_columns": [
+              "total",
+              "base",
+              "points",
+              "gear",
+              "gain"
+            ]
+          },
+          {
+            "kind": "stat_details",
+            "place": "right",
+            "stat_rows": [
+              "power",
+              "magic",
+              "defense",
+              "magic_defense",
+              "accuracy",
+              "evade",
+              "crit",
+              "crit_damage",
+              "speed"
+            ],
+            "stat_groups": [
+              {
+                "group_id": "attack",
+                "display_name": "Attack"
+              },
+              {
+                "group_id": "defence",
+                "display_name": "Defence"
+              },
+              {
+                "group_id": "battle",
+                "display_name": "Battle"
+              },
+              {
+                "group_id": "element_attack",
+                "display_name": "Element Attack"
+              },
+              {
+                "group_id": "element_resist",
+                "display_name": "Element Resistance"
+              }
+            ],
+            "stat_lines": [
+              {
+                "stat_id": "power",
+                "group": "attack",
+                "format": "range",
+                "spread": 10.0
+              },
+              {
+                "stat_id": "magic",
+                "group": "attack",
+                "format": "range",
+                "spread": 10.0
+              },
+              {
+                "stat_id": "damage_bonus",
+                "group": "attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "final_damage",
+                "group": "attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "boss_damage",
+                "group": "attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "penetration",
+                "group": "attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "crit",
+                "group": "attack",
+                "format": "chance",
+                "check": "crit"
+              },
+              {
+                "stat_id": "crit_damage",
+                "group": "attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "lifesteal",
+                "group": "attack",
+                "format": "share"
+              },
+              {
+                "stat_id": "defense",
+                "group": "defence"
+              },
+              {
+                "stat_id": "magic_defense",
+                "group": "defence"
+              },
+              {
+                "stat_id": "evade",
+                "group": "defence",
+                "format": "chance",
+                "check": "land"
+              },
+              {
+                "stat_id": "status_resist",
+                "group": "defence",
+                "format": "percent"
+              },
+              {
+                "stat_id": "speed",
+                "group": "battle"
+              },
+              {
+                "stat_id": "accuracy",
+                "group": "battle",
+                "format": "chance",
+                "check": "land"
+              },
+              {
+                "stat_id": "bp_power",
+                "group": "battle",
+                "format": "percent"
+              },
+              {
+                "stat_id": "weakness_damage",
+                "group": "battle",
+                "format": "percent"
+              },
+              {
+                "stat_id": "break_damage",
+                "group": "battle",
+                "format": "percent"
+              },
+              {
+                "stat_id": "fire_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "ice_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "lightning_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "wind_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "earth_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "light_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "dark_attack",
+                "group": "element_attack",
+                "format": "percent"
+              },
+              {
+                "stat_id": "fire_resist",
+                "group": "element_resist",
+                "format": "percent"
+              },
+              {
+                "stat_id": "ice_resist",
+                "group": "element_resist",
+                "format": "percent"
+              },
+              {
+                "stat_id": "lightning_resist",
+                "group": "element_resist",
+                "format": "percent"
+              },
+              {
+                "stat_id": "wind_resist",
+                "group": "element_resist",
+                "format": "percent"
+              },
+              {
+                "stat_id": "earth_resist",
+                "group": "element_resist",
+                "format": "percent"
+              },
+              {
+                "stat_id": "light_resist",
+                "group": "element_resist",
+                "format": "percent"
+              },
+              {
+                "stat_id": "dark_resist",
+                "group": "element_resist",
+                "format": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "schema": "asteria.rpg.menu_page",
+        "version": 1,
+        "page_id": "items",
+        "display_name": "Items",
+        "blocks": [
+          {
+            "kind": "item_list",
+            "place": "full",
+            "item_categories": [
+              {
+                "category_id": "all",
+                "display_name": "All"
+              },
+              {
+                "category_id": "consumables",
+                "display_name": "Consumables",
+                "tags": [
+                  "consumable",
+                  "potion",
+                  "cure",
+                  "concoction"
+                ]
+              },
+              {
+                "category_id": "throwables",
+                "display_name": "Throwables",
+                "tags": [
+                  "throwable"
+                ]
+              },
+              {
+                "category_id": "materials",
+                "display_name": "Materials",
+                "tags": [
+                  "material"
+                ]
+              },
+              {
+                "category_id": "weapons",
+                "display_name": "Weapons",
+                "tags": [
+                  "weapon"
+                ]
+              },
+              {
+                "category_id": "armour",
+                "display_name": "Armour",
+                "tags": [
+                  "armor",
+                  "head",
+                  "legs",
+                  "feet",
+                  "accessory"
+                ]
+              }
+            ],
+            "item_filters": [
+              {
+                "filter_id": "usable",
+                "display_name": "Usable now",
+                "usable": true
+              },
+              {
+                "filter_id": "potions",
+                "display_name": "Potions",
+                "tags": [
+                  "potion"
+                ]
+              },
+              {
+                "filter_id": "uniques",
+                "display_name": "Uniques",
+                "tags": [
+                  "unique"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "schema": "asteria.rpg.menu_page",
+        "version": 1,
+        "page_id": "materials",
+        "display_name": "Materials",
+        "icon_id": "playable_assets/icons_7soul/I_Agate.png",
+        "blocks": [
+          {
+            "kind": "item_list",
+            "place": "full",
+            "item_categories": [
+              {
+                "category_id": "materials",
+                "display_name": "Materials",
+                "tags": [
+                  "material"
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },

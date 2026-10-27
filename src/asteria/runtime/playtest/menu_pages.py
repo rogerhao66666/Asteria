@@ -12,6 +12,8 @@ and facts beside the list or behind a Details button (D88, Menu Pages' ``item_de
 
 from __future__ import annotations
 
+from asteria.rpg.data_text import record_key
+from asteria.rpg.menu_pages import PAGE_ENTRY, menu_pages, page_entries
 from asteria.rpg.menu_rules import PAUSE_ENTRIES, menu_rules
 
 
@@ -28,6 +30,48 @@ def _signed(value):
 
 
 PAGES = ("status", "items", "equipment", "skills")
+
+
+COLUMN_GAP, BLOCK_GAP = 20, 12
+FULL_HEIGHT = 160  # a full-width block without a height, above the columns
+
+
+def _stack(blocks, x, y, w, h):
+    """``(block, (x, y, w, h))`` for ``blocks`` one under another in a column ``h`` high."""
+    fixed = sum(b.height for b in blocks if b.height)
+    free = [b for b in blocks if not b.height]
+    room = h - fixed - BLOCK_GAP * (len(blocks) - 1)
+    share = room // len(free) if free else 0
+    out = []
+    for block in blocks:
+        height = block.height or share
+        out.append((block, (x, y, w, max(0, height))))
+        y += height + BLOCK_GAP
+    return out
+
+
+def menu_page_boxes(blocks, rect):
+    """Where each of a page's ``blocks`` is drawn in ``rect`` (D96): full-width blocks first
+    (all of ``rect`` when the page has no columns), then the left and right columns."""
+    x, y, w, h = rect
+    full = [b for b in blocks if b.place == "full"]
+    left = [b for b in blocks if b.place == "left"]
+    right = [b for b in blocks if b.place == "right"]
+    if not left and not right:
+        return _stack(full, x, y, w, h)
+    out = []
+    for block in full:
+        height = block.height or FULL_HEIGHT
+        out.append((block, (x, y, w, height)))
+        y, h = y + height + BLOCK_GAP, h - height - BLOCK_GAP
+    if left and right:
+        left_w = min(560, int((w - 24) * 0.45))
+        right_x = x + left_w + COLUMN_GAP
+        out += _stack(left, x, y, left_w, h)
+        out += _stack(right, right_x, y, x + w - right_x, h)
+    else:
+        out += _stack(left or right, x, y, w, h)
+    return out
 
 
 class MenuPagesMixin:
@@ -65,8 +109,18 @@ class MenuPagesMixin:
             if store:
                 usable.add(entry)
         rules = menu_rules(db)
-        order = rules.pause_entries if rules is not None and rules.pause_entries else PAUSE_ENTRIES
-        options = [(e, PAUSE_WORDS[e]) for e in order if e in usable]
+        pages = menu_pages(db)
+        own_pages = page_entries(db)  # D96: a project's own menu page is an entry of its own
+        usable.update(own_pages)
+        if rules is not None and rules.pause_entries:
+            order = rules.pause_entries
+        else:  # the engine's order: the project's pages after Items
+            at = PAUSE_ENTRIES.index("items") + 1
+            order = (*PAUSE_ENTRIES[:at], *own_pages, *PAUSE_ENTRIES[at:])
+        listed = {e: pages[e[len(PAGE_ENTRY) :]] for e in own_pages}
+        # ``keys`` below word a page's name in the player's language
+        names = {e: page.display_name for e, page in listed.items()}  # no session: as written
+        options = [(e, names.get(e) or PAUSE_WORDS[e]) for e in order if e in usable]
         own = [
             (f"entry:{entry.entry_id}", entry.label)
             for entry in sorted(db.menu_entries.values(), key=lambda e: (e.order, e.entry_id))
@@ -76,13 +130,21 @@ class MenuPagesMixin:
         icons = {
             f"entry:{e.entry_id}": e.icon_id for e in db.menu_entries.values() if e.icon_id
         }  # project-defined entries may carry an icon
-        keys = text_keys("pause", [o for o in options if not o[0].startswith("entry:")])
+        for entry in own_pages:
+            page = pages[entry[len(PAGE_ENTRY) :]]
+            if page.icon_id:
+                icons[entry] = page.icon_id
+        built_in = [o for o in options if not o[0].startswith(("entry:", PAGE_ENTRY))]
+        keys = text_keys("pause", built_in)
+        # a page's name in the player's language: the locale table's data.menu_page.<id>.name
+        keys.update({e: record_key(pages[e[len(PAGE_ENTRY) :]]) for e in own_pages})
         # the project's own entries keep their label unless a table words it (pause.entry.<id>)
         keys.update({f"entry:{e}": f"pause.entry.{e}" for e in db.menu_entries})
         return options, icons, keys
 
     def _open_pause_page(self, page):
-        """Open Status, Items, Equipment or Skills from the pause menu."""
+        """Open Status, Items, Equipment, Skills or a project's own page (``page:<id>``) from
+        the pause menu."""
         if page == "equipment" and getattr(self.save.rpg_state, "loadouts", None):
             self.open_equipment_screen(back="pause")
             return
@@ -117,17 +179,19 @@ class MenuPagesMixin:
         )
         return (x + 14, y + 44, w - 28, h - 52)
 
-    def _draw_status_page(self, c, menu, top):
-        """The Status page: profile, stat table with +, details (see the module)."""
-        width, height = self.width, self.height
-        left_w = min(560, int((width - 112) * 0.45))
-        bottom = height - 100
-        profile_h = 190
-        self._draw_status_profile(c, menu, (44, top, left_w, profile_h))
-        points_top = top + profile_h + 12
-        self._draw_stat_table(c, menu, (44, points_top, left_w, bottom - points_top))
-        right_x = 44 + left_w + 20
-        self._draw_stat_details(c, menu, (right_x, top, width - 44 - right_x, bottom - top))
+    # -- a page of blocks (D96) -----------------------------------------------------------------
+    def _draw_menu_page(self, c, menu, rect):
+        """``menu.page``'s blocks in ``rect``: ``full`` blocks across the top, then the ``left``
+        and ``right`` columns (the left one 45% of the width, at most 560 px); a block's
+        ``height`` is kept, the ones without share what is left of their column."""
+        draw = {
+            "profile": self._draw_status_profile,
+            "stat_points": self._draw_stat_table,
+            "stat_details": self._draw_stat_details,
+            "item_list": self._draw_item_list,
+        }
+        for block, box in menu_page_boxes(menu.page.blocks, rect):
+            draw[block.kind](c, menu, box)
 
     def _draw_status_profile(self, c, menu, rect):
         """The member: name, level and jobs, experience, and a bar per resource."""

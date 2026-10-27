@@ -115,7 +115,10 @@ class MenusInputMixin:
         tr = self.game.tr
         c.panel("frame", (24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
         tabs = c.place("tabs", (44, 36, 150 * len(TABS), 30), 150)
-        if menu.single:  # a page of its own: its name where the tabs were
+        if menu.single and menu.page_id:  # a project's own page (D96): its name
+            title = self.game.name_of(menu.page)
+            c.text("title", title, 44, 34, size=30, color=c.tone("title", (255, 220, 124)))
+        elif menu.single:  # a page of its own: its name where the tabs were
             title = tr(TAB_WORDS[menu.tab], menu.tab.title())
             c.text("title", title, 44, 34, size=30, color=c.tone("title", (255, 220, 124)))
         elif c.shown("tabs"):
@@ -136,66 +139,19 @@ class MenusInputMixin:
         member = tr("status.member", "Q / E  {name}", name=name)
         c.text("member", member, self.width - 330, 40, size=20, color=(170, 220, 255))
         self.hotspot((self.width - 336, 34, 300, 32), key="e")  # a click: the next member
+        if menu.page is not None:  # D96: the page's blocks, each in its place
+            self._draw_menu_page(c, menu, (44, 84, self.width - 88, self.height - 184))
+        else:  # Equipment and Skills: the list
+            self._draw_item_list(c, menu, (44, 84, self.width - 88, self.height - 184))
+        details = menu.details_mode if menu.tab == "items" else "off"
         if menu.tab == "status":
-            self._draw_status_page(c, menu, 84)
             hint = tr(
                 "status.hint.status",
                 "Up/Down: choose   Enter / Right: +1   Q / E: member   Esc: back",
             )
             if not menu.single:
                 hint = tr("status.hint.tabs", "Tab: next tab") + "   " + hint
-            self._status_footer(c, menu, hint)
-            return
-        top = 88
-        details = menu.details_mode if menu.tab == "items" else "off"
-        if menu.tab == "items":
-            self._draw_item_tabs(c, menu, 80)
-            top = 128
-        rows = menu.rows()
-        list_w = self.width - 80
-        if details == "panel":  # the list on the left, the chosen thing's details on the right
-            list_w = int((self.width - 80) * 0.58)
-            panel = (40 + list_w + 12, top - 6, self.width - 92 - list_w, self.height - top - 104)
-            self._draw_item_detail(c, menu, panel)
-        icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
-        at = c.place("rows", (40, top, list_w, (self.height - top - 110) // 28 * 28), 28)
-        icon_size = c.icon_size("rows", 22)
-        label_x = at.x(56) + (icon_size + 8 if any(icons) else 0)
-        fit = max(1, at.rect[3] // at.row)
-        start = max(0, menu.row - (fit - 1))
-        size = c.size("rows", 20)
-        normal = c.color("rows", c.tone("text", (210, 215, 225)))
-        for i, (_kind, _key, label, detail) in enumerate(rows[start : start + fit]):
-            y = at.y(top + 4) + i * at.row
-            selected = start + i == menu.row
-            row_box = (at.x(40), y - 4, at.rect[2], at.row - 2)
-            self.hotspot(row_box, lambda row=start + i: setattr(menu, "row", row))
-            if selected:
-                band = (at.x(40), y - 4, at.rect[2], at.row - 2)
-                c.selection(
-                    "rows",
-                    band,
-                    lambda band=band: self.pg.draw.rect(
-                        self.screen, (40, 52, 78), band, border_radius=4
-                    ),
-                )
-            self._draw_icon(icons[start + i], at.x(56), y - 3, icon_size)
-            picked = c.tone("selected", (255, 255, 255))
-            self.text(label, label_x, y, size=size, color=picked if selected else normal)
-            self.text(
-                detail,
-                at.x(40) + at.rect[2] - 12,
-                y,
-                size=size,
-                color=c.tone("muted", (170, 210, 240)),
-                anchor="topright",
-            )
-        if not rows:
-            empty = tr("status.empty", "Nothing here yet.")
-            c.text("empty", empty, 56, top + 4, size=20, color=(150, 160, 180))
-        if details == "button":
-            self._draw_details_button(c, menu, rows)
-        if menu.single and menu.tab == "items":
+        elif menu.single and menu.tab == "items":
             hint = tr(
                 "status.hint.items",
                 "Left/Right: tab   F: filter   Up/Down: choose   Enter: use   Esc: back",
@@ -210,6 +166,64 @@ class MenusInputMixin:
                 "Tab: next tab   Up/Down: choose   Enter: use / equip / unequip   Esc: back",
             )
         self._status_footer(c, menu, hint)
+
+    def _draw_item_list(self, c, menu, rect):
+        """The bag (an ``item_list`` block, D96) - or the Equipment / Skills tab's list - in
+        ``rect``: the Items page's tabs above, the chosen thing's details beside or behind a
+        button."""
+        tr = self.game.tr
+        # the list reaches 4 px past the page's edge, as it always has
+        x, y, w = rect[0] - 4, rect[1] - 4, rect[2] + 8
+        bottom = rect[1] + rect[3] - 10
+        top = y + 8
+        details = menu.details_mode if menu.tab == "items" else "off"
+        if menu.tab == "items":
+            self._draw_item_tabs(c, menu, y)
+            top = y + 48
+        rows = menu.rows()
+        list_w = w
+        if details == "panel":  # the list on the left, the chosen thing's details on the right
+            list_w = int(w * 0.58)
+            panel = (x + list_w + 12, top - 6, w - 12 - list_w, bottom - top + 6)
+            self._draw_item_detail(c, menu, panel)
+        icons = menu.row_icons() if menu.tab in ("items", "equipment") else [""] * len(rows)
+        at = c.place("rows", (x, top, list_w, (bottom - top) // 28 * 28), 28)
+        icon_size = c.icon_size("rows", 22)
+        label_x = at.x(x + 16) + (icon_size + 8 if any(icons) else 0)
+        fit = max(1, at.rect[3] // at.row)
+        start = max(0, menu.row - (fit - 1))
+        size = c.size("rows", 20)
+        normal = c.color("rows", c.tone("text", (210, 215, 225)))
+        for i, (_kind, _key, label, detail) in enumerate(rows[start : start + fit]):
+            row_y = at.y(top + 4) + i * at.row
+            selected = start + i == menu.row
+            row_box = (at.x(x), row_y - 4, at.rect[2], at.row - 2)
+            self.hotspot(row_box, lambda row=start + i: setattr(menu, "row", row))
+            if selected:
+                band = (at.x(x), row_y - 4, at.rect[2], at.row - 2)
+                c.selection(
+                    "rows",
+                    band,
+                    lambda band=band: self.pg.draw.rect(
+                        self.screen, (40, 52, 78), band, border_radius=4
+                    ),
+                )
+            self._draw_icon(icons[start + i], at.x(x + 16), row_y - 3, icon_size)
+            picked = c.tone("selected", (255, 255, 255))
+            self.text(label, label_x, row_y, size=size, color=picked if selected else normal)
+            self.text(
+                detail,
+                at.x(x) + at.rect[2] - 12,
+                row_y,
+                size=size,
+                color=c.tone("muted", (170, 210, 240)),
+                anchor="topright",
+            )
+        if not rows:
+            empty = tr("status.empty", "Nothing here yet.")
+            c.text("empty", empty, x + 16, top + 4, size=20, color=(150, 160, 180))
+        if details == "button":
+            self._draw_details_button(c, menu, rows)
 
     def _draw_details_button(self, c, menu, rows):
         """The Items page's Details button (item_details "button"); open, the details over the
@@ -262,8 +276,8 @@ class MenusInputMixin:
         choice = self._pause_menu.selected
         if choice == "resume":
             self._ui_mode = "field"
-        elif choice in ("status", "items", "equipment", "skills"):
-            self._open_pause_page(choice)
+        elif choice in ("status", "items", "equipment", "skills") or choice.startswith("page:"):
+            self._open_pause_page(choice)  # page:<id>: a project's own menu page (D96)
         elif choice == "enhance":
             self.open_enhance_screen(back="pause")
         elif choice in ("backlog", "music", "credits", "skill_slots"):

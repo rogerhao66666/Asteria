@@ -77,30 +77,53 @@ def window():
 
 
 def test_the_menu_pages_form_shows_and_applies(window):
+    """D96: a page's blocks are a table; an Item List block shows its tabs, filters and
+    details, and only those."""
+    from asteria.rpg.menu_pages import MenuBlock, MenuPage
+
+    page = MenuPage(
+        "bag",
+        "Bag",
+        blocks=(
+            MenuBlock("profile", "left", 190),
+            MenuBlock("item_list", "right", item_categories=RULES.item_categories),
+        ),
+    )
     editor = window.game_systems_editor
     api = editor.controller
-    api.create("menu_rules", RULES)
-    editor.set_kind("menu_rules")
-    editor.refresh("pages")
+    api.create("menu_pages", page)
+    editor.set_kind("menu_pages")
+    editor.refresh("bag")
     assert editor.apply(), editor.status.text()
-    assert api.get("menu_rules", "pages") == RULES
-    table = editor.form.widgets["item_categories"]
-    table.set_rows(
+    assert api.get("menu_pages", "bag") == page
+    blocks = editor.form.widgets["blocks"]
+    assert [blocks.list.item(i).text() for i in range(blocks.list.count())] == [
+        "Profile  ·  Left",
+        "Item List  ·  Right",
+    ]
+    blocks.list.setCurrentRow(1)
+    form = blocks.detail
+    shown = {k for k, row in form._rows.items() if id(row) not in form.grid._hidden}
+    assert {"item_categories", "item_filters", "item_details"} <= shown
+    assert not shown & {"stat_graph", "stat_columns", "stat_lines"}  # another kind's
+    tabs = form.widgets["item_categories"]
+    tabs.set_rows(
         [
-            *table.values(),
+            *tabs.values(),
             {"category_id": "keys", "display_name": "Keys", "tags": ["key"], "icon_id": ""},
         ]
     )
+    blocks.move_row(-1)  # the bag first
     assert editor.apply(), editor.status.text()
-    assert [c.category_id for c in api.get("menu_rules", "pages").item_categories] == [
-        "all",
-        "potions",
-        "keys",
-    ]
+    saved = api.get("menu_pages", "bag")
+    assert [b.kind for b in saved.blocks] == ["item_list", "profile"]
+    assert [c.category_id for c in saved.blocks[0].item_categories] == ["all", "potions", "keys"]
 
 
 def test_the_editor_words_the_new_form_in_chinese():
     import json
+
+    from asteria.editor.game_systems_authoring import _MENU_BLOCK
 
     table = json.loads(
         (
@@ -108,8 +131,9 @@ def test_the_editor_words_the_new_form_in_chinese():
         ).read_text(encoding="utf-8")
     )
     words = table if "messages" not in table else table["messages"]
-    labels = [f.label for f in FORMS["menu_rules"]]
-    labels += ["Menu Pages (status, items)", "Data: menu pages (item tabs and filters)"]
+    labels = [f.label for f in (*FORMS["menu_rules"], *FORMS["menu_pages"], *_MENU_BLOCK)]
+    labels += ["Pause Menu", "Menu Pages", "Data: menu pages (item tabs and filters)"]
+    labels += ["Profile", "Stat Points", "Stat Details", "Item List", "Left", "Right", "Full"]
     missing = [w for w in labels if w not in json.dumps(words, ensure_ascii=False)]
     assert not missing, missing
 
@@ -137,7 +161,11 @@ def host(monkeypatch):
 
 def test_status_items_equipment_and_skills_are_entries_of_their_own(host):
     options = [key for key, _label in host._pause_menu.options]
-    assert options[:6] == ["resume", "status", "items", "equipment", "enhance", "skills"]
+    assert options[:7] == [
+        *("resume", "status", "items"),
+        "page:materials",  # D96: the demo's own page, after Items
+        *("equipment", "enhance", "skills"),
+    ]
     assert options.index("entry:camp") == options.index("settings") - 1
     words = dict(host._pause_menu.labels(host.game.tr))
     assert words["status"] == "Status" and words["items"] == "Items"
@@ -238,7 +266,7 @@ def test_default_item_tabs_without_menu_pages():
     db = Game.project.rpg_database
     db.menu_rules.clear()
     menu = StatusMenu.__new__(StatusMenu)
-    menu.game, menu.rules = Game, None
+    menu.game, menu.pause_rules, menu.pages, menu.page_id, menu.tab = Game, None, {}, "", "items"
     tabs = [c.category_id for c in menu.categories()]
     assert tabs[0] == "all"
     assert tabs == (["all", "item", "equipment"] if db.items and db.equipment else ["all"])

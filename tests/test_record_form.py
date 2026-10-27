@@ -127,15 +127,15 @@ def test_help_shows_on_hover_only(app):
     assert any(m.toolTip() == CATEGORY_HELP["abilities"] for m in marks)
 
 
-def test_a_help_tooltip_opens_on_the_left_of_its_mark(app):
-    """D93: every ⓘ opens its help in one place - on the left of the label, level with it -
-    wherever the mouse came in (it used to open beside the text's end or under the pointer),
-    and the help goes when the mouse leaves."""
-    from PySide6.QtCore import QEvent, QPoint
+def test_a_help_tooltip_opens_right_beside_its_mark(app):
+    """D95: every ⓘ opens its help in one place - just right of the mark, level with the label,
+    see-through - wherever the mouse came in (D93 put it left of the label's words), and the
+    help goes when the mouse leaves."""
+    from PySide6.QtCore import QEvent, QPoint, Qt
     from PySide6.QtGui import QHelpEvent
     from PySide6.QtWidgets import QLabel
 
-    from asteria.editor.decor import _text_left, help_box, install
+    from asteria.editor.decor import HELP_GAP, HELP_MIN_WIDTH, _mark_span, help_box, install
 
     install(app)
     _project, _document, family = _family("actors", "hero_01")
@@ -150,33 +150,40 @@ def test_a_help_tooltip_opens_on_the_left_of_its_mark(app):
             event = QHelpEvent(QEvent.ToolTip, inside, label.mapToGlobal(inside))
             assert app.sendEvent(label, event)
             assert box.isVisible() and box.text() == label.toolTip()
-            corner = label.mapToGlobal(QPoint(_text_left(label), 0))  # where its words start
-            assert box.geometry().right() < corner.x() and box.y() == corner.y()  # left, level
+            mark = label.mapToGlobal(QPoint(_mark_span(label)[1], 0))  # the ⓘ's right edge
+            room = label.screen().availableGeometry().right() - (mark.x() + HELP_GAP)
+            if room >= HELP_MIN_WIDTH:
+                assert box.x() == mark.x() + HELP_GAP  # just right of the mark
+            else:  # the mark is against the screen's edge: just left of it instead
+                left = label.mapToGlobal(QPoint(_mark_span(label)[0], 0)).x()
+                assert box.geometry().right() < left
+            assert box.y() == max(mark.y(), label.screen().availableGeometry().top())  # level
+            assert box.testAttribute(Qt.WA_TranslucentBackground)
             app.sendEvent(label, QEvent(QEvent.Leave))
             assert not box.isVisible()
     assert title.toolTip().startswith("Starting numbers")
     family.close()
 
 
-def test_long_help_wraps_to_the_room_on_the_left(app):
+def test_long_help_wraps_to_the_room_on_the_right(app):
     from PySide6.QtCore import QEvent, QPoint
     from PySide6.QtGui import QHelpEvent
     from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 
-    from asteria.editor.decor import HELP_WIDTH, help_box, install
+    from asteria.editor.decor import HELP_WIDTH, _mark_span, help_box, install
     from asteria.editor.responsive_form import _field_cell
 
     install(app)
     window = QWidget()
-    window.setGeometry(560, 200, 400, 120)
+    window.setGeometry(0, 200, 400, 120)  # room on the right, even on a small screen
     cell = _field_cell("Order", QLineEdit(), "Lower comes first. " * 40)  # a Game Systems field
     cell.setParent(window)
     window.show()
     (caption,) = [lb for lb in cell.findChildren(QLabel) if "ⓘ" in lb.text()]
     inside = QPoint(caption.width() - 2, 2)
     assert app.sendEvent(caption, QHelpEvent(QEvent.ToolTip, inside, caption.mapToGlobal(inside)))
-    box, corner = help_box(), caption.mapToGlobal(QPoint(0, 0))
-    assert box.geometry().right() < corner.x() and box.width() <= HELP_WIDTH
+    box, mark = help_box(), caption.mapToGlobal(QPoint(_mark_span(caption)[1], 0))
+    assert box.x() > mark.x() and box.width() <= HELP_WIDTH
     assert box.wordWrap() and box.height() > 2 * box.fontMetrics().height()  # wrapped lines
     window.close()
     assert not box.isVisible()  # its mark went: so did the help

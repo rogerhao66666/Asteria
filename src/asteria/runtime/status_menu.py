@@ -23,6 +23,7 @@ from asteria.presentation.rpg_ability_screen import AbilityScreenRuntime
 from asteria.presentation.rpg_character_screen import CharacterScreenRuntime
 from asteria.presentation.rpg_equipment_screen import EquipmentScreenRuntime
 from asteria.presentation.rpg_inventory_screen import InventoryScreenRuntime
+from asteria.rpg.menu_pages import PAGE_ENTRY, menu_pages
 from asteria.rpg.menu_rules import NO_STAT_GRAPH, ItemCategory, ItemFilter, menu_rules
 
 TABS = ("status", "items", "equipment", "skills")
@@ -114,12 +115,23 @@ def _profile(game, tab):
 class StatusMenu:
     def __init__(self, game, page=None):
         self.game = game
-        self.single = page in TABS  # one page of its own: no tab row
+        db = game.project.rpg_database
+        self.pages = menu_pages(db)  # D96: the Status and Items tabs are pages of blocks
+        self.pause_rules = menu_rules(db)
+        self._rules = {}
+        self.page_id = ""  # a project page of its own (``page:<id>``), else the tab's page
+        if str(page or "").startswith(PAGE_ENTRY) and page[len(PAGE_ENTRY) :] in self.pages:
+            self.page_id = page[len(PAGE_ENTRY) :]
+            # the page's cursor and keys work as the Items page's or the Status page's
+            kind = self.pages[self.page_id].interactive()
+            page = "items" if kind == "item_list" else "status"
+            self.single = True
+        else:
+            self.single = page in TABS  # one page of its own: no tab row
         self.tab = page if self.single else "status"
         self.actor_index = 0
         self.row = 0
         self.message = ""
-        self.rules = menu_rules(game.project.rpg_database)
         self.category = 0  # the Items page's tab
         self.filter = -1  # the Items page's filter (-1: none)
         self.details_open = False  # item_details "button": the details over the list
@@ -133,6 +145,21 @@ class StatusMenu:
         }
 
     # -- state ---------------------------------------------------------------------------------
+    @property
+    def page(self):
+        """The ``MenuPage`` shown (D96), or None for the Equipment and Skills tabs."""
+        return self.pages.get(self.page_id or self.tab)
+
+    @property
+    def rules(self):
+        """The shown page's settings as one ``MenuRules`` (its blocks'), or None."""
+        page = self.page
+        if page is None:
+            return self.pause_rules
+        if page.page_id not in self._rules:  # read every frame: made once a page
+            self._rules[page.page_id] = page.rules(self.pause_rules)
+        return self._rules[page.page_id]
+
     @property
     def party(self):
         return tuple(self.game.save.rpg_state.party_active_actor_ids)

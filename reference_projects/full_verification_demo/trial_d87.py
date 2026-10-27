@@ -149,11 +149,16 @@ def patch_menu_pages(data):
     from trial_story import menu_pages
 
     db = data["rpg_database"]
-    record = menu_pages().to_data()
-    old = next((r for r in db.get("menu_rules", []) if r["rules_id"] == record["rules_id"]), {})
-    record.update({k: old[k] for k in LATER_FIELDS if k in old})
-    db["menu_rules"] = [r for r in db.get("menu_rules", []) if r["rules_id"] != record["rules_id"]]
-    db["menu_rules"].append(record)
+    words = dict(MENU_ZH)
+    if db.get("menu_pages"):  # D96 moved the settings onto pages: the record is trial_d96's
+        words.pop("data.menu_rules.trial_menu.name")
+    else:
+        record = menu_pages().to_data()
+        rules = db.get("menu_rules", [])
+        old = next((r for r in rules if r["rules_id"] == record["rules_id"]), {})
+        record.update({k: old[k] for k in LATER_FIELDS if k in old})
+        db["menu_rules"] = [r for r in rules if r["rules_id"] != record["rules_id"]]
+        db["menu_rules"].append(record)
     chinese = engine_translations("zh-TW")
     for table in db["locale_tables"]:
         if table["locale"] != "zh-TW":
@@ -162,7 +167,7 @@ def patch_menu_pages(data):
         for key, word in chinese.items():
             if key not in entries or key in CHANGED_WORDS:
                 entries[key] = word
-        entries.update(MENU_ZH)
+        entries.update(words)
 
 
 def patch_manifest(path):

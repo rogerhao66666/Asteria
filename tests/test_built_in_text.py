@@ -311,7 +311,7 @@ def test_the_pause_and_settings_menus_draw_the_players_language(host):
     assert "Resume" in english and "Settings" in english
     assert "Make Camp" in english  # the project's own entry, as it wrote it
     for key, label in host._pause_menu.options:  # what the list says each built-in one is
-        if not key.startswith("entry:"):
+        if not key.startswith(("entry:", "page:")):  # the project's own entries and pages
             assert BUILT_IN_TEXT[f"pause.{key}"] == label
     host.game.set_locale("zh-TW")
     title = host.game.tr("pause.heading", "Paused")

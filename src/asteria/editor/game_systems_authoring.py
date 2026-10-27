@@ -46,6 +46,15 @@ from asteria.rpg.items import (
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.localization import LocaleTable, MessageSettings
 from asteria.rpg.map_rules import MapRuleSet
+from asteria.rpg.menu_pages import (
+    BLOCK_KINDS,
+    BLOCK_PLACES,
+    PAGE_ENTRY,
+    MenuBlock,
+    MenuPage,
+    default_pages,
+    page_entries,
+)
 from asteria.rpg.menu_rules import (
     ITEM_DETAILS,
     NO_STAT_GRAPH,
@@ -53,6 +62,7 @@ from asteria.rpg.menu_rules import (
     STAT_COLUMNS,
     STAT_FORMATS,
     MenuRules,
+    menu_rules,
 )
 from asteria.rpg.new_game_plus import CARRY, NewGamePlusRules
 from asteria.rpg.pets import EXP_SHARES, LEVEL_UP_HEALS, PetRules
@@ -124,6 +134,8 @@ class FormField:
     empty_label: str = ""
     toggle_label: str = "Limited"  # the check box of an ``optional_int``
     help: str = ""  # what the field means and how it counts: an ⓘ beside its label (D91)
+    # (key, values): shown only while the record's ``key`` field holds one of ``values`` (D96)
+    when: tuple = ()
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor
@@ -185,6 +197,85 @@ _STAT_LINE = (  # a stat of the Status page's detail table (D89)
         default="",
         help="Chance lines only: the battle check (Battle Options ▸ Outcome Checks) whose"
         " chance the line shows, worked out from this stat.",
+    ),
+)
+_MENU_BLOCK = (  # a block of a menu page: its kind, place and that kind's settings (D96)
+    F(
+        "kind",
+        "Block",
+        "choice",
+        choices=BLOCK_KINDS,
+        default="item_list",
+        help="Profile: the member's name, level, jobs and resource bars. Stat Points: the"
+        " stat table with a + per stat. Stat Details: the table of the other stats."
+        " Item List: the bag, with tabs, filters and the chosen thing's details.",
+    ),
+    F("place", "Place", "choice", choices=BLOCK_PLACES, default="full"),
+    F("height", "Height (0 = share the rest of its column)", "int", default=0),
+    F(
+        "stat_graph",
+        "Stat Points Are Spent In (empty: the graph tagged attributes; - : no +)",
+        "optional_ref",
+        source="stat_graphs",
+        empty_label="(the graph tagged attributes)",
+        default="",
+        when=("kind", ("stat_points",)),
+    ),
+    F(
+        "stat_columns",
+        "Stat Table Columns, in Order (none ticked: every column)",
+        "ref_list",
+        source="stat_columns",
+        default=(),
+        when=("kind", ("stat_points",)),
+    ),
+    F(
+        "stat_rows",
+        "Detail Stats of the Status Page, in Order (none ticked: every stat formula)",
+        "ref_list",
+        source="stats",
+        default=(),
+        when=("kind", ("stat_details",)),
+    ),
+    F(
+        "stat_groups",
+        "Detail Table Groups (Attack, Defence...: a heading each)",
+        "table",
+        fields=_STAT_GROUP,
+        default=(),
+        when=("kind", ("stat_details",)),
+    ),
+    F(
+        "stat_lines",
+        "Detail Table Lines (a stat each, in its group; none: Detail Stats above)",
+        "table",
+        fields=_STAT_LINE,
+        default=(),
+        when=("kind", ("stat_details",)),
+    ),
+    F(
+        "item_categories",
+        "Item Page Tabs",
+        "table",
+        fields=_ITEM_CATEGORY,
+        default=(),
+        when=("kind", ("item_list",)),
+    ),
+    F(
+        "item_filters",
+        "Item Page Filters (F)",
+        "table",
+        fields=_ITEM_FILTER,
+        default=(),
+        when=("kind", ("item_list",)),
+    ),
+    F(
+        "item_details",
+        "Item Details (panel: beside the list; button: Details / D opens it; off)",
+        "choice",
+        choices=ITEM_DETAILS,
+        default="panel",
+        when=("kind", ("item_list",)),
     ),
 )
 _MODIFIER = (
@@ -1180,7 +1271,7 @@ D26_FORMS = {
         F("enabled_switch", "Usable While Switch Is On (empty: always)", "text", default=""),
         F("order", "Order", "int", default=0),
     ),
-    "menu_rules": (
+    "menu_rules": (  # the pause menu (D96: the pages' settings moved to Menu Pages)
         F("rules_id", "Rules ID", "id"),
         F("display_name", "Name", "text", default=""),
         F(
@@ -1189,51 +1280,25 @@ D26_FORMS = {
             "ref_list",
             source="pause_entries",
             default=(),
+            help="The pause menu's entries, top to bottom. Status and Items open the Menu"
+            " Pages status and items; every other menu page is an entry of its own (Page: …)."
+            " None ticked: the engine's order, with the project's pages after Items.",
         ),
+    ),
+    "menu_pages": (  # a page of the game menu built from blocks (D96)
+        F("page_id", "Page ID", "id"),
+        F("display_name", "Name", "text", default=""),
+        F("icon_id", "Icon", "icon", default=""),
         F(
-            "stat_graph",
-            "Stat Points Are Spent In (empty: the graph tagged attributes; - : no +)",
-            "optional_ref",
-            source="stat_graphs",
-            empty_label="(the graph tagged attributes)",
-            default="",
-        ),
-        F(
-            "stat_columns",
-            "Stat Table Columns, in Order (none ticked: every column)",
-            "ref_list",
-            source="stat_columns",
-            default=(),
-        ),
-        F(
-            "stat_rows",
-            "Detail Stats of the Status Page, in Order (none ticked: every stat formula)",
-            "ref_list",
-            source="stats",
-            default=(),
-        ),
-        F(
-            "stat_groups",
-            "Detail Table Groups (Attack, Defence...: a heading each)",
+            "blocks",
+            "Blocks (top to bottom; ↑ ↓ reorder)",
             "table",
-            fields=_STAT_GROUP,
+            fields=_MENU_BLOCK,
             default=(),
-        ),
-        F(
-            "stat_lines",
-            "Detail Table Lines (a stat each, in its group; none: Detail Stats above)",
-            "table",
-            fields=_STAT_LINE,
-            default=(),
-        ),
-        F("item_categories", "Item Page Tabs", "table", fields=_ITEM_CATEGORY, default=()),
-        F("item_filters", "Item Page Filters (F)", "table", fields=_ITEM_FILTER, default=()),
-        F(
-            "item_details",
-            "Item Details (panel: beside the list; button: Details / D opens it; off)",
-            "choice",
-            choices=ITEM_DETAILS,
-            default="panel",
+            help="What the page shows, each block in its place: left or right column, or the"
+            " full width across the top. A block keeps its height; blocks without one share"
+            " what is left of their column. The page status is the pause menu's Status, items"
+            " its Items; any other page is a pause entry of its own.",
         ),
     ),
     "doodads": (
@@ -1549,6 +1614,11 @@ def _templates():
         "drop_tables": lambda key, c: DropTable(key, key),
         "inventory_rules": lambda key, c: InventoryRules(key, key),
         "menu_rules": lambda key, c: MenuRules(key, key),
+        # status / items start as the engine draws them; any other page as a bag
+        "menu_pages": lambda key, c: (
+            default_pages(menu_rules(c.database)).get(key)
+            or MenuPage(key, key, blocks=(MenuBlock("item_list"),))
+        ),
         "battle_extension_rules": lambda key, c: BattleExtensionRules(key),
         "enemy_level_rules": lambda key, c: EnemyLevelRules(key),
         "map_rule_sets": lambda key, c: MapRuleSet(key),
@@ -1666,7 +1736,8 @@ KINDS = (
         AbilityLoadoutRules,
     ),
     _Kind("menu_entries", "Pause Menu Entries", "menu_entries", "entry_id", MenuEntry),
-    _Kind("menu_rules", "Menu Pages (status, items)", "menu_rules", "rules_id", MenuRules),
+    _Kind("menu_rules", "Pause Menu", "menu_rules", "rules_id", MenuRules),
+    _Kind("menu_pages", "Menu Pages", "menu_pages", "page_id", MenuPage),
     _Kind("doodads", "Doodads", "doodads", "doodad_id", DoodadDefinition),
 )
 # the order the Game Systems list shows them in (D90): the characters and their stats first,
@@ -1674,11 +1745,12 @@ KINDS = (
 KIND_ORDER = (
     *("stat_definitions", "derived_stats", "tag_definitions", "job_point_rules"),
     "ability_loadout_rules",
-    *("menu_rules", "equipment_slots", "equipment_sets", "refine_rules", "durability_rules"),
+    *("menu_rules", "menu_pages", "menu_entries"),
+    *("equipment_slots", "equipment_sets", "refine_rules", "durability_rules"),
     *("disassembly_recipes", "battle_options", "battle_extension_rules", "enemy_level_rules"),
     *("capture_rules", "drop_tables", "pet_species", "pet_rules", "recruit_offices", "shops"),
     *("quests", "quest_boards", "factions", "achievements", "world_interactions"),
-    *("map_rule_sets", "workstations", "gacha_banners", "inventory_rules", "menu_entries"),
+    *("map_rule_sets", "workstations", "gacha_banners", "inventory_rules"),
     *("message_settings", "music_tracks", "credits_pages", "locale_tables", "doodads"),
     "new_game_plus_rules",
 )
@@ -1812,7 +1884,14 @@ class GameSystemsAuthoringController:
         if source == "pause_entries":  # the built-in pages of the pause menu (D87)
             from asteria.runtime.game_menus import PAUSE_WORDS
 
-            return tuple((e, PAUSE_WORDS.get(e, e)) for e in PAUSE_ENTRIES)
+            from .i18n import translate
+
+            built_in = tuple((e, PAUSE_WORDS.get(e, e)) for e in PAUSE_ENTRIES)
+            pages = db.menu_pages  # D96: the project's own pages, each an entry
+            return built_in + tuple(
+                (e, translate("Page: {0}").format(pages[e[len(PAGE_ENTRY) :]].display_name))
+                for e in page_entries(db)
+            )
         if source == "stat_graphs":
             graphs = db.progression_graphs
             return (NO_STAT_GRAPH,) + tuple(

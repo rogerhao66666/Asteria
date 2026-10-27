@@ -9,7 +9,7 @@ import pytest
 from test_session_events import _project
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import FORMS, GameSystemsAuthoringController
+from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
 from asteria.gameplay.formulas import FormulaContext, FormulaTerm, ValueFormula
 from asteria.gameplay.stats import ResourcePool, StatBlock
 from asteria.gameplay.tags import TagSet
@@ -55,24 +55,35 @@ def test_menu_pages_keep_their_groups_and_lines():
     assert StatGroup("misc").display_name == "misc"  # no name: its id
 
 
+def _page():
+    """D96: the detail table is a Stat Details block of a menu page."""
+    from asteria.rpg.menu_pages import MenuBlock, MenuPage
+
+    block = MenuBlock(
+        "stat_details", "right", stat_groups=RULES.stat_groups, stat_lines=RULES.stat_lines
+    )
+    return MenuPage("pages", "Pages", blocks=(block,))
+
+
 def test_the_detail_table_survives_the_editor_form():
     document = EditorDocument(_project())
     api = GameSystemsAuthoringController(document)
-    api.create("menu_rules", RULES)
-    data = api.form_data("menu_rules", "pages")
-    assert data["stat_lines"][0]["format"] == "range" and data["stat_lines"][2]["check"] == ""
-    api.edit("menu_rules", "pages", data)
-    assert api.get("menu_rules", "pages") == RULES
-    keys = {f.key for f in FORMS["menu_rules"]}
-    assert {"stat_groups", "stat_lines"} <= keys
+    api.create("menu_pages", _page())
+    data = api.form_data("menu_pages", "pages")
+    lines = data["blocks"][0]["stat_lines"]
+    assert lines[0]["format"] == "range" and lines[2]["check"] == ""
+    api.edit("menu_pages", "pages", data)
+    assert api.get("menu_pages", "pages") == _page()
 
 
 def test_the_editor_words_the_detail_table_in_chinese():
     import json
 
+    from asteria.editor.game_systems_authoring import _MENU_BLOCK
+
     path = Path(__file__).resolve().parents[1] / "src/asteria/editor/translations/zh_TW.json"
     words = json.loads(path.read_text(encoding="utf-8"))["exact"]
-    fields = {f.key: f for f in FORMS["menu_rules"]}
+    fields = {f.key: f for f in _MENU_BLOCK}
     labels = [fields["stat_groups"].label, fields["stat_lines"].label, "Penetration Stat"]
     for key in ("stat_groups", "stat_lines"):
         labels += [f.label for f in fields[key].fields]
@@ -203,16 +214,17 @@ def window():
 def test_the_menu_pages_form_edits_the_detail_table(window):
     editor = window.game_systems_editor
     api = editor.controller
-    api.create("menu_rules", RULES)
-    editor.set_kind("menu_rules")
+    api.create("menu_pages", _page())
+    editor.set_kind("menu_pages")
     editor.refresh("pages")
     assert editor.apply(), editor.status.text()
-    assert api.get("menu_rules", "pages") == RULES
-    lines = editor.form.widgets["stat_lines"]
+    assert api.get("menu_pages", "pages") == _page()
+    blocks = editor.form.widgets["blocks"]
+    lines = blocks.detail.widgets["stat_lines"]
     row = {"stat_id": "defense", "group": "battle", "format": "percent", "spread": 0.0}
     lines.set_rows([*lines.values(), {**row, "label": "Guard", "check": ""}])
     assert editor.apply(), editor.status.text()
-    added = api.get("menu_rules", "pages").stat_lines[-1]
+    added = api.get("menu_pages", "pages").blocks[0].stat_lines[-1]
     assert (added.stat_id, added.group, added.format, added.label) == (
         "defense",
         "battle",

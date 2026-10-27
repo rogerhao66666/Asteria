@@ -8,6 +8,9 @@ whole sentences of quest and stat descriptions. ``LINES``: dialogue lines and ch
 WORDS = {
     # -- Menu Pages: the Items page's tabs and filters (D87) ------------------------------------
     "Trial menu pages": "試煉選單頁面",
+    "Pause menu": "暫停選單",  # D96: the pause menu record; its pages are their own
+    "Status": "狀態",
+    "Items": "道具",
     "All": "全部",
     "Consumables": "消耗品",
     "Throwables": "投擲物",

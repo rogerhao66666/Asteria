@@ -48,7 +48,7 @@ DATA_GROUPS = (
     ("Data: factions and achievements", ("factions", "achievements")),
     ("Data: world interactions", ("world_interactions",)),
     ("Data: party setups and drop tables", ("party_setups", "drop_tables")),
-    ("Data: menu pages (item tabs and filters)", ("menu_rules",)),
+    ("Data: menu pages (item tabs and filters)", ("menu_rules", "menu_pages")),
 )
 MAPS_GROUP = "Data: map names"
 CURRENCY_GROUP = "Data: currencies"
@@ -64,6 +64,7 @@ CATEGORY_GROUP = "Data: quest card categories"
 # quest objectives, skill-tree / growth nodes, workstation tabs, gacha rarities, the Items
 # page's tabs and filters
 NESTED = (
+    "blocks",  # a menu page's blocks (D96), whose tabs and filters have names
     "objectives",
     "nodes",
     "categories",
@@ -96,8 +97,9 @@ def _records(project, table):
 
 def _rows_of(record):
     known = kind_of(record)
-    if known is None:
-        return []
+    if known is None:  # a part with no name of its own (a menu block): its children's
+        return [row for a in NESTED for child in getattr(record, a, ()) or () for row in
+                _rows_of(child)]  # fmt: skip
     rows = []
     name = str(getattr(record, "display_name", "") or "")
     if name:

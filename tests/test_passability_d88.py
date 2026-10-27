@@ -319,9 +319,12 @@ def test_item_details_can_be_a_panel_a_button_or_off(runtime):
     with runtime.menu_fit():
         runtime._draw_status_menu()
     assert menu.details_mode == "panel"
-    rules = runtime.project.rpg_database.menu_rules
-    rule_id = next(iter(rules))
-    rules[rule_id] = MenuRules.from_data({**rules[rule_id].to_data(), "item_details": "button"})
+    from asteria.rpg.menu_pages import MenuBlock, MenuPage
+
+    pages = runtime.project.rpg_database.menu_pages  # D96: the Items page's Item List block
+    block = pages["items"].blocks[0]
+    data = {**block.to_data(), "item_details": "button"}
+    pages["items"] = MenuPage("items", "Items", blocks=(MenuBlock.from_data(data),))
     runtime._open_pause_page("items")
     menu = runtime.status_menu
     assert menu.details_mode == "button"

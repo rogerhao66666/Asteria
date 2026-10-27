@@ -96,7 +96,7 @@ def test_the_tag_page_lists_who_carries_and_what_reads(demo):
     assert "Classes brave" in text and "Any capabilities" in text
     assert "Engine:" in tag_usage(demo, "no_escape")
     groups = tag_usage(demo, "consumable")  # a menu category reads it, it carries nothing
-    assert "Menu rules trial_menu (Category)" in groups
+    assert "Menu pages items (Category)" in groups  # D96: the Items page's tab
 
 
 def test_an_undefined_tag_is_a_problem_once_tags_are_defined(demo):

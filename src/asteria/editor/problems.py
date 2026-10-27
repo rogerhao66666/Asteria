@@ -408,8 +408,12 @@ def used_stats(project):
         found.update(rule.multiplier_target_terms or {})
     for policy in db.battle_state_policies.values():
         found.update(policy.target_stat_terms or {})
-    for menu in db.menu_rules.values():
-        found.update(line.stat_id for line in menu.stat_lines)
+    from asteria.rpg.menu_pages import menu_pages
+
+    for page in menu_pages(db).values():  # D96: the pages' detail tables
+        for block in page.blocks:
+            found.update(line.stat_id for line in block.stat_lines)
+            found.update(block.stat_rows)
     return {s for s in found if s}
 
 

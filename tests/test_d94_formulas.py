@@ -202,3 +202,27 @@ def test_the_stat_formula_page_has_a_formula_field_and_refuses_a_bad_one(app, pr
         form.data()
     field.edit.setText("self.dex * 2")
     assert form.data()["expression"] == "self.dex * 2"
+
+
+def test_the_status_pages_chance_lines_read_a_checks_formula():
+    """A detail line written as a chance (Status page: ACC, EVA through the land check) reads
+    the check's formula as it read its terms: the same numbers."""
+    from asteria.rpg.interactions import OutcomeCheckDefinition
+    from asteria.rpg.menu_rules import StatLine
+
+    terms = OutcomeCheckDefinition(
+        "land",
+        0.95,
+        source_stat_terms={"accuracy": 0.003},
+        target_stat_terms={"evade": -0.003},
+        minimum_chance=0.3,
+    )
+    formula = OutcomeCheckDefinition(
+        "land",
+        0.95,
+        chance_expression="0.95 + 0.003 * source.accuracy - 0.003 * target.evade",
+        minimum_chance=0.3,
+    )
+    for stat, value in (("accuracy", -300), ("accuracy", 10), ("evade", 50), ("evade", 900)):
+        line = StatLine(stat, format="chance", check="land")
+        assert line.chance(value, formula) == pytest.approx(line.chance(value, terms))

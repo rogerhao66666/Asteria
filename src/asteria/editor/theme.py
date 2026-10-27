@@ -144,9 +144,11 @@ WORKSPACE_ACCENTS = {
 _TEMPLATE = Template(
     """
 QMainWindow, QDialog { background: $base; color: $text; }
-QToolTip, QLabel#HelpBox { background: $raised; color: $text; border: 1px solid $border_strong;
+QToolTip { background: $raised; color: $text; border: 1px solid $border_strong;
 padding: 5px 8px;
 border-radius: 5px; }
+QLabel#HelpBox { background: $help_bg; color: $text; border: 1px solid $border_strong;
+padding: 4px 7px; border-radius: 5px; }
 /* -- docks -------------------------------------------------------------------------------------
 */
 QDockWidget { color: $text_dim; font-weight: 600; border: 0; }
@@ -678,8 +680,15 @@ def _workspace_rules(palette):
     return "\n".join(rules)
 
 
+def _see_through(colour, alpha=0.86):
+    """``#rrggbb`` as ``rgba(...)``: the help box lets what it covers show through (D95)."""
+    r, g, b = (int(colour[i : i + 2], 16) for i in (1, 3, 5))
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
 def build_qss(palette):
     tokens = {f.name: getattr(palette, f.name) for f in fields(palette)}
+    tokens["help_bg"] = _see_through(palette.raised)
     return _TEMPLATE.substitute(tokens) + _workspace_rules(palette) + _form_rules(palette) + "\n"
 
 

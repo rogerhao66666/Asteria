@@ -28,6 +28,7 @@ import re
 
 import shiboken6
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QAbstractButton,
     QAbstractScrollArea,
@@ -41,6 +42,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QStyle,
+    QStyleOption,
     QTabWidget,
     QToolButton,
     QWidget,
@@ -356,9 +359,9 @@ def shows_tooltip(widget):
     return HELP_MARK in str(text or "")
 
 
-HELP_GAP = 6  # between the help box and its mark
+HELP_GAP = 4  # between the mark and its help box
 HELP_WIDTH = 460  # the widest a help box gets: longer help wraps
-HELP_MIN_WIDTH = 200  # narrower than this the help reads badly: it opens on the right instead
+HELP_MIN_WIDTH = 200  # narrower than this the help reads badly: it opens on the left instead
 
 
 class HelpBox(QLabel):
@@ -369,8 +372,20 @@ class HelpBox(QLabel):
         super().__init__(None, Qt.ToolTip | Qt.FramelessWindowHint)
         self.setObjectName("HelpBox")
         self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WA_TranslucentBackground)  # see-through: only a hint (D95)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.setTextFormat(Qt.PlainText)
         self.owner = None
+
+    def paintEvent(self, event):  # noqa: N802 - Qt
+        # a see-through window draws no stylesheet background on its own: draw it (the theme's
+        # half-clear colour, border and corners), then the words
+        option = QStyleOption()
+        option.initFrom(self)
+        painter = QPainter(self)
+        self.style().drawPrimitive(QStyle.PE_Widget, option, painter, self)
+        painter.end()
+        super().paintEvent(event)
 
 
 _HELP_BOX = []
@@ -389,11 +404,10 @@ def _alive():
 
 
 def show_help_tip(widget):
-    """Show ``widget``'s help on its left (D93): the box's right edge beside the widget's left
-    edge, level with its top, wherever the mouse came in - the same place for every ⓘ (a
-    field's label, a section's mark), never under the pointer. Long help wraps to the room on
-    the left; with less than ``HELP_MIN_WIDTH`` there (a window against the screen's edge) it
-    opens on the widget's right. Kept on the screen; it goes when the mouse leaves the mark."""
+    """Show ``widget``'s help right beside its ⓘ (D95): the box's left edge just past the mark,
+    level with the label, see-through, over whatever is there - it is only a hint. Long help
+    wraps to the room on the right; with less than ``HELP_MIN_WIDTH`` there (a mark against
+    the screen's edge) it opens on the mark's left. It goes when the mouse leaves the mark."""
     text = widget.toolTip()
     if not text:
         return False
@@ -403,19 +417,22 @@ def show_help_tip(widget):
     box.setMinimumWidth(0)
     box.setMaximumWidth(16777215)
     box.adjustSize()
-    corner = widget.mapToGlobal(QPoint(_text_left(widget), 0))
+    left_edge, right_edge = _mark_span(widget)
+    mark = widget.mapToGlobal(QPoint(right_edge, 0))
     screen = widget.screen().availableGeometry()
-    room = corner.x() - HELP_GAP - screen.left()
-    left = room >= HELP_MIN_WIDTH
-    if not left:
-        room = screen.right() - (widget.mapToGlobal(QPoint(widget.width(), 0)).x() + HELP_GAP)
+    room = screen.right() - (mark.x() + HELP_GAP)
+    right = room >= HELP_MIN_WIDTH
+    if not right:
+        room = widget.mapToGlobal(QPoint(left_edge, 0)).x() - HELP_GAP - screen.left()
     width = min(box.width(), HELP_WIDTH, max(HELP_MIN_WIDTH, room))
     box.setWordWrap(True)
     box.setFixedWidth(width)
     box.setFixedHeight(box.heightForWidth(width))
-    right = widget.mapToGlobal(QPoint(widget.width(), 0)).x() + HELP_GAP
-    x = corner.x() - width - HELP_GAP if left else right
-    y = max(screen.top(), min(corner.y(), screen.bottom() - box.height()))
+    if right:
+        x = mark.x() + HELP_GAP
+    else:
+        x = widget.mapToGlobal(QPoint(left_edge, 0)).x() - HELP_GAP - width
+    y = max(screen.top(), min(mark.y(), screen.bottom() - box.height()))
     box.owner = widget
     box.show()
     box.move(max(screen.left(), x), y)  # after showing: macOS shifts a window moved unshown
@@ -423,13 +440,26 @@ def show_help_tip(widget):
     return True
 
 
-def _text_left(widget):
-    """Where a label's words start (a right-aligned label is wider than its words)."""
-    if not isinstance(widget, QLabel) or not widget.alignment() & Qt.AlignRight:
-        return 0
+def _mark_span(widget):
+    """``(left, right)``: where the ⓘ is drawn inside ``widget``, in its own x. A label's mark
+    is found in its words (wherever they are aligned); any other widget's is its whole width."""
+    if not isinstance(widget, QLabel) or HELP_MARK not in widget.text():
+        return 0, widget.width()
+    lines = widget.text().split("\n")
+    line = next(ln for ln in lines if HELP_MARK in ln)
+    metrics = widget.fontMetrics()
     area = widget.contentsRect()
-    width = max(widget.fontMetrics().horizontalAdvance(line) for line in widget.text().split("\n"))
-    return max(0, area.right() - width)
+    used = metrics.horizontalAdvance(line)
+    if widget.alignment() & Qt.AlignRight:
+        start = area.right() - used
+    elif widget.alignment() & Qt.AlignHCenter:
+        start = area.center().x() - used // 2
+    else:
+        start = area.left() + max(0, widget.indent())
+    index = line.index(HELP_MARK)
+    left = start + metrics.horizontalAdvance(line[:index])
+    right = start + metrics.horizontalAdvance(line[: index + 1])
+    return max(0, left), min(widget.width(), right)
 
 
 def hide_help_tip(widget=None):
@@ -447,7 +477,7 @@ class _Decorator(QObject):
                 hide_help_tip(obj)  # the mouse left the mark: its help goes
         if kind == QEvent.ToolTip and isinstance(obj, QWidget):
             if shows_tooltip(obj):
-                return show_help_tip(obj)  # on the left of its mark
+                return show_help_tip(obj)  # right beside its mark
             return True  # swallowed: no tooltip (see ``shows_tooltip``)
         if kind == QEvent.Wheel and isinstance(obj, QAbstractSpinBox):
             # Scrolling never edits a number: hand the wheel to the containing scroll area
