@@ -157,6 +157,28 @@ def test_flowing_button_rows_leaves_no_layout_item_wrappers():
     page.deleteLater()
 
 
+def test_a_card_lists_first_line_is_measured_without_layout_item_wrappers():
+    """D84 measured a card list's first line with ``layout().itemAt(0)`` for every form row,
+    the same stale-wrapper crash as above: CI segfaulted while garbage-collecting (D99)."""
+    import gc
+    from types import SimpleNamespace
+
+    from PySide6.QtWidgets import QApplication, QLabel
+
+    from asteria.editor.record_form import CardList, _first_line_height
+
+    QApplication.instance() or QApplication([])
+    form = SimpleNamespace(vocabulary=SimpleNamespace(names=dict))
+    cards = CardList(form, {}, "phases", [])
+    label = cards.findChild(QLabel)
+    label.ensurePolished()
+    gc.collect()
+    before = {id(w) for w in _layout_item_wrappers()}
+    assert _first_line_height(cards) == label.fontMetrics().height()
+    assert [w for w in _layout_item_wrappers() if id(w) not in before] == []
+    cards.deleteLater()
+
+
 def test_record_editor_shows_readable_field_names_and_keeps_the_data():
     from PySide6.QtWidgets import QApplication
 

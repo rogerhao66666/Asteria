@@ -1647,9 +1647,13 @@ def _first_line_height(widget):
     if isinstance(widget, QLabel):
         widget.ensurePolished()  # its own small font, not the default one
         return widget.fontMetrics().height()
-    first = widget.layout().itemAt(0) if widget.layout() is not None else None
-    if isinstance(widget, CardList) and first is not None and isinstance(first.widget(), QLabel):
-        return _first_line_height(first.widget())  # "No entries yet." / "12 entries..."
+    if isinstance(widget, CardList) and widget.layout() is not None:
+        from .ui_fit import layout_widgets  # not itemAt: see layout_widgets
+
+        layout = widget.layout()
+        first = next((w for w in layout_widgets(layout) if layout.indexOf(w) == 0), None)
+        if isinstance(first, QLabel):
+            return _first_line_height(first)  # "No entries yet." / "12 entries..."
     if isinstance(widget, ChipList):
         chip = widget.findChild(QToolButton)
         return max(22, chip.sizeHint().height() if chip is not None else 24)
