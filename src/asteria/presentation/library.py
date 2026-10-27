@@ -30,12 +30,7 @@ from .battle_ui_renderer import BattleUiTheme
 from .creature_screens import CreatureScreenSettings
 from .dialogue_window import DialogueWindowStyle
 from .menu_layout import MenuBitmapFont, MenuLayout, MenuTheme
-from .rpg_ability_screen import AbilityScreenProfile
-from .rpg_character_screen import CharacterScreenProfile
-from .rpg_equipment_screen import EquipmentScreenProfile
-from .rpg_inventory_screen import InventoryScreenProfile
-from .rpg_party_screen import PartyScreenProfile
-from .rpg_progression_screen import ProgressionScreenProfile
+from .retired_screens import RETIRED_CATEGORIES
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,12 +67,6 @@ class BattlePresentationLibrary:
         "ui_theme",
         "motion_sequences",
         "action_workflows",
-        "rpg_character_screen",
-        "rpg_equipment_screen",
-        "rpg_ability_screen",
-        "rpg_progression_screen",
-        "rpg_inventory_screen",
-        "rpg_party_screen",
         "menu_layout",  # one per menu screen, keyed by its screen id (U2)
         "menu_theme",
         "bitmap_font",  # fonts drawn by hand, keyed by font id (V1)
@@ -95,6 +84,7 @@ class BattlePresentationLibrary:
 
     def __init__(self):
         self._records = {k: {} for k in self.CATEGORIES}
+        self.retired = {}  # D98: an old file's retired screen records, until moved
 
     def categories(self):
         return self.CATEGORIES
@@ -166,12 +156,6 @@ class BattlePresentationLibrary:
             "ui_theme": BattleUiTheme,
             "motion_sequences": BattleMotionSequence,
             "action_workflows": BattleActionWorkflowDefinition,
-            "rpg_character_screen": CharacterScreenProfile,
-            "rpg_equipment_screen": EquipmentScreenProfile,
-            "rpg_ability_screen": AbilityScreenProfile,
-            "rpg_progression_screen": ProgressionScreenProfile,
-            "rpg_inventory_screen": InventoryScreenProfile,
-            "rpg_party_screen": PartyScreenProfile,
             "menu_layout": MenuLayout,
             "menu_theme": MenuTheme,
             "bitmap_font": MenuBitmapFont,
@@ -404,7 +388,11 @@ class BattlePresentationLibrary:
         if data.get("schema") != cls.SCHEMA or data.get("version") != cls.VERSION:
             raise ValueError("unsupported battle presentation library")
         result = cls()
-        raw_categories = data.get("categories", {})
+        raw_categories = dict(data.get("categories", {}))
+        # the screen records retired in D98: kept as data for the project to move (Project)
+        result.retired = {
+            k: raw_categories.pop(k) for k in RETIRED_CATEGORIES if k in raw_categories
+        }
         unknown = set(raw_categories) - set(cls.CATEGORIES)
         if unknown:
             raise ValueError(

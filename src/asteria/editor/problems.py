@@ -4,7 +4,7 @@
 validators check, keeping every issue (``Project.validate`` stops at the
 first one), and gives each a ``target`` the shell can navigate to:
 
-    ("record", family, category_id, record_id)   family: rpg | battle | presentation | runtime_ui
+    ("record", family, category_id, record_id)   family: rpg | battle | presentation
     ("game_system", kind_id, record_id)          shops, quests, equipment sets, capture rules...
     ("scene", scene_id) / ("entity", scene_id, entity_id)
     ("sprite", asset_id) / ("sequence", sequence_id)

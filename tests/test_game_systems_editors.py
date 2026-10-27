@@ -228,6 +228,8 @@ def test_apply_without_changes_round_trips_every_kind(window):
     editor = window.game_systems_editor
     api = editor.controller
     for kind in KINDS:
+        if kind.kind_id in ("menu_rules", "menu_pages", "menu_entries"):
+            continue  # one Pause Menu page (D97): test_menu_pages
         key = "iron_guard" if kind.kind_id == "capture_rules" else f"rt_{kind.kind_id}"
         api.create_new(kind.kind_id, key)
         before = api.get(kind.kind_id, key)

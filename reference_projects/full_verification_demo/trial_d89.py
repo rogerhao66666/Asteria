@@ -89,11 +89,11 @@ STATS = {
 }
 
 NODES = (  # new or changed nodes of the attributes graph: id, name, reward, max rank
-    ("attr_vit", "VIT (Vitality)", {"stat_bonuses": {"vit": 1.0}}, 30),
+    ("attr_vit", "VIT", {"stat_bonuses": {"vit": 1.0}}, 30),
     ("attr_hp", "HP", {"resource_bonuses": {"vitality": 100.0}}, 50),
     ("attr_mp", "MP", {"resource_bonuses": {"technique": 30.0}}, 50),
 )
-NODE_ZH = {"attr_vit": "體力（VIT）", "attr_hp": "HP", "attr_mp": "MP"}
+NODE_ZH = {"attr_vit": "VIT", "attr_hp": "HP", "attr_mp": "MP"}
 
 FORMULAS = (  # (stat, terms, base): stat formulas the new stats need
     ("bp_power", {"bp_bonus": 1.0}, 100.0),
@@ -334,7 +334,7 @@ def chinese():
 
 def patch_menu(db):
     rules = next(r for r in db["menu_rules"] if r["rules_id"] == "trial_menu")
-    rules["stat_columns"] = ["total", "base", "points", "gear", "gain"]  # no rank (D89)
+    rules["stat_columns"] = ["total", "base", "points", "gear"]  # no rank (D89), no gain (D98)
     rules["stat_groups"] = [{"group_id": g, "display_name": en} for g, en, _zh, _l in GROUPS]
     rules["stat_lines"] = [
         {
@@ -354,7 +354,8 @@ def patch_words(data):
     from asteria.rpg.built_in_text import engine_translations
 
     db = data["rpg_database"]
-    screens = data["battle_presentation_library"]["categories"]["rpg_character_screen"]
+    # D98: the screen record is retired (its names moved to the Stats); older files have it
+    screens = data["battle_presentation_library"]["categories"].get("rpg_character_screen", {})
     for screen in screens.values():
         labels = {**screen["stat_labels"], **{s: en for s, (en, *_rest) in STATS.items()}}
         screen["stat_labels"] = dict(sorted(labels.items()))

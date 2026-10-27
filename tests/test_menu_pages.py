@@ -56,8 +56,9 @@ def test_menu_pages_are_a_game_systems_record_that_survives_the_form():
 
     restored = RpgDatabase.from_data(document.project.rpg_database.to_data())
     assert menu_rules(restored) == RULES
-    entries = dict(p if isinstance(p, tuple) else (p, p) for p in api.references("pause_entries"))
-    assert entries["items"] == "Items" and "status" in entries
+    entries = {e: (name, why_not) for e, name, why_not in api.references("pause_entries")}
+    assert entries["items"] == ("Items", "") and "status" in entries
+    assert entries["pets"] == ("Pets", "the game has pet species")  # D97: greyed, and why
     assert api.references("stat_graphs")[0] == "-"
 
 
@@ -92,11 +93,11 @@ def test_the_menu_pages_form_shows_and_applies(window):
     editor = window.game_systems_editor
     api = editor.controller
     api.create("menu_pages", page)
-    editor.set_kind("menu_pages")
-    editor.refresh("bag")
+    editor.set_kind("pause_menu")  # D97: a page is a row of the Pause Menu
+    editor.refresh("page:bag")
     assert editor.apply(), editor.status.text()
     assert api.get("menu_pages", "bag") == page
-    blocks = editor.form.widgets["blocks"]
+    blocks = editor.pause.form.widgets["blocks"]
     assert [blocks.list.item(i).text() for i in range(blocks.list.count())] == [
         "Profile  ·  Left",
         "Item List  ·  Right",
@@ -183,10 +184,19 @@ def test_menu_pages_order_the_pause_menu(host):
     from asteria.runtime.playtest.menu_pages import MenuPagesMixin
 
     host.project.rpg_database.menu_rules["trial_menu"] = MenuRules(
-        "trial_menu", pause_entries=("items", "pets", "resume", "save")
+        "trial_menu", pause_entries=("items", "pets", "resume"), pause_hidden=("status", "quit")
     )
     options, _icons, _keys = MenuPagesMixin._pause_options(host)
-    assert [k for k, _ in options] == ["items", "pets", "resume", "save", "entry:camp"]
+    keys = [k for k, _ in options]
+    listed = [k for k in keys if k in ("items", "pets", "resume")]
+    assert listed == ["items", "pets", "resume"]  # the author's order
+    assert keys[:2] == ["items", "page:materials"]  # left out: its place, after Items
+    assert "status" not in keys and "quit" not in keys  # hidden
+    assert keys[keys.index("settings") - 1] == "entry:camp"  # its place: before Settings
+    old = MenuRules.from_data(  # version 1: the order showed only the entries it listed
+        {"rules_id": "m", "version": 1, "pause_entries": ["items", "resume"]}
+    )
+    assert "status" in old.pause_hidden and "items" not in old.pause_hidden
 
 
 def test_the_status_page_raises_a_stat_with_its_plus(host):
@@ -271,3 +281,64 @@ def test_default_item_tabs_without_menu_pages():
     assert tabs[0] == "all"
     assert tabs == (["all", "item", "equipment"] if db.items and db.equipment else ["all"])
     assert [f.filter_id for f in menu.filters()] == ["usable"]
+
+
+def test_the_pause_menu_lists_every_entry_to_tick_and_move(window):
+    """D97: Game Systems ▸ Pause Menu lists the whole menu in the game's order; an unticked
+    entry is hidden, a moved one keeps its new place, and one the game cannot show is grey."""
+    from PySide6.QtCore import QModelIndex, Qt
+
+    editor = window.game_systems_editor
+    api = editor.controller
+    assert not api.ids("menu_rules")  # made when the order is first changed
+    editor.set_kind("pause_menu")
+    order = editor.pause.order
+    rows = [order.list.item(i) for i in range(order.list.count())]
+    assert [r.data(Qt.UserRole) for r in rows][:3] == ["resume", "status", "items"]
+    assert all(r.checkState() == Qt.Checked for r in rows)
+    pets = next(r for r in rows if r.data(Qt.UserRole) == "pets")
+    assert "pet species" in pets.toolTip()  # grey: the game has no pet species
+    assert order.order() == []  # the engine's order: nothing written
+    rows[1].setCheckState(Qt.Unchecked)  # hide Status: saved at once
+    assert api.get("menu_rules", "pause").pause_hidden == ("status",)
+    assert order.list.model().moveRow(QModelIndex(), 2, QModelIndex(), 0)  # Items to the top
+    rules = api.get("menu_rules", "pause")
+    assert rules.pause_entries[:3] == ("items", "resume", "status")
+    assert rules.pause_hidden == ("status",)
+    order._engine_order()  # Back to the Engine's Order: the ticks stay
+    assert order.order() == [] and order.hidden() == ["status"]
+
+
+def test_the_pause_menu_adds_and_removes_pages_and_event_entries(window):
+    """D97: New Page / New Event Entry add a row named by the author (its id made from the
+    name), the row's page edits it, and Delete takes it out of the menu and its order;
+    Status, Items and the other built-in entries cannot be deleted, a changed Status page
+    goes back to the engine's."""
+    from PySide6.QtCore import Qt
+
+    from asteria.editor.pause_menu_widget import _new_id
+
+    editor = window.game_systems_editor
+    api = editor.controller
+    editor.set_kind("pause_menu")
+    pause = editor.pause
+    assert pause.new_page("Key Items") and pause.selected == "page:key_items"
+    assert api.get("menu_pages", "key_items").display_name == "Key Items"
+    assert "page_id" not in pause.form.widgets  # the id is made from the name
+    pause.form.widgets["display_name"].setText("Keys")
+    assert editor.apply(), editor.status.text()
+    assert pause.order.list.currentItem().text() == "Page: Keys"
+    assert pause.new_entry("Make Camp") and pause.selected == "entry:make_camp"
+    assert {"entry_id", "order"}.isdisjoint(pause.form.widgets)  # its place: the list's
+    pause.order.list.item(0).setCheckState(Qt.Unchecked)  # the order is written now
+    assert pause.delete_record("menu_entries", "make_camp")
+    assert "make_camp" not in api.ids("menu_entries")
+    assert all("make_camp" not in e for e in api.get("menu_rules", "pause").pause_entries)
+    pause.refresh("status")
+    assert pause.form is not None and "status" not in api.ids("menu_pages")  # the engine's
+    pause.form.widgets["display_name"].setText("Member")
+    assert pause.apply() and api.get("menu_pages", "status").display_name == "Member"
+    assert pause.delete_record("menu_pages", "status")  # Back to the Engine's Page
+    pause.refresh("settings")
+    assert pause.form is None  # a built-in screen: nothing to edit, only what it opens
+    assert _new_id("鑰匙", (), "page") == "page" and _new_id("A b", ("a_b",), "x") == "a_b2"

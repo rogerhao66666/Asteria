@@ -22,6 +22,7 @@ def _game(mode):
     _project, game = smoke.load()
     inventory = game.save.rpg_state.inventory
     inventory.rules = dataclasses.replace(inventory.rules, equip_offer=mode)
+    game.save.rpg_state.equipment_bag.clear()  # D98: the demo starts with spare gear
     return game
 
 

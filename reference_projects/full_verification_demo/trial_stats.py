@@ -251,11 +251,11 @@ def _attributes(c):
 
     int_reward = {**bonus(int=1), "resource_bonuses": {SP: 4}}
     nodes = (
-        node("attr_str", "STR (Strength)", 30, points, bonus(str=1)),
-        node("attr_dex", "DEX (Dexterity)", 30, points, bonus(dex=1)),
-        node("attr_int", "INT (Intellect)", 30, points, int_reward),
-        node("attr_luk", "LUK (Luck)", 30, points, bonus(luk=1)),
-        node("attr_vit", "VIT (Vitality)", 30, points, {"resource_bonuses": {HP: 70}}),
+        node("attr_str", "STR", 30, points, bonus(str=1)),
+        node("attr_dex", "DEX", 30, points, bonus(dex=1)),
+        node("attr_int", "INT", 30, points, int_reward),
+        node("attr_luk", "LUK", 30, points, bonus(luk=1)),
+        node("attr_vit", "VIT", 30, points, {"resource_bonuses": {HP: 70}}),
     )  # fmt: skip
     graph = db.progression_graphs["attributes"]
     tags = tuple(dict.fromkeys((*graph.tags, "shared")))  # every hero's tree screen shows it
@@ -490,7 +490,8 @@ def _status_screen(c):
         "lifesteal",
         *(f"{e}_{kind}" for e in ELEMENTS for kind in ("attack", "resist")),
     )
-    for profile_id in library.ids("rpg_character_screen"):
+    retired = "rpg_character_screen" not in library.CATEGORIES  # D98: names live in the Stats
+    for profile_id in () if retired else library.ids("rpg_character_screen"):
         profile = library.require("rpg_character_screen", profile_id)
         library.set(
             "rpg_character_screen",

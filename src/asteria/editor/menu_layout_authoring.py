@@ -8,7 +8,7 @@ steps back one edit at a time. A screen with no layout draws as the engine alway
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 from asteria.presentation.menu_layout import (
     EXTRA,
@@ -21,11 +21,39 @@ from asteria.presentation.menu_layout import (
     screen_spec,
 )
 
-from .runtime_rpg_ui_authoring import _ProfileCommand
-
 
 class MenuLayoutAuthoringError(RuntimeError):
     pass
+
+
+@dataclass(slots=True)
+class _ProfileCommand:
+    """One undoable change of a presentation library record (``None``: removed)."""
+
+    library: object
+    category: str
+    profile_id: str
+    new_value: object | None
+    old_value: object | None
+    description: str
+
+    @property
+    def label(self):
+        return self.description
+
+    def redo(self):
+        if self.new_value is None:
+            if self.library.get(self.category, self.profile_id) is not None:
+                self.library.remove(self.category, self.profile_id)
+        else:
+            self.library.set(self.category, self.profile_id, self.new_value)
+
+    def undo(self):
+        if self.old_value is None:
+            if self.library.get(self.category, self.profile_id) is not None:
+                self.library.remove(self.category, self.profile_id)
+        else:
+            self.library.set(self.category, self.profile_id, self.old_value)
 
 
 # screens each record of a kind may have its own layout of (``<screen>.<record id>``): every

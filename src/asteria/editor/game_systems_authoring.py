@@ -49,16 +49,18 @@ from asteria.rpg.map_rules import MapRuleSet
 from asteria.rpg.menu_pages import (
     BLOCK_KINDS,
     BLOCK_PLACES,
+    MENU_ENTRY,
     PAGE_ENTRY,
+    PAUSE_NEEDS,
     MenuBlock,
     MenuPage,
     default_pages,
-    page_entries,
+    engine_pause_order,
+    usable_pause_entries,
 )
 from asteria.rpg.menu_rules import (
     ITEM_DETAILS,
     NO_STAT_GRAPH,
-    PAUSE_ENTRIES,
     STAT_COLUMNS,
     STAT_FORMATS,
     MenuRules,
@@ -115,6 +117,8 @@ class FormField:
     ``icon`` (a picture id picked from the project's icons or the built-in library),
     ``choice`` (``choices``), ``ref`` / ``ref_list`` (``source`` names a
     reference list, see :meth:`GameSystemsAuthoringController.references`),
+    ``pause_order`` (the pause menu top to bottom with a tick each: the order in ``key``, the
+    unticked entries in ``hidden_key``; D97),
     ``optional_ref`` (may be empty; ``empty_label`` names that choice), ``optional_int`` (None
     allowed). A reference list may hold ``(id, name)`` pairs: the form shows the name and keeps
     the id,
@@ -136,6 +140,7 @@ class FormField:
     help: str = ""  # what the field means and how it counts: an ⓘ beside its label (D91)
     # (key, values): shown only while the record's ``key`` field holds one of ``values`` (D96)
     when: tuple = ()
+    hidden_key: str = ""  # a ``pause_order``'s unticked entries (D97)
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor
@@ -1276,13 +1281,17 @@ D26_FORMS = {
         F("display_name", "Name", "text", default=""),
         F(
             "pause_entries",
-            "Pause Menu Pages, in Order (none ticked: the engine's order; drag to reorder)",
-            "ref_list",
+            "Pause Menu, Top to Bottom (ticked: shown; drag a row to move it)",
+            "pause_order",
             source="pause_entries",
+            hidden_key="pause_hidden",
             default=(),
-            help="The pause menu's entries, top to bottom. Status and Items open the Menu"
-            " Pages status and items; every other menu page is an entry of its own (Page: …)."
-            " None ticked: the engine's order, with the project's pages after Items.",
+            help="Every entry of the pause menu as the game lists it. Untick an entry to hide"
+            " it; drag it up or down to move it. Status and Items open the Menu Pages status"
+            " and items; every other menu page (Page: …) and Pause Menu Entry (Entry: …) is"
+            " an entry of its own. A grey entry needs something the game does not have yet;"
+            " it shows once the game has it. A page added later takes its place in the"
+            " engine's order: after Items.",
         ),
     ),
     "menu_pages": (  # a page of the game menu built from blocks (D96)
@@ -1872,6 +1881,35 @@ class GameSystemsAuthoringController:
 
         return IconLibrary(self.document)
 
+    def _pause_entries(self):
+        """``(id, name, why_not)`` of every pause entry in the engine's order: ``why_not`` what
+        the game lacks for one it cannot show yet (``rpg.menu_pages.PAUSE_NEEDS``)."""
+        from asteria.runtime.game_menus import PAUSE_WORDS
+
+        from .i18n import translate
+
+        db = self.database
+        messages = db.message_settings
+        backlog = messages[sorted(messages)[0]].backlog_limit if messages else 0
+        usable = usable_pause_entries(
+            db,
+            loadouts=bool(db.equipment),  # the party's slots come with the game's equipment
+            backlog=backlog,
+            abilities=self.project.gameplay_library.abilities.ids(),
+        )
+        out = []
+        for entry in engine_pause_order(db):
+            if entry.startswith(PAGE_ENTRY):  # D96: the project's own pages
+                name = db.menu_pages[entry[len(PAGE_ENTRY) :]].display_name
+                name = translate("Page: {0}").format(name)
+            elif entry.startswith(MENU_ENTRY):  # Pause Menu Entries
+                found = db.menu_entries[entry[len(MENU_ENTRY) :]]
+                name = translate("Entry: {0}").format(found.label or found.entry_id)
+            else:
+                name = translate(PAUSE_WORDS.get(entry, entry))
+            out.append((entry, name, "" if entry in usable else PAUSE_NEEDS[entry]))
+        return tuple(out)
+
     def references(self, source):
         """Choices for ``ref`` / ``ref_list`` form fields."""
         db = self.database
@@ -1881,17 +1919,8 @@ class GameSystemsAuthoringController:
             return tuple(sorted(self.project.event_programs.ids()))
         if source == "carry_parts":
             return tuple(CARRY)
-        if source == "pause_entries":  # the built-in pages of the pause menu (D87)
-            from asteria.runtime.game_menus import PAUSE_WORDS
-
-            from .i18n import translate
-
-            built_in = tuple((e, PAUSE_WORDS.get(e, e)) for e in PAUSE_ENTRIES)
-            pages = db.menu_pages  # D96: the project's own pages, each an entry
-            return built_in + tuple(
-                (e, translate("Page: {0}").format(pages[e[len(PAGE_ENTRY) :]].display_name))
-                for e in page_entries(db)
-            )
+        if source == "pause_entries":  # the whole pause menu (D87, D97): (id, name, why not)
+            return self._pause_entries()
         if source == "stat_graphs":
             graphs = db.progression_graphs
             return (NO_STAT_GRAPH,) + tuple(

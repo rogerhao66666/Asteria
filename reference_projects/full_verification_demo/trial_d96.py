@@ -49,8 +49,7 @@ def main():
                     if c.category_id == "materials"]  # fmt: skip
     pages["materials"] = MenuPage(
         "materials",
-        "Materials",
-        "playable_assets/icons_7soul/I_Agate.png",
+        "Materials",  # no icon: the other entries have none (D98)
         blocks=(MenuBlock("item_list", item_categories=(materials,)),),
     )
     db["menu_pages"] = [pages[k].to_data() for k in ("status", "items", "materials")]

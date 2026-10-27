@@ -215,11 +215,11 @@ def test_the_menu_pages_form_edits_the_detail_table(window):
     editor = window.game_systems_editor
     api = editor.controller
     api.create("menu_pages", _page())
-    editor.set_kind("menu_pages")
-    editor.refresh("pages")
+    editor.set_kind("pause_menu")  # D97: a page is a row of the Pause Menu
+    editor.refresh("page:pages")
     assert editor.apply(), editor.status.text()
     assert api.get("menu_pages", "pages") == _page()
-    blocks = editor.form.widgets["blocks"]
+    blocks = editor.pause.form.widgets["blocks"]
     lines = blocks.detail.widgets["stat_lines"]
     row = {"stat_id": "defense", "group": "battle", "format": "percent", "spread": 0.0}
     lines.set_rows([*lines.values(), {**row, "label": "Guard", "check": ""}])
@@ -263,4 +263,5 @@ def test_the_demo_hides_the_rank_column(host):
     host.text = catch
     with host.menu_fit():
         host._draw_status_menu()
-    assert "Rank" not in drawn and "Total" in drawn and "Each +" in drawn
+    assert "Rank" not in drawn and "Total" in drawn
+    assert "Each +" not in drawn  # D98: the demo hides the gain column too

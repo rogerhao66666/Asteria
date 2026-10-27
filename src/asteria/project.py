@@ -326,6 +326,12 @@ class Project:
             if version >= 11
             else (),
         )
+        retired = p.battle_presentation_library.retired
+        if retired:  # D98: an old file's screen records: their names and order move to the data
+            from asteria.presentation.retired_screens import move_retired
+
+            move_retired(retired, p.rpg_database)
+            p.battle_presentation_library.retired = {}
         for sd in data["scenes"]:
             p.add_scene(deserialize_scene(sd, registry))
         # Pre-v6 projects had no canonical GameplayLibrary ownership, so they

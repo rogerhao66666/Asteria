@@ -72,7 +72,6 @@ try:
         QScrollArea,
         QStyle,
         QTabBar,
-        QTabWidget,
         QTextEdit,
         QToolBar,
         QVBoxLayout,
@@ -212,6 +211,7 @@ class AsteriaEditorWindow(QMainWindow):
             GameSystemsAuthoringController(self.document), self
         )
         self.game_systems_editor.changed.connect(self.refresh_all)
+        self.game_systems_editor.pause.open_layout = self.open_menu_layout  # D98
         self.rpg_workspace.addTab(self.game_systems_editor, "Game Systems")
         from .enemy_ai_widget import EnemyAIEditorWidget
 
@@ -242,9 +242,6 @@ class AsteriaEditorWindow(QMainWindow):
         self.presentation_authoring = FamilyHostWidget(
             "Battle Presentation", self.authoring_controllers.presentation_categories, self
         )
-        self.runtime_ui_authoring = FamilyHostWidget(
-            "Runtime RPG UI", self.authoring_controllers.runtime_ui_categories, self
-        )
 
         # eleven tabs: they wrap onto rows so none hides behind the scroll arrows
         self.ui_workspace = WrappingTabWidget(self)
@@ -254,16 +251,16 @@ class AsteriaEditorWindow(QMainWindow):
         self.ui_workspace.addTab(self.presentation_authoring, "Battle Screen")
         from .menu_layout_widget import MenuLayoutWorkspace
 
-        # U2b: every menu screen laid out on a live canvas, beside the menu records
+        # U2b: every menu screen laid out on a live canvas (D98: the old Menu Records tab is
+        # gone: its stat and slot names live in Game Systems ▸ Stats and Equipment Slots)
         self.menu_layout_editor = MenuLayoutWorkspace(
-            self.document, self, open_in_game=self.play_menu_screen
+            self.document,
+            self,
+            open_in_game=self.play_menu_screen,
+            open_pause_menu=self.open_pause_menu,
         )
         self.menu_layout_editor.changed.connect(self._refresh_actions)
-        self.menu_screens_tabs = QTabWidget(self)
-        self.menu_screens_tabs.setObjectName("MenuScreensTabs")
-        self.menu_screens_tabs.addTab(self.menu_layout_editor, "Layout")
-        self.menu_screens_tabs.addTab(self.runtime_ui_authoring, "Menu Records")
-        self.ui_workspace.addTab(self.menu_screens_tabs, "Menu Screens")
+        self.ui_workspace.addTab(self.menu_layout_editor, "Menu Screens")
         self.ui_workspace.addTab(self.animation_widget, "Animation Preview")
         from .action_timeline_widget import ActionTimelineWidget
         from .animation_editor_widget import AnimationEditorWidget
@@ -819,7 +816,6 @@ class AsteriaEditorWindow(QMainWindow):
             self.battle_authoring.rebuild()
         elif mode == WorkspaceMode.UI:
             self.presentation_authoring.rebuild()
-            self.runtime_ui_authoring.rebuild()
             self.menu_layout_editor.rebuild()
         elif mode == WorkspaceMode.EVENT:
             self.game_flow_overview.refresh()
@@ -2160,14 +2156,10 @@ class AsteriaEditorWindow(QMainWindow):
                 "rpg": (WorkspaceMode.RPG, self.rpg_workspace, self.rpg_authoring),
                 "battle": (WorkspaceMode.BATTLE, None, self.battle_authoring),
                 "presentation": (WorkspaceMode.UI, self.ui_workspace, self.presentation_authoring),
-                "runtime_ui": (WorkspaceMode.UI, self.ui_workspace, self.menu_screens_tabs),
             }[family]
             self.workspace.set_mode(mode)
             if tabs is not None:
                 tabs.setCurrentWidget(host)
-            if host is self.menu_screens_tabs:
-                host.setCurrentWidget(self.runtime_ui_authoring)
-                host = self.runtime_ui_authoring
             host.rebuild()
             child = host.child
             index = child.category.findData(category_id)
@@ -2181,9 +2173,7 @@ class AsteriaEditorWindow(QMainWindow):
             _, kind_id, record_id = target
             self.workspace.set_mode(WorkspaceMode.RPG)
             self.rpg_workspace.setCurrentWidget(self.game_systems_editor)
-            self.game_systems_editor.set_kind(kind_id)
-            self.game_systems_editor.refresh(select=record_id)
-            return self.game_systems_editor.selected_id == record_id
+            return self.game_systems_editor.show_record(kind_id, record_id)
         if kind in ("scene", "entity"):
             scene = next((s for s in project.scenes() if s.id == target[1]), None)
             if scene is None:
@@ -2698,6 +2688,21 @@ class AsteriaEditorWindow(QMainWindow):
 
     def play_project(self):
         return self._start_play(from_start=True)
+
+    def open_pause_menu(self, entry=None):
+        """Game Systems ▸ Pause Menu, on ``entry`` (Menu Screens ▸ Layout links to it, D98)."""
+        self.workspace.set_mode(WorkspaceMode.RPG)
+        self.rpg_workspace.setCurrentWidget(self.game_systems_editor)
+        self.game_systems_editor.set_kind("pause_menu")
+        self.game_systems_editor.pause.refresh(entry)
+        return self.game_systems_editor.pause.selected
+
+    def open_menu_layout(self, screen_id):
+        """Presentation ▸ Menu Screens ▸ Layout, on ``screen_id`` (a menu page links to the
+        screen it is drawn on, D98)."""
+        self.workspace.set_mode(WorkspaceMode.UI)
+        self.ui_workspace.setCurrentWidget(self.menu_layout_editor)
+        return self.menu_layout_editor.show_screen(screen_id)
 
     def play_menu_screen(self, screen_id):
         """Run the project from its start, opened on one menu screen (Menu Screens ▸ Layout ▸

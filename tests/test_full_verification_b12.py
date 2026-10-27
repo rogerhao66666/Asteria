@@ -22,6 +22,7 @@ def _game(job="brave", encounter="boss_room"):
     _project, game = smoke.load()
     game.refine_rng = random.Random(3)
     smoke.prepare(game, Counter(), job)
+    game.save.rpg_state.equipment_bag.clear()  # D98: the demo starts with spare gear
     game.start_encounter(encounter)
     return game
 

@@ -263,6 +263,9 @@ QFrame#AuthoringSidebarCard, QFrame#AuthoringPreviewCard {
     background: $panel; border: 1px solid $border_strong; border-radius: 0;
 }
 QLabel#AuthoringSidebarTitle { color: $text; font-weight: 700; }
+QLabel#PauseEntryTitle { color: $text; font-size: 20px; font-weight: 700; }
+QLabel#PauseEntryKind { color: $primary_hi; font-weight: 600; }
+QLabel#PauseEntryAbout { color: $text_muted; }
 QTreeWidget#BehaviorTreeNodes {
     background: $list; border: 0; border-radius: 0;
 }
@@ -827,11 +830,15 @@ def _branch_rules(palette):
         "QTreeView::branch { background: transparent; }\n"
         # every checkbox drawn alike (the system's bright blue box looked foreign in a form)
         "QCheckBox { spacing: 8px; }\n"  # the box and its text not squeezed together
-        f"QCheckBox::indicator {{ width: 16px; height: 16px; border-radius: 4px;"
-        f" border: 1px solid {palette.border_strong}; background: {palette.raised}; }}\n"
-        f"QCheckBox::indicator:hover {{ border-color: {palette.primary_hi}; }}\n"
-        f"QCheckBox::indicator:checked {{ background: {palette.primary};"
-        f" border-color: {palette.primary}; image: url({tick}); }}\n"
+        # a list's or table's ticks too (D97: Cocoa drew only the current row's box)
+        f"QCheckBox::indicator, QAbstractItemView::indicator {{ width: 16px; height: 16px;"
+        f" border-radius: 4px; border: 1px solid {palette.border_strong};"
+        f" background: {palette.raised}; }}\n"
+        f"QCheckBox::indicator:hover, QAbstractItemView::indicator:hover"
+        f" {{ border-color: {palette.primary_hi}; }}\n"
+        f"QCheckBox::indicator:checked, QAbstractItemView::indicator:checked"
+        f" {{ background: {palette.primary}; border-color: {palette.primary};"
+        f" image: url({tick}); }}\n"
         f"QCheckBox::indicator:disabled {{ background: {palette.panel}; }}\n"
     )
 

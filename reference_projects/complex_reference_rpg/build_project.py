@@ -22,7 +22,6 @@ from asteria.gameplay import (
     TargetingRule,
 )
 from asteria.presentation import (
-    AbilityScreenProfile,
     BattleActionMenuPolicy,
     BattleFeedbackProfile,
     BattleHudProfile,
@@ -31,11 +30,6 @@ from asteria.presentation import (
     BattleUiLayoutProfile,
     BattleUiPolishProfile,
     BattleUiTheme,
-    CharacterScreenProfile,
-    EquipmentScreenProfile,
-    InventoryScreenProfile,
-    PartyScreenProfile,
-    ProgressionScreenProfile,
 )
 from asteria.project import Project
 from asteria.rpg import (
@@ -870,27 +864,6 @@ def build_project():
     lib.add("results", "default", BattleResultProfile())
     lib.add("party_layout", "adaptive", BattlePartyLayoutPolicy())
     lib.add("ui_theme", "reference", BattleUiTheme())
-    lib.add("rpg_character_screen", "default", CharacterScreenProfile())
-    lib.add("rpg_equipment_screen", "default", EquipmentScreenProfile(page_size=12))
-    lib.add(
-        "rpg_ability_screen",
-        "default",
-        AbilityScreenProfile(visible_limits={"abilities": 12, "passives": 8}),
-    )
-    lib.add(
-        "rpg_progression_screen",
-        "default",
-        ProgressionScreenProfile(visible_limits={f"{jid}_tree": 10 for jid, _ in JOBS}),
-    )
-    lib.add(
-        "rpg_inventory_screen", "default", InventoryScreenProfile(visible_limits={"items": 24})
-    )
-    lib.add(
-        "rpg_party_screen",
-        "default",
-        PartyScreenProfile(visible_limits={"active": 6, "reserve": 8}),
-    )
-
     # --- Field scene + Boss interaction ---
     scene = Scene("Astral Gate")
     player = Entity("Player")

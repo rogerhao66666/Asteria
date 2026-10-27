@@ -37040,180 +37040,6 @@
           "victory_label": "Victory"
         }
       },
-      "rpg_ability_screen": {
-        "default": {
-          "ability_categories": {},
-          "ability_labels": {},
-          "category_labels": {},
-          "default_ability_category": "abilities",
-          "default_passive_category": "passives",
-          "passive_categories": {},
-          "passive_labels": {},
-          "schema": "asteria.ability_screen_profile",
-          "version": 1,
-          "visible_limits": {
-            "abilities": 12,
-            "passives": 8
-          }
-        }
-      },
-      "rpg_character_screen": {
-        "default": {
-          "ability_labels": {},
-          "equipment_labels": {},
-          "hidden_sections": [],
-          "progression_labels": {},
-          "resource_labels": {
-            "technique": "MP",
-            "vitality": "HP"
-          },
-          "resource_presentations": {},
-          "schema": "asteria.character_screen_profile",
-          "section_order": [
-            "overview",
-            "resources",
-            "equipment",
-            "abilities",
-            "progression",
-            "status"
-          ],
-          "slot_labels": {},
-          "stat_labels": {
-            "accuracy": "Accuracy",
-            "boss_damage": "Boss Damage %",
-            "bp_bonus": "BP Bonus %",
-            "bp_power": "Skill Boost per BP %",
-            "break_damage": "Break Damage %",
-            "crit": "Critical Rate",
-            "crit_damage": "Critical Damage %",
-            "damage_bonus": "Damage %",
-            "dark_attack": "Dark Attack %",
-            "dark_resist": "Dark Resist %",
-            "defense": "Physical Defence",
-            "dex": "Dexterity",
-            "earth_attack": "Earth Attack %",
-            "earth_resist": "Earth Resist %",
-            "evade": "Evasion",
-            "final_damage": "Final Damage %",
-            "fire_attack": "Fire Attack %",
-            "fire_resist": "Fire Resist %",
-            "ice_attack": "Ice Attack %",
-            "ice_resist": "Ice Resist %",
-            "int": "Intelligence",
-            "lifesteal": "Lifesteal",
-            "light_attack": "Light Attack %",
-            "light_resist": "Light Resist %",
-            "lightning_attack": "Lightning Attack %",
-            "lightning_resist": "Lightning Resist %",
-            "luk": "Luck",
-            "magic": "Magic Attack",
-            "magic_defense": "Magic Defence",
-            "penetration": "Penetration %",
-            "power": "Physical Attack",
-            "speed": "Speed",
-            "status_resist": "Status Resistance %",
-            "str": "Strength",
-            "vit": "Vitality",
-            "weakness_damage": "Weakness Damage %",
-            "wind_attack": "Wind Attack %",
-            "wind_resist": "Wind Resist %"
-          },
-          "stat_order": [
-            "str",
-            "dex",
-            "int",
-            "luk",
-            "power",
-            "magic",
-            "defense",
-            "magic_defense",
-            "accuracy",
-            "evade",
-            "crit",
-            "crit_damage",
-            "speed",
-            "lifesteal",
-            "fire_attack",
-            "fire_resist",
-            "ice_attack",
-            "ice_resist",
-            "lightning_attack",
-            "lightning_resist",
-            "light_attack",
-            "light_resist",
-            "dark_attack",
-            "dark_resist",
-            "wind_attack",
-            "wind_resist",
-            "earth_attack",
-            "earth_resist"
-          ],
-          "version": 1
-        }
-      },
-      "rpg_equipment_screen": {
-        "default": {
-          "equipment_labels": {},
-          "growth_labels": {},
-          "include_incompatible_candidates": true,
-          "page_size": 12,
-          "schema": "asteria.equipment_screen_profile",
-          "slot_labels": {},
-          "socket_labels": {},
-          "version": 1
-        }
-      },
-      "rpg_inventory_screen": {
-        "default": {
-          "default_group": "items",
-          "group_labels": {},
-          "item_groups": {},
-          "item_labels": {},
-          "schema": "asteria.inventory_screen_profile",
-          "version": 1,
-          "visible_limits": {
-            "items": 24
-          }
-        }
-      },
-      "rpg_party_screen": {
-        "default": {
-          "group_labels": {
-            "active": "Active",
-            "reserve": "Reserve"
-          },
-          "group_order": [
-            "active",
-            "reserve"
-          ],
-          "member_labels": {},
-          "schema": "asteria.party_screen_profile",
-          "slot_labels": {},
-          "version": 1,
-          "visible_limits": {
-            "active": 6,
-            "reserve": 8
-          }
-        }
-      },
-      "rpg_progression_screen": {
-        "default": {
-          "graph_labels": {},
-          "node_labels": {},
-          "schema": "asteria.progression_screen_profile",
-          "version": 1,
-          "visible_limits": {
-            "alchemist_tree": 10,
-            "arcanist_tree": 10,
-            "duelist_tree": 10,
-            "mystic_tree": 10,
-            "oracle_tree": 10,
-            "ranger_tree": 10,
-            "vanguard_tree": 10,
-            "warden_tree": 10
-          }
-        }
-      },
       "sideview_templates": {
         "crypt_ranks": {
           "battlefield_center_x": 160.0,
@@ -44580,7 +44406,6 @@
     "player_facing": "down",
     "player_position": null,
     "rpg_state": {
-      "active_pet_id": null,
       "actor_progression": {
         "hero_01": {
           "active_class_ids": [
@@ -45105,7 +44930,6 @@
       "party_placements": {
         "hero_01": "slot_1"
       },
-      "pets": [],
       "progression": {
         "schema": "asteria.rpg.progression_runtime",
         "totals": {},
@@ -45254,7 +45078,710 @@
         }
       },
       "schema": "asteria.rpg.runtime_state",
-      "version": 5
+      "version": 8,
+      "shop_stock": {},
+      "quests": {},
+      "world": {
+        "schema": "asteria.rpg.world_record",
+        "version": 2,
+        "reputation": {},
+        "relationships": {},
+        "counters": {},
+        "achievements": [],
+        "bestiary": {},
+        "known_recipes": [],
+        "npcs": {}
+      },
+      "equipment_bag": [
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_archon_robe:bag1",
+          "equipment_id": "a_archon_robe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_blood_amulet:bag1",
+          "equipment_id": "a_blood_amulet",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_bone_mail:bag1",
+          "equipment_id": "a_bone_mail",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_chain_mail:bag1",
+          "equipment_id": "a_chain_mail",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_copper_ring:bag1",
+          "equipment_id": "a_copper_ring",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_dawn_robe:bag1",
+          "equipment_id": "a_dawn_robe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_feather_charm:bag1",
+          "equipment_id": "a_feather_charm",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_grave_shroud:bag1",
+          "equipment_id": "a_grave_shroud",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_guardian_medal:bag1",
+          "equipment_id": "a_guardian_medal",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_hawk_eye:bag1",
+          "equipment_id": "a_hawk_eye",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_holy_symbol:bag1",
+          "equipment_id": "a_holy_symbol",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_hunters_charm:bag1",
+          "equipment_id": "a_hunters_charm",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_iron_ring:bag1",
+          "equipment_id": "a_iron_ring",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_knight_plate:bag1",
+          "equipment_id": "a_knight_plate",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_leather_vest:bag1",
+          "equipment_id": "a_leather_vest",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_life_amulet:bag1",
+          "equipment_id": "a_life_amulet",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_linen_robe:bag1",
+          "equipment_id": "a_linen_robe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_mage_robe:bag1",
+          "equipment_id": "a_mage_robe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_mithril_mail:bag1",
+          "equipment_id": "a_mithril_mail",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_moon_pendant:bag1",
+          "equipment_id": "a_moon_pendant",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_moonstone_necklace:bag1",
+          "equipment_id": "a_moonstone_necklace",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_padded_jerkin:bag1",
+          "equipment_id": "a_padded_jerkin",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_phylactery:bag1",
+          "equipment_id": "a_phylactery",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_ranger_coat:bag1",
+          "equipment_id": "a_ranger_coat",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_ruby_ring:bag1",
+          "equipment_id": "a_ruby_ring",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_sages_pendant:bag1",
+          "equipment_id": "a_sages_pendant",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_scale_mail:bag1",
+          "equipment_id": "a_scale_mail",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_shadow_garb:bag1",
+          "equipment_id": "a_shadow_garb",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_silk_robe:bag1",
+          "equipment_id": "a_silk_robe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_silver_ring:bag1",
+          "equipment_id": "a_silver_ring",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_swift_medal:bag1",
+          "equipment_id": "a_swift_medal",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_warden_charm:bag1",
+          "equipment_id": "a_warden_charm",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_warden_plate:bag1",
+          "equipment_id": "a_warden_plate",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_warden_ring:bag1",
+          "equipment_id": "a_warden_ring",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "a_zealot_mail:bag1",
+          "equipment_id": "a_zealot_mail",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "ft_chain_boots:bag1",
+          "equipment_id": "ft_chain_boots",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "ft_explorer_boots:bag1",
+          "equipment_id": "ft_explorer_boots",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "ft_plate_boots:bag1",
+          "equipment_id": "ft_plate_boots",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "ft_wizard_shoes:bag1",
+          "equipment_id": "ft_wizard_shoes",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "hd_chain_helmet:bag1",
+          "equipment_id": "hd_chain_helmet",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "hd_explorer_ushanka:bag1",
+          "equipment_id": "hd_explorer_ushanka",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "hd_plate_helmet:bag1",
+          "equipment_id": "hd_plate_helmet",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "hd_royal_helmet:bag1",
+          "equipment_id": "hd_royal_helmet",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "hd_wizard_hat:bag1",
+          "equipment_id": "hd_wizard_hat",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "lg_chain_leggings:bag1",
+          "equipment_id": "lg_chain_leggings",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "lg_explorer_leggings:bag1",
+          "equipment_id": "lg_explorer_leggings",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "lg_leggings:bag1",
+          "equipment_id": "lg_leggings",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "lg_plate_leggings:bag1",
+          "equipment_id": "lg_plate_leggings",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "lg_wizard_leggings:bag1",
+          "equipment_id": "lg_wizard_leggings",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_ash_staff:bag1",
+          "equipment_id": "w_ash_staff",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_axe:bag1",
+          "equipment_id": "w_axe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_battle_axe:bag1",
+          "equipment_id": "w_battle_axe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_bloodreaver:bag1",
+          "equipment_id": "w_bloodreaver",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_book_of_prayers:bag1",
+          "equipment_id": "w_book_of_prayers",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_bow:bag1",
+          "equipment_id": "w_bow",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_brawler_gloves:bag1",
+          "equipment_id": "w_brawler_gloves",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_dagger:bag1",
+          "equipment_id": "w_dagger",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_dragoon_lance:bag1",
+          "equipment_id": "w_dragoon_lance",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_field_guide:bag1",
+          "equipment_id": "w_field_guide",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_grimoire_of_flames:bag1",
+          "equipment_id": "w_grimoire_of_flames",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_harpoon:bag1",
+          "equipment_id": "w_harpoon",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_iron_knuckles:bag1",
+          "equipment_id": "w_iron_knuckles",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_jade_staff:bag1",
+          "equipment_id": "w_jade_staff",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_knights_blade:bag1",
+          "equipment_id": "w_knights_blade",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_kris:bag1",
+          "equipment_id": "w_kris",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_leather_wraps:bag1",
+          "equipment_id": "w_leather_wraps",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_longbow:bag1",
+          "equipment_id": "w_longbow",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_main_gauche:bag1",
+          "equipment_id": "w_main_gauche",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_partisan:bag1",
+          "equipment_id": "w_partisan",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_phoenix_bow:bag1",
+          "equipment_id": "w_phoenix_bow",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_primer:bag1",
+          "equipment_id": "w_primer",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_recurve_bow:bag1",
+          "equipment_id": "w_recurve_bow",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_ritual_kris:bag1",
+          "equipment_id": "w_ritual_kris",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_saint_staff:bag1",
+          "equipment_id": "w_saint_staff",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_shadow_star:bag1",
+          "equipment_id": "w_shadow_star",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_shuriken:bag1",
+          "equipment_id": "w_shuriken",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_spear:bag1",
+          "equipment_id": "w_spear",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_staff:bag1",
+          "equipment_id": "w_staff",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_steel_sword:bag1",
+          "equipment_id": "w_steel_sword",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_storm_gauntlets:bag1",
+          "equipment_id": "w_storm_gauntlets",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_sun_staff:bag1",
+          "equipment_id": "w_sun_staff",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_sunbrand:bag1",
+          "equipment_id": "w_sunbrand",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_sword:bag1",
+          "equipment_id": "w_sword",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_throwing_axe:bag1",
+          "equipment_id": "w_throwing_axe",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_tide_trident:bag1",
+          "equipment_id": "w_tide_trident",
+          "attachments": {},
+          "growth": null
+        },
+        {
+          "schema": "asteria.rpg.equipment_instance",
+          "version": 2,
+          "instance_id": "w_war_axe:bag1",
+          "equipment_id": "w_war_axe",
+          "attachments": {},
+          "growth": null
+        }
+      ]
     },
     "scene_id": "4ca2db1c-f03a-51a8-aac9-3f85718155ee",
     "schema": "asteria.game_start",
@@ -102680,11 +103207,11 @@
           "data.skill_tree_node.archmage_spec_elementalist_capstone.name": "\u5143\u7d20\u4f7f\u9802\u9ede",
           "data.skill_tree_node.archmage_spec_elementalist_t1.name": "\u5143\u7d20\u4f7f I",
           "data.skill_tree_node.archmage_spec_elementalist_t2.name": "\u5143\u7d20\u4f7f II",
-          "data.skill_tree_node.attr_dex.name": "\u654f\u6377\uff08DEX\uff09",
-          "data.skill_tree_node.attr_int.name": "\u667a\u529b\uff08INT\uff09",
-          "data.skill_tree_node.attr_luk.name": "\u5e78\u904b\uff08LUK\uff09",
-          "data.skill_tree_node.attr_str.name": "\u529b\u91cf\uff08STR\uff09",
-          "data.skill_tree_node.attr_vit.name": "\u9ad4\u529b\uff08VIT\uff09",
+          "data.skill_tree_node.attr_dex.name": "DEX",
+          "data.skill_tree_node.attr_int.name": "INT",
+          "data.skill_tree_node.attr_luk.name": "LUK",
+          "data.skill_tree_node.attr_str.name": "STR",
+          "data.skill_tree_node.attr_vit.name": "VIT",
           "data.skill_tree_node.bishop_book.name": "\u4e3b\u6559\u6280\u80fd\u66f8",
           "data.skill_tree_node.bishop_core.name": "\u4e3b\u6559\u4fee\u7df4",
           "data.skill_tree_node.bishop_divine_aegis.name": "\u795e\u8056\u795e\u76fe",
@@ -110201,7 +110728,7 @@
         "nodes": [
           {
             "any_prerequisites": [],
-            "display_name": "STR (Strength)",
+            "display_name": "STR",
             "exclusive_group": null,
             "icon_id": "playable_assets/lucifer/icons/node_attr_str.png",
             "max_rank": 30,
@@ -110607,7 +111134,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "DEX (Dexterity)",
+            "display_name": "DEX",
             "exclusive_group": null,
             "icon_id": "playable_assets/lucifer/icons/node_attr_dex.png",
             "max_rank": 30,
@@ -111013,7 +111540,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "INT (Intellect)",
+            "display_name": "INT",
             "exclusive_group": null,
             "icon_id": "playable_assets/lucifer/icons/node_attr_int.png",
             "max_rank": 30,
@@ -111479,7 +112006,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "LUK (Luck)",
+            "display_name": "LUK",
             "exclusive_group": null,
             "icon_id": "playable_assets/lucifer/icons/node_attr_luk.png",
             "max_rank": 30,
@@ -111885,7 +112412,7 @@
           },
           {
             "any_prerequisites": [],
-            "display_name": "VIT (Vitality)",
+            "display_name": "VIT",
             "exclusive_group": null,
             "icon_id": "playable_assets/lucifer/icons/node_attr_vit.png",
             "max_rank": 30,
@@ -143310,6 +143837,28 @@
         ],
         "order": 37,
         "description": "Dark hits taken do 1% less a point."
+      },
+      {
+        "schema": "asteria.rpg.stat_definition",
+        "version": 1,
+        "stat_id": "technique",
+        "display_name": "MP",
+        "short_name": "",
+        "display": "number",
+        "set_on": [],
+        "order": 38,
+        "description": ""
+      },
+      {
+        "schema": "asteria.rpg.stat_definition",
+        "version": 1,
+        "stat_id": "vitality",
+        "display_name": "HP",
+        "short_name": "",
+        "display": "number",
+        "set_on": [],
+        "order": 39,
+        "description": ""
       }
     ],
     "tag_definitions": [
@@ -144280,8 +144829,7 @@
               "total",
               "base",
               "points",
-              "gear",
-              "gain"
+              "gear"
             ]
           },
           {
@@ -144573,7 +145121,6 @@
         "version": 1,
         "page_id": "materials",
         "display_name": "Materials",
-        "icon_id": "playable_assets/icons_7soul/I_Agate.png",
         "blocks": [
           {
             "kind": "item_list",

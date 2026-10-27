@@ -157,11 +157,6 @@ WORDS = {
     "INT": "智力",
     "LUK": "幸運",
     "VIT": "體力",
-    "STR (Strength)": "力量（STR）",  # the attribute nodes: the short name stays
-    "DEX (Dexterity)": "敏捷（DEX）",
-    "INT (Intellect)": "智力（INT）",
-    "LUK (Luck)": "幸運（LUK）",
-    "VIT (Vitality)": "體力（VIT）",
     "Strength": "力量",
     "Dexterity": "敏捷",
     "Intellect": "智力",

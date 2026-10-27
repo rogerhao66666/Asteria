@@ -8,10 +8,9 @@ table: the stats a stat graph raises with a + each (``stat_rows``, spent through
 
 Every tab is projected through the canonical presentation screen runtimes
 (``CharacterScreenRuntime``, ``InventoryScreenRuntime``, ``EquipmentScreenRuntime``,
-``AbilityScreenRuntime``) using the project's runtime UI profiles when the
-project defines them (``rpg_character_screen``, ``rpg_inventory_screen``,
-``rpg_equipment_screen``, ``rpg_ability_screen``), so the authored templates
-decide labels, grouping and limits. Actions go through the game session:
+``AbilityScreenRuntime``). The names and order of the stats are the Stats' and the slots'
+names the Equipment Slots' (D98: the screen records that held them are retired); items,
+gear and skills are named by their own records. Actions go through the game session:
 ``use_item``, ``equip_from_inventory`` / ``unequip_to_inventory``.
 """
 
@@ -81,14 +80,6 @@ class DetailLine:
     gear: float
 
 
-PROFILE_CATEGORY = {
-    "status": "rpg_character_screen",
-    "items": "rpg_inventory_screen",
-    "equipment": "rpg_equipment_screen",
-    "skills": "rpg_ability_screen",
-}
-
-
 class _Abilities:
     """The ability library as a mapping, for ``_word`` (``.get``)."""
 
@@ -102,14 +93,22 @@ class _Abilities:
             return None
 
 
-def _profile(game, tab):
-    library = game.project.battle_presentation_library
-    category = PROFILE_CATEGORY[tab]
-    try:
-        ids = library.ids(category)
-    except (KeyError, ValueError):
-        return None
-    return library.require(category, ids[0]) if ids else None
+def _status_profile(game):
+    """The Status page's names and order (D98): the Stats' (``stat_definitions``) and the
+    Equipment Slots' names, the stats in the Stats' order (HP leads the resources)."""
+    from asteria.presentation.rpg_character_screen import CharacterScreenProfile
+    from asteria.rpg.stat_definitions import ordered
+
+    db = game.project.rpg_database
+    stats = ordered(getattr(db, "stat_definitions", {}))
+    slots = getattr(db, "equipment_slots", {})
+    names = {d.stat_id: game.stat_name(d.stat_id) for d in stats}  # the player's language
+    return CharacterScreenProfile(
+        stat_labels=names,
+        resource_labels=names,
+        slot_labels={k: game.slot_name(k) for k in slots},
+        stat_order=tuple(names),
+    )
 
 
 class StatusMenu:
@@ -138,10 +137,10 @@ class StatusMenu:
         rules = getattr(game, "rules", None)
         lead = (getattr(rules, "knockout_resource_id", ""),)  # HP first, as in the HUD
         self.screens = {
-            "status": CharacterScreenRuntime(_profile(game, "status"), lead_resources=lead),
-            "items": InventoryScreenRuntime(_profile(game, "items")),
-            "equipment": EquipmentScreenRuntime(_profile(game, "equipment")),
-            "skills": AbilityScreenRuntime(_profile(game, "skills")),
+            "status": CharacterScreenRuntime(_status_profile(game), lead_resources=lead),
+            "items": InventoryScreenRuntime(),
+            "equipment": EquipmentScreenRuntime(),
+            "skills": AbilityScreenRuntime(),
         }
 
     # -- state ---------------------------------------------------------------------------------

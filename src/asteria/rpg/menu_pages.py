@@ -26,6 +26,7 @@ from dataclasses import dataclass
 
 from .menu_rules import (
     ITEM_DETAILS,
+    PAUSE_ENTRIES,
     STAT_COLUMNS,
     ItemCategory,
     ItemFilter,
@@ -33,6 +34,7 @@ from .menu_rules import (
     StatGroup,
     StatLine,
     menu_rules,
+    pause_order,
 )
 
 BLOCK_KINDS = ("profile", "stat_points", "stat_details", "item_list")
@@ -47,6 +49,18 @@ BLOCK_SETTINGS = {
 # the blocks a page's cursor and keys work in (one per page: the first of these)
 INTERACTIVE = ("item_list", "stat_points")
 PAGE_ENTRY = "page:"  # a pause entry that opens a project page: ``page:<id>``
+MENU_ENTRY = "entry:"  # a Pause Menu Entry (runs an event program): ``entry:<id>``
+# the built-in pause entries a game shows only when it has what they open (D97)
+PAUSE_NEEDS = {
+    "equipment": "the party has equipment slots",
+    "enhance": "equipment has refining, sockets or growth",
+    "skills": "the game has skills or progression graphs",
+    "pets": "the game has pet species",
+    "backlog": "Message Settings keep a backlog",
+    "skill_slots": "the game has Ability Slot Rules",
+    "music": "the game has music tracks",
+    "credits": "the game has credits pages",
+}
 BUILT_IN_PAGES = ("status", "items")
 
 
@@ -265,6 +279,77 @@ def menu_pages(database):
     return pages
 
 
+# what each built-in pause entry opens (Game Systems ▸ Pause Menu says it beside the entry)
+PAUSE_OPENS = {
+    "resume": "Closes the menu and goes back to the game.",
+    "status": "Opens the menu page status: the member's profile, stat points and details.",
+    "items": "Opens the menu page items: the bag with its tabs and filters.",
+    "equipment": "Opens the equipment screen (paper doll) to change the party's gear.",
+    "enhance": "Opens the enhance screen: refining, sockets and growth of equipment.",
+    "skills": "Opens the member's skill tree, or the list of skills without one.",
+    "pets": "Opens the pets screen.",
+    "quests": "Opens the quest log.",
+    "crafting": "Opens crafting with every recipe the party knows.",
+    "achievements": "Opens the list of achievements.",
+    "bestiary": "Opens the bestiary: the enemies met and what they drop.",
+    "backlog": "Opens the log of the messages read so far.",
+    "skill_slots": "Opens the ability slots: which skills each member has ready.",
+    "music": "Opens the music room: the tracks heard so far.",
+    "credits": "Opens the credits pages.",
+    "settings": "Opens the settings: volume, text speed, language, controls.",
+    "save": "Opens the save slots.",
+    "load": "Opens the save slots to load one.",
+    "title": "Goes back to the title screen.",
+    "quit": "Closes the game.",
+}
+
+
+def usable_pause_entries(database, *, loadouts, backlog, abilities):
+    """The pause entries the game shows (``PAUSE_NEEDS``): ``loadouts`` - the party has
+    equipment slots, ``backlog`` - the message backlog's length, ``abilities`` - the game has
+    skills. The project's own pages and entries are always usable."""
+    db = database
+    usable = set(PAUSE_ENTRIES) - set(PAUSE_NEEDS)
+    if loadouts:
+        usable.add("equipment")
+        if db.refine_rules or any(e.sockets or e.growth_id for e in db.equipment.values()):
+            usable.add("enhance")
+    if db.progression_graphs or abilities:
+        usable.add("skills")
+    for entry, present in (
+        ("pets", getattr(db, "pet_species", None)),
+        ("backlog", backlog),
+        ("skill_slots", db.ability_loadout_rules),
+        ("music", db.music_tracks),
+        ("credits", db.credits_pages),
+    ):
+        if present:
+            usable.add(entry)
+    usable.update(page_entries(db))
+    usable.update(f"{MENU_ENTRY}{e}" for e in db.menu_entries)
+    return usable
+
+
+def engine_pause_order(database):
+    """Every pause entry in the engine's order: the built-in ones, the project's own pages
+    after Items and its Pause Menu Entries (by their Order) before Settings."""
+    at = PAUSE_ENTRIES.index("items") + 1
+    order = [*PAUSE_ENTRIES[:at], *page_entries(database), *PAUSE_ENTRIES[at:]]
+    entries = sorted(database.menu_entries.values(), key=lambda e: (e.order, e.entry_id))
+    at = order.index("settings")
+    order[at:at] = [f"{MENU_ENTRY}{e.entry_id}" for e in entries]
+    return order
+
+
+def pause_menu(database, usable=None):
+    """The pause menu's entries top to bottom (Game Systems ▸ Pause Menu): the author's order,
+    without the hidden ones and, given ``usable``, those the game cannot use."""
+    rules = menu_rules(database)
+    entries, hidden = (rules.pause_entries, rules.pause_hidden) if rules else ((), ())
+    order = pause_order(entries, engine_pause_order(database))
+    return [e for e in order if e not in hidden and (usable is None or e in usable)]
+
+
 def page_entries(database):
     """The pause entries of the project's own pages (not Status and Items): ``page:<id>``."""
     own = getattr(database, "menu_pages", None) or {}
@@ -276,10 +361,16 @@ __all__ = [
     "BLOCK_PLACES",
     "BLOCK_SETTINGS",
     "BUILT_IN_PAGES",
+    "MENU_ENTRY",
     "PAGE_ENTRY",
+    "PAUSE_NEEDS",
+    "PAUSE_OPENS",
     "MenuBlock",
     "MenuPage",
     "default_pages",
+    "engine_pause_order",
     "menu_pages",
     "page_entries",
+    "pause_menu",
+    "usable_pause_entries",
 ]

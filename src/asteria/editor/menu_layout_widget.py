@@ -1,14 +1,15 @@
 """Presentation ▸ Menu Screens ▸ Layout: design every menu screen on a live canvas (U2b).
 
-Left, the menu screens (a dot marks one with a layout of its own). Middle, the screen drawn by
-the game's own code with sample data (``runtime/menu_preview.py``); every element the screen
-drew has an outline you can click, drag and resize from its corner. Right, the chosen element:
-its place and anchor, whether it shows, its frame picture (nine-patch with the four insets
-drawn over it), picture, colours, font, size, alignment, words or field, and the list / grid
-settings. The toolbar adds elements of your own (picture, panel, text, gauge, portrait), takes
-one out, puts the screen back to the engine's layout, copies another screen's layout, edits
-the project-wide menu theme and opens the screen in the game.
-
+Left, the menu screens ("(changed)" after one with a layout of its own). Middle, two rows -
+the element (choose, Add Element, Remove Element), then This Screen (reset, copy a layout,
+background), Shared Settings (menu theme, bitmap fonts, picture message window, creature
+screens, game folder settings), Show All Outlines, the preview language and Open in Game -
+and the screen drawn by the game's own code with sample data (``runtime/menu_preview.py``):
+an element's outline shows under the pointer (with its name) or when chosen; drag it to move
+it, its corner to resize (D98). Right, the chosen element - its place and anchor, whether it
+shows, its frame picture (nine-patch with the four insets drawn over it), picture, colours,
+font, size, alignment, words or field, and the list / grid settings - or, with none chosen,
+a button for each element of the screen.
 Pictures, fonts and sounds come from anywhere: "Choose…" takes a file of your own (copied into
 the project's ``ui/`` folder when it is outside it), "Library…" picks one from the bundled CC0
 packs. Every change is one undo step (Ctrl+Z).
@@ -35,7 +36,6 @@ from PySide6.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
-    QGridLayout,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -462,32 +462,64 @@ class SlotsField(QWidget):
 
 
 class ElementBox(QGraphicsRectItem):
-    """One element's outline on the canvas: drag to move, the corner square resizes."""
+    """One element on the canvas: drag to move, the corner square resizes. Its outline shows
+    while the pointer is over it (with its name) or it is chosen, or when the canvas shows
+    every outline (D98: the screen is seen as the game draws it)."""
 
     HANDLE = 10
 
-    def __init__(self, view, element_id, rect):
+    def __init__(self, view, element_id, rect, name=""):
         super().__init__(QRectF(0, 0, rect[2], rect[3]))
         self.view, self.element_id = view, element_id
+        self.name = name or element_id
+        self.picked = self.hovered = False
         self.setPos(rect[0], rect[1])
         self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
-        self.setPen(QPen(OUTLINE, 1, Qt.DashLine))
         self.setBrush(QBrush(Qt.NoBrush))
         self.setAcceptHoverEvents(True)
-        self.setToolTip(element_id)
+        self.setToolTip(self.name)
         self._resizing = False
+        self.restyle()
+
+    def restyle(self):
+        if self.picked:
+            self.setPen(QPen(PICKED, 2, Qt.SolidLine))
+        elif self.hovered or self.view.show_all:
+            self.setPen(QPen(OUTLINE, 1, Qt.DashLine))
+        else:
+            self.setPen(QPen(Qt.NoPen))
+        self.update()
 
     def set_picked(self, picked):
-        self.setPen(QPen(PICKED if picked else OUTLINE, 2 if picked else 1,
-                         Qt.SolidLine if picked else Qt.DashLine))  # fmt: skip
+        self.picked = picked
         self.setZValue(2 if picked else 1)
+        self.restyle()
+
+    def hoverEnterEvent(self, event):  # noqa: N802 - Qt
+        self.hovered = True
+        self.restyle()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):  # noqa: N802 - Qt
+        self.hovered = False
+        self.restyle()
+        super().hoverLeaveEvent(event)
 
     def paint(self, painter, option, widget=None):
         super().paint(painter, option, widget)
-        if self.pen().color() == PICKED:
-            r = self.rect()
+        r = self.rect()
+        if self.picked:
             h = self.HANDLE
             painter.fillRect(QRectF(r.right() - h, r.bottom() - h, h, h), PICKED)
+        if self.hovered or self.picked:  # its name on a tab above its top-left corner
+            font = painter.font()
+            font.setPixelSize(12)
+            painter.setFont(font)
+            width = painter.fontMetrics().horizontalAdvance(self.name) + 10
+            tab = QRectF(r.left(), r.top() - 18, width, 18)
+            painter.fillRect(tab, PICKED if self.picked else OUTLINE)
+            painter.setPen(QColor(20, 22, 30))
+            painter.drawText(tab, Qt.AlignCenter, self.name)
 
     def _on_handle(self, point):
         r = self.rect()
@@ -542,6 +574,13 @@ class MenuCanvasView(QGraphicsView):
         self.scene_.addItem(self.pixmap)
         self.boxes = {}
         self.grid = 4
+        self.show_all = False  # every outline at once (Show All Outlines)
+        self.names = {}  # element id -> the name its outline shows
+
+    def set_show_all(self, on):
+        self.show_all = bool(on)
+        for box in self.boxes.values():
+            box.restyle()
 
     def show_screen(self, image, boxes, picked=None):
         self.pixmap.setPixmap(QPixmap.fromImage(image))
@@ -549,7 +588,7 @@ class MenuCanvasView(QGraphicsView):
             self.scene_.removeItem(box)
         self.boxes = {}
         for element_id, rect in boxes.items():
-            box = ElementBox(self, element_id, rect)
+            box = ElementBox(self, element_id, rect, self.names.get(element_id, ""))
             box.set_picked(element_id == picked)
             self.scene_.addItem(box)
             self.boxes[element_id] = box
@@ -950,12 +989,13 @@ class MenuLayoutWorkspace(QWidget):
 
     changed = Signal()
 
-    def __init__(self, document, parent=None, *, open_in_game=None):
+    def __init__(self, document, parent=None, *, open_in_game=None, open_pause_menu=None):
         super().__init__(parent)
         self.setObjectName("MenuLayoutWorkspace")
         self.document = document
         self.controller = MenuLayoutAuthoringController(document)
         self.open_in_game = open_in_game
+        self.open_pause_menu = open_pause_menu  # the pages' blocks (D98)
         self._preview = None
         self._preview_project = None
         self._preview_folder = None  # the game folder's settings file the preview read
@@ -971,39 +1011,65 @@ class MenuLayoutWorkspace(QWidget):
         self.inspector = ElementInspector(document)
         self.element_combo = QComboBox()
         self.element_combo.setProperty("i18n_choices", True)
+        # a long element name never widens the page past the element's column
+        self.element_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.element_combo.setMinimumContentsLength(10)
         self.language = QComboBox()
         self.language.setProperty("i18n_choices", True)
-        add = QToolButton()
-        add.setText("Add element")
-        add.setPopupMode(QToolButton.InstantPopup)
+        # one row for the element, one for the screen and the settings every screen shares;
+        # the rest of the page is the preview (D98: nine buttons had taken half of it)
+        self.add_button = add = QPushButton("Add Element")
+        add.setToolTip("Put a picture, panel, text, gauge or portrait of your own on the screen.")
         menu = QMenu(add)
         for kind, label in ADDABLE:
             menu.addAction(label, lambda kind=kind: self._add(kind))
         add.setMenu(menu)
-        buttons = {
-            "Remove element": self._remove,
-            "Reset screen": self._reset,
-            "Copy from…": self._copy,
-            "Background…": self._background,
-            "Menu theme…": self._theme,
-            "Bitmap fonts…": self._bitmap_fonts,
-            "Picture message window…": self._dialogue_window,
-            "Creature screens…": self._creature_screens,
-            "Game folder settings…": self.edit_game_folder_settings,
-            "Open in game": self._open_in_game,
-        }
-        bar = QHBoxLayout()  # what to edit; the screen's actions on the row under it
+        self.remove_button = QPushButton("Remove Element")
+        self.remove_button.clicked.connect(self._remove)
+        screen = QPushButton("This Screen")
+        screen.setToolTip("Actions on the screen chosen on the left.")
+        screen_menu = QMenu(screen)
+        for label, slot in (
+            ("Reset Screen (the Engine's Layout)", self._reset),
+            ("Copy Layout From…", self._copy),
+            ("Background…", self._background),
+        ):
+            screen_menu.addAction(label, slot)
+        screen.setMenu(screen_menu)
+        shared = QPushButton("Shared Settings")
+        shared.setToolTip("Settings every menu screen of the game uses.")
+        shared_menu = QMenu(shared)
+        for label, slot in (
+            ("Menu Theme…", self._theme),
+            ("Bitmap Fonts…", self._bitmap_fonts),
+            ("Picture Message Window…", self._dialogue_window),
+            ("Creature Screens…", self._creature_screens),
+            ("Game Folder Settings…", self.edit_game_folder_settings),
+        ):
+            shared_menu.addAction(label, slot)
+        shared.setMenu(shared_menu)
+        play = QPushButton("Open in Game")
+        play.clicked.connect(self._open_in_game)
+        bar = QHBoxLayout()  # what to edit
         bar.addWidget(QLabel("Element"))
         bar.addWidget(self.element_combo, 1)
         bar.addWidget(add)
-        bar.addWidget(QLabel("Preview language"))
-        bar.addWidget(self.language)
-        actions = QGridLayout()  # three to a row: the page fits a laptop screen
-        for n, (label, slot) in enumerate(buttons.items()):
-            button = QPushButton(label)
-            button.clicked.connect(slot)
-            actions.addWidget(button, n // 3, n % 3)
-        actions.setColumnStretch(3, 1)
+        bar.addWidget(self.remove_button)
+        from .flow_layout import FlowLayout
+
+        # the screen, the shared settings, the preview: wraps onto a second line when the
+        # page is narrow, so the element's column on the right always has its room
+        actions = FlowLayout()
+        actions.addWidget(screen)
+        actions.addWidget(shared)
+        self.outlines = QCheckBox("Show All Outlines")
+        self.outlines.setToolTip("Outline every element, not only the one under the pointer.")
+        self.outlines.toggled.connect(self.canvas.set_show_all)
+        actions.addWidget(self.outlines)
+        self.language.setToolTip("The language the preview draws the screen in.")
+        actions.addWidget(QLabel("Preview language"))
+        actions.addWidget(self.language)
+        actions.addWidget(play)
         self.status = QLabel()
         self.status.setObjectName("MenuLayoutStatus")
         self.status.setWordWrap(True)
@@ -1012,11 +1078,37 @@ class MenuLayoutWorkspace(QWidget):
         column.setContentsMargins(0, 0, 0, 0)
         column.addLayout(bar)
         column.addLayout(actions)
+        # the status pages: what their blocks are is set in Game Systems ▸ Pause Menu
+        self.pages_link = QPushButton("The Pages' Blocks: Game Systems ▸ Pause Menu")
+        self.pages_link.setToolTip(
+            "Which blocks the Status, Items and your own pages show, and where in the rows."
+        )
+        self.pages_link.clicked.connect(self._open_pages)
+        self.pages_link.setVisible(False)
+        column.addWidget(self.pages_link, 0, Qt.AlignLeft)
         column.addWidget(self.canvas, 1)
         column.addWidget(self.status)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setWidget(self.inspector)
+        from PySide6.QtWidgets import QStackedWidget
+
+        # nothing chosen: what to do and the screen's elements, not a page of empty fields
+        self.chooser = QWidget()
+        self.chooser.setObjectName("MenuElementChooser")
+        chooser = QVBoxLayout(self.chooser)
+        hint = QLabel("Choose an element: click it on the screen, or pick it here.")
+        hint.setWordWrap(True)
+        hint.setObjectName("MutedLabel")
+        chooser.addWidget(hint)
+        # a list, not a column of buttons: a long screen's elements never squeeze together
+        self.chooser_list = QListWidget()
+        self.chooser_list.setObjectName("MenuElementChooserList")
+        self.chooser_list.itemClicked.connect(lambda item: self.pick(item.data(Qt.UserRole)))
+        chooser.addWidget(self.chooser_list, 1)
+        self.side = QStackedWidget()
+        self.side.addWidget(self.chooser)
+        self.side.addWidget(self.inspector)
+        scroll.setWidget(self.side)
         # wide enough for its rows (two boxes to a row), the rest goes to the screen being
         # designed; a hint read here would count the rows the element hides later
         scroll.setMinimumWidth(340)
@@ -1056,10 +1148,10 @@ class MenuLayoutWorkspace(QWidget):
                 header.setFlags(Qt.NoItemFlags)
                 header.setData(Qt.UserRole + 1, "During play")
                 self.screen_list.addItem(header)
-            item = QListWidgetItem(("● " if custom else "   ") + title)
+            item = QListWidgetItem(title)
             item.setData(Qt.UserRole, screen_id)
             item.setData(Qt.UserRole + 1, title)  # the English, shown in the editor's language
-            item.setToolTip(screen_id + ("  ·  has its own layout" if custom else ""))
+            item.setData(Qt.UserRole + 2, custom)  # its own layout: "(changed)" after it
             self.screen_list.addItem(item)
             if screen_id == self.screen_id:
                 self.screen_list.setCurrentItem(item)
@@ -1078,30 +1170,48 @@ class MenuLayoutWorkspace(QWidget):
         self.refresh_preview()
 
     def _fill_elements(self):
-        spec = screen_spec(self.screen_id)
         self.element_combo.blockSignals(True)
         self.element_combo.clear()
-        self.element_combo.addItem("(screen background)", "")
-        described = {i: d for i, _k, d in spec.elements}
-        for element_id in self.controller.element_ids(self.screen_id):
-            label = element_id + (
-                f"  ·  {described[element_id]}" if element_id in described else ""
-            )
-            self.element_combo.addItem(label, element_id)
+        self.element_combo.addItem("(none chosen)", "")
+        for element_id, name in self._element_names().items():
+            self.element_combo.addItem(name, element_id)
+        for element_id, name in self.canvas.names.items():  # parts the screen draws itself
+            if self.element_combo.findData(element_id) < 0:
+                self.element_combo.addItem(name, element_id)
         self.element_combo.setCurrentIndex(max(0, self.element_combo.findData(self.element_id)))
         self.element_combo.blockSignals(False)
         self._load_inspector()
+
+    def _fill_chooser(self):
+        self.chooser_list.clear()
+        names = {**self.canvas.names, **self._element_names()}
+        repeated = {n for n in names.values() if list(names.values()).count(n) > 1}
+        for element_id, name in names.items():
+            # two elements of one name (two key hints): the id tells them apart
+            item = QListWidgetItem(f"{name}  ({element_id})" if name in repeated else name)
+            item.setData(Qt.UserRole, element_id)
+            item.setToolTip(element_id)
+            self.chooser_list.addItem(item)
 
     def _load_inspector(self):
         spec = screen_spec(self.screen_id)
         if not self.element_id:
             self.inspector.setEnabled(False)
-            self.inspector.title.setText("Choose an element on the canvas or in the list.")
+            self._fill_chooser()
+            self.side.setCurrentWidget(self.chooser)
             return
+        self.side.setCurrentWidget(self.inspector)
         self.inspector.setEnabled(True)
         element = self.controller.element(self.screen_id, self.element_id)
         described = {i: d for i, _k, d in spec.elements}
-        description = described.get(self.element_id, "Your own element")
+        if self.element_id in described:
+            description = described[self.element_id]
+        elif self.element_id.startswith("extra."):
+            description = "Your own element"
+        elif self.screen_id == "status":  # D96: a block of the page, drawn by the page
+            description = "A block of the page: what it shows is set in Game Systems ▸ Pause Menu"
+        else:
+            description = "A part the screen draws"
         self.inspector.load(element, description, spec.fields, self.boxes.get(self.element_id))
 
     # --- preview -----------------------------------------------------------------------
@@ -1148,17 +1258,19 @@ class MenuLayoutWorkspace(QWidget):
             if item.data(Qt.UserRole) is None:  # a group's heading
                 item.setText(translate(str(item.data(Qt.UserRole + 1))))
                 continue
-            if custom is None:
-                marked = item.text().startswith("●")
-            else:
-                marked = item.data(Qt.UserRole) in custom
+            if custom is not None:
+                item.setData(Qt.UserRole + 2, item.data(Qt.UserRole) in custom)
+            marked = bool(item.data(Qt.UserRole + 2))
             english = str(item.data(Qt.UserRole + 1))
             # a workstation's own layout ("  ▸ Forge") keeps the station's name
             title = english if english.lstrip().startswith("▸") else translate(english)
-            item.setText(("● " if marked else "   ") + title)
+            item.setText(title + (translate("  (changed)") if marked else ""))
+            changed = translate("Its layout is changed: This Screen ▸ Reset Screen undoes it.")
+            item.setToolTip(changed if marked else translate("The engine's layout."))
 
     def refresh_preview(self):
         self._label_screens()
+        self.pages_link.setVisible(self.screen_id == "status" and self.open_pause_menu is not None)
         self._stale = not self.isVisible()  # a hidden page draws when it is shown
         if self._stale:
             return
@@ -1180,6 +1292,11 @@ class MenuLayoutWorkspace(QWidget):
         self.unit = unit = getattr(preview, "unit", 1.0) or 1.0
         self.inspector.size = (round(width / unit), round(height / unit))
         self.boxes = {k: tuple(round(v / unit) for v in r) for k, r in boxes.items()}
+        from .i18n import translate
+        from .record_vocabulary import words
+
+        names = self._element_names()  # a box the screen draws on its own: its id in words
+        self.canvas.names = {k: names.get(k) or translate(words(k)) for k in self.boxes}
         self.canvas.show_screen(image, boxes, self.element_id)
         custom = self.controller.layout(self.screen_id) is not None
         self.status.setText(
@@ -1187,6 +1304,29 @@ class MenuLayoutWorkspace(QWidget):
             + ("its own layout" if custom else "the engine's layout")
             + "  ·  drag an outline to move it, its corner to resize"
         )
+
+    def _element_names(self):
+        """Each element's name as its outline and the element list show it: what it is, in
+        the editor's language (its id for an element of the author's own)."""
+        from .i18n import translate
+
+        described = {i: d for i, _k, d in screen_spec(self.screen_id).elements}
+        return {
+            element_id: translate(described[element_id]) if element_id in described else element_id
+            for element_id in self.controller.element_ids(self.screen_id)
+        }
+
+    def _open_pages(self):
+        if self.open_pause_menu is not None:
+            self.open_pause_menu("status")
+
+    def show_screen(self, screen_id):
+        """Choose ``screen_id`` in the list (another page's link to it)."""
+        for row in range(self.screen_list.count()):
+            if self.screen_list.item(row).data(Qt.UserRole) == screen_id:
+                self.screen_list.setCurrentRow(row)
+                return True
+        return False
 
     # --- reacting ----------------------------------------------------------------------
     def _screen_chosen(self, row):

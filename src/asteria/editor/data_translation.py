@@ -177,16 +177,9 @@ def _walk_stats(value, found, depth=0):
 
 
 def _stat_labels(project):
-    """The first character screen profile's stat and resource labels (its English)."""
-    library = getattr(project, "battle_presentation_library", None)
-    try:
-        ids = library.ids("rpg_character_screen") if library is not None else ()
-    except (KeyError, ValueError):
-        ids = ()
-    if not ids:
-        return {}
-    profile = library.require("rpg_character_screen", ids[0])
-    return {**dict(profile.resource_labels), **dict(profile.stat_labels)}
+    """The Stats' names (their English, D91; D98: the character screen's labels moved there)."""
+    db = getattr(project, "rpg_database", None)
+    return {k: d.display_name for k, d in getattr(db, "stat_definitions", {}).items()}
 
 
 def stat_ids(project):

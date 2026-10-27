@@ -83,12 +83,6 @@ def test_all_presentation_categories_are_project_owned_and_authorable():
         assert c.library.require(category, "default") is value
     assert set(profiles()).issubset(set(c.library.categories()))
     assert set(c.library.categories()) - set(profiles()) == {
-        "rpg_character_screen",
-        "rpg_equipment_screen",
-        "rpg_ability_screen",
-        "rpg_progression_screen",
-        "rpg_inventory_screen",
-        "rpg_party_screen",
         "menu_layout",  # authored on Presentation ▸ Menu Screens ▸ Layout (U2)
         "menu_theme",
         "bitmap_font",  # Menu Screens ▸ Layout ▸ Bitmap fonts… (V1)

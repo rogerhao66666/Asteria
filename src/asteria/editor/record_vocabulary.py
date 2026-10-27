@@ -1058,6 +1058,5 @@ CATEGORY_HELP.update(
         "ui_layout": "Where the battle UI sits on screen.",
         "ui_polish": "Spacing and sizes of the battle UI.",
         "motion_sequences": "Each skill's animation beats: moves, effects, sounds.",
-        "rpg_character_screen": "The status screen: sections, stat names and order.",
     }
 )

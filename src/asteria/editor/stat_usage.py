@@ -156,7 +156,7 @@ def _milestones(db, stat_id):
 
 
 def _tree_nodes(db, stat_id):
-    """``Attributes ▸ STR (Strength): +1 a rank, up to 30 ranks`` for every skill tree node
+    """``Attributes ▸ STR: +1 a rank, up to 30 ranks`` for every skill tree node
     whose ranks give the stat."""
     items = []
     for graph in db.progression_graphs.values():

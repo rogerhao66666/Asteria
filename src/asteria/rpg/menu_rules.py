@@ -2,9 +2,11 @@
 
 ``MenuRules`` (the project's first, by id; none = the engine's defaults):
 
-* ``pause_entries`` - the built-in pause entries in their order (``PAUSE_ENTRIES``); an entry a
-  game cannot use (Pets without pet species...) is left out. Empty: the engine's order, where
-  Status, Items, Equipment and Skills are pages of their own.
+* ``pause_entries`` / ``pause_hidden`` - the pause menu top to bottom and the entries it does
+  not show (D97). An entry is a built-in one (``PAUSE_ENTRIES``), a project's own menu page
+  (``page:<id>``) or Pause Menu Entry (``entry:<id>``). An entry the order leaves out keeps
+  its place in the engine's order (``pause_order``), so a page added later shows up. An entry
+  a game cannot use (Pets without pet species...) is left out. Empty: the engine's order.
 * ``stat_graph`` - the progression graph whose ranks the Status page's stat table spends
   points on (STR, DEX, INT, LUK...: one row and one + each). Empty: the first graph tagged
   ``attributes``; ``-`` turns the + off.
@@ -316,6 +318,7 @@ class MenuRules:
     rules_id: str
     display_name: str = ""
     pause_entries: tuple[str, ...] = ()
+    pause_hidden: tuple[str, ...] = ()
     stat_graph: str = ""
     stat_rows: tuple[str, ...] = ()
     item_categories: tuple[ItemCategory, ...] = ()
@@ -331,6 +334,7 @@ class MenuRules:
         display_name="",
         *,
         pause_entries=(),
+        pause_hidden=(),
         stat_graph="",
         stat_rows=(),
         item_categories=(),
@@ -344,8 +348,10 @@ class MenuRules:
         if not rules_id:
             raise ValueError("menu rules need an id")
         entries = _tags(pause_entries)
-        # ``page:<id>``: a project's own menu page (D96, ``rpg.menu_pages``)
-        unknown = [e for e in entries if e not in PAUSE_ENTRIES and not e.startswith("page:")]
+        hidden = _tags(pause_hidden)
+        # ``page:<id>``: a project's own menu page (D96, ``rpg.menu_pages``); ``entry:<id>``:
+        # a Pause Menu Entry (D97)
+        unknown = [e for e in (*entries, *hidden) if not _pause_entry(e)]
         if unknown:
             raise ValueError(f"unknown pause entries: {', '.join(unknown)}")
         categories = tuple(
@@ -372,6 +378,7 @@ class MenuRules:
         s(self, "rules_id", rules_id)
         s(self, "display_name", _text(display_name) or rules_id)
         s(self, "pause_entries", entries)
+        s(self, "pause_hidden", hidden)
         s(self, "stat_graph", _text(stat_graph))
         s(self, "stat_rows", _tags(stat_rows))
         s(self, "item_categories", categories)
@@ -393,7 +400,7 @@ class MenuRules:
         return self.stat_columns or STAT_COLUMNS
 
     SCHEMA = "asteria.rpg.menu_rules"
-    VERSION = 1
+    VERSION = 2  # 2 (D97): pause_hidden; an entry left out of the order keeps its place
 
     def to_data(self):
         data = {
@@ -404,6 +411,8 @@ class MenuRules:
         }
         if self.pause_entries:
             data["pause_entries"] = list(self.pause_entries)
+        if self.pause_hidden:
+            data["pause_hidden"] = list(self.pause_hidden)
         if self.stat_graph:
             data["stat_graph"] = self.stat_graph
         if self.stat_rows:
@@ -424,10 +433,15 @@ class MenuRules:
 
     @classmethod
     def from_data(cls, data):
+        entries = tuple(data.get("pause_entries", ()))
+        hidden = data.get("pause_hidden", ())
+        if data.get("version", 1) < 2 and entries:  # version 1: the order showed only these
+            hidden = [e for e in PAUSE_ENTRIES if e not in entries]
         return cls(
             data["rules_id"],
             data.get("display_name", ""),
-            pause_entries=data.get("pause_entries", ()),
+            pause_entries=entries,
+            pause_hidden=hidden,
             stat_graph=data.get("stat_graph", ""),
             stat_rows=data.get("stat_rows", ()),
             item_categories=data.get("item_categories", ()),
@@ -437,6 +451,24 @@ class MenuRules:
             stat_lines=data.get("stat_lines", ()),
             stat_columns=data.get("stat_columns", ()),
         )
+
+
+def _pause_entry(entry):
+    return entry in PAUSE_ENTRIES or entry.startswith(("page:", "entry:"))
+
+
+def pause_order(order, engine):
+    """The pause menu top to bottom: the entries of ``engine`` (the engine's order) in
+    ``order``'s order, and each one ``order`` leaves out just after the entry before it in the
+    engine's order (the top when none is). Entries not in ``engine`` are dropped."""
+    known = set(engine)
+    out = [e for e in dict.fromkeys(order) if e in known]
+    for i, entry in enumerate(engine):
+        if entry in out:
+            continue
+        before = next((e for e in reversed(engine[:i]) if e in out), None)
+        out.insert(out.index(before) + 1 if before is not None else 0, entry)
+    return out
 
 
 def menu_rules(database):
@@ -457,4 +489,5 @@ __all__ = [
     "StatGroup",
     "StatLine",
     "menu_rules",
+    "pause_order",
 ]

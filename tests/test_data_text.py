@@ -249,6 +249,7 @@ ALLOWED = {
     "runtime/playtest/multiplayer.py",  # network players' names
     "presentation/rpg_character_screen.py",  # its own view model
     "presentation/rpg_inventory_screen.py",  # profile default; the status menu translates
+    "presentation/retired_screens.py",  # D98: moves old names into the data, draws nothing
     "presentation/battle_screen.py",  # the screen's names dict, filled translated
     "presentation/workspace.py",  # editor workspace search
     "runtime/battle_presentation_adapters.py",  # assigns the translated names dict

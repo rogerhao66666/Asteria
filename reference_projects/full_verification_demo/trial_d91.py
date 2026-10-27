@@ -981,7 +981,8 @@ def patch_menu(db):
 def patch_words(data):
     db = data["rpg_database"]
     tables = {t["locale"]: t["entries"] for t in db["locale_tables"]}
-    screens = data["battle_presentation_library"]["categories"]["rpg_character_screen"]
+    # D98: the screen record is retired (its names moved to the Stats); older files have it
+    screens = data["battle_presentation_library"]["categories"].get("rpg_character_screen", {})
     for screen in screens.values():  # the screen's labels: the stats' own names (Stats)
         labels = {**screen["stat_labels"], **{s: v[0] for s, v in STATS.items()}}
         screen["stat_labels"] = dict(sorted(labels.items()))

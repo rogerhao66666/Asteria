@@ -42,6 +42,7 @@ from asteria.presentation.particles import (
     ParticleSystem,
 )
 
+from .i18n import translate
 from .particle_authoring import ParticleAuthoringController, ParticleAuthoringError
 from .responsive_form import ResponsiveForm
 
@@ -240,7 +241,7 @@ class ParticleEffectWidget(QWidget):
         self.status.setWordWrap(True)
         self.usage = QLabel()
         self.usage.setObjectName("MutedLabel")
-        self.usage.setWordWrap(True)
+        self.usage.setWordWrap(True)  # one short line now; wraps only in a narrow column
         apply = QPushButton("Apply")
         apply.clicked.connect(self.apply)
         revert = QPushButton("Revert")
@@ -423,9 +424,24 @@ class ParticleEffectWidget(QWidget):
             return
         self._set_inputs(definition)
         self._preview(definition)
-        used = self.api.usages(effect_id)
-        self.usage.setText("Used by: " + ", ".join(used) if used else "Not used yet")
+        self._show_usage(self.api.usages(effect_id))
         self.status.setText("")
+
+    def _show_usage(self, used):
+        """One short line: how many use it and the first few; the whole list in its tooltip
+        (D98: seventeen timelines wrapped over the form's fields)."""
+        used = list(used)
+        if not used:
+            self.usage.setText(translate("Not used yet"))
+            self.usage.setToolTip("")
+            return
+        shown = ", ".join(used[:3])
+        more = len(used) - 3
+        text = translate("Used by {0}: {1}").format(len(used), shown)
+        if more > 0:
+            text += translate(" and {0} more").format(more)
+        self.usage.setText(text)
+        self.usage.setToolTip("\n".join(used))
 
     def apply(self):
         effect_id = self.selected_id

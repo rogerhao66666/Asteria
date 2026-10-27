@@ -2,8 +2,8 @@
 
 The start definition lives in ``Project.game_start`` (design data, not a Player Save). This
 controller exposes the common fields as a flat, Qt-free record: start scene, facing, position,
-party, bag, currencies and owned pets. Anything the form does not show (progression, loadouts,
-event variables...) is kept exactly as it is.
+party, bag, spare gear (the equipment bag, D98), currencies and owned pets. Anything the form
+does not show (progression, loadouts, event variables...) is kept exactly as it is.
 """
 
 from __future__ import annotations
@@ -47,6 +47,8 @@ GAME_START_FORM: tuple[FormField, ...] = (
     ),
     F("party_actor_ids", "Party", "ref_list", source="actors", default=()),
     F("items", "Starting Items", "amounts", source="items", default={}),
+    # D98: spare pieces in the equipment bag (worn gear is each hero's loadout)
+    F("gear", "Starting Gear (spare, in the bag)", "amounts", source="equipment", default={}),
     F("currencies", "Starting Currencies", "amounts", default={}),
     F("pets", "Starting Pets", "table", fields=_PET, default=()),
     F("active_pet", "Pet Sent Out First (1-based; 0: first pet)", "int", default=0),
@@ -96,7 +98,12 @@ class GameStartAuthoringController:
                 (actor_id, f"{db.actors[actor_id].display_name or actor_id} ({actor_id})")
                 for actor_id in sorted(db.actors)
             )
-        stores = {"items": db.items, "actors": db.actors, "pet_species": db.pet_species}
+        stores = {
+            "items": db.items,
+            "equipment": db.equipment,
+            "actors": db.actors,
+            "pet_species": db.pet_species,
+        }
         return tuple(sorted(stores.get(source, {})))
 
     # -- reading -------------------------------------------------------------------------
@@ -124,6 +131,7 @@ class GameStartAuthoringController:
             "position_y": None if position is None else int(position[1]),
             "party_actor_ids": list(state.get("party_actor_ids", ())),
             "items": items,
+            "gear": _gear_counts(state.get("equipment_bag", ())),
             "currencies": dict(state.get("currencies", {})),
             "pets": pets,
             "active_pet": order.index(active) + 1 if active in order else 0,
@@ -159,6 +167,9 @@ class GameStartAuthoringController:
         ] or party
         state["currencies"] = {str(k): v for k, v in dict(data.get("currencies", {})).items() if v}
         state["inventory"] = _with_items(state.get("inventory", {}), data.get("items", {}))
+        gear = {str(k): int(v) for k, v in dict(data.get("gear", {})).items() if int(v) > 0}
+        if gear != _gear_counts(state.get("equipment_bag", ())):
+            state = self._with_gear(state, gear)
         pets, serial = [], {}
         for raw in data.get("pets", ()):
             species = str(raw["species_id"])
@@ -190,6 +201,53 @@ class GameStartAuthoringController:
             state,
             old.event_context_data,
         )
+
+    def _with_gear(self, state, gear):
+        """``state`` holding ``gear`` (``{equipment id: pieces}``) in its equipment bag: a piece
+        it holds already is kept as it is (its growth, its sockets), a new one is made as the
+        game makes found gear. An older state gains only the keys the bag's version needs;
+        everything else stays as written."""
+        from asteria.rpg.items import EquippedItem
+        from asteria.rpg.progression import ProgressionRuntime
+        from asteria.rpg.save_state import RpgRuntimeState
+
+        db = self.project.rpg_database
+        state = copy.deepcopy(state)
+        if "equipment_bag" not in state:  # versions before 8: the bag and the keys before it
+            fresh = RpgRuntimeState(
+                progression=ProgressionRuntime(db.progression_tracks.values())
+            ).to_data()
+            for key in ("shop_stock", "quests", "world", "equipment_bag"):
+                state.setdefault(key, fresh[key])
+            state["version"] = fresh["version"]
+        bag = state["equipment_bag"]
+        taken = {piece["instance_id"] for piece in bag}
+        for loadout in state.get("loadouts", {}).values():
+            for pieces in dict(loadout.get("equipped", {})).values():
+                taken.update(piece.get("instance_id", "") for piece in pieces)
+        kept = []
+        for equipment_id, count in gear.items():
+            pieces = [g for g in bag if g["equipment_id"] == equipment_id][:count]
+            kept += pieces
+            serial = 0
+            for _ in range(count - len(pieces)):
+                serial += 1
+                while f"{equipment_id}:bag{serial}" in taken:
+                    serial += 1
+                instance_id = f"{equipment_id}:bag{serial}"
+                taken.add(instance_id)
+                piece = EquippedItem(db.equipment[equipment_id], instance_id=instance_id)
+                kept.append(piece.to_data())
+        state["equipment_bag"] = kept
+        return state
+
+
+def _gear_counts(bag):
+    """``{equipment id: pieces}`` of a serialised equipment bag."""
+    counts = {}
+    for piece in bag or ():
+        counts[piece["equipment_id"]] = counts.get(piece["equipment_id"], 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def _with_items(inventory, items):

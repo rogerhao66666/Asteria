@@ -33,7 +33,6 @@ from .rpg_enemy_encounter_authoring import RpgEnemyEncounterAuthoringController
 from .rpg_item_equipment_authoring import RpgItemEquipmentAuthoringController
 from .rpg_party_formation_authoring import RpgPartyFormationAuthoringController
 from .rpg_progression_authoring import RpgProgressionAuthoringController
-from .runtime_rpg_ui_authoring import RuntimeRpgUiAuthoringController
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +68,6 @@ class IntegratedAuthoringControllers:
         self.enemy = RpgEnemyEncounterAuthoringController(document)
         self.battle = RpgBattleRulesAuthoringController(document)
         self.presentation = BattlePresentationAuthoringController(document)
-        self.runtime_ui = RuntimeRpgUiAuthoringController(document)
         self.flow = FieldGameFlowAuthoringController(document)
 
     @property
@@ -588,29 +586,3 @@ class IntegratedAuthoringControllers:
                 )
             )
         return tuple(result)
-
-    def runtime_ui_categories(self):
-        c = self.runtime_ui
-        labels = {
-            "rpg_character_screen": "Character Screen",
-            "rpg_equipment_screen": "Equipment Screen",
-            "rpg_ability_screen": "Ability / Passive Screen",
-            "rpg_progression_screen": "Progression / Skill Tree Screen",
-            "rpg_inventory_screen": "Inventory Screen",
-            "rpg_party_screen": "Party / Formation Screen",
-        }
-        return tuple(
-            AuthoringCategoryAdapter(
-                cat,
-                labels[cat],
-                lambda cat=cat: c.library.ids(cat),
-                lambda key, cat=cat: c.library.require(cat, key),
-                lambda key, value, cat=cat: c.edit(cat, key, value),
-                lambda key, cat=cat: c.delete(cat, key),
-                lambda value, cat=cat: c.library._encode(cat, value),
-                lambda data, cat=cat: c.library._decode(cat, data),
-                lambda old, new, cat=cat: c.duplicate(cat, old, new),
-                lambda key, value, cat=cat: c.create(cat, key, value),
-            )
-            for cat in c.CATEGORIES
-        )

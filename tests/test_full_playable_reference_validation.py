@@ -32,8 +32,7 @@ def test_runtime_build_edits_are_visible_before_battle():
     assert "meteor" in build.abilities
     assert "passive_01" in build.active_passives
 
-    profile = p.battle_presentation_library.require("rpg_character_screen", "default")
-    view = CharacterScreenRuntime(profile).project(
+    view = CharacterScreenRuntime().project(
         build,
         display_name=p.rpg_database.actors[actor].display_name,
         loadout=s.rpg_state.loadouts[actor],

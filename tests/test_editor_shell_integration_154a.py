@@ -25,7 +25,6 @@ def test_integrated_controller_bundle_shares_one_canonical_document():
     assert c.enemy.document is d
     assert c.battle.document is d
     assert c.presentation.document is d
-    assert c.runtime_ui.document is d
     assert c.flow.document is d
 
 
@@ -60,22 +59,13 @@ def test_battle_adapter_edits_existing_canonical_definition():
     assert p.rpg_database.battle_resources["focus"].maximum == 10
 
 
-def test_presentation_and_runtime_ui_adapters_are_separate_families():
+def test_presentation_adapters_hold_no_retired_screen_records():
     p = project()
     d = EditorDocument(p)
     c = IntegratedAuthoringControllers(d)
     presentation = {x.category_id for x in c.presentation_categories()}
-    runtime = {x.category_id for x in c.runtime_ui_categories()}
     assert presentation
-    assert runtime == {
-        "rpg_character_screen",
-        "rpg_equipment_screen",
-        "rpg_ability_screen",
-        "rpg_progression_screen",
-        "rpg_inventory_screen",
-        "rpg_party_screen",
-    }
-    assert not presentation.intersection(runtime)
+    assert not any(x.startswith("rpg_") for x in presentation)  # D98: retired
 
 
 def test_shell_declares_complete_top_level_information_architecture():

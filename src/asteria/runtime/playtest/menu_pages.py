@@ -1,20 +1,26 @@
 """The pause menu's pages (D87): Status, Items, Equipment and Skills as entries of their own.
 
-``_pause_options`` lists the built-in entries a game can use, in the engine's order
-(``rpg.menu_rules.PAUSE_ENTRIES``) or the one Game Systems ▸ Menu Pages sets, with the
-project's own entries (Pause Menu Entries) before Settings. Equipment opens the paper doll,
-Skills the skill tree when the member has one (else the list of skills). The Status page is a
-stat table in the manner of a MapleStory stat window: the member's profile and resources, the
-stats a stat graph raises with a + each and the points left, and a table of the other stats.
-The Items page has tabs and a filter (F), and shows the chosen thing's picture, description
-and facts beside the list or behind a Details button (D88, Menu Pages' ``item_details``).
+``_pause_options`` lists the entries a game can use in the order Game Systems ▸ Pause Menu
+sets, without the ones it hides (``rpg.menu_pages.pause_menu``; D97). Equipment opens the
+paper doll, Skills the skill tree when the member has one (else the list of skills). The
+Status page is a stat table in the manner of a MapleStory stat window: the member's profile
+and resources, the stats a stat graph raises with a + each and the points left, and a table of
+the other stats. The Items page has tabs and a filter (F), and shows the chosen thing's
+picture, description and facts beside the list or behind a Details button (D88, Menu Pages'
+``item_details``).
 """
 
 from __future__ import annotations
 
 from asteria.rpg.data_text import record_key
-from asteria.rpg.menu_pages import PAGE_ENTRY, menu_pages, page_entries
-from asteria.rpg.menu_rules import PAUSE_ENTRIES, menu_rules
+from asteria.rpg.menu_pages import (
+    MENU_ENTRY,
+    PAGE_ENTRY,
+    menu_pages,
+    page_entries,
+    pause_menu,
+    usable_pause_entries,
+)
 
 
 def _number(value):
@@ -80,53 +86,21 @@ class MenuPagesMixin:
         from asteria.runtime.game_menus import PAUSE_WORDS, text_keys
 
         db = self.project.rpg_database
-        usable = set(PAUSE_ENTRIES) - {
-            "equipment",
-            "enhance",
-            "skills",
-            "pets",
-            "backlog",
-            "skill_slots",
-            "music",
-            "credits",
-        }
-        if getattr(self.save.rpg_state, "loadouts", None):  # U3: gear the party can change
-            usable.add("equipment")
-            if db.refine_rules or any(e.sockets or e.growth_id for e in db.equipment.values()):
-                usable.add("enhance")
-        if db.progression_graphs or self.project.gameplay_library.abilities.ids():
-            usable.add("skills")
-        if getattr(db, "pet_species", None):
-            usable.add("pets")
         settings = self.game.message_settings
-        if settings is not None and settings.backlog_limit:
-            usable.add("backlog")
-        for entry, store in (
-            ("skill_slots", db.ability_loadout_rules),
-            ("music", db.music_tracks),
-            ("credits", db.credits_pages),
-        ):
-            if store:
-                usable.add(entry)
-        rules = menu_rules(db)
+        usable = usable_pause_entries(
+            db,
+            loadouts=getattr(self.save.rpg_state, "loadouts", None),
+            backlog=settings.backlog_limit if settings is not None else 0,
+            abilities=self.project.gameplay_library.abilities.ids(),
+        )
         pages = menu_pages(db)
         own_pages = page_entries(db)  # D96: a project's own menu page is an entry of its own
-        usable.update(own_pages)
-        if rules is not None and rules.pause_entries:
-            order = rules.pause_entries
-        else:  # the engine's order: the project's pages after Items
-            at = PAUSE_ENTRIES.index("items") + 1
-            order = (*PAUSE_ENTRIES[:at], *own_pages, *PAUSE_ENTRIES[at:])
         listed = {e: pages[e[len(PAGE_ENTRY) :]] for e in own_pages}
         # ``keys`` below word a page's name in the player's language
         names = {e: page.display_name for e, page in listed.items()}  # no session: as written
-        options = [(e, names.get(e) or PAUSE_WORDS[e]) for e in order if e in usable]
-        own = [
-            (f"entry:{entry.entry_id}", entry.label)
-            for entry in sorted(db.menu_entries.values(), key=lambda e: (e.order, e.entry_id))
-        ]
-        at = next((i for i, o in enumerate(options) if o[0] == "settings"), len(options))
-        options[at:at] = own  # in order, before Settings
+        names.update({f"{MENU_ENTRY}{k}": e.label for k, e in db.menu_entries.items()})
+        # D97: Game Systems ▸ Pause Menu - the author's order, without the hidden entries
+        options = [(e, names.get(e) or PAUSE_WORDS[e]) for e in pause_menu(db, usable)]
         icons = {
             f"entry:{e.entry_id}": e.icon_id for e in db.menu_entries.values() if e.icon_id
         }  # project-defined entries may carry an icon
@@ -315,16 +289,25 @@ class MenuPagesMixin:
                 "gear": (_signed(row.gear), (130, 190, 255) if row.gear else muted, 17),
                 "gain": (_signed(row.gain) if row.gain else "", (255, 220, 124), 17),
             }
+            mid = line_y + 10  # the row's middle: the + button's too
             for key, edge in columns:
                 text, tone, size = values[key]
-                self.text(
-                    text,
+                sign = text.startswith("+")
+                drawn = self.text(
+                    text[1:] if sign else text,
                     right(edge),
-                    line_y + (20 - size) // 2,
+                    mid,
                     size=size,
                     color=tone,
-                    anchor="topright",
+                    anchor="midright",
                 )
+                if sign and drawn is not None:
+                    # the sign drawn as bars, not the font's "+": the font's is small and sits
+                    # low beside the digits (D98), as the + button's cross (D93)
+                    arm = max(3, size // 4)
+                    cx, cy = drawn.left - arm - 2, drawn.centery - 2  # the digits, not descents
+                    pg.draw.rect(self.screen, tone, (cx - arm, cy - 1, arm * 2 + 1, 2))
+                    pg.draw.rect(self.screen, tone, (cx - 1, cy - arm, 2, arm * 2 + 1))
             plus = (ax + aw - 36, line_y - 3, 36, 26)
             fill = (64, 150, 92) if row.allowed else (52, 58, 72)
             pg.draw.rect(self.screen, fill, plus, border_radius=5)

@@ -57,40 +57,23 @@ class MessagesMixin:
 
         return name_of(self.data_lookup, record, fallback)
 
-    def _profile_labels(self, category, *attributes):
-        """The labels of the project's first ``category`` screen profile, merged (U1)."""
-        library = self.project.battle_presentation_library
-        try:
-            ids = library.ids(category)
-        except (KeyError, ValueError):
-            return {}
-        if not ids:
-            return {}
-        profile = library.require(category, ids[0])
-        labels = {}
-        for attribute in attributes:
-            labels.update(dict(getattr(profile, attribute, ()) or ()))
-        return labels
-
     def stat_name(self, stat_id, *, short=False):
         """A stat's (or resource's) name in the player's language: the locale table's
-        ``data.stat.<id>.name``, else its stat definition's (D91), else the character screen's
-        label, else the id in words. ``short``: the short name (STR) where one is given."""
+        ``data.stat.<id>.name``, else its stat definition's (D91), else the id in words.
+        ``short``: the short name (STR) where one is given."""
         from asteria.rpg.data_text import stat_name, stat_short_name
 
-        labels = self._profile_labels("rpg_character_screen", "resource_labels", "stat_labels")
         db = getattr(self.project, "rpg_database", None)
         definition = getattr(db, "stat_definitions", {}).get(str(stat_id))
         find = stat_short_name if short else stat_name
-        return find(self.data_lookup, stat_id, labels, definition)
+        return find(self.data_lookup, stat_id, {}, definition)
 
     def slot_name(self, slot_id):
         """An equipment slot's name (``data.slot.<id>.name``, else the slot definition's name,
-        else a screen's label)."""
+        else the engine's word for it)."""
         from asteria.rpg.data_text import slot_name
 
-        labels = self._profile_labels("rpg_equipment_screen", "slot_labels")
-        labels = {**self._profile_labels("rpg_character_screen", "slot_labels"), **labels}
+        labels = {}
         db = getattr(self.project, "rpg_database", None)
         definition = getattr(db, "equipment_slots", {}).get(str(slot_id))
         own = self.name_of(definition, "") if definition is not None else ""

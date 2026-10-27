@@ -80,14 +80,9 @@ def test_reference_project_has_project_owned_presentation_and_runtime_ui():
         "results",
         "party_layout",
         "ui_theme",
-        "rpg_character_screen",
-        "rpg_equipment_screen",
-        "rpg_ability_screen",
-        "rpg_progression_screen",
-        "rpg_inventory_screen",
-        "rpg_party_screen",
     ):
         assert lib.ids(category), category
+    assert "rpg_character_screen" not in lib.categories()  # D98: the screen records are retired
 
 
 def test_reference_field_has_real_boss_interaction_chain():
@@ -118,9 +113,8 @@ def test_reference_project_is_visible_through_real_editor_authoring_adapters():
     assert "resources" in battle and len(battle["resources"].ids()) == 3
 
     presentation = {x.category_id: x for x in c.presentation_categories()}
-    runtime = {x.category_id: x for x in c.runtime_ui_categories()}
     assert presentation["hud"].ids() == ("adaptive",)
-    assert runtime["rpg_character_screen"].ids() == ("default",)
+    assert not hasattr(c, "runtime_ui_categories")  # D98: the Menu Records tab is gone
 
 
 def test_reference_generator_is_reproducible(tmp_path):

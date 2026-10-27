@@ -61,6 +61,7 @@ def test_the_paper_doll_wears_and_takes_off_what_fits(host):
     assert slots.count("arsenal") == 6  # the Brave's carried weapons (D92)
     boxes = {p.slot_id for p in host.menu_layout("equipment").element("doll").slots}
     assert boxes == set(slots)  # the demo's doll picture has a place for every slot
+    game.save.rpg_state.equipment_bag.clear()  # D98: the demo starts with spare gear
     (helmet,) = game.gain_equipment("hd_plate_helmet")
     game.gain_equipment("a_scale_mail")
     game.equip_offers.clear()

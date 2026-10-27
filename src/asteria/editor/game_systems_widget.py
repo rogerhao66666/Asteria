@@ -135,6 +135,99 @@ class _RefList(QListWidget):
         return False
 
 
+class _PauseOrder(QWidget):
+    """The pause menu top to bottom (D97): every entry the game has, a tick to show it, dragged
+    to its place. ``choices`` are ``(id, name, why_not)`` in the engine's order, ``why_not``
+    saying what the game lacks for an entry it cannot show ("" when it can). The value is the
+    order (empty while it is the engine's) and the hidden entries. ``compact``: the Game
+    Systems sidebar's list (Pause Menu): short buttons, the reasons in tooltips, the list
+    as tall as the sidebar."""
+
+    edited = Signal()
+
+    def __init__(self, choices, parent=None, *, compact=False):
+        super().__init__(parent)
+        self.compact = compact
+        self.set_choices(choices)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.list = QListWidget()
+        self.list.setDragDropMode(QAbstractItemView.InternalMove)
+        self.list.setDefaultDropAction(Qt.MoveAction)
+        self.list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.list.setSpacing(1)
+        self.list.itemChanged.connect(self._changed)
+        self.list.model().rowsMoved.connect(self._changed)
+        row = QHBoxLayout()  # above the list: in view however long the menu is
+        self.show_all = QPushButton("Show All" if compact else "Show Every Entry")
+        self.reset = QPushButton("Engine Order" if compact else "Back to the Engine's Order")
+        self.show_all.setToolTip(translate("Tick every entry."))
+        self.reset.setToolTip(translate("Put every entry back in the engine's order."))
+        self.show_all.clicked.connect(self._show_every_entry)
+        self.reset.clicked.connect(self._engine_order)
+        row.addWidget(self.show_all)
+        row.addWidget(self.reset)
+        row.addStretch(1)
+        layout.addLayout(row)
+        layout.addWidget(self.list)
+        self._loading = False
+
+    def set_choices(self, choices):
+        self.choices = [tuple(c) for c in choices]
+        self.engine = [c[0] for c in self.choices]
+
+    def _changed(self, *_args):
+        if not self._loading:
+            self.edited.emit()
+
+    def set_value(self, order, hidden):
+        from asteria.rpg.menu_rules import pause_order
+
+        self._loading = True
+        self.list.clear()
+        names = {c[0]: c[1:] for c in self.choices}
+        for entry in pause_order(order, self.engine):
+            name, why_not = names[entry]
+            item = QListWidgetItem(name)
+            tip = [translate("Internal ID: {0}").format(entry)]
+            if why_not:  # the game has nothing it opens: it is not shown whatever the tick
+                if not self.compact:
+                    item.setText(f"{name}    ({translate('not in this game: needs {0}')})")
+                    item.setText(item.text().format(translate(why_not)))
+                item.setForeground(self.palette().placeholderText())
+                tip.insert(0, translate("Shown once {0}.").format(translate(why_not)))
+            item.setToolTip("\n".join(tip))
+            item.setData(Qt.UserRole, entry)
+            flags = item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled
+            item.setFlags(flags & ~Qt.ItemIsDropEnabled)  # dropped between rows, not onto one
+            item.setCheckState(Qt.Unchecked if entry in hidden else Qt.Checked)
+            self.list.addItem(item)
+        if not self.compact:  # every entry in view: the whole menu at a glance, no scrolling
+            row = self.list.sizeHintForRow(0) + 2 * self.list.spacing() if self.list.count() else 0
+            self.list.setFixedHeight(row * self.list.count() + 2 * self.list.frameWidth() + 4)
+        self._loading = False
+
+    def _entries(self):
+        return [self.list.item(i) for i in range(self.list.count())]
+
+    def order(self):
+        """The order, empty while it is the engine's (a page added later then finds its place
+        as the engine places it)."""
+        order = [item.data(Qt.UserRole) for item in self._entries()]
+        return [] if order == self.engine else order
+
+    def hidden(self):
+        return [i.data(Qt.UserRole) for i in self._entries() if i.checkState() != Qt.Checked]
+
+    def _engine_order(self):
+        self.set_value((), self.hidden())
+        self.edited.emit()
+
+    def _show_every_entry(self):
+        for item in self._entries():
+            item.setCheckState(Qt.Checked)
+
+
 class _TableField(QGroupBox):
     """Master–detail editor for a list of nested records."""
 
@@ -640,6 +733,7 @@ class RecordForm(QWidget):
                     help_text=f.help,
                     # tables and long text (a translation, a description) take a whole row
                     span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info", "formula")
+                    or f.kind == "pause_order"
                     or f.key in ("text", "description", "message", "detail"),
                 )
 
@@ -677,6 +771,7 @@ class RecordForm(QWidget):
             "optional_ref": "currentIndexChanged",
             "icon": "changed",
             "ref_list": "edited",
+            "pause_order": "edited",
             "string_list": "edited",
             "amounts": "edited",
             "group": None,
@@ -842,6 +937,8 @@ class RecordForm(QWidget):
             row.addWidget(box.check)
             row.addWidget(box.spin, 1)
             return box
+        if f.kind == "pause_order":
+            return _PauseOrder(self.references(f.source))
         if f.kind == "ref_list":
             from .record_form import ChipList
 
@@ -919,6 +1016,8 @@ class RecordForm(QWidget):
             elif f.kind in ("ref_list", "string_list"):
                 widget.values = [str(v) for v in value or ()]
                 widget._build()
+            elif f.kind == "pause_order":
+                widget.set_value(value or (), data.get(f.hidden_key) or ())
             elif f.kind == "amounts":
                 widget.values = {str(k): float(v) for k, v in dict(value or {}).items()}
                 widget._build()
@@ -961,6 +1060,9 @@ class RecordForm(QWidget):
                 out[f.key] = widget.spin.value() if widget.check.isChecked() else None
             elif f.kind in ("ref_list", "string_list"):
                 out[f.key] = list(widget.values)
+            elif f.kind == "pause_order":
+                out[f.key] = widget.order()
+                out[f.hidden_key] = widget.hidden()
             elif f.kind == "amounts":
                 out[f.key] = {k: float(v) for k, v in widget.values.items()}
             elif f.kind == "pairs":
@@ -979,8 +1081,15 @@ def _number(text, label):
         raise GameSystemsAuthoringError(f"{label}: '{text}' is not a number") from None
 
 
+# the records the Pause Menu page edits together (D97): one entry of the kind list
+PAUSE_MENU = "pause_menu"
+MENU_KINDS = ("menu_rules", "menu_pages", "menu_entries")
+
+
 class GameSystemsEditorWidget(QWidget):
-    """Browse, create, duplicate, edit and delete game-system definitions."""
+    """Browse, create, duplicate, edit and delete game-system definitions. Pause Menu (D97)
+    is one page for the menu's order, its pages and its event entries
+    (``pause_menu_widget``)."""
 
     changed = Signal()
 
@@ -989,7 +1098,10 @@ class GameSystemsEditorWidget(QWidget):
         self.controller = controller
         self.kind_box = QComboBox()
         for kind in KINDS:
-            self.kind_box.addItem(kind.label, kind.kind_id)
+            if kind.kind_id == MENU_KINDS[0]:
+                self.kind_box.addItem("Pause Menu", PAUSE_MENU)
+            if kind.kind_id not in MENU_KINDS:
+                self.kind_box.addItem(kind.label, kind.kind_id)
         self.kind_box.setProperty("decorate", True)  # kind icons (decor.py), as the hub combos
         fit_combo_to_items(self.kind_box)  # "Battle Extras (taunt, steal, TP...)" whole
         self.kind_box.currentIndexChanged.connect(self.refresh)
@@ -1011,6 +1123,7 @@ class GameSystemsEditorWidget(QWidget):
         self.status.setWordWrap(True)
         self.used_by = QLabel("")
         buttons = QHBoxLayout()
+        self.record_buttons = []  # not on the Pause Menu page: it adds and removes its own
         for label, slot in (
             ("New…", self._new_clicked),
             ("Duplicate…", self._duplicate_clicked),
@@ -1019,6 +1132,18 @@ class GameSystemsEditorWidget(QWidget):
             button = QPushButton(label)
             button.clicked.connect(slot)
             buttons.addWidget(button)
+            self.record_buttons.append(button)
+        from PySide6.QtWidgets import QStackedWidget
+
+        from .pause_menu_widget import PauseMenuEditor
+
+        self.pause = PauseMenuEditor(controller, self.scroll, self)
+        self.pause.hide()  # its parts live in the sidebar and the page
+        self.pause.changed.connect(self.changed)
+        self.pause.report.connect(self._report)
+        self.sidebar = QStackedWidget()
+        self.sidebar.addWidget(self.browser)
+        self.sidebar.addWidget(self.pause.side)
         # a gacha banner: draw 10,000 times and show the real spread (U5)
         self.simulate_button = QPushButton("Simulate 10,000 Pulls")
         self.simulate_button.clicked.connect(self.simulate_selected)
@@ -1029,7 +1154,7 @@ class GameSystemsEditorWidget(QWidget):
         buttons.addStretch(1)
         buttons.addWidget(UndoRedoButtons())  # edits apply on their own: a step back or on
         split = QSplitter()
-        split.addWidget(authoring_sidebar("Game Systems", self.browser, header=self.kind_box))
+        split.addWidget(authoring_sidebar("Game Systems", self.sidebar, header=self.kind_box))
         split.addWidget(self.scroll)
         split.setStretchFactor(1, 1)
         layout = QVBoxLayout(self)
@@ -1111,6 +1236,23 @@ class GameSystemsEditorWidget(QWidget):
     def set_kind(self, kind_id):
         self.kind_box.setCurrentIndex(self.kind_box.findData(kind_id))
 
+    def show_record(self, kind_id, record_id):
+        """Open ``kind_id``'s record ``record_id`` (a problem's jump): a menu record opens on
+        its row of the Pause Menu (D97)."""
+        if kind_id in MENU_KINDS:
+            from asteria.rpg.menu_pages import BUILT_IN_PAGES, MENU_ENTRY, PAGE_ENTRY
+
+            if kind_id == "menu_pages":
+                row = record_id if record_id in BUILT_IN_PAGES else PAGE_ENTRY + record_id
+            else:
+                row = MENU_ENTRY + record_id if kind_id == "menu_entries" else None
+            self.set_kind(PAUSE_MENU)
+            self.pause.refresh(row)
+            return row is None or self.pause.selected == row
+        self.set_kind(kind_id)
+        self.refresh(select=record_id)
+        return self.selected_id == record_id
+
     def refresh(self, select=None):
         current = select or self.selected_id
         if self.controller.document.project is None:
@@ -1123,6 +1265,17 @@ class GameSystemsEditorWidget(QWidget):
             self.form = None
             return
         self.flush_edits()
+        pause = self.kind_id == PAUSE_MENU
+        self.sidebar.setCurrentIndex(1 if pause else 0)
+        for button in self.record_buttons:
+            button.setVisible(not pause)
+        if pause:
+            self.form = None
+            self.used_by.setText("")
+            self.simulate_button.setVisible(False)
+            self.simulation.setVisible(False)
+            self.pause.refresh(select)
+            return
         gacha = self.kind_id == "gacha_banners"
         self.simulate_button.setVisible(gacha)
         self.simulation.setVisible(gacha)
@@ -1198,6 +1351,7 @@ class GameSystemsEditorWidget(QWidget):
         return True
 
     def flush_edits(self):
+        self.pause.flush()
         if self._apply_timer.isActive():
             self._apply_timer.stop()
             self.auto_apply()
@@ -1211,6 +1365,8 @@ class GameSystemsEditorWidget(QWidget):
 
     def apply(self):
         self._apply_timer.stop()
+        if self.kind_id == PAUSE_MENU:
+            return self.pause.apply()
         key = self.selected_id
         if key is None:
             return False

@@ -89,7 +89,7 @@ def test_the_demo_writes_its_pages_as_blocks(host):
 def test_a_page_of_the_projects_own_opens_from_the_pause_menu(host):
     words = dict(host._pause_menu.labels(host.game.tr))
     assert words["page:materials"] == "Materials"
-    assert host._pause_menu.icons["page:materials"].endswith("I_Agate.png")
+    assert not host._pause_menu.icons.get("page:materials")  # D98: no icon in the demo
     host._open_pause_page("page:materials")
     menu = host.status_menu
     assert host._ui_mode == "status" and menu.single and menu.page_id == "materials"
@@ -103,14 +103,18 @@ def test_a_page_of_the_projects_own_opens_from_the_pause_menu(host):
     assert len(host.pointer.drawn) > len(menu.rows())  # its rows and tabs take clicks
 
 
-def test_a_page_without_an_entry_in_the_ticked_order_is_not_shown(host):
+def test_a_page_left_out_of_the_order_keeps_its_place_and_a_hidden_one_is_not_shown(host):
     from asteria.runtime.playtest.menu_pages import MenuPagesMixin
 
     db = host.project.rpg_database
     (rule_id,) = db.menu_rules
     db.menu_rules[rule_id] = MenuRules(rule_id, pause_entries=("page:materials", "items"))
     options, _icons, _keys = MenuPagesMixin._pause_options(host)
-    assert [k for k, _ in options][:2] == ["page:materials", "items"]
+    keys = [k for k, _ in options]
+    assert keys.index("page:materials") < keys.index("items")  # the author's order
     db.menu_rules[rule_id] = MenuRules(rule_id, pause_entries=("items", "resume"))
+    options, _icons, _keys = MenuPagesMixin._pause_options(host)
+    assert [k for k, _ in options][:2] == ["items", "page:materials"]  # its place: after Items
+    db.menu_rules[rule_id] = MenuRules(rule_id, pause_hidden=("page:materials",))
     options, _icons, _keys = MenuPagesMixin._pause_options(host)
     assert "page:materials" not in [k for k, _ in options]

@@ -34,7 +34,6 @@ def _adapters(controllers):
         "rpg_categories",
         "battle_categories",
         "presentation_categories",
-        "runtime_ui_categories",
     ):
         for adapter in getattr(controllers, group)():
             yield group, adapter
