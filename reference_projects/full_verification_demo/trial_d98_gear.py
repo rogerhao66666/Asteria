@@ -1,4 +1,5 @@
 """D98: the demo starts with one spare piece of most gear (Game Start ▸ Starting Gear)."""
+
 import json
 from pathlib import Path
 
