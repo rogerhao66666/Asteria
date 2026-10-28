@@ -1,5 +1,7 @@
 """A small dock that plays an imported 2D skeleton so a rig can be checked before use."""
 
+import weakref
+
 try:
     from PySide6.QtCore import QEvent, Qt, QTimer, Signal
     from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
@@ -49,8 +51,14 @@ except ImportError:
 class _Canvas(QWidget):
     def __init__(self, owner):
         super().__init__()
-        self.owner = owner
+        # a weak reference: the owner holds this widget, and a cycle between a widget and
+        # the window it sits in crashed PySide6 6.12's garbage collection (a segfault)
+        self._owner = weakref.ref(owner)
         self.setMinimumHeight(180)
+
+    @property
+    def owner(self):
+        return self._owner()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -147,9 +155,15 @@ class _Canvas(QWidget):
 class _Timeline(QWidget):
     def __init__(self, owner):
         super().__init__()
-        self.owner = owner
+        # a weak reference: the owner holds this widget, and a cycle between a widget and
+        # the window it sits in crashed PySide6 6.12's garbage collection (a segfault)
+        self._owner = weakref.ref(owner)
         self.setMinimumHeight(12)
         self.setMaximumHeight(16)
+
+    @property
+    def owner(self):
+        return self._owner()
 
     def key_positions(self):
         clip = self.owner.clip()

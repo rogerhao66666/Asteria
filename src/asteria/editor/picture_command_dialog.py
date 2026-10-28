@@ -1,5 +1,6 @@
 """Structured editor and screen-space preview for picture world commands."""
 
+import weakref
 from pathlib import Path
 
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
@@ -30,8 +31,14 @@ PICTURE_COMMANDS = (
 class _PicturePreview(QWidget):
     def __init__(self, owner):
         super().__init__()
-        self.owner = owner
+        # a weak reference: the owner holds this widget, and a cycle between a widget and
+        # the window it sits in crashed PySide6 6.12's garbage collection (a segfault)
+        self._owner = weakref.ref(owner)
         self.setMinimumSize(280, 180)
+
+    @property
+    def owner(self):
+        return self._owner()
 
     def paintEvent(self, event):
         painter = QPainter(self)

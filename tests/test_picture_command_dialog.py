@@ -70,3 +70,18 @@ def test_move_frame_and_erase_dialogs_only_emit_supported_fields(app):
         assert dialog.result_args() == {"picture_id": "portal"}
     finally:
         dialog.close()
+
+
+def test_the_preview_holds_its_dialog_weakly(app):
+    """As the Dialogue preview: a preview keeping its dialog while the dialog held it made a
+    cycle that PySide6 6.12 crashed collecting."""
+    import gc
+    import weakref
+
+    dialog = PictureCommandDialog("SHOW_PICTURE")
+    assert dialog.preview.owner is dialog
+    assert dialog not in gc.get_referents(dialog.preview.__dict__)
+    gone = weakref.ref(dialog)
+    dialog.close()
+    del dialog
+    assert gone() is None  # freed by reference counting, without the cycle collector

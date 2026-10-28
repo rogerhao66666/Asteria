@@ -331,3 +331,18 @@ def test_skeleton_presentation_tab_floats_and_returns_to_its_tab(app):
         window.close()
         window.deleteLater()
         app.processEvents()
+
+
+def test_the_canvas_and_timeline_hold_the_viewer_weakly(app):
+    """As the Dialogue preview: a part keeping its viewer while the viewer held it made a cycle
+    that PySide6 6.12 crashed collecting."""
+    import gc
+
+    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+
+    widget = SkeletonViewerWidget()
+    for part in (widget.canvas, widget.timeline):
+        assert part.owner is widget
+        assert widget not in gc.get_referents(part.__dict__)
+    del widget, part
+    gc.collect()  # crashed here (segfault) while the parts held the viewer
