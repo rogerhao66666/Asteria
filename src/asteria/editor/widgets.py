@@ -151,8 +151,7 @@ class ProjectTreeWidget(QWidget):
                     tree_item.setIcon(0, icon(name))
                 if kind is not None:
                     tree_item.setData(0, Qt.UserRole, (kind, value))
-                    if (kind, id(value)) in selected:
-                        tree_item.setSelected(True)
+                    if (kind, id(value)) in selected:  # marked once it is in the tree (below)
                         selected_items.append(tree_item)
                 return tree_item
 
@@ -212,6 +211,10 @@ class ProjectTreeWidget(QWidget):
                     parent = parent.parent()
             if selected_items:
                 self.tree.setCurrentItem(selected_items[0])
+            # an item marked before it was added to the tree stayed unmarked: a box selection
+            # showed only its first entity here
+            for selected_item in selected_items:
+                selected_item.setSelected(True)
         finally:
             self.tree.blockSignals(False)
 

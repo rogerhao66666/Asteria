@@ -1000,7 +1000,7 @@ class MenuLayoutWorkspace(QWidget):
         self._preview_project = None
         self._preview_folder = None  # the game folder's settings file the preview read
         self._stale = True  # the preview waits until the page is shown
-        self.screen_id = "shop"
+        self.screen_id = ""  # the list's first screen (the title) until one is chosen
         self.element_id = ""
         self.boxes = {}
         self.screen_list = QListWidget()
@@ -1155,6 +1155,10 @@ class MenuLayoutWorkspace(QWidget):
             self.screen_list.addItem(item)
             if screen_id == self.screen_id:
                 self.screen_list.setCurrentItem(item)
+        if self.screen_list.currentItem() is None and self.screen_list.count():
+            first = self.screen_list.item(0)  # the menus come first: the title screen
+            self.screen_id = first.data(Qt.UserRole)
+            self.screen_list.setCurrentItem(first)
         self.screen_list.blockSignals(False)
         locales = project.rpg_database.locale_tables
         current = self.language.currentData()

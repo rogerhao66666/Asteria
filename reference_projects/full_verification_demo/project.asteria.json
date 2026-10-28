@@ -101561,7 +101561,8 @@
           "plaque.cleared": "The Hall of Heroes: Roger's name is carved here. The Trial begins anew.",
           "plaque.empty": "The Hall of Heroes: no name is carved here yet.",
           "scholar.ask": "Which tongue shall I tell the tales in?",
-          "scholar.done": "So be it."
+          "scholar.done": "So be it.",
+          "hint.mouse": ""
         },
         "locale": "en"
       },
@@ -101747,7 +101748,7 @@
           "controls.action.reset_all": "\u5168\u90e8\u91cd\u8a2d",
           "controls.all_reset": "\u5df2\u6062\u5fa9\u6240\u6709\u6309\u9375\u7684\u9810\u8a2d",
           "controls.hint": "Enter\uff1a\u91cd\u65b0\u8a2d\u5b9a   Backspace\uff1a\u6062\u5fa9\u6b64\u9805\u9810\u8a2d   Esc\uff1a\u5132\u5b58\u4e26\u8fd4\u56de",
-          "hint.mouse": "\u9ede\u64ca\uff1a\u9078\u64c7   \u53f3\u9375\uff1a\u8fd4\u56de",
+          "hint.mouse": "",
           "controls.pad_axis": "\u624b\u628a {axis}",
           "controls.pad_button": "\u624b\u628a {button}",
           "controls.pad_hat": "\u5341\u5b57\u9375",

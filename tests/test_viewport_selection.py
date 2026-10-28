@@ -20,3 +20,25 @@ def test_selected_scene_falls_back_to_startup_scene():
     p.add_scene(Scene("B"))
     doc = EditorDocument(project=p)
     assert selected_scene(doc) is a
+
+
+def test_the_project_tree_marks_every_entity_of_a_box_selection(monkeypatch):
+    """The tree marked items before they were in it, so a box selection showed only its first
+    entity there (the Inspector said "3 selected")."""
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.widgets import ProjectTreeWidget
+
+    QApplication.instance() or QApplication([])
+    p = Project("G")
+    scene = p.add_scene(Scene("A"))
+    heroes = [scene.add_entity(Entity(name)) for name in ("Ann", "Bo", "Cy")]
+    scene.add_entity(Entity("Dee"))
+    doc = EditorDocument(project=p)
+    doc.select_many("entity", heroes)
+    tree = ProjectTreeWidget(doc)
+    tree.refresh()
+    marked = sorted(i.text(0) for i in tree.tree.selectedItems())
+    assert marked == ["Ann", "Bo", "Cy"]
+    tree.deleteLater()

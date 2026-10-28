@@ -205,7 +205,7 @@ class MenuPagesMixin:
             bar_y += 28
 
     # where the stat table's columns end, back from its right edge: the last column the first
-    STAT_EDGES = (44, 98, 154, 210, 268, 330)
+    STAT_EDGES = (54, 108, 164, 220, 278, 340)  # 12 px clear of the row colour's end
 
     @classmethod
     def _stat_columns(cls, menu):
@@ -269,16 +269,19 @@ class MenuPagesMixin:
             selected = i == menu.row
             band = (ax - 6, line_y - 4, aw + 12, row_h - 4)
             self.hotspot(band, lambda i=i: setattr(menu, "row", i), key="")
+            # the row's colour stops short of the + button: a button on a dark row and one on a
+            # light row looked different sizes; every button now sits on the panel's own colour
+            shade = (ax - 6, line_y - 4, aw - 36, row_h - 4)
             if selected:
                 c.selection(
                     "stat_rows",
-                    band,
-                    lambda band=band: pg.draw.rect(
-                        self.screen, (40, 52, 78), band, border_radius=4
+                    shade,
+                    lambda shade=shade: pg.draw.rect(
+                        self.screen, (40, 52, 78), shade, border_radius=4
                     ),
                 )
             elif i % 2:
-                pg.draw.rect(self.screen, (20, 26, 42), band, border_radius=4)
+                pg.draw.rect(self.screen, (20, 26, 42), shade, border_radius=4)
             color = c.tone("selected", (255, 255, 255)) if selected else normal
             self.text(row.label, ax, line_y, size=19, color=color)
             values = {

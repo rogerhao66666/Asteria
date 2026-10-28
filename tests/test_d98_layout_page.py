@@ -120,3 +120,15 @@ def test_a_pause_menu_page_links_to_its_layout(monkeypatch):
         assert window.menu_layout_editor.screen_id == "status"
     finally:
         window.close()
+
+
+def test_the_page_opens_on_the_title_screen(monkeypatch):
+    _document, page = _page(monkeypatch)
+    try:
+        page.show()
+        page.rebuild()
+        assert page.screen_id == "title"
+        assert page.screen_list.currentItem().data(Qt.UserRole) == "title"
+        assert page.screen_list.currentRow() == 0
+    finally:
+        page.close()

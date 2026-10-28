@@ -524,7 +524,8 @@ def test_the_demo_shows_the_engine_words_and_its_own_menu_names_in_chinese():
     assert all(f"battle.layer.{layer.layer_id}" in chinese for layer in pages.layers)
     assert all(f"pause.entry.{key}" in chinese for key in project.rpg_database.menu_entries)
     assert all(chinese[key] == zh for key, (_en, zh) in trial_world.TEXT.items())
-    assert set(english) & set(BUILT_IN_TEXT) == {"language.name"}  # English: as written
+    # English: as written, but for the mouse hint the demo blanks (its clicks still work)
+    assert set(english) & set(BUILT_IN_TEXT) == {"language.name", "hint.mouse"}
 
 
 def test_the_translations_page_lists_the_names_the_battle_menu_draws():

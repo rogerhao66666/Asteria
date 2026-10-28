@@ -247,7 +247,7 @@ def test_the_stat_table_shows_the_columns_menu_pages_tick():
 
     menu = Menu()
     menu.rules = rules
-    assert MenuPagesMixin._stat_columns(menu) == [("total", 98), ("gain", 44)]  # no gap
+    assert MenuPagesMixin._stat_columns(menu) == [("total", 108), ("gain", 54)]  # no gap
 
 
 def test_the_demo_hides_the_rank_column(host):

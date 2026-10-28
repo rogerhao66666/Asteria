@@ -571,3 +571,17 @@ def test_click_to_move_skips_a_side_view_action_scene(runtime):
         assert not runtime._click_move_scene()  # a platformer's player jumps instead
     finally:
         del type(game).action_scene
+
+
+def test_the_full_verification_demo_keeps_the_mouse_but_draws_no_hint():
+    """D99: the demo blanks ``hint.mouse`` in both its languages; clicks still work."""
+    import json
+
+    from asteria.rpg.localization import LocaleTable, Localizer
+
+    demo = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
+    data = json.loads((demo / "project.asteria.json").read_text(encoding="utf-8"))
+    tables = [LocaleTable.from_data(t) for t in data["rpg_database"]["locale_tables"]]
+    for locale in ("en", "zh-TW"):
+        assert Localizer(tables, default_locale="en", locale=locale).tr("hint.mouse", "x") == ""
+    assert data.get("input_map", {}).get("mouse", True) is not False
