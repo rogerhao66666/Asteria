@@ -114,7 +114,10 @@ def test_text_draws_in_the_bitmap_font_and_falls_back_for_what_it_lacks(runtime)
     assert runtime.screen.get_at((13, 10))[:3] == RED  # C starts after A's 3
     runtime.screen.fill((0, 0, 0))
     rect = runtime.text("中文", 10, 10, size=20, font="bitmap:pix")  # not in it: the fonts
-    assert rect.width > 20
+    from asteria.platform.pygame_battle_ui import cjk_font_path
+
+    if cjk_font_path(runtime.pg) is not None:  # without a CJK system font there is none to use
+        assert rect.width > 20
     library = runtime.project.battle_presentation_library
     library.set("menu_theme", "default", MenuTheme(bitmap_font="pix"))
     runtime.screen.fill((0, 0, 0))
