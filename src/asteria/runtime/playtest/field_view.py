@@ -194,6 +194,10 @@ class FieldViewMixin:
         return view
 
     def _field_screen_xy(self, world_x, world_y):
+        known = self.__dict__.get("_tile_scene")
+        if known is not None and known[0] is self.game.scene and not known[1]:
+            # a picture field (no tile view): skip the tile_view lookup, made per entity
+            return self.field_camera.world_to_screen(world_x, world_y)
         view = self.tile_view
         if view is not None:
             return view.world_to_screen(world_x, world_y)
@@ -448,9 +452,13 @@ class FieldViewMixin:
         else:
             bg = self.load_image(self.manifest["field"]["background"])
             bx, by, bw, bh = self.field_camera.background_rect()
-            self.screen.blit(
-                self.pg.transform.smoothscale(bg, (round(bw), round(bh))), (round(bx), round(by))
-            )
+            # rescaled only when the size (the camera zoom) or the picture changes, not each
+            # frame; one slot, as the sprite cache's budget would be spent on a screen-sized image
+            key = (bg, round(bw), round(bh))
+            cached = self.__dict__.get("_field_background")
+            if cached is None or cached[0] != key:
+                cached = self._field_background = (key, self.pg.transform.smoothscale(bg, key[1:]))
+            self.screen.blit(cached[1], (round(bx), round(by)))
 
         sprites = self.manifest["field"].get("entity_sprites", {})
         from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
