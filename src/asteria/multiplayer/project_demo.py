@@ -45,7 +45,23 @@ class _EntityScene:
         return getattr(self.scene, name)
 
     def query(self, *types):
-        return tuple(row for row in self.scene.query(*types) if row[0] is self.entity)
+        # Same rows as filtering ``scene.query(*types)`` down to this entity, without walking
+        # every member: the scene query's predicate is applied to the one entity directly.
+        scene, entity = self.scene, self.entity
+        index = getattr(scene, "_index", None)
+        if not types or not isinstance(index, dict):
+            return tuple(row for row in scene.query(*types) if row[0] is entity)
+        base = min(types, key=lambda t: len(index.get(t, ())))
+        if entity not in index.get(base, ()):
+            return ()
+        components = entity._components
+        if (
+            not entity.enabled
+            or entity._destroy_requested
+            or not all(t in components for t in types if t is not base)
+        ):
+            return ()
+        return ((entity, *(components[t] for t in types)),)
 
 
 class ProjectDemoAdapter:
