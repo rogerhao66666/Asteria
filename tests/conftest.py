@@ -166,9 +166,16 @@ def _close_windows_the_test_opened():
     app = qt.QApplication.instance() if qt is not None else None
     if app is None or real_window.enabled():  # a replay keeps its windows for screenshots
         return
-    from PySide6.QtCore import QCoreApplication, QEvent
+    from PySide6.QtCore import QCoreApplication, QEvent, Qt
 
-    left = [w for w in _application_owned_top_level_widgets(app) if w not in before]
+    # windows and dialogs only: a popup (a completer's list, a menu) has no parent widget but
+    # belongs to an object that may outlive the test, and deleting it crashed the next use
+    kinds = (Qt.WindowType.Window, Qt.WindowType.Dialog)
+    left = [
+        w
+        for w in _application_owned_top_level_widgets(app)
+        if w not in before and w.windowType() in kinds
+    ]
     for widget in left:
         # hide, not close: closing an editor with unsaved changes asks to save and would wait
         # forever for an answer
