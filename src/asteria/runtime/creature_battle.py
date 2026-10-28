@@ -1434,7 +1434,7 @@ class CreatureBattleScreen:
         for rule in db.capture_rules.values():
             balls |= set(rule.capture_items())
         result = []
-        for item_id in sorted(db.items):
+        for item_id in _owned_item_ids(inventory, db.items):
             count = inventory.count(item_id)
             if count <= 0:
                 continue
@@ -2404,6 +2404,17 @@ class CreatureBattleScreen:
             self._text(
                 self.tr("creature.bag_empty", "Nothing here."), listing.x + 14, listing.y + 6
             )
+
+
+def _owned_item_ids(inventory, records):
+    """The ids of ``records`` to list for ``inventory``, sorted: a plain ``Inventory`` names the
+    ids it holds, so only those are visited (record ids are plain strings, as are its keys);
+    any other inventory gets every record id. Callers still skip counts of 0 or less."""
+    from asteria.rpg.items import Inventory
+
+    if type(inventory) is not Inventory:
+        return sorted(records)
+    return [item_id for item_id in inventory.item_ids() if item_id in records]
 
 
 def _effectiveness(outcome, prefix=""):
