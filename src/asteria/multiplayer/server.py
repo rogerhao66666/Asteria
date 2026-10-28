@@ -523,12 +523,41 @@ class MultiplayerServer(ThreadingTCPServer):
         )
 
     @staticmethod
-    def _set_baseline(peer: _Peer, state, revision):
+    def _set_baseline(peer: _Peer, state, revision, shared=None):
         if peer.delta and isinstance(state, dict):
-            peer.base_state, peer.base_revision = copy.deepcopy(state), int(revision)
+            if shared is None:
+                baseline = copy.deepcopy(state)
+            else:
+                # Baselines are only ever read (diffed against), never mutated, so the peers of
+                # one broadcast can share a single copy of the state they were sent.
+                entry = shared.get(("copy", id(state)))
+                if entry is None or entry[0] is not state:
+                    entry = shared[("copy", id(state))] = (state, copy.deepcopy(state))
+                baseline = entry[1]
+            peer.base_state, peer.base_revision = baseline, int(revision)
 
-    def _deliver(self, peer: _Peer, value: Mapping[str, Any]):
-        """Send ``value`` to one peer; a state update becomes a delta when the peer reads them."""
+    @staticmethod
+    def _send_shared(peer: _Peer, value: Mapping[str, Any], shared):
+        """``peer.handler.send(value)``, encoding a message shared by several peers only once."""
+        if shared is None:
+            return peer.handler.send(value)
+        entry = shared.get(("frame", id(value)))
+        if entry is None or entry[0] is not value:
+            try:
+                frame = encode_frame(value)
+            except ProtocolError:
+                frame = None
+            entry = shared[("frame", id(value))] = (value, frame)
+        if entry[1] is None:
+            return False
+        return peer.handler.send(value, frame=entry[1])
+
+    def _deliver(self, peer: _Peer, value: Mapping[str, Any], shared=None):
+        """Send ``value`` to one peer; a state update becomes a delta when the peer reads them.
+
+        ``shared`` (one dict per broadcast) lets peers that hold the same baseline share the
+        diff, the delta message, its encoding and the new baseline copy.
+        """
         state = value.get("state")
         if (
             not peer.delta
@@ -537,33 +566,59 @@ class MultiplayerServer(ThreadingTCPServer):
             or value.get("resync")
         ):
             if peer.delta and value.get("type") == "game_update":
-                self._set_baseline(peer, state, value.get("revision", -1))
-            return peer.handler.send(value)
-        patch = diff(peer.base_state, state) if peer.base_state is not None else None
+                self._set_baseline(peer, state, value.get("revision", -1), shared)
+            return self._send_shared(peer, value, shared)
         revision = value.get("revision", -1)
-        if peer.base_state is None or (isinstance(patch, dict) and set(patch) == {"$set"}):
-            self._set_baseline(peer, state, revision)
-            return peer.handler.send(value)  # nothing smaller than the whole state
-        slim = {k: v for k, v in value.items() if k != "state"}
-        slim.update(
-            state_delta=patch if patch is not None else {"$del": []},
-            base_revision=peer.base_revision,
-        )
-        sent = peer.handler.send(slim)
+        base_state = peer.base_state
+        if base_state is None:
+            self._set_baseline(peer, state, revision, shared)
+            return self._send_shared(peer, value, shared)
+        # Peers whose baseline is the same object at the same revision get the same message.
+        key = ("delta", id(base_state), peer.base_revision)
+        entry = None if shared is None else shared.get(key)
+        if entry is None or entry[0] is not base_state:
+            patch = diff(base_state, state)
+            if isinstance(patch, dict) and set(patch) == {"$set"}:
+                slim = None  # nothing smaller than the whole state
+            else:
+                slim = {k: v for k, v in value.items() if k != "state"}
+                slim.update(
+                    state_delta=patch if patch is not None else {"$del": []},
+                    base_revision=peer.base_revision,
+                )
+            entry = (base_state, slim, [])  # [] caches the bytes saved once computed
+            if shared is not None:
+                shared[key] = entry
+        slim = entry[1]
+        if slim is None:
+            self._set_baseline(peer, state, revision, shared)
+            return self._send_shared(peer, value, shared)
+        sent = self._send_shared(peer, slim, shared)
         if sent:
-            before = len(json.dumps(value, separators=(",", ":"), ensure_ascii=False))
-            after = len(json.dumps(slim, separators=(",", ":"), ensure_ascii=False))
-            self.metrics.saved(max(0, before - after))
-        self._set_baseline(peer, state, revision)
+            saved = entry[2]
+            if not saved:
+                if shared is None:
+                    before = len(json.dumps(value, separators=(",", ":"), ensure_ascii=False))
+                else:
+                    sizes = shared.get(("size", id(value)))
+                    if sizes is None or sizes[0] is not value:
+                        size = len(json.dumps(value, separators=(",", ":"), ensure_ascii=False))
+                        sizes = shared[("size", id(value))] = (value, size)
+                    before = sizes[1]
+                after = len(json.dumps(slim, separators=(",", ":"), ensure_ascii=False))
+                saved.append(max(0, before - after))
+            self.metrics.saved(saved[0])
+        self._set_baseline(peer, state, revision, shared)
         return sent
 
     def broadcast(self, value: Mapping[str, Any], *, exclude=None):
         with self._publish_lock:
             with self._room_lock:
                 peers = tuple(self._peers.values())
+            shared = {}
             for peer in peers:
                 if peer.player_id != exclude:
-                    self._deliver(peer, value)
+                    self._deliver(peer, value, shared)
 
     def _send_error(self, handler: _ClientHandler, text: str):
         handler.send(message("server_error", message=str(text)[:240]))
@@ -696,9 +751,11 @@ class _ClientHandler(StreamRequestHandler):
         self.server.metrics.received(value.get("type", "?"), len(frame))
         return value
 
-    def send(self, value):
+    def send(self, value, frame=None):
+        """Write ``value`` (already encoded as ``frame`` when given) to this client."""
         try:
-            frame = encode_frame(value)
+            if frame is None:
+                frame = encode_frame(value)
             with self._send_lock:
                 self.wfile.write(frame)
                 self.wfile.flush()
