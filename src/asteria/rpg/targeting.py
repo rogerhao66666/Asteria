@@ -445,7 +445,8 @@ class BattleTargetingRuntime:
                 return False
         return True
 
-    def _candidate_sort_key(self, member_id):
+    def _candidate_sort_key(self, member_id, slot_orders=None):
+        """``slot_orders`` (one dict per sort) caches each formation's slot -> index map."""
         member = self.members[str(member_id)]
         formation = self._formation_for(member.side)
         if formation is None:
@@ -453,8 +454,13 @@ class BattleTargetingRuntime:
         slot_id = formation.slot_id_for(member.member_id)
         if slot_id is None:
             return (member.side, 999_999, member.member_id)
-        order = {slot.slot_id: i for i, slot in enumerate(formation.definition.slots)}
-        return (member.side, order.get(slot_id, 999_998), member.member_id)
+        entry = None if slot_orders is None else slot_orders.get(id(formation))
+        if entry is None or entry[0] is not formation:
+            order = {slot.slot_id: i for i, slot in enumerate(formation.definition.slots)}
+            entry = (formation, order)
+            if slot_orders is not None:
+                slot_orders[id(formation)] = entry
+        return (member.side, entry[1].get(slot_id, 999_998), member.member_id)
 
     def candidates(self, actor_id, ability_id):
         actor = self.members[str(actor_id)]
@@ -492,7 +498,10 @@ class BattleTargetingRuntime:
             ):
                 continue
             result.append(candidate.member_id)
-        ordered = tuple(sorted(result, key=self._candidate_sort_key))
+        slot_orders = {}
+        ordered = tuple(
+            sorted(result, key=lambda member_id: self._candidate_sort_key(member_id, slot_orders))
+        )
         if self.candidate_filter is not None and definition.selection_mode is not (
             TargetSelectionMode.ALL
         ):

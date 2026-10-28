@@ -178,6 +178,7 @@ class ReactionRuntime:
             if definition.reaction_id in self.definitions:
                 raise ValueError(f"duplicate reaction: {definition.reaction_id}")
             self.definitions[definition.reaction_id] = definition
+        self._ordered_cache = None  # (definition values, those values in queue order)
         self.hooks = hooks
         self.max_depth = int(max_depth)
         self.max_reactions = int(max_reactions)
@@ -234,6 +235,16 @@ class ReactionRuntime:
             )
         raise KeyError(f"unknown reactor selector: {selector}")
 
+    def _ordered_definitions(self):
+        """Definitions by (-priority, reaction_id), re-sorted only when ``definitions`` holds
+        different values (definitions are frozen, so equal values sort the same)."""
+        values = tuple(self.definitions.values())
+        cached = self._ordered_cache
+        if cached is None or cached[0] != values:
+            cached = (values, tuple(sorted(values, key=lambda x: (-x.priority, x.reaction_id))))
+            self._ordered_cache = cached
+        return cached[1]
+
     def _targets(self, battle, selector, event, reactor_id):
         custom = self.selector_resolvers.get(selector)
         if custom is not None:
@@ -271,9 +282,7 @@ class ReactionRuntime:
             if ev.depth > self.max_depth:
                 suppressed.append("max_depth")
                 return
-            for definition in sorted(
-                self.definitions.values(), key=lambda x: (-x.priority, x.reaction_id)
-            ):
+            for definition in self._ordered_definitions():
                 if not definition.matches(ev.trigger, ev.tags):
                     continue
                 for reactor_id in self._reactors(battle, definition.reactor_selector, ev):

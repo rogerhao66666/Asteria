@@ -15,6 +15,7 @@ battle screen was retired in D19 (CB15 A9).
 
 from __future__ import annotations
 
+import heapq
 from typing import Protocol
 
 from asteria.gameplay import ActionCue, ActionCueKind, PresentationCue
@@ -615,15 +616,21 @@ class CanonicalBattleAdapter:
     # increasing sequence order for every downstream runtime.
 
     def _at(self, time, step):
+        # ``_schedule`` is a heap of (time, order, step); ``order`` is unique, so steps are
+        # never compared and due steps come out by time, then by when they were queued.
         self._order += 1
-        self._schedule.append((max(time, self._clock), self._order, step))
+        heapq.heappush(self._schedule, (max(time, self._clock), self._order, step))
 
     def _release_due(self):
-        due = sorted(x for x in self._schedule if x[0] <= self._clock + 1e-9)
-        if due:
-            self._schedule = [x for x in self._schedule if x[0] > self._clock + 1e-9]
-            for _, _, step in due:
-                step()
+        # Take every step due now before running any: steps queued while these run wait for
+        # the next release, as before.
+        limit = self._clock + 1e-9
+        schedule = self._schedule
+        due = []
+        while schedule and schedule[0][0] <= limit:
+            due.append(heapq.heappop(schedule))
+        for _, _, step in due:
+            step()
         self._flush()
 
     def _flush(self):

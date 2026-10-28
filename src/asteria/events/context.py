@@ -12,6 +12,56 @@ def _validate_value(value: Any):
     return value
 
 
+class KeyTrackedDict(dict):
+    """A dict that counts changes to its *key set* (``key_revision``), not to its values.
+
+    Readers that index the keys (e.g. ``EventTimers.active``) cache against the revision; any
+    insertion of a new key or removal of a key through the dict API bumps it.
+    """
+
+    key_revision = 0
+
+    def _bump(self):
+        self.key_revision = self.key_revision + 1
+
+    def __setitem__(self, key, value):
+        if key not in self:
+            self._bump()
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self._bump()
+
+    def pop(self, key, *default):
+        if key in self:
+            self._bump()
+        return super().pop(key, *default)
+
+    def popitem(self):
+        item = super().popitem()
+        self._bump()
+        return item
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            self._bump()
+        return super().setdefault(key, default)
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        self._bump()
+
+    def clear(self):
+        super().clear()
+        self._bump()
+
+    def __ior__(self, other):
+        result = super().__ior__(other)
+        self._bump()
+        return result
+
+
 @dataclass(slots=True)
 class EventContext:
     """Serializable mutable state visible to event programs.
@@ -26,7 +76,8 @@ class EventContext:
     """
 
     switches: dict[str, bool] = field(default_factory=dict)
-    variables: dict[str, Any] = field(default_factory=dict)
+    # A KeyTrackedDict by default (a plain dict passed in is kept as is, just not tracked).
+    variables: dict[str, Any] = field(default_factory=KeyTrackedDict)
     locals: dict[str, dict[str, Any]] = field(default_factory=dict)
     # Read-only values the host exposes to conditions (e.g. "battle": round, HP ratios). Never
     # saved.
