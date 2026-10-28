@@ -449,7 +449,9 @@ from asteria import kernels
 from asteria.kernels import _native
 assert _native.np is None and _native._fallback.NAME == "python"
 assert kernels.available()[0] == "native", kernels.available()
-sys.exit(pytest.main(["-q", "-p", "no:cacheprovider", sys.argv[1], "-k", "not without_numpy"]))
+# the macOS-only check skips elsewhere; every other test must run, none skip
+only = "not without_numpy and not macos_library"
+sys.exit(pytest.main(["-q", "-p", "no:cacheprovider", sys.argv[1], "-k", only]))
 """
 
 
