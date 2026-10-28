@@ -29,7 +29,7 @@ from asteria.graphics import EMPTY_TILE, TileChunk, TileLayer, TileMap
 from asteria.graphics.serialization import tilemap_to_data
 
 from .rpg_maker_mv import RPGMakerMVImporter
-from .rpg_maker_mv_map_render import MVTileResolver
+from .rpg_maker_mv_map_render import MVTileResolver, cached_json
 from .types import AssetRecord, AssetRef
 
 TILE = 48
@@ -82,7 +82,7 @@ def _sheet_data(texture_id, frames):
 
 
 def _tileset_flags(layout, tileset_id):
-    records = json.loads((layout.data / "Tilesets.json").read_text(encoding="utf-8-sig"))
+    records = cached_json(layout.data / "Tilesets.json")  # parsed once per import
     return tuple(records[tileset_id].get("flags") or ())
 
 
@@ -125,6 +125,9 @@ def bake_map(layout, catalog, mv_map, out_root) -> BakedMap:
     local: dict[int, int] = {}
     images: list[Image.Image] = []
     unsupported: set[int] = set()
+    # tile id -> the catalog issues composing it reported, for a tile that cannot be composed:
+    # each later use reports them again instead of composing it again
+    failed: dict[int, tuple] = {}
 
     def compose(tile_id):
         region = resolver.resolve(tile_id)
@@ -150,8 +153,13 @@ def bake_map(layout, catalog, mv_map, out_root) -> BakedMap:
             if tile_id == 0:
                 continue
             if tile_id not in local:
+                if tile_id in failed:
+                    catalog.issues.extend(failed[tile_id])
+                    continue
+                before = len(catalog.issues)
                 image = compose(tile_id)
                 if image is None:
+                    failed[tile_id] = tuple(catalog.issues[before:])
                     unsupported.add(tile_id)
                     continue
                 local[tile_id] = len(images)

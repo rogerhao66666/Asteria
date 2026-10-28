@@ -60,13 +60,16 @@ class RPGMakerMVProjectImporter:
         for asset in catalog.assets:
             project.assets.register(asset)
 
+        # icon asset ids registered so far (a set: one lookup per record, not a scan)
+        icon_ids = {a.asset_id for a in project.assets.query(kind="icon")}
+
         def menu_icon(icon):
             """An ``mv.icon.<index>`` icon asset (one IconSet cell) for menus; "" for none (MV
             index 0)."""
             if icon is None or icon.index <= 0:
                 return ""
             asset_id = f"mv.icon.{icon.index}"
-            if all(a.asset_id != asset_id for a in project.assets.query(kind="icon")):
+            if asset_id not in icon_ids:
                 x0, y0, x1, y1 = icon.box
                 project.assets.register(
                     CanonicalAsset(
@@ -81,6 +84,7 @@ class RPGMakerMVProjectImporter:
                         metadata=(("region", (x0, y0, x1 - x0, y1 - y0)),),
                     )
                 )
+                icon_ids.add(asset_id)
             return asset_id
 
         for record in database.skills:

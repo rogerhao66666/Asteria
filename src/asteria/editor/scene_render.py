@@ -25,6 +25,8 @@ def build_scene_texture_draws(source, camera, viewport_width, viewport_height):
         origin_y=source.origin_y,
         viewport_width=viewport_width,
         viewport_height=viewport_height,
+        # the map is validated where it is loaded, saved and edited; not on every repaint
+        validate_tilemap=False,
     )
 
 

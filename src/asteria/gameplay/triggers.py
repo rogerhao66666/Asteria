@@ -97,6 +97,7 @@ class TriggerRuntime:
 
     def __init__(self, triggers=()):
         self._triggers = {}
+        self._by_event = {}  # event -> its triggers in trigger-id order (kept on register)
         for trigger in triggers:
             self.register(trigger)
 
@@ -106,6 +107,9 @@ class TriggerRuntime:
         if trigger.trigger_id in self._triggers:
             raise ValueError(f"duplicate trigger: {trigger.trigger_id}")
         self._triggers[trigger.trigger_id] = trigger
+        self._by_event[trigger.event] = tuple(
+            sorted((*self._by_event.get(trigger.event, ()), trigger), key=lambda t: t.trigger_id)
+        )
         return trigger
 
     def triggers(self):
@@ -123,9 +127,7 @@ class TriggerRuntime:
             raise ValueError("trigger event is required")
         results = []
 
-        for trigger in self.triggers():
-            if trigger.event != event:
-                continue
+        for trigger in self._by_event.get(event, ()):
             if not trigger.conditions.evaluate(context):
                 results.append(TriggerExecutionResult(trigger.trigger_id, False))
                 continue

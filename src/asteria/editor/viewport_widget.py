@@ -79,6 +79,7 @@ class SceneViewportWidget(QWidget):
         self._skeleton_timer.timeout.connect(self._advance_skeletons)
         self.tile_tools = TileToolState()
         self._tile_stroke_cells = []
+        self._tile_stroke_seen = set()  # the stroke's cells again, for O(1) membership
         self._last_tile_cell = None
         self._tile_rect_start = None
         self._panning = False
@@ -235,7 +236,8 @@ class SceneViewportWidget(QWidget):
             new_cells = line_cells(*self._last_tile_cell, *cell)
         added = []
         for c in new_cells:
-            if c not in self._tile_stroke_cells:
+            if c not in self._tile_stroke_seen:
+                self._tile_stroke_seen.add(c)
                 self._tile_stroke_cells.append(c)
                 added.append(c)
         self._last_tile_cell = cell
@@ -553,6 +555,8 @@ class SceneViewportWidget(QWidget):
                 self.camera,
                 origin_x=self.render_source.origin_x,
                 origin_y=self.render_source.origin_y,
+                viewport_width=self.width(),
+                viewport_height=self.height(),
             ):
                 painter.drawRect(
                     int(cell.screen_x),
@@ -664,18 +668,37 @@ class SceneViewportWidget(QWidget):
         layer = region_layer(tilemap, self.tile_tools.region_layer_name)
         if layer is None:
             return
+        width = tilemap.tile_width * self.camera.zoom
+        height = tilemap.tile_height * self.camera.zoom
+        # a cell's number is printed from its corner and may run past a small cell: cells (and
+        # chunks) are skipped only when even the number cannot reach the view
+        reach_x = max(width, 3 + 8 * 12)
+        reach_y = max(height, 14 + 8)
+        view_w, view_h = self.width(), self.height()
+        origin_x, origin_y = self.render_source.origin_x, self.render_source.origin_y
         for (chunk_x, chunk_y), chunk in layer.chunks.items():
+            rows = -(-len(chunk.tiles) // tilemap.chunk_width)
+            left, top = self.camera.world_to_screen(
+                origin_x + chunk_x * tilemap.chunk_width * tilemap.tile_width,
+                origin_y + chunk_y * tilemap.chunk_height * tilemap.tile_height,
+            )
+            right, bottom = self.camera.world_to_screen(
+                origin_x + (chunk_x + 1) * tilemap.chunk_width * tilemap.tile_width,
+                origin_y + (chunk_y * tilemap.chunk_height + rows) * tilemap.tile_height,
+            )
+            if right + reach_x < 0 or left > view_w or bottom + reach_y < 0 or top > view_h:
+                continue
             for index, value in enumerate(chunk.tiles):
                 if value < 0:
                     continue
                 tile_x = chunk_x * tilemap.chunk_width + index % tilemap.chunk_width
                 tile_y = chunk_y * tilemap.chunk_height + index // tilemap.chunk_width
                 sx, sy = self.camera.world_to_screen(
-                    self.render_source.origin_x + tile_x * tilemap.tile_width,
-                    self.render_source.origin_y + tile_y * tilemap.tile_height,
+                    origin_x + tile_x * tilemap.tile_width,
+                    origin_y + tile_y * tilemap.tile_height,
                 )
-                width = tilemap.tile_width * self.camera.zoom
-                height = tilemap.tile_height * self.camera.zoom
+                if sx + reach_x < 0 or sx > view_w or sy + reach_y < 0 or sy > view_h:
+                    continue
                 hue = (value * 47) % 360
                 painter.setPen(QPen(QColor.fromHsv(hue, 200, 255, 220), 1))
                 painter.setBrush(QBrush(QColor.fromHsv(hue, 200, 255, 70)))
@@ -784,6 +807,7 @@ class SceneViewportWidget(QWidget):
                 event.accept()
                 return
             self._tile_stroke_cells = []
+            self._tile_stroke_seen = set()
             self._last_tile_cell = None
             self._append_tile_stroke(
                 self._screen_to_tile(event.position().x(), event.position().y())
@@ -901,6 +925,7 @@ class SceneViewportWidget(QWidget):
             except (TileEditError, ValueError):
                 pass
             self._tile_stroke_cells = []
+            self._tile_stroke_seen = set()
             self._last_tile_cell = None
             window = self.window()
             if hasattr(window, "refresh_all"):

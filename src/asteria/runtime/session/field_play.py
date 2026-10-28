@@ -641,7 +641,7 @@ class FieldPlayMixin:
             GridMover2DComponent,
             LookByVariable2DComponent,
             SwitchVisibility2DComponent,
-            parse_looks,
+            looks_of,
         )
 
         context = self.save.event_context
@@ -728,22 +728,35 @@ class FieldPlayMixin:
                     for entity_id in running:
                         system.state.pop(entity_id, None)
         switches = self.save.event_context.get_switch
-        for entity in self.scene.entities():  # hidden ones too: a switch may show them again
-            spec = entity.try_get(SwitchVisibility2DComponent)
-            if spec is None:  # hidden by a route / SHOW_ENTITY only
-                if entity.id in self.route_hidden and entity is not self.player:
-                    entity.enabled = False
-                    self._story_hidden.add(entity.id)
-                elif entity.id in self._story_hidden:
-                    entity.enabled = True
-                    self._story_hidden.discard(entity.id)
+        scene = self.scene
+        # hidden ones too: a switch may show them again (each entity is settled on its own, so
+        # the switch-shown ones come from the component index and the rest only by the ids a
+        # route or SHOW_ENTITY hid - not from a scan of the whole scene every frame)
+        for entity in scene._members(SwitchVisibility2DComponent):
+            if entity.destroy_requested:
                 continue
+            spec = entity.get(SwitchVisibility2DComponent)
             shown = not (spec.hidden_switch and switches(spec.hidden_switch))
             entity.enabled = shown and entity.id not in self.route_hidden
+        for entity_id in tuple(self.route_hidden | self._story_hidden):
+            entity = scene.get_entity(entity_id)
+            if (
+                entity is None
+                or entity.destroy_requested
+                or entity.has(SwitchVisibility2DComponent)
+            ):
+                continue
+            # hidden by a route / SHOW_ENTITY only
+            if entity.id in self.route_hidden and entity is not self.player:
+                entity.enabled = False
+                self._story_hidden.add(entity.id)
+            elif entity.id in self._story_hidden:
+                entity.enabled = True
+                self._story_hidden.discard(entity.id)
         self.player.enabled = self.player.id not in self.route_hidden
         get = self.save.event_context.get_variable
         for entity, spec in self.scene.query(LookByVariable2DComponent):
-            look = parse_looks(spec.looks).get(str(get(spec.variable, "")))
+            look = looks_of(spec.looks).get(str(get(spec.variable, "")))
             if look is None:
                 continue
             from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
@@ -884,16 +897,13 @@ class FieldPlayMixin:
 
     def _update_grid_movers(self, dt):
         """Walk the scene's grid characters (GridMover2D) a cell at a time."""
-        from asteria.runtime.collision import CollisionWorld
         from asteria.runtime.grid_actors import GridMover2DComponent
 
         movers = [e.id for e, _ in self.scene.query(GridMover2DComponent)]
         if not movers:
             return
         system = self.grid_movers()
-        solid = CollisionWorld.from_scene(self.scene).blocking_query(
-            exclude={self.player.id, *movers}
-        )
+        solid = self.frame_collision_world().blocking_query(exclude={self.player.id, *movers})
         tiles = self._tile_blocking.get(self.scene.id)
         walls = solid if tiles is None else _EitherBlocks(solid, tiles)
         t = self.player.get(Transform)
@@ -964,6 +974,18 @@ class FieldPlayMixin:
                 continue
             resources.change(resource_id, -hurt)
             state.actor_snapshots[actor_id] = replace(snapshot, resources=resources.to_data())
+
+    def frame_collision_world(self):
+        """The frame's collision world brought up to date with the scene now (followed in
+        place, or rebuilt when it cannot be): the same shapes ``CollisionWorld.from_scene``
+        would read, without rebuilding the whole world every time a step asks."""
+        from asteria.runtime.collision import CollisionWorld
+
+        world = self._frame_collision_world
+        with self.profiler.section("collision"):
+            if world is None or not world.follow(self.scene):
+                world = self._frame_collision_world = CollisionWorld.from_scene(self.scene)
+        return world
 
     def _follow_collision_world(self):
         """Keep the frame's collision world current: updated in place when only positions or

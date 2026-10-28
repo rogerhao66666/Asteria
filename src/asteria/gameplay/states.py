@@ -368,6 +368,7 @@ class StateRuntime:
         self.tags = tags
         self._active = {}
         self._tag_contributions = {}
+        self._modifier_cache = {}  # state id -> (definition, stacks, StatModifier copies)
 
     def active_states(self):
         return tuple(self._active[key] for key in sorted(self._active))
@@ -547,14 +548,24 @@ class StateRuntime:
         return tuple(expired)
 
     def modifiers(self):
+        """A fresh ModifierSet of every active state's modifiers (one copy per stack).
+
+        The per-stack StatModifier copies are immutable, so they are reused while a state keeps
+        the same definition object and stack count; the set itself is rebuilt every call.
+        """
         result = ModifierSet()
+        cache = self._modifier_cache
+        kept = {}
         for state_id in sorted(self._active):
             active = self._active[state_id]
             definition = self.registry.require(state_id)
             repeat = active.stacks if definition.stacking == StackingPolicy.STACK else 1
-            for stack_index in range(repeat):
-                for modifier in definition.modifiers:
-                    result.add(
+            entry = cache.get(state_id)
+            if entry is None or entry[0] is not definition or entry[1] != repeat:
+                entry = (
+                    definition,
+                    repeat,
+                    tuple(
                         StatModifier(
                             f"{state_id}:{stack_index}:{modifier.modifier_id}",
                             modifier.stat,
@@ -564,7 +575,14 @@ class StateRuntime:
                             required_tags=modifier.required_tags,
                             blocked_tags=modifier.blocked_tags,
                         )
-                    )
+                        for stack_index in range(repeat)
+                        for modifier in definition.modifiers
+                    ),
+                )
+            kept[state_id] = entry
+            for modifier in entry[2]:
+                result.add(modifier)
+        self._modifier_cache = kept
         return result
 
     def snapshot(self):

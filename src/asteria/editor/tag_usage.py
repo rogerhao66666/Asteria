@@ -50,11 +50,15 @@ def _record_name(table, record):
     return f"{words(table)} {rid}".strip()
 
 
-def project_tags(project):
-    """``{tag: [(carries, field, "Table record_id"), ...]}`` over the whole project."""
+def project_tags(project, data=None):
+    """``{tag: [(carries, field, "Table record_id"), ...]}`` over the whole project.
+
+    ``data``: the ``(rpg_database.to_data(), gameplay_library.to_data())`` pair when the caller
+    has already serialised them."""
     found = {}
-    tables = dict(project.rpg_database.to_data())
-    tables.update({f"lib.{k}": v for k, v in project.gameplay_library.to_data().items()})
+    rpg_data, library_data = data if data is not None else _project_data(project)
+    tables = dict(rpg_data)
+    tables.update({f"lib.{k}": v for k, v in library_data.items()})
     for table, records in tables.items():
         if not isinstance(records, list):
             continue
@@ -63,6 +67,10 @@ def project_tags(project):
             if isinstance(record, dict):
                 _walk(record, "", _record_name(name, record), found)
     return found
+
+
+def _project_data(project):
+    return project.rpg_database.to_data(), project.gameplay_library.to_data()
 
 
 def _listed(records):

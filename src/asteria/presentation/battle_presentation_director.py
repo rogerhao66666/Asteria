@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 from math import isfinite
 
@@ -142,7 +143,8 @@ class BattlePresentationDirector:
         self.time = 0.0
         self.hold_remaining = 0.0
         self.active_beat = "default"
-        self._pending: list[BattleDirectedEvent] = []
+        # in increasing event sequence (released from the left)
+        self._pending: deque[BattleDirectedEvent] = deque()
         self.last_sequence = 0
 
     def _metadata(self, event):
@@ -166,6 +168,7 @@ class BattlePresentationDirector:
 
     def ingest(self, events):
         """Accept a stable resolved event stream and immediately release due events."""
+        unordered = False
         for event in tuple(events):
             if not isinstance(event, BattlePresentationEvent):
                 raise TypeError("director events must be BattlePresentationEvent")
@@ -173,6 +176,8 @@ class BattlePresentationDirector:
                 raise ValueError("director events must be applied in increasing sequence order")
             self.last_sequence = event.sequence
             direction = self._metadata(event)
+            if self._pending and self._pending[-1].event.sequence > event.sequence:
+                unordered = True  # only a restored snapshot can hold later sequences
             self._pending.append(
                 BattleDirectedEvent(
                     event,
@@ -180,7 +185,10 @@ class BattlePresentationDirector:
                     direction,
                 )
             )
-        self._pending.sort(key=lambda x: x.event.sequence)
+        # Sequences only increase, so appending keeps the queue sorted; sort (stably, as
+        # before) only if it somehow is not.
+        if unordered:
+            self._pending = deque(sorted(self._pending, key=lambda x: x.event.sequence))
         return self.release_ready()
 
     def release_ready(self):
@@ -189,7 +197,7 @@ class BattlePresentationDirector:
         never lets a later event overtake an earlier one."""
         released = []
         while self._pending and self._pending[0].release_time <= self.time + 1e-12:
-            item = self._pending.pop(0)
+            item = self._pending.popleft()
             released.append(item.event)
             self.active_beat = item.direction.beat
             if item.direction.hold > self.hold_remaining:
@@ -249,7 +257,7 @@ class BattlePresentationDirector:
         self.hold_remaining = _nonnegative(data["hold_remaining"], "hold_remaining")
         self.active_beat = str(data.get("active_beat", "default"))
         self.last_sequence = int(data.get("last_sequence", 0))
-        self._pending = []
+        self._pending = pending = deque()
         for raw in data.get("pending", ()):
             e = raw["event"]
             event = BattlePresentationEvent(
@@ -258,12 +266,13 @@ class BattlePresentationDirector:
                 str(e["source_id"]),
                 dict(e.get("payload", {})),
             )
-            self._pending.append(
+            pending.append(
                 BattleDirectedEvent(
                     event,
                     _nonnegative(raw["release_time"], "release_time"),
                     BattlePresentationDirection.from_data(raw["direction"]),
                 )
             )
-        self._pending.sort(key=lambda x: (x.release_time, -x.direction.priority, x.event.sequence))
+        # Release order is sequence order (see ``release_ready``), as ``ingest`` keeps it.
+        self._pending = deque(sorted(pending, key=lambda x: x.event.sequence))
         return self

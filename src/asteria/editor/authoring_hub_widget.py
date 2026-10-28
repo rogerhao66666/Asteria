@@ -940,6 +940,18 @@ class SkillTreeGraphView(QGraphicsView):
         return {key: [item.pos().x(), item.pos().y()] for key, item in self.node_items.items()}
 
 
+_UNREAD = object()  # AdapterFamilyWidget._encoded: no record handed in / not encoded yet
+
+
+class _EncodeFailed:
+    """What encoding a record raised, kept so every reader sees it again."""
+
+    __slots__ = ("error",)
+
+    def __init__(self, error):
+        self.error = error
+
+
 class AdapterFamilyWidget(QWidget):
     """Qt authoring surface over a set of AuthoringCategoryAdapter objects."""
 
@@ -956,6 +968,12 @@ class AdapterFamilyWidget(QWidget):
         self._ids = []
         self.last_error = None
         self._list_chosen = False
+        # each record's encoded data (or the error encoding it raised), shared by the filter,
+        # the name sort and the row titles; kept across filter / sort changes while nothing is
+        # edited (_encodings_stamp)
+        self._encodings = {}
+        self._encodings_stamp = None
+        self._applied = 0  # edits applied from the form (they change what is encoded)
 
         header = QHBoxLayout()
         heading = self.heading = QLabel(self.title)
@@ -975,10 +993,14 @@ class AdapterFamilyWidget(QWidget):
         self.search = QLineEdit()
         self.search.setPlaceholderText("Filter records…")
         self.search.setClearButtonEnabled(True)
-        self.search.textChanged.connect(lambda _text: self.refresh(keep=self.selected_ids))
+        self.search.textChanged.connect(
+            lambda _text: self.refresh(keep=self.selected_ids, same_data=True)
+        )
         self.sort = QComboBox()
         self.sort.addItems(["ID A→Z", "ID Z→A", "Name A→Z", "Name Z→A"])
-        self.sort.currentIndexChanged.connect(lambda _i: self.refresh(keep=self.selected_ids))
+        self.sort.currentIndexChanged.connect(
+            lambda _i: self.refresh(keep=self.selected_ids, same_data=True)
+        )
         self.browser = QListWidget()
         self.browser.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.browser.currentRowChanged.connect(self._selection_changed)
@@ -1067,7 +1089,7 @@ class AdapterFamilyWidget(QWidget):
                 from .record_vocabulary import record_title
 
                 try:
-                    data = self.adapter.encode(record)
+                    data = self._encoded(key, record)
                 except Exception:  # noqa: BLE001 - a record that cannot be encoded keeps its id
                     data = None
                 name = record_title(self.category_id, data, self.editor.vocabulary, key)
@@ -1093,9 +1115,22 @@ class AdapterFamilyWidget(QWidget):
         row = self.browser.currentRow()
         return self._ids[row] if 0 <= row < len(self._ids) else None
 
+    def _encoded(self, key, record=_UNREAD):
+        """``adapter.encode`` of record ``key``, once per refresh (raises what it raised)."""
+        found = self._encodings.get(key, _UNREAD)
+        if found is _UNREAD:
+            try:
+                found = self.adapter.encode(self.adapter.get(key) if record is _UNREAD else record)
+            except Exception as exc:  # noqa: BLE001 - raised again to every caller
+                found = _EncodeFailed(exc)
+            self._encodings[key] = found
+        if isinstance(found, _EncodeFailed):
+            raise found.error
+        return found
+
     def _display_name(self, key):
         try:
-            data = self.adapter.encode(self.adapter.get(key))
+            data = self._encoded(key)
         except Exception:  # noqa: BLE001 - a record that can't be encoded sorts by id
             return key
         return str(data.get("display_name") or data.get("name") or key)
@@ -1129,9 +1164,20 @@ class AdapterFamilyWidget(QWidget):
             self.browser.setCurrentRow(first, self.browser.selectionModel().SelectionFlag.NoUpdate)
             self._selection_changed(first)
 
-    def refresh(self, *_args, keep=None):
+    def refresh(self, *_args, keep=None, same_data=False):
+        """Rebuild the list; ``same_data``: only the filter or the sort changed, so records
+        encoded for the last list are reused unless anything was edited since."""
         self.flush_edits()
         adapter = self.adapter
+        stamp = (
+            self.category_id,
+            id(adapter),
+            getattr(self.document, "revision", None),
+            self._applied,
+        )
+        if not same_data or stamp != self._encodings_stamp:
+            self._encodings = {}
+        self._encodings_stamp = stamp
         self.browser.blockSignals(True)
         self.browser.clear()
         self.browser.blockSignals(False)
@@ -1226,6 +1272,7 @@ class AdapterFamilyWidget(QWidget):
             return False
         self.editor.set_error(None)
         self._unannounced = True
+        self._applied += 1
         return True
 
     def flush_edits(self):

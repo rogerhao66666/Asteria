@@ -99,8 +99,9 @@ def _structure(project, found):
             found.append(
                 Problem("error", "Events", f"event bindings reference unknown scene {scene_id}")
             )
+    program_ids = set(project.event_programs.ids())
     for binding in project.lifecycle_event_bindings:
-        if binding.event_program_id not in project.event_programs.ids():
+        if binding.event_program_id not in program_ids:
             found.append(
                 Problem(
                     "error",
@@ -433,7 +434,7 @@ def _stats(project, found):
         )
 
 
-def _tags(project, found):
+def _tags(project, found, data=None):
     """A project that defines its tags (Game Systems ▸ Tags) defines every one it uses, alone
     or by a family (``rune.*``)."""
     from asteria.rpg.tag_definitions import definition_for
@@ -443,7 +444,7 @@ def _tags(project, found):
     defined = project.rpg_database.tag_definitions
     if not defined:
         return  # an older project: its tags are words its rules agree on
-    for tag in sorted(project_tags(project)):
+    for tag in sorted(project_tags(project, data() if data is not None else None)):
         if definition_for(defined, tag) is None:
             found.append(
                 Problem(
@@ -455,9 +456,12 @@ def _tags(project, found):
             )
 
 
-def project_formulas(project):
+def project_formulas(project, data=None):
     """Every formula the project writes: ``(where, text, names)`` - the record (a table and its
-    id) and the names the formula may use (``FORMULA_FIELDS``), however deep it sits."""
+    id) and the names the formula may use (``FORMULA_FIELDS``), however deep it sits.
+
+    ``data``: the ``(rpg_database.to_data(), gameplay_library.to_data())`` pair when the caller
+    has already serialised them."""
     from asteria.gameplay.expressions import FORMULA_FIELDS
 
     out = []
@@ -474,8 +478,11 @@ def project_formulas(project):
             for x in value.values():
                 walk(x, where)
 
-    tables = dict(project.rpg_database.to_data())
-    tables.update({f"lib.{k}": v for k, v in project.gameplay_library.to_data().items()})
+    if data is None:
+        data = project.rpg_database.to_data(), project.gameplay_library.to_data()
+    rpg_data, library_data = data
+    tables = dict(rpg_data)
+    tables.update({f"lib.{k}": v for k, v in library_data.items()})
     for table, records in tables.items():
         if not isinstance(records, list):
             continue
@@ -486,15 +493,19 @@ def project_formulas(project):
     return out
 
 
-def _formulas(project, found):
+def _formulas(project, found, data=None):
     """Every formula parses and reads only declared variables: a project that defines its stats
     (Game Systems ▸ Stats) may only read those stats, and resources it has (D94)."""
     from .formula_field import declared, formula_problem
     from .record_vocabulary import ProjectVocabulary
 
-    stats, resources, strict = declared(ProjectVocabulary(project))
+    vocabulary = ProjectVocabulary(project)
+    if data is not None:
+        vocabulary.use_data(data)
+    stats, resources, strict = declared(vocabulary)
     stat_ids, resource_ids = [c.value for c in stats], [c.value for c in resources]
-    for where, text, names in project_formulas(project):
+    formulas = project_formulas(project, data() if data is not None else None)
+    for where, text, names in formulas:
         problem = formula_problem(text, names, stat_ids, resource_ids, strict)
         if problem:
             found.append(Problem("error", "Formulas", f"{where}: {text} - {problem}", ()))
@@ -505,14 +516,29 @@ def collect_problems(document, *, resource_root=None):
     if project is None:
         return []
     found = []
+    serialised = []
+
+    def data():
+        # the database and library serialised once for every check that walks them (a failure
+        # is raised again to each, as when each serialised them itself)
+        if not serialised:
+            try:
+                rpg_data = project.rpg_database.to_data()
+                serialised.append((rpg_data, project.gameplay_library.to_data()))
+            except Exception as exc:  # noqa: BLE001
+                serialised.append(exc)
+        if isinstance(serialised[0], Exception):
+            raise serialised[0]
+        return serialised[0]
+
     for area, step in (
         ("Project", lambda: _structure(project, found)),
         ("RPG Database", lambda: _references(project, found)),
         ("Field / Events", lambda: _field(project, found)),
         ("Real-Time Combat", lambda: _combat(project, found)),
         ("Stats", lambda: _stats(project, found)),
-        ("Tags", lambda: _tags(project, found)),
-        ("Formulas", lambda: _formulas(project, found)),
+        ("Tags", lambda: _tags(project, found, data)),
+        ("Formulas", lambda: _formulas(project, found, data)),
         ("Sprites", lambda: _sprites(document, found, resource_root)),
         ("Action Timeline", lambda: _timelines(document, found)),
         ("Scripts", lambda: _scripts(document, found)),
@@ -521,8 +547,11 @@ def collect_problems(document, *, resource_root=None):
     # A validator that wraps others (Game Start validates the RPG database too) repeats their
     # messages
     # without a location; keep only the located copies.
-    located = [p.message for p in found if p.target]
-    found = [p for p in found if p.target or not any(m in p.message for m in located)]
+    # (one search for any located message, not one test per pair)
+    located = {p.message for p in found if p.target}
+    if located:
+        pattern = re.compile("|".join(re.escape(m) for m in located))
+        found = [p for p in found if p.target or not pattern.search(p.message)]
     # Safety net: anything Project.validate rejects must be visible even if no collector above
     # names it.
     try:

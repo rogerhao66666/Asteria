@@ -136,11 +136,12 @@ class Project:
         for scene_id in self.scene_event_bindings:
             if scene_id not in self._scenes:
                 raise ValueError("event bindings reference unknown scene")
+        program_ids = set(self.event_programs.ids())
         for binding in self.lifecycle_event_bindings:
-            if binding.event_program_id not in self.event_programs.ids():
+            if binding.event_program_id not in program_ids:
                 raise ValueError("lifecycle binding references unknown event program")
         for common in self.common_events:
-            if common.program_id not in self.event_programs.ids():
+            if common.program_id not in program_ids:
                 raise ValueError(
                     f"common event references unknown event program {common.program_id}"
                 )

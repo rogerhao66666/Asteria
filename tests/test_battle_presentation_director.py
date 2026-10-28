@@ -138,6 +138,35 @@ def test_director_snapshot_roundtrip_preserves_pending_choreography():
     assert restored.update(0.15).released_events[0].sequence == event.sequence
 
 
+def test_a_restored_director_still_releases_in_sequence_order():
+    """A delayed event holds back the undelayed one after it; a snapshot keeps that order
+    (restore used to sort the queue by release time and let the later event overtake)."""
+    profile = BattlePresentationDirectorProfile(
+        (
+            BattlePresentationDirectorRule(
+                BattlePresentationEventKind.TIMELINE_CUE.value,
+                "audio",
+                BattlePresentationDirection("accent", delay=0.5),
+            ),
+        )
+    )
+    director = BattlePresentationDirector(profile)
+    events = _events(
+        (
+            ActionCue("sfx", 0, "audio", {"sound_id": "hit"}),
+            ActionCue("vfx", 0, "vfx", {"effect_id": "slash"}),
+        )
+    )
+    director.ingest(events)
+    assert director.pending_count == 2
+    snapshot = director.snapshot()
+
+    restored = BattlePresentationDirector(profile).restore(snapshot)
+    assert restored.snapshot() == snapshot
+    released = restored.update(0.6).released_events
+    assert [e.sequence for e in released] == [e.sequence for e in events]
+
+
 def test_profile_roundtrip_is_project_owned_policy():
     profile = BattlePresentationDirectorProfile(
         (

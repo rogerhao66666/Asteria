@@ -21,7 +21,7 @@ rules; ``views()`` gives what to draw.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import cos, hypot, radians, sin
+from math import cos, hypot, isfinite, radians, sin
 
 from asteria import kernels
 from asteria.core import System, world_position
@@ -268,19 +268,28 @@ class ProjectileSystem(System):
         ]
         nan = float("nan")
         target_x, target_y = [nan] * len(uids), [nan] * len(uids)
-        for row, uid in enumerate(uids):
-            shot = self.shots[uid]
-            if shot.definition.homing_turn <= 0:
-                continue
+        homing = [
+            (row, self.shots[uid])
+            for row, uid in enumerate(uids)
+            if self.shots[uid].definition.homing_turn > 0
+        ]
+        grid = (
+            _centre_grid(centres, max(shot.definition.homing_range for _, shot in homing))
+            if homing and len(centres) > _GRID_MIN_TARGETS
+            else None
+        )
+        for row, shot in homing:
+            x, y = xs[row], ys[row]
+            candidates = centres if grid is None else _grid_candidates(grid, centres, x, y)
             best, reach = None, shot.definition.homing_range
-            for entity_id, team, cx, cy in centres:
+            for entity_id, team, cx, cy in candidates:
                 if (
                     entity_id == shot.owner_id
                     or entity_id in shot.hit_ids
                     or (shot.team and team == shot.team)
                 ):
                     continue
-                distance = hypot(cx - xs[row], cy - ys[row])
+                distance = hypot(cx - x, cy - y)
                 if distance <= reach:
                     best, reach = (cx, cy), distance
             if best is not None:
@@ -405,6 +414,43 @@ class ProjectileSystem(System):
                 ended[row] = "target"
             elif shot.pierce_left > 0:
                 shot.pierce_left -= 1
+
+
+# below this many hurtboxes homing scans them all; above, a grid of their centres is used
+_GRID_MIN_TARGETS = 16
+# a grid cell index past this is too coarse for ``//`` to be trusted to the cell: scan everything
+_GRID_MAX_CELL = 1e9
+
+
+def _centre_grid(centres, reach):
+    """Hurtbox centres bucketed into cells a little wider than the longest homing ``reach``
+    (``None`` when that reach is not a positive finite number, so callers scan every centre).
+    Centres that are not finite are left out: no finite reach is ever within range of them."""
+    if not (0.0 < reach < float("inf")):
+        return None
+    size = reach * 1.001  # the margin absorbs float rounding at the edge of a cell
+    cells = {}
+    for index, (_, _, cx, cy) in enumerate(centres):
+        if isfinite(cx) and isfinite(cy):
+            cells.setdefault((cx // size, cy // size), []).append(index)
+    return size, cells
+
+
+def _grid_candidates(grid, centres, x, y):
+    """Centres in the 3 x 3 cells around ``(x, y)`` - every centre within the grid's reach - in
+    their original order, so the nearest-target scan breaks ties the same way as a full scan."""
+    size, cells = grid
+    if not (isfinite(x) and isfinite(y)):
+        return ()  # no finite centre is within a finite reach of a non-finite point
+    gx, gy = x // size, y // size
+    if abs(gx) > _GRID_MAX_CELL or abs(gy) > _GRID_MAX_CELL:
+        return centres
+    found = []
+    for dx in (-1.0, 0.0, 1.0):
+        for dy in (-1.0, 0.0, 1.0):
+            found.extend(cells.get((gx + dx, gy + dy), ()))
+    found.sort()
+    return [centres[i] for i in found]
 
 
 __all__ = ["ProjectileEvent", "ProjectileSystem", "ProjectileView", "turn_with_facing"]

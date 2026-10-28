@@ -30,8 +30,9 @@ class TextDrawMixin:
 
         f, cjk_path = self._font_face(size)
         if cjk_path and contains_cjk(value):
-            return self.pg.font.Font(cjk_path, cjk_size(f)).size(str(value))
-        return font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f)).size(str(value))
+            return self.pg.font.Font(cjk_path, cjk_size(f, self.pg, cjk_path)).size(str(value))
+        cjk_pt = cjk_size(f, self.pg) if contains_cjk(value) else 0  # 0: not used
+        return font_for_text(self.pg, f, value, self._cjk_fonts, cjk_pt).size(str(value))
 
     # --- menu layouts and the menu theme (U2) -----------------------------------------------
     def menu_layout(self, screen_id):
@@ -199,12 +200,13 @@ class TextDrawMixin:
                 cache.clear()
             if cjk_path and contains_cjk(value):  # the menu theme's own CJK font
                 faces = self.__dict__.setdefault("_asset_fonts", {})
-                face_key = (cjk_path, "cjk", cjk_size(f))
+                face_key = (cjk_path, "cjk", cjk_size(f, self.pg, cjk_path))
                 if face_key not in faces:
-                    faces[face_key] = self.pg.font.Font(cjk_path, cjk_size(f))
+                    faces[face_key] = self.pg.font.Font(cjk_path, face_key[2])
                 text_font = faces[face_key]
             else:
-                text_font = font_for_text(self.pg, f, value, self._cjk_fonts, cjk_size(f))
+                cjk_pt = cjk_size(f, self.pg) if contains_cjk(value) else 0  # 0: not used
+                text_font = font_for_text(self.pg, f, value, self._cjk_fonts, cjk_pt)
             if text_font is f and not str(value).isascii():
                 # what the Latin face lacks ("→", "·" in a pixel font) comes from one that has it
                 surf = render_with_fallback(

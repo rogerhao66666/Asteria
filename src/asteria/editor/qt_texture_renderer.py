@@ -10,11 +10,15 @@ except ImportError:
 class QtTextureCache:
     def __init__(self):
         self._cache = {}
+        # each path as given -> its resolved form (resolving touches the file system)
+        self._keys = {}
 
     def get(self, path):
         if QImage is None:
             raise RuntimeError("PySide6 is required")
-        key = str(Path(path).resolve())
+        key = self._keys.get(path)
+        if key is None:
+            key = self._keys[path] = str(Path(path).resolve())
         image = self._cache.get(key)
         if image is None:
             image = QImage(key)
@@ -25,12 +29,18 @@ class QtTextureCache:
 
     def clear(self):
         self._cache.clear()
+        self._keys.clear()
 
 
 def paint_texture_draws(painter, draws, resolve_path, cache):
     painted = 0
+    paths = {}  # one lookup per texture per paint, not one per drawn tile
     for draw in draws:
-        path = resolve_path(draw.texture_asset_id)
+        asset_id = draw.texture_asset_id
+        if asset_id in paths:
+            path = paths[asset_id]
+        else:
+            path = paths[asset_id] = resolve_path(asset_id)
         if path is None:
             continue
         image = cache.get(path)

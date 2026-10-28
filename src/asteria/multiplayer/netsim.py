@@ -12,6 +12,7 @@ import random
 import socket
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass
 
 
@@ -46,7 +47,7 @@ class _Pipe(threading.Thread):
             rng,
             stats,
         )
-        self._queue = []
+        self._queue = deque()
         self._cond = threading.Condition()
         self._stopped = False
         self._free_at = 0.0
@@ -104,7 +105,7 @@ class _Pipe(threading.Thread):
                 if wait > 0:
                     self._cond.wait(wait)
                     continue
-                self._queue.pop(0)
+                self._queue.popleft()
             try:
                 self.sink.sendall(frame)
             except OSError:
