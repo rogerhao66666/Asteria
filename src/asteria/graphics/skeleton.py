@@ -9,6 +9,7 @@ blend of two - into world transforms; ``solve_two_bone`` bends a limb to reach a
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from dataclasses import dataclass, field
 from math import acos, atan2, cos, degrees, hypot, isfinite, radians, sin
 
@@ -95,6 +96,9 @@ class SkeletonClip:
     loop: bool = True
     tracks: tuple = ()
     frames: tuple = ()
+    # lookup tables derived from ``tracks`` / ``frames``; not part of equality, hash or repr
+    _track_index: dict = field(default=None, init=False, compare=False, repr=False)
+    _frame_index: dict = field(default=None, init=False, compare=False, repr=False)
 
     def __init__(self, name, duration, *, loop=True, tracks=None, frames=None):
         if not name:
@@ -117,21 +121,40 @@ class SkeletonClip:
         object.__setattr__(self, "loop", bool(loop))
         object.__setattr__(self, "tracks", tuple(sorted(parsed)))
         object.__setattr__(self, "frames", switches)
+        index = {}
+        for track, keys in self.tracks:
+            if track not in index:  # the first matching track wins, as in a linear scan
+                times = tuple(k.time for k in keys)
+                index[track] = (keys, None if any(t != t for t in times) else times)
+        object.__setattr__(self, "_track_index", index)
+        frame_index = {}
+        for slot, rows in self.frames:
+            frame_index.setdefault(slot, rows)
+        object.__setattr__(self, "_frame_index", frame_index)
 
     def local_time(self, time):
         return time % self.duration if self.loop else max(0.0, min(self.duration, time))
 
     def sample(self, bone_id, channel, time, default):
         """The key value at ``time`` (``default`` when the bone is not keyed on that channel)."""
-        for (bone, name), keys in self.tracks:
-            if bone == bone_id and name == channel:
-                return self._interpolate(keys, self.local_time(time))
-        return default
+        entry = self._track_index.get((bone_id, channel))
+        if entry is None:
+            return default
+        return self._interpolate(entry[0], self.local_time(time), entry[1])
 
     @staticmethod
-    def _interpolate(keys, time):
+    def _interpolate(keys, time, times=None):
         if time <= keys[0].time:
             return keys[0].value
+        if times is not None:
+            # first key at or after ``time``; 0 only when ``time`` is NaN (no ``<=`` matches)
+            i = bisect_left(times, time)
+            if i == 0 or i == len(keys):
+                return keys[-1].value
+            before, after = keys[i - 1], keys[i]
+            span = after.time - before.time
+            t = 0.0 if span <= 0 else (time - before.time) / span
+            return before.value + (after.value - before.value) * _ease(before.easing, t)
         for before, after in zip(keys, keys[1:], strict=False):
             if time <= after.time:
                 span = after.time - before.time
@@ -140,14 +163,15 @@ class SkeletonClip:
         return keys[-1].value
 
     def frame_for(self, slot_id, time, default):
-        for slot, rows in self.frames:
-            if slot == slot_id:
-                frame = default
-                for when, value in rows:
-                    if when <= self.local_time(time):
-                        frame = value
-                return frame
-        return default
+        rows = self._frame_index.get(slot_id)
+        if rows is None:
+            return default
+        local = self.local_time(time)
+        frame = default
+        for when, value in rows:
+            if when <= local:
+                frame = value
+        return frame
 
 
 @dataclass(frozen=True, slots=True)
