@@ -13,32 +13,58 @@ class CollisionCell:
     height: float
 
 
-def build_collision_cells(tilemap, camera, *, origin_x=0.0, origin_y=0.0):
+def build_collision_cells(
+    tilemap,
+    camera,
+    *,
+    origin_x=0.0,
+    origin_y=0.0,
+    viewport_width=None,
+    viewport_height=None,
+):
+    """Screen cells of every filled tile on a collision layer; with a viewport size, chunks and
+    cells wholly outside it are left out."""
+    from asteria.runtime.tile_draw import _visible_span
+
     cells = []
+    width = tilemap.tile_width * camera.zoom
+    height = tilemap.tile_height * camera.zoom
     for layer in tilemap.ordered_layers():
         if not layer.collision_enabled:
             continue
         for chunk in layer.chunks.values():
+            base_x = chunk.chunk_x * tilemap.chunk_width
+            base_y = chunk.chunk_y * tilemap.chunk_height
+            if viewport_width is not None or viewport_height is not None:
+                first = camera.world_to_screen(
+                    origin_x + base_x * tilemap.tile_width,
+                    origin_y + base_y * tilemap.tile_height,
+                )
+                last = camera.world_to_screen(
+                    origin_x + (base_x + chunk.width - 1) * tilemap.tile_width,
+                    origin_y + (base_y + chunk.height - 1) * tilemap.tile_height,
+                )
+                if not _visible_span(first[0], last[0], width, viewport_width):
+                    continue
+                if not _visible_span(first[1], last[1], height, viewport_height):
+                    continue
+            tiles = chunk.tiles
             for ly in range(chunk.height):
+                row = ly * chunk.width
                 for lx in range(chunk.width):
-                    if chunk.get(lx, ly) == EMPTY_TILE:
+                    if tiles[row + lx] == EMPTY_TILE:
                         continue
-                    tx = chunk.chunk_x * tilemap.chunk_width + lx
-                    ty = chunk.chunk_y * tilemap.chunk_height + ly
+                    tx = base_x + lx
+                    ty = base_y + ly
                     sx, sy = camera.world_to_screen(
                         origin_x + tx * tilemap.tile_width,
                         origin_y + ty * tilemap.tile_height,
                     )
-                    cells.append(
-                        CollisionCell(
-                            tx,
-                            ty,
-                            sx,
-                            sy,
-                            tilemap.tile_width * camera.zoom,
-                            tilemap.tile_height * camera.zoom,
-                        )
-                    )
+                    if viewport_width is not None and (sx + width < 0 or sx > viewport_width):
+                        continue
+                    if viewport_height is not None and (sy + height < 0 or sy > viewport_height):
+                        continue
+                    cells.append(CollisionCell(tx, ty, sx, sy, width, height))
     return tuple(cells)
 
 

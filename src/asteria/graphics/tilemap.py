@@ -16,6 +16,13 @@ class TileChunk:
     width: int
     height: int
     tiles: list[int]
+    # filled (non-empty) cells, kept by ``set`` so an erase need not rescan the chunk; only a
+    # hint (``is_empty`` checks the cells before saying yes), as ``tiles`` is a plain list
+    _filled: int = field(default=0, init=False, repr=False, compare=False)
+
+    def __post_init__(self):
+        tiles = self.tiles
+        self._filled = len(tiles) - tiles.count(EMPTY_TILE) if hasattr(tiles, "count") else 0
 
     @classmethod
     def empty(cls, chunk_x, chunk_y, width, height):
@@ -42,7 +49,23 @@ class TileChunk:
     def set(self, x, y, tile_id):
         if not isinstance(tile_id, int) or tile_id < EMPTY_TILE:
             raise ValueError("invalid tile id")
-        self.tiles[self._index(x, y)] = tile_id
+        index = self._index(x, y)
+        old = self.tiles[index]
+        self.tiles[index] = tile_id
+        if old == EMPTY_TILE:
+            if tile_id != EMPTY_TILE:
+                self._filled += 1
+        elif tile_id == EMPTY_TILE:
+            self._filled -= 1
+
+    def is_empty(self):
+        """True when every cell is empty: O(1) while the cells change through ``set``."""
+        if self._filled > 0:
+            return False
+        if all(t == EMPTY_TILE for t in self.tiles):
+            return True
+        self._filled = len(self.tiles) - self.tiles.count(EMPTY_TILE)  # changed behind set
+        return False
 
 
 @dataclass(slots=True)
