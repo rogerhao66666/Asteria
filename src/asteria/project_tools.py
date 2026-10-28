@@ -383,7 +383,14 @@ def _sign_ad_hoc(app):
     return result.returncode == 0
 
 
-_BUNDLED = object()
+class _Bundled:
+    """Default of ``package_game(player=...)``: the player inside the standalone app, if any."""
+
+    def __repr__(self):  # shown in signatures (the manual's API chapter)
+        return "<bundled player>"
+
+
+_BUNDLED = _Bundled()
 
 
 def package_game(

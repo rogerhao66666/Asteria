@@ -1034,7 +1034,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | 簽名 | 說明 |
 | --- | --- |
 | `asteria.project_tools.export_game(project_path, output, *, allow_missing=False, bundle_engine=True)` | 遊戲資料夾：專案、它用到的檔案與引擎（`run_game.py`）。 |
-| `asteria.project_tools.package_game(project_path, output, *, name=None, pyz=True, app=False, allow_missing=False)` | 遊戲資料夾加上單一檔案 `.pyz`，在 macOS 還有 `.app`。 |
+| `asteria.project_tools.package_game(project_path, output, *, name=None, pyz=True, app=False, allow_missing=False, player=<bundled player>)` | 遊戲資料夾加上單一檔案 `.pyz`，在 macOS 還有 `.app`。 |
 | `asteria.project_tools.build_pyz(game_folder, output, *, name)` | 把遊戲資料夾打包成單一 `.pyz` 檔。 |
 | `asteria.project_tools.build_macos_app(pyz, output_dir, *, name, identifier=None)` | 把 `.pyz` 包成 macOS App。 |
 | `asteria.project_tools.upgrade_project(path, *, backup=True)` | 把專案檔升級成目前的格式（保留備份）。 |

@@ -1083,7 +1083,7 @@ The same functions run behind File ▸ Export Game… and the command lines `ast
 | Signature | Description |
 | --- | --- |
 | `asteria.project_tools.export_game(project_path, output, *, allow_missing=False, bundle_engine=True)` | A game folder: the project, its files and the engine (`run_game.py`). |
-| `asteria.project_tools.package_game(project_path, output, *, name=None, pyz=True, app=False, allow_missing=False)` | The game folder plus a single-file `.pyz` and, on macOS, an `.app`. |
+| `asteria.project_tools.package_game(project_path, output, *, name=None, pyz=True, app=False, allow_missing=False, player=<bundled player>)` | The game folder plus a single-file `.pyz` and, on macOS, an `.app`. |
 | `asteria.project_tools.build_pyz(game_folder, output, *, name)` | Zip a game folder into one `.pyz` file. |
 | `asteria.project_tools.build_macos_app(pyz, output_dir, *, name, identifier=None)` | Wrap a `.pyz` in a macOS app. |
 | `asteria.project_tools.upgrade_project(path, *, backup=True)` | Upgrade a project file to the current format (keeps a backup). |
