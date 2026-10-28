@@ -1,3 +1,4 @@
+import heapq
 import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -93,16 +94,15 @@ class AssetStore:
                 if dep in docs:
                     indeg[aid] += 1
                     out[dep].append(aid)
-        ready = sorted(a for a, d in indeg.items() if d == 0)
+        ready = sorted(a for a, d in indeg.items() if d == 0)  # a sorted list is a valid heap
         order = []
         while ready:
-            a = ready.pop(0)
+            a = heapq.heappop(ready)
             order.append(a)
             for n in sorted(out[a]):
                 indeg[n] -= 1
                 if indeg[n] == 0:
-                    ready.append(n)
-                    ready.sort()
+                    heapq.heappush(ready, n)
         cyc = sorted(a for a, d in indeg.items() if d)
         if cyc:
             issues.append(AssetStoreIssue(str(root), "asset.dependency.cycle", ", ".join(cyc)))
