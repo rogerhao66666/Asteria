@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from asteria.assets.local_reference import RPGMakerMVProjectLayout
@@ -21,12 +22,37 @@ class MVTileRegion:
     quarters: tuple[tuple[int, int, int, int], ...]
 
 
-def _autotile_table(js_path: Path, name: str):
-    source = js_path.read_text(encoding="utf-8-sig")
+def _file_stamp(path: Path):
+    stat = path.stat()
+    return str(path), stat.st_mtime_ns, stat.st_size
+
+
+@lru_cache(maxsize=8)
+def _read_text(path: str, _mtime_ns: int, _size: int) -> str:
+    return Path(path).read_text(encoding="utf-8-sig")
+
+
+@lru_cache(maxsize=8)
+def _parsed_json(path: str, mtime_ns: int, size: int):
+    return json.loads(_read_text(path, mtime_ns, size))
+
+
+def cached_json(path: Path):
+    """``path`` parsed, once while the file is unchanged. Shared: callers must not change it."""
+    return _parsed_json(*_file_stamp(path))
+
+
+@lru_cache(maxsize=16)
+def _parsed_table(path: str, mtime_ns: int, size: int, name: str):
+    source = _read_text(path, mtime_ns, size)
     match = re.search(rf"Tilemap\.{name}\s*=\s*(\[.*?\]);", source, re.DOTALL)
     if match is None:
         raise ValueError(f"missing MV autotile table: {name}")
     return tuple(tuple(tuple(pair) for pair in row) for row in json.loads(match.group(1)))
+
+
+def _autotile_table(js_path: Path, name: str):
+    return _parsed_table(*_file_stamp(js_path), name)
 
 
 class MVTileResolver:
@@ -36,7 +62,7 @@ class MVTileResolver:
         self.layout = layout
         self.catalog = catalog
         self.tileset_id = int(tileset_id)
-        records = json.loads((layout.data / "Tilesets.json").read_text(encoding="utf-8-sig"))
+        records = cached_json(layout.data / "Tilesets.json")
         if (
             self.tileset_id <= 0
             or self.tileset_id >= len(records)
@@ -48,8 +74,22 @@ class MVTileResolver:
         self.floor = _autotile_table(js, "FLOOR_AUTOTILE_TABLE")
         self.wall = _autotile_table(js, "WALL_AUTOTILE_TABLE")
         self.waterfall = _autotile_table(js, "WATERFALL_AUTOTILE_TABLE")
+        # set number -> (its source and asset id, the catalog issues finding it reported)
+        self._sources: dict[int, tuple[tuple[Path | None, str], tuple]] = {}
 
     def _source(self, set_number: int) -> tuple[Path | None, str]:
+        """The image and asset of tileset sheet ``set_number``, looked up once; a repeat
+        reports the lookup's issues again, as a fresh lookup would."""
+        cached = self._sources.get(set_number)
+        if cached is not None:
+            self.catalog.issues.extend(cached[1])
+            return cached[0]
+        before = len(self.catalog.issues)
+        found = self._find_source(set_number)
+        self._sources[set_number] = (found, tuple(self.catalog.issues[before:]))
+        return found
+
+    def _find_source(self, set_number: int) -> tuple[Path | None, str]:
         name = self.names[set_number] if set_number < len(self.names) else ""
         if not name:
             return None, ""

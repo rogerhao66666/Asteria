@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from PIL import Image
@@ -40,6 +40,8 @@ class RPGMakerMVCatalog:
     database: RPGMakerMVDatabase
     assets: tuple[CanonicalAsset, ...]
     issues: list[MVReferenceIssue]
+    # IconSet image -> its (columns, rows) of 32px cells: read once, not once per record
+    _icon_grids: dict = field(default_factory=dict, init=False, repr=False, compare=False)
 
     @classmethod
     def build(
@@ -97,9 +99,11 @@ class RPGMakerMVCatalog:
         if source is None:
             return None
         index = int(index)
-        with Image.open(source) as image:
-            columns = image.width // 32
-            rows = image.height // 32
+        grid = self._icon_grids.get(source)
+        if grid is None:
+            with Image.open(source) as image:
+                grid = self._icon_grids[source] = (image.width // 32, image.height // 32)
+        columns, rows = grid
         if index < 0 or index >= columns * rows:
             self.issues.append(MVReferenceIssue("icon.out_of_range", "IconSet.png", str(index)))
             return None
