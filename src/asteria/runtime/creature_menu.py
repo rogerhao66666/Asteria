@@ -40,7 +40,7 @@ import json
 from pathlib import Path
 
 from asteria.presentation.creature_screens import creature_settings
-from asteria.runtime.creature_battle import CreatureBattleScreen, H, W
+from asteria.runtime.creature_battle import CreatureBattleScreen, H, W, _owned_item_ids
 from asteria.runtime.pointer import hand_over
 
 OVERLAY_PHASES = ("start", "save")  # drawn over the field
@@ -311,7 +311,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
 
         return [
             (item_id, inventory.count(item_id))
-            for item_id in sorted(db.items)
+            for item_id in _owned_item_ids(inventory, db.items)
             if inventory.count(item_id) > 0 and pocket_of(item_id) == index
         ]
 
