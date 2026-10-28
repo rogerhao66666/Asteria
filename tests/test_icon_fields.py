@@ -172,7 +172,9 @@ def test_the_pause_menu_and_quest_log_draw_icons(monkeypatch):
             drawn.append(icon_id),
             original(icon_id, *a, **k),
         )[1]
-        runtime._draw_overlay_menu("Paused", runtime._pause_menu)
+        menu = runtime._pause_menu  # on Tips: a short window scrolls the list to it
+        menu.index = [key for key, _label in menu.options].index("entry:tips")
+        runtime._draw_overlay_menu("Paused", menu)
         runtime.game.start_quest("herbs")
         runtime._draw_quests()
         assert drawn == ["forged:star", "forged:heal"]

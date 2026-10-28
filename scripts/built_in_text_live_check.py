@@ -103,6 +103,13 @@ def main(argv=None):
         if missing:
             print(name, "missing", missing)
 
+    def pause_end(name, *expected):
+        """The pause menu scrolled to its last rows (it has more than the window shows)."""
+        menu = runtime._pause_menu
+        menu.index = len(menu.options) - 1
+        shot(name, *expected)
+        menu.index = 0
+
     def hero_turn(limit=20.0):
         deadline = time.perf_counter() + limit
         while time.perf_counter() < deadline:
@@ -136,7 +143,8 @@ def main(argv=None):
 
     smoke.prepare(game, Counter())  # a hero with trees, gear and skills to show
     runtime._ui_mode = "pause"
-    shot("en_pause", "Resume", "Settings")
+    shot("en_pause", "Paused", "Resume")
+    pause_end("en_pause_end", "Settings", "Quit")
 
     game.set_locale("zh-TW")  # as Settings ▸ Language does
     checks["locale"] = game.localizer.locale == "zh-TW"
@@ -145,7 +153,8 @@ def main(argv=None):
     press(pygame.K_n, 0.6)  # N: a new game (the hero prepared above plays on)
     shot("zh_field", "野外測試")
     runtime._ui_mode = "pause"
-    shot("zh_pause", "暫停", "繼續遊戲", "設定", "結束遊戲")
+    shot("zh_pause", "暫停", "繼續遊戲")
+    pause_end("zh_pause_end", "設定", "結束遊戲")
     runtime._ui_mode = "settings"
     shot("zh_settings", "設定", "語言", "繁體中文", "音樂音量", "戰鬥訊息")
     runtime.open_slots("save")

@@ -333,14 +333,16 @@ class MenusDrawMixin:
         self._draw_backdrop(base, canvas=c)
         # a menu longer than the window scrolls when the cursor leaves the rows shown (so the
         # row under the pointer stays put), "n/total" by the title (D85)
-        fit = max(1, min(len(cursor.options), (self.height - 130) // 34))
+        # the field's hint bar stays visible below the menu: a long menu cut it in half
+        bottom = self.height - (100 if self._hint_bar_behind(base, c) else 0)
+        fit = max(1, min(len(cursor.options), (bottom - 130) // 34))
         tops = self.__dict__.setdefault("_overlay_tops", {})
         first = min(tops.get(screen_id, 0), cursor.index)
         first = max(first, cursor.index - fit + 1, 0)
         first = tops[screen_id] = min(first, max(0, len(cursor.options) - fit))
         height = 90 + 34 * fit
         shift = 30 if cursor.icons else 0  # room for the rows' icons: the panel grows with it
-        x, y = self.width / 2 - 170 - shift / 2, self.height / 2 - height / 2
+        x, y = self.width / 2 - 170 - shift / 2, bottom / 2 - height / 2
         x, y, width, height = c.panel("frame", (x, y, 340 + shift, height))
         middle = x + width / 2
         c.text("title", title, middle, y + 18, size=34, color=c.tone("title", TITLE), center=True)
@@ -385,6 +387,16 @@ class MenusDrawMixin:
                 center=True,
             )
         c.finish()
+
+    def _hint_bar_behind(self, base, canvas):
+        """Whether the backdrop shows the field's hint bar (as _draw_field draws it)."""
+        layout = canvas.layout
+        if layout is not None and (layout.background_color is not None or layout.background_image):
+            return False  # the layout's own background replaces the field
+        game = self.game
+        if base != "field" or game.cutscene_active or game.action_scene:
+            return False
+        return self.manifest.get("field", {}).get("test_hints", True)
 
     def _menu_fields(self):
         """Fields every overlay menu offers the author's own texts (U2)."""

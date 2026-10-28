@@ -322,6 +322,25 @@ def test_the_pause_and_settings_menus_draw_the_players_language(host):
     assert "語言" in settings and "繁體中文" in settings and "音樂音量" in settings
 
 
+def test_a_long_pause_menu_stays_above_the_field_hint_bar(host):
+    """The pause list once ran down over the field's hint bar and cut its controls in half."""
+    host.height = 540
+    rows = []
+    original = host.menu_row
+
+    def record(label, x, y, *args, **kwargs):
+        rows.append(y)
+        return original(label, x, y, *args, **kwargs)
+
+    host.menu_row = record
+    try:
+        host._draw_overlay_menu("Paused", host._pause_menu)
+    finally:
+        host.menu_row = original
+    assert len(rows) < len(host._pause_menu.options)  # it scrolls
+    assert max(rows) + 34 <= host.height - 92  # the bar's top (field_ui)
+
+
 def test_the_title_and_game_over_screens_draw_the_players_language(host):
     host.game.set_locale("zh-TW")
     shown = _drawn(host, host._draw_title)

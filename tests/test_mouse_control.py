@@ -91,15 +91,18 @@ def test_the_input_map_keeps_the_switch_only_when_it_is_off():
 
 def test_the_pause_menu_follows_the_pointer_and_a_click_opens_the_row(runtime):
     runtime._ui_mode = "pause"
-    runtime._pause_menu.index = 0
+    options = [key for key, _label in runtime._pause_menu.labels(runtime.game.tr)]
+    target = options.index("settings")
+    runtime._pause_menu.index = target  # scrolled into view
     _frames(runtime, [])
     rows = _spots(runtime)
-    options = [key for key, _label in runtime._pause_menu.labels(runtime.game.tr)]
-    assert len(rows) == min(len(options), (runtime.height - 130) // 34)  # the rows that fit
-    target = options.index("settings")
-    _frames(runtime, [_move(_centre(rows[target]))])
+    fit = min(len(options), (runtime.height - 100 - 130) // 34)  # above the field's hint bar
+    assert len(rows) == fit  # the rows that fit
+    row = min(target, fit - 1)  # Settings: the last row shown once the list scrolled to it
+    runtime._pause_menu.index = target - 1
+    _frames(runtime, [_move(_centre(rows[row]))])
     assert runtime._pause_menu.index == target
-    _frames(runtime, [_click(_centre(_spots(runtime)[target]))])
+    _frames(runtime, [_click(_centre(_spots(runtime)[row]))])
     assert runtime._ui_mode == "settings"
     _frames(runtime, [], [_click((5, 5), button=3)])
     assert runtime._ui_mode == "pause"  # a right click goes back
@@ -426,13 +429,13 @@ def test_a_click_while_rebinding_is_not_the_key_bound(runtime):
 
 def test_a_pause_menu_taller_than_the_window_scrolls_to_its_last_row(runtime):
     runtime._ui_mode = "pause"
-    runtime.height = 300  # room for five rows
+    runtime.height = 400  # room for five rows above the field's hint bar
     options = [key for key, _label in runtime._pause_menu.labels(runtime.game.tr)]
     assert len(options) > 5
     runtime._pause_menu.index = len(options) - 1
     _frames(runtime, [])
     rows = _spots(runtime)
-    assert len(rows) == 5 and rows[-1].rect[1] + rows[-1].rect[3] < 300
+    assert len(rows) == 5 and rows[-1].rect[1] + rows[-1].rect[3] < 400 - 92
     _frames(runtime, [_move(_centre(rows[0]))], [])
     assert runtime._pause_menu.index == len(options) - 5  # the top row shown
     assert _spots(runtime)[0].rect == rows[0].rect  # pointing does not scroll the rows
