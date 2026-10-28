@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from stat import S_ISREG
+
 from .support import (  # noqa: F401 - the names the moved methods use
     BESTIARY_TAG_KINDS,
     FIELD_BODY_HEIGHT,
@@ -49,7 +51,19 @@ class EnvironmentMixin:
         if record is None or record.kind != "shader":
             return None
         path = self.resource_root / record.source_path
-        return path.read_text(encoding="utf-8") if path.is_file() else None
+        try:
+            info = path.stat()
+        except OSError:
+            return None
+        if not S_ISREG(info.st_mode):
+            return None
+        # read once per asset (asked every frame), again only when the file changes
+        key = (str(path), info.st_mtime_ns, info.st_size)
+        cache = self.__dict__.setdefault("_shader_sources", {})
+        known = cache.get(str(asset_id))
+        if known is None or known[0] != key:
+            known = cache[str(asset_id)] = (key, path.read_text(encoding="utf-8"))
+        return known[1]
 
     def world_done(self, kind):
         """The world layer for this frame is drawn: weather goes on it, and what follows (HUD,

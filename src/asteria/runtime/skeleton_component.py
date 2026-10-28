@@ -63,10 +63,7 @@ class SkeletonSceneRuntime:
     def update(self, scene, dt):
         alive = set()
         step = max(0.0, float(dt))
-        for entity in scene.entities():
-            component = entity.try_get(SkeletonAnimation2DComponent)
-            if component is None or not entity.enabled:
-                continue
+        for entity, component in scene.query(SkeletonAnimation2DComponent):
             alive.add(entity.id)
             signature = (component.skeleton_json, component.clip_name)
             if self._signatures.get(entity.id) != signature:
@@ -127,7 +124,9 @@ class SkeletonSceneRuntime:
         if scene is None:
             return ()
         draws = []
-        for entity in scene.entities():
+        for entity in scene._members(SkeletonAnimation2DComponent):  # disabled ones draw too
+            if entity.destroy_requested:
+                continue
             draws.extend(self.draw_entity(entity, camera, resolve_sprite_sheet))
         return tuple(sorted(draws, key=lambda draw: (draw.layer, draw.depth, draw.screen_y)))
 

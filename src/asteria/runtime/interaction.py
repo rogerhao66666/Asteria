@@ -137,11 +137,8 @@ class TouchTriggerController:
         from .components2d import Interaction2DComponent
 
         ax, ay = world_position(actor)
-        for entity in scene.entities():
-            if entity is actor or not entity.enabled:
-                continue
-            interaction = entity.try_get(Interaction2DComponent)
-            if interaction is None or entity.try_get(Transform) is None:
+        for entity, interaction, _ in scene.query(Interaction2DComponent, Transform):
+            if entity is actor:
                 continue
             if (
                 not interaction.enabled

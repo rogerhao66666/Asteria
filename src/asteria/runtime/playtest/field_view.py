@@ -409,15 +409,24 @@ class FieldViewMixin:
             sheet = self.load_image(asset.source.uri)
             columns = max(1, sheet.get_width() // fw)
             index = part.frame_index % max(1, columns * max(1, sheet.get_height() // fh))
-            image = sheet.subsurface(((index % columns) * fw, (index // columns) * fh, fw, fh))
             size = (
                 max(1, round(fw * part.scale_x * scale)),
                 max(1, round(fh * part.scale_y * scale)),
             )
-            image = resized(self.pg, image, size)
+            # the frame cut and resized once per size (not every frame); turned and faded after
+            image = self._scaled.get(
+                ("part", asset.source.uri, index, fw, fh, size),
+                lambda sheet=sheet, index=index, columns=columns, fw=fw, fh=fh, size=size: resized(
+                    self.pg,
+                    sheet.subsurface(((index % columns) * fw, (index // columns) * fh, fw, fh)),
+                    size,
+                ),
+            )
             if part.rotation_deg:
                 image = self.pg.transform.rotate(image, -part.rotation_deg)
             if part.opacity < 1.0:
+                if not part.rotation_deg:
+                    image = image.copy()  # the cached copy is shared: fade a copy of it
                 image.set_alpha(int(part.opacity * 255))
             if part.kind == "layer":
                 x, y = position[0] + part.x * scale, position[1] + part.y * scale
@@ -463,7 +472,15 @@ class FieldViewMixin:
         sprites = self.manifest["field"].get("entity_sprites", {})
         from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
 
-        for entity in self.game.scene.entities():
+        scene = self.game.scene
+        if sprites:
+            drawn = scene.entities()
+        else:  # no sprites by name: only the field enemies draw (their circles), so the
+            # component index gives them, in scene order, without a scan of the scene
+            enemies = {*scene._members(FieldAIComponent)}
+            enemies.update(scene._members(VisibleEncounterComponent))
+            drawn = [e for e in sorted(enemies, key=lambda e: e._order) if not e.destroy_requested]
+        for entity in drawn:
             if not entity.enabled:
                 continue  # hidden / relocated NPCs (WLD-02) and disabled entities are not drawn
             spec = sprites.get(entity.name)

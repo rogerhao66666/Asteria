@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
+from functools import lru_cache
+from types import MappingProxyType
 
 from asteria.core import Component, Field, Transform, component_schema
 
@@ -163,6 +165,17 @@ def line_of_sight(spec_range, facing, own_cell, target_cell, blocked):
     return between
 
 
+def _hold(holders, entity_id, mover, change=1):
+    """Add (``change`` 1) or take away (-1) the cells ``mover`` stands on and steps into."""
+    for cell in (mover.cell, mover.target):
+        if cell is None:
+            continue
+        if change > 0:
+            holders.setdefault(cell, []).append(entity_id)
+        else:
+            holders[cell].remove(entity_id)
+
+
 @dataclass(slots=True)
 class _Mover:
     home: tuple  # the cell it started on
@@ -231,15 +244,21 @@ class GridMoverSystem:
         dt = max(0.0, float(dt))
         reserved = set(reserved)
         alive = set()
-        for entity in scene.entities():
-            spec = entity.try_get(GridMover2DComponent)
-            if spec is None or not entity.enabled or not entity.has(Transform):
-                continue
+        # cell -> ids of the movers holding it (``held_cells`` once, not once per mover that
+        # decides): made when first asked for, then kept current as movers step and choose
+        holders = None
+        for entity, spec, transform in scene.query(GridMover2DComponent, Transform):
             alive.add(entity.id)
-            transform = entity.get(Transform)
+            known = entity.id in self.state
             mover = self._mover(entity, spec, transform)
+            if holders is not None and not known:
+                _hold(holders, entity.id, mover)
             if mover.target is not None:
+                if holders is not None:
+                    _hold(holders, entity.id, mover, -1)
                 self._walk(spec, mover, transform, dt)
+                if holders is not None:
+                    _hold(holders, entity.id, mover)
                 continue
             if spec.behaviour == "still":
                 continue
@@ -261,11 +280,18 @@ class GridMoverSystem:
                 continue
             size = spec.grid_size
             centre = (cell[0] * size + size / 2, cell[1] * size + size / 2)
-            if cell in reserved or cell in self.held_cells(exclude=entity.id):
+            if cell in reserved:
+                continue
+            if holders is None:
+                holders = {}
+                for entity_id, held in self.state.items():
+                    _hold(holders, entity_id, held)
+            if any(owner != entity.id for owner in holders.get(cell, ())):
                 continue
             if walls is not None and walls(*centre):
                 continue
             mover.target = cell
+            holders.setdefault(cell, []).append(entity.id)
         for entity_id in tuple(self.state):
             if entity_id not in alive:
                 del self.state[entity_id]
@@ -500,3 +526,13 @@ def parse_looks(text):
         if value.strip() and sheet.strip():
             looks[value.strip()] = (sheet.strip(), clips.strip())
     return looks
+
+
+@lru_cache(maxsize=256)
+def _cached_looks(text):
+    return MappingProxyType(parse_looks(text))
+
+
+def looks_of(text):
+    """``parse_looks`` of ``text``, read-only and parsed once per text (asked every frame)."""
+    return _cached_looks(str(text or ""))

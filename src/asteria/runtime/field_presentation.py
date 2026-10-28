@@ -80,14 +80,9 @@ class FieldEffects:
         from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
         seen = set()
-        for entity in scene.entities() if scene is not None else ():
-            component = entity.try_get(ParticleEmitter2DComponent)
-            if (
-                component is None
-                or not component.enabled
-                or not entity.enabled
-                or not entity.has(Transform)
-            ):
+        found = scene.query(ParticleEmitter2DComponent, Transform) if scene is not None else ()
+        for entity, component, _ in found:
+            if not component.enabled:
                 continue
             current = self.emitters.get(entity.id)
             if (

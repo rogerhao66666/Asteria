@@ -233,9 +233,8 @@ class SceneEnvironment:
 def _settings(scene, defaults):
     component = None
     if scene is not None:
-        for entity in scene.entities():
-            c = entity.try_get(Environment2DComponent) if entity.enabled else None
-            if c is not None and c.enabled:
+        for _, c in scene.query(Environment2DComponent):
+            if c.enabled:
                 component = c
                 break
     fields = get_component_schema(Environment2DComponent).fields.values()
@@ -294,9 +293,8 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
     for effect in env.post:
         effect.validate()
     if scene is not None and to_screen is not None:
-        for entity in scene.entities():
-            water = entity.try_get(WaterRegion2DComponent) if entity.enabled else None
-            if water is not None and water.enabled and entity.has(Transform):
+        for entity, water, _ in scene.query(WaterRegion2DComponent, Transform):
+            if water.enabled:
                 wx, wy = world_position(entity)
                 x0, y0 = to_screen(
                     wx + water.offset_x - water.width / 2, wy + water.offset_y - water.height / 2
@@ -319,11 +317,9 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
                 )
         env.water = env.water[:8]  # the GPU pass takes up to 8 regions per frame
     if scene is not None and to_screen is not None and env.lighting:
-        for entity in scene.entities():
-            if not entity.enabled or not entity.has(Transform):
-                continue
-            light = entity.try_get(LightSource2DComponent)
-            if light is not None and light.enabled:
+        # lights and casters each keep scene order in their own list
+        for entity, light, _ in scene.query(LightSource2DComponent, Transform):
+            if light.enabled:
                 wx, wy = world_position(entity)
                 sx, sy = to_screen(wx + light.offset_x, wy + light.offset_y)
                 env.lights.append(
@@ -341,8 +337,8 @@ def resolve_environment(scene, *, defaults=None, to_screen=None, scale=1.0, read
                         light.flicker,
                     )
                 )
-            caster = entity.try_get(ShadowCaster2DComponent)
-            if caster is not None and caster.enabled and caster.width > 0 and caster.height > 0:
+        for entity, caster, _ in scene.query(ShadowCaster2DComponent, Transform):
+            if caster.enabled and caster.width > 0 and caster.height > 0:
                 wx, wy = world_position(entity)
                 cx, cy = wx + caster.offset_x, wy + caster.offset_y
                 hw, hh = caster.width / 2, caster.height / 2

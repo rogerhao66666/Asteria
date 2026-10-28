@@ -296,9 +296,11 @@ class TileSceneView:
         self._advance_tiles(dt)
         self._look_ahead(dt)
         self._skeleton_runtime.update(self.session.scene, dt)
-        for entity in self.session.scene.entities():
-            animator = entity.try_get(Animator2DComponent)
-            if animator is None or not animator.clip_set_id or not entity.has(Transform):
+        for entity in self.session.scene._members(Animator2DComponent):  # disabled ones too
+            if entity.destroy_requested:
+                continue
+            animator = entity.get(Animator2DComponent)
+            if not animator.clip_set_id or not entity.has(Transform):
                 continue
             state = self._animated.get(entity.id)
             if state and state.clip_set_id != animator.clip_set_id:
@@ -700,8 +702,12 @@ class TileSceneView:
         behind = self._parallax(screen)
         self._layer(screen, "below", None if behind else backdrop)
         sprites = []
-        for entity in self.session.scene.entities():
-            if not entity.enabled:
+        scene = self.session.scene
+        # only entities with a sprite or a skeleton draw (index lookups, not a scan of the
+        # scene), in scene order as before: the depth sort keeps that order on ties
+        drawn = {*scene._members(SpriteRenderer2D), *scene._members(SkeletonAnimation2DComponent)}
+        for entity in sorted(drawn, key=lambda e: e._order):
+            if not entity.enabled or entity.destroy_requested:
                 continue
             sprite = entity.try_get(SpriteRenderer2D)
             skeleton = entity.try_get(SkeletonAnimation2DComponent)
@@ -725,6 +731,7 @@ class TileSceneView:
         sprites.sort(key=lambda row: (row[0], row[1]))
         player = getattr(self.session, "player", None)
         covers = getattr(self, "_covers", None)
+        clip = screen.get_clip()
         for _, _, entity, sprite, frame, rig_draws in sprites:
             if sprite is None:
                 for draw in rig_draws:
@@ -749,14 +756,17 @@ class TileSceneView:
                         (round(gx - shadow.get_width() / 2), round(gy - shadow.get_height() / 2)),
                     )
                 sy -= lift * self.camera.zoom
-            if sprite.flip_x:
-                image = self.pg.transform.flip(image, True, False)
-            if entity.id in flash:
-                image = image.copy()
-                image.fill((120, 120, 120, 0), special_flags=self.pg.BLEND_RGB_ADD)
-            screen.blit(
-                image, (round(sx - image.get_width() * px), round(sy - image.get_height() * py))
-            )
+            width, height = image.get_size()
+            at = (round(sx - width * px), round(sy - height * py))
+            # wholly off the screen's clip: the blit would draw nothing, so the flip / flash
+            # copies are not made (its cover below still draws, as it may show)
+            if clip.colliderect((at[0], at[1], width, height)):
+                if sprite.flip_x:
+                    image = self.pg.transform.flip(image, True, False)
+                if entity.id in flash:
+                    image = image.copy()
+                    image.fill((120, 120, 120, 0), special_flags=self.pg.BLEND_RGB_ADD)
+                screen.blit(image, at)
             if covers:
                 self._draw_cover(screen, entity, t)
         self._layer(screen, "above")
