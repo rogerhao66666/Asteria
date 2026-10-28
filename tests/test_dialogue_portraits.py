@@ -299,3 +299,20 @@ def test_the_message_settings_form_offers_the_portrait_options_in_both_languages
         "Use a picture file of your own as the portrait",
     ):
         assert table.get(text), text
+
+
+def test_the_preview_holds_its_dialog_weakly(document):
+    """The preview kept its dialog in an attribute while the dialog held the preview; PySide6
+    6.12 crashed collecting that cycle (CI segfaulted in this file)."""
+    import gc
+    import weakref
+
+    from asteria.editor.dialogue_command_dialog import DialogueCommandDialog
+
+    dialog = DialogueCommandDialog({"speaker": "Hana", "text": "Hi"}, document=document)
+    assert dialog.preview.owner is dialog
+    assert dialog not in gc.get_referents(dialog.preview.__dict__)
+    gone = weakref.ref(dialog)
+    dialog.close()
+    del dialog
+    assert gone() is None  # freed by reference counting, without the cycle collector

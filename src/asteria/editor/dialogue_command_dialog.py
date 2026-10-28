@@ -1,6 +1,7 @@
 """The Dialogue command's editor: who speaks, the text and the portrait shown with it, beside a
 preview of the game's message window (the project's Message Settings decide face or bust)."""
 
+import weakref
 from pathlib import Path
 
 from PySide6.QtCore import QRectF, Qt
@@ -110,8 +111,14 @@ class _MessagePreview(QWidget):
 
     def __init__(self, owner):
         super().__init__()
-        self.owner = owner
+        # a weak reference: the dialog holds this preview, and a cycle between a widget and
+        # the window it sits in crashed PySide6 6.12's garbage collection (a segfault)
+        self._owner = weakref.ref(owner)
         self.setMinimumSize(300, 190)
+
+    @property
+    def owner(self):
+        return self._owner()
 
     def _settings(self):
         project = getattr(self.owner.document, "project", None)
