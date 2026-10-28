@@ -3328,7 +3328,6 @@
   "Number: 299. Percent: 12.5% (the stat counts in percent points). Share: a 0-1 stat written as a percent (0.12: 12%).": "數值：299。百分比：12.5%（屬性本身以百分點計）。比例：0～1 的屬性以百分比顯示（0.12 即 12%）。",
   "The records whose Base Stats list this stat: an actor's starting stats, a job's growth per level, an enemy's stats. A stat none of them sets comes from Stat Formulas, gear, passives and points.": "哪些紀錄的基礎屬性會列出這個屬性：角色的初始屬性、職業的每級成長、敵人的屬性。都不勾的屬性來自屬性公式、裝備、被動與能力點。",
   "Lower comes first in every list.": "數字小的在每個清單中排前面。",
-  "The definition, in your words: what the number does in the game.": "用你自己的話寫下定義：這個數字在遊戲裡做什麼。",
   "Worked out from the whole project: the stat formula, the records and gear that set it, the battle checks, rules and skills that read it.": "由整個專案自動整理：算出它的屬性公式、設定它的紀錄與裝備，以及讀取它的戰鬥判定、規則與技能。",
   "Number: the stat as it is (299). Percent: with a % (12.5%). Range: the low ~ high an attack rolls, the stat less and plus Spread % (180 ~ 220). Chance: the % a battle check gives at this stat (crit 20%). Share: a 0-1 stat as a percent (0.12: 12%).": "數值：直接顯示（299）。百分比：加上 %（12.5%）。範圍：攻擊擲出的最低 ~ 最高，即屬性減、加浮動 %（180 ~ 220）。機率：這個屬性值下某個戰鬥判定的機率（爆擊 20%）。比例：0～1 的屬性以百分比顯示（0.12 即 12%）。",
   "Starting numbers before jobs, levels, gear and points. The list offers the stats Game Systems ▸ Stats sets on this kind of record (an actor: STR, DEX, INT, LUK, VIT, SPD).": "職業、等級、裝備與能力點之前的初始數值。清單列出「遊戲系統 ▸ 屬性」指定在這類紀錄設定的屬性（角色：STR、DEX、INT、LUK、VIT、SPD）。",
@@ -3379,7 +3378,6 @@
   "Who Carries It and What Reads It": "誰帶有它、誰讀取它",
   "The tag the data uses: weapon.sword, weak.fire, no_escape. End it in * for a family: rune.* covers every tag starting with rune.": "資料使用的標籤：weapon.sword、weak.fire、no_escape。結尾加 * 代表一個家族：rune.* 涵蓋所有以 rune. 開頭的標籤。",
   "What players read: Sword, Fire.": "玩家看到的名稱：劍、火。",
-  "The definition, in your words: what carrying the tag does in the game.": "用你自己的話寫下定義：帶有這個標籤在遊戲中會怎樣。",
   "Worked out from the whole project: what the engine itself does with the tag, the records that carry it and the rules that read it.": "從整個專案整理出來：引擎本身怎麼使用這個標籤、哪些資料帶有它、哪些規則讀取它。",
   "Engine: {0}": "引擎：{0}",
   "Covers {0} tags: {1}": "涵蓋 {0} 個標籤：{1}",
@@ -3412,7 +3410,6 @@
   "Only for Heroes With": "只限有這些能力的英雄",
   "Capabilities (tags) a hero needs to use the slot, from a job's Granted Tags: capability.carry_weapons lets only that job carry weapons. Empty: everyone.": "英雄要有這些能力（標籤，來自職業的「給予標籤」）才能用這一格：capability.carry_weapons 讓只有那個職業能攜帶武器。空白：每個人都能用。",
   "What It Is For": "用途",
-  "In your words, for the people making the game.": "用你的話寫，給做遊戲的人看。",
   "Swap Carried Weapons in Battle": "戰鬥中換上攜帶的武器",
   "The battle's Swap command takes a piece from a carried slot (Game Systems ▸ Equipment Slots, Carried) into a worn one. turn: swapping uses the turn. free: the hero still acts. off: no Swap command.": "戰鬥的「換武器」指令把攜帶格（遊戲系統 ▸ 裝備格，攜帶）的裝備換到穿戴的格子。turn：換武器用掉這回合。free：換完還能行動。off：沒有換武器指令。",
   "When a Place Is Taken": "位置被佔用時",
@@ -3596,7 +3593,14 @@
   "Revert": "還原",
   "Starting maximum of the actor": "角色的起始上限",
   "Added to the maximum once by the job": "職業一次加到上限",
-  "Added to the maximum every level after the first (× level − 1)": "每升一級加到上限一次（×（等級 − 1））"
+  "Added to the maximum every level after the first (× level − 1)": "每升一級加到上限一次（×（等級 − 1））",
+  "Description (editor only)": "說明（僅編輯器）",
+  "Players See It": "玩家看得到",
+  "The definition, in your words: what carrying the tag does in the game. Players read it under an item's or a piece's description.": "用你自己的話寫下定義：帶有這個標籤在遊戲中會怎樣。玩家會在道具或裝備的說明下方看到。",
+  "The definition, in your words: what the number does in the game. Players read it under the Status page's stat table.": "用你自己的話寫下定義：這個數字在遊戲裡做什麼。玩家會在狀態頁的能力值表格下方看到。",
+  "The game does not show this description: it stays in the editor (and in translation tables). For your own notes, use Note below.": "遊戲不會顯示這段說明：它只留在編輯器（和翻譯表）裡。自己的筆記請寫在下方的備註。",
+  "Ticked: the game shows the description. Unticked: it stays in the editor.": "勾選：遊戲會顯示說明。不勾：說明只留在編輯器裡。",
+  "What players read on the equipment screen when they pick the slot.": "玩家在裝備畫面選到這個欄位時看到的說明。"
  },
  "patterns": [
   [

@@ -423,15 +423,24 @@ class EquipmentScreen:
         muted = canvas.tone("muted", MUTED)
         head = tr("equipment.fits", "For {slot}", slot=game.slot_name(slot_id or ""))
         rt.text(head, x + 16, y + 12, size=20, color=title)
+        # what the slot is for (Game Systems ▸ Equipment Slots), under its name
+        slots = getattr(game.project.rpg_database, "equipment_slots", {})
+        about = game.description_of(slots.get(slot_id or ""), "")
+        from .crafting_screen import wrap
+
+        lines = wrap(rt, about, 15, w - 32)[:2] if about else []
+        for n, line in enumerate(lines):
+            rt.text(line, x + 16, y + 38 + n * 19, size=15, color=muted)
+        shift = 19 * len(lines) + (4 if lines else 0)
         rows = self.candidates()
         if not rows:
-            rt.text(tr("equipment.nothing_fits", "Nothing in the bag fits."), x + 16, y + 48,
-                    size=18, color=muted)  # fmt: skip
+            rt.text(tr("equipment.nothing_fits", "Nothing in the bag fits."), x + 16,
+                    y + 48 + shift, size=18, color=muted)  # fmt: skip
             return
         row_h = canvas.row_height("candidates", 44)
         icon = canvas.icon_size("candidates", 32)
-        top = y + 46
-        visible = max(1, (h - 56) // row_h)
+        top = y + 46 + shift
+        visible = max(1, (h - 56 - shift) // row_h)
         first = max(0, min(self.row - visible + 1, len(rows) - visible)) if self.row else 0
         rarities = game.project.rpg_database.loot_rarities()
         for n, (piece, allowed, _reason) in enumerate(rows[first : first + visible]):

@@ -409,6 +409,8 @@ GROUPS = (
             ("status.details_button", "D  Details"),
             ("status.hint.details", "D: details"),
             ("status.detail.count", "Owned"),
+            ("tag.meaning", "{tag}: {meaning}"),
+            ("status.job_meaning", "{job}: {meaning}"),
             ("status.detail.menu_use", "Use here"),
             ("status.yes", "yes"),
             ("status.detail.battle_use", "In battle"),

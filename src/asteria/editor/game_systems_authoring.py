@@ -76,9 +76,33 @@ from asteria.rpg.workstations import WorkstationDefinition
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
 
+EDITOR_ONLY = (
+    "The game does not show this description: it stays in the editor (and in translation"
+    " tables). For your own notes, use Note below."
+)
+
 
 class GameSystemsAuthoringError(RuntimeError):
     pass
+
+
+@dataclass(slots=True)
+class _StepsCommand:
+    """Commands as one undo step: a record, its note and its Players See It."""
+
+    steps: tuple
+
+    @property
+    def label(self):
+        return self.steps[0].label
+
+    def redo(self):
+        for step in self.steps:
+            step.redo()
+
+    def undo(self):
+        for step in reversed(self.steps):
+            step.undo()
 
 
 @dataclass(slots=True)
@@ -145,6 +169,11 @@ class FormField:
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor
     return FormField(key, label, kind, **values)
+
+
+EDITOR_ONLY_DESCRIPTION = F(
+    "description", "Description (editor only)", "multiline", default="", help=EDITOR_ONLY
+)
 
 
 _ITEM_CATEGORY = (  # a tab of the Items page (D87)
@@ -619,7 +648,7 @@ FORMS = {
     "recruit_offices": (
         F("office_id", "Office ID (OPEN_RECRUIT names it)", "id"),
         F("display_name", "Name", "text", default=""),
-        F("description", "Description", "multiline", default=""),
+        EDITOR_ONLY_DESCRIPTION,
         F(
             "candidates",
             "Candidates",
@@ -1005,7 +1034,7 @@ D26_FORMS = {
         F("station_id", "Station ID (recipes and OPEN_CRAFTING name it)", "id"),
         F("display_name", "Name", "text", default=""),
         F("icon_id", "Icon", "icon", default=""),
-        F("description", "Description", "multiline", default=""),
+        EDITOR_ONLY_DESCRIPTION,
         F(
             "categories",
             "Tabs (recipe categories)",
@@ -1076,7 +1105,8 @@ D26_FORMS = {
             "What It Means",
             "multiline",
             default="",
-            help="The definition, in your words: what the number does in the game.",
+            help="The definition, in your words: what the number does in the game. Players"
+            " read it under the Status page's stat table.",
         ),
         F(
             "usage",
@@ -1134,7 +1164,7 @@ D26_FORMS = {
             "What It Is For",
             "multiline",
             default="",
-            help="In your words, for the people making the game.",
+            help="What players read on the equipment screen when they pick the slot.",
         ),
     ),
     "tag_definitions": (  # what each tag of the game means (D91)
@@ -1152,7 +1182,8 @@ D26_FORMS = {
             "What It Means",
             "multiline",
             default="",
-            help="The definition, in your words: what carrying the tag does in the game.",
+            help="The definition, in your words: what carrying the tag does in the game."
+            " Players read it under an item's or a piece's description.",
         ),
         F(
             "usage",
@@ -1188,7 +1219,7 @@ D26_FORMS = {
             default="actors",
         ),
         F("order", "Order (lower runs first)", "int", default=0),
-        F("description", "Description", "multiline", default=""),
+        EDITOR_ONLY_DESCRIPTION,
     ),
     "new_game_plus_rules": (
         F("rules_id", "Rules ID", "id"),
@@ -1324,6 +1355,31 @@ D26_FORMS = {
     ),
 }
 FORMS.update(D26_FORMS)
+
+# every record's own Note (the database's author_notes): for the people making the game, never
+# shown in it; the pause menu's records are edited on their own page and keep theirs out
+NOTE = "author_note"
+NOTE_FIELD = F(NOTE, "Note", "multiline", default="")
+for _kind in FORMS:
+    if _kind not in ("menu_rules", "menu_pages", "menu_entries"):
+        FORMS[_kind] = (*FORMS[_kind], NOTE_FIELD)
+
+# the description players read can be kept from them (the database's hidden_descriptions):
+# a switch after the description of every kind the game shows one of
+SHOWN = "description_shown"
+SHOWN_FIELD = F(
+    SHOWN,
+    "Players See It",
+    "bool",
+    default=True,
+    help="Ticked: the game shows the description. Unticked: it stays in the editor.",
+)
+for _kind in (
+    "stat_definitions", "tag_definitions", "equipment_slots", "quests", "achievements",
+    "quest_boards", "gacha_banners",
+):  # fmt: skip
+    _at = next(i for i, f in enumerate(FORMS[_kind]) if f.key == "description") + 1
+    FORMS[_kind] = (*FORMS[_kind][:_at], SHOWN_FIELD, *FORMS[_kind][_at:])
 
 
 def _stat_label(db, stat_id, labels=None):
@@ -1853,7 +1909,19 @@ class GameSystemsAuthoringController:
         for f in FORMS[kind_id]:
             if f.kind == "info":  # worked out, never stored
                 data[f.key] = self.info(kind_id, key) if info else ""
+        if NOTE in data:
+            data[NOTE] = self.note(kind_id, key)
+        if SHOWN in data:
+            from .record_notes import is_shown
+
+            data[SHOWN] = is_shown(self.project, self.get(kind_id, key))
         return data
+
+    def note(self, kind_id, key):
+        """The makers' own note on a record (its form's Note box)."""
+        from .record_notes import note_of
+
+        return note_of(self.project, self.kind(kind_id).store, key)
 
     def info(self, kind_id, key):
         """The words of a record's read-only ``info`` field."""
@@ -1868,6 +1936,8 @@ class GameSystemsAuthoringController:
         return ""
 
     def decode(self, kind_id, data):
+        if isinstance(data, dict) and (NOTE in data or SHOWN in data):  # kept beside the record
+            data = {k: v for k, v in data.items() if k not in (NOTE, SHOWN)}
         try:
             if kind_id in ADAPTERS:
                 data = ADAPTERS[kind_id][1](data)
@@ -2044,13 +2114,23 @@ class GameSystemsAuthoringController:
         kind = self.kind(kind_id)
         key = str(key)
         old = self.get(kind_id, key)
+        extra = []  # the note and Players See It: kept beside the record, not in it
+        if isinstance(value, dict) and (NOTE in value or SHOWN in value):
+            from .record_notes import note_command, shown_command
+
+            value = dict(value)
+            if NOTE in value:
+                extra.append(note_command(self.project, kind.store, key, value.pop(NOTE)))
+            if SHOWN in value:
+                extra.append(shown_command(self.project, old, value.pop(SHOWN)))
         value = self._coerce(kind_id, value)
         if getattr(value, kind.key) != key:
             raise GameSystemsAuthoringError(f"{kind.key} cannot change during edit")
         self._validated(kind_id, key, value)
-        self.document.execute(
-            _MapCommand(self.store(kind_id), key, value, old, f"Edit {kind.label[:-1]} {key}")
+        command = _MapCommand(
+            self.store(kind_id), key, value, old, f"Edit {kind.label[:-1]} {key}"
         )
+        self.document.execute(_StepsCommand((command, *(x for x in extra if x is not None))))
         return value
 
     def duplicate(self, kind_id, key, new_key):
@@ -2072,9 +2152,16 @@ class GameSystemsAuthoringController:
         users = self.where_used(kind_id, key)
         if users:
             raise GameSystemsAuthoringError(f"{key} is used by " + ", ".join(users))
-        self.document.execute(
-            _MapCommand(self.store(kind_id), key, None, old, f"Delete {kind.label[:-1]} {key}")
+        command = _MapCommand(
+            self.store(kind_id), key, None, old, f"Delete {kind.label[:-1]} {key}"
         )
+        from .record_notes import note_command, shown_command
+
+        extra = (  # its note and hidden mark go with it (undo: back)
+            note_command(self.project, kind.store, key, ""),
+            shown_command(self.project, old, True),
+        )
+        self.document.execute(_StepsCommand((command, *(x for x in extra if x is not None))))
         return old
 
 

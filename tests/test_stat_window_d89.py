@@ -164,6 +164,28 @@ def test_the_stat_table_splits_each_stat_by_where_it_comes_from(host):
     assert {r.stat_id: r for r in menu.stat_rows()}["vitality"].value == hp + 100.0
 
 
+def test_the_stat_table_shows_the_picked_stats_meaning_in_the_players_language(host):
+    """Stats ▸ What It Means reaches the game: under the table, for the row picked."""
+    host.game.set_locale("zh-TW")
+    host._open_pause_page("status")
+    menu = host.status_menu
+    menu.row = [r.stat_id for r in menu.stat_rows()].index("str")
+    drawn = []
+    original = host.text
+    host.text = lambda value, *a, **k: drawn.append(str(value)) or original(value, *a, **k)
+    with host.menu_fit():
+        host._draw_status_menu()
+    words = "".join(drawn)
+    assert "提高物理攻擊" in words  # data.stat.str.description, not the English
+    assert "Raises Physical Attack" not in words
+    menu.row = [r.stat_id for r in menu.stat_rows()].index("vit")
+    drawn.clear()
+    with host.menu_fit():
+        host._draw_status_menu()
+    words = "".join(drawn)
+    assert "提高物理防禦（每點 +1.5）" in words and "提高物理攻擊" not in words
+
+
 def test_the_detail_table_has_its_groups_and_writes_each_line_its_way(host):
     host._open_pause_page("status")
     groups = dict(host.status_menu.detail_groups())

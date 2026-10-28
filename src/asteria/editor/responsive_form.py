@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QBoxLayout,
     QCheckBox,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QSizePolicy,
     QVBoxLayout,
@@ -63,9 +64,10 @@ def _caption_text(label, help_text):
     return f"{label}  ⓘ" if help_text else label
 
 
-def _field_cell(label, widget, help_text=""):
+def _field_cell(label, widget, help_text="", aside=None):
     """A label above its field (no crowded label column; every field gets the cell's whole
-    width)."""
+    width); ``aside`` stands at the right end of the label's line (a description's Players See
+    It switch)."""
     cell = _Cell()
     box = QVBoxLayout(cell)
     box.setContentsMargins(0, 0, 0, 0)
@@ -82,7 +84,15 @@ def _field_cell(label, widget, help_text=""):
     # a whole row's caption has the row to itself: no wrapping, and its own height only - a
     # field below that wraps (chips, words) makes the cell taller, never the caption (D91)
     caption.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-    box.addWidget(caption)
+    if aside is None:
+        box.addWidget(caption)
+    else:
+        line = QHBoxLayout()
+        line.setContentsMargins(0, 0, 0, 0)
+        line.addWidget(caption)
+        line.addStretch(1)
+        line.addWidget(aside)
+        box.addLayout(line)
     box.addWidget(widget)
     box.addStretch(1)
     cell.caption = caption
@@ -123,11 +133,12 @@ class ResponsiveForm(QWidget):
         self.grid.setVerticalSpacing(3)  # a caption to its field; rows: the caption's margin
         self.columns = 0
 
-    def add_row(self, label, widget, *, span=False, help_text=""):
+    def add_row(self, label, widget, *, span=False, help_text="", aside=None):
         """``span``: the field takes a whole row (tables of key / amount pairs, long text).
-        ``help_text``: what the field means, on hover over an ⓘ after its label."""
+        ``help_text``: what the field means, on hover over an ⓘ after its label. ``aside``: a
+        small control at the right end of a whole row's label line."""
         if span:
-            self.rows.append((_field_cell(label, widget, help_text), "span"))
+            self.rows.append((_field_cell(label, widget, help_text, aside), "span"))
         else:
             self.rows.append((_Pair(label, widget, help_text), False))
         self._place(force=True)

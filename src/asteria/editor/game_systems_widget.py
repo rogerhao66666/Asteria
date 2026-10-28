@@ -724,6 +724,14 @@ class RecordForm(QWidget):
             widget = self._build(f)
             self._watch(f, widget)
             self.widgets[f.key] = widget
+        aside = self.widgets.get("description_shown")  # Players See It: by the description
+        if aside is not None:
+            aside.setText(next(f.label for f in self.fields if f.key == "description_shown"))
+            aside.setToolTip(next(f.help for f in self.fields if f.key == "description_shown"))
+        for f in self.fields:
+            widget = self.widgets[f.key]
+            if f.key == "description_shown":
+                continue
             if f.kind in ("group", "table", "translations"):  # a caption, the box below it
                 self._rows[f.key] = self.grid.add_row(f.label, widget, span=True, help_text=f.help)
             else:
@@ -731,6 +739,7 @@ class RecordForm(QWidget):
                     f.label,
                     widget,
                     help_text=f.help,
+                    aside=aside if f.key == "description" else None,
                     # tables and long text (a translation, a description) take a whole row
                     span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info", "formula")
                     or f.kind == "pause_order"

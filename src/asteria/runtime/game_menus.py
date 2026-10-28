@@ -262,16 +262,16 @@ def achievement_rows(game):
 
 
 def bestiary_rows(game):
-    """``(name, seen, defeated, captured, tags, resources, drops)`` per enemy. Unseen enemies
-    show as ???; weaknesses / resistances (``tags``) and resources (``(resource_id, amount)``)
-    unlock once one has been defeated; ``drops`` lists only what has really dropped
-    (``(display name, times)``)."""
+    """``(name, seen, defeated, captured, tags, resources, drops, about)`` per enemy. Unseen
+    enemies show as ???; weaknesses / resistances (``tags``) and resources (``(resource_id,
+    amount)``) unlock once one has been defeated; ``drops`` lists only what has really dropped
+    (``(display name, times)``); ``about`` is its description, once seen."""
     db = game.project.rpg_database
     rows = []
     for enemy_id, enemy in sorted(db.enemies.items()):
         entry = game.world.bestiary.get(enemy_id)
         if not entry or not entry.get("seen"):
-            rows.append((game.tr("bestiary.unseen", "???"), 0, 0, 0, (), (), ()))
+            rows.append((game.tr("bestiary.unseen", "???"), 0, 0, 0, (), (), (), ""))
             continue
         known = entry.get("defeated", 0) > 0
         drops = []
@@ -290,6 +290,7 @@ def bestiary_rows(game):
                 tuple(t for t in getattr(enemy, "tags", ()) if "." in t) if known else (),
                 tuple(sorted(enemy.resources.items())) if known else (),
                 tuple(drops),
+                game.description_of(enemy, ""),
             )
         )
     return tuple(rows)

@@ -112,6 +112,23 @@ class MessagesMixin:
         lookup = self.data_lookup
         return (lookup(key("tag", tag)) if lookup is not None else None) or words(tag)
 
+    def tag_meanings(self, tags):
+        """``"Sword: what it does"`` for each of ``tags`` whose definition (Game Systems ▸ Tags)
+        has a meaning players may read, in the player's language."""
+        from asteria.rpg.tag_definitions import definition_for
+
+        definitions = getattr(self.project.rpg_database, "tag_definitions", {})
+        lines = []
+        for tag in dict.fromkeys(str(t).lower() for t in tags):
+            meaning = self.description_of(definition_for(definitions, tag), "")
+            if meaning:
+                lines.append(
+                    self.tr(
+                        "tag.meaning", "{tag}: {meaning}", tag=self.tag_name(tag), meaning=meaning
+                    )
+                )
+        return tuple(lines)
+
     def points_name(self, currency):
         """A skill-tree point's short name: ``data.points.<id>.name``, else the built-in
         words (AP, SP, stat points, "<class> JP" for ``jp.<class>``), else the id."""
@@ -157,8 +174,12 @@ class MessagesMixin:
 
     def description_of(self, record, fallback=""):
         """A project record's description in the player's language (D60)."""
-        from asteria.rpg.data_text import description_of
+        from asteria.rpg.data_text import description_of, kind_of
 
+        known = kind_of(record) if record is not None else None
+        db = getattr(self.project, "rpg_database", None)
+        if known is not None and db is not None and db.description_hidden(*known):
+            return fallback  # Players See It unticked: the makers' words only
         return description_of(self.data_lookup, record, fallback)
 
     def line_text(self, line):

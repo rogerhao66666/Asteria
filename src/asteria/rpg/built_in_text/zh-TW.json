@@ -117,6 +117,8 @@
   "status.details_button": "D  詳細",
   "status.hint.details": "D：詳細",
   "status.detail.count": "持有",
+  "tag.meaning": "{tag}：{meaning}",
+  "status.job_meaning": "{job}：{meaning}",
   "status.detail.menu_use": "選單可用",
   "status.yes": "是",
   "status.detail.battle_use": "戰鬥中",

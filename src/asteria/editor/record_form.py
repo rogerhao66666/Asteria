@@ -911,6 +911,8 @@ class RecordForm(QScrollArea):
         self.icon_library = None
         self.category = ""
         self.optional = set()
+        self.description_switch = None  # () -> a Players See It switch for the description
+        self.trailer = None  # a widget kept at the end of every record's page (its Note)
         self._data = None
         self._title = None
         self._icons = {}
@@ -1001,6 +1003,8 @@ class RecordForm(QScrollArea):
         scroll = self.verticalScrollBar().value()
         old = self.takeWidget()  # kept alive until the new page is in (the banner moves over)
         self.error.setParent(None)
+        if self.trailer is not None:  # moves to the new page, never deleted with the old one
+            self.trailer.setParent(None)
         self._page = QWidget()
         self._page.setObjectName("RecordFormPage")
         self._layout = QVBoxLayout(self._page)
@@ -1009,6 +1013,9 @@ class RecordForm(QScrollArea):
         self._layout.addWidget(self.error)
         if self._data is not None:
             self._build(self._data)
+            if self.trailer is not None:  # last, so it scrolls with the record's fields
+                self._layout.addWidget(self.trailer)
+                self.trailer.show()
         self._layout.addStretch(1)
         self.setWidget(self._page)
         if old is not None:
@@ -1157,6 +1164,19 @@ class RecordForm(QScrollArea):
             return
         text = label_for(key) if label is None else label
         help_text = HELP.get(str(key), "")
+        if key == "description" and label is None and data is self._data:
+            from .record_notes import description_words
+
+            text, help_text = description_words(self.category, text, help_text)
+            switch = self.description_switch() if self.description_switch else None
+            if switch is not None:  # Players See It, right under the words it is about
+                holder = QWidget()
+                column = QVBoxLayout(holder)
+                column.setContentsMargins(0, 0, 0, 0)
+                column.setSpacing(4)
+                column.addWidget(widget)
+                column.addWidget(switch)
+                widget = holder
         source = self._reference(data, str(key)) if isinstance(value, str) else None
         about = self.vocabulary.description(source, value) if source else ""
         if about:  # what the picked skill / item does, under its picker

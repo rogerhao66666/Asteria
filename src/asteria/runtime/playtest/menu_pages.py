@@ -174,7 +174,7 @@ class MenuPagesMixin:
         view = menu._status_view()
         normal = c.tone("text", (210, 215, 225))
         muted = c.tone("muted", (150, 170, 200))
-        px, py, pw, _ph = self._status_section(
+        px, py, pw, ph = self._status_section(
             c, "profile", rect, tr("status.profile", "Character")
         )
         db = self.project.rpg_database
@@ -203,6 +203,22 @@ class MenuPagesMixin:
             amount = f"{resource.current:g} / {resource.maximum:g}"
             self.text(amount, bar[0] + bar[2] // 2, bar_y + 2, size=16, anchor="midtop")
             bar_y += 28
+        # what each of its jobs is (Database ▸ Classes / Jobs ▸ Description), as room allows
+        from asteria.runtime.crafting_screen import wrap
+
+        line_y = bar_y + 2
+        for class_id in getattr(state, "active_class_ids", ()):
+            job = db.classes.get(class_id)
+            about = game.description_of(job, "")
+            if not about:
+                continue
+            words = tr("status.job_meaning", "{job}: {meaning}", job=game.name_of(job, class_id),
+                       meaning=about)  # fmt: skip
+            for part in wrap(self, words, 15, pw):
+                if line_y + 18 > py + ph:
+                    break
+                self.text(part, px, line_y, size=15, color=muted)
+                line_y += 18
 
     # where the stat table's columns end, back from its right edge: the last column the first
     STAT_EDGES = (54, 108, 164, 220, 278, 340)  # 12 px clear of the row colour's end
@@ -261,10 +277,21 @@ class MenuPagesMixin:
         for key, edge in columns:
             self.text(headers[key], right(edge), ay - 2, size=14, color=muted, anchor="topright")
         pg.draw.line(self.screen, (52, 64, 96), (ax - 4, ay + 18), (ax + aw + 4, ay + 18))
-        row_h = min(36, max(28, (ah - 26) // max(1, len(rows))))
+        # the picked row's stat, in the author's words (Stats ▸ What It Means), under the
+        # table: room for two lines is kept whenever any row has words, so rows never jump
+        abouts = [self._stat_about(row.stat_id) for row in rows]
+        about_h = 44 if any(abouts) else 0
+        row_h = min(36, max(28, (ah - 26 - about_h) // max(1, len(rows))))
+        if about_h and 0 <= menu.row < len(rows) and abouts[menu.row]:
+            from asteria.runtime.crafting_screen import wrap
+
+            about_y = ay + ah - about_h + 6
+            for line in wrap(self, abouts[menu.row], 16, aw)[:2]:
+                self.text(line, ax, about_y, size=16, color=muted)
+                about_y += 20
         for i, row in enumerate(rows):
             line_y = ay + 26 + i * row_h
-            if line_y + row_h > ay + ah + 8:
+            if line_y + row_h > ay + ah - about_h + 8:
                 break
             selected = i == menu.row
             band = (ax - 6, line_y - 4, aw + 12, row_h - 4)
@@ -324,6 +351,11 @@ class MenuPagesMixin:
             pg.draw.rect(self.screen, ink, (mid_x - 7, mid_y - 2, 14, 4))
             pg.draw.rect(self.screen, ink, (mid_x - 2, mid_y - 7, 4, 14))
             self.hotspot(plus, lambda i=i: setattr(menu, "row", i))  # a click: raise it
+
+    def _stat_about(self, stat_id):
+        """A stat's What It Means in the player's language (``data.stat.<id>.description``)."""
+        definition = getattr(self.project.rpg_database, "stat_definitions", {}).get(stat_id)
+        return self.game.description_of(definition, "") if definition is not None else ""
 
     def _draw_stat_details(self, c, menu, rect):
         """The detail table: its groups top to bottom, in as many columns as fit, a line per
@@ -458,6 +490,14 @@ class MenuPagesMixin:
                 break
             self.text(line, x, line_y, size=18, color=c.tone("text", (210, 215, 225)))
             line_y += 24
+        if detail.meanings:  # what its tags mean (Game Systems ▸ Tags), under its own words
+            line_y += 6
+        for meaning in detail.meanings:
+            for line in wrap(self, meaning, 16, w):
+                if line_y + 21 > bottom - facts_h - 8:
+                    break
+                self.text(line, x, line_y, size=16, color=muted)
+                line_y += 21
         line_y = max(line_y + 8, bottom - facts_h)
         for label, value in detail.facts:
             if line_y + 22 > bottom:

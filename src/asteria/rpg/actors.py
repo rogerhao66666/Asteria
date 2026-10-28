@@ -852,6 +852,12 @@ class RpgDatabase:
         self.inventory_rules = {}
         self.behavior_trees = {}
         self.quests = {}
+        # the makers' own notes: {store ("items", "tag_definitions"...): {record id: text}};
+        # the editor's Note box on every record writes them, the game never reads them
+        self.author_notes = {}
+        # descriptions kept from players: {record kind ("item", "tag"...): {record id: True}};
+        # the game reads such a record's description as empty (Players See It, unticked)
+        self.hidden_descriptions = {}
 
     def add_actor(self, value):
         if not isinstance(value, ActorDefinition):
@@ -1898,6 +1904,23 @@ class RpgDatabase:
             ],
             "rarities": [self.rarities[k].to_data() for k in sorted(self.rarities)],
             "affixes": [self.affixes[k].to_data() for k in sorted(self.affixes)],
+            **({"author_notes": self._notes_data()} if self._notes_data() else {}),
+            **({"hidden_descriptions": self._hidden_data()} if self._hidden_data() else {}),
+        }
+
+    def _hidden_data(self):
+        return {kind: sorted(ids) for kind, ids in sorted(self.hidden_descriptions.items()) if ids}
+
+    def description_hidden(self, kind, record_id):
+        """Whether players never read record ``record_id``'s description (``kind``: its
+        locale-table kind, ``data_text.kind_of``)."""
+        return bool(self.hidden_descriptions.get(str(kind), {}).get(str(record_id)))
+
+    def _notes_data(self):
+        return {
+            store: dict(sorted(notes.items()))
+            for store, notes in sorted(self.author_notes.items())
+            if notes
         }
 
     @classmethod
@@ -2214,4 +2237,12 @@ class RpgDatabase:
                 result.add_recruit_office(RecruitOfficeDefinition.from_data(x))
             for x in data.get("gacha_banners", ()):
                 result.add_gacha_banner(GachaBanner.from_data(x))
+        result.hidden_descriptions = {
+            str(kind): {str(x): True for x in ids}
+            for kind, ids in dict(data.get("hidden_descriptions") or {}).items()
+        }
+        result.author_notes = {
+            str(store): {str(k): str(v) for k, v in dict(notes).items() if v}
+            for store, notes in dict(data.get("author_notes") or {}).items()
+        }
         return result

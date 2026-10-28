@@ -1041,6 +1041,12 @@ class AdapterFamilyWidget(QWidget):
         self.detail_stack = QStackedWidget()
         self.detail_stack.addWidget(self.editor)
         self.detail_stack.addWidget(self.graph_view)
+        from .author_note_box import AuthorNoteBox
+
+        # the makers' own note: the last block of every record's form, scrolling with it
+        self.note_box = AuthorNoteBox(document)
+        self.editor.description_switch = self.note_box.switch
+        self.editor.trailer = self.note_box
         split = QSplitter()
         split.addWidget(browser_panel)
         split.addWidget(self.detail_stack)
@@ -1212,6 +1218,9 @@ class AdapterFamilyWidget(QWidget):
     def _selection_changed(self, row):
         self.flush_edits()
         key = self.selected_id
+        self.note_box.set_record(
+            self.category_id, key, self.adapter.get(key) if key is not None else None
+        )
         if key is None:
             self._editing = None
             self.editor.clear()
@@ -1277,6 +1286,7 @@ class AdapterFamilyWidget(QWidget):
 
     def flush_edits(self):
         """Apply a pending edit now and tell the rest of the editor about applied ones."""
+        self.note_box.flush()
         if self._apply_timer.isActive():
             self._apply_timer.stop()
             self.auto_apply()

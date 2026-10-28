@@ -47,6 +47,7 @@ class ItemDetail:
     description: str
     facts: tuple[tuple[str, str], ...]
     rarity_rgb: tuple | None = None
+    meanings: tuple[str, ...] = ()  # "Sword: ..." for each of its tags that has a meaning
 
 
 @dataclass(frozen=True, slots=True)
@@ -636,6 +637,7 @@ class StatusMenu:
             kind_line,
             game.description_of(record, ""),
             tuple(facts),
+            meanings=game.tag_meanings(getattr(record, "tags", ())),
         )
 
     def _piece_detail(self, piece, label):
@@ -660,6 +662,7 @@ class StatusMenu:
             game.description_of(piece.equipment, ""),
             tuple(facts),
             rarity.rgb() if rarity is not None else None,
+            meanings=game.tag_meanings(piece.equipment.tags),
         )
 
     # -- actions ---------------------------------------------------------------------------------

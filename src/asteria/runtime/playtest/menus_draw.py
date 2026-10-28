@@ -215,9 +215,9 @@ class MenusDrawMixin:
         return labels
 
     def _bestiary_detail(self, row):
-        """The lines under a bestiary entry: counts; weaknesses and resources once one fell;
-        the drops that really fell."""
-        _name, seen, defeated, captured, tags, resources, drops = row
+        """The lines under a bestiary entry: counts; what it is (its description); weaknesses
+        and resources once one fell; the drops that really fell."""
+        _name, seen, defeated, captured, tags, resources, drops, about = row
         if not seen:
             return ""
         tr = self.game.tr
@@ -230,6 +230,10 @@ class MenusDrawMixin:
                 captured=captured,
             )
         ]
+        if about:
+            from asteria.runtime.crafting_screen import wrap
+
+            lines += wrap(self, about, 17, self.width - 240)
         if defeated:
             labels = self._resource_labels()
             known = [f"{labels.get(r, r)} {v:,.0f}" for r, v in resources]
