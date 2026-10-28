@@ -170,7 +170,9 @@ def _close_windows_the_test_opened():
 
     left = [w for w in _application_owned_top_level_widgets(app) if w not in before]
     for widget in left:
-        widget.close()
+        # hide, not close: closing an editor with unsaved changes asks to save and would wait
+        # forever for an answer
+        widget.hide()
         widget.deleteLater()
     if left:
         QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
