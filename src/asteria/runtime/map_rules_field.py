@@ -151,9 +151,9 @@ class FieldMapRules:
             transform.x, transform.y, crouching=crouching, moving=moving
         )
         self.session.sight_scale = scale  # behaviour-tree foes read it too
-        for entity in self.session.scene.entities():
-            spec = entity.try_get(FieldAIComponent)
-            if spec is None:
+        for entity in self.session.scene._members(FieldAIComponent):  # disabled ones too
+            if entity.destroy_requested:
                 continue
+            spec = entity.get(FieldAIComponent)
             base = self._base_sight.setdefault(entity.id, (spec.detect_radius, spec.lose_radius))
             spec.detect_radius, spec.lose_radius = base[0] * scale, base[1] * scale
