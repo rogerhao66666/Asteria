@@ -14,11 +14,13 @@ class Scene:
         self.name = str(name)
         self.scheduler = SystemScheduler()
         self.events = EventBus()
-        self._entities = []
+        self._entities = {}  # entity -> None, in scene order (O(1) membership and removal)
         self._entity_ids = {}
         self._updating = False
         self._pending_add = []
+        self._pending_add_ids = {}  # entity id -> entity, mirrors _pending_add
         self._pending_remove = []
+        self._pending_remove_set = set()  # mirrors _pending_remove
         self._entered = False
         # D22-C1: entity slots, column tables and a per-type index (query without scanning every
         # entity)
@@ -43,17 +45,18 @@ class Scene:
     def add_entity(self, entity):
         if entity.scene is not None and entity.scene is not self:
             raise RuntimeError("Entity already belongs to another scene")
-        if entity.id in self._entity_ids or any(e.id == entity.id for e in self._pending_add):
+        if entity.id in self._entity_ids or entity.id in self._pending_add_ids:
             raise ValueError(f"Duplicate entity ID in scene: {entity.id}")
         if self._updating:
             self._pending_add.append(entity)
+            self._pending_add_ids[entity.id] = entity
         else:
             self._attach_now(entity)
         return entity
 
     def _attach_now(self, entity):
         entity._scene = self
-        self._entities.append(entity)
+        self._entities[entity] = None
         self._entity_ids[entity.id] = entity
         self._order_counter += 1
         entity._order = self._order_counter
@@ -123,30 +126,31 @@ class Scene:
         if entity.scene is not self:
             raise ValueError("Entity does not belong to scene")
         self._release(entity)
-        self._entities.remove(entity)
+        del self._entities[entity]
         self._entity_ids.pop(entity.id, None)
         entity._scene = None
         entity._destroy_requested = False
         return entity
 
     def remove_entity(self, entity):
-        if entity.scene is not self and entity not in self._pending_add:
+        if entity.scene is not self and self._pending_add_ids.get(entity.id) is not entity:
             return
         entity._destroy_requested = True
         if self._updating:
-            if entity not in self._pending_remove:
+            if entity not in self._pending_remove_set:
                 self._pending_remove.append(entity)
+                self._pending_remove_set.add(entity)
         else:
             self._remove_now(entity)
 
     def _remove_now(self, entity):
         if entity.id in self._slots and entity._scene is self:
             self._release(entity)
-        if entity in self._entities:
-            self._entities.remove(entity)
+        self._entities.pop(entity, None)
         self._entity_ids.pop(entity.id, None)
-        if entity in self._pending_add:
+        if self._pending_add_ids.get(entity.id) is entity:
             self._pending_add.remove(entity)
+            del self._pending_add_ids[entity.id]
         for c in tuple(entity._components.values()):
             c._destroy()
         entity._components.clear()
@@ -161,15 +165,15 @@ class Scene:
         count = len(self._entities)
         if count <= 1:
             return 0
-        old = self._entities.index(entity)
+        order = list(self._entities)
+        old = order.index(entity)
         new_index = max(0, min(int(new_index), count - 1))
         if old == new_index:
             return old
-        self._entities.pop(old)
-        self._entities.insert(new_index, entity)
-        for position, e in enumerate(
-            self._entities
-        ):  # scene order changed: renumber, drop cached query orders
+        order.pop(old)
+        order.insert(new_index, entity)
+        self._entities = dict.fromkeys(order)
+        for position, e in enumerate(order):  # scene order changed: renumber, drop query caches
             e._order = position
         self._order_counter = len(self._entities)
         self._index_cache.clear()
@@ -178,7 +182,7 @@ class Scene:
     def entity_index(self, entity):
         if entity.scene is not self:
             raise ValueError("Entity does not belong to scene")
-        return self._entities.index(entity)
+        return list(self._entities).index(entity)
 
     def entities(self):
         return tuple(e for e in self._entities if not e.destroy_requested)
@@ -219,7 +223,9 @@ class Scene:
             for e in tuple(self._pending_remove):
                 self._remove_now(e)
             self._pending_remove.clear()
+            self._pending_remove_set.clear()
             for e in tuple(self._pending_add):
                 if not e.destroy_requested:
                     self._attach_now(e)
             self._pending_add.clear()
+            self._pending_add_ids.clear()
