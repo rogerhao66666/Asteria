@@ -293,11 +293,9 @@ class TileMapField:
                 self.controller.half_height
             )  # the collision box stands on the feet (bottom edge = feet)
             self.controller.x, self.controller.y = t.x, t.y - hh
-            from .collision import CollisionWorld, CombinedQuery
+            from .collision import CombinedQuery
 
-            solids = CollisionWorld.from_scene(session.scene).blocking_query(
-                exclude={session.player.id}
-            )
+            solids = session.frame_collision_world().blocking_query(exclude={session.player.id})
             rules = session.map_rules
             restricted = None if rules is None else rules.block_query("player")
             if rules is not None:  # a slippery floor carries the player on
