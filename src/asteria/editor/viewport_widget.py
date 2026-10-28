@@ -960,13 +960,7 @@ class SceneViewportWidget(QWidget):
             self._box_start = None
             self._box_end = None
             window = self.window()
-            # only the selection changed: refresh what shows it, not the whole project
-            if hasattr(window, "refresh_selection_context"):
-                if getattr(window, "project_tree", None) is not None:
-                    window.project_tree.refresh()
-                window.refresh_selection_context()
-                self.update()
-            elif hasattr(window, "refresh_all"):
+            if hasattr(window, "refresh_all"):
                 window.refresh_all()
             event.accept()
             return
