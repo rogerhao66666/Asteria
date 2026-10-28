@@ -30,6 +30,9 @@ def _seconds(value, label):
 class EventTimers:
     def __init__(self, context):
         self.context = context
+        # (variables dict, its key revision, active ids): valid while that dict's key set is
+        # unchanged; a replaced or untracked variables dict is rescanned.
+        self._active_cache = None
 
     def _key(self, timer_id, field):
         return f"{PREFIX}{timer_id}.{field}"
@@ -86,12 +89,24 @@ class EventTimers:
         return self._get(str(timer_id), "left") is not None
 
     def active(self):
+        variables = self.context.variables
+        revision = getattr(variables, "key_revision", None)
+        cache = self._active_cache
+        if (
+            revision is not None
+            and cache is not None
+            and cache[0] is variables
+            and cache[1] == revision
+        ):
+            return cache[2]
         names = {
             key[len(PREFIX) :].rsplit(".", 1)[0]
-            for key in self.context.variables
+            for key in variables
             if key.startswith(PREFIX) and key.endswith(".left")
         }
-        return tuple(sorted(names))
+        result = tuple(sorted(names))
+        self._active_cache = None if revision is None else (variables, revision, result)
+        return result
 
     def running(self, timer_id):
         return bool(self._get(str(timer_id), "running", False))

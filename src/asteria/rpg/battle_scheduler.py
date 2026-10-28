@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from heapq import heapify, heappop, heappush
 from math import isfinite
 
 
@@ -212,20 +213,22 @@ class BattleScheduler:
                 return ()
             full = order * (count // len(order) + 1)
             return tuple(full[:count])
+        # A heap pops the same smallest whole tuple that sorting then taking the head did.
         queue = [(x.ready_time, x.member_id, x.sequence, x.speed) for x in self._pending]
+        heapify(queue)
         sequence = self._sequence
         result = []
         while queue and len(result) < count:
-            queue.sort()
-            ready, member_id, _, _ = queue.pop(0)
+            ready, member_id, _, _ = heappop(queue)
             result.append((member_id, ready))
             member = self._members.get(member_id)
             if member is None:
                 continue
             sequence += 1
             speed = self._speed(member)
-            queue.append(
-                (ready + self.definition.timeline_scale / speed, member_id, sequence, speed)
+            heappush(
+                queue,
+                (ready + self.definition.timeline_scale / speed, member_id, sequence, speed),
             )
         return tuple(result)
 

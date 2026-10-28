@@ -118,12 +118,70 @@ class StatModifier:
         )
 
 
+class _ModifierTable(dict):
+    """modifier id -> StatModifier, remembering its ordered views until it next changes.
+
+    The views live on the table itself, so anything sharing the table (a shallow copy of the
+    set) shares them too, and every dict mutation drops them.
+    """
+
+    views = None  # (all modifiers in order, {stat: modifiers of that stat in order})
+
+    def _changed(self):
+        self.views = None
+
+    def __setitem__(self, key, value):
+        self._changed()
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        self._changed()
+        super().__delitem__(key)
+
+    def pop(self, *args):
+        self._changed()
+        return super().pop(*args)
+
+    def popitem(self):
+        self._changed()
+        return super().popitem()
+
+    def setdefault(self, key, default=None):
+        self._changed()
+        return super().setdefault(key, default)
+
+    def update(self, *args, **kwargs):
+        self._changed()
+        super().update(*args, **kwargs)
+
+    def clear(self):
+        self._changed()
+        super().clear()
+
+    def __ior__(self, other):
+        self._changed()
+        return super().__ior__(other)
+
+    def ordered(self):
+        views = self.views
+        if views is None:
+            ordered = tuple(sorted(self.values(), key=lambda m: (m.priority, m.modifier_id)))
+            by_stat = {}
+            for modifier in ordered:
+                by_stat.setdefault(modifier.stat, []).append(modifier)
+            views = self.views = (
+                ordered,
+                {stat: tuple(items) for stat, items in by_stat.items()},
+            )
+        return views
+
+
 @dataclass(slots=True)
 class ModifierSet:
-    _modifiers: dict[str, StatModifier] = field(default_factory=dict)
+    _modifiers: dict[str, StatModifier] = field(default_factory=_ModifierTable)
 
     def __init__(self, modifiers=()):
-        self._modifiers = {}
+        self._modifiers = _ModifierTable()
         for modifier in modifiers:
             self.add(modifier)
 
@@ -144,18 +202,23 @@ class ModifierSet:
     def remove(self, modifier_id):
         return self._modifiers.pop(str(modifier_id))
 
+    def _ordered(self):
+        table = self._modifiers
+        if not isinstance(table, _ModifierTable):  # a plain dict was assigned: no caching
+            ordered = tuple(sorted(table.values(), key=lambda m: (m.priority, m.modifier_id)))
+            return ordered, None
+        return table.ordered()
+
     def modifiers(self):
-        return tuple(
-            sorted(
-                self._modifiers.values(),
-                key=lambda m: (m.priority, m.modifier_id),
-            )
-        )
+        return self._ordered()[0]
 
     def for_stat(self, stat, *, tags=None):
         stat = str(stat)
         tags = tags or TagSet()
-        return tuple(m for m in self.modifiers() if m.stat == stat and m.applies(tags))
+        ordered, by_stat = self._ordered()
+        if by_stat is None:
+            return tuple(m for m in ordered if m.stat == stat and m.applies(tags))
+        return tuple(m for m in by_stat.get(stat, ()) if m.applies(tags))
 
     def evaluate(self, stat, base_value, *, tags=None):
         value = _number(base_value, name=str(stat))
