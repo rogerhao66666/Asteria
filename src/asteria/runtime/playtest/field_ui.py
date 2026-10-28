@@ -5,7 +5,7 @@ from __future__ import annotations
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
 from asteria.presentation.creature_screens import creature_settings
-from asteria.runtime.collision import CollisionWorld, box_blocked, feet_box
+from asteria.runtime.collision import box_blocked, feet_box
 
 from .support import (  # noqa: F401 - the names the moved methods use
     BESTIARY_TAG_KINDS,
@@ -443,13 +443,14 @@ class FieldUiMixin:
                 packets.extend(composer.compose((item,)))
             except ValueError:
                 continue  # the anchor left the scene
-        from asteria.platform.pygame_battle_ui import cjk_size, font_for_text
+        from asteria.platform.pygame_battle_ui import cjk_size, contains_cjk, font_for_text
 
         latin = self.pg.font.Font(None, 30)
         for packet in packets:
             color = self.POPUP_COLORS.get(packet.metadata.get("kind"), self.POPUP_COLORS["info"])
             # Chinese, Japanese or Korean words come from a system face that has them
-            font = font_for_text(self.pg, latin, packet.text, self._cjk_fonts, cjk_size(latin))
+            cjk_pt = cjk_size(latin, self.pg) if contains_cjk(packet.text) else 0  # 0: unused
+            font = font_for_text(self.pg, latin, packet.text, self._cjk_fonts, cjk_pt)
             image = font.render(packet.text, True, color)
             if packet.scale != 1.0:
                 size = (
@@ -1001,7 +1002,7 @@ class FieldUiMixin:
             mag = max(1.0, (dx * dx + dy * dy) ** 0.5)
             speed = float(self.manifest.get("field", {}).get("walk_speed", 0) or 36.0)
             pt = self.game.player.get(Transform)
-            blocked = CollisionWorld.from_scene(self.game.scene).blocking_query(
+            blocked = self.game.frame_collision_world().blocking_query(
                 exclude={self.game.player.id}
             )
             x_range, y_range = (-120.0, 120.0), (-52.0, 52.0)
@@ -1194,7 +1195,7 @@ class FieldUiMixin:
             transform.y = (transform.y // size) * size + size / 2
         self._grid_walker_moves = moves
         game = self.game
-        blocked = CollisionWorld.from_scene(game.scene).blocking_query(exclude={game.player.id})
+        blocked = game.frame_collision_world().blocking_query(exclude={game.player.id})
         walls = game._tile_blocking.get(game.scene.id)
         if walls is not None:
             blocked = CombinedQuery(blocked, walls)
