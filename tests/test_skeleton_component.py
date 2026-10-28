@@ -239,8 +239,13 @@ def test_editor_scene_viewport_advances_attached_skeleton_preview(app, tmp_path)
             scene, widget.camera, document.asset_views.sprite_sheet
         )
         assert len(draws) == 1
-        QTest.qWait(90)
-        assert widget.skeleton_runtime._times[entity.id] > 0
+        # a few 33 ms ticks; a busy CI runner can take longer than that to deliver them
+        times = widget.skeleton_runtime._times
+        for _ in range(200):
+            if times.get(entity.id, 0) > 0:
+                break
+            QTest.qWait(10)
+        assert times[entity.id] > 0
     finally:
         widget.close()
         app.processEvents()
