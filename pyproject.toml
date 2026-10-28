@@ -16,6 +16,8 @@ editor=["PySide6>=6.8,<6.12"]
 mv=["Pillow>=10"]
 fast=["numpy>=2"]
 web=["pygbag>=0.9"]
+# scripts/build_app.py: the standalone app (AST-06)
+package=["pyinstaller>=6.10"]
 dev=["pytest>=9", "ruff>=0.16", "numpy>=2"]
 
 [tool.setuptools.package-data]

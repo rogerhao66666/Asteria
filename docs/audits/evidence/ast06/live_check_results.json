@@ -1,0 +1,17 @@
+{
+  "frozen": true,
+  "executable": "/Users/roger/Documents/Vscode/Asteria/dist/Asteria.app/Contents/MacOS/Asteria",
+  "engine": "/Users/roger/Documents/Vscode/Asteria/dist/Asteria.app/Contents/Resources/engine",
+  "player": "/Users/roger/Documents/Vscode/Asteria/dist/Asteria.app/Contents/Resources/player/AsteriaPlayer.app",
+  "full_verification_template": true,
+  "editor_screenshot": true,
+  "playtest_started": true,
+  "playtest_running_after_8s": true,
+  "playtest_screenshot": true,
+  "playtest_log_tail": "pygame-ce 2.5.8 (SDL 2.32.10, Python 3.13.15)\nasteria-debug: listening on 127.0.0.1:60902\n",
+  "export_standalone": true,
+  "export_app": "<scratch>/live2/export/FV Quest.app",
+  "export_warnings": [],
+  "exported_game_screenshot": true,
+  "exported_game_exit": 0
+}

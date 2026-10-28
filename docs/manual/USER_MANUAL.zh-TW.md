@@ -55,6 +55,9 @@ Asteria 是用 Python（pygame-ce）寫的 2D RPG 引擎，編輯器用 PySide6 
 
 ## 2. 安裝與啟動編輯器
 
+> **不想裝 Python？** 改下載免安裝版 app：編輯器、試玩、匯出都在裡面，用它匯出的遊戲玩家也不用裝
+> Python。見 [STANDALONE_APP.zh-TW.md](../STANDALONE_APP.zh-TW.md)。以下是原始碼安裝的步驟。
+
 需要 Python 3.12 以上（3.13 可用）。在 Asteria 資料夾裡：
 
 ```bash

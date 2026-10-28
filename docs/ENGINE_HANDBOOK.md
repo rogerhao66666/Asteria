@@ -35,6 +35,8 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 .venv/bin/python -m asteria.export_web PROJECT.json OUT --serve   # 瀏覽器版（D59；需要 pip install pygbag）
 ```
 
+免安裝版 app（D100）：`.venv/bin/python scripts/build_app.py`（需要 `pip install -e ".[package]"`）產生 `dist/Asteria.app`／zip／dmg，說明見 [`STANDALONE_APP.zh-TW.md`](STANDALONE_APP.zh-TW.md)。
+
 提交前（專案規則）：
 
 ```bash

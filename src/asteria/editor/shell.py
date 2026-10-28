@@ -2447,15 +2447,22 @@ class AsteriaEditorWindow(QMainWindow):
             QLineEdit,
         )
 
+        from asteria.frozen import player_runtime
+
         if self.document.project is None:
             return None
+        standalone = player_runtime() is not None  # the standalone app carries a player
         dialog = QDialog(self)
         dialog.setWindowTitle("Export Game")
         name = QLineEdit(self.document.project.name or "Asteria Game")
-        pyz = QCheckBox("Single-file game (.pyz)")
-        pyz.setChecked(True)
-        app = QCheckBox("macOS app (.app)")
-        app.setChecked(sys.platform == "darwin")
+        pyz = QCheckBox("Single-file game (.pyz, needs Python)")
+        pyz.setChecked(not standalone)
+        if sys.platform == "darwin":
+            app = QCheckBox("macOS app (.app)")
+        else:
+            app = QCheckBox("Game folder that runs without Python")
+        app.setChecked(sys.platform == "darwin" or standalone)
+        app.setEnabled(sys.platform == "darwin" or standalone)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
@@ -2463,12 +2470,14 @@ class AsteriaEditorWindow(QMainWindow):
         form.addRow("Game name", name)
         form.addRow("", pyz)
         form.addRow("", app)
-        form.addRow(
-            QLabel(
+        if standalone:
+            note = "The app runs without Python; the .pyz and the game folder need Python 3.12+."
+        else:
+            note = (
                 "The game folder always carries the engine; players need Python 3.12+ with "
                 "pygame-ce."
             )
-        )
+        form.addRow(QLabel(note))
         form.addRow(buttons)
         if dialog.exec() != QDialog.Accepted:
             return None
@@ -2486,7 +2495,8 @@ class AsteriaEditorWindow(QMainWindow):
         if result["pyz"]:
             lines.append(f"Single file: {result['pyz']}")
         if result["app"]:
-            lines.append(f"macOS app: {result['app']}")
+            kind = "no Python needed" if result.get("standalone") else "needs Python"
+            lines.append(f"Game app: {result['app']} ({kind})")
         missing = result["report"].missing
         if missing:
             lines.append("Missing: " + ", ".join(missing))

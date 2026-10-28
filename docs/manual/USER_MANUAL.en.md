@@ -58,6 +58,10 @@ Three words used throughout:
 
 ## 2. Installing and starting the editor
 
+> **No Python?** Download the standalone app instead: it carries the editor, playtesting and
+> export, and games exported from it run without Python too. See
+> [STANDALONE_APP.md](../STANDALONE_APP.md). The steps below are for a source install.
+
 You need Python 3.12 or newer (3.13 works). From the Asteria folder:
 
 ```bash

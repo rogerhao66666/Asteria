@@ -4358,3 +4358,41 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 **還沒做：** HP 卡片的「它會改變什麼」仍然寫「還沒有東西讀它」。這是事實：沒有公式或規則讀 HP 的數值，戰鬥只扣它的現值。要不要在資源卡片寫明「傷害和治療改它的現值」，留給使用者決定。
 
 **狀態：** 已提交。
+
+## D100 — 免安裝版 app：編輯器、試玩、匯出都不需要 Python（AST-06，2026-10-28）
+
+**問題：** AST-06 的缺口「不產生免直譯器執行檔」。輕度使用者要先裝 Python、PySide6、pygame，還會遇到版本衝突。匯出的遊戲也一樣，玩家要有 python3＋pygame-ce。
+
+**決定（使用者選擇）：** 用 PyInstaller（不用 Nuitka、Briefcase）。先做 macOS，Windows／Linux 的 CI 留到之後。只做 ad-hoc 簽章，不做 Developer ID 公證。匯出的遊戲內附免安裝播放器。
+
+**做法：**
+- `scripts/build_app.py` 一個指令產生 `dist/Asteria.app`、`.zip`、`.dmg`（`build/`、`dist/` 已加入 .gitignore）。PyInstaller 凍結直譯器、整個標準函式庫（專案自己的 Python 程式碼也能用）、PySide6、pygame-ce、numpy、ModernGL。
+- 引擎本身不凍結，以原始碼放在 `Contents/Resources/engine/src/asteria`（建置時預先編好 .pyc，執行時不寫 bytecode）。旁邊放 `engine/asset_library` 和 `engine/reference_projects/full_verification_demo`。引擎用 `__file__` 找的路徑因此都和原始碼目錄一樣，原有程式不用改。這包括素材庫、Full Verification 範本，以及匯出時複製引擎。
+- 新模組 `src/asteria/frozen.py`：編輯器用 `sys.executable -m asteria.runtime.preview` 啟動試玩，用 `-m asteria.multiplayer.server` 啟動多人伺服器；kernel 檢查用 `-I -c`。在 app 裡 `sys.executable` 就是 app 本身，所以由 `run_python_style` 照 Python 的方式處理 `-m`、`-c` 和 `script.py`。`runtime_launcher.py`、`multiplayer_workspace.py` 都不用改。另有 `preview`／`export`／`upgrade` 子指令。
+- 播放器 `AsteriaPlayer.app` 不含 Qt，放在 `Contents/Resources/player/`。`project_tools.build_player_game` 匯出時複製一份，改成遊戲名稱和 bundle id，把遊戲放進 `Contents/Resources/game`，再重新做 ad-hoc 簽章。在 Windows／Linux 上則產生 `Name/` 資料夾，裡面有改名的執行檔和 `game/`。
+- app bundle 內不能寫入，所以遊戲從使用者資料夾的鏡像目錄執行（`~/Library/Application Support/Asteria Games/<名稱>`）。鏡像裡每一項都連結回 app，`saves/` 留在鏡像裡，換新版 app 後存檔還在。
+- `package_game` 多了 `player` 參數和 `standalone` 結果。從 app 匯出時，預設不再產生 .pyz（它需要 Python）。Export Game 對話框會說明哪些產物需要 Python。
+
+**驗證：**
+- `tests/test_frozen_app.py`：8 項。涵蓋 `-m`／`-c`／script、內附遊戲的位置、鏡像目錄與存檔、匯出的 .app 與資料夾。加上匯出與 kernel 既有測試，共 36 passed。
+- 凍結版在 repo 外執行，環境用 `env -i`（只有 `/usr/bin:/bin`，沒有 Python 路徑）：
+  - `asteria.__file__` 指向 app 內的引擎，native kernel 從 app 內載入；
+  - `-m asteria.runtime.preview` 跑 120 幀，結束碼 0；
+  - `Asteria export … --app` 產生 `FV Quest.app`，`codesign --verify --deep --strict` 通過；
+  - 匯出的遊戲跑 120 幀，結束碼 0，存檔資料夾建在使用者資料夾。
+- `scripts/standalone_app_live_check.py` 由 app 本身執行，使用真實 Cocoa 視窗、靜音：編輯器開啟 Full Verification、▶ 試玩（8 秒後仍在跑，debug 通道有開）、匯出不需要 Python 的遊戲，遊戲以結束碼 0 結束。結果 **PASS**。截圖與結果在 `docs/audits/evidence/ast06/`。
+- 試玩視窗：凍結版以 cocoa driver 存下自己第 90 幀的畫面（`frozen_playtest_window.png`）。匯出的遊戲用 `open` 啟動（等同 Finder 雙擊），會出現在最前面（`exported_game_window.png`）。
+- 由背景程式（腳本、終端機）啟動的遊戲視窗會開在其他視窗後面。原始碼版做同樣測試也一樣，所以不是打包造成的，是 macOS 的視窗啟用規則。
+- 檢查過程中出現 3 份 `Asteria` SIGABRT 當機報告，都來自檢查腳本早期版本收尾時只 `hide()` 視窗：QThread 還在跑時 widget 就被解構。改成 `close()` 後再跑，沒有新的報告。
+
+**大小：** `Asteria.app` 277 MB（播放器 58 MB、引擎＋素材＋範例 83 MB）；zip 126 MB、dmg 158 MB。PySide6 外掛會帶進 QtQuick／QtQml／QtPdf／QtVirtualKeyboard。在 excludes 排除這些模組沒有效果，所以沒有保留。
+
+**還沒做：**
+- Developer ID 簽章與公證（需要帳號）。
+- Windows／Linux 建置與 CI。
+- 縮小 Qt 外掛。
+- 網頁版匯出在 app 內不能用（需要 pygbag）。
+- `multiplayer/project_demo.py` 預設的範例專案路徑在 app 內找不到（app 沒有帶 `diablo_multiplayer_demo`）。
+- 人工在 Finder 雙擊 app、第一次右鍵打開的流程還沒有人實際做過。
+
+**狀態：** 未提交（等使用者指示）。

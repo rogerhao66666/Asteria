@@ -9,6 +9,9 @@ only Python and pygame-ce installed — not from the Asteria repository. The
 ``.pyz`` is the same folder in one file: it unpacks once into the user cache
 and keeps saves in a per-game data folder that survives updates.
 
+From the standalone Asteria app (``asteria.frozen``) the macOS app / game folder is a copy of
+the bundled AsteriaPlayer with the game inside, so players need no Python at all.
+
 The engine copy carries the native (C++) kernel library, built first when it
 is missing or out of date. When it cannot be built the export still succeeds
 and its report warns that the game runs on the slower kernels.
@@ -22,6 +25,8 @@ import json
 import plistlib
 import shutil
 import stat
+import subprocess
+import sys
 import zipapp
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -326,19 +331,96 @@ def build_macos_app(pyz, output_dir, *, name, identifier=None):
     return app
 
 
-def package_game(project_path, output, *, name=None, pyz=True, app=False, allow_missing=False):
+def build_player_game(game_folder, output_dir, *, name, player, identifier=None):
+    """A game that needs no Python: a copy of the frozen ``player`` (``AsteriaPlayer.app`` or
+    the ``AsteriaPlayer`` folder) named after the game, with the exported folder as its
+    ``game`` (macOS: ``Name.app/Contents/Resources/game``; elsewhere: ``Name/game``)."""
+    from asteria.frozen import PLAYER_NAME, player_executable
+
+    player = Path(player)
+    slug = _slug(name)
+    skip = shutil.ignore_patterns("run_game.py", "saves", "__pycache__")
+    if player.suffix != ".app":
+        target = Path(output_dir) / slug
+        shutil.rmtree(target, ignore_errors=True)
+        shutil.copytree(player, target, symlinks=True)
+        program = player_executable(target)
+        program.rename(program.with_name(program.name.replace(PLAYER_NAME, slug)))
+        shutil.copytree(game_folder, target / "game", ignore=skip)
+        return target
+    app = Path(output_dir) / f"{name}.app"
+    shutil.rmtree(app, ignore_errors=True)
+    shutil.copytree(player, app, symlinks=True)
+    contents = app / "Contents"
+    with (contents / "Info.plist").open("rb") as handle:
+        info = plistlib.load(handle)
+    (contents / "MacOS" / info["CFBundleExecutable"]).rename(contents / "MacOS" / slug)
+    info.update(
+        CFBundleName=name,
+        CFBundleDisplayName=name,
+        CFBundleIdentifier=identifier or f"com.asteria.{slug.lower()}",
+        CFBundleExecutable=slug,
+    )
+    with (contents / "Info.plist").open("wb") as handle:
+        plistlib.dump(info, handle)
+    shutil.copytree(game_folder, contents / "Resources" / "game", ignore=skip)
+    _sign_ad_hoc(app)
+    return app
+
+
+def _sign_ad_hoc(app):
+    """Seal ``app`` again after it was changed (ad-hoc: no developer identity). Unsealed, a
+    downloaded copy is reported as damaged instead of from an unidentified developer."""
+    codesign = shutil.which("codesign") if sys.platform == "darwin" else None
+    if codesign is None:
+        return False
+    result = subprocess.run(
+        [codesign, "--force", "--deep", "--sign", "-", str(app)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+_BUNDLED = object()
+
+
+def package_game(
+    project_path,
+    output,
+    *,
+    name=None,
+    pyz=True,
+    app=False,
+    allow_missing=False,
+    player=_BUNDLED,
+):
     """Export a game folder, then the single-file build and (optionally) the macOS app next to it.
 
-    Returns ``{"folder": Path, "pyz": Path | None, "app": Path | None, "report": ExportReport}``.
+    With a frozen ``player`` (default: the one inside the standalone Asteria app, if any) the
+    ``app`` is the player with the game inside - ``Name.app`` on macOS, a ``Name`` folder
+    elsewhere - and runs without Python; otherwise it is a launcher around the ``.pyz``.
+
+    Returns ``{"folder": Path, "pyz": Path | None, "app": Path | None, "report": ExportReport,
+    "standalone": bool}`` (``standalone``: the app needs no Python).
     """
+    if player is _BUNDLED:
+        from asteria.frozen import player_runtime
+
+        player = player_runtime()
     output = Path(output)
     name = name or load_project(project_path).name or "Asteria Game"
     folder = output / f"{_slug(name)}_folder"
     report = export_game(project_path, folder, allow_missing=allow_missing)
+    standalone = bool(app and player is not None)
     result = {"folder": folder, "pyz": None, "app": None, "report": report}
-    if pyz or app:
+    result["standalone"] = standalone
+    if pyz or (app and player is None):
         result["pyz"] = build_pyz(folder, output / f"{_slug(name)}.pyz", name=name)
-    if app:
+    if app and player is not None:
+        result["app"] = build_player_game(folder, output, name=name, player=player)
+    elif app:
         result["app"] = build_macos_app(result["pyz"], output, name=name)
     return result
 
@@ -364,7 +446,10 @@ def export_main(argv=None):
         "--pyz", action="store_true", help="also build a single-file game (Name.pyz)"
     )
     parser.add_argument(
-        "--app", action="store_true", help="also build a macOS app bundle (Name.app)"
+        "--app",
+        action="store_true",
+        help="also build a macOS app bundle (Name.app); from the standalone Asteria app, a game "
+        "that runs without Python",
     )
     parser.add_argument("--name", help="game name (default: the project name)")
     args = parser.parse_args(argv)
@@ -381,7 +466,7 @@ def export_main(argv=None):
         args.project,
         args.output,
         name=args.name,
-        pyz=True,
+        pyz=args.pyz,
         app=args.app,
         allow_missing=args.allow_missing,
     )
@@ -390,8 +475,11 @@ def export_main(argv=None):
     for warning in result["report"].warnings:
         print(f"  warning: {warning}")
     print(f"Game folder: {result['folder']}  (python run_game.py)")
-    print(f"Single file: {result['pyz']}  (python3 {result['pyz'].name})")
-    if result["app"] is not None:
+    if result["pyz"] is not None:
+        print(f"Single file: {result['pyz']}  (python3 {result['pyz'].name})")
+    if result["standalone"]:
+        print(f"Standalone:  {result['app']}  (no Python needed)")
+    elif result["app"] is not None:
         print(
             f"macOS app:   {result['app']}  (needs python3 with pygame-ce, or set ASTERIA_PYTHON)"
         )
