@@ -102,12 +102,32 @@ def font_for_text(pg, font, value, cache, size):
     return cache[key]
 
 
-def cjk_size(font):
+def cjk_size(font, pg=None, path=None):
     """The size to draw Chinese, Japanese or Korean text at beside ``font`` (a face that has
     no CJK characters): a quarter taller than the face's line. Asked for the same size, a system
     CJK face came out 45 % larger than pygame's built-in face (which draws smaller than asked)
-    and towered over the Latin text beside it."""
-    return max(1, round(font.get_height() * 1.25))
+    and towered over the Latin text beside it.
+
+    With ``pg`` the size is fitted to the CJK face that will draw (``path``, else the system
+    one), so its line - not its point size - is a quarter taller: faces differ in how tall a
+    line they set per point (WenQuanYi Zen Hei sets about 1.3x)."""
+    line = max(1, round(font.get_height() * 1.25))
+    if pg is None:
+        return line
+    path = path or cjk_font_path(pg)
+    if not path:
+        return line
+    key = (path, line)
+    size = _CJK_SIZES.get(key)
+    if size is None:
+        size = max(1, round(line * line / max(1, pg.font.Font(path, line).get_height())))
+        while size > 1 and pg.font.Font(path, size).get_height() > line:
+            size -= 1
+        _CJK_SIZES[key] = size
+    return size
+
+
+_CJK_SIZES = {}  # (CJK face file, line height) -> the point size that sets that line
 
 
 def _centre(font, char, cache):

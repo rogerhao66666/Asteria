@@ -399,7 +399,9 @@ def test_a_chinese_menu_label_sits_level_with_its_cursor(monkeypatch):
             return [
                 y
                 for y in range(120)
-                if any(runtime.screen.get_at((x, y))[:3] == (255, 0, 0) for x in range(x0, x1))
+                # ink, not only fully covered pixels: a face's hinting may leave thin strokes
+                # without one pure-red pixel (WenQuanYi on Linux)
+                if any(runtime.screen.get_at((x, y))[0] >= 128 for x in range(x0, x1))
             ]
 
         room = runtime.menu_mark_room(size)
@@ -442,7 +444,7 @@ def test_the_battle_screen_draws_chinese_at_its_face_size_level_with_the_cursor(
             return [
                 y
                 for y in range(120)
-                if any(screen.get_at((x, y))[:3] == (255, 0, 0) for x in range(x0, x1))
+                if any(screen.get_at((x, y))[0] >= 128 for x in range(x0, x1))  # ink, as above
             ]
 
         mark, text = rows(18, 40), rows(60, 420)
