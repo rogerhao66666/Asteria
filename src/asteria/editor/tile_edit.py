@@ -34,7 +34,7 @@ def tile_at(tilemap, layer, tile_x, tile_y):
 
 
 def _chunk_is_empty(chunk):
-    return all(v == EMPTY_TILE for v in chunk.tiles)
+    return chunk.is_empty()
 
 
 @dataclass(slots=True)
