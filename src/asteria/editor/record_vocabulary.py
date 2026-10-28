@@ -548,6 +548,7 @@ class ProjectVocabulary:
         self.project = project
         self._cache = {}
         self._values = None
+        self._data = None  # a provider of the serialised project (use_data)
 
     # -- records --------------------------------------------------------------------------------
     def choices(self, source):
@@ -664,7 +665,8 @@ class ProjectVocabulary:
         value = None
         if source == "abilities":
             library = project.gameplay_library.abilities
-            value = library.get(key) if key in library.ids() else None
+            # the ids are strings: a lookup, not a scan of the sorted ids
+            value = library.get(key) if isinstance(key, str) else None
         elif source in ("items", "equipment", "classes", "states"):
             value = getattr(project.rpg_database, source, {}).get(key)
         return str(getattr(value, "description", "") or "")
@@ -716,11 +718,21 @@ class ProjectVocabulary:
         return tuple(by_id.get(k) or Choice(k, _stat_label(k)) for k in keep)
 
     # -- values already used --------------------------------------------------------------------
+    def use_data(self, provider):
+        """Read the values used from ``provider()`` - the ``(rpg_database.to_data(),
+        gameplay_library.to_data())`` pair a caller has already serialised - instead of
+        serialising the project again."""
+        self._data = provider
+
     def values_for(self, key):
         """Distinct string values other records give ``key`` (a drop-down of what is used)."""
         if self._values is None:
             self._values = {}
-            if self.project is not None:
+            if self.project is not None and self._data is not None:
+                rpg_data, library_data = self._data()
+                _collect(rpg_data, self._values)
+                _collect(library_data, self._values)
+            elif self.project is not None:
                 _collect(self.project.rpg_database.to_data(), self._values)
                 _collect(self.project.gameplay_library.to_data(), self._values)
         return tuple(sorted(self._values.get(str(key), ())))
