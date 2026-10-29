@@ -2362,7 +2362,8 @@ class CreatureBattleScreen:
             icon = self._image("item_icon", item_id, None)
             if icon is not None:
                 s.blit(icon, self.BAG_ICON)
-            words = getattr(item, "description", "") or item.display_name
+            # Players See It and the player's language, as the shop (game.description_of)
+            words = self.game.description_of(item, "") or item.display_name
             for i, line in enumerate(self.wrap(words, 104)[:3]):
                 y = self.BAG_DESCRIPTION[1] + i * 14
                 self._text(line, self.BAG_DESCRIPTION[0], y, (248, 248, 248), (98, 98, 98))

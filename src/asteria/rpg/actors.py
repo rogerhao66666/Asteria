@@ -1904,8 +1904,8 @@ class RpgDatabase:
             ],
             "rarities": [self.rarities[k].to_data() for k in sorted(self.rarities)],
             "affixes": [self.affixes[k].to_data() for k in sorted(self.affixes)],
-            **({"author_notes": self._notes_data()} if self._notes_data() else {}),
-            **({"hidden_descriptions": self._hidden_data()} if self._hidden_data() else {}),
+            **({"author_notes": notes} if (notes := self._notes_data()) else {}),
+            **({"hidden_descriptions": hidden} if (hidden := self._hidden_data()) else {}),
         }
 
     def _hidden_data(self):

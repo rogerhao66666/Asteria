@@ -44,6 +44,17 @@ class AuthorNoteBox(QWidget):
         self.text.setPlainText(text)
         self.text.blockSignals(False)
         self.setEnabled(key is not None and project is not None)
+        if self.shown is not None and project is not None and record is not None:
+            # the same record again (an undo changed only Players See It): the form keeps its
+            # layout, so the kept switch follows the database
+            try:
+                want = is_shown(project, record)
+                if self.shown.isChecked() != want:
+                    self.shown.blockSignals(True)
+                    self.shown.setChecked(want)
+                    self.shown.blockSignals(False)
+            except RuntimeError:  # the form was rebuilt: its new switch reads the database
+                self.shown = None
 
     def switch(self):
         """A new Players See It switch for the record's form, under its description (the form

@@ -120,8 +120,22 @@ def test_a_player_folder_becomes_a_game_folder(tmp_path):
     target = build_player_game(game_folder, tmp_path / "out", name="My Game", player=player)
     assert target == tmp_path / "out" / "My_Game"
     assert (target / f"My_Game{suffix}").read_text() == "binary"
+    assert frozen.player_executable(target) == target / f"My_Game{suffix}"  # renamed program
     assert (target / "game" / frozen.PROJECT_FILE).is_file()
     assert not (target / "game" / "run_game.py").exists()
+
+
+def test_a_game_named_with_a_slash_is_one_bundle_in_the_output_folder(tmp_path, monkeypatch):
+    monkeypatch.setattr("asteria.project_tools._sign_ad_hoc", lambda app: True)
+    game_folder = tmp_path / "export"
+    game_folder.mkdir()
+    (game_folder / frozen.PROJECT_FILE).write_text("{}")
+    out = tmp_path / "out"
+    out.mkdir()
+    app = build_player_game(game_folder, out, name="Act 1/2", player=_fake_player_app(tmp_path))
+    assert app == out / "Act 1-2.app" and app.is_dir()
+    info = plistlib.loads((app / "Contents" / "Info.plist").read_bytes())
+    assert info["CFBundleName"] == "Act 1/2"  # the name players see is kept
 
 
 def test_python_style_runs_a_script_file(tmp_path, monkeypatch):

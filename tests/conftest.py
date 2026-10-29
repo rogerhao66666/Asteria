@@ -146,6 +146,45 @@ def pytest_sessionfinish(session, exitstatus):
         real_window.write_report(_REPLAY_RESULTS)
 
 
+@pytest.fixture(autouse=True)
+def _close_windows_the_test_opened():
+    """Close and delete the root windows a test opened and left behind.
+
+    They stayed alive until the session ended, so every later ``app.setStyleSheet`` restyled
+    thousands of stale widgets: the theme tests took 16 minutes in a full run and pushed CI
+    past its 30-minute limit. Windows that existed before the test (a module or session
+    fixture's) are kept."""
+    import sys
+
+    qt = sys.modules.get("PySide6.QtWidgets")
+    app = qt.QApplication.instance() if qt is not None else None
+    before = set(_application_owned_top_level_widgets(app)) if app is not None else set()
+    yield
+    import real_window
+
+    qt = sys.modules.get("PySide6.QtWidgets")
+    app = qt.QApplication.instance() if qt is not None else None
+    if app is None or real_window.enabled():  # a replay keeps its windows for screenshots
+        return
+    from PySide6.QtCore import QCoreApplication, QEvent, Qt
+
+    # windows and dialogs only: a popup (a completer's list, a menu) has no parent widget but
+    # belongs to an object that may outlive the test, and deleting it crashed the next use
+    kinds = (Qt.WindowType.Window, Qt.WindowType.Dialog)
+    left = [
+        w
+        for w in _application_owned_top_level_widgets(app)
+        if w not in before and w.windowType() in kinds
+    ]
+    for widget in left:
+        # hide, not close: closing an editor with unsaved changes asks to save and would wait
+        # forever for an answer
+        widget.hide()
+        widget.deleteLater()
+    if left:
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+
 def _application_owned_top_level_widgets(app):
     """Return root windows; topLevelWidgets also includes parent-owned popups."""
     return [widget for widget in app.topLevelWidgets() if widget.parentWidget() is None]
