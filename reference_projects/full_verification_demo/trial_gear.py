@@ -1,4 +1,4 @@
-"""Gear and crafting of the Full Verification (phase 3), Ragnarok / MapleStory / Diablo style.
+"""Gear and crafting of the Full Verification (phase 3), Ragnarok / MapleStory / action-RPG style.
 
 * **More gear**: a second tier of every weapon (two gem sockets and a card socket), heavy /
   light / cloth armour in two tiers (a card socket) and six accessories (a gem socket).

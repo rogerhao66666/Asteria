@@ -10,7 +10,11 @@ def s():
 
 
 root = Path(__file__).resolve().parents[2]
-project = json.loads((root / "AsteriaPhase7B_BattleSchedulerDemo.asteria.json").read_text())
+project = json.loads(
+    (
+        root / "reference_projects" / "legacy" / "AsteriaPhase7B_BattleSchedulerDemo.asteria.json"
+    ).read_text()
+)
 db = RpgDatabase.from_data(project["rpg_database"])
 definition = db.battle_schedulers["continuous.demo"]
 members = [

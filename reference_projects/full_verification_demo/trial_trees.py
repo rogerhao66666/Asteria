@@ -6,7 +6,7 @@
   strength for another; bridges join neighbouring sectors, so a build can wander across.
 * **Specializations** (World of Warcraft): every job tree gets three exclusive specs (Priest:
   Holy / Discipline / Shadow ...); a spec opens two ranked talents and a capstone passive.
-* **Runes** (Diablo III): the job's signature skill takes one of three runes (Ember: fire and
+* **Runes** (action-RPG style): the job's signature skill takes one of three runes (Ember: fire and
   burn, Echo: twice the hits, Siphon: heals the user); the rune node grants a tag and an ability
   evolution that needs the tag swaps the skill for its rune version.
 * **Skill books** (MapleStory): a ten-rank book per job, bought with skill points earned per

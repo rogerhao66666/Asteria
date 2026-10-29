@@ -56,7 +56,7 @@ class BattleUiLayoutProfile:
     # Side-view staging options (defaults keep the original column HUD):
     # party_hud "column" | "bottom_row" (one compact cell per member along the bottom) |
     # "side_list" (a panel per member down the party's edge: name, status chips, one
-    # "label  current / maximum" line with a bar per resource - the Octopath Traveler look);
+    # "label  current / maximum" line with a bar per resource - the classic party-RPG look);
     # overhead_zones: placement zones whose members show a bar over their sprite
     # instead of a HUD panel; action_menu_placement "bottom" | "actor" (beside the
     # acting member); stage_top: fraction of the height where the ground begins;

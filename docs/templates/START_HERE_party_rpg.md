@@ -1,4 +1,4 @@
-# Start here - Party RPG (Octopath-style)
+# Start here - Party RPG (break and boost battles)
 
 This project is a finished turn-based battle game made only from project data. Open it in the
 editor, press **Run Project**, then change things one at a time. Everything below is a record you
@@ -12,12 +12,13 @@ can edit; nothing is hard-coded in the engine.
 | Tab | switch Skills / Items |
 | Left / Right | raise / lower the boost level (a boost point is gained every turn) |
 | Enter / Esc | confirm / go back |
-| Esc (field) | pause menu: Status, Quests, Crafting, **Pets**, Settings, Save |
+| Esc (field) | pause menu (its entries and their order: Database > Game Systems > Pause Menu) |
 
 ## Where each rule lives
 
-The toolbar has Scene, Database, Battle, Presentation, Events and Code. Database has the tabs
-Game Data, Game Systems, Enemy AI, Behavior Trees and Real-Time Combat.
+The toolbar has Scene, Database, Battle, Presentation, Events, Code and Multiplayer. Database
+has the tabs Game Data, Game Systems, Enemy AI, Behavior Trees, Real-Time Combat and Game Start.
+Every record form ends with a **Note** for your own remarks (the game never shows it).
 
 | You want to change | Open | Record |
 | --- | --- | --- |
@@ -33,7 +34,10 @@ Game Data, Game Systems, Enemy AI, Behavior Trees and Real-Time Combat.
 | A pet species (stats, growth, experience) | Database > Game Systems > Pet Species | `stats`, `growth`, `exp_base`, `exp_per_battle` |
 | Which enemy can be captured as a pet | Database > Game Systems > Capture Rules | `Becomes Owned Pet`, `Pet Starts At Level` |
 | Where enemies stand and wander | Scene workspace | entities with Visible Encounter + Field AI |
-| The party, bag and pets you start with | the project's game start data | Database workspace > Game Start tab (scene, facing, position, party, bag, currencies, pets) |
+| The party, bag and pets you start with | Database > Game Start | scene, facing, position, party, bag, currencies, pets |
+| What a tag or a stat means, and who reads it | Database > Game Systems > Tags / Stats | a definition per tag or stat |
+| The pause menu and its pages | Database > Game Systems > Pause Menu | the order, the pages' blocks, event entries |
+| Where a menu's parts sit on screen | Presentation > Menu Screens | one layout per screen |
 
 ## Try these first
 

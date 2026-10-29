@@ -16,7 +16,7 @@ The milestone proves:
   visuals, animation/VFX/camera, side-view and portrait-party grammars;
 - renderer-side structural foundations cover preload, culling, batching,
   bounded transient reuse and frame-budget metrics;
-- non-Octopath generality is proven across solo, ATB-like, monster-collection
+- non-party-RPG generality is proven across solo, ATB-like, monster-collection
   and raid-scale shapes;
 - no project-specific gameplay subsystem was required.
 

@@ -902,7 +902,7 @@ def build_project_adapter(*, store, rules=None, project_path=None, project_root=
     path = (
         Path(project_path or configured)
         if (project_path or configured)
-        else repo / "reference_projects" / "diablo_multiplayer_demo" / "project.asteria.json"
+        else repo / "reference_projects" / "arpg_multiplayer_demo" / "project.asteria.json"
     )
     if not path.is_absolute():
         path = repo / path

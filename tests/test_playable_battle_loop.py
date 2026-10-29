@@ -321,7 +321,7 @@ def _overlaps(a, b):
 def test_canonical_hud_panels_do_not_overlap(resource_root, monkeypatch):
     runtime, layout, frame = _canonical_frame(resource_root, monkeypatch)
     try:
-        # Octopath staging: one HUD panel per hero down the right edge, enemies show overhead bars.
+        # Party RPG staging: a HUD panel per hero down the right edge, enemies show overhead bars.
         hud = [p for p in frame.panels if p.panel_id.startswith("hud:")]
         heroes = list(runtime.game.battle.parties["heroes"].ids())
         assert sorted(p.member_id for p in hud) == sorted(heroes)

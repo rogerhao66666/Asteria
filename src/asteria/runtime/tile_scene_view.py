@@ -10,7 +10,8 @@ crisp). Every entity with a
 ``SpriteRenderer2D`` is drawn on its feet, sorted by depth; entities with an ``Animator2D`` whose
 clip set has ``idle_*`` / ``walk_*`` clips for the four facings animate from their own movement
 and facing (a controller's facing when they have one), and play ``attack_<facing>`` while an
-action timeline runs on them.
+action timeline runs on them. A side-view character (a ``CharacterController2D`` in ``side`` mode)
+stands on the bottom of its collision box, where the floor holds it, not on its middle.
 
 The view also hands the session the map's collision (``collision_enabled`` layers, the map edge
 blocks) so controllers, AI and projectiles respect walls. Nothing here is tied to one game or art
@@ -25,7 +26,9 @@ from asteria.core import Transform
 from asteria.graphics.scaling import resized
 from asteria.graphics.tilemap import TileChunk, TileLayer, TileMap
 
+from .action_play import walls_cover_characters
 from .camera import Camera2D
+from .character_control import CharacterController2DComponent, feet_y
 from .components2d import (
     Animator2DComponent,
     Camera2DComponent,
@@ -59,6 +62,17 @@ class MapBlocking:
         if not (x0 <= x < x1 and y0 <= y < y1):
             return True
         tx, ty = floor(x / self._tile[0]), floor(y / self._tile[1])
+        cx, cy = tx // self._chunk[0], ty // self._chunk[1]
+        index = (ty - cy * self._chunk[1]) * self._chunk[0] + (tx - cx * self._chunk[0])
+        for layer in self._layers:  # inline, not solid_tile(): every controller calls this
+            chunk = layer.chunks.get((cx, cy))
+            if chunk is not None and chunk.tiles[index] != -1:
+                return True
+        return False
+
+    def solid_tile(self, tx, ty):
+        """Whether the tile at column ``tx``, row ``ty`` is on a collision layer (the map's edge
+        is not a tile: outside it, ``False``)."""
         cx, cy = tx // self._chunk[0], ty // self._chunk[1]
         index = (ty - cy * self._chunk[1]) * self._chunk[0] + (tx - cx * self._chunk[0])
         for layer in self._layers:
@@ -692,6 +706,8 @@ class TileSceneView:
         else:
             self.pg.transform.scale(canvas, size, scaled)
         screen.blit(scaled, (round(sx), round(sy)))
+        if group == "below":  # what walls are drawn again from, over the characters
+            self._below_shown = (scaled, (round(sx), round(sy)), x0, y0, size[0] / w, size[1] / h)
 
     def draw(self, screen, flash=()):
         """Layers below characters, the sprites (depth-sorted, on their feet), layers above."""
@@ -699,6 +715,7 @@ class TileSceneView:
         color = getattr(settings, "background_color", "") or "#0c0e14"
         backdrop = tuple(int(color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
         screen.fill(backdrop)
+        self._below_shown = None
         behind = self._parallax(screen)
         self._layer(screen, "below", None if behind else backdrop)
         sprites = []
@@ -732,6 +749,7 @@ class TileSceneView:
         player = getattr(self.session, "player", None)
         covers = getattr(self, "_covers", None)
         clip = screen.get_clip()
+        drawn_rects = []
         for _, _, entity, sprite, frame, rig_draws in sprites:
             if sprite is None:
                 for draw in rig_draws:
@@ -745,7 +763,7 @@ class TileSceneView:
             except Exception:  # noqa: BLE001 - a missing frame is skipped, the scene keeps drawing
                 continue
             t = entity.get(Transform)
-            sx, sy = self.camera.world_to_screen(t.x, t.y)
+            sx, sy = self.camera.world_to_screen(t.x, feet_y(entity, t.y))
             lift = getattr(self.session, "player_lift", 0.0) if entity is player else 0.0
             if lift > 0:  # a hop: the shadow stays on the ground, the character rises
                 if self.jump_shadow is not None:
@@ -767,10 +785,38 @@ class TileSceneView:
                     image = image.copy()
                     image.fill((120, 120, 120, 0), special_flags=self.pg.BLEND_RGB_ADD)
                 screen.blit(image, at)
+                if entity.has(CharacterController2DComponent):
+                    drawn_rects.append(self.pg.Rect(at[0], at[1], width, height))
             if covers:
                 self._draw_cover(screen, entity, t)
+        if drawn_rects and walls_cover_characters(settings):
+            self._cover_with_walls(screen, drawn_rects)
         self._layer(screen, "above")
         self._draw_darkness(screen)
+
+    def _cover_with_walls(self, screen, rects):
+        """Solid map tiles drawn again over the parts of these characters' pictures that reach
+        into them: a sword swung at a wall stops at its face, feet stay on the floor's top."""
+        shown = getattr(self, "_below_shown", None)
+        blocking = getattr(self, "blocking", None)
+        if shown is None or blocking is None:
+            return
+        picture, (ox, oy), x0, y0, kx, ky = shown
+        tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+        done = set()
+        for rect in rects:
+            # the tiles under the picture: its screen box back in the layer's world units
+            left, top = (rect.left - ox) / kx + x0, (rect.top - oy) / ky + y0
+            right, bottom = (rect.right - ox) / kx + x0, (rect.bottom - oy) / ky + y0
+            for ty in range(floor(top / th), floor(bottom / th) + 1):
+                for tx in range(floor(left / tw), floor(right / tw) + 1):
+                    if (tx, ty) in done or not blocking.solid_tile(tx, ty):
+                        continue
+                    done.add((tx, ty))
+                    cx, cy = tx * tw - x0, ty * th - y0  # the tile in the layer picture
+                    x, y = floor(cx * kx), floor(cy * ky)
+                    area = self.pg.Rect(x, y, floor((cx + tw) * kx) - x, floor((cy + th) * ky) - y)
+                    screen.blit(picture, (ox + x, oy + y), area)
 
     def _draw_darkness(self, screen):
         """SET_LIGHT: black but for the lit circle round the player."""

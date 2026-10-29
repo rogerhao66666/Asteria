@@ -177,7 +177,7 @@ def test_each_build_has_a_unique_that_pushes_its_stat():
 
 def test_every_gear_icon_is_a_real_picture():
     project = _project()
-    root = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
     for item_id, equipment in project.rpg_database.equipment.items():
         uri = project.assets.resolve(equipment.icon_id).source.uri
         assert (root / uri).is_file(), item_id
@@ -371,7 +371,7 @@ def test_every_skill_animation_exists_for_every_facing_of_every_class_look():
     from asteria.runtime.actor_link import ClassAppearanceComponent
 
     project = _project()
-    root = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
     scene = _scene_with_player(project)
     looks = scene.get(ClassAppearanceComponent).parsed()
     assert set(looks) == {"warrior", "ranger", "mage"}

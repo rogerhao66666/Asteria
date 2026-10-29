@@ -11,7 +11,7 @@ from asteria.project import Project
 from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.game_session import GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 @pytest.fixture

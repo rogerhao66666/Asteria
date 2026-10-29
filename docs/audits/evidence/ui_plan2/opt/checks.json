@@ -4,7 +4,7 @@
   "message_windows": "6 compared; differ: none",
   "against": "HEAD ed2bc517 (git archive), fixed clock"
  },
- "battle_frame_ms_octopath_cocoa_two_runs": {
+ "battle_frame_ms_party_rpg_cocoa_two_runs": {
   "HEAD": [
    {
     "no_layout_p95": 1.78,

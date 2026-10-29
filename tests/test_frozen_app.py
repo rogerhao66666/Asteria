@@ -13,7 +13,7 @@ import pytest
 from asteria import frozen
 from asteria.project_tools import build_player_game, package_game
 
-REF = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+REF = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 def test_python_style_command_lines_run_modules_and_code(tmp_path, monkeypatch):

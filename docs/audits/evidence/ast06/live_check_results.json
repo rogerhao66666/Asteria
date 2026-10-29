@@ -1,8 +1,8 @@
 {
   "frozen": true,
-  "executable": "/Users/roger/Documents/Vscode/Asteria/dist/Asteria.app/Contents/MacOS/Asteria",
-  "engine": "/Users/roger/Documents/Vscode/Asteria/dist/Asteria.app/Contents/Resources/engine",
-  "player": "/Users/roger/Documents/Vscode/Asteria/dist/Asteria.app/Contents/Resources/player/AsteriaPlayer.app",
+  "executable": "~/Documents/Vscode/Asteria/dist/Asteria.app/Contents/MacOS/Asteria",
+  "engine": "~/Documents/Vscode/Asteria/dist/Asteria.app/Contents/Resources/engine",
+  "player": "~/Documents/Vscode/Asteria/dist/Asteria.app/Contents/Resources/player/AsteriaPlayer.app",
   "full_verification_template": true,
   "editor_screenshot": true,
   "playtest_started": true,

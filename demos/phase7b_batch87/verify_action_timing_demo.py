@@ -8,7 +8,11 @@ from asteria.rpg import (
 )
 
 root = Path(__file__).resolve().parents[2]
-project = json.loads((root / "AsteriaPhase7B_ActionTimingDemo.asteria.json").read_text())
+project = json.loads(
+    (
+        root / "reference_projects" / "legacy" / "AsteriaPhase7B_ActionTimingDemo.asteria.json"
+    ).read_text()
+)
 db = RpgDatabase.from_data(project["rpg_database"])
 meteor = db.action_timings["meteor"]
 assert meteor.windup == 5.0

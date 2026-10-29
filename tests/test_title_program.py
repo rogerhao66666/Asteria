@@ -21,7 +21,7 @@ def _project():
     from asteria.editor import EditorDocument
     from asteria.project import Project
 
-    path = ROOT / "diablo_demo" / "project.asteria.json"
+    path = ROOT / "arpg_demo" / "project.asteria.json"
     return Project.load_json(path, EditorDocument().component_registry)
 
 
@@ -64,7 +64,7 @@ def test_the_title_program_runs_then_starts_a_new_game(monkeypatch, tmp_path):
         ),
     )
     rt = PlayableTestRuntime(
-        project, project.game_start.instantiate(project), ROOT / "diablo_demo", width=960,
+        project, project.game_start.instantiate(project), ROOT / "arpg_demo", width=960,
         height=540,
     )  # fmt: skip
     rt.open()
@@ -96,7 +96,7 @@ def test_a_title_menu_screen_comes_back_to_the_title(monkeypatch):
 
     project = _project()
     rt = PlayableTestRuntime(
-        project, project.game_start.instantiate(project), ROOT / "diablo_demo", width=960,
+        project, project.game_start.instantiate(project), ROOT / "arpg_demo", width=960,
         height=540,
     )  # fmt: skip
     rt.open()
@@ -124,7 +124,7 @@ def test_a_picture_of_words_fills_in_its_variables(monkeypatch):
 
     project = _project()
     rt = PlayableTestRuntime(
-        project, project.game_start.instantiate(project), ROOT / "diablo_demo", width=960,
+        project, project.game_start.instantiate(project), ROOT / "arpg_demo", width=960,
         height=540,
     )  # fmt: skip
     rt.open()

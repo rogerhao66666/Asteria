@@ -91,7 +91,7 @@ def test_apply_writes_png_files_and_only_touches_icon_lines(tmp_path):
     assert again == {"abilities": 0, "states": 0, "pets": 0}  # existing icons are kept
 
 
-@pytest.mark.parametrize("name", ["octopath_demo", "diablo_demo"])
+@pytest.mark.parametrize("name", ["party_rpg_demo", "arpg_demo"])
 def test_the_reference_projects_have_working_original_icons(name):
     from asteria.editor import EditorDocument
     from asteria.project import Project
@@ -107,6 +107,6 @@ def test_the_reference_projects_have_working_original_icons(name):
     for icon_id in icons:
         assert (folder / icon_id).is_file(), icon_id
         assert icon_source(project, icon_id) is not None
-    if name == "octopath_demo":
+    if name == "party_rpg_demo":
         for species in project.rpg_database.pet_species.values():
             assert species.icon_id and (folder / species.icon_id).is_file()

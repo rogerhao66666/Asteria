@@ -121,7 +121,7 @@ pixel-art assets. These are replaceable development assets, not final commercial
 Damage, targeting legality, costs, scheduling, status meaning, weakness/break
 rules and outcomes remain with frozen Battle Core. Batch 95 adds visible combatant
 animation/render-command integration only. Damage numbers, VFX/audio state, camera hit feedback, target indicators, and HP/MP/arbitrary-gauge/status HUD view-state are now covered through Batch 112. Final renderer/UI adapters, turn/timeline UI, and result/reward presentation remain future Battle Presentation work. See [architecture](ARCHITECTURE.md),
-[handoff](../PROJECT_HANDOFF.md), and [next-phase plan](NEXT_PHASE_PLAN.md).
+[handoff](history/PROJECT_HANDOFF.md), and [next-phase plan](NEXT_PHASE_PLAN.md).
 
 
 ## Batch 96 verified source contract

@@ -142,12 +142,12 @@ def test_stable_ids_make_a_build_repeatable():
     "folder",
     [
         "reference_projects/full_verification_demo",
-        "reference_projects/octopath_demo",
+        "reference_projects/party_rpg_demo",
         "reference_projects/complex_reference_rpg",
         "src/asteria/templates/party_rpg",
     ],
 )
-def test_every_turn_based_demo_uses_the_octopath_battle_ui(folder):
+def test_every_turn_based_demo_uses_the_break_battle_ui(folder):
     import json
 
     path = Path(__file__).resolve().parents[1] / folder / "project.asteria.json"

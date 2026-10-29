@@ -1,4 +1,4 @@
-"""Reuse the tile-painted Diablo field without its action RPG systems."""
+"""Reuse the tile-painted ARPG field without its action RPG systems."""
 
 from __future__ import annotations
 

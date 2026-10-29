@@ -11,7 +11,7 @@ from asteria.editor.game_start_authoring import (
 )
 from asteria.project import Project
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 @pytest.fixture

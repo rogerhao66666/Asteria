@@ -1,4 +1,5 @@
-"""Source-level layering rules from CODEX_HANDOFF.md and ASTERIA_SPEC.md §44."""
+"""Source-level layering rules from docs/history/CODEX_HANDOFF.md and
+docs/spec/ASTERIA_SPEC.md §44."""
 
 import re
 from pathlib import Path

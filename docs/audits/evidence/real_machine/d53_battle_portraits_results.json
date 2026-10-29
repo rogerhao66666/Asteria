@@ -185,8 +185,8 @@
    "pass": true
   },
   {
-   "battle": "octopath_side_list",
-   "demo": "octopath",
+   "battle": "break_battle_side_list",
+   "demo": "party_rpg",
    "encounter": "boss_room",
    "layout": {
     "party_hud": "side_list",
@@ -195,7 +195,7 @@
    },
    "video_driver": "cocoa",
    "frames": 224,
-   "screenshot": "d53_octopath_side_list.png",
+   "screenshot": "d53_break_battle_side_list.png",
    "members_with_portraits": [
     "hero_01",
     "hero_02",
@@ -276,8 +276,8 @@
    "pass": true
   },
   {
-   "battle": "octopath_column",
-   "demo": "octopath",
+   "battle": "break_battle_column",
+   "demo": "party_rpg",
    "encounter": "boss_room",
    "layout": {
     "party_hud": "column",
@@ -286,7 +286,7 @@
    },
    "video_driver": "cocoa",
    "frames": 225,
-   "screenshot": "d53_octopath_column.png",
+   "screenshot": "d53_break_battle_column.png",
    "members_with_portraits": [
     "hero_01",
     "hero_02",
@@ -367,8 +367,8 @@
    "pass": true
   },
   {
-   "battle": "octopath_bottom_row_above",
-   "demo": "octopath",
+   "battle": "break_battle_bottom_row_above",
+   "demo": "party_rpg",
    "encounter": "boss_room",
    "layout": {
     "party_hud": "bottom_row",
@@ -377,7 +377,7 @@
    },
    "video_driver": "cocoa",
    "frames": 223,
-   "screenshot": "d53_octopath_bottom_row_above.png",
+   "screenshot": "d53_break_battle_bottom_row_above.png",
    "members_with_portraits": [
     "hero_01",
     "hero_02",

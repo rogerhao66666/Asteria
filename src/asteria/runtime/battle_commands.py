@@ -6,7 +6,7 @@ here, so
 tests drive it directly. It produces ``BattleActionEntry`` rows for the canonical battle screen's
 menu:
 
-* **root** (``style="root"``, the Octopath-style menu) - a short vertical list: *Attack* (the
+* **root** (``style="root"``, the party-RPG menu) - a short vertical list: *Attack* (the
   weapons' attacks), *Skills*, *Items*; Enter opens one, Esc comes back to it.
 * **command** - categories *Skills* and *Items* (Tab switches); Up / Down choose; Left / Right set
   the boost

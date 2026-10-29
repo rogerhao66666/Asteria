@@ -240,7 +240,7 @@ def test_commands_show_only_on_a_heroes_turn_and_never_cover_the_party(battle):
     runtime, adapter = battle
     layout, frame = _frame(adapter)
     menu = next(p for p in frame.panels if p.panel_id == "action_menu")  # idle: hero waiting
-    assert menu.role == "interaction:float"  # see-through, Octopath style
+    assert menu.role == "interaction:float"  # see-through, break-battle style
     actor = adapter.screen.scene.visual_for(runtime._battle_actor())
     if layout.action_menu_placement == "actor_bottom_right":  # touching whoever acts
         assert actor.anchor.x < menu.x <= actor.anchor.x + 40
@@ -397,7 +397,7 @@ def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monke
 
 
 def test_hidden_zones_draw_no_hud_for_their_members(battle):
-    """Like Octopath: only the party has a panel; enemies show neither a bar nor a name."""
+    """Party-RPG style: only the party has a panel; enemies show neither a bar nor a name."""
     import dataclasses
 
     runtime, adapter = battle

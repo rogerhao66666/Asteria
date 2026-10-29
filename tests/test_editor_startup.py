@@ -234,11 +234,11 @@ def test_a_picture_field_follows_the_scene_camera_as_authored():
 def test_every_party_demo_scene_has_a_camera_on_the_hero():
     root = Path(__file__).resolve().parents[1]
     for folder in (
-        "reference_projects/octopath_demo",
+        "reference_projects/party_rpg_demo",
         "reference_projects/complex_reference_rpg",
         "src/asteria/templates/party_rpg",
         "reference_projects/full_verification_demo",
-        "reference_projects/diablo_demo",
+        "reference_projects/arpg_demo",
     ):
         data = json.loads((root / folder / "project.asteria.json").read_text())
         player = data["game_start"]["player_entity_id"]

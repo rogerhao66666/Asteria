@@ -2,7 +2,7 @@
 
 import dataclasses
 
-from test_octopath_style_battle import _battle, _project
+from test_break_battle import _battle, _project
 
 from asteria.events.world_commands import WorldCommand
 

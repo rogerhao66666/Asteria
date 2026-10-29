@@ -10,7 +10,7 @@ import pytest
 def test_hits_costs_and_states_are_added_in_the_record_tree_and_applied():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
-    from test_octopath_style_battle import _project
+    from test_break_battle import _project
 
     from asteria.editor import EditorDocument
     from asteria.editor.authoring_hub_widget import AdapterFamilyWidget

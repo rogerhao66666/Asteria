@@ -105,7 +105,10 @@ class SkeletonSceneRuntime:
             return ()
         time = self._times.get(entity.id, 0.0)
         pose = rig.pose(clip_name, time)
-        origin = world_position(entity)
+        from .character_control import feet_y
+
+        x, y = world_position(entity)
+        origin = (x, feet_y(entity, y))  # a side-view character stands on its box's bottom
         rows = rig.draws(pose, clip_name, time, origin=origin, scale=component.scale)
         try:
             return tuple(

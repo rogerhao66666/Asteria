@@ -1,6 +1,6 @@
 # Multiplayer ECS closeout
 
-The user requests a loadable, separately copied Diablo project with the original gameplay
+The user requests a loadable, separately copied ARPG project with the original gameplay
 running authoritatively on the server. All supplied multiplayer rules remain editable examples.
 Preserve the offline project's data/assets, original editor appearance, and non-network behavior.
 

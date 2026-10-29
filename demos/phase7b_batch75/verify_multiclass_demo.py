@@ -17,7 +17,9 @@ from asteria.rpg import RpgRuntimeState
 
 root = Path(__file__).resolve().parents[2]
 document = EditorDocument()
-load_document(document, root / "AsteriaPhase7B_MultiClassDemo.asteria.json")
+load_document(
+    document, root / "reference_projects" / "legacy" / "AsteriaPhase7B_MultiClassDemo.asteria.json"
+)
 project = document.project
 save_data = json.loads(
     (root / "reference_data" / "phase7b_batch75_multiclass_demo.save.json").read_text()

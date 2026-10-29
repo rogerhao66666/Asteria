@@ -1,14 +1,14 @@
-# Octopath-style Battle Demo
+# Party RPG Battle Demo
 
-A playable Asteria project whose battle works like Octopath Traveler — built only from project data on top of
-the Complex Reference RPG's CC0 art (see `playable_assets/CREDITS.md`). The engine has no Octopath code; every
+A playable Asteria project whose battle uses breaks and boosts like a classic party RPG — built only from project data,
+with Foozle's CC0 Lucifer art (see `playable_assets/CREDITS.md`). File ▸ New Project… ▸ Party RPG copies it. The engine has no game-specific code; every
 rule below is an authored record you can open and change in the editor.
 
 ```bash
-.venv/bin/python -m asteria.runtime.preview reference_projects/octopath_demo/project.asteria.json
+.venv/bin/python -m asteria.runtime.preview reference_projects/party_rpg_demo/project.asteria.json
 ```
 
-Rebuild it after changing the script: `python reference_projects/octopath_demo/build_project.py`.
+Rebuild it after changing the script: `python reference_projects/party_rpg_demo/build_project.py`.
 
 ## The party
 

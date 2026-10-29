@@ -2,7 +2,7 @@
 stance), and the reaction shows up as an action in the battle log."""
 
 import pytest
-from test_octopath_style_battle import DAMAGE, _battle, _project
+from test_break_battle import DAMAGE, _battle, _project
 
 from asteria.rpg.reactions import ReactionDefinition
 

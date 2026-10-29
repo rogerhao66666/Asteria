@@ -9,7 +9,7 @@ import pytest
 
 from asteria.core import Transform
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
 
 
 def _project():
@@ -318,6 +318,221 @@ def test_the_side_view_mine_lets_the_player_stand_jump_and_climb(demo):
     ladder = _entity(mine, "Ladder")
     lx, ly = _xy(ladder)
     assert ly < ground_y  # the ladder leads up to the high walkway
+
+
+def _assert_feet_on_the_ground(demo):
+    """The player is grounded and the lowest row of its drawn figure is the bottom of its box
+    (the top of what holds it up), within one world pixel."""
+    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.components2d import SpriteRenderer2D
+
+    game = demo.game
+    controller = game.player.get(CharacterController2DComponent)
+    assert controller.grounded
+    x, y = _xy(game.player)
+    sx, floor = demo._field_screen_xy(x, y + controller.half_height)
+    sx, floor = round(sx), round(floor)
+    for entity, sprite in game.scene.query(SpriteRenderer2D):
+        if entity is not game.player and entity.has(CharacterController2DComponent):
+            sprite.visible = False  # enemies passing by are not the player's pixels
+    shots = []
+    for visible in (True, False):
+        game.player.get(SpriteRenderer2D).visible = visible
+        demo._frame([], 0.0)  # no time passes: the camera and the figure hold still
+        shots.append(demo.screen.copy())
+    zoom = demo.tile_view.camera.zoom
+    rows = [
+        row
+        for row in range(max(0, floor - 60), min(demo.height, floor + 30))
+        if any(
+            shots[0].get_at((col, row)) != shots[1].get_at((col, row))
+            for col in range(sx - 12, sx + 13)
+        )
+    ]
+    assert rows, "the player is drawn"
+    assert abs(rows[-1] + 1 - floor) < zoom  # the feet on the top, within one world pixel
+
+
+@pytest.mark.parametrize(
+    "tile_x, facing",
+    [
+        (7.5, "right"),  # the cave floor
+        (7.5, "left"),
+        (10.0, "left"),  # a one-way ledge
+        (13.7, "right"),  # beside a step up
+        (36.5, "right"),  # the wooden bridge
+        (71.0, "left"),  # the high walkway
+        (1.4, "right"),  # against the cave wall
+    ],
+)
+def test_side_view_characters_are_drawn_standing_on_the_floor(demo, tile_x, facing):
+    """The player stands on the bottom of its collision box (its place is the box's middle),
+    on whatever holds it up: the lowest row of its drawn figure is the top of the floor, ledge
+    or bridge, neither half a box above it nor sunk in (each facing has its own feet)."""
+    game = demo.game
+    mine = _scene(game.project, "Rustdeep")
+    game.transfer_player(mine.id, tile_x * 18, 2 * 18, facing=facing)  # dropped onto it
+    _frames(demo, 120)
+    _assert_feet_on_the_ground(demo)
+
+
+def _hold(demo, keys, frames):
+    pg = demo.pg
+    for key in keys:
+        pg.event.post(pg.event.Event(pg.KEYDOWN, key=key, mod=0, unicode="", scancode=0))
+    _frames(demo, frames, pg.event.get())
+    for key in keys:
+        pg.event.post(pg.event.Event(pg.KEYUP, key=key, mod=0, unicode="", scancode=0))
+    _frames(demo, 1, pg.event.get())
+
+
+@pytest.mark.parametrize("move", ["jump", "walk off a ledge", "jump up a step"])
+def test_side_view_feet_land_back_on_the_ground_after_moving(demo, move):
+    """After a jump on the spot, a walk off a one-way ledge's end down to the floor, or a jump
+    up a step, the player stands on what caught it with its feet on its top."""
+    from asteria.runtime.character_control import CharacterController2DComponent
+
+    game, pg = demo.game, demo.pg
+    mine = _scene(game.project, "Rustdeep")
+    # the floor; the first one-way ledge (tiles 8 - 12); below the first step up (tile 14)
+    tile_x = {"jump": 7.5, "walk off a ledge": 11.0, "jump up a step": 14.6}[move]
+    game.transfer_player(mine.id, tile_x * 18, 2 * 18, facing="right")
+    _frames(demo, 90)
+    controller = game.player.get(CharacterController2DComponent)
+    y0 = game.player.get(Transform).y
+    if move == "jump":
+        _hold(demo, (pg.K_SPACE,), 2)
+    elif move == "walk off a ledge":
+        _hold(demo, (pg.K_d,), 40)
+    else:
+        _hold(demo, (pg.K_a, pg.K_SPACE), 30)
+    _frames(demo, 90)
+    y1 = game.player.get(Transform).y
+    if move == "walk off a ledge":
+        assert y1 > y0 + 18  # it came down
+    elif move == "jump up a step":
+        assert y1 < y0 - 9  # it went up onto the step
+    assert controller.grounded
+    _assert_feet_on_the_ground(demo)
+
+
+def _pixels_in_walls(demo, entity):
+    """How many of ``entity``'s drawn pixels show over solid map tiles (no time passes)."""
+    from asteria.runtime.components2d import SpriteRenderer2D
+
+    sprite = entity.get(SpriteRenderer2D)
+    shots = []
+    for visible in (True, False):
+        sprite.visible = visible
+        demo._frame([], 0.0)
+        shots.append(demo.screen.copy())
+    sprite.visible = True
+    view = demo.tile_view
+    cam = view.camera
+    sx, sy = demo._field_screen_xy(*_xy(entity))
+    count = 0
+    for row in range(max(0, int(sy) - 90), min(demo.height, int(sy) + 60), 2):
+        for col in range(max(0, int(sx) - 90), min(demo.width, int(sx) + 90), 2):
+            if shots[0].get_at((col, row)) != shots[1].get_at((col, row)):
+                wx, wy = cam.x + (col + 0.5) / cam.zoom, cam.y + (row + 0.5) / cam.zoom
+                count += view.blocking.collides_world_point(wx, wy)
+    return count
+
+
+@pytest.mark.parametrize("mode, covered", [("auto", True), ("always", True), ("never", False)])
+def test_a_sword_swung_at_a_wall_stops_at_its_face(demo, mode, covered):
+    """Side view: walls are drawn over the parts of a character reaching into them - the swing
+    against the cave wall shows no pixel inside the wall (``never`` draws them, as before)."""
+    from asteria.runtime.action_play import combat_scene
+
+    game, pg = demo.game, demo.pg
+    mine = _scene(game.project, "Rustdeep")
+    game.transfer_player(mine.id, 2.0 * 18, 2 * 18, facing="left")
+    _frames(demo, 90)
+    combat_scene(game.scene).walls_cover_characters = mode
+    pg.event.post(pg.event.Event(pg.KEYDOWN, key=pg.K_a, mod=0, unicode="", scancode=0))
+    _frames(demo, 20, pg.event.get())  # pressed against the wall
+    pg.event.post(pg.event.Event(pg.KEYDOWN, key=pg.K_j, mod=0, unicode="", scancode=0))
+    _frames(demo, 1, pg.event.get())
+    worst = 0
+    for _ in range(10):
+        _frames(demo, 2)
+        worst = max(worst, _pixels_in_walls(demo, game.player))
+    assert (worst == 0) is covered
+
+
+def test_walls_cover_characters_in_side_view_unless_set_otherwise():
+    from asteria.runtime.action_play import CombatSceneComponent, walls_cover_characters
+
+    settings = CombatSceneComponent()
+    assert settings.walls_cover_characters == "auto"
+    assert not walls_cover_characters(settings)  # top-down: characters stand in front of walls
+    settings.view = "side"
+    assert walls_cover_characters(settings)
+    settings.walls_cover_characters = "never"
+    assert not walls_cover_characters(settings)
+    settings.view, settings.walls_cover_characters = "topdown", "always"
+    assert walls_cover_characters(settings)
+    assert not walls_cover_characters(None)
+
+
+def test_no_character_starts_or_ends_up_inside_a_wall(demo):
+    """Every character's box is clear of the map's walls where it is placed and after the
+    scene has run a while (one placed into the floor could not move at all)."""
+    from asteria.runtime.character_control import CharacterController2DComponent
+
+    game = demo.game
+    start = {  # an open spot in each scene for the player
+        "Hollowbrook": _xy(game.player),
+        "Greenvale Fields": (14 * 16, 23.5 * 16),
+        "Rustdeep Mine": (4.5 * 18, 10 * 18),
+    }
+    for scene in game.project.scenes():
+        game.transfer_player(scene.id, *start[scene.name], facing="down")
+        stuck = []
+        for when in ("placed", "after a while"):
+            _frames(demo, 1 if when == "placed" else 240)
+            blocking = demo.tile_view.blocking
+            for entity, box in game.scene.query(CharacterController2DComponent):
+                if entity is game.player and when == "placed":
+                    continue  # put down by the transfer, not by the author
+                x, y = _xy(entity)
+                hw, hh = box.half_width - 0.5, box.half_height - 0.5
+                corners = [(x + dx * hw, y + dy * hh) for dx in (-1, 1) for dy in (-1, 1)]
+                if any(blocking.collides_world_point(cx, cy) for cx, cy in corners):
+                    stuck.append((scene.name, entity.name, when))
+        assert not stuck
+
+
+def test_side_view_monsters_stand_on_the_ground_unless_they_fly(demo):
+    """In the mine every monster with gravity is on the ground once it has settled; only the
+    ones made to fly (no gravity) are in the air, and those show no shadow under them."""
+    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.components2d import SpriteRenderer2D
+
+    game = demo.game
+    mine = _scene(game.project, "Rustdeep")
+    game.transfer_player(mine.id, 4.5 * 18, 10 * 18, facing="right")  # far from them all
+    _frames(demo, 60)
+    fliers, floating = [], []
+    for entity, controller in game.scene.query(CharacterController2DComponent):
+        if entity is game.player:
+            continue
+        if controller.gravity <= 0:
+            fliers.append(entity.name)
+        elif not controller.grounded:
+            floating.append(entity.name)
+    assert not floating
+    assert fliers and all(name.startswith("Cave Bat") for name in fliers)
+    bat = _entity(game.scene, "Cave Bat").get(SpriteRenderer2D)
+    sheet = demo.tile_view.resources.get(bat.sprite_sheet_asset_id, "sprite_sheet")
+    picture = demo.tile_view._texture(sheet.texture.asset_id)
+    see_through_dark = 0
+    for y in range(0, picture.get_height(), 2):
+        for x in range(0, picture.get_width(), 2):
+            r, g, b, a = picture.get_at((x, y))
+            see_through_dark += 0 < a < 255 and r + g + b < 60
+    assert see_through_dark == 0  # no drawn ground shadow on a flier
 
 
 def test_particle_effects_and_text_use_the_tile_scenes_camera_and_are_cached(demo):

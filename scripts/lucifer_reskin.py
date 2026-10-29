@@ -177,7 +177,7 @@ class Reskin:
                 key,
                 dataclasses.replace(
                     layout,
-                    party_hud="side_list",  # Octopath: a panel per hero down the right edge
+                    party_hud="side_list",  # Party RPG: a panel per hero down the right edge
                     action_menu_placement="actor_bottom_right",  # right by who acts
                     menu_over_stage=True,  # the command menu stands see-through beside the actor
                     overhead_zones=("left",),  # foes carry their name over the head

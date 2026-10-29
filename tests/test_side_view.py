@@ -184,3 +184,15 @@ def test_old_controllers_and_colliders_load_with_the_earlier_behaviour():
         {"type": "asteria.Collider2D", "version": 2, "fields": {"one_way": True}}, registry
     )
     assert collider.one_way and not collider.ladder and collider.shape == "box"
+
+
+def test_a_side_view_character_has_its_feet_at_the_bottom_of_its_box():
+    from asteria.runtime.character_control import feet_y
+
+    side = Entity("Side")
+    side.add_component(_set(CharacterController2DComponent(), mode="side", half_height=7.0))
+    top = Entity("Top")
+    top.add_component(_set(CharacterController2DComponent(), mode="topdown", half_height=7.0))
+    assert feet_y(side, 100.0) == 107.0  # the box's bottom rests on the floor
+    assert feet_y(top, 100.0) == 100.0  # top-down: the place is the feet
+    assert feet_y(Entity("Prop"), 100.0) == 100.0

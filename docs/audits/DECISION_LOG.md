@@ -185,7 +185,7 @@
 **決策：** 使用者決定 `assets/` 底下的內容全部不要了，並授權「先備份後處理」。這覆蓋 D3／D4 原本「等待批准」的狀態。
 
 **已執行：**
-- 備份：`/Users/roger/Documents/Vscode/Asteria_backup_2026-10-09_generated_art.zip`（repo 外，30 MB，180 個項目，`unzip -t` 通過）。內容包括整個 `assets/`（含從 git 取出的 `ready_user_hero`）、下列被移除的程式／腳本／測試／設計文件，以及修改前的 `shell.py`、`assets/__init__.py`、`test_editor_mv_character_creator.py`
+- 備份：`~/Documents/Vscode/Asteria_backup_2026-10-09_generated_art.zip`（repo 外，30 MB，180 個項目，`unzip -t` 通過）。內容包括整個 `assets/`（含從 git 取出的 `ready_user_hero`）、下列被移除的程式／腳本／測試／設計文件，以及修改前的 `shell.py`、`assets/__init__.py`、`test_editor_mv_character_creator.py`
 - 刪除：`assets/`（目錄已不存在）；`assets/starter_character.py`、`starter_character_packs.py`、`starter_sprite.py`、`character_content_pack.py`；`editor/ready_character_library_widget.py`；`scripts/build_starter_template_art.py`、`rebuild_asteria_boss_aura.py`、`rebuild_starter_side_views.py`；測試 `test_asteria_boss_pack.py`、`test_character_content_packs.py`、`test_starter_character_art.py`、`test_starter_sprite.py`、`test_starter_character_native_pipeline.py`；starter art／boss sprites／content packs 的 6 份設計與計畫文件
 - 移除相依：Editor 的「Ready Characters」分頁；`assets/__init__.py` 的 3 個 import；`shell.py` 的 content-pack `instantiate` 分支；`test_editor_mv_character_creator.py` 的 Ready Characters 測試與斷言
 - Commit：只 commit 了 `ready_user_hero` 的刪除（`773d072`，branch `cleanup/remove-generated-art`，未 push）。其他變更跟你原本未提交的工作交織在一起，維持未提交
@@ -420,7 +420,7 @@
 | Integration Evidence | 角色 sprite 動畫（idle 實際換影格）；技能 motion sequence 依序：揮擊 → VFX → 命中（受擊姿勢、傷害數字、音效、camera shake 同一拍）；KO 姿勢等致命一擊後才出現（由 `BattleRuntime.is_active` 同步）；指令只在英雄等待輸入時出現且不遮擋隊伍；捕捉出現在指令選單；缺 visual profile 時明確 fallback。沒有新增任何戰鬥規則 |
 | Real-Machine Validation Evidence | 實機 Cocoa 視窗：animation_smoothness PASS（boss 動畫 88 格／10 s）、frame_pacing PASS（58.9 fps、jitter 1.2 ms、p99 18.0 ms），截圖 `evidence/real_machine/battle_window_0.png` |
 | 實機發現並修正 | (1) 舊 `_play_fx` 每個技能阻塞約 430 ms（第一次實機量測 43.7 fps、p99 441 ms → FAIL）；(2) canonical 下同一命中音效播兩次；(3) 勝利音樂在最後一擊音效前播放。三者都已修正並有回歸測試 |
-| 使用者 demo 回饋（同日） | 角色右、怪物左（預設）；角色與怪物站在地面、不擋背景；怪物 HP 顯示在頭上；指令只在輪到角色時顯示（八方旅人式）。以 `BattleUiLayoutProfile` 的 opt-in 欄位（`party_hud`、`overhead_zones`、`action_menu_placement`、`stage_top`）實作，預設值維持原行為；reference project 採用 |
+| 使用者 demo 回饋（同日） | 角色右、怪物左（預設）；角色與怪物站在地面、不擋背景；怪物 HP 顯示在頭上；指令只在輪到角色時顯示（隊伍 RPG 式）。以 `BattleUiLayoutProfile` 的 opt-in 欄位（`party_hud`、`overhead_zones`、`action_menu_placement`、`stage_top`）實作，預設值維持原行為；reference project 採用 |
 | Remaining Gaps | 可聽音訊、實體按鍵、手把、主觀流暢度需要人工（M1–M5）；hit-stop 未接進 canonical；時間軸列右端與最上方隊伍格在舊欄式版面仍會重疊（新版 bottom row 不受影響）；legacy 畫面的阻塞式特效仍存在（D14 #6 保留，不修改） |
 | Updated Traceability Matrix | BTL-04 C → **B**；VFX-01、CAM-01、ENG-12、ENG-18 補上 RM 證據，維持 **B** |
 
@@ -723,7 +723,7 @@ field 繪製分層角色與 attachment。`validation/jrpg_stress.py` 在參考�
 使用者決定：「我們的引擎不要有任何限制使用者的行為」。SPEC 沒寫死的規則都改成作者可選的資料，並且可以在編輯器裡設定：
 - **DOT：** 預設是固定傷害。在 Status Effects 填 Interaction Tags，就會經過互動規則套用倍率。D19 的待決事項 1 由此結案。
 - **逐回合加重的 DOT：** PeriodicEffect 的 `growth`、`growth_mode`（add／multiply）、`growth_cap`，例如 10、20、30……。Game Data 新增「Status Definitions」分類可以編輯。
-- **倍率規則：** 任意倍率、克制、屬性、武器類型都可以設定，弱點也可以是「劍」。攻擊在能力上標武器類型（`weapon.sword`），物品只標攜帶的裝備（`equip.sword`）。破盾倍率、Boost 的連擊（repeat）或增幅（power，`boost_mode`）、雙武器、副職業都可以只靠資料組出八方旅人式的系統。
+- **倍率規則：** 任意倍率、克制、屬性、武器類型都可以設定，弱點也可以是「劍」。攻擊在能力上標武器類型（`weapon.sword`），物品只標攜帶的裝備（`equip.sword`）。破盾倍率、Boost 的連擊（repeat）或增幅（power，`boost_mode`）、雙武器、副職業都可以只靠資料組出隊伍 RPG 式的系統。
 - **背包規則：** 堆疊上限、唯一物品、種類上限（關鍵物品可豁免）、滿了時的處理（fill／reject）。
 - **召喚與夥伴：** 召喚（敵方小兵、預備隊夥伴、事件 SUMMON）、捕捉後成長、收納。
 - **技能：** 冷卻回合，以及行動時序 `action_timing`（immediate／timeline，預設 immediate，參考專案不受影響）。
@@ -790,7 +790,7 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 1. ~~關閉低耗電模式後重跑 weather load~~：**使用者決定（2026-10-12）先不測。** 項目 25 仍記為 FAIL（低耗電模式；程式未回歸），等之後再重跑 `--only vfx`。
 2. ~~AST-07、VFX-01~~：已依使用者決定完成（D20-5）。
 
-### D20-6 — 八方旅人式戰鬥 demo（`6fb8d9c`、`524b8cd`）
+### D20-6 — 破防／加速戰鬥 demo（`6fb8d9c`、`524b8cd`）
 使用者問 demo 是否完成。檢查後的結論是：引擎能力大致都有，但缺幾項功能，也沒有可遊玩的專案。這次全部補齊，並做成可遊玩的 demo。
 
 **引擎（全部是選填資料，不設定就不寫入）：**
@@ -817,7 +817,7 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 
 **編輯器：** 資料樹右鍵可以「Add Entry／Remove Entry／Add Field」，hits、commands、狀態、BP 消耗等欄位都能在編輯器裡編輯。
 
-**Demo（`reference_projects/octopath_demo`）：**
+**Demo（`reference_projects/party_rpg_demo`）：**
 - 以參考專案的 CC0 素材建置。
 - 4 位旅人，各有主職和副職，各帶兩種武器；另有一隻寵物。
 - 3 個敵人，各有不同的護盾數和弱點。
@@ -920,7 +920,7 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 **決定（使用者）：**
 - 解除 ARPG 的延後（SCOPE_DECISIONS／Closure Policy）。原因是 D21-2 時功能 closure 和自動化驗證都已完成，只剩手動和實機項目。
 - 俯視和橫向兩種視角都支援，由作者在每個場景選擇。戰鬥核心只寫一次，兩種視角共用。
-- 形式：通用功能放進引擎，另外做一個 demo 專案 `reference_projects/diablo_demo`，專案裡有俯視野外和橫向地城兩種區域。
+- 形式：通用功能放進引擎，另外做一個 demo 專案 `reference_projects/arpg_demo`，專案裡有俯視野外和橫向地城兩種區域。
 - 第一階段做完整核心：判定、無敵幀、擊退、投射物、敵人 AI、受傷和死亡，加上壓力場景（300 隻敵人 + 500 顆投射物），先量測效能。
 - 先寫設計文件，核准後再實作。
 
@@ -930,10 +930,10 @@ autofix 原本沒有產品入口，已在 D20-4 接上編輯器。animated_text 
 
 **需要你決定：** 橫向素材的來源（建議下載 CC0 的 Kenney Pixel Platformer）；核准計畫後從 A1 開始。
 
-**核准（2026-10-13）：** 使用者核准計畫並同意下載 Kenney Pixel Platformer 1.2（CC0，kenney.nl，`kenney_pixel-platformer.zip`，260 KB，存到 git-ignored 的 `local_reference/free_assets/kenney_pixel-platformer/`，已下載，授權檔確認是 CC0）。Demo 改成暗黑破壞神式：打怪掉寶、職業、技能樹也一起做進引擎。計畫改成 A1–A11（新增 A6 掉寶、A7 職業和技能樹），見 [ARPG_DESIGN.md](ARPG_DESIGN.md)。
+**核准（2026-10-13）：** 使用者核准計畫並同意下載 Kenney Pixel Platformer 1.2（CC0，kenney.nl，`kenney_pixel-platformer.zip`，260 KB，存到 git-ignored 的 `local_reference/free_assets/kenney_pixel-platformer/`，已下載，授權檔確認是 CC0）。Demo 改成動作 RPG 式：打怪掉寶、職業、技能樹也一起做進引擎。計畫改成 A1–A11（新增 A6 掉寶、A7 職業和技能樹），見 [ARPG_DESIGN.md](ARPG_DESIGN.md)。
 
 **使用者追加（2026-10-13）：**
-- 系統一律做成通用的。暗黑式玩法只是 demo，引擎不能只支援暗黑；不限制作者的程式、想法、美術和玩法。已寫進 ARPG_DESIGN §3 原則 0。
+- 系統一律做成通用的。動作 RPG 玩法只是 demo，引擎不能只支援這一種玩法；不限制作者的程式、想法、美術和玩法。已寫進 ARPG_DESIGN §3 原則 0。
 - A1 也要做霸體和倒地。
 
 ### D22-A1 — 戰鬥核心
@@ -1262,7 +1262,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **實機測試時發現並修正的問題：**
 1. 參考專案的角色沒有 hp 資源，敵人打不痛玩家 → 攻擊預設扣目標的生命資源。
 2. 敵人的圓點大小沒有乘上場景的世界縮放 → 改用每個世界單位實際的像素數。
-3. 敵人每一下小攻擊都會打斷玩家的連擊 → playground 設定 `hitstun_rule = never`（暗黑式手感）和自動瞄準最近的敵人。兩者都是引擎原本就有的選項。
+3. 敵人每一下小攻擊都會打斷玩家的連擊 → playground 設定 `hitstun_rule = never`（動作 RPG 手感）和自動瞄準最近的敵人。兩者都是引擎原本就有的選項。
 4. 參考專案原本回合制的 Boss 精靈站在競技場裡擋住玩家 → playground 停用場景裡的回合制遭遇。
 
 **執行的測試：** 完整套件 **2132 passed**。
@@ -1271,7 +1271,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **還沒做：**
 - 橫向的玩家精靈目前沿用參考專案俯視角色的走路圖，比例偏大；A10 的 demo 會換成 Pixel Platformer 的橫向素材。
-- 開場選職業畫面、技能樹專用畫面：目前用建構選單（C）配點和換職業；暗黑式技能樹畫面放在 A10 的 demo。
+- 開場選職業畫面、技能樹專用畫面：目前用建構選單（C）配點和換職業；動作 RPG 技能樹畫面放在 A10 的 demo。
 - 鏡頭的 `camera_look_ahead` 欄位已經有了，但還沒接到 field camera。
 - 真實視窗約 55 fps，沒有到 60；瓶頸在既有的繪製（每幀縮放整張場景背景），留給 A11 量測。
 - 格子背包。
@@ -1327,9 +1327,9 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 完整套件 **2136 passed**，黃金基準沒有改變。
 - `demos/` 和 `reference_projects/` 原本就有其他規則的問題（例如 lambda 指派、import 位置），在這次之前就存在、以前也不在 lint 範圍內；這次沒有處理，數量從 115 個降到 47 個。
 
-### D22-A10 — ARPG demo 專案（暗黑式範例，系統全部通用）
+### D22-A10 — ARPG demo 專案（動作 RPG 範例，系統全部通用）
 
-**Demo 專案 `reference_projects/diablo_demo/`**（`build_project.py` 產生，可重跑；`art.py` 切素材、`maps.py` 用程式排地圖；README 說明每條規則在資料的哪裡）：
+**Demo 專案 `reference_projects/arpg_demo/`**（`build_project.py` 產生，可重跑；`art.py` 切素材、`maps.py` 用程式排地圖；README 說明每條規則在資料的哪裡）：
 - **城鎮 Hollowbrook**（俯視）：商人（收購怪物素材、賣藥水）、鐵匠（用素材合成藥水）、戰士／遊俠／法師三位導師（對話後用 `SET_CLASSES` 換職業）、長老（給藥水）、村民；往東的道路傳送到野外。
 - **野外 Greenvale Fields**（俯視）：史萊姆（近戰）、會射擊的眼怪、骷髏精英小隊（霸體、倒地、掉寶加成）、獨眼巨人 Boss（HP 一半以下改用霸體重擊、會丟石頭）。
 - **礦坑 Rustdeep Mine**（橫向，Kenney Pixel Platformer）：起伏地形、單向平台、木橋、梯子通往高處走道、爬行怪、蝙蝠（無重力）、無人機（遠程）、岩石魔像 Boss。
@@ -1382,7 +1382,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **執行的測試：** 完整套件 **2147 passed、1 skipped**。被略過的是 `test_record_operations_gui.py:76`，在視窗沒有鍵盤焦點時會略過（當時有 Cocoa 視窗開著），和 A10 無關。ruff E501 和全部規則都是 0 個問題。
 
 **還沒做：**
-- 背包仍是 A8 的清單畫面，不是暗黑式的格子背包；也還沒有裝備比較的提示框。
+- 背包仍是 A8 的清單畫面，不是動作 RPG 的格子背包；也還沒有裝備比較的提示框。
 - 玩家的外觀不會隨職業改變（ClassDefinition 沒有外觀欄位），三種職業共用同一張角色圖。
 - `camera_look_ahead` 還沒接到 tile 場景的鏡頭。
 - 礦坑的背景只有單色，沒有視差背景圖層。
@@ -1564,7 +1564,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 ### D23-8 — HUD 底部重做：圓球、快捷列、狀態列（使用者回報）
 
-**使用者回報：** 下方文字疊在一起；血量的圖示和數字沒在同一條水平線；Potion 的「x3」很醜；希望快捷鍵像暗黑破壞神、魔獸世界的鍵盤式快捷列；血量改成左紅右藍的圓球；增益、護盾、減益、異常狀態都要顯示。
+**使用者回報：** 下方文字疊在一起；血量的圖示和數字沒在同一條水平線；Potion 的「x3」很醜；希望快捷鍵像動作 RPG、魔獸世界的鍵盤式快捷列；血量改成左紅右藍的圓球；增益、護盾、減益、異常狀態都要顯示。
 
 **做法（`runtime/hud_bottom.py`，新；`action_play.draw_overlay` 改用它）：**
 - **圓球**：生命資源在左邊紅色圓球，第一個其他資源在右邊（名稱像魔力的用藍色，怒氣橘色，體力黃色），依比例填充（逐列畫弦、頂端較亮、液面線、高光、外框），數字在球內。其他資源是快捷列右上方的細條；名稱含 shield／barrier／ward／guard 的資源自己有淺藍色的條（護盾）。
@@ -1578,12 +1578,12 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 ### D24-1 — 狀態與技能的名稱、圖示欄位；敵人頭上的狀態圖示；法力消耗顯示（使用者回報）
 
-**使用者要求：** 補上 D23-8 列出的三個限制（狀態沒有名稱／圖示、敵人狀態仍是文字、技能格是文字不是圖示），再整體確認引擎、八方旅人 demo 與暗黑 demo。之後回報「法杖旁邊的 1 是什麼」。
+**使用者要求：** 補上 D23-8 列出的三個限制（狀態沒有名稱／圖示、敵人狀態仍是文字、技能格是文字不是圖示），再整體確認引擎、隊伍 RPG demo 與 ARPG demo。之後回報「法杖旁邊的 1 是什麼」。
 
 **資料格式（向下相容，沒有值就不寫入資料）：**
 - `StateDefinition` 新增 `display_name`、`icon_id`；`AbilityDefinition` 新增 `display_name`、`icon_id`（走 `OPTIONAL_DATA`）。舊資料照常載入，沒設定的不會被寫回。
 - 編輯器的狀態與技能表單本來就以資料欄位為準，`icon_id` 會自動出現圖示挑選（測試：改名稱和圖示、復原）。
-- 八方旅人戰鬥畫面的狀態文字也改讀 `display_name`（沒有就用 id）。
+- 隊伍 RPG 戰鬥畫面的狀態文字也改讀 `display_name`（沒有就用 id）。
 
 **畫面：**
 - 快捷列格子：技能有 `icon_id` 就畫圖示（不再寫名稱），沒有才退回名稱文字；狀態列：有圖示畫圖示，沒有才用縮寫；名稱用 `display_name`。
@@ -1596,21 +1596,21 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 | --- | --- |
 | 完整測試套件 | 2178 passed（之後再加：全部 demo 測試 22 passed） |
 | 真實視窗實機驗證 `real_machine_validation.py` 全部檢查 | 66 項 PASS；4 項需要真人或手把（實體鍵盤、手把、可聽音訊、音訊延遲）未執行，原樣標示 |
-| 八方旅人 demo（Cocoa、真按鍵） | 指令選單、加速點、目標選單、加速攻擊兩段傷害、神技花 3 點、粒子、調合、勝利、四種遭遇全部 ok |
-| 暗黑 demo 三個職業真實視窗 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7；走完城鎮、轉職、技能樹、野外、Boss、礦坑、背包 |
-| 編輯器稽核 1600×1000／1280×800／1100×700（暗黑與八方旅人兩個專案） | 0 裁切、0 溢出、0 過小；僅有頁面需捲動（資訊性） |
+| 隊伍 RPG demo（Cocoa、真按鍵） | 指令選單、加速點、目標選單、加速攻擊兩段傷害、神技花 3 點、粒子、調合、勝利、四種遭遇全部 ok |
+| ARPG demo 三個職業真實視窗 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7；走完城鎮、轉職、技能樹、野外、Boss、礦坑、背包 |
+| 編輯器稽核 1600×1000／1280×800／1100×700（ARPG 與隊伍 RPG 兩個專案） | 0 裁切、0 溢出、0 過小；僅有頁面需捲動（資訊性） |
 
 測試：`test_states_and_abilities_carry_a_name_and_an_icon`、`test_enemies_show_their_statuses_as_pips_over_the_bar`、`test_the_editor_edits_a_status_name_and_icon_and_undoes_it`。截圖 `docs/audits/evidence/real_machine/d24_hud_icons.png`。
 
-**仍然存在：** 圖示是從資源包挑的相近圖，不是專屬設計；暗黑 demo 的實機輸入沒有實體鍵盤／手把驗證（需要真人）；`CollisionWorld.from_scene` 仍未快取。
+**仍然存在：** 圖示是從資源包挑的相近圖，不是專屬設計；ARPG demo 的實機輸入沒有實體鍵盤／手把驗證（需要真人）；`CollisionWorld.from_scene` 仍未快取。
 
 ### D24-2 — 冷卻轉圈動畫、從範本新增專案、編輯器左側分頁擠在一起（使用者回報）
 
-**使用者回報：** 技能進入冷卻要有「變暗、轉一圈變亮」的動畫，當成預設；八方旅人與暗黑的設定可以當成預設範本讓使用者修改；GUI 有文字擠在一起，例如 Scene 下面的 Project 跟 Tile。
+**使用者回報：** 技能進入冷卻要有「變暗、轉一圈變亮」的動畫，當成預設；隊伍 RPG 與 ARPG 的設定可以當成預設範本讓使用者修改；GUI 有文字擠在一起，例如 Scene 下面的 Project 跟 Tile。
 
 **做法：**
 - **冷卻時鐘**（`hud_bottom.BottomHud._sweep`）：技能用出後整格變暗，一個明亮的扇形從 12 點鐘方向順時針展開，邊緣有一條亮線，轉滿一圈整格恢復明亮並閃一下（0.3 秒）；中間仍顯示剩餘秒數。取代原本由上往下的遮罩。對所有專案的動作戰鬥 HUD 預設生效，不需設定。
-- **File > New from Template…（Ctrl+N）**（`editor/project_templates.py`）：兩個範本 —— *Party RPG (Octopath-style)*（弱點與護盾、加速點、職業、寵物、調合、狀態、四種敵人）和 *Action RPG (Diablo-style)*（職業與技能樹、稀有度與詞綴、套裝、藥水、格子背包、有冷卻的快捷列、城鎮／野外／礦坑）。範本是完整的專案資料夾（含美術與授權文件），複製後改名、載入，所有設定（戰鬥規則、數值、HUD、地圖）都能直接改；建置腳本不複製。原範本不會被動到。範本來源是 `reference_projects/`，打包安裝版若沒有這個資料夾，選單會顯示「沒有安裝範本」。
+- **File > New from Template…（Ctrl+N）**（`editor/project_templates.py`）：兩個範本 —— *Party RPG (break and boost battles)*（弱點與護盾、加速點、職業、寵物、調合、狀態、四種敵人）和 *Action RPG (real-time loot and skill trees)*（職業與技能樹、稀有度與詞綴、套裝、藥水、格子背包、有冷卻的快捷列、城鎮／野外／礦坑）。範本是完整的專案資料夾（含美術與授權文件），複製後改名、載入，所有設定（戰鬥規則、數值、HUD、地圖）都能直接改；建置腳本不複製。原範本不會被動到。範本來源是 `reference_projects/`，打包安裝版若沒有這個資料夾，選單會顯示「沒有安裝範本」。
 - **左側分頁**：原本「Project / Scene、Tile Palette、Layers」三個分頁在窄的左欄擠不下，第三個被捲動箭頭吃掉。改名為 Project／Tiles／Layers，dock 分頁的左右內距 12 → 8 px，左欄最小寬度 264 px；視窗最小尺寸 1000×640（再小面板會擠字）。
 - **稽核腳本**：`editor_ui_audit.py` 新增 `dock_tab_hidden`，停靠面板的分頁掉到分頁列外面就算缺陷（之前被當成可捲動的資訊項而漏掉）。
 
@@ -1619,7 +1619,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 ### D24-3 — 寵物技能、多武器與多段攻擊的測試補齊、手冊（使用者指示）
 
-**使用者要求：** 八方旅人 demo 補寵物（派出抓到的寵物攻擊，沒有寵物就不能用，寵物本身不用是單位）、
+**使用者要求：** 隊伍 RPG demo 補寵物（派出抓到的寵物攻擊，沒有寵物就不能用，寵物本身不用是單位）、
 多武器（切換武器、技能用不同武器各打一下、多段如打五下、特大火魔法三下）、調合、每個職業的副職技能、
 四個奧義都要有測試；處理 lint；寫一份 md 把引擎和 demo 的功能全部記錄下來；然後 commit、push。
 
@@ -1634,7 +1634,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **demo：** 拿掉 hero_07 和「召喚寵物」技能；Sera 的 `send_frost_lynx`（需要背包有 `pet_frost_lynx`，三下冰）
 和 `send_ember_hound`（捕獲 Ember Hound 後解鎖，兩下火）；新增 `grand_inferno`（一發火球打三下）。
 
-**新增／改寫的測試（`test_octopath_demo.py` 26 → 35，加兩個單元測試）：**
+**新增／改寫的測試（`test_party_rpg_demo.py` 26 → 35，加兩個單元測試）：**
 | 項目 | 測試 |
 | --- | --- |
 | 寵物 | 有寵物可用、沒有時灰掉並說明、直接選會被拒、派出後寵物還在、出戰名單沒有多一個單位；捕獲得到寵物道具並解鎖技能、隊伍沒變 |
@@ -1645,7 +1645,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 | 奧義 | 四個奧義：不足 3 點時被拒絕並說明、足夠時花光；Last Stand 全隊攻擊提升 |
 
 **文件：** 新增 `docs/ENGINE_HANDBOOK.md`（引擎功能、編輯器、兩個 demo、資料格式變更、測試與驗證方式、
-限制與下一步、工作方式）；`README.md` 開頭改指向手冊；octopath README 更新寵物與武器說明。
+限制與下一步、工作方式）；`README.md` 開頭改指向手冊；隊伍 RPG 範例的 README 更新寵物與武器說明。
 
 ### D24-4 — Scene 視圖：滑鼠滾輪改為縮放（使用者指示）
 
@@ -1685,7 +1685,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **其他：**
 - **目標框**（`hud_bottom.draw_target_frame`）：鎖定時畫面上方顯示名稱、血條、最多 4 個狀態的名稱、疊層、剩餘秒數。
-- **專屬狀態圖示**：暗黑 demo 的 healing／war_cry／burning／bleeding／chilled 用程式畫（綠十字、橘色上箭頭、火焰、
+- **專屬狀態圖示**：ARPG demo 的 healing／war_cry／burning／bleeding／chilled 用程式畫（綠十字、橘色上箭頭、火焰、
   血滴、雪花，1 px 深色外框）；`art.py` 的 `status_glyph`，不是 AI 生成。
 - **範本隨套件發布**：`scripts/sync_templates.py` 把兩個參考專案複製到 `src/asteria/templates/`（`pyproject`
   的 package-data 包含），`--check` 或測試會在兩邊不一致時失敗；範本內含 `START_HERE.md`（來源
@@ -1693,35 +1693,35 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - **測試穩定性**：找到並修正先前偶發失敗的測試 `test_every_secondary_job_skill_works_in_battle`（睡眠命中率 80%）。
 
 **限制：** 寵物不是戰鬥單位（沒有自己的血量與回合）；沒有進化與學技能；起始寵物要改 game start 資料（沒有表單）；
-八方旅人的寵物沒有圖示；第三個範本依使用者指示沒有做。
+隊伍 RPG 的寵物沒有圖示；第三個範本依使用者指示沒有做。
 
 **D25-1 驗證（真實 Cocoa 視窗）：**
 | 項目 | 結果 |
 | --- | --- |
 | 完整測試套件 | 2209 passed；ruff（含 E501）全過 |
 | `real_machine_validation.py` 全部檢查 | 64 PASS 第一輪；2 項 FAIL 已查明：`replay_BTL-03` 是因為我把一個測試改名而 replay 清單還指著舊名（已更新清單並加入新測試，重跑 PASS）；`vfx_moderngl_field` 54.6 fps 低於門檻，單獨重跑 55.1 fps PASS（接近門檻，其他程式同時在跑時會掉）。4 項需要真人或手把仍未執行 |
-| 暗黑 demo 三個職業 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7 |
+| ARPG demo 三個職業 | 皆 60.0 fps；戰士 3 擊殺、遊俠 3、法師 7 |
 | 編輯器稽核 1600×1000／1280×800／1100×700（兩個專案） | 0 缺陷 |
 
-### D25-2 — 八方旅人式戰鬥畫面：右側隊伍狀態、行動順序兩邊、指令選單、Break 顯示（使用者指示）
+### D25-2 — 破防／加速戰鬥畫面：右側隊伍狀態、行動順序兩邊、指令選單、Break 顯示（使用者指示）
 
 - **隊伍狀態在右邊**（`BattleUiLayoutProfile.party_hud="side_list"`）：每人一格，名稱、狀態縮寫、`HP 5,430 / 5,722`、`SP`、BP 圓點，帶細條；列高依人數自動縮減，不超出畫面。
 - **行動順序**：上方每個回合一格，敵我用不同底色（友方藍、敵方紅、目前行動者金色）。
 - **指令選單**（`BattleCommands(style="root")`，manifest `battle.command_style`）：Attack／Skills／Items；Attack 列出裝備武器給的攻擊，Esc 回上層，Q／R 調 Boost。
 - **Break 顯示**（`runtime/battle_extras.py`）：敵人腳下盾牌數字（還要打幾下）、弱點圖示（命中後顯示，未發現是 ?）、Break 時紅色 BREAK 與「Damage up - loses a turn」。
 - **不重疊**：舞台排版給每個敵人一個空間（名稱、精靈、盾牌列），選單放在雙方之間；`test_no_information_covers_other_information_on_the_battle_screen` 對四種遭遇檢查面板、選單、精靈與盾牌列互不重疊。
-- 測試：`test_octopath_demo.py` 42 個通過。限制：Boost 與武器切換用列表選擇，不是在同一列左右切換。
+- 測試：`test_party_rpg_demo.py` 42 個通過。限制：Boost 與武器切換用列表選擇，不是在同一列左右切換。
 
 
 ## D25-3 戰鬥畫面實機回饋修正
 
 - 動作選單改用螢幕座標避開敵人的名字與血條（鏡頭移動時也不會蓋住），行動順序格加高並分開名字與時間。
-- 實機驗證腳本改為先開 Attack 清單、用 R 鍵調 Boost，八方旅人實機檢查 PASS。
+- 實機驗證腳本改為先開 Attack 清單、用 R 鍵調 Boost，隊伍 RPG 實機檢查 PASS。
 - 新增測試：鏡頭移動期間選單不蓋住任何敵人名字。
 
 ## D25-4 戰鬥畫面全面不重疊與半透明選單
 
-- 指令選單在八方旅人排版下改為半透明，優先放在行動角色旁（面向敵人那一側），不蓋住任何敵人的名字、血條、圖案、盾牌與弱點列；放不下時依序嘗試其他空位。
+- 指令選單在隊伍 RPG 排版下改為半透明，優先放在行動角色旁（面向敵人那一側），不蓋住任何敵人的名字、血條、圖案、盾牌與弱點列；放不下時依序嘗試其他空位。
 - 隊伍面板改半透明；pygame 後端面板支援 alpha。
 - 選單底部說明超過選單寬度時截短。
 - 新增 tests/test_battle_screen_no_overlap.py：5 場遭遇、各選單狀態、鏡頭穩定後逐幀檢查文字、面板、量表、圖案、盾牌列互不重疊。
@@ -1733,12 +1733,12 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 ## D25-6 選單固定在行動角色旁
 
-- 八方旅人排版的指令選單固定出現在行動角色左側（變窄而非移位），可蓋住其他隊友，不蓋行動角色、隊伍血量面板與敵人資訊。5 場遭遇逐一截圖確認。
+- 隊伍 RPG 排版的指令選單固定出現在行動角色左側（變窄而非移位），可蓋住其他隊友，不蓋行動角色、隊伍血量面板與敵人資訊。5 場遭遇逐一截圖確認。
 - 實機重跑：input、mv_import、vfx_weather_load 通過；vfx_moderngl_field 在此機器上 44–54 fps（門檻 55），與戰鬥畫面無關。
 
 ### D26-1 — Asteria 通用多人連線能力（以 ARPG Demo 驗證）
 
-**使用者要求（2026-10-14）：** 多人連線應是任何 Asteria 遊戲類型都能導入的能力。Diablo 式 ARPG 合作打 Boss 是第一個測試案例，不是功能限定的遊戲類型。
+**使用者要求（2026-10-14）：** 多人連線應是任何 Asteria 遊戲類型都能導入的能力。ARPG 合作打 Boss 是第一個測試案例，不是功能限定的遊戲類型。
 
 **設計提案：** 提供選配的通用連線套件和獨立 headless authoritative server，涵蓋場次、參與者身分、command/state/event 同步介面；各遊戲以 adapter 接入自身玩法。第一個端到端驗證以 2–4 人共同擊敗 ARPG Boss 為例。大型 MMO 的帳號、公開配對、持久世界、relay／代管服務不列入此提案。
 
@@ -1757,7 +1757,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **既有功能回歸：** baseline 發現三個舊測試仍把 workspace 數量固定為六；更新斷言以涵蓋新增 Multiplayer 工作區並仍驗證原頁面。Profiler/debugger 在受限 runner 因 loopback bind 權限失敗；獲准本機 socket 後其原有測試 10 個通過。完整 suite 尚待最後重跑。
 
-**限制：** 這個 Boss 是可由兩個 client 真正連線共同操作的 network adapter 範例，尚未把既有 `reference_projects/diablo_demo` 的 ECS、素材、技能與玩家存檔改成多人。沒有 TLS、身分驗證、NAT relay、adapter 沙箱、網路 delay／jitter／loss 注入或 CPU／頻寬量測；不可宣稱公開 Internet 可用。
+**限制：** 這個 Boss 是可由兩個 client 真正連線共同操作的 network adapter 範例，尚未把既有 `reference_projects/arpg_demo` 的 ECS、素材、技能與玩家存檔改成多人。沒有 TLS、身分驗證、NAT relay、adapter 沙箱、網路 delay／jitter／loss 注入或 CPU／頻寬量測；不可宣稱公開 Internet 可用。
 
 **實機與下一步：** 全部介面已加到 Multiplayer workspace；桌面 Cocoa 驗收尚未完成，因本機螢幕鎖定、GUI automation 無法取得視窗。解鎖後需確認版面、選取 Boss 範例、本機 host/client、第二 client 加入、兩端 Boss HP 一致、離開與停止 server，並保存 Cocoa 證據截圖。
 
@@ -1791,7 +1791,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - 沒做的 YEP 項目：圖片點擊事件（PictureCommonEvents）、自由放置裝飾物（GridFreeDoodads）、戰鬥天氣、EnhancedTP 等 TP 模式；Asteria 沒有「圖片」系統，要先決定是否引入。
 - 多人連線：NAT 穿透／配對、真正的 adapter 沙箱、本機預測與插值、真實 WAN 測量仍未做；full-state 每 tick 約 40 KB／秒／人。
 - 需要真人或裝置的審計 B 項（實體鍵盤、手把、聽感、目視）依然無法在這個環境完成。
-- 既有的 `reference_projects/diablo_multiplayer_demo/build_project.py` 第 14–15 行超過 99 字元（不是這次改的）。
+- 既有的 `reference_projects/arpg_multiplayer_demo/build_project.py` 第 14–15 行超過 99 字元（不是這次改的）。
 
 
 ## D27 — 多人連線：差量更新、插值與預測工具（2026-10-15）
@@ -1848,7 +1848,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 | Picture 指令編輯器 | 可設定 `SHOW_PICTURE`、`MOVE_PICTURE`、`SET_PICTURE_FRAME`、`ERASE_PICTURE` 參數並預覽畫面位置 | event editor／picture preview；`7b7e906` |
 | 多人預測／插值 | `SnapshotInterpolator` 與 `InputPredictor` 已接進多人 preview，並以自動化測試覆蓋 | `runtime/multiplayer_preview.py`；`25d683a` |
 | Qt／SDL 收尾 | 修正測試結束時 Qt deferred-delete 與 SDL 資源清理問題 | `tests/conftest.py`；`a4ebe2c` |
-| Octopath 勝利結算 | 參考專案與 party RPG template 都開啟 `battle.victory_aftermath`，並加回歸測試 | demo manifest、template manifest、`tests/test_octopath_demo.py`；`1ed4bc8` |
+| Party RPG 勝利結算 | 參考專案與 party RPG template 都開啟 `battle.victory_aftermath`，並加回歸測試 | demo manifest、template manifest、`tests/test_party_rpg_demo.py`；`1ed4bc8` |
 | CJK 訊息字型 | RPG 對話、戰鬥 UI、pygame／ModernGL 對話使用系統 CJK 字型；拉丁文字保留既有字型，附單元測試 | `platform/pygame_battle_ui.py` 等、`tests/test_battle_ui_renderer.py`；`ff9eddb` |
 
 ### 驗證證據
@@ -1857,7 +1857,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - `.venv/bin/ruff check src tests scripts demos reference_projects`：通過。
 - `.venv/bin/ruff check --select E501 src tests scripts demos reference_projects`：通過。
 - 有測試覆蓋區域規則編輯、原生骨骼序列化／指令復原、DragonBones 支援子集、Picture 參數與預覽、骨骼 component 存取及 runtime 實際像素繪製、多玩家平滑資料流。
-- Cocoa 視窗：Octopath 戰鬥及勝利結算、區域地板傷害／滑冰／腳步聲、Music Room／Backlog／Credits、`\\C`／`\\I`／`\\V`／`\\N` 和 CJK glyph、編輯器骨骼／區域規則／Terrain／Region／Doodad 面板均有實機程序驗證與截圖。另以兩個 Cocoa runtime 視窗連同一個本機 server；兩邊都收到兩位玩家狀態、各處理 304 個遠端快照，兩個 client 均正常結束。
+- Cocoa 視窗：Party RPG 戰鬥及勝利結算、區域地板傷害／滑冰／腳步聲、Music Room／Backlog／Credits、`\\C`／`\\I`／`\\V`／`\\N` 和 CJK glyph、編輯器骨骼／區域規則／Terrain／Region／Doodad 面板均有實機程序驗證與截圖。另以兩個 Cocoa runtime 視窗連同一個本機 server；兩邊都收到兩位玩家狀態、各處理 304 個遠端快照，兩個 client 均正常結束。
 - 原生按鍵事件佇列、選單／存檔／設定流程已驗證；CoreAudio 開啟 44.1 kHz 裝置、音效 channel 與音樂串流運作。這些程序驗證不代替真人手按、主觀聽感或實際音訊延遲測量。
 
 ### 限制與未完成
@@ -1866,7 +1866,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - Skeleton component 目前嵌入原生 rig JSON；貼圖仍依專案資源 ID 解析，引用的貼圖必須存在於該專案。
 - Picture 預覽使用事件設計畫布座標；點擊命中仍是既有整張圖片矩形規則。
 - 真人主觀手感、實體鍵盤直接操作尚未驗收；測試送入 Cocoa／SDL 事件佇列，不代表由人手按鍵。當時沒有連接 game controller；可播放音訊已測到裝置層，但聽感與 latency 未測。
-- 兩個 Cocoa 視窗同機 loopback 的多人資料流、插值與預測已驗證；真人主觀延遲／移動手感仍待確認。原生驗證器先前沒有載入 tilemap sidecar，找到問題後補上資源解析；最後的 Cocoa 重驗通過，使用 Diablo demo 的 tilemap 顯示區域 7 編號及半透明蓋層，截圖 `editor_d30_region_overlay.png`。專案檔案保持未改寫。
+- 兩個 Cocoa 視窗同機 loopback 的多人資料流、插值與預測已驗證；真人主觀延遲／移動手感仍待確認。原生驗證器先前沒有載入 tilemap sidecar，找到問題後補上資源解析；最後的 Cocoa 重驗通過，使用 ARPG demo 的 tilemap 顯示區域 7 編號及半透明蓋層，截圖 `editor_d30_region_overlay.png`。專案檔案保持未改寫。
 - 只有一台可用機器；`multiplayer_netbench.py` 的 loopback 數據不能當跨機器 WAN 結果，WAN 實測未完成。
 
 ### NAT／配對與 adapter 沙箱決策
@@ -1907,7 +1907,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 ### D31 補記：Cocoa 實機驗證（2026-10-16）
 
-- **編輯器（真實 Cocoa 視窗，`scripts/editor_ui_audit.py`，octopath_demo）：** Game Start 分頁、Pet Species、Shops、Pause Menu Entries、Battle Extension Rules 在 1600×1000 與 1100×700 皆 0 缺陷（只有一般的頁面可捲動提示）。截圖：`d31_game_start_tab.png`、`d31_game_systems_icons.png`。
+- **編輯器（真實 Cocoa 視窗，`scripts/editor_ui_audit.py`，party_rpg_demo）：** Game Start 分頁、Pet Species、Shops、Pause Menu Entries、Battle Extension Rules 在 1600×1000 與 1100×700 皆 0 缺陷（只有一般的頁面可捲動提示）。截圖：`d31_game_start_tab.png`、`d31_game_systems_icons.png`。
 - **發現並修正：** 商店表單原本把條件放在巢狀表格裡，造成 2 個過小控制項（在未修改的 HEAD 上為 0）。改成平的字串清單欄位（`switch:name==true`；價格規則 `買 賣 | 條件;條件`），以轉接器雙向無損轉換，缺陷歸零。
 - **圖示：** 新增 `flag`（Game Start）、`paw`（寵物）、`gauge` 三個圖示，並讓 Game Systems 的種類下拉選單與其他資料庫分類下拉一樣顯示圖示；Revert 按鈕有圖示。
 - **Pets 畫面（真實視窗，SDL driver `cocoa`）：** 親密度「Bond 12」顯示於既有的一行內，沒有溢出；按 E 後寵物由 Frost Lynx 進化為 Ember Hound，暱稱與等級保留（`d31_pets_before_evolve.png`、`d31_pets_after_evolve.png`）。
@@ -1934,7 +1934,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 - **過期測試（前一個 UI 整理 commit 之後沒跟上）：** `test_editor_dock_tabs`、`test_project_templates`、`test_region_rules_panel`、`test_theme`、`test_editor_shell_integration_154a` 改成對應現行（有意的）結構：卡片包住捲動區、範本多了 `basic_rpg` 與 `empty`、選單文字 `New Project…`、區域規則表單一律換行、分頁邊框逐邊繪製。
 - **編輯器稽核找出的版面缺陷：** 粒子效果的最小／最大值框被截斷（改為上下堆疊，並讓表單格子靠上對齊）、Ability Timelines 的 Length 欄位與 Enemy AI 的 Actions per turn 太窄（加最小寬度）。稽核腳本改成跳過被其他分頁蓋住的元件（原本把沒顯示的 Tiles 面板誤報為截斷），並新增 `scene_tiles` 面層。
 
-**驗證：** 完整測試 **2695 passed、0 failed**；`ruff format`、`ruff check`（含 E501）通過。編輯器稽核（真實 Cocoa 視窗，octopath／diablo 兩個專案，1600×1000、1280×800、1100×700）缺陷 0（唯一 1 項 Enemy AI 窄欄位已修正後重跑為 0）。地圖視窗與自訂暫停選單項目在真實視窗（SDL driver `cocoa`）截圖：`d32_field_hud.png`、`d32_pause_menu_entry.png`；`d32_ability_slots_editor.png`。
+**驗證：** 完整測試 **2695 passed、0 failed**；`ruff format`、`ruff check`（含 E501）通過。編輯器稽核（真實 Cocoa 視窗，隊伍 RPG 與動作 RPG 兩個專案，1600×1000、1280×800、1100×700）缺陷 0（唯一 1 項 Enemy AI 窄欄位已修正後重跑為 0）。地圖視窗與自訂暫停選單項目在真實視窗（SDL driver `cocoa`）截圖：`d32_field_hud.png`、`d32_pause_menu_entry.png`；`d32_ability_slots_editor.png`。
 
 **限制：**
 - A17（弱點姿勢、狀態特效、血條樣式）沒做；事件常駐圖示沒做。
@@ -1956,15 +1956,15 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **驗證：** 新測試加進 `tests/test_pets_advanced.py` 與 `tests/test_navigation_session.py`；Cocoa 真實視窗（SDL driver `cocoa`）截圖：`d33_battle_pet_unit_weak_pose.png`（寵物戰鬥單位以暱稱出現在隊伍與時間軸、低血量姿勢）、`d33_skill_slots_screen.png`（技能槽畫面）。
 
-**限制：** 事件圖示只驗證了資料與繪製呼叫，沒有在真實視窗用實際圖示素材看過；弱點姿勢只對產生出來的角色圖自動有，Octopath／Diablo 的自訂角色圖沒有 `weak` 片段所以不變；自動戰鬥沒有編輯器表單（用 manifest 鍵）。
+**限制：** 事件圖示只驗證了資料與繪製呼叫，沒有在真實視窗用實際圖示素材看過；弱點姿勢只對產生出來的角色圖自動有，Party RPG／ARPG 的自訂角色圖沒有 `weak` 片段所以不變；自動戰鬥沒有編輯器表單（用 manifest 鍵）。
 
 
 ## D34 — 剩餘事項的決定與驗證（2026-10-16）
 
 - **`CollisionWorld.from_scene` 快取：決定不做。** 量測（`from_scene` 已走欄位儲存）：100／500／2000 個碰撞器每次 0.05／0.22／0.85 ms，每幀約一次。收益不到 1 ms，而快取要處理啟用狀態、增刪、換場景與移動的失效，風險較大。
-- **事件常駐圖示：** 真實 Cocoa 視窗（SDL driver `cocoa`）用 Diablo 專案的物品圖示（`bone_shard.png`）顯示在玩家頭上（`d34_entity_icon.png`）。同一次也確認 `_field_world_xy`（點擊觸發用的螢幕→世界轉換）與 `_field_screen_xy` 往返誤差為 0。
+- **事件常駐圖示：** 真實 Cocoa 視窗（SDL driver `cocoa`）用 ARPG 專案的物品圖示（`bone_shard.png`）顯示在玩家頭上（`d34_entity_icon.png`）。同一次也確認 `_field_world_xy`（點擊觸發用的螢幕→世界轉換）與 `_field_screen_xy` 往返誤差為 0。
 - **手冊：** `ENGINE_HANDBOOK.md` 新增 D27–D33 的系統表，並把「下一步的候選」改成現況：第三個範本與 Web 匯出依使用者指示暫不做。
-- **仍未做：** 第三個範本、Web 匯出（使用者指示先不用）；自動戰鬥與低血量姿勢門檻的編輯器表單；專屬技能圖示與八方旅人寵物圖示。需要外部條件的項目（手把、聽感、WAN）不變。
+- **仍未做：** 第三個範本、Web 匯出（使用者指示先不用）；自動戰鬥與低血量姿勢門檻的編輯器表單；專屬技能圖示與隊伍 RPG 寵物圖示。需要外部條件的項目（手把、聽感、WAN）不變。
 
 
 ## D35 — 戰鬥選項表單與原創圖示（2026-10-16）
@@ -1973,11 +1973,11 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 |---|---|---|
 | 戰鬥選項表單 | Game Systems > Battle Options（`BattleOptions`：T 鍵自動戰鬥、低血量姿勢門檻）；專案有這筆資料就以它為準，沒有才讀 manifest 的 `battle.auto_key`／`battle.weak_below`；沒設定不寫入 | `rpg/extras.py`、`editor/game_systems_authoring.py`、`playable_test_runtime.battle_option` |
 | 原創圖示 | `asteria.graphics.forged_icons`：44 種用程式畫的像素風圖示（武器、元素、治療、狀態、寵物頭像…），4 倍超取樣縮小；以 id 關鍵字對應種類；沒有任何第三方圖片、沒有 AI | `src/asteria/graphics/forged_icons.py`、`scripts/build_original_icons.py` |
-| 套用到專案 | Diablo：23 個技能換成原創圖示（藥水沿用道具圖示、狀態沿用既有程式畫的狀態符號）；八方旅人：62 個技能、6 個狀態、2 隻寵物（Frost Lynx、Ember Hound）新增圖示；圖檔在各專案 `playable_assets/icons/skill_*.png`，範本同步；兩個 `build_project.py` 重建後會再套用；CREDITS 註明原創 | `reference_projects/*`、`src/asteria/templates/*` |
+| 套用到專案 | ARPG：23 個技能換成原創圖示（藥水沿用道具圖示、狀態沿用既有程式畫的狀態符號）；隊伍 RPG：62 個技能、6 個狀態、2 隻寵物（Frost Lynx、Ember Hound）新增圖示；圖檔在各專案 `playable_assets/icons/skill_*.png`，範本同步；兩個 `build_project.py` 重建後會再套用；CREDITS 註明原創 | `reference_projects/*`、`src/asteria/templates/*` |
 
-**驗證：** 新增 `tests/test_forged_icons.py`（每種圖示畫得出來且不是空白或實心方塊、id 對應、只改 icon 那幾行、兩個專案的圖示檔都存在且可被選單載入）與 `BattleOptions` 測試。Cocoa 真實視窗：八方旅人的 Pets 畫面顯示 Frosty 的 Frost Lynx 頭像、Diablo 的快捷列顯示新的拳頭與翻滾圖示、Battle Options 表單在 1600×1000 稽核缺陷 0（`d35_*.png`）。
+**驗證：** 新增 `tests/test_forged_icons.py`（每種圖示畫得出來且不是空白或實心方塊、id 對應、只改 icon 那幾行、兩個專案的圖示檔都存在且可被選單載入）與 `BattleOptions` 測試。Cocoa 真實視窗：隊伍 RPG 的 Pets 畫面顯示 Frosty 的 Frost Lynx 頭像、ARPG 的快捷列顯示新的拳頭與翻滾圖示、Battle Options 表單在 1600×1000 稽核缺陷 0（`d35_*.png`）。
 
-**限制：** 圖示是 32 px 的簡單像素風，不是美術師手繪；技能名稱沒有對上關鍵字的不會有圖示（沿用原本的縮寫）；八方旅人的戰鬥選單目前不顯示技能圖示（選單版面沒有改）；Diablo 多人副本專案沒有重建，仍用舊圖示。
+**限制：** 圖示是 32 px 的簡單像素風，不是美術師手繪；技能名稱沒有對上關鍵字的不會有圖示（沿用原本的縮寫）；隊伍 RPG 的戰鬥選單目前不顯示技能圖示（選單版面沒有改）；ARPG 多人副本專案沒有重建，仍用舊圖示。
 
 
 ## D36 — 戰鬥選單顯示技能圖示、沒對上的 id 也有圖示（2026-10-16）
@@ -1987,14 +1987,14 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 | 戰鬥選單圖示 | 技能（含武器普攻）與道具的 `icon_id` 帶進選單列（`BattleActionEntry.icon_asset_id`）；畫面端原本就有 `BattleUiIcon` 與 `resolve_icon` 掛鉤，但沒人接：現在由戰鬥畫面把專案的選單圖示載入並畫在每列左側。選單裡只要有一列有圖示，所有列的文字右移 8 個版面單位並預留位置；名稱太長會以「..」截短，不會碰到右側花費。**沒有任何圖示的選單版面完全不變** | `runtime/battle_commands.py`、`runtime/battle_presentation_adapters.py`、`presentation/battle_ui.py` |
 | 沒對上關鍵字的 id | `forge_monogram`：以 id 的前兩個字母加 id 雜湊出的顏色畫成寶石，同一個 id 永遠同一張、不同 id 不同色；`apply_to_project_file` 在關鍵字都不符時自動用它（`skill_mono_<id>.png`），所以每個技能、狀態、寵物都有自己的圖示 | `graphics/forged_icons.py` |
 
-**驗證：** `tests/test_forged_icons.py`（含寶石圖示穩定且互不相同、無關鍵字的紀錄拿到寶石）、`tests/test_pets_advanced.py`（選單列帶圖示、圖示可解析、解析失敗時回 `None`）。Cocoa 真實視窗：八方旅人的戰鬥選單 Attack／Skills 分頁顯示圖示，長名稱截短（`d36_octopath_battle_menu_icons.png`、`d36_monogram_icons.png`）。
+**驗證：** `tests/test_forged_icons.py`（含寶石圖示穩定且互不相同、無關鍵字的紀錄拿到寶石）、`tests/test_pets_advanced.py`（選單列帶圖示、圖示可解析、解析失敗時回 `None`）。Cocoa 真實視窗：隊伍 RPG 的戰鬥選單 Attack／Skills 分頁顯示圖示，長名稱截短（`d36_break_battle_menu_icons.png`、`d36_monogram_icons.png`）。
 
 **限制：** 目前兩個 demo 的所有技能都對上關鍵字，所以還沒有專案實際用到寶石圖示；選單圖示固定畫 8 個版面單位寬（約 24 px），細長的武器圖示（法杖、匕首）看起來偏小。
 
 
 ## D37 — 場景開啟時角色置中（2026-10-16）
 
-編輯器開啟專案（或按 Reset View）時，如果場景沒有啟用中的遊戲攝影機，過去是把世界原點放在視窗左上附近，八方旅人的角色因此偏在一側。現在 `SceneViewportWidget.frame_initial()` 先用遊戲攝影機的範圍，沒有才呼叫 `frame_entities()`：把所有有位置的實體的外框中心放在視窗正中央，實體分布比視窗寬時縮小到放得下（最多放大 1.5 倍，單一實體維持 1 倍）。視窗改變大小時，如果使用者還沒有平移或縮放，視圖會跟著保持置中；平移過就不動它。
+編輯器開啟專案（或按 Reset View）時，如果場景沒有啟用中的遊戲攝影機，過去是把世界原點放在視窗左上附近，隊伍 RPG 的角色因此偏在一側。現在 `SceneViewportWidget.frame_initial()` 先用遊戲攝影機的範圍，沒有才呼叫 `frame_entities()`：把所有有位置的實體的外框中心放在視窗正中央，實體分布比視窗寬時縮小到放得下（最多放大 1.5 倍，單一實體維持 1 倍）。視窗改變大小時，如果使用者還沒有平移或縮放，視圖會跟著保持置中；平移過就不動它。
 
 **驗證：** `tests/test_viewport_framing.py`（開啟、縮放視窗、平移後按 Reset View、平移後視窗改變大小）；`tests/test_editor_shell_surface.py` 的 Reset View 期望改成「單一實體在視窗中央」。Cocoa 視窗截圖：`d37_scene_view_centered.png`（六個角色的外框中心與視窗中心差 < 3 px）。
 
@@ -2016,41 +2016,41 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 **限制：** 職業、寶珠、被動、派系、套裝、音樂的圖示目前沒有執行期畫面可以顯示；挑選器是下拉選單加 Browse，不能直接打字輸入任意 id（用 Browse 或內建庫；手寫在資料裡的 id 會保留）。
 
 
-## D39 — Lucifer 換皮、Diablo 流派與裝備詞條（2026-10-17，使用者要求「全部換成 Lucifer」「Diablo 最重要的是技能樹與裝備詞條」）
+## D39 — Lucifer 換皮、ARPG 流派與裝備詞條（2026-10-17，使用者要求「全部換成 Lucifer」「ARPG 最重要的是技能樹與裝備詞條」）
 
 **做了什麼：**
-- 換皮工具 `scripts/lucifer_reskin.py`、`scripts/reskin_reference_projects.py`：Octopath、reference RPG、party／basic 範本換成 Lucifer 人物、怪物、背景、UI 面板、字型與圖示；basic 起始範本的主角是 Warrior、怪物是 Skeleton Ancient。build 腳本結尾會自動套用。
+- 換皮工具 `scripts/lucifer_reskin.py`、`scripts/reskin_reference_projects.py`：Party RPG、reference RPG、party／basic 範本換成 Lucifer 人物、怪物、背景、UI 面板、字型與圖示；basic 起始範本的主角是 Warrior、怪物是 Skeleton Ancient。build 腳本結尾會自動套用。
 - 戰鬥畫面：怪物血條放腳下（`overhead_below`）、角色都站在草地上（`stage_top`）、指令選單在行動角色旁、半透明；選單會蓋住沒在行動的隊友（原本的邏輯，使用者確認這樣是對的），不會蓋住行動中的角色。
 - 戰鬥 UI 的像素字型缺很多 ASCII 字元（括號、百分比…），缺的字改用內建字型畫。
-- Diablo 兩個 demo：Lucifer 人物與地形、UI Set 1 面板、特效（Foozle Pixel Magic Effects）；每個職業三個流派（各 5 技能、3 被動、1 個互斥的關鍵天賦），共 36 個新技能與 7 種新狀態；元素與暴擊屬性（`crit`、`fire_dmg`、`cold_dmg`、`shock_dmg`、`poison_dmg`）；33 種基底、7 個部位、3 套套裝、10 件獨特裝、約 36 種詞條、六種稀有度、每種怪物的掉落表。
+- ARPG 兩個 demo：Lucifer 人物與地形、UI Set 1 面板、特效（Foozle Pixel Magic Effects）；每個職業三個流派（各 5 技能、3 被動、1 個互斥的關鍵天賦），共 36 個新技能與 7 種新狀態；元素與暴擊屬性（`crit`、`fire_dmg`、`cold_dmg`、`shock_dmg`、`poison_dmg`）；33 種基底、7 個部位、3 套套裝、10 件獨特裝、約 36 種詞條、六種稀有度、每種怪物的掉落表。
 - 引擎：技能欄綁定 `slot:N`、技能樹技能可進技能欄（自動放入空格，等級越高格數越多，最多 6 格）、`vfx` 提示、技能樹節點 `icon_id`；技能樹畫面可縮放（滾輪／+ −）、拖曳平移、點選、R 回到全貌，節點永遠不重疊。
 - 編輯器：版面表單顯示全部選填欄位，技能樹表單顯示每個節點的圖示欄。
 
 **驗證：** 全套測試 2944 項通過；`tests/test_arpg_builds.py` 涵蓋流派結構、關鍵天賦互斥、技能欄、詞條與稀有度、掉落、特效、技能樹視圖與編輯器欄位；`scripts/arpg_demo_live_check.py`、`scripts/reskin_live_check.py` 在 Cocoa 真實視窗跑過（60 fps）；`scripts/arpg_balance.py` 九個流派綜合分數在平均的 -12% 到 +20% 之間。
 
-**限制：** Diablo 的投射物與弓／魔杖圖示不是 Lucifer；鎮上的房子是上色的墓穴；平衡只比流派之間，沒有裝備也沒有真人；重建 Octopath／reference 會換新的專案 id（舊存檔對不上）。
+**限制：** ARPG 的投射物與弓／魔杖圖示不是 Lucifer；鎮上的房子是上色的墓穴；平衡只比流派之間，沒有裝備也沒有真人；重建 Party RPG／reference 會換新的專案 id（舊存檔對不上）。
 
 
 **D39 補充（同日，使用者看了 Cocoa 實機畫面後的修正）：**
-- **去掉舊美術**：Diablo 兩個 demo、Boss Trial、Octopath、reference、範本裡 Ninja Adventure、Kenney、Idylwild 的圖和產生它們的程式都移除了（`art.py` 的 ninja／kenney 函式、`trial_art.py` 的 ninja 程式、三支舊的 `scripts/build_reference_*`）；只留音效檔與 `tests/golden` 的固定測試素材。投射物與特效改用 Foozle Pixel Magic Effects，弓與法杖的圖示用 Lucifer 裝備圖代替，箭是程式畫的。`scripts/prune_orphan_assets.py` 刪掉沒人引用的素材檔，換皮與 Boss Trial 的 build 結尾都會跑。
+- **去掉舊美術**：ARPG 兩個 demo、Boss Trial、Party RPG、reference、範本裡 Ninja Adventure、Kenney、Idylwild 的圖和產生它們的程式都移除了（`art.py` 的 ninja／kenney 函式、`trial_art.py` 的 ninja 程式、三支舊的 `scripts/build_reference_*`）；只留音效檔與 `tests/golden` 的固定測試素材。投射物與特效改用 Foozle Pixel Magic Effects，弓與法杖的圖示用 Lucifer 裝備圖代替，箭是程式畫的。`scripts/prune_orphan_assets.py` 刪掉沒人引用的素材檔，換皮與 Boss Trial 的 build 結尾都會跑。
 - **揮劍方向**：Foozle 的 Left 與 Right 攻擊動畫不是鏡像（Left 是由上往下揮，鏡像 Right 會變成由下往上）。隊伍站右邊面向左，所以用 Left 條帶，工作表標記 `facing: left`（`BattleCombatantVisual.art_facing`，不再翻轉）；怪物用 Right。
-- **三種攻擊條帶**：普通武器攻擊用第一條；施法、增益、獲得能力、輔助用第二條；大絕招與重擊（神聖技、多段、重砸、斧）用第三條；跳躍用 Jump。Diablo 的四方向角色也有 `attack2`／`attack3`／`jump`，每格依自己的大小放在共同的格子裡（原本不同大小的條帶被壓成同一大小而變形）。
+- **三種攻擊條帶**：普通武器攻擊用第一條；施法、增益、獲得能力、輔助用第二條；大絕招與重擊（神聖技、多段、重砸、斧）用第三條；跳躍用 Jump。ARPG 的四方向角色也有 `attack2`／`attack3`／`jump`，每格依自己的大小放在共同的格子裡（原本不同大小的條帶被壓成同一大小而變形）。
 - **異常狀態與特效位置**：狀態名稱放在怪物頭正上方；技能特效以角色本體（不是整張圖框）為中心；斬擊類特效依攻擊方向翻轉（`face_attacker`）。圖框裡待機腳底以下還有別的動畫佔位，所以工作表的 pivot 設在待機的腳底，血條與名字不會蓋到自己。
 - **動作結尾**：攻擊、施法、受擊、跳躍的最後一格都是站姿，不會停在半空。
 - **卡頓**：Cocoa 實機 5000 幀平均 8.3 ms、最長 10.9 ms；唯一的停頓是第一次放粒子特效時載入 kernel（約 60 ms），改成進戰鬥時預先載入。
-- **每個方向都照包裝用**：包裝的四個方向（Left、Right、Up 背影、Down）各有自己的條帶，一律原樣使用，不翻轉、不拼貼、不重排。隊伍站右邊面向左，用 Left（工作表標記 `facing: left`）；怪物站左邊面向右，用 Right；Diablo 四個方向各用自己的。（曾經把 Right 換成「Left 翻轉」，也曾拿 Down 的弧蓋到 Up，都被使用者指出素材本來就有，已還原。）
+- **每個方向都照包裝用**：包裝的四個方向（Left、Right、Up 背影、Down）各有自己的條帶，一律原樣使用，不翻轉、不拼貼、不重排。隊伍站右邊面向左，用 Left（工作表標記 `facing: left`）；怪物站左邊面向右，用 Right；ARPG 四個方向各用自己的。（曾經把 Right 換成「Left 翻轉」，也曾拿 Down 的弧蓋到 Up，都被使用者指出素材本來就有，已還原。）
 
 **D39 再補充（同日，把清單上能修的都修了）：**
 - 向上（背對鏡頭）的揮擊：包裝本身就有 Up 條帶，直接照用，不拼貼、不重排（曾經拿 Down 的弧蓋上去，使用者指出素材都有，已還原）。
-- 重建不再換 id：`scripts/stable_ids.py` 讓場景與實體 id 在每次 build 都一樣；Octopath 與 Boss Trial 的 build 結尾重跑兩次結果完全相同。complex_reference_rpg 現在可以從頭重建：`build_project.py` 結尾依序跑 `scripts/build_reference_presentation.py`（特效圖框、動作序列、側視版面與 HUD；原本由已刪掉的舊腳本做）和換皮；專案 id 沿用現有的。它的場景與實體 id 每次重建都是新的（沿用舊行為，已提交的存檔、試玩設定與黃金基準都綁著現有的 id），重建後要重跑 `build_saves.py`、更新試玩設定與 `scripts/update_golden_baselines.py`，所以已提交的版本沒有重建。
+- 重建不再換 id：`scripts/stable_ids.py` 讓場景與實體 id 在每次 build 都一樣；Party RPG 與 Boss Trial 的 build 結尾重跑兩次結果完全相同。complex_reference_rpg 現在可以從頭重建：`build_project.py` 結尾依序跑 `scripts/build_reference_presentation.py`（特效圖框、動作序列、側視版面與 HUD；原本由已刪掉的舊腳本做）和換皮；專案 id 沿用現有的。它的場景與實體 id 每次重建都是新的（沿用舊行為，已提交的存檔、試玩設定與黃金基準都綁著現有的 id），重建後要重跑 `build_saves.py`、更新試玩設定與 `scripts/update_golden_baselines.py`，所以已提交的版本沒有重建。
 - `scripts/boss_trial_live_check.py` 在 Cocoa 實機通過（按鍵打贏三個階段）：原因是腳本在最後一階段還一直把 Boss 血量釘回去。
-- Diablo：弓、弩、魔杖的圖示在 Lucifer 沒有對應物，改成程式畫的（32×16、和裝備包同樣的外框，`lucifer_art.weapon_icon`）；鎮上的房子用地城圖集組成（紅屋頂、磚牆、門、窗，商店有條紋遮陽、鐵匠有爐火窗）；每個技能的動畫在每個職業的四個方向都有對應片段（有測試）；四人原生連線驗收 `scripts/validate_multiplayer_project.py` 通過。
+- ARPG：弓、弩、魔杖的圖示在 Lucifer 沒有對應物，改成程式畫的（32×16、和裝備包同樣的外框，`lucifer_art.weapon_icon`）；鎮上的房子用地城圖集組成（紅屋頂、磚牆、門、窗，商店有條紋遮陽、鐵匠有爐火窗）；每個技能的動畫在每個職業的四個方向都有對應片段（有測試）；四人原生連線驗收 `scripts/validate_multiplayer_project.py` 通過。
 - 平衡：`scripts/arpg_balance.py --gear` 讓每個流派穿自己的武器、獨特裝與隨機稀有裝；九個流派在「無裝備／有裝備」輸出的幾何平均落在 400–640（坦克型流派的目標是平均的 75–85%），倍率在 `arpg_builds.BUILD_DAMAGE`。
 - 還沒做：受擊閃光是包裝本身的「受傷」動畫（白色、紅色剪影），沒改。
 
 **D39 編輯器啟動（同日）：** 開啟編輯器預設會開 `~/Library/Application Support/Asteria/Projects/Basic RPG`，但這個資料夾只在第一次建立，範本改了它就過期（使用者看到的還是舊的 Ninja 美術）。現在 `ensure_starter_project` 會在資料夾旁記一個範本指紋：指紋變了而專案沒被改過就原地重建；被改過或沒有指紋（更早建立的）就整個移到 `Basic RPG (previous)` 再重建，不會丟東西。左邊面板每次開啟都固定停在 Project 頁(不記住上次的頁籤)。
 
-**D39 戰鬥 UI 統一（同日）：** 所有回合制 demo 與範本（Boss Trial、Octopath、complex reference、party 範本、Basic RPG 起始專案）都用八方旅人版面：隊伍 HP 一人一格排在右邊緣（`party_hud=side_list`）、指令選單貼在行動角色旁（`action_menu_placement=actor`）且透明、怪物名字與血條在頭上。選單只可能蓋到「非行動中的隊友」，不會蓋到行動角色或任何怪物（`menu_over_stage` 不再讓選單蓋怪物）。Boss Trial 的怪物不再隱藏血條，Basic RPG 起始專案不再覆寫站位與怪物縮放。`tests/test_lucifer_art_rules.py::test_every_turn_based_demo_uses_the_octopath_battle_ui` 守住這組設定。
+**D39 戰鬥 UI 統一（同日）：** 所有回合制 demo 與範本（Boss Trial、Party RPG、complex reference、party 範本、Basic RPG 起始專案）都用隊伍 RPG 版面：隊伍 HP 一人一格排在右邊緣（`party_hud=side_list`）、指令選單貼在行動角色旁（`action_menu_placement=actor`）且透明、怪物名字與血條在頭上。選單只可能蓋到「非行動中的隊友」，不會蓋到行動角色或任何怪物（`menu_over_stage` 不再讓選單蓋怪物）。Boss Trial 的怪物不再隱藏血條，Basic RPG 起始專案不再覆寫站位與怪物縮放。`tests/test_lucifer_art_rules.py::test_every_turn_based_demo_uses_the_break_battle_ui` 守住這組設定。
 
 **D40 Boss Trial 重整與戰鬥資訊（2026-10-18）：** 依使用者要求：起始只有主角一人；城裡加冒險者公會，Mira 一開始就在，Vesper／Cael 打完各自的 Boss 後到公會等，對話即加入；公會長可讓同伴回公會等候（LEAVE_PARTY，之前 demo 沒用到）。可操作角色的美術互不重複，鎮民改成同造型的棕褐色調；召喚獸改用 Goblin Rider。怪物縮到三個 Boss 加三種小怪（刪掉 Goblin Berserker、Skeleton Grunt 兩種）。戰鬥畫面：指令選單一律貼在行動角色右下角並畫在最上層（可蓋住其他角色、怪物或血量面板）；怪物頭上只顯示名字、不顯示血條（`overhead_bars=False`），名字會往上或左右挪開，不蓋到任何角色或其他名字；怪物圖鑑打倒一次後才顯示弱點與血量，掉落物只列真的掉過的。引擎新增：`action_menu_placement="actor_bottom_right"`、`overhead_bars`、`NpcIdentity2D.starts_hidden`、bestiary 記錄 `drop:<id>`。
 
@@ -2078,7 +2078,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 |---|---|---|
 | 指令數字 | 頂層戰鬥指令只顯示名稱；版面 `command_counts` 打開才顯示數量（技能花費照常顯示）；所有 demo 都關掉 | `presentation/battle_ui.py`、`presentation/library.py` |
 | Game Start | 起始場景用名稱挑（存的仍是 id）；隊伍清單顯示名字；起始位置的勾選框寫「Set position」；新場景自動取不重複的名稱（Scene、Scene 2…）；還原版面後左側面板仍回到 Project 頁 | `editor/game_start_authoring.py`、`editor/game_systems_widget.py`、`editor/scenes.py`、`editor/shell.py` |
-| 主角與攝影機 | 每個 `Camera2D` 跟著起始玩家，站在玩家所在或抵達的位置；只是重複 Player 位置的起始座標會清掉，所以在編輯器移動 Player 就是移動遊戲起點；主角用和其他角色一樣的腳底碰撞框；Octopath、complex reference、party 範本每個場景都有一台跟著主角的 Camera；沒有圖塊地圖的「圖片場景」照作者設定的 Camera 取景（manifest 的攝影機設定仍優先） | `editor/scene_cameras.py`、`scripts/center_cameras.py`、`runtime/field_camera.py`、`runtime/playable_test_runtime.py` |
+| 主角與攝影機 | 每個 `Camera2D` 跟著起始玩家，站在玩家所在或抵達的位置；只是重複 Player 位置的起始座標會清掉，所以在編輯器移動 Player 就是移動遊戲起點；主角用和其他角色一樣的腳底碰撞框；Party RPG、complex reference、party 範本每個場景都有一台跟著主角的 Camera；沒有圖塊地圖的「圖片場景」照作者設定的 Camera 取景（manifest 的攝影機設定仍優先） | `editor/scene_cameras.py`、`scripts/center_cameras.py`、`runtime/field_camera.py`、`runtime/playable_test_runtime.py` |
 | 畫地圖 | Tiles 面板顯示整張圖塊集：點一格或拖曳選一塊，就用整塊畫（拖曳時無縫重複，矩形與填滿從起點對齊）；筆刷大小（`[`／`]`）放大單格的 Paint 與 Erase；右鍵從地圖吸取一格或一塊；B／G／R／E／S 切換工具；Paint 與 Erase 按住時就畫在地圖上，放開算一個復原步驟 | `editor/tile_palette.py`、`editor/tile_palette_widget.py`、`editor/tile_edit.py`、`editor/viewport_widget.py` |
 
 **測試：** `tests/test_tile_brushes.py`（新增）、`tests/test_editor_startup.py`、`tests/test_viewport_framing.py`、`tests/test_bestiary_and_labels.py`。
@@ -2112,7 +2112,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **測試：** `tests/test_full_verification_campaign.py`（整段劇情）、`test_full_verification_b11.py`、`test_full_verification_b12.py`、`test_refine_materials.py`、`test_battle_rules_choice.py`、`test_battle_presentation_wiring.py`、`test_town_people_and_home.py`、`test_editor_quit.py`、`test_viewport_combat_boxes.py`、`test_map_prop_stamps.py`（每個擺設印章都是完整的圖）、`test_vfx_tool.py`。
 
-**實機證據：** [`evidence/full_verification_campaign/`](evidence/full_verification_campaign/)：整段劇情在 Cocoa 視窗跑完，先用真的按鍵走路與對話，再跑完 4 張地圖、9 場戰鬥；2026-10-22 重新產生（D51）。`d43_skill_tree_graph.png`：編輯器裡勇者技能樹的圖示卡片與箭頭。
+**實機證據：** [`evidence/full_verification_campaign/`](evidence/full_verification_campaign)：整段劇情在 Cocoa 視窗跑完，先用真的按鍵走路與對話，再跑完 4 張地圖、9 場戰鬥；2026-10-22 重新產生（D51）。`d43_skill_tree_graph.png`：編輯器裡勇者技能樹的圖示卡片與箭頭。
 
 **限制：** demo 的數值與流程是驗證用，沒有真人調過平衡；地圖區域等四個系統目前只在這個 demo 裡用到。
 
@@ -2359,7 +2359,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 截圖從乾淨副本拍（`git archive HEAD` 加上這一批的檔案與編好的 kernel；工作目錄有其他 session 未提交的改動）。
 - `scripts/built_in_text_live_check.py`（Cocoa 視窗，真的按鍵）PASS，21 項檢查全過：`d52_zh_title.png`、`d52_zh_field.png`、`d52_zh_pause.png`、`d52_zh_settings.png`、`d52_zh_slots.png`、`d52_zh_status.png`、`d52_zh_battle_menu.png`、`d52_zh_battle_skills.png`、`d52_zh_battle_skill_help.png`、`d52_zh_battle_disabled.png`、`d52_zh_battle_target.png`、`d52_zh_victory.png`、`d52_zh_victory_hero.png`、`d52_zh_game_over.png`，英文對照 `d52_en_pause.png`、`d52_en_battle_menu.png`；每個畫面畫出的字記在 `d52_built_in_text_results.json`。
 - 編輯器（Cocoa）：`d52_editor_translations.png`（中文介面的翻譯頁：專案自訂的鍵與標題畫面的內建字）、`d52_editor_translations_menu_names.png`（Command Menu Pages 的名稱與中文）；`editor_ui_audit.py` 的 Translations 頁在英文與中文介面、1600×1000 與 1100×700 都 0 缺陷（只有整頁要上下捲）。
-- **沒有翻譯表的畫面不變**：新舊引擎（舊的＝HEAD 版本的這批檔案＋工作目錄其他檔案）各畫 12 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、遊戲結束、存檔、狀態、戰鬥指令、技能清單），Octopath、Complex Reference（都沒有表）與英文的 Full Verification 共 36 張逐像素相同。
+- **沒有翻譯表的畫面不變**：新舊引擎（舊的＝HEAD 版本的這批檔案＋工作目錄其他檔案）各畫 12 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、遊戲結束、存檔、狀態、戰鬥指令、技能清單），Party RPG、Complex Reference（都沒有表）與英文的 Full Verification 共 36 張逐像素相同。
 
 **限制：**
 - 專案資料的名稱和說明（角色、技能、道具、狀態、敵人、任務、商店、勝利頁的敵人與貨幣 id、技能說明）照作者寫的顯示；要多語系得另做「資料翻譯」。
@@ -2386,19 +2386,19 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **相容：** 沒有設定肖像的專案（目前所有範本與參考專案都沒有）畫面完全不變；舊資料照常讀，新選項沒設定就不寫入。
 
-**測試：** `tests/test_battle_hud_portraits.py`（46 項）：選項只在有設定時寫入、舊資料照讀、錯的值會擋下；編輯器的下拉與中英文、肖像選擇器；三種 HUD × 左／右／上方：肖像在自己的卡片裡，不碰到自己的名字、血條、狀態圖示，卡片大小（放旁邊不變、放上方剛好長高肖像＋2），卡片不重疊、不出畫面；沒有肖像的卡片樣子完全一樣（放旁邊時連位置都一樣）；`off` 和沒有肖像的畫面相同；同一清單或欄位一樣大；大小肖像的選擇與互補；大小選項與極限（滿的側欄只用剩下的空間、太窄的卡片不畫）；四種版面 × 三個行動角色，指令選單、說明框、目標框都不蓋肖像，沒擋到時位置不變；快取（肖像改了才重排）；Headless 後端的繪製順序；pygame 後端的縮放與置中；Octopath demo 的真實戰鬥（肖像畫在方格裡、圖不存在的不畫、`off` 不畫）。完整測試 3181 通過、1 略過、0 失敗（`pytest -q`，約 5 分鐘）；`ruff check`、`ruff format --check` 乾淨。
+**測試：** `tests/test_battle_hud_portraits.py`（46 項）：選項只在有設定時寫入、舊資料照讀、錯的值會擋下；編輯器的下拉與中英文、肖像選擇器；三種 HUD × 左／右／上方：肖像在自己的卡片裡，不碰到自己的名字、血條、狀態圖示，卡片大小（放旁邊不變、放上方剛好長高肖像＋2），卡片不重疊、不出畫面；沒有肖像的卡片樣子完全一樣（放旁邊時連位置都一樣）；`off` 和沒有肖像的畫面相同；同一清單或欄位一樣大；大小肖像的選擇與互補；大小選項與極限（滿的側欄只用剩下的空間、太窄的卡片不畫）；四種版面 × 三個行動角色，指令選單、說明框、目標框都不蓋肖像，沒擋到時位置不變；快取（肖像改了才重排）；Headless 後端的繪製順序；pygame 後端的縮放與置中；Party RPG demo 的真實戰鬥（肖像畫在方格裡、圖不存在的不畫、`off` 不畫）。完整測試 3181 通過、1 略過、0 失敗（`pytest -q`，約 5 分鐘）；`ruff check`、`ruff format --check` 乾淨。
 
 **實機證據：**
-- `scripts/battle_portraits_live_check.py`（Cocoa 視窗，真的跑 frame 到第一位主角的回合、指令選單開著）PASS：五場戰鬥每張肖像都和縮放後的圖逐像素相同（0 個像素不同），沒有字、血條或選單蓋到。肖像用 Ninja Adventure 的 CC0 facesets（Hunter、SorcererBlack、Vampire、SamuraiBlue，取自 `local_reference/`）代替動漫臉，專案只在記憶體裡改。截圖：`d53_vigil_side_list.png`（Portrait Party Layout：身體隱藏、側欄、肖像在左）、`d53_vigil_side_list_right.png`（肖像在右）、`d53_octopath_side_list.png`（側視戰鬥、身體顯示）、`d53_octopath_column.png`（引擎預設的欄位 HUD）、`d53_octopath_bottom_row_above.png`（底列、肖像在上方 30 單位）；結果在 `d53_battle_portraits_results.json`。
+- `scripts/battle_portraits_live_check.py`（Cocoa 視窗，真的跑 frame 到第一位主角的回合、指令選單開著）PASS：五場戰鬥每張肖像都和縮放後的圖逐像素相同（0 個像素不同），沒有字、血條或選單蓋到。肖像用 Ninja Adventure 的 CC0 facesets（Hunter、SorcererBlack、Vampire、SamuraiBlue，取自 `local_reference/`）代替動漫臉，專案只在記憶體裡改。截圖：`d53_vigil_side_list.png`（Portrait Party Layout：身體隱藏、側欄、肖像在左）、`d53_vigil_side_list_right.png`（肖像在右）、`d53_break_battle_side_list.png`（側視戰鬥、身體顯示）、`d53_break_battle_column.png`（引擎預設的欄位 HUD）、`d53_break_battle_bottom_row_above.png`（底列、肖像在上方 30 單位）；結果在 `d53_battle_portraits_results.json`。
 - 編輯器（Cocoa，`--editor`）：`d53_editor_battle_ui_layout.png`／`_zh.png`（Battle Screen ▸ Battle UI Layout 的 HUD Portraits 下拉與 HUD Portrait Size，含說明）、`d53_editor_combatant_portraits.png`／`_zh.png`（Combatant Sprites 的 Portrait 肖像選擇器：預覽、清單、Browse…）；英文與繁體中文都畫出（語言只對這個視窗切換，沒有存設定），結果在 `d53_editor_results.json`。
-- **沒有肖像的畫面不變**：舊引擎（改之前的 src，HEAD 03558c5f）與新引擎各畫 Octopath（boss_room、slime_pit、samurai_duel）、Full Verification（acolyte_vigil、boss_room）、Complex Reference（boss_room）六場戰鬥，每場五個時刻（主角回合後第 1、60、240 幀，按下、再按確定之後），共 30 張逐像素相同。
+- **沒有肖像的畫面不變**：舊引擎（改之前的 src，HEAD 03558c5f）與新引擎各畫 Party RPG（boss_room、slime_pit、samurai_duel）、Full Verification（acolyte_vigil、boss_room）、Complex Reference（boss_room）六場戰鬥，每場五個時刻（主角回合後第 1、60、240 幀，按下、再按確定之後），共 30 張逐像素相同。
 
 **限制：**
 - 肖像只在 HUD 卡片上；`BattleUiAssemblyRuntime` 仍沒有接到實際戰鬥流程（和之前一樣）。
 - 頭頂資訊（overhead）的成員沒有卡片，所以不畫肖像。
 - 「上方」在滿的側欄（例如 Vigil 4 人 × 4 列）沒有剩下的空間，肖像不會出現；側欄建議用左或右。
 - 肖像不會依狀態換臉（受傷、倒地），也沒有外框樣式可選。
-- 既有、與肖像無關：欄位 HUD 的數字在 Octopath 字型下 4 位數時會壓到血條右端；Battle UI Layout 表單的 Command Counts、Stage Front Right 兩個欄位名還沒有中文。
+- 既有、與肖像無關：欄位 HUD 的數字在 Party RPG 字型下 4 位數時會壓到血條右端；Battle UI Layout 表單的 Command Counts、Stage Front Right 兩個欄位名還沒有中文。
 
 **狀態：** 已提交（2026-10-23，使用者要求）。
 
@@ -2432,7 +2432,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 兩欄間距 169px → 80px；英雄前排到最近敵人 84px → 173px；寵物不再站在敵人前面。敵人的位置都沒變。
 
-**相容：** 沒有設定這些選項的專案站位完全不變：Octopath（boss_room、gazer_nest）與 Complex Reference（boss_room）的座標相同，改之前（HEAD 的乾淨副本）和改之後的 Cocoa 截圖逐像素相同（3 張，0 個像素不同）。目前只有 Full Verification 有站位範本，所以「腳站在地面」預設開也只影響它（Crypt Guard 的 Aldric）。
+**相容：** 沒有設定這些選項的專案站位完全不變：Party RPG（boss_room、gazer_nest）與 Complex Reference（boss_room）的座標相同，改之前（HEAD 的乾淨副本）和改之後的 Cocoa 截圖逐像素相同（3 張，0 個像素不同）。目前只有 Full Verification 有站位範本，所以「腳站在地面」預設開也只影響它（Crypt Guard 的 Aldric）。
 
 **測試：** `tests/test_battle_stage_spacing.py`（11 項）：沒設定時和以前一樣（自動距離 64、被推到 262）；欄距兩側都套用、右側欄距覆蓋、敵人保持自動；整方貼著邊緣（後排 326、前排 296，一人時也在 326）；Boss 那一欄保持自動距離；隊伍前的寵物照欄距站；範本的腳不會在牆上或舞台底下、x 與面向照範本；關掉時照範本；偏移 Y 照樣讓飛行單位離地；選項只在有設定時寫入、舊資料照讀、負值擋下；編輯器顯示與跟隨、中英文說明；Full Verification 的資料。`run_campaign.py` 的 Crypt Guard 站位檢查改成新的 x（246）。完整測試 3195 通過、1 略過、1 失敗（`pytest -q`，約 6 分鐘）：失敗的是 `test_asset_library`，因為另一個 session 正在加、還沒提交的 `asset_library/kaykit/`（沒有授權文字），和這次的改動無關；那個 session 把它分成三個各有授權檔的包之後，`test_asset_library` 重跑通過。`ruff check`、`ruff format --check` 乾淨。
 
@@ -2589,7 +2589,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **測試：** `tests/test_data_text.py`（9 項）：每個種類都對得上真的紀錄類別與 id 欄位、種類不重複；查不到時回到紀錄自己的字；對話鍵只在有設定時寫入、舊資料照讀、多餘欄位拒絕；Full Verification 加上一組 zh-TW 資料鍵後，道具、角色、技能名與說明、狀態、地圖名、成就、圖鑑、貨幣、商店、任務與目標、`\N[hero_01]`、對話與選項與說話者、戰鬥成員名與技能名都換成中文，切回英文就還原；沒有翻譯表時 `data_lookup` 是 None、勝利頁照舊用 id；**原始碼掃描**：`runtime/` 與 `presentation/` 不再有直接畫 `display_name` 的地方（允許清單：開發錯誤、資料複製、寵物戰鬥單位、多人連線名稱、presentation 自己的 view model，以及明確標記的無 session 後援）。全套 3243 通過、1 略過；`run_campaign.py` 結束碼 0（REQUIRED 全有）；ruff 乾淨。
 
-**畫面不變的證據：** HEAD 的引擎（`git archive HEAD`）與目前工作目錄各畫 13 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、讀檔、技能欄、訊息紀錄、製作人員、遊戲結束、戰鬥），Octopath、Complex Reference、英文的 Full Verification 共 **39 張逐像素相同**（狀態畫面兩邊都要先選角色才能開，這次沒比到）。
+**畫面不變的證據：** HEAD 的引擎（`git archive HEAD`）與目前工作目錄各畫 13 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、讀檔、技能欄、訊息紀錄、製作人員、遊戲結束、戰鬥），Party RPG、Complex Reference、英文的 Full Verification 共 **39 張逐像素相同**（狀態畫面兩邊都要先選角色才能開，這次沒比到）。
 
 **限制（T1）：**
 - 編輯器還沒有資料翻譯的頁面（T2）；Full Verification 還沒有資料的 zh-TW 翻譯（T3）。
@@ -3375,10 +3375,10 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **驗證：**
 - 新測試：`test_ui_layout_v1.py`（10）、`test_picture_fields.py`（4）、`test_dialogue_layout_v2.py`（7）、`test_hud_layout_v3.py`（6）、`test_battle_layout_v4.py`（5），共 32 個通過。
-- **沒有版面時逐像素不變**（HEAD 的 src 與現在的 src 各畫一次、固定時鐘）：UI 導覽 43 個畫面中英文、Octopath 戰鬥兩幀、Diablo HUD 共 89 張，加上對話框（台詞、無名字台詞、選項）中英文 6 張，全部相同。
+- **沒有版面時逐像素不變**（HEAD 的 src 與現在的 src 各畫一次、固定時鐘）：UI 導覽 43 個畫面中英文、Party RPG 戰鬥兩幀、ARPG HUD 共 89 張，加上對話框（台詞、無名字台詞、選項）中英文 6 張，全部相同。
   - 比對時抓到一個回歸：選項框背後的視窗面板在 V2 不見了；已修，修完重比為相同。
-- **每幀時間**（真實 Cocoa 視窗）：選單 86 個畫面都在 16.7 ms 內，最慢翻面告示板 95 百分位 5.86 ms；Octopath 戰鬥沒版面 0.97 ms、有版面 0.88 ms（95 百分位）；Diablo HUD 沒版面 2.82 ms、有版面 3.02 ms。
-- 真實視窗截圖（中英文，引擎樣子與作者版面各一）：對話、選項、技能樹、戰鬥（Full Verification）、HUD（Diablo）。
+- **每幀時間**（真實 Cocoa 視窗）：選單 86 個畫面都在 16.7 ms 內，最慢翻面告示板 95 百分位 5.86 ms；Party RPG 戰鬥沒版面 0.97 ms、有版面 0.88 ms（95 百分位）；ARPG HUD 沒版面 2.82 ms、有版面 3.02 ms。
+- 真實視窗截圖（中英文，引擎樣子與作者版面各一）：對話、選項、技能樹、戰鬥（Full Verification）、HUD（ARPG）。
 - 編輯器截圖（Cocoa，中英文）：技能樹、對話、選項、戰鬥、HUD 版面頁，點陣字型、圖片對話視窗、選單主題三個對話框。
 - 圖示與圖片的匯入檢查：遊戲系統表單、內附專案裡所有放圖的鍵、通用資料樹、版面屬性欄都由 `test_picture_fields.py` 守著（新增欄位沒有選擇器會失敗）；角色、戰鬥圖、圖塊這類資源是從「素材 ▸ 匯入」進來的檔案（`uri`／`source_path`），本來就有自己的檔案選擇。
 - 證據：`docs/audits/evidence/ui_plan2/`（截圖、`pixel_identity.json`、`menu_frame_times.json`、`battle_hud_frame_times.json`）。
@@ -3446,7 +3446,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 **驗證：**
 - 新測試：`test_game_folder_settings.py`（6）；`test_creature_screens_v5.py` 加 3 個（只在專案的商店會開、預設與說明、借設定畫畫面且還原）；`test_battle_layout_v4.py` 加 2 個（單張卡片、沒有卡片元素時不動）；`test_dialogue_layout_v2.py` 加 1 個（選項框長高，作者放的框不變）。
 - **沒有版面時逐像素不變**（和 HEAD `ed2bc517` 比，固定時鐘）：UI 導覽、戰鬥、HUD 89 張，對話框 6 張，全部相同。
-- **每幀時間**（真實 Cocoa 視窗，Octopath 戰鬥，各跑兩次）：95 百分位 HEAD 1.62–2.75 ms，現在 1.68–2.03 ms（沒版面、有版面、有卡片元素三種），差異在雜訊內。
+- **每幀時間**（真實 Cocoa 視窗，Party RPG 戰鬥，各跑兩次）：95 百分位 HEAD 1.62–2.75 ms，現在 1.68–2.03 ms（沒版面、有版面、有卡片元素三種），差異在雜訊內。
 - 生物畫面重畫時間（AsteriaEmerald）：戰鬥 525 ms（要跑 200 幀讓生物出場），開始選單 9 ms、商店 15 ms、輸入名字 21 ms、圖片選項 15 ms。
 - 截圖（Cocoa，中英文）：遊戲資料夾設定、戰鬥版面頁選中 `party_hud.1`；遊戲畫面（真實視窗）：長高的選項框、單獨放的隊伍卡片。放在 `docs/audits/evidence/ui_plan2/opt/`（含 `checks.json`）。AsteriaEmerald 的生物畫面頁截圖只在本機暫存（私人專案的美術）。
 
@@ -3696,7 +3696,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
   - 點人物後走過去，事件開始，面向它，停在範圍內；
   - 從上方看的動作場景可以點擊移動，平台場景不行。
 - 原本的點擊移動測試改成往人物的反方向點，因為點在人物旁邊現在會去說話。
-- Cocoa 真實視窗（Diablo 示範的城鎮，動作場景，960×540）3/3：
+- Cocoa 真實視窗（ARPG 示範的城鎮，動作場景，960×540）3/3：
   - 是從上方看的動作場景；
   - 點地面後從 (312,200) 走到 (374.4,200)，目標 376；
   - 點「Brann the Smith」，走過去後對話框出現。
@@ -3724,7 +3724,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - **介面名稱都對過：** 中文版的每個介面字都用 `i18n.translate` 與 `zh_TW.json` 查過，再對照中文截圖；目前仍是英文的地方照實寫（見下方限制）。
 - **截圖（`docs/manual/images/`，119 張，約 11 MB）：**
   - 編輯器：Cocoa 真實視窗開 Full Verification，1440×900，先英文再用 `set_language('zh_TW')` 切中文，每個畫面中英各一張（場景、遊戲資料各類別、遊戲系統、遊戲開始、戰鬥規則、戰鬥畫面、選單版面、操作、三個事件分頁、程式碼、對話框、六個選單）。
-  - 遊戲：`PlayableTestRuntime` 的真實畫格，中英各一套（標題、地圖、暫停、設定、按鍵設定、存檔、狀態、背包、技能樹、裝備、商店、任務、戰鬥、遊戲結束、製作、寵物、對話、選項），加上 D85 的滑鼠畫面、生物戰鬥、歧路旅人戰鬥、暗黑城鎮。
+  - 遊戲：`PlayableTestRuntime` 的真實畫格，中英各一套（標題、地圖、暫停、設定、按鍵設定、存檔、狀態、背包、技能樹、裝備、商店、任務、戰鬥、遊戲結束、製作、寵物、對話、選項），加上 D85 的滑鼠畫面、生物戰鬥、破防／加速戰鬥、ARPG 城鎮。
 - **API 產生器（新檔 `scripts/manual_api_list.py`）：** 列出 14 組常用 API（專案載入、遊戲視窗、地圖與移動、事件與對話、翻譯、隊伍、道具、任務、戰鬥、寵物、輸入、程式碼工作區、事件程式資料、匯出），簽名用 `inspect` 從真實程式碼取得（省略型別註記），再加上事件 opcode 表與 83 個世界指令的參數（`WORLD_COMMAND_ARGUMENTS`）。寫在兩份手冊的 `<!-- BEGIN API … -->`／`<!-- END API -->` 之間；`--check` 在過期時回傳 1。
 - **索引：** `docs/ENGINE_HANDBOOK.md` 開頭加上手冊連結，並新增「D86 新增」表格。
 
@@ -4392,7 +4392,7 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - Windows／Linux 建置與 CI。
 - 縮小 Qt 外掛。
 - 網頁版匯出在 app 內不能用（需要 pygbag）。
-- `multiplayer/project_demo.py` 預設的範例專案路徑在 app 內找不到（app 沒有帶 `diablo_multiplayer_demo`）。
+- `multiplayer/project_demo.py` 預設的範例專案路徑在 app 內找不到（app 沒有帶 `arpg_multiplayer_demo`）。
 - 人工在 Finder 雙擊 app、第一次右鍵打開的流程還沒有人實際做過。
 
-**狀態：** 未提交（等使用者指示）。
+**狀態：** 已提交（`9b8353ca`）。

@@ -10,7 +10,7 @@ from asteria.multiplayer.server import _load_adapter
 def test_project_factory_uses_selected_file_outside_reference_demo(tmp_path):
     source = (
         Path(__file__).resolve().parents[1]
-        / "reference_projects/diablo_multiplayer_demo/project.asteria.json"
+        / "reference_projects/arpg_multiplayer_demo/project.asteria.json"
     )
     data = json.loads(source.read_text())
     data["name"] = "My copied online game"

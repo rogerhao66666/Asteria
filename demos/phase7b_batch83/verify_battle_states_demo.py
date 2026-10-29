@@ -16,7 +16,7 @@ from asteria.gameplay import (
 from asteria.rpg import BattleStateRuntime, PartyMember, RpgDatabase
 
 ROOT = Path(__file__).resolve().parents[2]
-PROJECT = ROOT / "AsteriaPhase7B_BattleStatesDemo.asteria.json"
+PROJECT = ROOT / "reference_projects" / "legacy" / "AsteriaPhase7B_BattleStatesDemo.asteria.json"
 
 
 def make_subject(state_defs, *, stats=None, tags=()):

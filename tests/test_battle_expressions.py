@@ -18,7 +18,7 @@ from asteria.rpg.battle_lifecycle import BattleEscapeRule
 from asteria.rpg.battle_session_rules import BattleSessionRules
 from asteria.rpg.interactions import InteractionResolver, OutcomeCheckDefinition
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 class _Subject:

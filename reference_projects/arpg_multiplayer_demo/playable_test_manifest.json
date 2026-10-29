@@ -1,0 +1,182 @@
+{
+  "schema": "asteria.playable_test_content",
+  "version": 1,
+  "title": "Asteria ARPG Multiplayer Demo",
+  "subtitle": "Hollowbrook - an ARPG demo",
+  "field": {
+    "background": "playable_assets/title.png",
+    "player_sheet": "playable_assets/hero.png",
+    "player_frame_size": [
+      16,
+      16
+    ],
+    "world_to_screen_scale": 3.0,
+    "player_start": [
+      0,
+      0
+    ],
+    "boss_world": [
+      0,
+      0
+    ],
+    "entity_sprites": {},
+    "player_render_width": 48
+  },
+  "battle": {
+    "skills": {
+      "punch": {
+        "label": "Punch"
+      },
+      "w_slash": {
+        "label": "Slash"
+      },
+      "w_whirl": {
+        "label": "Whirl"
+      },
+      "w_leap": {
+        "label": "Leap"
+      },
+      "w_shout": {
+        "label": "War Cry"
+      },
+      "r_shot": {
+        "label": "Shoot"
+      },
+      "r_volley": {
+        "label": "Volley"
+      },
+      "r_pierce": {
+        "label": "Pierce"
+      },
+      "r_tumble": {
+        "label": "Tumble"
+      },
+      "m_bolt": {
+        "label": "Firebolt"
+      },
+      "m_nova": {
+        "label": "Nova"
+      },
+      "m_meteor": {
+        "label": "Meteor"
+      },
+      "m_blink": {
+        "label": "Blink"
+      },
+      "roll": {
+        "label": "Roll"
+      },
+      "potion": {
+        "label": "Potion"
+      },
+      "w_rend": {
+        "label": "Rend"
+      },
+      "w_frenzy": {
+        "label": "Frenzy"
+      },
+      "w_execute": {
+        "label": "Execute"
+      },
+      "w_rampage": {
+        "label": "Rampage"
+      },
+      "w_shield_bash": {
+        "label": "Shield Bash"
+      },
+      "w_fortify": {
+        "label": "Fortify"
+      },
+      "w_ground_slam": {
+        "label": "Ground Slam"
+      },
+      "w_retribution": {
+        "label": "Retribution"
+      },
+      "w_bulwark": {
+        "label": "Bulwark"
+      },
+      "w_cleave": {
+        "label": "Cleave"
+      },
+      "w_thunderclap": {
+        "label": "Thunderclap"
+      },
+      "w_earthquake": {
+        "label": "Earthquake"
+      },
+      "r_aimed": {
+        "label": "Aimed Shot"
+      },
+      "r_deadeye": {
+        "label": "Deadeye"
+      },
+      "r_snipe": {
+        "label": "Snipe"
+      },
+      "r_railshot": {
+        "label": "Rail Shot"
+      },
+      "r_poison_arrow": {
+        "label": "Poison Arrow"
+      },
+      "r_caltrops": {
+        "label": "Caltrops"
+      },
+      "r_toxic_cloud": {
+        "label": "Toxic Cloud"
+      },
+      "r_venom_rain": {
+        "label": "Venom Rain"
+      },
+      "r_plague": {
+        "label": "Plague"
+      },
+      "r_fan": {
+        "label": "Fan of Arrows"
+      },
+      "r_shadow_step": {
+        "label": "Shadow Step"
+      },
+      "r_rapid_fire": {
+        "label": "Rapid Fire"
+      },
+      "m_flame_wave": {
+        "label": "Flame Wave"
+      },
+      "m_fireball": {
+        "label": "Fireball"
+      },
+      "m_inferno": {
+        "label": "Inferno"
+      },
+      "m_firestorm": {
+        "label": "Firestorm"
+      },
+      "m_frost_bolt": {
+        "label": "Frost Bolt"
+      },
+      "m_ice_spike": {
+        "label": "Ice Spikes"
+      },
+      "m_blizzard": {
+        "label": "Blizzard"
+      },
+      "m_frozen_orb": {
+        "label": "Frozen Orb"
+      },
+      "m_chain_lightning": {
+        "label": "Chain Lightning"
+      },
+      "m_lightning_strike": {
+        "label": "Lightning Strike"
+      },
+      "m_thunderstorm": {
+        "label": "Thunderstorm"
+      },
+      "m_overload": {
+        "label": "Overload"
+      }
+    }
+  }
+}

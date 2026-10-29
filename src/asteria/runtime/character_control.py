@@ -1021,6 +1021,16 @@ def register_character_components(registry):
     return registry
 
 
+def feet_y(entity, y):
+    """Where an entity at world height ``y`` has its feet, the y a sprite's or a rig's pivot is
+    drawn at: ``y`` itself, or for a side-view controller the bottom of its box, which is what
+    rests on the floor (its place is the box's middle)."""
+    controller = entity.try_get(CharacterController2DComponent)
+    if controller is not None and controller.mode == "side":
+        return y + float(controller.half_height)
+    return y
+
+
 __all__ = [
     "AIController2DComponent",
     "CharacterController2DComponent",
@@ -1031,6 +1041,7 @@ __all__ = [
     "Hitbox2DComponent",
     "HitboxSystem",
     "facing_box",
+    "feet_y",
     "facing_from",
     "facing_vector",
     "turn_with_aim",

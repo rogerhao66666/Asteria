@@ -2,7 +2,7 @@
 
 **日期：** 2026-10-15
 **狀態：** 通用連線、SQLite、可編輯規則模板及完整原 ECS 遊戲副本已完成四人原生驗收；本機／可信任 LAN 開發範圍。
-**首個驗證案例：** Diablo 式即時 ARPG 合作打 Boss。此案例用來驗證多人連線，不限制功能只能用於 ARPG。
+**首個驗證案例：** 即時 ARPG 合作打 Boss。此案例用來驗證多人連線，不限制功能只能用於 ARPG。
 **關聯：** `docs/audits/ARPG_DESIGN.md` §7、§8；原 D22 將多人連線排除在 ARPG 計畫批次之外，本提案另記錄引擎層的通用能力。
 
 ### 目前原型進度（2026-10-15）
@@ -16,7 +16,7 @@
 - Network Position Preview 會顯示帶有 x/y 的玩家；Boss 範例另外顯示 Boss 方形標記與目前 HP。實際遊戲素材仍由遊戲 runtime 繪製。
 - 本機 server 可指定 SQLite database；編輯器預設放在專案 `.asteria/multiplayer.sqlite3`。玩家的 Guest ID 保存在 Connection Profile，重連會取回伺服器端經驗、遊戲 JSON state 和 inventory。Guest ID 是可更改的 guest key，沒有密碼、驗證或防冒用能力。
 - Multiplayer 的 **Game Rules Template** 可編輯／驗證專案 `.asteria/multiplayer-rules.json`。Boss 預設只把伺服器接受的正傷害當作參與：設定 100 XP 時，每位符合條件的玩家各得完整 100 XP，不會平均分配；每一項 Boss 掉落各自隨機派給一位有造成傷害的玩家。個人拾取、指定持有人、先到先得、輪替與隨機持有人可由 SQLite world-drop API 原子裁定。
-- `reference_projects/diablo_multiplayer_demo` 是離線 demo 的獨立副本，預載 `asteria.multiplayer.project_demo:build_project_adapter`。server 透過 `--project` 載入實際選定專案；原 ECS 戰鬥、技能、NPC、商店、製作、場景、背包、裝備與角色存檔由 server 裁定並同步。
+- `reference_projects/arpg_multiplayer_demo` 是離線 demo 的獨立副本，預載 `asteria.multiplayer.project_demo:build_project_adapter`。server 透過 `--project` 載入實際選定專案；原 ECS 戰鬥、技能、NPC、商店、製作、場景、背包、裝備與角色存檔由 server 裁定並同步。
 - Server 會先驗證 adapter state/event 可編碼成協定上限內的嚴格 JSON，再增加 revision 和發布；過期輸入、重播命令、超速輸入、NaN／Infinity 會被拒絕。
 - loopback 測試涵蓋兩 client Boss 戰、全額 per-player XP、未參戰者排除、規則覆寫、穩定 Guest ID、SQLite 重開恢復、多人競搶／個人掉落、重複 operation 與 editor 實際啟動本機 server。
 - 最新驗證：完整回歸 **2307 passed（154.86s）**；四個獨立 Cocoa 遊戲程序擊殺原始 900 HP Cyclops，四位參與者各得 100 XP，原掉落由持有人拾取並穿戴，SQLite 重開保存資料。輸入由驗證程式送出。
@@ -37,7 +37,7 @@
 - 提供伺服器與客戶端之間的訊息傳輸、遊戲指令驗證、狀態／事件同步和權限邊界。
 - 允許遊戲 adapter 選擇適合玩法的同步方式：即時遊戲可同步輸入與狀態，回合制遊戲可同步指令與結果，其他玩法可定義自己的狀態和事件。
 - 提供可選套件、客戶端 API、headless server 啟動方式、範例和部署文件。
-- 首個端到端驗證採 2–4 位玩家共同進入 Diablo 式 ARPG 場景並擊敗同一隻 Boss。
+- 首個端到端驗證採 2–4 位玩家共同進入 ARPG 場景並擊敗同一隻 Boss。
 
 連線套件提供通用網路與場次基礎；每個遊戲仍需提供 adapter，將自身規則接到連線命令和狀態同步介面。第一個 ARPG adapter 是驗證案例，不代表通用連線層依賴 RPG、戰鬥或 Boss 資料。
 
@@ -174,7 +174,7 @@ client does not instantiate actors or mutate a game's world automatically.
 
 目前 runtime 和 ARPG 參考執行路徑仍以單一玩家為中心。ARPG 的 `GameSessionRuntime` 有單一 `player`／`save`，玩家輸入系統只驅動該玩家，場景 AI 預設也以單一玩家為目標。這些是第一個 ARPG 驗證案例要處理的現況，不是通用連線層對遊戲類型的限制。
 
-多人能力需先讓場次世界狀態和每位參與者的輸入／擁有權分開，再由各遊戲 adapter 管理自己的存檔與規則。網路識別、同步訊息和場次生命週期應保持通用，不把 Diablo、特定職業、Boss 或遊戲服務商寫死在 Core。
+多人能力需先讓場次世界狀態和每位參與者的輸入／擁有權分開，再由各遊戲 adapter 管理自己的存檔與規則。網路識別、同步訊息和場次生命週期應保持通用，不把 ARPG、特定職業、Boss 或遊戲服務商寫死在 Core。
 
 ### 開發原型的操作方式
 
@@ -185,9 +185,9 @@ client does not instantiate actors or mutate a game's world automatically.
 5. Guest ID 預設由 Connection Profile 保存；同一台機器開第二個測試 client 時，先按 **New ID** 避免重複。此 ID 只用來找回 SQLite guest state，不是登入驗證。Boss 倒地玩家附近的隊友可在 Command 填 `revive`，Payload 填 `{"target_player_id":"<倒地玩家 ID>"}` 來救援。完成後先 **Leave Session**，再 **Stop Server**。
 6. 預設 Boss 獎勵是每位正傷害參與者各得設定的完整 XP（100），每一項掉落隨機給一位正傷害參與者。開啟 Game Rules Template 可修改 eligibility、XP 數值、Boss 掉落分配和 world pickup policy，再按 **Save Project Rules**；自訂 adapter 可採用其他任意遊戲規則。
 
-### Diablo 多人地圖預覽操作
+### ARPG 多人地圖預覽操作
 
-1. 在 Editor 開啟 `reference_projects/diablo_multiplayer_demo/project.asteria.json`，切到 Multiplayer。
+1. 在 Editor 開啟 `reference_projects/arpg_multiplayer_demo/project.asteria.json`，切到 Multiplayer。
 2. 確認 **Connect Run Project to this multiplayer session** 已勾選，保留副本的 project adapter，按 **Start Local Server**。
 3. 按 **Run Project** 開始遊戲；使用原綁定移動、J 攻擊、F 拾取（G 亦可）、B 背包、F5 存檔及 F3 斷線重連。
 4. 測第二名玩家時，另開一個 Editor／專案副本，先在 Multiplayer 按 **New ID** 並儲存 profile，再連到相同 server 後 Run Project。不要讓兩個 client 共用 Guest ID。
@@ -215,7 +215,7 @@ python -m asteria.multiplayer.server \
 |---|---|---|
 | **N0 技術驗證** | 兩個獨立 client 程序連到本機 headless server；使用最小測試 adapter 驗證場次、身分、指令、狀態／事件往返和斷線 | 兩端收到同一份伺服器權威狀態；可注入延遲、抖動和封包遺失；記錄 CPU、頻寬和修正次數 |
 | **N1 通用連線 API** | 場次生命週期、參與者擁有權、通用 command/state/event 介面、adapter 載入和 server 驗證；離線路徑維持可用 | 測試 adapter 可連線並同步其自訂資料；連線核心不需匯入 ARPG 或 RPG 模組 |
-| **N2 首個遊戲整合案例** | 以 Diablo 式 ARPG Demo 撰寫第一個 adapter；接上多玩家輸入、Boss AI 多目標／仇恨、權威命中與傷害、階段事件、死亡／復活和戰利品結算 | 2–4 位玩家擊敗同一隻 Boss；各 client 的生命與階段最終一致；命中、死亡和掉落不重複結算 |
+| **N2 首個遊戲整合案例** | 以 ARPG Demo 撰寫第一個 adapter；接上多玩家輸入、Boss AI 多目標／仇恨、權威命中與傷害、階段事件、死亡／復活和戰利品結算 | 2–4 位玩家擊敗同一隻 Boss；各 client 的生命與階段最終一致；命中、死亡和掉落不重複結算 |
 | **N3 網路手感與容錯** | 依遊戲 adapter 的同步模型實作必要的預測／插值、超時、斷線處理和重連；對即時案例做延遲測試 | ARPG 案例在明確記錄的 RTT、抖動和丟包條件下完成 Boss 戰；無永久狀態分歧，連線恢復後可繼續操作 |
 | **N4 可導入交付** | 套件安裝、作者 API、adapter 範例、headless server 啟動器、文件和發佈包 | 新專案依文件安裝套件、實作或載入 adapter、啟動 server，讓兩個 client 完成多人遊戲流程；沒有套件的專案仍能離線遊玩 |
 
@@ -257,13 +257,13 @@ python -m asteria.multiplayer.server \
 - **伺服器執行使用者專案程式有安全界線：** 開放 server hosting 前需限制可載入內容、檔案存取與連線輸入；此提案不宣稱已完成沙箱或商業級防作弊。
 - **營運成本不隨套件消失：** 作者仍要自行提供可連線的 server。Asteria 第一版不提供帳號、配對、relay、雲端保存或 uptime 保證。
 - **不需先引入 C++：** 第一版的主要風險在連線邊界、各遊戲權威模擬和同步手感，不是計算 kernel。只有量測證明 server simulation 是瓶頸後才評估 native code。
-- **不依賴正式美術包：** 可用現有 Diablo Demo 資料驗證網路流程；多人連線核心適用於其他遊戲，驗收不要求先完成 Asteria Starter art。
+- **不依賴正式美術包：** 可用現有 ARPG Demo 資料驗證網路流程；多人連線核心適用於其他遊戲，驗收不要求先完成 Asteria Starter art。
 
 ---
 
 ## 8. 範圍紀錄
 
-D22 原 ARPG 計畫把該計畫中的多人連線實作列為「不在這次範圍」。2026-10-14 使用者進一步說明，多人連線應是 Asteria 各類遊戲皆可導入的通用能力；Diablo 式 ARPG 合作打 Boss 只是第一個驗證案例。本文件因此記錄引擎層的通用連線方向，不把能力範圍限定為 ARPG。TCP 原型與 GUI lobby 已開始實作；場次狀態保存、正式同步模型、網路品質門檻和產品化部署仍待後續驗證與決策。
+D22 原 ARPG 計畫把該計畫中的多人連線實作列為「不在這次範圍」。2026-10-14 使用者進一步說明，多人連線應是 Asteria 各類遊戲皆可導入的通用能力；ARPG 合作打 Boss 只是第一個驗證案例。本文件因此記錄引擎層的通用連線方向，不把能力範圍限定為 ARPG。TCP 原型與 GUI lobby 已開始實作；場次狀態保存、正式同步模型、網路品質門檻和產品化部署仍待後續驗證與決策。
 
 
 ---

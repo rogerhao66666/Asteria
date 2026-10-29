@@ -5,7 +5,7 @@ engine: start the editor, build maps and events, fill the database, set up battl
 dialogue, controls and translations, then play-test and export. The last chapter lists the
 Python API you can use from scripts.
 
-- Version: engine and editor as of 2026-10-26 (decision log D85).
+- Version: engine and editor as of 2026-10-29 (decision log D100, plus record notes).
 - The same manual in Traditional Chinese: [USER_MANUAL.zh-TW.md](USER_MANUAL.zh-TW.md).
 - Every picture is a real screen: editor pictures come from the editor window on macOS (Cocoa)
   with the Full Verification demo open; game pictures are real frames of the game window.
@@ -38,9 +38,9 @@ Everything a game is made of is **data in the project file**, edited in the edit
 characters, skills, items, enemies, battle rules, screen layouts and translations. The engine has
 no game of its own built in; the demos are only example data. You can make:
 
-- turn-based party battles (side view, weaknesses, shields and boosts, Octopath-style),
+- turn-based party battles (side view, weaknesses, shields and boosts),
 - creature battles (catch, party of creatures, the Pokémon-style screen),
-- real-time action RPGs (top-down or side-scrolling, Diablo-style loot and skill trees),
+- real-time action RPGs (top-down or side-scrolling, with loot and skill trees),
 - anything in between, because rules are options, not code.
 
 When the editor does not offer something, a Python script in the **Code** workspace can do it
@@ -110,8 +110,8 @@ dialog asks for the template, then the project name, then the folder.
 | --- | --- |
 | Full Verification (Recommended) | A whole game to learn from: four maps, a town with shops, a party of four with jobs and skill trees, elements, shields and Breaks, bosses, quests, crafting and every editor page filled in. |
 | Basic RPG (Small) | One hero, two enemies, Attack, Fire and Heal; a playable field and basic battles. |
-| Party RPG (Octopath-style) | Weaknesses and shields, boost points, jobs, a pet, concoction, statuses and four enemy types. |
-| Action RPG (Diablo-style) | Real-time combat with classes and skill trees, loot with rarities and affixes, potions, a grid bag, an action bar with cooldowns. |
+| Party RPG (break and boost battles) | Weaknesses and shields, boost points, jobs, a pet, concoction, statuses and four enemy types. |
+| Action RPG (real-time loot and skill trees) | Real-time combat with classes and skill trees, loot with rarities and affixes, potions, a grid bag, an action bar with cooldowns. |
 | Completely Empty | No sample data. |
 
 The whole template folder is copied, including its art and licence files. If the project has a
@@ -337,6 +337,12 @@ Every record page works the same way:
   records (with icons), tag chips and cards for lists. Empty optional fields are folded under
   "Show N more fields"; internal fields are under **Advanced**.
 - **Duplicate…** and **Delete** at the bottom; edits apply by themselves.
+- **Note** is the last box of every form: write anything for yourself or your team there. Notes
+  stay in the project file and never reach the game.
+- **Players See It** sits next to a description. Untick it and the description stays in the
+  editor only; a description the game never shows is labelled "(editor only)". The game shows
+  the descriptions of skills, items, equipment, jobs, enemies (in the bestiary), quests,
+  achievements, quest boards, gacha banners, stats, tags and equipment slots.
 
 ### 7.2 Game Data categories
 
@@ -347,7 +353,7 @@ Every record page works the same way:
 | Abilities | Skills: targeting, costs, conditions, hits, effects, states, cooldowns, menu group. |
 | Status Definitions | Statuses (poison, sleep, buffs…): duration, stacking, ticks, icon. |
 | Passives | Always-on effects. |
-| Progression Tracks, Skill Trees | Levels and skill trees (with a graph view). |
+| Progression Tracks, Skill Trees, Ability Evolutions | Levels, skill trees (with a graph view) and skills that turn into stronger ones. |
 | Items, Equipment, Attachments, Equipment Growth | Consumables, gear, gems / cards, gear growth paths. |
 | Crafting / Alchemy | Recipes. |
 | Party Setups, Formations, Party Menu Rules | Party size and rows. |
@@ -373,14 +379,38 @@ Layout**; **List / Data View** shows the form.
 ### 7.3 Game Systems
 
 **Game Systems** holds the project-wide rules, one kind at a time (drop-down at the top left):
-Shops, Quests, Factions, Achievements, Equipment Sets, Capture Rules, Pet Species, Pet Rules
-(creature party), World Interactions, Drop Tables, Inventory Rules, Battle Extras (taunt, steal,
-TP...), Enemy Levels, Map Areas (regions, hazards), Equipment Durability, Weapon Refine (+N),
-Disassembly, Workstations (crafting), Quest Boards, Recruiting Offices, Gacha Banners, Job
-Points, Stat Formulas (derived stats), New Game Plus, Translations, Message Settings, Music Room,
-Credits, Battle Options, Ability Slots, Pause Menu Entries and Doodads.
+Stats, Stat Formulas (derived stats), Tags, Job Points, Ability Slots, Pause Menu, Equipment
+Slots, Equipment Sets, Weapon Refine (+N), Equipment Durability, Disassembly, Battle Options,
+Battle Extras (taunt, steal, TP...), Enemy Levels, Capture Rules, Drop Tables, Pet Species, Pet
+Rules (creature party), Recruiting Offices, Shops, Quests, Quest Boards, Factions, Achievements,
+World Interactions, Map Areas (regions, hazards), Workstations (crafting), Gacha Banners,
+Inventory Rules, Message Settings, Music Room, Credits, Translations, Doodads and New Game Plus.
 
 ![Game Systems: Shops](images/editor_en_systems_shops.png)
+
+**Stats and Tags say what every number and tag means.** Each stat has a short name (STR), how it
+is written (a number, a percentage…), where its base value is set and what it means; each tag
+(or a whole family such as `weak.*`) has a name and a meaning. The card under the form lists who
+carries the tag or gives the stat, step by step in the order the game adds them up, and every
+rule or formula that reads it, with the page where each one is edited. Once a project defines
+its stats and tags, the **Problems** panel lists any tag or stat used without a definition.
+
+![Game Systems: Tags](images/editor_en_systems_tags.png)
+
+**Formulas.** Fields that take a formula (a stat formula, a chance check, an escape chance, the
+turn order, the final damage, a skill's value) only accept names declared under Stats. Type the
+formula, or insert names with the `source ▾`, `target ▾` or `self ▾` buttons, the functions
+menu and the operator buttons. The line below says which names it reads, or what is wrong; a
+wrong formula is not applied, and an empty one falls back to the page's other fields.
+
+**Equipment Slots** names every slot and sets its order and description. A slot can hold more
+than one piece (two rings), take gear tagged for another slot (a sub-weapon slot that takes any
+`weapon`), be **Carried, Not Worn** (its pieces give nothing until swapped in during battle) or
+be **Only for Heroes With** a capability a job grants. A two-handed weapon names the slots it
+**Also takes (two-handed)** on its equipment record; **Inventory Rules** decides what happens
+when such a slot is taken and whether swapping a carried weapon in battle costs a turn.
+
+![Game Systems: Equipment Slots](images/editor_en_systems_equipment_slots.png)
 
 ### 7.4 Enemy AI, Behavior Trees, Real-Time Combat
 
@@ -409,6 +439,9 @@ Rules, Action Costs and General Battle Rules.
 
 ![Battle rules](images/editor_en_battle_rules.png)
 
+Heroes with carried weapons get a **Swap** command in battle: it lists the carried weapons and
+the slot each one goes into; the weapon taken off goes back to the carried slots.
+
 **General Battle Rules** ties them together: the knockout resource (HP), the boost resource and
 its cost per level, the shield resource for weakness Breaks, what happens on defeat, action
 timing and the weakness tag. **Status Effects** sets how each status behaves in battle (turns,
@@ -421,9 +454,9 @@ command menu next to the acting hero, shields and hidden weaknesses under the en
 
 ![A turn-based battle](images/game_en_battle.png)
 
-The Octopath-style demo with a full party, boost points and the timeline:
+The party RPG demo with a full party, boost points and the timeline:
 
-![Octopath-style battle](images/game_octopath_battle.png)
+![Party RPG battle with breaks and boosts](images/game_break_battle.png)
 
 ### 8.2 The battle screen
 
@@ -447,8 +480,8 @@ A creature game (catch creatures, fight with a party of them) uses the same rule
 - **Game Systems ▸ Pet Species** (base stats, growth, moves, evolutions), **Pet Rules
   (creature party)** (party size, storage, formulas, genes, experience) and **Capture Rules**
   (catch rates, balls, shakes).
-- The creature battle screen: turn it on with **Presentation ▸ Menu Screens ▸ Layout ▸
-  Creature screens…** (the `battle.creature_screen` record; or `battle.style: "creature"` in the
+- The creature battle screen: turn it on with **Presentation ▸ Menu Screens ▸ Shared
+  Settings ▸ Creature Screens…** (the `battle.creature_screen` record; or `battle.style: "creature"` in the
   game folder settings). Its pictures, font, sounds and positions are edited in the same dialog.
 
 These frames come from the Full Verification demo with stand-in Foozle creatures:
@@ -464,7 +497,14 @@ Action RPGs fight on the map. Attacks, projectiles, loot rarities and affixes ar
 ▸ Real-Time Combat**; enemy behaviour in **Behavior Trees**; the bottom HUD (orbs, action bar,
 cooldowns) is the **Action RPG HUD** menu screen (chapter 9).
 
-![Diablo-style town with the action HUD](images/game_diablo_town.png)
+The scene's **Combat Scene** component sets how the fight is seen. In side view a character
+stands on the bottom of its collision box, so its feet are on the floor, ledge or bridge that
+holds it. **Walls Cover Characters** draws solid map tiles over the parts of a character that
+reach into them: a sword swung at a wall stops at its face. `auto` does this in side view only
+(top-down characters stand in front of walls); `always` and `never` choose for themselves. A
+monster with no gravity flies; every other one walks on the ground.
+
+![Action RPG town with the action HUD](images/game_arpg_town.png)
 
 ---
 
@@ -481,25 +521,42 @@ cooldowns) is the **Action RPG HUD** menu screen (chapter 9).
   Skill tree, Shop, Crafting (a workstation), Quest board, Recruiting office, Gacha banner, Quest
   log, Pets, Achievements, Bestiary, Message log, Music room, Credits, Skill slots, Wear new gear?,
   Map hints line, and the in-play screens Dialogue window, Dialogue choice, Action RPG HUD and
-  Battle screen. A dot marks screens this project has changed; a workstation, board or banner can
-  have its own layout (the indented rows).
-- **The canvas** (middle): the screen drawn with sample data. Click an outline to select an
-  element, drag it to move, drag its corner to resize.
+  Battle screen. "(modified)" marks screens this project has changed; a workstation, board or
+  banner can have its own layout (the indented rows).
+- **The canvas** (middle): the screen drawn with sample data, as the game draws it. Hover an
+  element to see its dashed outline and name; click to select it, drag it to move, drag its
+  corner to resize. **Show All Outlines** draws every outline at once.
 - **The properties** (right): Engine's place (untick to place it yourself), Anchor, Place, Size,
   Shown, Layer, Frame (nine-patch), Picture and more.
-- **Buttons**: Element (pick one; **+** adds your own Picture, Panel, Text, Gauge or Portrait), Remove element,
-  Reset screen, Copy from…, Background…, Menu theme…, Bitmap fonts…, Picture message window…,
-  Creature screens…, Game folder settings…, and **Open in game** (runs the project opened on this
-  screen). **Preview language** draws the canvas in another locale.
+- **Buttons**, in two rows: the element list, **Add Element** (your own Picture, Panel, Text,
+  Gauge or Portrait) and **Remove Element**; then **This Screen** (reset to the engine's layout,
+  copy the layout from another screen, background), **Shared Settings** (Menu Theme, Bitmap
+  Fonts, Picture Message Window, Creature Screens, Game Folder Settings), **Show All Outlines**
+  and **Open in Game** (runs the project opened on this screen). **Preview language** draws the
+  canvas in another locale. On the status pages, a button jumps to the pages' blocks in Game
+  Systems ▸ Pause Menu.
 
 A screen without a layout is drawn exactly as the engine always drew it.
 
-### 9.2 Menu records
+### 9.2 The pause menu and its pages
 
-**Menu Screens ▸ Menu Records** edits the data behind the screens (Character Screen, Equipment
-Screen, Inventory Screen, Party / Formation Screen…).
+**Database ▸ Game Systems ▸ Pause Menu** is the whole pause menu on one page.
 
-![Menu Records](images/editor_en_menu_records.png)
+![Game Systems: Pause Menu](images/editor_en_systems_pause_menu.png)
+
+- **The list** (left) is the menu in the game's order: tick to show an entry, drag to move it.
+  **Show All** ticks every entry and **Engine Order** puts them back in the engine's order; **New Page** and **New Event Entry** add your
+  own. An entry the game has nothing to open for yet is greyed out, and its tooltip says what it
+  needs.
+- **The settings** (right) belong to the selected row. A built-in entry says what it opens. A
+  **page** (Status, Items, or one of your own) has a name, an icon and **blocks** from top to
+  bottom: Profile, Stat Points, Stat Details or Item List, each placed Left, Right or Full (the
+  whole width), with its own settings (which stat columns, which item tabs…). **Back to the
+  Engine's Page** undoes your changes to Status or Items; **Move It on the Screen (Layout)** opens
+  the page in Menu Screens. An **event entry** runs an event program.
+
+The names of stats come from Game Systems ▸ Stats and the names of equipment slots from Game
+Systems ▸ Equipment Slots.
 
 ### 9.3 The game's screens
 
@@ -519,8 +576,8 @@ Pictures of the Full Verification demo:
 ![Save slots](images/game_en_save_slots.png)
 ![Game over](images/game_en_game_over.png)
 
-The pause menu's own entries come from **Game Systems ▸ Pause Menu Entries**; screens such as
-Pets, Crafting or Enhance appear only when the project has that content.
+The pause menu's order, pages and entries come from **Game Systems ▸ Pause Menu**; screens such
+as Pets, Crafting or Enhance appear only when the project has that content.
 
 ---
 
@@ -719,6 +776,11 @@ pygame-ce. The same from a terminal:
 .venv/bin/asteria-export PROJECT.json OUTPUT --pyz --app --name "My Game"
 ```
 
+From the **standalone Asteria app** (no Python installed), the macOS app it exports carries a
+small player of its own, so players do not need Python either; its saves go to
+`~/Library/Application Support/Asteria Games/<game name>/saves`. The .pyz and the game folder
+still need Python. See [STANDALONE_APP.md](../STANDALONE_APP.md).
+
 ### 13.4 Export a web game
 
 ```bash
@@ -745,8 +807,8 @@ Open any of them with File ▸ Open Project… or play them with `asteria-previe
 | Project | Shows |
 | --- | --- |
 | `reference_projects/full_verification_demo` | The recommended template: a whole turn-based game. Hearthfold (town) → Whispering Woods → Catacombs → Ember Throne, the hero Roger hiring Mira, Vesper and Cael, jobs and skill trees, STR / DEX / INT / LUK, elements, weaknesses / shields / Breaks, refine and sockets, crafting, quests, pets, map areas, New Game Plus, full Traditional Chinese, music room. Every editor page has data. |
-| `reference_projects/diablo_demo` | A real-time action RPG: a town, fields, a side-scrolling mine with platforms and ladders, three classes with skill trees, loot with rarities, affixes and sets, potions, bosses. |
-| `reference_projects/octopath_demo` | Octopath-style party battles: four travellers with two jobs each, weaknesses and shields, boost points, divine skills, multi-weapon attacks, a Pokémon-style pet, concoction, five encounters. |
+| `reference_projects/arpg_demo` | A real-time action RPG: a town, fields, a side-scrolling mine with platforms and ladders, three classes with skill trees, loot with rarities, affixes and sets, potions, bosses. |
+| `reference_projects/party_rpg_demo` | Party battles with breaks and boosts: four travellers with two jobs each, weaknesses and shields, boost points, divine skills, multi-weapon attacks, a Pokémon-style pet, concoction, five encounters. |
 | `reference_projects/complex_reference_rpg` | A dense generic RPG: 12 actors, 8 jobs, 24 abilities, 16 passives, eight skill trees, equipment growth, a 12-person roster, a three-phase boss with adds, custom battle resources. See its `PLAYTEST.md`. |
 
 To see how a system is described in data, find it in the Full Verification demo: its

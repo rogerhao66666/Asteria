@@ -57,21 +57,21 @@ TEMPLATES = (
         "basic_rpg",
         "Basic RPG (Small)",
         "One hero, two enemies, Attack, Fire and Heal; a playable field and basic battles.",
-        "octopath_demo",
+        "party_rpg_demo",
     ),
     ProjectTemplate(
         "party_rpg",
-        "Party RPG (Octopath-style)",
+        "Party RPG (break and boost battles)",
         "Turn-based battles with weaknesses and shields, boost points, jobs, a pet, concoction, "
         "statuses and four enemy types; a field map with encounters.",
-        "octopath_demo",
+        "party_rpg_demo",
     ),
     ProjectTemplate(
         "action_rpg",
-        "Action RPG (Diablo-style)",
+        "Action RPG (real-time loot and skill trees)",
         "Real-time combat with classes and skill trees, loot with rarities and affixes, a set, "
         "potions, a grid bag, an action bar with cooldowns; a town, a field and a side-view mine.",
-        "diablo_demo",
+        "arpg_demo",
     ),
     ProjectTemplate("empty", "Completely Empty", "No sample data; build everything yourself.", ""),
 )

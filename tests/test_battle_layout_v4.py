@@ -11,7 +11,7 @@ from asteria.presentation.battle_layout import BattleScreenLayout
 from asteria.presentation.battle_ui import BattleUiPanel, BattleUiText
 from asteria.presentation.menu_layout import MenuElement, MenuLayout
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 PURPLE, GOLD = (30, 0, 60, 255), (200, 160, 0, 255)
 
 

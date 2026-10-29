@@ -4,7 +4,7 @@ its own damage types, strength and extra cost; chosen when the skill is used."""
 import dataclasses
 
 import pytest
-from test_octopath_style_battle import BP, DAMAGE, _battle, _project
+from test_break_battle import BP, DAMAGE, _battle, _project
 
 from asteria.gameplay import AbilityDefinition, Effect, EffectOperation, EffectOperationKind
 from asteria.gameplay.abilities import AbilityEffect

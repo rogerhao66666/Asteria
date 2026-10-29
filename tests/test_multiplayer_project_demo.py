@@ -17,7 +17,7 @@ from asteria.runtime.loot import LootComponent
 
 PROJECT = (
     Path(__file__).resolve().parents[1]
-    / "reference_projects/diablo_multiplayer_demo/project.asteria.json"
+    / "reference_projects/arpg_multiplayer_demo/project.asteria.json"
 )
 
 

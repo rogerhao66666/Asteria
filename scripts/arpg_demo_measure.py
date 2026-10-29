@@ -37,7 +37,7 @@ def main(argv=None):
     parser.add_argument("--extra", type=int, default=0)
     parser.add_argument("--frames", type=int, default=600)
     args = parser.parse_args(argv)
-    root = REPO / "reference_projects" / "diablo_demo"
+    root = REPO / "reference_projects" / "arpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=1280, height=720

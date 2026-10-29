@@ -29,7 +29,7 @@ The project intentionally exercises a dense but generic RPG configuration:
 - a field scene with an interactable Boss that dispatches `START_ENCOUNTER`
 
 All names/content are original reference material. The project does not contain or
-copy Octopath Traveler assets, characters, story, maps, music, or proprietary game
+copy commercial game assets, characters, story, maps, music, or proprietary game
 data. Commercial JRPGs are used only as a system-density benchmark.
 
 `build_project.py` reproduces the project entirely through canonical Asteria APIs.

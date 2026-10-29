@@ -4,7 +4,7 @@ one from the bag, and taking it out again either returns it or destroys it (an i
 import dataclasses
 
 import pytest
-from test_octopath_style_battle import _project
+from test_break_battle import _project
 from test_session_events import _session
 
 from asteria.gameplay.modifiers import ModifierOperation, StatModifier

@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-DEMO = ROOT / "reference_projects/diablo_multiplayer_demo"
+DEMO = ROOT / "reference_projects/arpg_multiplayer_demo"
 
 
 def wait(predicate, timeout=60):

@@ -4,11 +4,11 @@
       {
         "id": "0ed83770-13cf-569a-8cef-5d31174eeb50",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Wanderer",
         "source_path": "playable_assets/hero.png"
@@ -16,11 +16,11 @@
       {
         "id": "6e0355af-351b-5fba-a226-0ecd5d2a96d5",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Wanderer Sheet",
         "source_path": "playable_assets/hero_sheet.json"
@@ -28,11 +28,11 @@
       {
         "id": "49b9b03a-2861-58c5-86d5-029320e5f3c3",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Wanderer Animations",
         "source_path": "playable_assets/hero_clips.json"
@@ -40,11 +40,11 @@
       {
         "id": "bfb10386-3dc4-5cd1-8d2e-0c8887878e86",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Merchant",
         "source_path": "playable_assets/merchant.png"
@@ -52,11 +52,11 @@
       {
         "id": "5b403add-9853-5bb5-aceb-dc48fc46ab46",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Merchant Sheet",
         "source_path": "playable_assets/merchant_sheet.json"
@@ -64,11 +64,11 @@
       {
         "id": "ce246768-58f8-51f6-9f7b-e938cb1e7c2e",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Merchant Animations",
         "source_path": "playable_assets/merchant_clips.json"
@@ -76,11 +76,11 @@
       {
         "id": "adbb8742-f5e4-59c6-8539-f85537c75cbb",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Smith",
         "source_path": "playable_assets/smith.png"
@@ -88,11 +88,11 @@
       {
         "id": "1e66a636-f21a-5481-9da3-02dec87e3967",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Smith Sheet",
         "source_path": "playable_assets/smith_sheet.json"
@@ -100,11 +100,11 @@
       {
         "id": "9fd9b7c7-09f9-5e0e-b566-905f20438d3a",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Smith Animations",
         "source_path": "playable_assets/smith_clips.json"
@@ -112,11 +112,11 @@
       {
         "id": "78acb90a-b592-53be-8afa-6445186eba78",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Elder",
         "source_path": "playable_assets/elder.png"
@@ -124,11 +124,11 @@
       {
         "id": "5868793f-d5d9-5ecd-b0a2-8f1296027f15",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Elder Sheet",
         "source_path": "playable_assets/elder_sheet.json"
@@ -136,11 +136,11 @@
       {
         "id": "3b62c068-1d1b-5057-bdce-111981478314",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Elder Animations",
         "source_path": "playable_assets/elder_clips.json"
@@ -148,11 +148,11 @@
       {
         "id": "b9c6e918-8831-528c-ad58-1043ae683fcf",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Villager",
         "source_path": "playable_assets/villager.png"
@@ -160,11 +160,11 @@
       {
         "id": "39aa9f61-22d1-54b4-bc4d-8878eeeb12bd",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Villager Sheet",
         "source_path": "playable_assets/villager_sheet.json"
@@ -172,11 +172,11 @@
       {
         "id": "7e2d35b9-5f98-558d-9e63-8492adb2f856",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Villager Animations",
         "source_path": "playable_assets/villager_clips.json"
@@ -184,11 +184,11 @@
       {
         "id": "45c6bf93-cd77-5a13-80c8-666e6a469ac8",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Warrior",
         "source_path": "playable_assets/trainer_warrior.png"
@@ -196,11 +196,11 @@
       {
         "id": "618d1f60-1f03-5c1b-bfdc-2791141c1b71",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Warrior Sheet",
         "source_path": "playable_assets/trainer_warrior_sheet.json"
@@ -208,11 +208,11 @@
       {
         "id": "52d54082-1248-55e9-8df4-7fad5919bb05",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Warrior Animations",
         "source_path": "playable_assets/trainer_warrior_clips.json"
@@ -220,11 +220,11 @@
       {
         "id": "690c9fbd-b3e3-5488-b369-975854167bf9",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Ranger",
         "source_path": "playable_assets/trainer_ranger.png"
@@ -232,11 +232,11 @@
       {
         "id": "d224418e-7989-57de-acee-fe5edd292941",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Ranger Sheet",
         "source_path": "playable_assets/trainer_ranger_sheet.json"
@@ -244,11 +244,11 @@
       {
         "id": "4d439532-223c-5c6a-80ab-ea59d11f6d0d",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Ranger Animations",
         "source_path": "playable_assets/trainer_ranger_clips.json"
@@ -256,11 +256,11 @@
       {
         "id": "58b9ddb2-ebb2-5d8a-b252-3a70428e28af",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mage",
         "source_path": "playable_assets/trainer_mage.png"
@@ -268,11 +268,11 @@
       {
         "id": "628ada4f-ece3-5753-a572-09bd5bbbe996",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mage Sheet",
         "source_path": "playable_assets/trainer_mage_sheet.json"
@@ -280,11 +280,11 @@
       {
         "id": "83b5c24a-9571-532e-9ac4-351b047d97a1",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mage Animations",
         "source_path": "playable_assets/trainer_mage_clips.json"
@@ -292,11 +292,11 @@
       {
         "id": "eff9ff1b-1a96-5b0d-8512-53c2bd27e48c",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Goblin",
         "source_path": "playable_assets/slime.png"
@@ -304,11 +304,11 @@
       {
         "id": "3b8818ac-3f26-55ac-8bb1-c5aa902cd09c",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Goblin Sheet",
         "source_path": "playable_assets/slime_sheet.json"
@@ -316,11 +316,11 @@
       {
         "id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Goblin Animations",
         "source_path": "playable_assets/slime_clips.json"
@@ -328,11 +328,11 @@
       {
         "id": "c5b3ac80-0146-54f0-b550-9306d90fc072",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Watcher",
         "source_path": "playable_assets/eye.png"
@@ -340,11 +340,11 @@
       {
         "id": "05aefae2-2ed0-53e7-bd0b-db20c6fc3bab",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Watcher Sheet",
         "source_path": "playable_assets/eye_sheet.json"
@@ -352,11 +352,11 @@
       {
         "id": "17328d4d-791a-52c7-9076-8c30f88bfde9",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Watcher Animations",
         "source_path": "playable_assets/eye_clips.json"
@@ -364,11 +364,11 @@
       {
         "id": "e0b244e8-94e7-5170-8831-e38ff310bac3",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Skeleton",
         "source_path": "playable_assets/skull.png"
@@ -376,11 +376,11 @@
       {
         "id": "ce86f22d-7232-53a8-9135-68b4c6498944",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Skeleton Sheet",
         "source_path": "playable_assets/skull_sheet.json"
@@ -388,11 +388,11 @@
       {
         "id": "daff4455-d216-55f4-be1c-e8239be13e92",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Skeleton Animations",
         "source_path": "playable_assets/skull_clips.json"
@@ -400,11 +400,11 @@
       {
         "id": "2c464a9c-b4f7-568c-9f1c-2157069e1542",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Bone Champion",
         "source_path": "playable_assets/skull_elite.png"
@@ -412,11 +412,11 @@
       {
         "id": "32a32c01-f400-5408-b833-01b6d84bc4c0",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Bone Champion Sheet",
         "source_path": "playable_assets/skull_elite_sheet.json"
@@ -424,11 +424,11 @@
       {
         "id": "5bb1f7fe-68d1-540b-91a0-bc4ba48769a5",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Bone Champion Animations",
         "source_path": "playable_assets/skull_elite_clips.json"
@@ -436,11 +436,11 @@
       {
         "id": "96c2f954-c55b-5b0c-8238-d65ca1bd311f",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Skeleton King",
         "source_path": "playable_assets/cyclops.png"
@@ -448,11 +448,11 @@
       {
         "id": "7d516055-1ea9-585d-a115-14cc9bee092a",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Skeleton King Sheet",
         "source_path": "playable_assets/cyclops_sheet.json"
@@ -460,11 +460,11 @@
       {
         "id": "6fe84ee1-7f8c-5246-b361-f0103817829e",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Skeleton King Animations",
         "source_path": "playable_assets/cyclops_clips.json"
@@ -472,11 +472,11 @@
       {
         "id": "cd14ea73-6927-591e-9041-4d3e4b37e101",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Crawler",
         "source_path": "playable_assets/walker.png"
@@ -484,11 +484,11 @@
       {
         "id": "aac3ef36-2a21-5d78-aa3d-02e579ad9a17",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Crawler Sheet",
         "source_path": "playable_assets/walker_sheet.json"
@@ -496,11 +496,11 @@
       {
         "id": "68f038cf-53c8-5f28-bf9c-dbf9759664e5",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Crawler Animations",
         "source_path": "playable_assets/walker_clips.json"
@@ -508,47 +508,47 @@
       {
         "id": "bdc01704-a645-5e4e-8224-ac37dc1155dd",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
-        "name": "Cave Imp",
+        "name": "Cave Bat",
         "source_path": "playable_assets/bat.png"
       },
       {
         "id": "682787e1-f929-5fd1-b29e-11c70acef227",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
-        "name": "Cave Imp Sheet",
+        "name": "Cave Bat Sheet",
         "source_path": "playable_assets/bat_sheet.json"
       },
       {
         "id": "3d81f616-81ac-5749-99f1-dd5a8d94a1a6",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
-        "name": "Cave Imp Animations",
+        "name": "Cave Bat Animations",
         "source_path": "playable_assets/bat_clips.json"
       },
       {
         "id": "64041def-74a7-5b95-abc9-762a68d36a0e",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Ancient Drone",
         "source_path": "playable_assets/drill.png"
@@ -556,11 +556,11 @@
       {
         "id": "4357c423-f624-5cbe-a232-9588056dd1e3",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Ancient Drone Sheet",
         "source_path": "playable_assets/drill_sheet.json"
@@ -568,11 +568,11 @@
       {
         "id": "caa2d807-2049-5725-8964-7feee34efd17",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Ancient Drone Animations",
         "source_path": "playable_assets/drill_clips.json"
@@ -580,11 +580,11 @@
       {
         "id": "f162f787-9c2b-5869-b183-e2b275cb20bc",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Beast Golem",
         "source_path": "playable_assets/golem.png"
@@ -592,11 +592,11 @@
       {
         "id": "d18db00a-4441-5663-86e1-146a41573f99",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Beast Golem Sheet",
         "source_path": "playable_assets/golem_sheet.json"
@@ -604,11 +604,11 @@
       {
         "id": "48fa654c-13dd-5702-864f-17cdd6a1abe7",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "animation",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Beast Golem Animations",
         "source_path": "playable_assets/golem_clips.json"
@@ -616,11 +616,11 @@
       {
         "id": "fce88643-f053-57bc-bd7e-21150dafc24c",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "fire_ball",
         "source_path": "playable_assets/fx_fire_ball.png"
@@ -628,11 +628,11 @@
       {
         "id": "d4b56e20-0322-5f05-85c2-317f4a7f8e87",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "fire_ball Sheet",
         "source_path": "playable_assets/fx_fire_ball_sheet.json"
@@ -640,11 +640,11 @@
       {
         "id": "c27d8a91-0d71-5683-ab72-db4cda968162",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "explosion",
         "source_path": "playable_assets/fx_explosion.png"
@@ -652,11 +652,11 @@
       {
         "id": "f89d6315-f0af-5852-abc1-f06def68ea06",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "explosion Sheet",
         "source_path": "playable_assets/fx_explosion_sheet.json"
@@ -664,11 +664,11 @@
       {
         "id": "17208374-974d-5b96-bb30-e97417c788d4",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "spear",
         "source_path": "playable_assets/fx_spear.png"
@@ -676,11 +676,11 @@
       {
         "id": "65b554ef-9bc1-5b11-a51f-8d8e175c1b1a",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "spear Sheet",
         "source_path": "playable_assets/fx_spear_sheet.json"
@@ -688,11 +688,11 @@
       {
         "id": "b48112a3-b61b-551c-b289-049e0beeb965",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "water",
         "source_path": "playable_assets/fx_water.png"
@@ -700,11 +700,11 @@
       {
         "id": "bd05d9de-b0b1-5b2a-9194-30c06cbf88af",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "water Sheet",
         "source_path": "playable_assets/fx_water_sheet.json"
@@ -712,11 +712,11 @@
       {
         "id": "ca65e9a6-441f-5c30-98d2-76b7f87edc1d",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "geyser",
         "source_path": "playable_assets/fx_geyser.png"
@@ -724,11 +724,11 @@
       {
         "id": "1fcf4310-a241-5053-82cb-716542727a7b",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "geyser Sheet",
         "source_path": "playable_assets/fx_geyser_sheet.json"
@@ -736,11 +736,11 @@
       {
         "id": "bda4767d-2c7a-5219-807a-317119ea033f",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "wind",
         "source_path": "playable_assets/fx_wind.png"
@@ -748,11 +748,11 @@
       {
         "id": "cda0e46b-9037-5ebd-b2dc-2d192fcd9672",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "wind Sheet",
         "source_path": "playable_assets/fx_wind_sheet.json"
@@ -760,11 +760,11 @@
       {
         "id": "08198c80-3586-549e-a7a1-08de03729fbb",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "tornado",
         "source_path": "playable_assets/fx_tornado.png"
@@ -772,11 +772,11 @@
       {
         "id": "f9ab0671-56f8-5458-b369-13fa2e7e342d",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "tornado Sheet",
         "source_path": "playable_assets/fx_tornado_sheet.json"
@@ -784,11 +784,11 @@
       {
         "id": "d70729b6-a894-52b0-b3e1-211bcb30ba39",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "spike",
         "source_path": "playable_assets/fx_spike.png"
@@ -796,11 +796,11 @@
       {
         "id": "869812bd-bf9f-5815-b480-52b9cf4cb286",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "spike Sheet",
         "source_path": "playable_assets/fx_spike_sheet.json"
@@ -808,11 +808,11 @@
       {
         "id": "e5c4321b-fac1-51bc-b336-69938aef9d98",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "rocks",
         "source_path": "playable_assets/fx_rocks.png"
@@ -820,11 +820,11 @@
       {
         "id": "1d04be6e-81eb-5b6d-89fc-d1b1c7674e92",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "rocks Sheet",
         "source_path": "playable_assets/fx_rocks_sheet.json"
@@ -832,11 +832,11 @@
       {
         "id": "40792b28-e78f-55c8-b9a9-6f54d3a9b9a2",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "portal",
         "source_path": "playable_assets/fx_portal.png"
@@ -844,11 +844,11 @@
       {
         "id": "8d8d18a4-2a0c-53f1-94d1-502157dd8e36",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "portal Sheet",
         "source_path": "playable_assets/fx_portal_sheet.json"
@@ -856,11 +856,11 @@
       {
         "id": "d5f657cb-3200-5d3b-bfe0-80ea12309fd3",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "ice_bolt",
         "source_path": "playable_assets/fx_ice_bolt.png"
@@ -868,11 +868,11 @@
       {
         "id": "c9764146-76d4-58ff-ab1a-b35dea10ac82",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "ice_bolt Sheet",
         "source_path": "playable_assets/fx_ice_bolt_sheet.json"
@@ -880,11 +880,11 @@
       {
         "id": "24a5e0bd-e3f1-54a3-b0d4-41341359c742",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "ice_burst",
         "source_path": "playable_assets/fx_ice_burst.png"
@@ -892,11 +892,11 @@
       {
         "id": "fc159e61-4ab6-5923-be3e-3fbf5abbfda0",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "ice_burst Sheet",
         "source_path": "playable_assets/fx_ice_burst_sheet.json"
@@ -904,11 +904,11 @@
       {
         "id": "b5f1ab49-9bc9-5a8d-8aa1-a02c800829a1",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "bolt_ball",
         "source_path": "playable_assets/fx_bolt_ball.png"
@@ -916,11 +916,11 @@
       {
         "id": "f11b2ac9-f610-56e9-b24f-d543647b7c6c",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "bolt_ball Sheet",
         "source_path": "playable_assets/fx_bolt_ball_sheet.json"
@@ -928,11 +928,11 @@
       {
         "id": "46c2fa85-ade8-589d-ae0a-1e2f62de8e52",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "bolt_strike",
         "source_path": "playable_assets/fx_bolt_strike.png"
@@ -940,11 +940,11 @@
       {
         "id": "174f9c0f-cffa-542c-b255-b092114c94bc",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "bolt_strike Sheet",
         "source_path": "playable_assets/fx_bolt_strike_sheet.json"
@@ -952,11 +952,11 @@
       {
         "id": "c81f8bcd-de35-5a07-b2bf-8940f776a690",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "bolt_burst",
         "source_path": "playable_assets/fx_bolt_burst.png"
@@ -964,11 +964,11 @@
       {
         "id": "aad78212-e3f6-5be5-8c40-f7de903c42ed",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "bolt_burst Sheet",
         "source_path": "playable_assets/fx_bolt_burst_sheet.json"
@@ -976,11 +976,11 @@
       {
         "id": "0aaa30b2-854d-56df-9cf2-fdf0fc1b3d17",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "spark_arc",
         "source_path": "playable_assets/fx_spark_arc.png"
@@ -988,11 +988,11 @@
       {
         "id": "dbbe5a78-ea96-532f-a6fc-74df01ff7f18",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "spark_arc Sheet",
         "source_path": "playable_assets/fx_spark_arc_sheet.json"
@@ -1000,11 +1000,11 @@
       {
         "id": "80a7fa1b-4069-5221-89f9-66ad8feec8d9",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "ember_arc",
         "source_path": "playable_assets/fx_ember_arc.png"
@@ -1012,11 +1012,11 @@
       {
         "id": "505ee81d-9408-540e-8c11-b1e9cd0c6c40",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "ember_arc Sheet",
         "source_path": "playable_assets/fx_ember_arc_sheet.json"
@@ -1024,11 +1024,11 @@
       {
         "id": "d5619553-1e6e-5ada-bafb-9d5da17ce1d6",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "poison_cloud",
         "source_path": "playable_assets/fx_poison_cloud.png"
@@ -1036,11 +1036,11 @@
       {
         "id": "a58a8059-bf7a-50bd-a5db-87d9975f9684",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "poison_cloud Sheet",
         "source_path": "playable_assets/fx_poison_cloud_sheet.json"
@@ -1048,11 +1048,11 @@
       {
         "id": "979274e4-140c-51bb-9f23-f0b5f03088dd",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "poison_burst",
         "source_path": "playable_assets/fx_poison_burst.png"
@@ -1060,11 +1060,11 @@
       {
         "id": "abb310b9-1c6c-5546-b25d-ded3ef7f54c9",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "poison_burst Sheet",
         "source_path": "playable_assets/fx_poison_burst_sheet.json"
@@ -1072,11 +1072,11 @@
       {
         "id": "7a8aaf47-e388-54f6-8dce-ba29d16053f2",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "gold_burst",
         "source_path": "playable_assets/fx_gold_burst.png"
@@ -1084,11 +1084,11 @@
       {
         "id": "b45649f1-20b5-5379-8d9d-4e4f7a59bea3",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "gold_burst Sheet",
         "source_path": "playable_assets/fx_gold_burst_sheet.json"
@@ -1096,11 +1096,11 @@
       {
         "id": "0d5f57a7-5964-50bb-bbb9-6c3f6bb134d3",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "blood_arc",
         "source_path": "playable_assets/fx_blood_arc.png"
@@ -1108,11 +1108,11 @@
       {
         "id": "42da1255-316d-5511-be7c-6c7036e1b869",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "blood_arc Sheet",
         "source_path": "playable_assets/fx_blood_arc_sheet.json"
@@ -1120,11 +1120,11 @@
       {
         "id": "32f50c8c-fda0-50c0-bfad-d3f96f9f2997",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "shadow_portal",
         "source_path": "playable_assets/fx_shadow_portal.png"
@@ -1132,11 +1132,11 @@
       {
         "id": "0f43a2fb-88e1-5afc-9ce1-99e8f246e8ca",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "shadow_portal Sheet",
         "source_path": "playable_assets/fx_shadow_portal_sheet.json"
@@ -1144,11 +1144,11 @@
       {
         "id": "fcc0d235-356b-5a3d-946c-1d23e6328c1c",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Arrow",
         "source_path": "playable_assets/arrow.png"
@@ -1156,11 +1156,11 @@
       {
         "id": "8ee7ba15-5539-53c0-9b01-b1cacb00ee2d",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Arrow Sheet",
         "source_path": "playable_assets/arrow_sheet.json"
@@ -1168,11 +1168,11 @@
       {
         "id": "46f940da-d284-5fe4-be8b-26f58462ea40",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Overworld",
         "source_path": "playable_assets/overworld.png"
@@ -1180,11 +1180,11 @@
       {
         "id": "af230c00-e855-5992-b645-fa0c18e1ebcf",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Overworld Sheet",
         "source_path": "playable_assets/overworld_sheet.json"
@@ -1192,11 +1192,11 @@
       {
         "id": "c0784815-0580-51dc-a2dd-a098f365673b",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "tileset",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Overworld Tileset",
         "source_path": "playable_assets/overworld_tileset.json"
@@ -1204,11 +1204,11 @@
       {
         "id": "bffa8e3a-0c36-5864-9668-e1cd41e0da05",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mine",
         "source_path": "playable_assets/mine.png"
@@ -1216,11 +1216,11 @@
       {
         "id": "09efe86b-0138-5c4a-9786-0e0c8dc156e5",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "sprite_sheet",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mine Sheet",
         "source_path": "playable_assets/mine_sheet.json"
@@ -1228,11 +1228,11 @@
       {
         "id": "4fad0e8e-08e9-5052-a469-f81d8efc91ad",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "tileset",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mine Tileset",
         "source_path": "playable_assets/mine_tileset.json"
@@ -1240,11 +1240,11 @@
       {
         "id": "951af2b6-16a9-59f4-9ada-23111a16f850",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "tilemap",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Town Map",
         "source_path": "playable_assets/town_map.json"
@@ -1252,11 +1252,11 @@
       {
         "id": "2a295d51-3682-588c-af08-4e8e7916f5f2",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "tilemap",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Field Map",
         "source_path": "playable_assets/field_map.json"
@@ -1264,11 +1264,11 @@
       {
         "id": "699dae43-93dc-5b5f-a482-cc942da9bd37",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "tilemap",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Dungeon Map",
         "source_path": "playable_assets/dungeon_map.json"
@@ -1276,11 +1276,11 @@
       {
         "id": "4f32dc99-2f6e-5c75-9163-d57aaa2d857a",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mine Far",
         "source_path": "playable_assets/mine_far.png"
@@ -1288,11 +1288,11 @@
       {
         "id": "ff58e4a2-f466-53c8-9bf5-443d4bb0c502",
         "import_settings": {},
-        "importer": "diablo_demo",
+        "importer": "arpg_demo",
         "importer_version": 1,
         "kind": "texture",
         "metadata": {
-          "source": "reference_projects/diablo_demo/build_project.py"
+          "source": "reference_projects/arpg_demo/build_project.py"
         },
         "name": "Mine Near",
         "source_path": "playable_assets/mine_near.png"
@@ -29946,7 +29946,7 @@
                 "scale_x": 1.0,
                 "scale_y": 1.0,
                 "x": 639.0,
-                "y": 262.0
+                "y": 260.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -30084,7 +30084,7 @@
                 "scale_x": 1.0,
                 "scale_y": 1.0,
                 "x": 1305.0,
-                "y": 244.0
+                "y": 242.0
               },
               "type": "asteria.Transform",
               "version": 1

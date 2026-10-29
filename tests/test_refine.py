@@ -2,7 +2,7 @@
 work and what a failure does (nothing, lose a level, or break the item)."""
 
 import pytest
-from test_octopath_style_battle import _project
+from test_break_battle import _project
 from test_session_events import _session
 
 from asteria.gameplay.modifiers import StatModifier

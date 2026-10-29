@@ -53,11 +53,24 @@ ACTIONS = {  # clip role: the Lucifer strips it may come from (first that exists
 }
 
 
-def character(assets, key, lucifer_key, name, *, height=26):
+def _without_shadow(frame):
+    """A frame without its drawn ground shadow (the half-see-through dark pixels under a
+    figure): a creature in the air has no floor to cast it on."""
+    pixels = frame.load()
+    for y in range(frame.height):
+        for x in range(frame.width):
+            r, g, b, a = pixels[x, y]
+            if 0 < a < 255 and r + g + b < 60:
+                pixels[x, y] = (0, 0, 0, 0)
+    return frame
+
+
+def character(assets, key, lucifer_key, name, *, height=26, shadow=True):
     """A Lucifer character as one sheet: per facing the idle and walk strips and the whole of the
     attack strips (``attack``, ``attack2``, ``attack3``) and the jump, every frame kept at its
     own size on one common cell (a strip's cell may be larger: arcs, a long weapon) and scaled so
-    the standing figure is ``height`` px tall; the pivot stands at the feet."""
+    the standing figure is ``height`` px tall; the pivot stands at the feet. ``shadow=False``
+    leaves out the shadow drawn under the figure (a flier: its feet are the lowest it shows)."""
     from PIL import Image
 
     strips = {}
@@ -68,6 +81,8 @@ def character(assets, key, lucifer_key, name, *, height=26):
         }
         for role, (names, _seconds) in ACTIONS.items():
             roles[role] = _strip(lucifer_key, facing, names)
+        if not shadow:
+            roles = {role: [_without_shadow(f.copy()) for f in fs] for role, fs in roles.items()}
         strips[facing] = roles
     stand = strips["Down"]["idle"][0]
     body = stand.getchannel("A").getbbox()
@@ -80,20 +95,24 @@ def character(assets, key, lucifer_key, name, *, height=26):
         out.alpha_composite(frame, ((cell - frame.width) // 2, cell - frame.height))
         return out.resize((side, side), Image.NEAREST)
 
-    frames, order = [], {}
+    frames, order, feet = [], {}, []
     for direction, facing in FOLDERS.items():
+        # each facing stands on its own idle feet: the side views draw the feet lower than the
+        # front one, and a side-view scene shows only those
+        idle = placed(strips[facing]["idle"][0]).getchannel("A").getbbox()
         for role in ("idle", "walk", *ACTIONS):
             indices = []
             for frame in strips[facing][role]:
                 indices.append(len(frames))
                 frames.append(placed(frame))
+                feet.append(idle[3] / side)
             order[(role, direction)] = indices
     sheet = Image.new("RGBA", (side * len(frames), side), (0, 0, 0, 0))
     for index, image in enumerate(frames):
         sheet.paste(image, (index * side, 0))
     rects = [(i * side, 0, side, side) for i in range(len(frames))]
-    feet = frames[0].getchannel("A").getbbox()[3] / side  # where the standing figure's feet are
-    sheet_id = assets.sheet(key, _surface(sheet), rects, name, pivot=(0.5, feet))
+    pivots = [(0.5, y) for y in feet]  # where the standing figure's feet are
+    sheet_id = assets.sheet(key, _surface(sheet), rects, name, pivots=pivots)
     clips = {}
     for (role, direction), indices in order.items():
         if role == "idle":

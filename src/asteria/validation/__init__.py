@@ -68,10 +68,10 @@ from .everything_combined import EverythingCombinedReport, EverythingCombinedSce
 
 from .presentation_stress import BattlePresentationStressHarness, PresentationStressReport
 
-from .non_octopath_generality import (
+from .non_party_rpg_generality import (
     GeneralityArchetypeResult,
-    NonOctopathGeneralityHarness,
-    NonOctopathGeneralityReport,
+    NonPartyRpgGeneralityHarness,
+    NonPartyRpgGeneralityReport,
 )
 
 from .playable_runtime_loop import PlayableRpgRuntimeLoop, PlayableRuntimeState

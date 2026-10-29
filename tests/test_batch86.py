@@ -5,11 +5,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def doc():
-    return (ROOT / "BATCH86_SYSTEM_CLOSURE_AUDIT.md").read_text()
+    return (ROOT / "docs" / "history" / "BATCH86_SYSTEM_CLOSURE_AUDIT.md").read_text()
 
 
 def data():
-    return json.loads((ROOT / "BATCH86_CLOSURE_CHECKLIST.json").read_text())
+    return json.loads((ROOT / "docs" / "history" / "BATCH86_CLOSURE_CHECKLIST.json").read_text())
 
 
 def test_conditional_not_false_production_pass():
