@@ -23,10 +23,10 @@ persistent, Momentum compact, Rage contextual, and a detailed Resolve meter
 focused-only. The engine does not attach semantics to those names.
 
 Design reference policy:
-Asteria may learn from polished JRPG interfaces, including Octopath Traveler's
+Asteria may learn from polished JRPG interfaces, including commercial party JRPGs'
 clarity, focus hierarchy, command readability, and interaction rhythm. This is a
 quality/design reference only. Asteria must remain generic, adaptive and
-project-configurable, and must not copy or hardcode Octopath-specific mechanics,
+project-configurable, and must not copy or hardcode reference-game-specific mechanics,
 party assumptions, resource taxonomy, command structure, or exact layout.
 
 Product rule: the lower layer preserves creative freedom; the presentation layer

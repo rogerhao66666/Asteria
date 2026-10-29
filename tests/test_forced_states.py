@@ -4,7 +4,7 @@ berserk (only some skills), doom (death when it runs out). All of it is state da
 import dataclasses
 
 import pytest
-from test_octopath_style_battle import DAMAGE, _battle, _project
+from test_break_battle import DAMAGE, _battle, _project
 
 from asteria.gameplay import Effect, EffectOperation, EffectOperationKind
 from asteria.gameplay.states import StateDefinition

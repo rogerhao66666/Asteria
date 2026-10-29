@@ -5,13 +5,13 @@ PYTHONPATH=src python reference_projects/run_reference_smoke.py
 from asteria.validation import (
     BattlePresentationStressHarness,
     EverythingCombinedScenario,
-    NonOctopathGeneralityHarness,
+    NonPartyRpgGeneralityHarness,
 )
 
 
 def main():
     combined = EverythingCombinedScenario().run()
-    general = NonOctopathGeneralityHarness().run()
+    general = NonPartyRpgGeneralityHarness().run()
     stress = BattlePresentationStressHarness(vfx_draws=1000, offscreen_draws=300).run(
         planner_iterations=3
     )

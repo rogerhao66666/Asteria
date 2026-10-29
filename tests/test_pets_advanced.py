@@ -1,7 +1,7 @@
 """Pet evolution, learned moves, affinity and the optional battle-unit mode."""
 
 import pytest
-from test_octopath_demo import BOSS, demo  # noqa: F401  (pytest fixture)
+from test_party_rpg_demo import BOSS, demo  # noqa: F401  (pytest fixture)
 
 from asteria.rpg.pets import PetEvolution, PetMove, PetRecord, PetSpeciesDefinition
 
@@ -388,7 +388,7 @@ def test_the_skill_slots_screen_equips_and_removes_abilities():
     from asteria.runtime.extras_screens import AbilitySlotsScreen
     from asteria.runtime.game_session import GameSessionRuntime
 
-    root = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     project.rpg_database.add_ability_loadout_rules(AbilityLoadoutRules("slots", 1))

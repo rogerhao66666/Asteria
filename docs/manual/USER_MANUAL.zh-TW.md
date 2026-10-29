@@ -36,9 +36,9 @@ Asteria 是用 Python（pygame-ce）寫的 2D RPG 引擎，編輯器用 PySide6 
 **專案檔裡的資料**，在編輯器裡編輯：地圖、角色、技能、道具、敵人、戰鬥規則、畫面版面與
 翻譯。引擎本身沒有內建任何一款遊戲，範例只是示範資料。你可以做：
 
-- 回合制隊伍戰鬥（側視、弱點、護盾與增幅，歧路旅人風格），
+- 回合制隊伍戰鬥（側視、弱點、護盾與增幅），
 - 生物戰鬥（捕捉、生物隊伍、寶可夢風格的畫面），
-- 即時動作 RPG（俯視或橫向捲軸，暗黑破壞神風格的掉寶與技能樹），
+- 即時動作 RPG（俯視或橫向捲軸，含掉寶與技能樹），
 - 以及介於兩者之間的任何玩法，因為規則是選項，不是程式碼。
 
 編輯器沒有提供的功能，可以在 **程式碼** 工作區用 Python 腳本完成（第 15 章列出 API）。
@@ -107,8 +107,8 @@ python3 -m venv .venv
 | --- | --- |
 | Full Verification (Recommended) | 一整款可以拿來學的遊戲：四張地圖、有商店的城鎮、四人隊伍與職業和技能樹、屬性、護盾與破防、頭目、任務、製作，每一個編輯器頁面都有資料。 |
 | Basic RPG (Small) | 一位英雄、兩種敵人、攻擊、火焰與治療；可玩的地圖與基本戰鬥。 |
-| Party RPG (Octopath-style) | 弱點與護盾、增幅點數、職業、一隻寵物、調合、狀態與四種敵人。 |
-| Action RPG (Diablo-style) | 即時戰鬥，含職業與技能樹、有稀有度和詞綴的掉寶、藥水、格子背包、有冷卻的技能列。 |
+| Party RPG (break and boost battles) | 弱點與護盾、增幅點數、職業、一隻寵物、調合、狀態與四種敵人。 |
+| Action RPG (real-time loot and skill trees) | 即時戰鬥，含職業與技能樹、有稀有度和詞綴的掉寶、藥水、格子背包、有冷卻的技能列。 |
 | Completely Empty | 沒有範例資料。 |
 
 整個範本資料夾都會被複製，包括美術與授權檔。專案若有 `START_HERE.md`，**主控台** 面板會顯示
@@ -396,9 +396,9 @@ TP…）、敵人等級、地圖區域（區域、危險地帶）、裝備耐久
 
 ![回合制戰鬥](images/game_zh_battle.png)
 
-歧路旅人風格的範例，滿編隊伍、增幅點數與時間軸：
+隊伍 RPG 範例（破防／加速戰鬥），滿編隊伍、增幅點數與時間軸：
 
-![歧路旅人風格戰鬥](images/game_octopath_battle.png)
+![隊伍 RPG（破防／加速戰鬥）](images/game_break_battle.png)
 
 ### 8.2 戰鬥畫面
 
@@ -435,7 +435,7 @@ TP…）、敵人等級、地圖區域（區域、危險地帶）、裝備耐久
 動作 RPG 直接在地圖上戰鬥。攻擊、投射物、戰利品稀有度與詞綴在 **資料庫 ▸ 即時戰鬥**；敵人行為
 在 **行為樹**；下方的 HUD（血球、技能列、冷卻）是 **動作 RPG 介面** 這個選單畫面（第 9 章）。
 
-![暗黑破壞神風格的城鎮與動作 HUD](images/game_diablo_town.png)
+![動作 RPG 的城鎮與動作 HUD](images/game_arpg_town.png)
 
 ---
 
@@ -697,8 +697,8 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | 專案 | 展示 |
 | --- | --- |
 | `reference_projects/full_verification_demo` | 建議使用的範本：一整款回合制遊戲。Hearthfold（城鎮）→ Whispering Woods → Catacombs → Ember Throne，主角 Roger 雇用 Mira、Vesper 與 Cael，職業與技能樹、STR / DEX / INT / LUK、屬性、弱點／護盾／破防、精煉與鑲嵌、製作、任務、寵物、地圖區域、繼承新遊戲、完整繁體中文、音樂室。每個編輯器頁面都有資料。 |
-| `reference_projects/diablo_demo` | 即時動作 RPG：城鎮、野外、有平台和梯子的橫向捲軸礦坑、三個職業與技能樹、有稀有度／詞綴／套裝的掉寶、藥水、頭目。 |
-| `reference_projects/octopath_demo` | 歧路旅人風格的隊伍戰鬥：四位旅人各有兩個職業、弱點與護盾、增幅點數、神技、多武器攻擊、一隻寶可夢風格的寵物、調合、五場遭遇戰。 |
+| `reference_projects/arpg_demo` | 即時動作 RPG：城鎮、野外、有平台和梯子的橫向捲軸礦坑、三個職業與技能樹、有稀有度／詞綴／套裝的掉寶、藥水、頭目。 |
+| `reference_projects/party_rpg_demo` | 破防／加速的隊伍戰鬥：四位旅人各有兩個職業、弱點與護盾、增幅點數、神技、多武器攻擊、一隻寶可夢風格的寵物、調合、五場遭遇戰。 |
 | `reference_projects/complex_reference_rpg` | 資料密集的通用 RPG：12 位角色、8 個職業、24 個技能、16 個被動、八棵技能樹、裝備成長、12 人名冊、有小兵的三階段頭目、自訂戰鬥資源。見它的 `PLAYTEST.md`。 |
 
 想知道某個系統在資料裡怎麼描述，到 Full Verification 範例裡找：它的

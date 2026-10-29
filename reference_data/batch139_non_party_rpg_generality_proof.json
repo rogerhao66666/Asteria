@@ -1,5 +1,5 @@
 {
-  "schema": "asteria.non_octopath_generality_proof",
+  "schema": "asteria.non_party_rpg_generality_proof",
   "version": 1,
   "archetypes": {
     "solo_reactive": {
@@ -31,5 +31,5 @@
     "same project-authored staging mechanism",
     "presentation caps create overflow, never gameplay caps"
   ],
-  "conclusion": "Octopath-like capability is a benchmark, not an engine template."
+  "conclusion": "Party-RPG-like capability is a benchmark, not an engine template."
 }

@@ -156,7 +156,7 @@ def test_dense_timeline_can_show_focus_and_move_lower_priority_entries_to_overfl
     assert len(v.overflow) == 12
 
 
-def test_project_can_choose_different_visibility_grammar_without_octopath_semantics():
+def test_project_can_choose_different_visibility_grammar_without_party_rpg_semantics():
     r = BattleInformationRuntime()
     v = r.resolve(
         (

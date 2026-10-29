@@ -2,7 +2,7 @@
   "schema": "asteria.reference_project",
   "version": 1,
   "project_id": "reference.generality_matrix",
-  "title": "Asteria Non-Octopath Generality Matrix",
+  "title": "Asteria Non-Party-RPG Generality Matrix",
   "archetypes": [
     {
       "id": "solo_reactive",

@@ -38,9 +38,9 @@ Everything a game is made of is **data in the project file**, edited in the edit
 characters, skills, items, enemies, battle rules, screen layouts and translations. The engine has
 no game of its own built in; the demos are only example data. You can make:
 
-- turn-based party battles (side view, weaknesses, shields and boosts, Octopath-style),
+- turn-based party battles (side view, weaknesses, shields and boosts),
 - creature battles (catch, party of creatures, the Pokémon-style screen),
-- real-time action RPGs (top-down or side-scrolling, Diablo-style loot and skill trees),
+- real-time action RPGs (top-down or side-scrolling, with loot and skill trees),
 - anything in between, because rules are options, not code.
 
 When the editor does not offer something, a Python script in the **Code** workspace can do it
@@ -110,8 +110,8 @@ dialog asks for the template, then the project name, then the folder.
 | --- | --- |
 | Full Verification (Recommended) | A whole game to learn from: four maps, a town with shops, a party of four with jobs and skill trees, elements, shields and Breaks, bosses, quests, crafting and every editor page filled in. |
 | Basic RPG (Small) | One hero, two enemies, Attack, Fire and Heal; a playable field and basic battles. |
-| Party RPG (Octopath-style) | Weaknesses and shields, boost points, jobs, a pet, concoction, statuses and four enemy types. |
-| Action RPG (Diablo-style) | Real-time combat with classes and skill trees, loot with rarities and affixes, potions, a grid bag, an action bar with cooldowns. |
+| Party RPG (break and boost battles) | Weaknesses and shields, boost points, jobs, a pet, concoction, statuses and four enemy types. |
+| Action RPG (real-time loot and skill trees) | Real-time combat with classes and skill trees, loot with rarities and affixes, potions, a grid bag, an action bar with cooldowns. |
 | Completely Empty | No sample data. |
 
 The whole template folder is copied, including its art and licence files. If the project has a
@@ -421,9 +421,9 @@ command menu next to the acting hero, shields and hidden weaknesses under the en
 
 ![A turn-based battle](images/game_en_battle.png)
 
-The Octopath-style demo with a full party, boost points and the timeline:
+The party RPG demo with a full party, boost points and the timeline:
 
-![Octopath-style battle](images/game_octopath_battle.png)
+![Party RPG battle with breaks and boosts](images/game_break_battle.png)
 
 ### 8.2 The battle screen
 
@@ -464,7 +464,7 @@ Action RPGs fight on the map. Attacks, projectiles, loot rarities and affixes ar
 ▸ Real-Time Combat**; enemy behaviour in **Behavior Trees**; the bottom HUD (orbs, action bar,
 cooldowns) is the **Action RPG HUD** menu screen (chapter 9).
 
-![Diablo-style town with the action HUD](images/game_diablo_town.png)
+![Action RPG town with the action HUD](images/game_arpg_town.png)
 
 ---
 
@@ -745,8 +745,8 @@ Open any of them with File ▸ Open Project… or play them with `asteria-previe
 | Project | Shows |
 | --- | --- |
 | `reference_projects/full_verification_demo` | The recommended template: a whole turn-based game. Hearthfold (town) → Whispering Woods → Catacombs → Ember Throne, the hero Roger hiring Mira, Vesper and Cael, jobs and skill trees, STR / DEX / INT / LUK, elements, weaknesses / shields / Breaks, refine and sockets, crafting, quests, pets, map areas, New Game Plus, full Traditional Chinese, music room. Every editor page has data. |
-| `reference_projects/diablo_demo` | A real-time action RPG: a town, fields, a side-scrolling mine with platforms and ladders, three classes with skill trees, loot with rarities, affixes and sets, potions, bosses. |
-| `reference_projects/octopath_demo` | Octopath-style party battles: four travellers with two jobs each, weaknesses and shields, boost points, divine skills, multi-weapon attacks, a Pokémon-style pet, concoction, five encounters. |
+| `reference_projects/arpg_demo` | A real-time action RPG: a town, fields, a side-scrolling mine with platforms and ladders, three classes with skill trees, loot with rarities, affixes and sets, potions, bosses. |
+| `reference_projects/party_rpg_demo` | Party battles with breaks and boosts: four travellers with two jobs each, weaknesses and shields, boost points, divine skills, multi-weapon attacks, a Pokémon-style pet, concoction, five encounters. |
 | `reference_projects/complex_reference_rpg` | A dense generic RPG: 12 actors, 8 jobs, 24 abilities, 16 passives, eight skill trees, equipment growth, a 12-person roster, a three-phase boss with adds, custom battle resources. See its `PLAYTEST.md`. |
 
 To see how a system is described in data, find it in the Full Verification demo: its

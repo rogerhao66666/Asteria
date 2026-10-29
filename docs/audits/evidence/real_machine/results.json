@@ -635,9 +635,9 @@
       "note": "Hands-on use by a person is manual item M7; judging the look is M10."
     },
     {
-      "check": "octopath_demo_real_window",
+      "check": "party_rpg_demo_real_window",
       "status": "PASS",
-      "evidence": "Octopath-style demo in a real cocoa window, real key events: command_menu=ok, boost_set_by_key=ok, target_menu=ok, boosted_attack_two_hits=ok, divine_spends_three_bp=ok, divine_particle_burst=ok, concoct_by_keys=ok, battle_won_by_keys=ok, encounter_slime_pit=ok, encounter_old_crypt=ok, encounter_gazer_nest=ok, encounter_samurai_duel=ok; divine skill last_stand, up to 120 particles in a frame",
+      "evidence": "Party RPG demo in a real cocoa window, real key events: command_menu=ok, boost_set_by_key=ok, target_menu=ok, boosted_attack_two_hits=ok, divine_spends_three_bp=ok, divine_particle_burst=ok, concoct_by_keys=ok, battle_won_by_keys=ok, encounter_slime_pit=ok, encounter_old_crypt=ok, encounter_gazer_nest=ok, encounter_samurai_duel=ok; divine skill last_stand, up to 120 particles in a frame",
       "screenshots": [
         "octo_field.png",
         "octo_menu.png",

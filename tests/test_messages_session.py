@@ -12,7 +12,7 @@ from asteria.rpg.localization import LocaleTable, Localizer, MessageSettings
 from asteria.runtime.backlog import MessageBacklog
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 def _session(**database):

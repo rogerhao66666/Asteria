@@ -1,6 +1,6 @@
 # Loadable multiplayer gameplay template
 
-Open `reference_projects/diablo_multiplayer_demo/project.asteria.json`, start one server from
+Open `reference_projects/arpg_multiplayer_demo/project.asteria.json`, start one server from
 Multiplayer, then Run Project. Use distinct Guest IDs for four clients. The copied profile
 selects `asteria.multiplayer.project_demo:build_project_adapter`; the server receives the
 selected document through `--project`. The original offline project remains unchanged.

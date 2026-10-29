@@ -1,6 +1,6 @@
-# Asteria Diablo Multiplayer Demo
+# Asteria ARPG Multiplayer Demo
 
-This is a separate copy of `../diablo_demo`; the offline source and its assets are preserved.
+This is a separate copy of `../arpg_demo`; the offline source and its assets are preserved.
 The server runs the copied project's original ECS scenes, monsters, collisions, skills,
 projectiles, NPC events, shops and crafting. Each guest has an independent character save.
 

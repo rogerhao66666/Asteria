@@ -9,7 +9,7 @@ import pytest
 
 from asteria.core import Transform
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
 
 
 def _project():

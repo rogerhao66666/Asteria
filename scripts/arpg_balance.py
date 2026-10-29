@@ -17,7 +17,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
-sys.path.insert(0, str(REPO / "reference_projects" / "diablo_demo"))
+sys.path.insert(0, str(REPO / "reference_projects" / "arpg_demo"))
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
@@ -30,7 +30,7 @@ from asteria.runtime.character_control import Hurtbox2DComponent  # noqa: E402
 from asteria.runtime.combat import CombatantComponent  # noqa: E402
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime  # noqa: E402
 
-DEMO = REPO / "reference_projects" / "diablo_demo"
+DEMO = REPO / "reference_projects" / "arpg_demo"
 
 
 def _runtime():

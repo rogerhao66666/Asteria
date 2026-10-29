@@ -7,7 +7,7 @@ which tags a check emits and what they do is still up to interaction rules.
 import dataclasses
 
 import pytest
-from test_octopath_style_battle import DAMAGE, _battle, _project
+from test_break_battle import DAMAGE, _battle, _project
 
 from asteria.gameplay import AbilityDefinition
 from asteria.rpg.interactions import (

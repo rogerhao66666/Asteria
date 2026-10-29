@@ -18,8 +18,8 @@ REPO = Path(__file__).resolve().parents[1]
 OUT = REPO / "src" / "asteria" / "templates"
 SKIP = {"__pycache__", ".DS_Store", "build_project.py", "art.py", "maps.py"}
 TEMPLATES = {  # template id -> (reference project folder, guide)
-    "party_rpg": ("octopath_demo", "START_HERE_party_rpg.md"),
-    "action_rpg": ("diablo_demo", "START_HERE_action_rpg.md"),
+    "party_rpg": ("party_rpg_demo", "START_HERE_party_rpg.md"),
+    "action_rpg": ("arpg_demo", "START_HERE_action_rpg.md"),
 }
 
 

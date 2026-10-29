@@ -68,7 +68,7 @@ def test_an_event_waits_for_the_fanfare_only_where_sound_plays():
         EventInstruction("WAIT", {"until": {**wait, "scope_id": None}}),
         EventInstruction("SET_SWITCH", {"name": "after", "value": True}),
     ]
-    game = _game("octopath_demo", ("fanfare", program))
+    game = _game("party_rpg_demo", ("fanfare", program))
     context = game.save.event_context
     game.plays_audio = True  # a host that plays sound (the playtest window)
     game.events.start("fanfare")
@@ -77,7 +77,7 @@ def test_an_event_waits_for_the_fanfare_only_where_sound_plays():
     game.audio_status["me"] = False  # the host: the jingle ended
     game.update_events(0.0)
     assert context.get_switch("after")
-    headless = _game("octopath_demo", ("fanfare", program))
+    headless = _game("party_rpg_demo", ("fanfare", program))
     headless.events.start("fanfare")
     headless.update_events(0.0)  # no sound here: nothing to wait for
     assert headless.save.event_context.get_switch("after")
@@ -86,7 +86,7 @@ def test_an_event_waits_for_the_fanfare_only_where_sound_plays():
 
 
 def _set_tile_game():
-    return _game("octopath_demo")
+    return _game("party_rpg_demo")
 
 
 def test_set_tile_lasts_for_the_visit_or_for_good():
@@ -125,7 +125,7 @@ def test_the_field_view_draws_and_walks_by_changed_tiles(monkeypatch):
     from asteria.editor import EditorDocument
     from asteria.project import Project
 
-    root = ROOT / "diablo_demo"
+    root = ROOT / "arpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
@@ -167,7 +167,7 @@ def test_a_choice_starts_on_its_option_and_answers_the_cancel_key():
         "cancel": 127,
     }
     game = _game(
-        "octopath_demo",
+        "party_rpg_demo",
         ("ask", [EventInstruction("CHOICE", choice)]),
     )
     game.events.start("ask")

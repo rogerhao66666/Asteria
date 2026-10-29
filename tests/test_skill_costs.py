@@ -4,7 +4,7 @@
 import dataclasses
 
 import pytest
-from test_octopath_style_battle import DAMAGE, _battle, _project
+from test_break_battle import DAMAGE, _battle, _project
 
 from asteria.gameplay import Effect, EffectOperation, EffectOperationKind
 from asteria.gameplay.abilities import AbilityCost, AbilityEffect

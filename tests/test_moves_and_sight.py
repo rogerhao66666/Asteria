@@ -198,7 +198,7 @@ def test_a_trainer_notices_walks_up_and_starts_its_event(monkeypatch):
     from asteria.runtime.components2d import Interaction2DComponent
     from asteria.runtime.game_session import GameSessionRuntime
 
-    root = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     project.event_programs.register(
         "challenge",

@@ -1,13 +1,13 @@
 {
   "adapter_factory": "asteria.multiplayer.project_demo:build_project_adapter",
   "connect_on_run": true,
-  "guest_id": "diablo-demo-player-one",
+  "guest_id": "arpg-demo-player-one",
   "listen_address": "127.0.0.1",
   "max_players": 4,
   "player_name": "Ranger",
   "port": 8765,
   "schema": "asteria.multiplayer.profile",
   "server_address": "127.0.0.1",
-  "session_name": "Diablo Multiplayer",
+  "session_name": "ARPG Multiplayer",
   "version": 1
 }

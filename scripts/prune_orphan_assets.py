@@ -1,6 +1,6 @@
 """Delete the files of a project's ``playable_assets`` that nothing refers to.
 
-    python scripts/prune_orphan_assets.py reference_projects/octopath_demo [--dry-run]
+    python scripts/prune_orphan_assets.py reference_projects/party_rpg_demo [--dry-run]
 
 A file counts as used when its path appears in ``project.asteria.json`` or in
 ``playable_test_manifest.json`` (``CREDITS.md`` always stays). Run after a reskin so the old

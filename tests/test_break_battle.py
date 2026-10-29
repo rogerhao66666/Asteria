@@ -1,4 +1,4 @@
-"""An Octopath-Traveler-style battle built only from authored data on the reference project
+"""A break-and-boost party battle built only from authored data on the reference project
 (BTL-02 / BTL-03 /
 GP-02): weapon and element weaknesses with any multiplier, resistances, shields broken by weakness
 hits, a

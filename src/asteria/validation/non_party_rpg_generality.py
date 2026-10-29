@@ -38,13 +38,13 @@ class GeneralityArchetypeResult:
 
 
 @dataclass(frozen=True, slots=True)
-class NonOctopathGeneralityReport:
+class NonPartyRpgGeneralityReport:
     archetypes: tuple[GeneralityArchetypeResult, ...]
     shared_mechanisms: tuple[str, ...]
     no_reference_game_ids_required: bool
 
 
-class NonOctopathGeneralityHarness:
+class NonPartyRpgGeneralityHarness:
     """Proves presentation mechanisms are not coupled to one reference JRPG.
 
     The scenarios deliberately vary party scale, command grammar, information
@@ -315,7 +315,7 @@ class NonOctopathGeneralityHarness:
             ),
         )
         results = tuple(self._run(x) for x in specs)
-        return NonOctopathGeneralityReport(
+        return NonPartyRpgGeneralityReport(
             results,
             (
                 "opaque action/category IDs",

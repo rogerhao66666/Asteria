@@ -4,7 +4,7 @@
 
 **Goal:** Finish the generic multiplayer prototype with a server-authoritative cooperative boss example, reliable client/session behavior, and evidence from automated plus native GUI testing.
 
-**Architecture:** Keep TCP sessions and the adapter API game-agnostic. The boss encounter stays in a separate sample adapter that owns its rules and publishes serializable snapshots/events. The copied Diablo project opts into a small runtime bridge; normal projects without an enabled multiplayer profile remain offline and do not connect.
+**Architecture:** Keep TCP sessions and the adapter API game-agnostic. The boss encounter stays in a separate sample adapter that owns its rules and publishes serializable snapshots/events. The copied ARPG project opts into a small runtime bridge; normal projects without an enabled multiplayer profile remain offline and do not connect.
 
 **Tech Stack:** Python 3.13, socketserver/TCP JSON Lines, pytest, PySide6 editor, macOS Cocoa GUI.
 
@@ -69,7 +69,7 @@
 ## User-approved follow-on: persistent reward rules and playable demo
 
 The user approved server-side SQLite persistence, editable project-owned reward templates,
-preserving the offline `diablo_demo`, and a separate connected copy. For the boss template,
+preserving the offline `arpg_demo`, and a separate connected copy. For the boss template,
 "touched" means the server accepted positive damage: every such player gets the full configured
 XP amount (100 by default), and each configured boss drop is independently assigned to a random
 damaging participant. XP is not divided into a shared pool. Custom adapters remain free to
@@ -133,15 +133,15 @@ implement different rules.
 - [x] Add a Multiplayer rules card using existing Asteria styles and icons; validate values before
   saving and leave custom adapter code unrestricted by built-in presets.
 
-### Task 9: Connect a separate Diablo demo copy and document the boundary
+### Task 9: Connect a separate ARPG demo copy and document the boundary
 
 **Files:**
-- Create: `reference_projects/diablo_multiplayer_demo/` from the existing offline demo
+- Create: `reference_projects/arpg_multiplayer_demo/` from the existing offline demo
 - Modify: `docs/audits/MULTIPLAYER_DESIGN.md`, `README.md`, `docs/ENGINE_HANDBOOK.md` only where
   multiplayer is already discussed
 - Add integration tests under `tests/`
 
-- [x] Keep `reference_projects/diablo_demo` unchanged and make the connected project a separate copy.
+- [x] Keep `reference_projects/arpg_demo` unchanged and make the connected project a separate copy.
 - [x] Replace the preliminary Boss overlay with the project-backed authoritative ECS adapter.
 - [x] Synchronize original skills, monsters, collision, inventory, equipment, NPCs and saves.
 - [x] Four separate Cocoa clients defeat the original Cyclops, receive full per-player XP,

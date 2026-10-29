@@ -1,7 +1,8 @@
 """The bottom of the real-time HUD (D23): resource orbs, the action bar and the status row.
 
 * **Orbs** - the life resource fills a red globe on the left, the first other resource a globe on
-  the right (blue for mana-like names), like Diablo; more resources are thin bars above the bar.
+  the right (blue for mana-like names), like a classic action RPG; more resources are thin
+  bars above the bar.
 * **Action bar** - one slot per ability binding: the two non-numbered ones (attack, dodge) larger
   at the left, then the numbered skills. Each slot shows its key as a keycap (read from the
   project's input map), the ability's name, a cooldown sweep with seconds, a count badge in the

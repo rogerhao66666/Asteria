@@ -1,8 +1,8 @@
-from asteria.validation import NonOctopathGeneralityHarness
+from asteria.validation import NonPartyRpgGeneralityHarness
 
 
 def report():
-    return NonOctopathGeneralityHarness().run()
+    return NonPartyRpgGeneralityHarness().run()
 
 
 def by_id(value, archetype_id):
@@ -85,7 +85,7 @@ def test_layout_visibility_cap_does_not_remove_members():
 def test_shared_mechanisms_are_reference_game_neutral():
     value = report()
     text = " ".join(value.shared_mechanisms).casefold()
-    assert "octopath" not in text
+    assert "party_rpg" not in text
     assert "break" not in text
     assert "bp" not in text
 

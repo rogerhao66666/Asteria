@@ -3088,8 +3088,8 @@ def check_editor_particles(out):
     )
 
 
-def check_octopath_demo(out):
-    """BTL-02 / BTL-03 / GP-02: the Octopath-style demo project played in a real window by key
+def check_party_rpg_demo(out):
+    """BTL-02 / BTL-03 / GP-02: the party RPG demo project played in a real window by key
     events through
     the battle command menu: boost and a chosen target, a divine skill (three boost points,
     particle burst),
@@ -3101,7 +3101,7 @@ def check_octopath_demo(out):
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    root = REPO / "reference_projects" / "octopath_demo"
+    root = REPO / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
@@ -3287,9 +3287,9 @@ def check_octopath_demo(out):
         other.close()
     failed = sorted(k for k, v in checks.items() if not v)
     return result(
-        "octopath_demo_real_window",
+        "party_rpg_demo_real_window",
         "PASS" if not failed and driver == "cocoa" else "FAIL",
-        f"Octopath-style demo in a real {driver} window, real key events: "
+        f"Party RPG demo in a real {driver} window, real key events: "
         + ", ".join(f"{k}={'ok' if v else 'FAILED'}" for k, v in checks.items())
         + f"; divine skill {divine}, up to {peak['n']} particles in a frame",
         screenshots=shots,
@@ -3307,7 +3307,7 @@ def check_cjk_text(out):
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    root = REPO / "reference_projects" / "octopath_demo"
+    root = REPO / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
@@ -3363,7 +3363,7 @@ def check_game_extras(out):
     from asteria.runtime import extras_screens
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    root = REPO / "reference_projects" / "octopath_demo"
+    root = REPO / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     database = project.rpg_database
     database.add_message_settings(MessageSettings("native", backlog_limit=20))
@@ -3411,7 +3411,7 @@ def check_game_extras(out):
 
 
 def check_map_rules_real_window(out):
-    """Exercise damage, slippery movement and footstep requests while Octopath is open."""
+    """Exercise damage, slippery movement and footstep requests while Party RPG demo is open."""
     import pygame
 
     from asteria.core import Transform
@@ -3421,7 +3421,7 @@ def check_map_rules_real_window(out):
     from asteria.rpg.map_rules import AreaRule, MapRuleSet
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    root = REPO / "reference_projects" / "octopath_demo"
+    root = REPO / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     project.rpg_database.add_map_rule_set(
         MapRuleSet(
@@ -3481,7 +3481,7 @@ def check_map_rules_real_window(out):
     return result(
         "map_rules_real_window",
         "PASS" if not failed and driver == "cocoa" else "FAIL",
-        "Octopath Cocoa runtime with in-memory region rules: "
+        "Party RPG Cocoa runtime with in-memory region rules: "
         + ", ".join(f"{key}={'ok' if value else 'FAILED'}" for key, value in checks.items()),
         screenshot="octo_map_rules.png",
         note="Rule effects are runtime-verified; physical movement feel is for a person.",
@@ -3502,7 +3502,7 @@ def check_editor_d30(out):
     from asteria.rpg.map_rules import AreaRule, MapRuleSet
 
     app = QApplication.instance() or QApplication([])
-    project_file = REPO / "reference_projects" / "diablo_demo" / "project.asteria.json"
+    project_file = REPO / "reference_projects" / "arpg_demo" / "project.asteria.json"
     original = project_file.read_bytes()
     project = Project.load_json(project_file, EditorDocument().component_registry)
     window = AsteriaEditorWindow(project)
@@ -3741,33 +3741,33 @@ REPLAY = {
     ],
     "BTL-02": [
         "dot_in_session::test_damage_over_time_is_fixed_unless_the_author_gives_it_interaction_tags",
-        "octopath_style_battle::test_two_weapons_weapon_weakness_and_resistance",
-        "octopath_style_battle::test_weakness_hits_break_the_shield_and_the_break_doubles_damage",
-        "octopath_style_battle::test_boost_repeats_attacks_and_powers_spells",
-        "octopath_style_battle::test_secondary_job_and_a_poison_that_worsens_every_turn",
+        "break_battle::test_two_weapons_weapon_weakness_and_resistance",
+        "break_battle::test_weakness_hits_break_the_shield_and_the_break_doubles_damage",
+        "break_battle::test_boost_repeats_attacks_and_powers_spells",
+        "break_battle::test_secondary_job_and_a_poison_that_worsens_every_turn",
     ],
     "ANI-02": [
         "canonical_battle_presentation::test_an_authored_state_machine_chooses_the_battle_clips"
     ],
     "BTL-03": [
-        "octopath_demo::test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness",
-        "octopath_demo::test_break_skips_the_enemy_turn_and_doubles_damage",
-        "octopath_demo::test_divine_skill_needs_three_boost_points_and_spends_them",
-        "octopath_demo::test_one_spell_of_three_elements_reveals_three_weaknesses",
-        "octopath_demo::test_donate_boost_then_concoct",
-        "octopath_demo::test_the_pet_attack_needs_an_owned_pet_and_hits_harder_when_the_pet_is_stronger",
-        "octopath_demo::test_a_sent_pet_gains_experience_levels_up_can_be_renamed_and_chosen",
-        "octopath_demo::test_capturing_an_enemy_gives_an_owned_pet_with_its_level_and_unlocks_its_attack",
-        "octopath_demo::test_each_weapon_has_its_own_attack_and_each_attack_finds_its_own_weakness",
-        "octopath_demo::test_a_skill_can_strike_once_with_every_weapon_or_five_times_or_three_with_one_spell",
-        "octopath_demo::test_every_secondary_job_skill_works_in_battle",
-        "octopath_demo::test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage",
-        "octopath_demo::test_the_demo_battle_is_won_with_the_keyboard",
-        "octopath_demo::test_fire_heals_the_gel_slime_and_lightning_breaks_it",
-        "octopath_demo::test_the_mirror_gazer_reflects_spells_and_cannot_be_put_to_sleep",
-        "octopath_demo::test_the_bone_wraith_shrugs_off_poison_and_fears_light",
-        "octopath_demo::test_the_iron_samurai_resists_swords_and_needs_a_spear",
-        "octopath_demo::test_field_enemies_wander_and_touching_one_starts_its_battle",
+        "party_rpg_demo::test_boosted_sword_attack_hits_three_times_breaks_shields_and_reveals_the_weakness",
+        "party_rpg_demo::test_break_skips_the_enemy_turn_and_doubles_damage",
+        "party_rpg_demo::test_divine_skill_needs_three_boost_points_and_spends_them",
+        "party_rpg_demo::test_one_spell_of_three_elements_reveals_three_weaknesses",
+        "party_rpg_demo::test_donate_boost_then_concoct",
+        "party_rpg_demo::test_the_pet_attack_needs_an_owned_pet_and_hits_harder_when_the_pet_is_stronger",
+        "party_rpg_demo::test_a_sent_pet_gains_experience_levels_up_can_be_renamed_and_chosen",
+        "party_rpg_demo::test_capturing_an_enemy_gives_an_owned_pet_with_its_level_and_unlocks_its_attack",
+        "party_rpg_demo::test_each_weapon_has_its_own_attack_and_each_attack_finds_its_own_weakness",
+        "party_rpg_demo::test_a_skill_can_strike_once_with_every_weapon_or_five_times_or_three_with_one_spell",
+        "party_rpg_demo::test_every_secondary_job_skill_works_in_battle",
+        "party_rpg_demo::test_poison_worsens_sleep_skips_turns_and_attack_up_raises_damage",
+        "party_rpg_demo::test_the_demo_battle_is_won_with_the_keyboard",
+        "party_rpg_demo::test_fire_heals_the_gel_slime_and_lightning_breaks_it",
+        "party_rpg_demo::test_the_mirror_gazer_reflects_spells_and_cannot_be_put_to_sleep",
+        "party_rpg_demo::test_the_bone_wraith_shrugs_off_poison_and_fears_light",
+        "party_rpg_demo::test_the_iron_samurai_resists_swords_and_needs_a_spear",
+        "party_rpg_demo::test_field_enemies_wander_and_touching_one_starts_its_battle",
     ],
     "CMP-03": [
         "field_popups::test_item_gains_and_authored_popups_rise_and_fade_above_characters",
@@ -3865,7 +3865,7 @@ CHECKS = {
     "editor_characters": check_editor_characters,
     "icons_and_particles": check_icons_and_particles,
     "editor_particles": check_editor_particles,
-    "octopath_demo": check_octopath_demo,
+    "party_rpg_demo": check_party_rpg_demo,
     "cjk_text": check_cjk_text,
     "game_extras": check_game_extras,
     "map_rules": check_map_rules_real_window,

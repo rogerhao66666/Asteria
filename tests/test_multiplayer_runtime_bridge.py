@@ -117,7 +117,7 @@ def test_multiplayer_runtime_profile_missing_file_keeps_ordinary_projects_offlin
     assert load_runtime_multiplayer_profile(Path(tmp_path)) is None
 
 
-def test_diablo_project_runtime_joins_the_shared_boss_and_draws_the_map_overlay(
+def test_arpg_project_runtime_joins_the_shared_boss_and_draws_the_map_overlay(
     monkeypatch, tmp_path
 ):
     pygame = pytest.importorskip("pygame")
@@ -129,7 +129,7 @@ def test_diablo_project_runtime_joins_the_shared_boss_and_draws_the_map_overlay(
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     demo_root = (
-        Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_multiplayer_demo"
+        Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     )
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
@@ -161,7 +161,7 @@ def test_diablo_project_runtime_joins_the_shared_boss_and_draws_the_map_overlay(
             "127.0.0.1",
             server.server_address[1],
             "Mage",
-            guest_id="diablo-demo-player-two",
+            guest_id="arpg-demo-player-two",
         )
         assert _wait_for(lambda: len(runtime.multiplayer_bridge.state.get("players", ())) == 2)
 
@@ -200,7 +200,7 @@ def test_project_snapshot_replaces_scene_and_maps_guest_without_local_simulation
     from asteria.runtime.multiplayer_preview import apply_project_snapshot
 
     demo_root = (
-        Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_multiplayer_demo"
+        Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     )
     project = Project.load_json(
         demo_root / "project.asteria.json", EditorDocument().component_registry
@@ -254,7 +254,7 @@ def test_authoritative_menu_commands_do_not_mutate_projected_save():
     from asteria.runtime.multiplayer_preview import install_authoritative_commands
 
     demo_root = (
-        Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_multiplayer_demo"
+        Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     )
     project = Project.load_json(
         demo_root / "project.asteria.json", EditorDocument().component_registry
@@ -311,7 +311,7 @@ def test_project_server_drives_real_runtime_frames_and_skill_screen(monkeypatch,
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     demo_root = (
-        Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_multiplayer_demo"
+        Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     )
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
@@ -436,7 +436,7 @@ def test_project_snapshot_keeps_each_guests_class_appearance():
     from asteria.runtime.game_session import GameSessionRuntime
     from asteria.runtime.multiplayer_preview import apply_project_snapshot
 
-    root = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_multiplayer_demo"
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     project = Project.load_json(root / "project.asteria.json", default_component_registry())
     save = project.game_start.instantiate(project)
     game = GameSessionRuntime(project, save)

@@ -1,4 +1,4 @@
-"""Build the Octopath-style battle demo from the Complex Reference RPG (its CC0 art, map and
+"""Build the party RPG battle demo from the Complex Reference RPG (its CC0 art, map and
 field).
 
 Everything here is ordinary project data - no engine code knows about this game:
@@ -15,8 +15,9 @@ Everything here is ordinary project data - no engine code knows about this game:
   defence down;
 * particle bursts on divine skills and an aura on the boss in the field.
 
-Run: ``python reference_projects/octopath_demo/build_project.py`` (writes this folder; idempotent).
-Play: ``python -m asteria.runtime.preview reference_projects/octopath_demo/project.asteria.json``.
+Run: ``python reference_projects/party_rpg_demo/build_project.py`` (writes this folder;
+idempotent).
+Play: ``python -m asteria.runtime.preview reference_projects/party_rpg_demo/project.asteria.json``.
 """
 
 from __future__ import annotations
@@ -107,7 +108,7 @@ def ability(
 def main():
     import stable_ids
 
-    stable_ids.install("asteria-octopath-demo")
+    stable_ids.install("asteria-party-rpg-demo")
     target = (
         HERE / "playable_assets"
     )  # the reference game's CC0 art first; new art is written into it below
@@ -116,7 +117,7 @@ def main():
     shutil.copytree(REFERENCE / "playable_assets", target)
     registry = EditorDocument().component_registry
     project = Project.load_json(REFERENCE / "project.asteria.json", registry)
-    project.name = "Asteria Octopath-style Battle Demo"
+    project.name = "Asteria Party RPG Battle Demo"
     db, library = project.rpg_database, project.gameplay_library
     abilities = library.abilities
     template = {
@@ -175,9 +176,9 @@ def main():
     )
     rules = next(iter(db.battle_session_rules.values()))
     db.battle_session_rules.clear()
-    db.battle_session_rules["octopath"] = dataclasses.replace(
+    db.battle_session_rules["break_battle"] = dataclasses.replace(
         rules,
-        rules_id="octopath",
+        rules_id="break_battle",
         boost_resource_id=BP,
         boost_max_level=3,
         shield_resource_id=SHIELD,
@@ -1030,7 +1031,7 @@ def main():
 
     # -- assets and the playable manifest ---------------------------------------------------------
     manifest = json.loads((REFERENCE / "playable_test_manifest.json").read_text(encoding="utf-8"))
-    manifest["title"] = "Octopath-style Battle Demo"
+    manifest["title"] = "Party RPG Battle Demo"
     manifest["battle"]["victory_aftermath"] = True
     sprites = manifest["field"]["entity_sprites"]
     sprites["Grimgarde"] = sprites.pop(
@@ -1053,7 +1054,7 @@ def main():
             name += " (Divine)"
         labels[ability_id] = {"label": name}
     manifest["battle"]["skills"] = labels
-    manifest["battle"]["command_style"] = "root"  # Attack / Skills / Items, like Octopath
+    manifest["battle"]["command_style"] = "root"  # Attack / Skills / Items, party-RPG style
     (HERE / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )

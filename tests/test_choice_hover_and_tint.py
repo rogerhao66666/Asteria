@@ -17,7 +17,7 @@ def _game(*programs):
     from asteria.project import Project
     from asteria.runtime.game_session import GameSessionRuntime
 
-    path = ROOT / "octopath_demo" / "project.asteria.json"
+    path = ROOT / "party_rpg_demo" / "project.asteria.json"
     project = Project.load_json(path, EditorDocument().component_registry)
     for program_id, instructions in programs:
         project.event_programs.register(

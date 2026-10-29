@@ -11,13 +11,13 @@
 
 ## 0. 一句話
 
-Python 寫的 2D RPG 引擎加編輯器：**資料驅動、系統通用**（回合制和即時動作都能做，Octopath 和 Diablo 只是
+Python 寫的 2D RPG 引擎加編輯器：**資料驅動、系統通用**（回合制和即時動作都能做，Party RPG 和 ARPG 只是
 兩個範例專案），**使用者用資料或 Python 程式碼都能擴充**，熱迴圈用 C++ kernel 加速。
 
 三條原則（使用者定的，之後的工作都要遵守）：
 
 1. **不限制作者**：不寫死遊戲規則。有歧義的規則做成編輯器能改的選項；demo 的設定只是範例。
-2. **系統通用**：Diablo、八方旅人是範例資料，引擎裡沒有它們的程式碼。
+2. **系統通用**：ARPG、隊伍 RPG 是範例資料，引擎裡沒有它們的程式碼。
 3. **沒有證據不說完成**：功能要有測試；畫面和視窗要在真實 Cocoa 視窗驗證。
 
 ---
@@ -48,8 +48,8 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 重新產生兩個 demo 專案（需要 git-ignored 的 `local_reference/` 美術來源）：
 
 ```bash
-.venv/bin/python reference_projects/octopath_demo/build_project.py
-.venv/bin/python reference_projects/diablo_demo/build_project.py
+.venv/bin/python reference_projects/party_rpg_demo/build_project.py
+.venv/bin/python reference_projects/arpg_demo/build_project.py
 ```
 
 ---
@@ -70,7 +70,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 | `src/asteria/assets` | 素材管線：匯入、圖集、自動修正、品質門檻、RPG Maker MV 匯入 |
 | `src/asteria/editor` | PySide6 編輯器（約 100 個模組） |
 | `src/asteria/validation` | 壓力測試與實驗場景 |
-| `reference_projects/` | `octopath_demo`、`diablo_demo` 以及其他參考專案 |
+| `reference_projects/` | `party_rpg_demo`、`arpg_demo` 以及其他參考專案 |
 | `tests/` | 全部測試 |
 | `scripts/` | 實機驗證、編輯器稽核、量測腳本 |
 | `docs/audits/` | 決策紀錄、稽核、實機證據（`evidence/`） |
@@ -141,7 +141,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 - **File > New from Template…（Ctrl+N）**：Full Verification（推薦：完整的遊戲，也是編輯器預設開的起始專案）、
-  Basic RPG（小）、Party RPG（八方旅人式）、Action RPG（暗黑式）、Completely Empty；複製整個專案資料夾
+  Basic RPG（小）、Party RPG（破防／加速戰鬥）、Action RPG（即時戰鬥與掉寶）、Completely Empty；複製整個專案資料夾
   （含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則在編輯器哪裡改）。
   Party 與 Action 範本隨套件發布（`src/asteria/templates/`），改了 demo 之後執行 `scripts/sync_templates.py`，
   測試會檢查兩邊一致；Full Verification 與 Basic RPG 從原始碼裡的 `reference_projects/` 複製。
@@ -170,7 +170,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   分頁列。2026-10-22 在 Full Verification 專案（56 頁，英文與中文，1600×1000 與 1100×700）：每次被截的文字
   0–1 處（Map Rule Sets 的圖片路徑、窄視窗 Battle 頁的一個選項；見 DECISION_LOG D51）。
 - Code 工作區：寫 Python 腳本直接操作專案，有自動完成。
-- Multiplayer 工作區：本機 server、Guest ID、SQLite、專案規則模板及獨立 Diablo 多人副本。副本使用 project-backed adapter 同步原 ECS 戰鬥、技能、怪物、NPC、商店、製作、背包、裝備與角色存檔；四人 Cocoa 驗收通過。Boss 有正傷害者各得完整 100 XP，每項原掉落隨機保留給一位參與者。使用方式見 [遊戲模板](audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md)。
+- Multiplayer 工作區：本機 server、Guest ID、SQLite、專案規則模板及獨立 ARPG 多人副本。副本使用 project-backed adapter 同步原 ECS 戰鬥、技能、怪物、NPC、商店、製作、背包、裝備與角色存檔；四人 Cocoa 驗收通過。Boss 有正傷害者各得完整 100 XP，每項原掉落隨機保留給一位參與者。使用方式見 [遊戲模板](audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md)。
 - Scene 視圖操作：**滑鼠滾輪以游標為中心縮放**（一格 ×1.15）；方向鍵平移視圖（有選取實體時改為移動實體，
   Shift 加大步距）；**觸控板**雙指捲動平移、捏合縮放（維持原樣）。
 
@@ -188,7 +188,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   Default Locale、或玩家在 設定 ▸ 語言 選了它時使用（有兩個以上 locale 才出現語言選項）。
   在預設語系的表裡寫英文就是改名，例如 en 表 `battle.command.attack` = `Fight`。
 - **沒有翻譯表的專案畫面完全不變**：新舊引擎各畫 12 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、
-  遊戲結束、存檔、狀態、戰鬥指令、技能清單），Octopath、Complex Reference（沒有表）與英文的 Full
+  遊戲結束、存檔、狀態、戰鬥指令、技能清單），Party RPG、Complex Reference（沒有表）與英文的 Full
   Verification 共 36 張逐像素相同。
 - **引擎附的繁體中文**：`rpg/built_in_text/zh-TW.json`（每個鍵都有，`{...}` 與英文一致）。Translations 頁的
   「填入空白列」把它填進 zh-TW 表（專案名稱剛好是內建字的，例如指令頁的「Skills」，也一起填）。
@@ -213,7 +213,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 ## 4. 範本專案
 
-### 4.1 Octopath 式回合制（`reference_projects/octopath_demo`）
+### 4.1 隊伍 RPG 回合制（破防／加速戰鬥）（`reference_projects/party_rpg_demo`）
 
 四位旅人：Garrick（Warrior／Merchant，劍＋矛）、Sera（Hunter／Thief，弓＋短劍）、Bram（Apothecary／Cleric，
 斧＋杖）、Ione（Scholar／Dancer，杖＋短劍）。
@@ -233,7 +233,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 五種遭遇 | Grimgarde 首領（召喚、沉默吼、毒隕石）、Gel Slime（火會治療它、會分裂）、Bone Wraith（不死、免疫毒）、Mirror Gazer（反射法術、免疫睡眠）、Iron Samurai（抗劍斧弓、8 護盾） |
 | 野外 | 敵人在地圖上遊蕩，碰到就開戰 |
 
-### 4.2 Diablo 式即時動作（`reference_projects/diablo_demo`）
+### 4.2 即時動作 RPG（`reference_projects/arpg_demo`）
 
 | 區域 | 內容 |
 | --- | --- |
@@ -293,8 +293,8 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 
 ## 6. 測試與驗證
 
-- 全套測試（`pytest -q`）。octopath 專案另有 `tests/test_octopath_demo.py`（每個機制）與
-  `tests/test_octopath_style_battle.py`（機制本身的單元測試）；ARPG 在 `tests/test_arpg_demo.py`、
+- 全套測試（`pytest -q`）。party_rpg 專案另有 `tests/test_party_rpg_demo.py`（每個機制）與
+  `tests/test_break_battle.py`（機制本身的單元測試）；ARPG 在 `tests/test_arpg_demo.py`、
   `test_arpg_save_load.py`、`test_native_kernels.py`、`test_frame_limiter.py`；範本在
   `test_project_templates.py`。
 - Full Verification：`tests/test_full_verification_campaign.py` 打完整段劇情；
@@ -319,7 +319,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 
 | 項目 | 狀態 |
 | --- | --- |
-| 圖示與美術 | 所有 demo（Full Verification、Octopath、reference、Diablo 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：Diablo 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
+| 圖示與美術 | 所有 demo（Full Verification、Party RPG、reference、ARPG 兩個、party／basic／action 範本）的人物、怪物、地圖、UI、裝備與技能圖示都是 Foozle Lucifer（CC0）；例外：ARPG 的箭與投射物、弓和魔杖圖示來自 Ninja Adventure（Lucifer 沒有）。程式畫的原創圖示（`graphics/forged_icons.py`，D35）仍在引擎裡可選。沒有 AI 美術 |
 | 原生 kernel 要在開發機編譯一次 | `python -m asteria.kernels.build_native`（macOS 編成 arm64 + x86_64 通用檔，ABI 5）；匯出會先檢查、必要時重編並帶著它，玩家的 Python 沒有 numpy 也能用；沒編譯會退回 numpy／python |
 | 輕量電腦 | 效能只在本機（Apple silicon、沒開低耗電模式）量過；真的輕量電腦或低耗電模式要有人實際跑 |
 | 頭上名字的縮寫 | 名字超過 14 字會縮成縮寫（「Goblin Slinger 2」→「GS2」），要怎麼顯示待使用者決定。2026-10-22 發現的其他戰鬥畫面問題（拉近時的狀態文字、技能列名稱黏花費、狀態畫面 HP／MP 順序）已修（DECISION_LOG D51 補充） |
@@ -328,10 +328,10 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | Web 匯出（D59） | `python -m asteria.export_web`（pygbag）：沒有編輯器、多人連線、ModernGL、C++ kernel、預載執行緒；玩家開頁面要連得到 pygame-web 的 CDN（`--cdn` 自架）；存檔在瀏覽器的 localStorage；音訊只有 ogg／wav；本機測試用 `127.0.0.1` 開，不用 `localhost`；證據 `audits/evidence/web_export/` |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
 | 手把與實體鍵盤、音訊聽感與延遲 | 需要真人；沒有自動化 |
-| 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整。Diablo 的九個流派用 `scripts/arpg_balance.py` 對齊（同等級、同技能點下的輸出加存活的綜合分數，差距在 ±20% 內）；沒有裝備、沒有真人操作，只能比流派之間 |
+| 手感與平衡 | 數值是 demo 用的，需要有人實際玩過調整。ARPG 的九個流派用 `scripts/arpg_balance.py` 對齊（同等級、同技能點下的輸出加存活的綜合分數，差距在 ±20% 內）；沒有裝備、沒有真人操作，只能比流派之間 |
 | 寵物 | 預設不是戰鬥單位（物種可選 `battle_unit`）；已有進化、學技能、親密度（D31） |
 | 寵物的存檔與選單 | Pets 畫面只在專案有寵物物種時出現在暫停選單；起始寵物在 Database > Game Start 分頁設定 |
-| 多人連線 | 通用 TCP session／adapter、SQLite 原子掉落領取及完整角色存檔、可修改規則模板、獨立 Diablo 多人副本已完成四人原生驗收。Guest ID 為開發身分；伺服器重開保留角色並重建場次世界。公開網路部署、TLS、登入驗證與 WAN 品質驗收另行處理。見 [設計文件](audits/MULTIPLAYER_DESIGN.md)。 |
+| 多人連線 | 通用 TCP session／adapter、SQLite 原子掉落領取及完整角色存檔、可修改規則模板、獨立 ARPG 多人副本已完成四人原生驗收。Guest ID 為開發身分；伺服器重開保留角色並重建場次世界。公開網路部署、TLS、登入驗證與 WAN 品質驗收另行處理。見 [設計文件](audits/MULTIPLAYER_DESIGN.md)。 |
 
 接續工作與本機設定：[`NEXT_STEPS.md`](NEXT_STEPS.md)。
 
@@ -360,7 +360,7 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 裝備 | `RefineRules`（+N 精煉：費用、各級成功率、失敗後果 keep／drop／break／destroy、安全級數）、可鑲嵌道具（`ItemDefinition.attachment_id`、`destroyed_on_removal`） |
 | 角色 | `ClassDefinition.level_growth`（職業每級成長）、`points_per_level`（升級給任意名稱的點數） |
 | 世界指令 | `GRANT_EXPERIENCE`、`REFINE_EQUIPMENT`、`SOCKET_ITEM`、`UNSOCKET_ITEM`、`UPGRADE_EQUIPMENT` |
-| 戰鬥表現 | 版面 `hidden_zones`（該區域成員完全不畫 HUD，像八方旅人的敵人）、`move` 動作通道（`advance` 衝向目標、`return` 退回，停在目標體型邊緣）、精靈表中繼資料 `body_height`（血條與選單依本體高度擺） |
+| 戰鬥表現 | 版面 `hidden_zones`（該區域成員完全不畫 HUD，像隊伍 RPG 的敵人）、`move` 動作通道（`advance` 衝向目標、`return` 退回，停在目標體型邊緣）、精靈表中繼資料 `body_height`（血條與選單依本體高度擺） |
 | 反擊與戰鬥表現 | `ReactionDefinition.reactor_tags`（要求反應者自己帶標籤，如反擊姿態）；可玩戰鬥現在會觸發專案的反應並記入戰鬥記錄；敵人技能也走逐下流程（爆擊／即死／反應）；`EQUIP_ITEM`（戰鬥中換武器，技能跟著變）、`DISASSEMBLE`；失去開場（先制／偷襲）的一方在時間軸排程下只讓出第一輪 |
 | Demo | `reference_projects/full_verification_demo/`：單一主角打 Boss，`run_trial_smoke.py` 腳本化驗證、`scripts/full_verification_live_check.py` 真實視窗驗證 |
 

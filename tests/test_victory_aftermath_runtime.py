@@ -6,7 +6,7 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 def _runtime(monkeypatch, aftermath):

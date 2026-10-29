@@ -44,7 +44,7 @@ Precision, Vigor), each a gate, small nodes, two notables and a keystone that tr
 for another; bridges join neighbours; drawn as a web (authored positions). **Specializations**
 (World of Warcraft): every job tree has three exclusive specs (Priest: Holy / Discipline /
 Shadow ...), each with two ranked talents and a capstone passive (54 spec passives). **Runes**
-(Diablo III): each job's rune skill takes Ember (fire + burn), Echo (twice the hits) or Siphon
+(action-RPG style): each job's rune skill takes Ember (fire + burn), Echo (twice the hits) or Siphon
 (heals the user); the rune node grants a tag and an evolution that needs the tag swaps the skill
 (54 rune skills; engine: `AbilityEvolutionRule.required_tags`). **Skill books** (MapleStory): a
 ten-rank book per job paid with skill points from levels (shrine, Job Master training). The

@@ -1,4 +1,4 @@
-# Start here - Party RPG (Octopath-style)
+# Start here - Party RPG (break and boost battles)
 
 This project is a finished turn-based battle game made only from project data. Open it in the
 editor, press **Run Project**, then change things one at a time. Everything below is a record you

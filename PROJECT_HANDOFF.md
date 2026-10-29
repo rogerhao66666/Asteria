@@ -113,7 +113,7 @@ Next development phase: Runtime RPG UI. Do not reopen Battle Core/Presentation w
 - Batch 126 complete: Battle Information Hierarchy / Clutter Control formalizes
   persistent/contextual/focused/compact/hidden/overflow presentation. Stress
   cases cover 7 resources, 12 statuses, 12 party members, 18 timeline entries,
-  boss + adds + summon. Octopath Traveler may inform quality/hierarchy only;
+  boss + adds + summon. Commercial party JRPGs may inform quality/hierarchy only;
   Asteria remains generic/adaptive/project-configurable. No Core changes.
 
 - Batch 127 complete: Combatant Visual System separates battlefield body,
@@ -199,13 +199,13 @@ Next development phase: Runtime RPG UI. Do not reopen Battle Core/Presentation w
   frame-budget accounting all pass. This is CPU-side planning validation, not a
   real-hardware 60 FPS claim.
 
-- Batch 139 complete: Non-Octopath Generality Proof validates solo reactive,
+- Batch 139 complete: Non-Party-RPG Generality Proof validates solo reactive,
   ATB-like squad, 18-member monster collection, and 24-unit raid presentation
   shapes with the same generic interaction/information/layout mechanisms.
-  Octopath-like capability is confirmed as a benchmark, not an engine template.
+  Party-RPG-like capability is confirmed as a benchmark, not an engine template.
 
 - Batch 140: Playable RPG Systems Validation milestone FROZEN.
 - Persistent FULL CANONICAL is produced at this boundary.
 - `reference_projects/` contains direct-use side-view JRPG, portrait dungeon,
-  large-party stress, and non-Octopath generality presets plus executable smoke.
+  large-party stress, and non-party-RPG generality presets plus executable smoke.
 - Next: Asteria Engine Editor GUI.

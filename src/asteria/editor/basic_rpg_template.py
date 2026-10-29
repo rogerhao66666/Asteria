@@ -208,7 +208,7 @@ def simplify_basic_rpg(folder):
         "and two enemies.\n"
         "Battle contains HP (vitality), MP (technique), targeting, turn order, "
         "victory and escape.\n"
-        "The field is the tile-painted Diablo map. Select Map in the scene, then Tiles "
+        "The field is the tile-painted ARPG map. Select Map in the scene, then Tiles "
         "to edit its layers and collision.\n"
         "Enemy AI contains one attack rule shared by both enemies.\n"
         "There are no jobs to unlock, shields, boost points, pets or crafting dependencies.\n"

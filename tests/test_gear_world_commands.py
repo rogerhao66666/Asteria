@@ -69,7 +69,7 @@ def test_bad_arguments_are_reported():
 
 
 def test_disassemble_command_breaks_an_item_down():
-    from test_octopath_style_battle import _project
+    from test_break_battle import _project
     from test_session_events import _session
 
     from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield

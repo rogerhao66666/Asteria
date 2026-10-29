@@ -30,7 +30,7 @@ from asteria.presentation.text_cells import cells
 from asteria.runtime import Camera2D
 
 REPO = Path(__file__).resolve().parents[1]
-OCTOPATH = REPO / "reference_projects" / "octopath_demo"
+PARTY_RPG = REPO / "reference_projects" / "party_rpg_demo"
 HEROES = ("hero", "ally", "mage")
 PLACEMENT = {"hero": "right", "ally": "right", "mage": "right", "boss": "left", "imp": "left"}
 PORTRAITS = {m: (f"faces/{m}.png", f"faces/{m}_small.png") for m in HEROES}
@@ -215,7 +215,7 @@ def test_the_combatant_sprites_form_picks_portraits_from_the_portrait_pictures(t
     QApplication.instance() or QApplication([])
     document = EditorDocument()
     document.project = Project.load_json(
-        OCTOPATH / "project.asteria.json", document.component_registry
+        PARTY_RPG / "project.asteria.json", document.component_registry
     )
     document.file_path = tmp_path / "project.asteria.json"
     (tmp_path / "faces").mkdir()
@@ -385,7 +385,7 @@ def _menu_boxes(frame):
 @pytest.mark.parametrize(
     "layout",
     [
-        # the Octopath demo's: the menu at the acting member's lower right, over the stage
+        # the Party RPG demo's: the menu at the acting member's lower right, over the stage
         BattleUiLayoutProfile(
             virtual_width=480,
             virtual_height=270,
@@ -528,7 +528,7 @@ def battle(monkeypatch, tmp_path):
 
     def start(portraits=True, **layout):
         project = Project.load_json(
-            OCTOPATH / "project.asteria.json", EditorDocument().component_registry
+            PARTY_RPG / "project.asteria.json", EditorDocument().component_registry
         )
         library = project.battle_presentation_library
         if portraits:
@@ -552,7 +552,7 @@ def battle(monkeypatch, tmp_path):
         for key in library.ids("ui_layout"):
             library.set("ui_layout", key, replace(library.require("ui_layout", key), **layout))
         runtime = PlayableTestRuntime(
-            project, project.game_start.instantiate(project), OCTOPATH, width=960, height=540
+            project, project.game_start.instantiate(project), PARTY_RPG, width=960, height=540
         )
         runtime.open()
         runtime._ui_mode = "field"

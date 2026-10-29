@@ -17,7 +17,7 @@ def view(monkeypatch):
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    root = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+    root = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=320, height=180

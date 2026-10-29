@@ -63,7 +63,7 @@ def test_an_edit_is_written_back_and_nothing_else_moves(dialog_for, tmp_path):
     assert written["battle"] == MANIFEST["battle"] and list(written) == list(MANIFEST)
 
 
-@pytest.mark.parametrize("demo", ["full_verification_demo", "diablo_demo", "octopath_demo"])
+@pytest.mark.parametrize("demo", ["full_verification_demo", "arpg_demo", "party_rpg_demo"])
 def test_ok_without_changes_leaves_the_file_byte_for_byte(dialog_for, tmp_path, demo):
     text = (DEMOS / demo / "playable_test_manifest.json").read_text(encoding="utf-8")
     dialog = dialog_for(text)

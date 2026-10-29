@@ -14,7 +14,7 @@ from asteria.rpg.new_game_plus import NewGamePlusRules
 from asteria.rpg.progression_graph import ProgressionAllocationRuntime
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 HERO = "hero_01"
 SWORD = "w_sword:hero_01"
 

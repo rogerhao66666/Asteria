@@ -3,11 +3,11 @@
     python scripts/battle_portraits_live_check.py OUTPUT_DIR
     python scripts/battle_portraits_live_check.py OUTPUT_DIR --editor
 
-Opens real (Cocoa) windows on the Full Verification and Octopath demos with each of the first
+Opens real (Cocoa) windows on the Full Verification and Party RPG demos with each of the first
 four heroes' Combatant Sprites records given a portrait - CC0 Ninja Adventure facesets from
 ``local_reference/`` stand in for anime faces - and plays each battle with real frames to the
 first hero's turn, its command menu open: the Acolyte's Vigil (Portrait Party Layout: bodies
-hidden, the side list), the Octopath side list (bodies shown), the engine's default column HUD
+hidden, the side list), the Party RPG side list (bodies shown), the engine's default column HUD
 and a bottom row with the portraits over its cells. The projects are changed in memory only.
 Every battle is saved as ``d53_<name>.png``; ``d53_battle_portraits_results.json`` lists the
 portraits drawn and the checks: each portrait is on screen pixel for pixel as fitted, nothing
@@ -43,22 +43,22 @@ FACES = (
 STAND_INS = ("Hunter", "SorcererBlack", "Vampire", "SamuraiBlue")  # hero_01 .. hero_04
 DEMOS = {
     "full_verification": REPO / "reference_projects" / "full_verification_demo",
-    "octopath": REPO / "reference_projects" / "octopath_demo",
+    "party_rpg": REPO / "reference_projects" / "party_rpg_demo",
 }
 # (name, demo, encounter, layout changes)
 BATTLES = (
     ("vigil_side_list", "full_verification", "acolyte_vigil", {}),
     ("vigil_side_list_right", "full_verification", "acolyte_vigil", {"hud_portraits": "right"}),
-    ("octopath_side_list", "octopath", "boss_room", {}),
+    ("break_battle_side_list", "party_rpg", "boss_room", {}),
     (
-        "octopath_column",
-        "octopath",
+        "break_battle_column",
+        "party_rpg",
         "boss_room",
         {"party_hud": "column", "action_menu_placement": "bottom", "overhead_zones": ()},
     ),
     (
-        "octopath_bottom_row_above",
-        "octopath",
+        "break_battle_bottom_row_above",
+        "party_rpg",
         "boss_room",
         {
             "party_hud": "bottom_row",

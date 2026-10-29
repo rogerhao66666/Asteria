@@ -10,7 +10,7 @@ status, known gaps and NEXT
 ## 2026-10-15 update — Multiplayer ECS closeout (D26)
 
 - Generic TCP adapter/session infrastructure, editable project rules and styled Multiplayer GUI.
-- Separate Diablo copy now uses `project_demo:build_project_adapter`, loading the selected project.
+- Separate ARPG copy now uses `project_demo:build_project_adapter`, loading the selected project.
   The server runs original ECS combat/AI/physics/skills/NPCs/shops/crafting and independent players.
   Original UI routes inventory, equipment, progression and save/load to authoritative commands.
 - SQLite persists full character saves, contributions, XP and atomic loot claims. Every positive

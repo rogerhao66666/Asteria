@@ -1,6 +1,6 @@
-"""Dress the party-RPG reference projects (Octopath demo, complex reference RPG) in Lucifer art.
+"""Dress the party-RPG reference projects (Party RPG demo, complex reference RPG) in Lucifer art.
 
-    python scripts/reskin_reference_projects.py [octopath_demo complex_reference_rpg]
+    python scripts/reskin_reference_projects.py [party_rpg_demo complex_reference_rpg]
 
 Edits the saved projects in place (project, manifest, pictures, icons) and rewrites their credits.
 The build scripts of those projects call ``dress`` at their end, so a rebuild keeps the look.
@@ -104,7 +104,7 @@ def write_credits(folder):
 
 def main(argv=None):
     names = list(sys.argv[1:] if argv is None else argv) or [
-        "octopath_demo",
+        "party_rpg_demo",
         "complex_reference_rpg",
     ]
     for name in names:

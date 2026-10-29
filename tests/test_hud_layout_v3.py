@@ -8,7 +8,7 @@ import pytest
 
 from asteria.presentation.menu_layout import MenuElement, MenuLayout, MenuTheme
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "diablo_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
 MAGENTA, CYAN, GREEN = (255, 0, 255), (0, 255, 255), (0, 200, 0)
 
 

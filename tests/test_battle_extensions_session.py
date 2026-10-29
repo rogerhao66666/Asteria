@@ -1,4 +1,4 @@
-"""Battle extension rules and enemy levels inside a real game session (octopath demo data)."""
+"""Battle extension rules and enemy levels inside a real game session (party_rpg demo data)."""
 
 from pathlib import Path
 
@@ -10,7 +10,7 @@ from asteria.rpg import BattleExtensionRules, StealEntry, StealTable
 from asteria.rpg.enemy_levels import DifficultyLevel, EnemyLevelRules
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 HP = "vitality"
 
 

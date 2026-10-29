@@ -21,9 +21,9 @@ from asteria.graphics.forged_icons import apply_to_project_file  # noqa: E402
 
 def main():
     projects = {
-        # Diablo keeps its drawn state glyphs and the potion's item icon; skills get new ones
-        "diablo_demo": {"replace": True, "keep": ("potion",), "states": False},
-        "octopath_demo": {"replace": False, "keep": (), "states": True},
+        # ARPG keeps its drawn state glyphs and the potion's item icon; skills get new ones
+        "arpg_demo": {"replace": True, "keep": ("potion",), "states": False},
+        "party_rpg_demo": {"replace": False, "keep": (), "states": True},
     }
     for name, options in projects.items():
         path = ROOT / "reference_projects" / name / "project.asteria.json"

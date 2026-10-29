@@ -1,7 +1,7 @@
 {
   "schema": "asteria.playable_test_content",
   "version": 1,
-  "title": "Asteria Diablo Multiplayer Demo",
+  "title": "Asteria ARPG Multiplayer Demo",
   "subtitle": "Hollowbrook - an ARPG demo",
   "field": {
     "background": "playable_assets/title.png",

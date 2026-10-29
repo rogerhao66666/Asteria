@@ -25,6 +25,6 @@ feedback may share the same impact timestamp. Persistent status VFX may overlap
 recovery. Transform, summon entry/exit and boss phase transitions are ordinary
 presentation cues rather than game-specific engine systems.
 
-The design target is premium, fluid JRPG presentation. Octopath Traveler may be
+The design target is premium, fluid JRPG presentation. Commercial party JRPGs may be
 used as a quality benchmark for smoothness, timing and impact feel, but Asteria
-does not copy its assets, exact choreography or game-specific mechanics.
+does not copy their assets, exact choreography or game-specific mechanics.

@@ -1,4 +1,4 @@
-"""Build the ARPG demo (D22 A10): a Diablo-like action RPG made only of project data.
+"""Build the ARPG demo (D22 A10): a loot-driven action RPG made only of project data.
 
 * a town (a merchant who buys monster parts and sells potions, a smith who brews potions,
   three class trainers), a top-down field (slimes, eyes that shoot, an elite pack, a boss) and a
@@ -8,11 +8,11 @@
 * loot: rarities with random affixes, a three-piece set, uniques, gold and crafting parts;
 * potions are inventory items an ability spends (``item:potion``).
 
-Everything is ordinary project data: the engine has no idea this is "Diablo-like". The same
+Everything is ordinary project data: the engine has no idea this is "an action RPG". The same
 systems build a soulslike, a twin-stick shooter, a platformer brawler or anything else.
 
-Run: ``python reference_projects/diablo_demo/build_project.py`` (writes this folder; idempotent).
-Play: ``python -m asteria.runtime.preview reference_projects/diablo_demo/project.asteria.json``.
+Run: ``python reference_projects/arpg_demo/build_project.py`` (writes this folder; idempotent).
+Play: ``python -m asteria.runtime.preview reference_projects/arpg_demo/project.asteria.json``.
 """
 
 from __future__ import annotations
@@ -1419,7 +1419,7 @@ def new_game(project, scene, hero):
     )
 
 
-PROJECT_ID = "09fb43ca-4bdc-4732-a3da-bee2d08c67ee"  # shared by both Diablo demos
+PROJECT_ID = "09fb43ca-4bdc-4732-a3da-bee2d08c67ee"  # shared by both ARPG demos
 
 
 # -- art ------------------------------------------------------------------------------------------

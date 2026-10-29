@@ -11,7 +11,7 @@ from asteria.rpg.map_rules import AreaRule, MapRuleSet
 from asteria.runtime.field_ai import FieldAIComponent
 from asteria.runtime.game_session import GameSessionRuntime
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 def _session(rules, **options):

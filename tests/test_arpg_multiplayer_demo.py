@@ -6,8 +6,8 @@ from pathlib import Path
 from asteria.multiplayer.rules import load_rules
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects"
-OFFLINE = ROOT / "diablo_demo"
-MULTIPLAYER = ROOT / "diablo_multiplayer_demo"
+OFFLINE = ROOT / "arpg_demo"
+MULTIPLAYER = ROOT / "arpg_multiplayer_demo"
 
 
 def test_multiplayer_demo_copies_the_offline_project_and_assets_without_changing_them():
@@ -37,7 +37,7 @@ def test_multiplayer_demo_has_a_valid_full_per_player_xp_profile():
     )
     rules = load_rules(MULTIPLAYER / ".asteria" / "multiplayer-rules.json")
 
-    assert project["name"] == "Asteria Diablo Multiplayer Demo"
+    assert project["name"] == "Asteria ARPG Multiplayer Demo"
     assert (
         project["id"]
         == json.loads((OFFLINE / "project.asteria.json").read_text(encoding="utf-8"))["id"]

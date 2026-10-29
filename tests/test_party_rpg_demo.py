@@ -1,4 +1,4 @@
-"""The Octopath-style battle demo (reference_projects/octopath_demo), played through the battle
+"""The party RPG battle demo (reference_projects/party_rpg_demo), played through the battle
 command menu the
 player uses (BattleCommands: categories, cursor, boost, targets, ingredients) and, end to end, by
 key presses.
@@ -18,7 +18,7 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 BP, SHIELD, HP = "bp", "shield", "vitality"
 BOSS = "astral_tyrant:1"
 

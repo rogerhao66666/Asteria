@@ -18,7 +18,7 @@ from asteria.runtime.image_preloader import ImagePreloader  # noqa: E402
 from asteria.runtime.web_persistence import DictStorage, FolderMirror  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
-DEMO = REPO / "reference_projects" / "octopath_demo" / "project.asteria.json"
+DEMO = REPO / "reference_projects" / "party_rpg_demo" / "project.asteria.json"
 HEADLESS = {"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy"}
 
 
@@ -31,7 +31,7 @@ def exported(tmp_path_factory):
 
 def test_the_app_folder_holds_the_game_a_slim_engine_the_font_and_main_py(exported):
     app = exported.app
-    assert app.name == "octopath_demo" or app.name.endswith("demo")
+    assert app.name == "party_rpg_demo" or app.name.endswith("demo")
     assert (app / "project.asteria.json").is_file()
     assert (app / "playable_test_manifest.json").is_file()
     assert (app / "main.py").is_file()

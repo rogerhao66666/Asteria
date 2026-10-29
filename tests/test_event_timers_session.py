@@ -10,7 +10,7 @@ from asteria.project import Project
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 @pytest.fixture

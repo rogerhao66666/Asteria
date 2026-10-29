@@ -17532,7 +17532,7 @@
     "version": 1
   },
   "lifecycle_event_bindings": [],
-  "name": "Asteria Octopath-style Battle Demo",
+  "name": "Asteria Party RPG Battle Demo",
   "prefabs": {
     "prefabs": [],
     "schema": "asteria.prefab_library",
@@ -18136,7 +18136,7 @@
         "boost_resource_id": "bp",
         "hit_trigger": "battle.hit",
         "knockout_resource_id": "vitality",
-        "rules_id": "octopath",
+        "rules_id": "break_battle",
         "schema": "asteria.rpg.battle_session_rules",
         "shield_resource_id": "shield",
         "version": 1

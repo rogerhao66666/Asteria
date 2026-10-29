@@ -1,4 +1,4 @@
-"""Every drawn text, panel, gauge, sprite and shield block on the Octopath demo's battle screen
+"""Every drawn text, panel, gauge, sprite and shield block on the Party RPG demo's battle screen
 stays clear of the others, in every menu state, while the camera settles."""
 
 import itertools
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "octopath_demo"
+ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 ENCOUNTERS = ["boss_room", "slime_pit", "old_crypt", "gazer_nest", "samurai_duel"]
 
 

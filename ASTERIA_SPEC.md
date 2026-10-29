@@ -30,7 +30,7 @@ Primary target families:
 -   2D Action RPG / side-scrolling or top-down ARPG
 
 Reference complexity targets include system complexity comparable to
-**Octopath Traveler** and **ASTLIBRA Revision**. These are architectural
+commercial party JRPGs and **ASTLIBRA Revision**. These are architectural
 stress targets, not templates or gameplay clones.
 
 ## 2. Core Product Principle

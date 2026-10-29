@@ -1,4 +1,4 @@
-# Start here - Action RPG (Diablo-style)
+# Start here - Action RPG (real-time loot and skill trees)
 
 A real-time action RPG made only from project data: a town, a top-down field and a side-view
 mine, three classes with skill trees, and loot with rarities and affixes. Open it in the editor,

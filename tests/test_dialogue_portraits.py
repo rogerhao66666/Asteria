@@ -158,7 +158,7 @@ def document(tmp_path):
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
-    ref = REPO / "reference_projects" / "octopath_demo" / "project.asteria.json"
+    ref = REPO / "reference_projects" / "party_rpg_demo" / "project.asteria.json"
     doc = EditorDocument()
     doc.project = Project.load_json(ref, doc.component_registry)
     doc.file_path = tmp_path / "project.asteria.json"  # pictures are looked for in tmp_path

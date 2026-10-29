@@ -179,13 +179,13 @@ and tune only evidence-backed hot paths before generality proof.
 
 ### Batch 138 complete
 Dense UI/renderer/animation stress validation passes and two unnecessary
-per-frame draw-container copies were removed. Next: Batch 139 Non-Octopath
+per-frame draw-container copies were removed. Next: Batch 139 Non-Party-RPG
 Generality Proof — validate materially different RPG/battle structures against
 the same mechanisms and presentation policies so the engine is not accidentally
 optimized around the reference JRPG shape.
 
 ### Batch 139 complete
-Non-Octopath generality proof passes. Next: Batch 140 Playable RPG Systems
+Non-Party-RPG generality proof passes. Next: Batch 140 Playable RPG Systems
 Closure Audit / Freeze. Audit the full 119–139 validation milestone, resolve
 only proven generic gaps, then produce a persistent FULL CANONICAL milestone
 before the Editor GUI phase.

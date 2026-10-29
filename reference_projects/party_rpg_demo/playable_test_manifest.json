@@ -1,7 +1,7 @@
 {
   "schema": "asteria.playable_test_content",
   "version": 1,
-  "title": "Octopath-style Battle Demo",
+  "title": "Party RPG Battle Demo",
   "field": {
     "background": "playable_assets/field_map.png",
     "player_sheet": "playable_assets/player_field_sheet.png",

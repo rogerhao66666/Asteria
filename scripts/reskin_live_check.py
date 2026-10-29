@@ -46,7 +46,7 @@ def main(argv):
     out.mkdir(parents=True, exist_ok=True)
     demos = REPO / "reference_projects"
     drivers = {
-        "octopath": shoot(demos / "octopath_demo", "boss_room", out, "octopath"),
+        "party_rpg": shoot(demos / "party_rpg_demo", "boss_room", out, "party_rpg"),
         "reference": shoot(demos / "complex_reference_rpg", "boss_room", out, "reference"),
     }
     basic = create_from_template("basic_rpg", "Basic", Path(tempfile.mkdtemp()) / "basic")

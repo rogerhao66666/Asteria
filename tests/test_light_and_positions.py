@@ -21,7 +21,7 @@ def _game(*programs):
     from asteria.project import Project
     from asteria.runtime.game_session import GameSessionRuntime
 
-    path = ROOT / "octopath_demo" / "project.asteria.json"
+    path = ROOT / "party_rpg_demo" / "project.asteria.json"
     project = Project.load_json(path, EditorDocument().component_registry)
     for program_id, instructions in programs:
         project.event_programs.register(
@@ -78,7 +78,7 @@ def test_the_field_view_draws_the_dark_round_the_player(monkeypatch):
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    root = ROOT / "diablo_demo"
+    root = ROOT / "arpg_demo"
     project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
