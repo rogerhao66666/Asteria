@@ -1,14 +1,13 @@
 name: tests
 
-# Every push and pull request: lint and format check (ruff), then the whole test suite
-# headless (SDL dummy drivers, Qt offscreen). Real-window checks (scripts/*_live_check.py)
-# need a desktop and stay local; the evidence they produce is committed under docs/audits.
+# Lint and format check (ruff), then the whole test suite headless (SDL dummy drivers, Qt
+# offscreen). The suite runs locally before each commit; this workflow runs only on demand
+# (Actions > tests > Run workflow), so pushes and pull requests use no Actions minutes.
+# Real-window checks (scripts/*_live_check.py) need a desktop and stay local; the evidence
+# they produce is committed under docs/audits.
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:  # the Actions tab's "Run workflow" button: also runs the macOS suite
+  workflow_dispatch:  # the Actions tab's "Run workflow" button: Linux and macOS suites
 
 concurrency:
   # with the event: a manual run (workflow_dispatch) must not cancel the push run of a commit
@@ -56,8 +55,7 @@ jobs:
       - run: pip install -e ".[pygame,editor,mv,dev]"
       - run: python -m pytest tests -q -p no:cacheprovider --durations=15
 
-  # macOS minutes cost ten times Linux minutes on a private repository, so this suite runs on
-  # pull requests and on demand (Actions > tests > Run workflow), not on every push to main.
+  # macOS minutes cost ten times Linux minutes on a private repository.
   # It catches what Linux cannot: the macOS fonts (CJK sizing), Cocoa paths, .app exports.
   tests-macos:
     if: github.event_name != 'push'
