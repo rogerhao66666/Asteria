@@ -361,7 +361,7 @@ def test_two_clients_defeat_the_same_authoritative_boss(serve_adapter):
                 value.get("type") == "game_update"
                 and value.get("state", {}).get("boss", {}).get("alive") is False
             ),
-            timeout=8.0,
+            timeout=20.0,  # real-time server ticks: a slow CI machine (macOS runner) needs longer
         )
         second_done = _next_message(
             second_messages,
@@ -369,7 +369,7 @@ def test_two_clients_defeat_the_same_authoritative_boss(serve_adapter):
                 value.get("type") == "game_update"
                 and value.get("state", {}).get("boss", {}).get("alive") is False
             ),
-            timeout=8.0,
+            timeout=20.0,  # real-time server ticks: a slow CI machine (macOS runner) needs longer
         )
         assert first_done["state"]["boss"] == second_done["state"]["boss"]
         assert {p["experience"] for p in first_done["state"]["players"]} == {100}

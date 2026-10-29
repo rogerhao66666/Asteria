@@ -11,7 +11,8 @@ on:
   workflow_dispatch:  # the Actions tab's "Run workflow" button: also runs the macOS suite
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # with the event: a manual run (workflow_dispatch) must not cancel the push run of a commit
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 env:
