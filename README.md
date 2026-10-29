@@ -1,38 +1,51 @@
 # Asteria
 
-**用 Python 做 2D RPG 的引擎與編輯器。** 回合制隊伍戰鬥與即時動作戰鬥共用一套資料驅動的核心；
-有歧義的規則都是編輯器裡的選項，範例遊戲只是資料，不是寫死在引擎裡的規則。編輯器有繁體中文與英文介面。
+**English** | [繁體中文](README.zh-TW.md)
 
-*A Python 2D RPG engine with a PySide6 editor. [English summary below.](#english)*
+**A 2D RPG engine and editor in Python.** Turn-based party battles and real-time action combat
+share one data-driven core. Every rule with more than one sensible answer is an option in the
+editor, and the sample games are data, not rules written into the engine. The editor has an
+English and a Traditional Chinese interface.
 
-> **狀態：Alpha（開發者預覽）。** 功能完整、測試齊全，但資料格式與 API 仍可能變動，也還沒有在很多人的
-> 機器上跑過。這是個人興趣專案：歡迎回報問題，但不保證回應時間。
+> **Status: alpha (developer preview).** It is feature-complete and well tested, but the data
+> format and the API may still change, and it has not yet run on many people's machines. This is
+> a personal hobby project: issues are welcome, but replies are not guaranteed.
 
-![編輯器：場景工作區](docs/manual/images/editor_zh_scene.png)
+![The editor: the Scene workspace](docs/manual/images/editor_en_scene.png)
 
-![遊戲：回合制戰鬥](docs/manual/images/game_zh_battle.png)
+![The game: a turn-based battle](docs/manual/images/game_en_battle.png)
 
 ---
 
-## 特色
+## Features
 
-- **編輯器**（PySide6）：場景、資料庫、戰鬥、演出、事件、程式碼、多人連線七個工作區；紀錄是表單，
-  改了就套用、Ctrl+Z 復原；畫地圖、技能樹圖、素材庫匯入、從範本開新專案；英文與繁體中文介面即時切換。
-- **回合制戰鬥**：排程與加速點、弱點／護盾／破防、多段攻擊、多武器、主副職業、技能樹、狀態、反射與吸收、
-  多階段 Boss、召喚、寵物與收服、調合、逃跑、戰鬥獎勵；側視站位、HUD 肖像、鏡頭、特效，全部可調。
-- **即時戰鬥**：俯視與橫向視角共用一套核心；攻擊判定（無敵幀、擊退、硬直）、連段、閃避、鎖定、冷卻、
-  投射物、行為樹 AI、平台手感（郊狼時間、跳躍緩衝、斜坡、梯子）。
-- **RPG 資料**：職業、技能樹、裝備（欄位、鑲嵌、套裝、成長、隨機詞綴、稀有度、精煉）、掉落、任務、
-  商店、聲望、成就、圖鑑、寵物（物種、升級、進化）、存檔槽、新遊戲＋。
-- **世界**：分層地圖、四向角色、對話與事件程式、NPC 狀態、天氣與光照、視差背景、可翻譯的內建字詞。
-- **效能**：ECS 欄位陣列；熱迴圈有 Python／numpy／C++ 三組 kernel，結果相同，不編譯 C++ 也能跑。
-- **匯出**：可發布的遊戲資料夾、單檔遊戲（`.pyz`）、macOS app，以及不需要 Python 的免安裝版。
-- **多人原型**：TCP session／lobby、即時輸入同步、合作 Boss 範例、SQLite 玩家資料（本機或可信任的區域網路）。
-- **RPG Maker MV 匯入**：地圖、資料庫、事件可以帶過來（素材請見下方說明）。
+- **Editor** (PySide6): seven workspaces - Scene, Database, Battle, Presentation, Events, Code and
+  Multiplayer. Records are forms: a change applies at once, Ctrl+Z undoes it. Paint maps, draw
+  skill-tree graphs, import into the asset library, start a new project from a template, and switch
+  the interface between English and Traditional Chinese while it runs.
+- **Turn-based battles:** turn order and boost points; weaknesses, shields and breaks; multi-hit
+  attacks; several weapons; main and sub jobs; skill trees; states; reflect and absorb; multi-phase
+  bosses; summons; pets and capture; mixing; escape; battle rewards. Side-view placement, HUD
+  portraits, camera and effects are all adjustable.
+- **Real-time combat:** top-down and side-view share one core - hitboxes (invincibility frames,
+  knockback, hit stun), combos, dodges, lock-on, cooldowns, projectiles, behaviour-tree AI, and
+  platformer feel (coyote time, jump buffering, slopes, ladders).
+- **RPG data:** jobs, skill trees, equipment (slots, sockets, sets, growth, random affixes, rarity,
+  refining), drops, quests, shops, reputation, achievements, a bestiary, pets (species, levels,
+  evolution), save slots and New Game+.
+- **World:** layered maps, four-direction characters, dialogue and event programs, NPC states,
+  weather and lighting, parallax backgrounds, and translatable built-in words.
+- **Performance:** ECS column arrays; the hot loops have Python, numpy and C++ kernels with the same
+  results, so it runs without compiling the C++.
+- **Export:** a game folder ready to release, a single-file game (`.pyz`), a macOS app, and a
+  standalone build that needs no Python.
+- **Multiplayer prototype:** TCP sessions and lobby, live input sync, a co-op boss example, and
+  SQLite player data (on one machine or a trusted local network).
+- **RPG Maker MV import:** maps, database and events come across (see the asset note below).
 
-## 安裝
+## Install
 
-需要 Python 3.12 以上（macOS、Linux、Windows）。
+Python 3.12 or later (macOS, Linux, Windows).
 
 ```bash
 git clone https://github.com/rogerhao66666/Asteria.git
@@ -42,101 +55,91 @@ python -m pip install -U pip
 python -m pip install -e ".[pygame,editor,mv,dev]"
 ```
 
-可選的 extras：`pygame`（遊戲執行）、`editor`（PySide6 編輯器）、`mv`（RPG Maker MV 匯入，需要 Pillow）、
-`moderngl`（GPU 後端）、`fast`（numpy kernel）、`dev`（pytest、ruff）、`package`（免安裝版 app）。
-只玩遊戲、不開編輯器的話，裝 `".[pygame]"` 就夠。C++ kernel 可選：`python -m asteria.kernels.build_native`。
+Optional extras: `pygame` (running games), `editor` (the PySide6 editor), `mv` (RPG Maker MV import,
+needs Pillow), `moderngl` (GPU backend), `fast` (numpy kernels), `dev` (pytest, ruff), `package`
+(the standalone app). To play games without the editor, `".[pygame]"` is enough. The C++ kernels
+are optional: `python -m asteria.kernels.build_native`.
 
-## 開始使用
+## Getting started
 
 ```bash
-asteria-editor                                   # 開編輯器
-asteria-preview reference_projects/full_verification_demo/project.asteria.json   # 直接玩範例
-asteria-export PROJECT.json OUT_DIR              # 匯出可發布的遊戲資料夾
-asteria-export PROJECT.json OUT_DIR --pyz --app  # 另外做單檔遊戲與 macOS app
-asteria-import-mv MV_PROJECT_DIR OUT.json        # 匯入 RPG Maker MV 專案
-asteria-upgrade PROJECT.json                     # 把舊版專案升到目前格式
+asteria-editor                                   # open the editor
+asteria-preview reference_projects/full_verification_demo/project.asteria.json   # play a sample
+asteria-export PROJECT.json OUT_DIR              # export a game folder ready to release
+asteria-export PROJECT.json OUT_DIR --pyz --app  # also a single-file game and a macOS app
+asteria-import-mv MV_PROJECT_DIR OUT.json        # import an RPG Maker MV project
+asteria-upgrade PROJECT.json                     # bring an older project up to the current format
 ```
 
-第一次開編輯器會打開一份 Full Verification 範例的副本（放在你的使用者資料夾，不會改到 repo 裡的範例）。
-要開新專案：**File > New Project…**（Ctrl+N），選 Full Verification（完整的遊戲，推薦）、Basic RPG、
-Party RPG、Action RPG 或 Completely Empty。**Run Project**（F6）從遊戲開始處試玩，
-**Run Current Scene**（Ctrl+F6）從目前的地圖試玩。
+The first time the editor opens, it opens a copy of the Full Verification sample (kept in your user
+folder, so the sample in the repository is never changed). For a new project: **File > New
+Project…** (Ctrl+N), then pick Full Verification (a whole game, recommended), Basic RPG, Party RPG,
+Action RPG or Completely Empty. **Run Project** (F6) plays from the start of the game; **Run Current
+Scene** (Ctrl+F6) plays from the map you are on.
 
-遊戲預設鍵位：WASD／方向鍵移動、E 互動、Q 任務、Esc 暫停、F5 存檔（可在設定裡改）。
+Default game keys: WASD / arrow keys to move, E to interact, Q for quests, Esc to pause, F5 to save
+(all can be changed in the settings). Menus, dialogue and battles also work with the mouse.
 
-完整的使用手冊：[繁體中文](docs/manual/USER_MANUAL.zh-TW.md)／[English](docs/manual/USER_MANUAL.en.md)。
+The full user manual: [English](docs/manual/USER_MANUAL.en.md) /
+[繁體中文](docs/manual/USER_MANUAL.zh-TW.md).
 
-## 範例專案（`reference_projects/`）
+## Sample projects (`reference_projects/`)
 
-| 專案 | 內容 |
+| Project | What it shows |
 | --- | --- |
-| `full_verification_demo` | 回合制 JRPG，**所有系統都用上**：四張地圖、三個 Boss、四位隊員、技能樹、職業、多武器、裝備精煉與鑲嵌、寵物收服與進化、召喚、調合、商店、任務、存讀檔、新遊戲＋ |
-| `party_rpg_demo` | 隊伍 RPG：弱點／護盾／破防、加速、奧義、多武器、多段攻擊、寵物、調合 |
-| `arpg_demo` | 動作 RPG：城鎮、野外（俯視）、礦坑（橫向）、技能樹 build、詞綴裝備 |
-| `arpg_multiplayer_demo` | 上一個的多人版本 |
+| `full_verification_demo` | A turn-based JRPG that **uses every system**: four maps, three bosses, four party members, skill trees, jobs, several weapons, equipment refining and sockets, pet capture and evolution, summons, mixing, shops, quests, save and load, New Game+ |
+| `party_rpg_demo` | A party RPG: weaknesses / shields / breaks, boost, ultimate skills, several weapons, multi-hit attacks, pets, mixing |
+| `arpg_demo` | An action RPG: a town, a top-down field, a side-view mine, skill-tree builds, affix equipment |
+| `arpg_multiplayer_demo` | The multiplayer version of the one above |
 
-範例的美術和音樂都已在 repo 裡（`playable_assets/`），可以直接玩。要重建範例：
+The samples' art and music are in the repository (`playable_assets/`), so they play as they are. To
+rebuild a sample:
 
 ```bash
 python reference_projects/full_verification_demo/build_project.py
 ```
 
-美術從 `asset_library/` 讀。音樂原本來自較大的 Foozle 音樂包（不放進 repo）；沒有設定
-`ASTERIA_MUSIC_ASSETS` 時，重建會沿用 repo 裡已有的音樂檔，所以從 repo 重建不需要另外下載。
+Art is read from `asset_library/`. The music came from a larger Foozle music pack that is not in the
+repository; without `ASTERIA_MUSIC_ASSETS` set, a rebuild keeps the music files already in the
+repository, so rebuilding from the repository needs no extra download.
 
-## 素材與授權
+## Assets and licences
 
-- **程式碼**：[MIT License](LICENSE)。用 Asteria 做的遊戲可以自由發布、販售，不需要開源。
-- **附帶的素材**（`asset_library/`、範例的 `playable_assets/`）：CC0 為主，字型為 SIL OFL；每一項的來源與
-  授權見 [`THIRD_PARTY_ASSETS.md`](THIRD_PARTY_ASSETS.md)，函式庫見 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
-- **你自己的遊戲素材**：任何授權允許你使用的素材都可以。注意 RPG Maker 內建的素材（RTP）與多數官方 DLC，
-  授權通常只限用在 RPG Maker 製作的遊戲；匯入 MV 專案後，請換成你有權使用的素材再發布。
+- **Code:** [MIT License](LICENSE). Games made with Asteria may be released and sold freely, without
+  opening their source.
+- **Bundled assets** (`asset_library/`, the samples' `playable_assets/`): mostly CC0, fonts under the
+  SIL OFL. The source and licence of each one are in [`THIRD_PARTY_ASSETS.md`](THIRD_PARTY_ASSETS.md);
+  libraries are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+- **Your own game's assets:** anything whose licence lets you use it. Note that RPG Maker's built-in
+  assets (RTP) and most official DLC are usually licensed only for games made with RPG Maker; after
+  importing an MV project, replace them with assets you have the right to use before releasing.
 
-Asteria 與 RPG Maker 及其權利人沒有任何關聯。
+Asteria is not affiliated with RPG Maker or its owners.
 
-## 開發
+## Development
 
 ```bash
-python -m pytest -q                              # 全部測試（約 3,600 項，約 5 分鐘）
-ruff check src scripts tests reference_projects  # 每行 ≤ 99 字元
+python -m pytest -q                              # all tests (about 3,600; about 8 minutes)
+ruff check src scripts tests reference_projects  # every line ≤ 99 characters
 ruff format --check src scripts tests reference_projects
+scripts/docker_tests.sh                          # the suite on a clean Linux in Docker
 ```
 
-GitHub Actions 在每次 push 與 PR 跑 lint 與 Linux 測試；PR 與手動觸發時另外跑 macOS。
-想參與：請看 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
+GitHub Actions runs only the lint and format check on every push and pull request. The full test
+suite runs locally: `scripts/docker_tests.sh` runs it on a clean Linux in Docker, and the
+maintainer's pre-push hook runs it automatically. The Linux and macOS suites on GitHub run only when
+started by hand. To contribute, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## 文件
+## Documentation
 
-- [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md)：**從這裡開始**，安裝、目錄、每個系統怎麼運作、已知限制。
-- [`docs/manual/`](docs/manual/)：給遊戲作者的使用手冊（中英文，附截圖）。
-- [`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md)：每個設計決策的原因、測試與證據。
-- [`docs/spec/`](docs/spec/)：產品與素材規格（設計目標；目前實作到哪裡以手冊為準）。
-- [`docs/README.md`](docs/README.md)：所有文件的索引，標明哪些是現行文件、哪些是歷史紀錄。
-- [`docs/history/`](docs/history/)：開發過程的紀錄與稽核。
-
----
-
-<a id="english"></a>
-## English summary
-
-**Asteria** is a Python 2D RPG engine with a PySide6 editor (English and Traditional Chinese UI).
-Turn-based party battles and real-time action combat share one data-driven core; every rule with
-more than one sensible answer is an editor option, and the sample games are data, not engine code.
-
-**Status: alpha / developer preview.** It is feature-rich and well tested, but formats and APIs may
-still change. It is a personal hobby project: issues are welcome, responses are not guaranteed.
-
-- **Install:** Python 3.12+, `pip install -e ".[pygame,editor,mv,dev]"`. The C++ kernels are optional
-  (`python -m asteria.kernels.build_native`); numpy and pure-Python fallbacks give the same results.
-- **Use:** `asteria-editor` (File > New Project…, F6 to play), `asteria-preview PROJECT.json`,
-  `asteria-export` (a game folder; `--pyz` single file; `--app` macOS bundle), `asteria-import-mv`.
-- **Samples** in `reference_projects/`: `full_verification_demo` (a whole JRPG using every system),
-  `party_rpg_demo` (break/boost party battles), `arpg_demo` and `arpg_multiplayer_demo` (action RPG).
-- **Licence:** code under the [MIT License](LICENSE); games made with Asteria may be released and sold
-  without opening their source. Bundled assets are CC0 (fonts under the SIL OFL); see
-  [`THIRD_PARTY_ASSETS.md`](THIRD_PARTY_ASSETS.md). RPG Maker's own assets are usually licensed for
-  RPG Maker games only; replace them before releasing an imported project. Asteria is not affiliated
-  with RPG Maker or its owners.
-- **Develop:** `python -m pytest -q`, `ruff check`; see [`CONTRIBUTING.md`](CONTRIBUTING.md).
-  Docs start at [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md) (Traditional Chinese) and
-  [`docs/manual/USER_MANUAL.en.md`](docs/manual/USER_MANUAL.en.md).
+- [`docs/manual/`](docs/manual/): the user manual for game authors (English and Traditional Chinese,
+  with screenshots). **Start here** if you want to make a game.
+- [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md): install, layout, how each system works and
+  the known limits (Traditional Chinese). Start here if you want to work on the engine.
+- [`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md): the reason, tests and evidence for each
+  design decision (Traditional Chinese).
+- [`docs/spec/`](docs/spec/): product and asset specifications (design goals; the manual says what
+  is implemented today).
+- [`docs/README.md`](docs/README.md): an index of every document, marking which are current and
+  which are history.
+- [`docs/history/`](docs/history/): records and audits from development.
