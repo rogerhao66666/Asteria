@@ -17,7 +17,7 @@ pygame，也不用編譯任何東西。用它匯出的遊戲，玩家那邊同�
 4. 之後就能正常雙擊開啟。
 
 第一次啟動會開啟一份屬於你的 **Full Verification** 範例副本（和原始碼安裝一樣）。
-**File ▸ New from Template…** 開新專案；素材庫已經內建在 app 裡。
+**File ▸ New Project…** 開新專案；素材庫已經內建在 app 裡。
 
 ### 和原始碼安裝的差別
 

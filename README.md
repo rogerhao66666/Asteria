@@ -57,8 +57,10 @@ asteria-import-mv MV_PROJECT_DIR OUT.json        # 匯入 RPG Maker MV 專案
 asteria-upgrade PROJECT.json                     # 把舊版專案升到目前格式
 ```
 
-第一次開編輯器：**File > New from Template…**（Ctrl+N），選 Full Verification（完整的遊戲，推薦）、
-Basic RPG、Party RPG、Action RPG 或 Completely Empty。**Play Current Scene**（F6）直接試玩。
+第一次開編輯器會打開一份 Full Verification 範例的副本（放在你的使用者資料夾，不會改到 repo 裡的範例）。
+要開新專案：**File > New Project…**（Ctrl+N），選 Full Verification（完整的遊戲，推薦）、Basic RPG、
+Party RPG、Action RPG 或 Completely Empty。**Run Project**（F6）從遊戲開始處試玩，
+**Run Current Scene**（Ctrl+F6）從目前的地圖試玩。
 
 遊戲預設鍵位：WASD／方向鍵移動、E 互動、Q 任務、Esc 暫停、F5 存檔（可在設定裡改）。
 
@@ -95,7 +97,7 @@ Asteria 與 RPG Maker 及其權利人沒有任何關聯。
 ## 開發
 
 ```bash
-python -m pytest -q                              # 全部測試（約 3,500 項）
+python -m pytest -q                              # 全部測試（約 3,600 項，約 5 分鐘）
 ruff check src scripts tests reference_projects  # 每行 ≤ 99 字元
 ruff format --check src scripts tests reference_projects
 ```
@@ -108,7 +110,8 @@ GitHub Actions 在每次 push 與 PR 跑 lint 與 Linux 測試；PR 與手動觸
 - [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md)：**從這裡開始**，安裝、目錄、每個系統怎麼運作、已知限制。
 - [`docs/manual/`](docs/manual/)：給遊戲作者的使用手冊（中英文，附截圖）。
 - [`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md)：每個設計決策的原因、測試與證據。
-- [`docs/spec/`](docs/spec/)：規格文件（部分為歷史文件，手冊會說明哪些仍有效）。
+- [`docs/spec/`](docs/spec/)：產品與素材規格（設計目標；目前實作到哪裡以手冊為準）。
+- [`docs/README.md`](docs/README.md)：所有文件的索引，標明哪些是現行文件、哪些是歷史紀錄。
 - [`docs/history/`](docs/history/)：開發過程的紀錄與稽核。
 
 ---
@@ -125,7 +128,7 @@ still change. It is a personal hobby project: issues are welcome, responses are 
 
 - **Install:** Python 3.12+, `pip install -e ".[pygame,editor,mv,dev]"`. The C++ kernels are optional
   (`python -m asteria.kernels.build_native`); numpy and pure-Python fallbacks give the same results.
-- **Use:** `asteria-editor` (File > New from Template…, F6 to play), `asteria-preview PROJECT.json`,
+- **Use:** `asteria-editor` (File > New Project…, F6 to play), `asteria-preview PROJECT.json`,
   `asteria-export` (a game folder; `--pyz` single file; `--app` macOS bundle), `asteria-import-mv`.
 - **Samples** in `reference_projects/`: `full_verification_demo` (a whole JRPG using every system),
   `party_rpg_demo` (break/boost party battles), `arpg_demo` and `arpg_multiplayer_demo` (action RPG).

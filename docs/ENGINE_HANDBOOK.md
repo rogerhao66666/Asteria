@@ -1,9 +1,9 @@
 # Asteria 引擎手冊（功能、範本、demo、規則、下一步）
 
-**更新：** 2026-10-22（D51；D42–D51 的內容看 DECISION_LOG，缺口對照表見 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
-[`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D51），規格在
-[`ASTERIA_SPEC.md`](spec/ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
-不代表現狀。
+**更新：** 2026-10-29（到 D100 與之後的「備註」；缺口對照表見 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
+[`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D100），規格在
+[`ASTERIA_SPEC.md`](spec/ASTERIA_SPEC.md)，架構在 [`ARCHITECTURE.md`](ARCHITECTURE.md)。哪些文件是現行、哪些是歷史紀錄，
+看 [`docs/README.md`](README.md)；`docs/` 根目錄的 BATCH／PHASE 文件和 `docs/history/` 不代表現狀。
 
 **給遊戲作者的使用手冊（D86）：** [`manual/USER_MANUAL.zh-TW.md`](manual/USER_MANUAL.zh-TW.md)（英文版 [`manual/USER_MANUAL.en.md`](manual/USER_MANUAL.en.md)）。從安裝到匯出的完整操作說明，附真實截圖；最後一章的 Python API 由 `scripts/manual_api_list.py` 產生。
 
@@ -28,9 +28,9 @@ Python 寫的 2D RPG 引擎加編輯器：**資料驅動、系統通用**（回�
 python3 -m venv .venv && source .venv/bin/activate
 python -m pip install -e ".[pygame,editor,mv,dev]"
 
-.venv/bin/asteria-editor                       # 編輯器（File > New from Template… 從範本開新專案）
+.venv/bin/asteria-editor                       # 編輯器（File > New Project… 從範本開新專案）
 .venv/bin/asteria-preview PROJECT.json         # 直接玩專案
-.venv/bin/python -m pytest -q                  # 全部測試（約 3,100 項，約 5 分鐘）
+.venv/bin/python -m pytest -q                  # 全部測試（約 3,600 項，約 5 分鐘；靜音見 §6）
 .venv/bin/python -m asteria.kernels.build_native   # 編譯 C++ kernel（開發機一次；ABI 改了要重編）
 .venv/bin/python -m asteria.export_web PROJECT.json OUT --serve   # 瀏覽器版（D59；需要 pip install pygbag）
 ```
@@ -45,12 +45,19 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 .venv/bin/ruff check src tests scripts demos reference_projects
 ```
 
-重新產生兩個 demo 專案（需要 git-ignored 的 `local_reference/` 美術來源）：
+重新產生 demo 專案（Full Verification 從 repo 裡的 `asset_library/` 讀美術；Party RPG 與 ARPG 需要
+git-ignored 的 `local_reference/` 美術來源）。改了 Party RPG 或 ARPG 之後執行 `scripts/sync_templates.py`，
+套件裡的範本才會跟著更新：
 
 ```bash
+.venv/bin/python reference_projects/full_verification_demo/build_project.py
 .venv/bin/python reference_projects/party_rpg_demo/build_project.py
 .venv/bin/python reference_projects/arpg_demo/build_project.py
+.venv/bin/python scripts/sync_templates.py      # --check：只檢查套件內的範本是否過期
 ```
+
+GitHub Actions（`.github/workflows/tests.yml`）：每次 push 與 PR 跑 lint 與 Linux 全套測試；PR 與手動觸發時
+另外跑 macOS 全套測試。
 
 ---
 
@@ -71,9 +78,15 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 | `src/asteria/editor` | PySide6 編輯器（約 100 個模組） |
 | `src/asteria/validation` | 壓力測試與實驗場景 |
 | `reference_projects/` | `party_rpg_demo`、`arpg_demo` 以及其他參考專案 |
+| `src/asteria/templates` | 隨套件發布的 Party RPG 與 Action RPG 範本（由 `scripts/sync_templates.py` 複製） |
+| `src/asteria/frozen.py` | 免安裝版 app 裡的路徑與子程序啟動方式（D100） |
+| `asset_library/` | 隨 repo 附的 CC0 素材包（Foozle Lucifer 等），File ▸ Import from Asset Library… 從這裡挑 |
 | `tests/` | 全部測試 |
-| `scripts/` | 實機驗證、編輯器稽核、量測腳本 |
+| `scripts/` | 實機驗證、編輯器稽核、量測、範本同步、免安裝版打包（`build_app.py`） |
+| `docs/manual/` | 給遊戲作者的使用手冊（中英文） |
+| `docs/spec/` | 產品與素材規格 |
 | `docs/audits/` | 決策紀錄、稽核、實機證據（`evidence/`） |
+| `docs/history/` | 歷史紀錄（舊版的進度、交接、稽核），不代表現狀 |
 
 ---
 
@@ -140,7 +153,7 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 工作區：**Scene、Database（RPG）、Battle、Presentation（UI）、Events、Code、Multiplayer**；面板：Project／Tiles／Layers、
 Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
-- **File > New from Template…（Ctrl+N）**：Full Verification（推薦：完整的遊戲，也是編輯器預設開的起始專案）、
+- **File > New Project…（Ctrl+N）**：Full Verification（推薦：完整的遊戲，也是編輯器預設開的起始專案）、
   Basic RPG（小）、Party RPG（破防／加速戰鬥）、Action RPG（即時戰鬥與掉寶）、Completely Empty；複製整個專案資料夾
   （含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則在編輯器哪裡改）。
   Party 與 Action 範本隨套件發布（`src/asteria/templates/`），改了 demo 之後執行 `scripts/sync_templates.py`，
@@ -154,6 +167,23 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   「Show N more fields」／「More fields」；內部欄位收在 Advanced。每個欄位有說明（ⓘ 與灰字）。
   **改了就套用**（停止輸入 0.35 秒後經可復原指令套用，Ctrl+Z 復原），錯誤以紅字顯示且不套用；
   左側清單顯示名稱與圖示，篩選也找名稱。Game Systems 與 Game Start 也改為自動套用、鍵值從清單選。
+- **Database ▸ Game Systems 的分類**（下拉選單，依這個順序）：Stats、Stat Formulas、Tags、Job Points、
+  Ability Slots、**Pause Menu**、Equipment Slots、Equipment Sets、Weapon Refine、Equipment Durability、
+  Disassembly、Battle Options、Battle Extras、Enemy Levels、Capture Rules、Drop Tables、Pet Species、Pet Rules、
+  Recruiting Offices、Shops、Quests、Quest Boards、Factions、Achievements、World Interactions、Map Areas、
+  Workstations、Gacha Banners、Inventory Rules、Message Settings、Music Room、Credits、Translations、Doodads、
+  New Game Plus（`editor/game_systems_authoring.KINDS`）。
+  - **Pause Menu**（D97）一頁編輯暫停選單的順序、選單頁（D96 的區塊）和事件項目，取代原本的三個分類。
+  - **Tags**（D91）與 **Stats**（D91、D99）：每個標籤和屬性的意思，下方的卡片列出誰帶著它、誰讀它、
+    數值從哪裡來（D95）。
+  - **公式欄位**（D94）：只能用 Stats 宣告過的名字；可以打字，也可以按按鈕插入。
+  - **Equipment Slots**（D92）：欄位名稱、排序、攜帶格、需要的能力標籤；雙手武器在裝備紀錄的
+    「同時佔用（雙手）」。
+- **備註（Note）**：每筆紀錄表單的最後一塊，寫給作者自己看，不會進遊戲（`RpgDatabase.author_notes`）。
+  說明欄位旁的「Players See It」決定這段說明會不會出現在遊戲裡（`RpgDatabase.hidden_descriptions`）；
+  遊戲不會顯示的說明標成「(editor only)」。
+- **Presentation ▸ Menu Screens** 現在只有版面（D98）：舊的「選單資料」分頁拿掉了，屬性名稱改在
+  Game Systems ▸ Stats，欄位名稱改在 Equipment Slots。
 - **介面語言**（D50）：English（預設）／繁體中文，View ▸ Language 即時切換，記在 QSettings `editor/language`
   （`editor/i18n.py`、`editor/translations/zh_TW.json`）；只翻介面文字，名稱、id、描述等作者的資料不翻。
 - **畫地圖**（D42）：Tiles 面板顯示整張圖塊集，點一格或拖曳選一塊來畫（整塊無縫重複）；筆刷大小 `[`／`]`、
@@ -180,7 +210,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   任務／商店／製作／成就／圖鑑／訊息紀錄／音樂室／製作人員／技能欄／寵物選單、背包與技能樹（動作遊戲）、
   動作 HUD、戰鬥指令與提示、指令不能用的原因、破防與捕獲、勝利結算與標題、遊戲結束、連線合作的訊息。
   畫的時候都經過 `GameSessionRuntime.tr(鍵, 英文)`。
-- **鍵的清單**：`src/asteria/rpg/built_in_text.py`（`GROUPS`：337 個鍵、依畫面分 27 組，每個鍵附畫出的英文），
+- **鍵的清單**：`src/asteria/rpg/built_in_text.py`（`GROUPS`：709 個鍵、依畫面分 29 組，每個鍵附畫出的英文），
   逐條列在 [`BUILT_IN_TEXT_KEYS.md`](BUILT_IN_TEXT_KEYS.md)（`scripts/built_in_text_keys.py` 產生）。
   `tests/test_built_in_text.py` 掃描原始碼：畫面用到的每個鍵都在清單裡、英文一致，清單裡的鍵都有畫面在用。
 - **翻譯表**：Database ▸ Game Systems ▸ Translations。每個 locale 一張表，頁面列出全部內建字（英文在旁邊），
@@ -250,10 +280,11 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 
 ### 4.3 Full Verification（`reference_projects/full_verification_demo`，回合制壓力測試）
 
-驗證引擎回合制部分的專案，也是推薦範本：主角 Aldric（勇者／大魔導師）一人出發，在 Hearthfold 的公會雇用
-Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四種風格的技能樹、STR／DEX／INT／LUK 與能力值
-公式、元素、弱點／護盾／破防、精煉與鑲嵌、製作、任務、寵物、地圖區域、新遊戲＋、翻譯、音樂室，編輯器每一頁
-都有資料。每個系統用在哪裡：[`audits/FULL_VERIFICATION_COVERAGE.md`](audits/FULL_VERIFICATION_COVERAGE.md)。
+驗證引擎回合制部分的專案，也是推薦範本：主角 Roger（中文羅傑，id 仍是 `hero_01`；勇者／大魔導師）從
+Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四張野外與城鎮地圖加主角的家、三個 Boss
+加小怪；20 個職業與各自的技能樹、STR／DEX／INT／LUK／VIT 加點與屬性公式、標籤與屬性的定義、元素、
+弱點／護盾／破防、主副武器與攜帶武器、精煉與鑲嵌、製作、任務、寵物、地圖區域、新遊戲＋、繁中翻譯、
+音樂室，編輯器每一頁都有資料。每個系統用在哪裡：[`audits/FULL_VERIFICATION_COVERAGE.md`](audits/FULL_VERIFICATION_COVERAGE.md)。
 驗證：`tests/test_full_verification_campaign.py`（整段劇情）與 `scripts/full_verification_campaign_live_check.py`
 （Cocoa 視窗；圖在 `audits/evidence/full_verification_campaign/`）。
 
@@ -285,6 +316,10 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | `RefineRules.materials`、`protect_item`；裝備相關世界指令可寫 `slot:<部位>` | `rpg/refine.py`、`runtime/world_command_handlers.py` |
 | 世界指令 `LEARN_ABILITY`、`NEW_GAME_PLUS`、`SET_LOCALE`；技能可用 `BATTLE_SEQUENCE` 叫出序列 | `runtime/world_command_handlers.py`、`runtime/session/party.py`（LEARN_ABILITY）、`session/battle_events.py`（NEW_GAME_PLUS）、`session/messages.py`（SET_LOCALE） |
 | manifest `battle.preload_mb`（預先解碼戰鬥圖的記憶體上限，預設 64，0 關閉） | `runtime/playtest/resources.py`、`runtime/image_preloader.py` |
+| 資料庫新增 `tag_definitions`（D91）、`equipment_slots` 的名稱／排序／說明／`stowed`／`required_capabilities`（D92）、`menu_pages`（D96）；各類紀錄的 `description`（D91）；`EquipmentDefinition.blocks_slots`（D92） | `rpg/tag_definitions.py`、`rpg/items.py`、`rpg/menu_pages.py` |
+| 公式欄位：`DerivedStatRule.expression`、`OutcomeCheckDefinition.chance_expression`、逃跑規則的 `chance_expression`、戰鬥規則的 `initiative_expression`／`final_damage_expression`（D94） | `gameplay/expressions.py`、`rpg/derived_stats.py`、`rpg/battle_lifecycle.py` |
+| `MenuRules` v2：`pause_entries` 改成排序、新增 `pause_hidden`（v1 讀進來時，沒列的內建項目轉成隱藏，D97）；舊的六類選單資料讀進來時搬到 Stats 與 Equipment Slots（D98） | `rpg/menu_rules.py`、`rpg/menu_pages.py`、`presentation/retired_screens.py` |
+| `RpgDatabase.author_notes`、`hidden_descriptions`（只在有內容時寫入） | `rpg/actors.py` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的
 降防禦從來沒生效）。
@@ -323,7 +358,8 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 原生 kernel 要在開發機編譯一次 | `python -m asteria.kernels.build_native`（macOS 編成 arm64 + x86_64 通用檔，ABI 5）；匯出會先檢查、必要時重編並帶著它，玩家的 Python 沒有 numpy 也能用；沒編譯會退回 numpy／python |
 | 輕量電腦 | 效能只在本機（Apple silicon、沒開低耗電模式）量過；真的輕量電腦或低耗電模式要有人實際跑 |
 | 頭上名字的縮寫 | 名字超過 14 字會縮成縮寫（「Goblin Slinger 2」→「GS2」），要怎麼顯示待使用者決定。2026-10-22 發現的其他戰鬥畫面問題（拉近時的狀態文字、技能列名稱黏花費、狀態畫面 HP／MP 順序）已修（DECISION_LOG D51 補充） |
-| 編輯器 | 中文模式下，顯示的字就是存檔值的固定選項（Enemy AI 的條件／動作／目標、事件觸發、VFX 錨點）還是英文；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充） |
+| 編輯器 | 中文模式下，顯示的字就是存檔值的固定選項（Enemy AI 的條件／動作／目標、事件觸發、VFX 錨點）還是英文；File ▸ New Project… 的範本名稱與說明也還是英文（`zh_TW.json` 沒有對應的字）；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充） |
+| 免安裝版 app（D100） | 只有 macOS，ad-hoc 簽章（沒有 Developer ID 公證，第一次要右鍵打開）；Windows／Linux 建置與 CI 還沒做；app 內不能做網頁匯出；`Asteria.app` 約 277 MB |
 | 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；專案資料的名稱、說明、對話也能翻（D60；Full Verification 全部有繁中）；開發用的錯誤訊息維持英文；中文用系統字型，桌面匯出不附中文字型（web 匯出附 Noto Sans TC，`ASTERIA_CJK_FONT` 可指定）；寵物改名不支援中文輸入法組字 |
 | Web 匯出（D59） | `python -m asteria.export_web`（pygbag）：沒有編輯器、多人連線、ModernGL、C++ kernel、預載執行緒；玩家開頁面要連得到 pygame-web 的 CDN（`--cdn` 自架）；存檔在瀏覽器的 localStorage；音訊只有 ogg／wav；本機測試用 `127.0.0.1` 開，不用 `localhost`；證據 `audits/evidence/web_export/` |
 | Enemy AI 的七欄規則表 | 窗口很窄時可橫向捲動（表格的正常行為） |
@@ -662,6 +698,51 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 | 編輯器 | 遊戲系統 ▸ 選單頁面：Detail Table Groups／Lines 兩個表格；`references("outcome_checks")`；Stat 下拉用角色畫面的名稱 |
 | FV 示範 | `trial_d89.py`（可重跑）：VIT／HP／MP 加點、新屬性與規則、裝備屬性、五組詳細表格；`run_campaign.py` 輸了讀檔重打（`RETRIES`） |
 
+### D90–D92 新增（2026-10-27；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 下拉列表 | `editor/theme.py` 的 style：清單掛在格子下緣、左邊對齊，不再蓋住格子（D90） |
+| 能力值表的欄位 | `MenuRules.stat_columns`：`rank`、`total`、`base`、`points`、`gear`、`gain`，勾選＋排序（D90；D96 起放在選單頁的「能力點表」區塊） |
+| 標籤定義 | `rpg/tag_definitions.py` `TagDefinition`：單一標籤或 `rune.*` 家族；`BUILT_IN` 寫明引擎自己讀的標籤；專案有定義時，用到但沒定義的標籤列為問題（D91） |
+| 說明欄位 | 被動、狀態、職業、角色、敵人、裝備、寶石都有 `description`；`rpg/effect_text.py` 依屬性的顯示方式寫效果（D91） |
+| 裝備欄位 | `EquipmentSlotDefinition`：名稱、排序、說明、`stowed`（攜帶格）、`required_capabilities`；裝備的 `blocks_slots`（雙手）；戰鬥指令「換武器」，背包規則決定換武器花不花回合（D92） |
+
+### D93–D95 新增（2026-10-27；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 說明框 | `decor.show_help_tip`：編輯器自己的說明框，緊貼 ⓘ、半透明（D93、D95） |
+| 公式 | `gameplay/expressions.FORMULA_FIELDS` 列出每個公式欄位能用的名字；`derived_stat.expression`；`variables()`／`undeclared()`；`editor/formula_field.py`；問題面板的「公式」區域（D94） |
+| 屬性用途卡片 | `editor/stat_usage.py`：來源照遊戲相加的順序一步一行，作用寫出公式與所在頁面（D95） |
+
+### D96–D99 新增（2026-10-27～28；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 選單頁 | `rpg/menu_pages.py`：`MenuPage`（ID、名稱、圖示、`blocks`）、`MenuBlock`（`profile`／`stat_points`／`stat_details`／`item_list`，左欄／右欄／整排）；`menu_pages(db)` 沒有的頁面用引擎的狀態頁、物品頁補上（D96） |
+| 暫停選單 | `MenuRules` v2：`pause_entries` 是排序、`pause_hidden` 是隱藏；`engine_pause_order`、`usable_pause_entries`、`pause_menu`；`PAUSE_NEEDS`／`PAUSE_OPENS`；編輯器 `pause_menu_widget.py`（D97） |
+| 版面分頁 | Menu Screens 只剩版面；`presentation/retired_screens.py` 把舊專案的六類選單資料搬到 Stats 與 Equipment Slots（D98） |
+| 資源卡片 | HP／MP 的卡片標題是自己的名稱，來源列出角色、職業與每級加到上限的數值（D99） |
+
+### D100 新增（2026-10-28；細節見 DECISION_LOG 與 [`STANDALONE_APP.zh-TW.md`](STANDALONE_APP.zh-TW.md)）
+
+| 類別 | 內容 |
+|---|---|
+| 打包 | `scripts/build_app.py`（PyInstaller）產生 `dist/Asteria.app`、zip、dmg；引擎以原始碼放在 `Contents/Resources/engine/` |
+| 子程序 | `src/asteria/frozen.py`：試玩用 `sys.executable -m asteria.runtime.preview`，多人伺服器用 `-m asteria.multiplayer.server` |
+| 匯出 | `package_game(..., player=...)`：從 app 匯出的遊戲內附不含 Qt 的 `AsteriaPlayer.app`，玩家不需要 Python；遊戲從 `~/Library/Application Support/Asteria Games/<名稱>` 的鏡像執行，存檔留在那裡 |
+| 測試 | `tests/test_frozen_app.py`；`scripts/standalone_app_live_check.py`（由 app 本身在 Cocoa 視窗執行） |
+
+### D100 之後（2026-10-28～29）
+
+| 類別 | 內容 |
+|---|---|
+| 備註 | `RpgDatabase.author_notes`（作者備註，不進遊戲）、`RpgDatabase.hidden_descriptions`（「Players See It」沒勾的說明）；`editor/author_note_box.py`、`editor/record_notes.py`；遊戲現在會顯示屬性、標籤、裝備欄位、敵人（圖鑑）與職業的說明 |
+| 效能 | 野外系統從場景索引讀元件、碰撞世界每幀共用、編輯器只重畫看得到的圖塊、多人伺服器每個基準只編碼一次（PR #1） |
+| CI | GitHub Actions 的 Linux 與 macOS 全套測試；PySide6 6.12 回收 widget ↔ 視窗循環參照時會當掉，`pyproject.toml` 暫時限制 `PySide6<6.12` |
+| 開源前整理 | MIT 授權；範例改名 `party_rpg_demo`、`arpg_demo`；根目錄文件搬進 `docs/` |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。
@@ -670,14 +751,19 @@ Mira、Vesper、Cael；四張地圖、三個 Boss 加三種小怪；職業與四
 4. 第三個範本（橫向平台動作、彈幕射擊）——使用者 2026-10-16 說先不用。
 5. Web 匯出——做了（D59）；還可做：存檔匯出／匯入成檔案、自架 runtime 的一鍵複製、標題畫面每幀 14 ms 的背景縮放快取。
 6. 技能圖示換成美術師手繪（現在是程式畫的 32 px 原創圖示，D35）。
+7. 免安裝版 app 的 Windows／Linux 建置、Developer ID 公證、縮小 Qt 外掛（D100）。
+8. 編輯器範本清單的中文名稱與說明。
 
 ---
 
 ## 8. 工作方式（給之後接手的人）
 
-- 直接在 `main` 上提交，不開分支；提交作者使用 Roger 的 GitHub 身分，且不得加入任何 `Co-Authored-By` trailer。
+外部貢獻者請看 [`CONTRIBUTING.md`](../CONTRIBUTING.md)（fork、開分支、送 PR）。下面是維護者自己的規則：
+
+- 維護者直接在 `main` 上提交；提交作者使用 Roger 的 GitHub 身分，且不得加入任何 `Co-Authored-By` trailer。
 - 每行 Python ≤ 99 字元（skill：`.claude/skills/line-length`）。
-- 新 clone 後執行 `git config core.hooksPath .githooks`；提交 hook 會阻擋共同作者 trailer，並確認 author 是 `rogerhao66666`。
+- 維護者的 clone 執行 `git config core.hooksPath .githooks`：提交 hook 會阻擋共同作者 trailer，並確認 author 是
+  `rogerhao66666`。外部貢獻者不要啟用它，否則自己的提交會被擋下。
 - 每一批的結果寫進 `docs/audits/DECISION_LOG.md`（中文，六段式：做了什麼、證據、限制）。
 - UI 和實機的東西一定在 Cocoa 真實視窗驗證，附截圖，放 `docs/audits/evidence/real_machine/`。
 - 編輯器要好看：有顏色、有圖示、版面密但不擠；稽核腳本要乾淨。

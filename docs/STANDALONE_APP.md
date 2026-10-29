@@ -19,7 +19,7 @@ run on players' machines without Python too.
 4. After that Asteria opens with a normal double-click.
 
 The first start opens your own copy of the **Full Verification** demo, as in a source install.
-**File ▸ New from Template…** starts a new project; the asset library is inside the app.
+**File ▸ New Project…** starts a new project; the asset library is inside the app.
 
 ### What works the same as a source install
 

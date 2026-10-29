@@ -6,6 +6,21 @@ operational SOPs\
 **Merged sources:** old `ASTERIA_ASSET_PIPELINE.md` +
 `ASTERIA_SPRITE_PRODUCTION_SOP.md`
 
+> **Where Asteria stands (2026-10-29).** This is a design specification: it records the goals and
+> principles the engine is built towards. What is implemented today is described in
+> [`docs/ENGINE_HANDBOOK.md`](../ENGINE_HANDBOOK.md), the user manual
+> ([`docs/manual/`](../manual/)) and the decision log
+> ([`docs/audits/DECISION_LOG.md`](../audits/DECISION_LOG.md)). Decisions that changed this
+> specification:
+>
+> - **No generated art.** Asteria ships no AI-generated art and has no image generator in its
+>   pipeline. The bundled art is third-party CC0 packs (mainly Foozle's Lucifer packs, in
+>   `asset_library/`; licences in [`THIRD_PARTY_ASSETS.md`](../../THIRD_PARTY_ASSETS.md)).
+> - **The Character Generator is cancelled** (decision log D2). Characters come from sprite sheets
+>   the author imports; the canonical asset path below still applies to them.
+> - The SOP steps for generated frames apply to any frame sequence an author brings in
+>   (hand-drawn, rendered or bought); Asteria itself does not generate any.
+
 Sprite Production is an SOP chapter here. Future Tileset/VFX/etc. SOPs
 should extend this document rather than become additional top-level
 canonical MD files.

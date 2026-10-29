@@ -5,6 +5,23 @@
 gameplay specification\
 **Source coverage:** Exact content of legacy `SPEC.md` preserved below.
 
+> **Where Asteria stands (2026-10-29).** This is a design specification: it records the goals and
+> principles the engine is built towards. What is implemented today is described in
+> [`docs/ENGINE_HANDBOOK.md`](../ENGINE_HANDBOOK.md), the user manual
+> ([`docs/manual/`](../manual/)) and the decision log
+> ([`docs/audits/DECISION_LOG.md`](../audits/DECISION_LOG.md)). Decisions that changed this
+> specification:
+>
+> - **No generated art.** Asteria ships no AI-generated art and has no image generator in its
+>   pipeline. The bundled art is third-party CC0 packs (mainly Foozle's Lucifer packs, in
+>   `asset_library/`; licences in [`THIRD_PARTY_ASSETS.md`](../../THIRD_PARTY_ASSETS.md)).
+> - **The Character Generator is cancelled** (decision log D2). Characters come from sprite sheets
+>   the author imports; the canonical asset path below still applies to them.
+> - **Templates that ship** (File ▸ New Project…): Full Verification, Basic RPG, Party RPG,
+>   Action RPG and Completely Empty (§36). The two stress tests of §35 are the Full Verification
+>   demo (turn-based) and the ARPG demo (real-time) in `reference_projects/`.
+> - `ASTERIA_PROGRESS.md`, named below, is a historical progress log (now in `docs/history/`).
+
 > Detailed asset taxonomy/formats live in `ASTERIA_ASSET_SPEC.md`;
 > processing SOPs live in `ASTERIA_ASSET_PIPELINE.md`; art-quality rules
 > live in `ASTERIA_ART_DIRECTION.md`; implementation state lives in

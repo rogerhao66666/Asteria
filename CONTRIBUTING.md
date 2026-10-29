@@ -21,7 +21,11 @@ python -m pip install -e ".[pygame,editor,mv,dev]"
 python -m pytest -q
 ```
 
-測試在無頭環境跑（SDL dummy driver、Qt offscreen），和 CI 一樣。
+測試在無頭環境跑（SDL dummy driver、Qt offscreen），和 CI 一樣。要不出聲，執行前設 `ASTERIA_MUTE=1`。
+
+`.githooks/` 是維護者自己的提交檢查（只接受維護者的作者身分），**不要**用 `core.hooksPath` 啟用它。
+程式結構、每個系統怎麼運作，看 [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md) 和
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)；文件索引在 [`docs/README.md`](docs/README.md)。
 
 ## 送 PR 前
 

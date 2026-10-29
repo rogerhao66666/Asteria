@@ -4395,4 +4395,4 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - `multiplayer/project_demo.py` 預設的範例專案路徑在 app 內找不到（app 沒有帶 `arpg_multiplayer_demo`）。
 - 人工在 Finder 雙擊 app、第一次右鍵打開的流程還沒有人實際做過。
 
-**狀態：** 未提交（等使用者指示）。
+**狀態：** 已提交（`9b8353ca`）。

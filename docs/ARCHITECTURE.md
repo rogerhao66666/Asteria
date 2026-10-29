@@ -1,330 +1,110 @@
-# Asteria Active Architecture
-
-Current full cumulative base: v0.94.0a94. Current incremental development state: v0.97.0a97 (Batch 95 + Batch 96 + Batch 97 overlays).
-Phase 7B Battle Core remains FROZEN at Batch 93 / v0.93.0a93.
-Batch 94 adds presentation foundation; Batch 95 adds runtime/animation integration; Batch 96 adds resolved combat-feedback state and VFX/audio queues; Batch 97 adds camera/screen hit feedback and target-indicator projection.
-
-This is the active architecture through Batch 97 / v0.97.0a97. Historical batch
-documents and the copies under `docs/history/` explain prior checkpoints only;
-they cannot reopen frozen ownership boundaries or redefine the current roadmap.
-
-## Canonical layers and ownership
-
-- Core: entities/scenes and lifecycle bus; assets and graphics/render/animation
-  provide reusable resource and visual mechanisms.
-- Editor and runtime: author and execute shared Project data through their
-  existing backends. Python authoring and Event VM connect to these mechanisms.
-- Generic gameplay: stats/resources/tags, conditions, formulas, modifiers,
-  effects/states, AbilityRuntime and ActionTimelinePlayer.
-- RPG: definitions, RpgDatabase, mutable runtime/save state and resolved build
-  composition; Battle Core handles authored combat policies and outcomes.
-- Presentation: scene/combatant visual data, ordered events, and a backend-neutral
-  runtime that maps semantic animation roles onto existing sprite/animation/render
-  abstractions. Later adapters own VFX/audio/UI/camera integration.
-
-`Project` schema v6 owns GameplayLibrary, RpgDatabase and lifecycle bindings.
-RpgActorRuntime owns intrinsic mutable actor state; `resolve_actor_build` resolves
-supplied class/progression/allocation/loadout/passive/evolution inputs for consumers.
-No second character/equipment/ability model is introduced by presentation.
-
-## Observed presentation dependency and flow
-
-`presentation/battle.py` imports LifecycleEvent/HookBus from `core/lifecycle.py`
-and PresentationCue from `gameplay/action_timeline.py`. All dependencies are
-present. Core/gameplay/RPG have no imports of asteria.presentation.
-
-1. Gameplay executes effects and battle rules, emitting lifecycle events.
-2. ActionTimelinePlayer executes GAMEPLAY_ABILITY cues via AbilityRuntime and
-   emits other cues as PresentationCue values.
-3. Callers explicitly feed those cues to the coordinator; attach observes hooks.
-4. The coordinator queues events for later renderer/audio/UI adapters to drain.
-
-Batch 95 adds an explicit presentation runtime after the Batch 94 coordinator. It
-selects authored animation roles/clips, advances existing AnimatorState objects,
-observes already-resolved lifecycle KO/revive state, and produces TextureDraw
-commands. Asset resolution remains injected; no pygame/Qt dependency enters the
-presentation package. Scene schema v1 remains separate from Project v6.
-
-## Lifecycle bridge implemented in Batch 94
-
-
-All names below have the `rpg.battle.` prefix:
-
-| Hook suffix | Presentation kind |
-| --- | --- |
-| combatant_state_changed, combatant_incapacitated, combatant_revived, combatant_removed, combatant_transformed, combatant_form_reverted | combatant_state |
-| turn_ready | turn_ready |
-| turn_ended | turn_ended |
-| sequence_started | sequence_started |
-| sequence_step_resolved | sequence_step |
-| sequence_finished | sequence_finished |
-| finished | battle_result |
-
-Other hooks are ignored. Mapped events preserve the hook name, source and a
-shallow copy of hook data. A battle-result hook does not automatically finish the
-presentation scene. The bridge observes events; it does not infer or decide
-combat results, resource spending, targeting, weakness/break or status semantics.
-
-
-## Ownership and invariants
-
-Game authors own rules and balance; Battle Core owns combat execution.
-Presentation owns visual binding data and event ordering, not gameplay decisions.
-Ordering is deterministic for a given input order. The queue is in memory;
-its payloads are shallow dicts, not deeply immutable data, and it is not a
-persisted whole-engine replay mechanism. See [current spec](CANONICAL_SPEC.md)
-and [audit](CONSISTENCY_AUDIT.md).
-
-
-## Batch 95 runtime flow
-
-`BattlePresentationCoordinator` -> ordered `BattlePresentationEvent` ->
-`BattlePresentationRuntime` -> `BattleCombatantAnimator` -> existing
-`AnimatorState` / `AnimationClipSet` / `SpriteSheet` -> `TextureDraw`.
-
-Attack and Hit are transient presentation roles and return to Idle when their
-non-looping clip completes. KO/revive are driven by lifecycle events, never by
-checking HP inside presentation. Runtime snapshot/restore covers presentation
-state only and is not a Battle Core snapshot replacement.
-
-
-## Batch 96 resolved-feedback flow
-
-`BattlePresentationCoordinator` may translate an existing `ValueResolutionResult` / `OutcomeResolutionResult` into a `RESOLVED_VALUE` presentation event and an existing `GaugeCompositionResult.thresholds` sequence into `GAUGE_THRESHOLD` events. These adapters copy resolved primitives only; they never invoke interaction, gauge, target, damage or lifecycle rules.
-
-`BattleFeedbackRuntime` consumes those events plus ActionTimeline VFX/AUDIO cues. `BattleFeedbackProfile` is project data mapping arbitrary outcome tags, dispositions and threshold ids to labels such as WEAK, RESIST, IMMUNE, ABSORB or BREAK. Therefore the engine still does not know what an element, weakness or Break mechanic means. Floating values, labels and VFX have deterministic lifetimes; pending audio is an explicit one-shot drain queue; presentation state supports snapshot/restore. Final rendering of text/numbers remains adapter-owned.
-
-
-## Batch 97 camera/target presentation flow
-
-`ActionTimeline CAMERA/SCREEN_FX cues -> BattlePresentationCoordinator -> BattleCameraFeedbackRuntime -> derived Camera2D view / screen-effect state`. Canonical target selection is mirrored through `push_target_selection()` and projected using existing `BattlePresentationScene` anchors. No target resolver or Battle Core rule is invoked by this path.
-
-
-## Batch 98 Battle HUD projection
-
-`BattleResourceRuntime / GameplaySubject.states -> BattleHudRuntime -> BattleHudMember -> BattleHudGauge / BattleHudStatusIcon`.
-
-The HUD path is deliberately read-only. `BattleHudProfile` supplies project-owned labels, icons, ordering and visibility. HP/MP are convenience defaults rather than engine semantics; arbitrary resources and statuses remain valid. The presentation layer copies canonical resource values and active-state records and does not mutate, re-resolve, or infer gameplay rules. Final bar/icon/text drawing is renderer/UI-adapter owned.
-
-## Batch 99 Battle turn/timeline projection
-
-`BattleScheduler.pending() / BattleActionTimingRuntime.pending() -> BattleTurnTimelineRuntime -> BattleTurnTimelineView`.
-
-This path is read-only. It mirrors canonical scheduling and timing into upcoming-turn and pending-cast presentation entries. Presentation may cap visible entries and compute a visual progress ratio from canonical timestamps, but it cannot pop/shift turns, interrupt/resolve actions, validate targets, or infer gameplay ownership. Final timeline widgets remain UI/renderer-adapter owned.
-
-## Batch 100 battle result/reward projection
-
-`BattleOutcome + RewardApplicationResult -> BattleResultPresentationRuntime -> BattleResultView`.
-
-The result layer consumes only resolved battle outcome and already-applied reward/progression outputs. Loot RNG, reward application, progression mutation and outcome criteria remain RPG/Battle Core responsibilities. Presentation owns labels/layout only.
-
-## Batch 101 unified Battle UI composition
-
-`BattlePresentationFrame + BattleHudMember[] + BattleTurnTimelineView + BattleFeedbackRuntime + BattleCameraFeedbackFrame + BattleResultView -> BattleUiComposer -> BattleUiFrame`.
-
-The composed frame is renderer-neutral and contains world sprite draws plus UI panel/text/gauge/icon/marker commands and already-authored VFX/screen-FX metadata. This creates a single rendering seam without introducing a second gameplay model. Renderer backends consume this frame; they do not own battle semantics.
-
-## Batch 102 concrete Battle UI rendering seam
-
-`BattleUiFrame -> BattleUiRenderer + BattleUiTheme -> Battle UI backend`.
-
-The executor is backend-neutral and deterministic. `HeadlessBattleUiBackend` records operations for tests; `PygameBattleUiBackend` converts those operations to pygame-ce primitives and text without exposing pygame objects back into core/gameplay/RPG layers. Theme/palette/font sizes are project presentation policy. Battle semantics remain upstream.
-
-## Batch 103 Battle Screen orchestration
-
-`BattlePresentationCoordinator`
-→ `BattlePresentationRuntime` / `BattleFeedbackRuntime` / `BattleCameraFeedbackRuntime`
-+ read-only `BattleHudRuntime` / `BattleTurnTimelineRuntime`
-+ `BattleResultPresentationRuntime`
-→ `BattleUiComposer`
-→ `TextureRenderer` + `BattleUiRenderer`.
-
-`BattleScreenRuntime` owns this wiring and presentation clock only. The canonical battle controller remains responsible for current actor, action execution, scheduler advancement, targeting, resources/states, rewards and battle outcome. The screen runtime may mirror those resolved states but cannot derive or mutate them.
-
-## Batch 104 generic resource presentation
-
-Canonical battle resources remain gameplay-owned. `BattleHudResourceStyle` is the presentation-policy seam between generic resource state and runtime UI. It carries visual role, grouping, priority, compactness and visibility metadata while `BattleHudRuntime` carries canonical values unchanged into a presentation view.
-
-Asteria distinguishes:
-- gameplay resource semantics: project/Battle Core owned,
-- presentation role: project presentation policy,
-- actual drawing: runtime UI adapter/theme owned.
-
-This lets a project use HP/MP, BP/SP, guard/break, shields, ATB, cast/recovery, limit meters, shared meters, or entirely custom resources without adding engine-specific battle rules.
-
-## Batch 105 adaptive party/combatant presentation
-
-`BattlePartyLayoutPolicy` is a presentation-only capacity layer between canonical `BattleHudMember` projections and `BattleUiComposer`.
-
-The policy resolves:
-canonical member list
-+ explicit project presentation zones
-+ current/focused member
-+ available screen height
-→ expanded / compact / minimal visible HUD layout
-+ overflow metadata.
-
-The policy can reduce visible detail but cannot reduce canonical party membership. Resource detail selection uses Batch 104 presentation priority metadata. Gameplay side/formation semantics remain outside this layer.
-
-`BattleScreenRuntime` now supplies explicit member placement to `BattleUiComposer`. Optional project side→zone mappings are supported; otherwise side identifiers are assigned to visual zones deterministically without interpreting their names.
-
-## Batch 106 generic action-menu presentation
-
-Canonical action availability remains gameplay/controller-owned. `BattleActionMenuRuntime` receives opaque `BattleActionEntry` values and owns only browsing state: category, query, page and cursor.
-
-This separates:
-- action definition/execution: gameplay-owned,
-- action availability: canonical controller-owned,
-- action presentation metadata: project-owned,
-- browsing/layout: presentation-owned.
-
-The resulting menu can represent ordinary abilities, equipment actions, items, summons, stances, transformations, multi-step workflows or project-defined commands without a fixed engine command list.
-
-## Batch 107 generic action workflow/composition
-
-`BattleActionWorkflowRuntime` is a transient interaction-state seam between generic action presentation and canonical gameplay execution.
-
-The flow is:
-canonical controller supplies workflow definition/options
-→ presentation collects selections
-→ presentation returns opaque selection payload
-→ canonical controller interprets/resolves/executes.
-
-This supports alchemy, concoction, rune/card composition, summons, transformations and other multi-step commands through one mechanism without hardcoding any of those systems.
-
-## Batch 108 Presentation Director
-
-The presentation execution path is now:
-
-Battle Core / ActionTimeline resolved output
-→ BattlePresentationCoordinator
-→ BattlePresentationDirector
-→ Animation / Feedback / Camera presentation runtimes
-→ BattleUiComposer / render adapters.
-
-The Director is a choreography scheduler, not a gameplay scheduler. It owns presentation release time, beat labels, same-time priority and presentation-clock hold windows only. Default policy is passthrough for backward compatibility.
-
-## Batch 109 animation timing / transition layer
-
-`BattleAnimationTimingProfile` sits beside the Presentation Director and configures how semantic animation roles are visually played rather than when gameplay occurs.
-
-The path is:
-Director releases presentation event
-→ BattlePresentationRuntime selects semantic role/clip
-→ timing profile controls playback rate, transition easing and recovery hold
-→ renderer receives one draw or a temporary previous/current cross-fade pair.
-
-`BattleHitRhythm` is a reusable presentation cadence utility. It emits only timing offsets and has no access to ability execution or Battle Core hit resolution.
-
-## Batch 110 coordinated presentation layering
-
-The premium presentation path is now:
-
-resolved presentation events
-→ Presentation Director (release timing / holds)
-→ Presentation Layering Runtime (shared staging group / channel metadata)
-→ animation, feedback/VFX/audio and camera/screen-FX runtimes
-→ UI/render adapters.
-
-The layering runtime works on copied presentation cue payloads. It enables one authored impact to coordinate camera strength, VFX layer/intensity, screen-FX ordering and audio gain/bus without introducing gameplay coupling.
-
-## Batch 111 premium adaptive Battle UI
-
-`BattleUiPolishProfile` sits above the generic Batch 104–107 presentation view models and below `BattleUiComposer`.
-
-Generic presentation state
-→ adaptive layout/polish profile
-→ semantic UI roles
-→ `BattleUiTheme`
-→ backend renderer.
-
-This gives Asteria an opinionated, beginner-friendly default visual hierarchy while keeping layout/theme/prefix/spacing values project-owned and replaceable.
-
-## Batch 112 Battle Presentation milestone freeze
-
-Batches 104–112 establish the complete presentation architecture:
-
-generic canonical projections
-→ resource/party/action/workflow presentation policy
-→ Presentation Director
-→ animation timing and transition policy
-→ coordinated channel layering
-→ premium adaptive UI composition/theme
-→ backend adapters.
-
-Diverse validation confirms this architecture supports substantially different RPG battle models without reference-game semantics. The Battle Presentation milestone should now be treated as frozen unless a later runtime/UI integration test proves a genuine generic abstraction gap.
-
-## Combined Battle System freeze boundary
-
-The full battle execution architecture is frozen:
-
-Battle Core resolved state/events
-→ Presentation Coordinator
-→ Presentation Director
-→ Presentation Layering
-→ animation/feedback/camera
-→ adaptive UI composition
-→ backend render adapters.
-
-Presentation is downstream-only. It may transform timing, layout, visual/audio intensity and labels from supplied perspective, but cannot invoke gameplay resolution or mutate canonical battle state.
-
-## Runtime RPG UI — Character Screen Foundation
-
-The Runtime RPG UI path begins with canonical read-only projection:
-
-RPG mutable runtime/definitions
-→ `ResolvedActorBuild`
-→ `CharacterScreenRuntime`
-→ `CharacterScreenView`
-→ future adaptive runtime UI composer/renderer.
-
-Optional equipment/progression views remain read-only supporting projections. Project-owned `CharacterScreenProfile` supplies labels, section ordering and visual resource roles rather than gameplay semantics.
-
-## Runtime RPG UI — Party / Formation
-
-Party presentation is downstream from canonical roster/formation state:
-
-canonical roster membership + optional `BattleFormationRuntime`
-→ `PartyScreenRuntime`
-→ `PartyScreenView`
-→ future adaptive runtime UI composer/renderer.
-
-Group membership and formation tags remain project data. Presentation focus and overflow are local UI state only.
-
-## Runtime RPG UI — Equipment / Loadout
-
-canonical EquipmentLoadout + EquipmentDefinition catalog
-→ `EquipmentScreenRuntime`
-→ generic slot/item/socket/growth/candidate view models
-→ future adaptive Runtime RPG UI composer/renderer.
-
-Mutation remains outside presentation. Equipment browsing may expose canonical eligibility/reasons but cannot equip, detach, unlock growth or consume inventory.
-
-## Runtime RPG UI — Ability / Passive Collections
-
-`ResolvedActorBuild` + optional `ActorAbilityState` + canonical ability/passive catalogs
-→ `AbilityScreenRuntime`
-→ generic collection/group/loadout view models
-→ future adaptive Runtime RPG UI composer/renderer.
-
-Ownership and active passive state remain canonical data. Presentation only
-projects provenance and collection organization.
-
-## Runtime RPG UI — Progression Graph / Skill Tree
-
-`ProgressionAllocationRuntime` + `ProgressionGraphDefinition`
-→ `ProgressionScreenRuntime`
-→ graph/node/prerequisite/cost view models
-→ future adaptive Runtime RPG UI composer/renderer.
-
-Canonical `preview_allocate()` remains the single source of allocation eligibility; presentation performs no progression mutation.
-
-## Runtime RPG UI milestone
-
-Canonical RPG state
-→ read-only Runtime RPG presentation models
-→ reusable adaptive UI components/templates
-→ renderer/backend adapters.
-
-The next architecture phase is Engine Editor GUI / RPG UX, editing the same
-canonical model rather than maintaining an editor-only data model.
+# Asteria 架構
+
+**更新：** 2026-10-29。這份說明程式怎麼分層、一個專案從檔案到畫面經過哪些地方。每個系統的功能看
+[`ENGINE_HANDBOOK.md`](ENGINE_HANDBOOK.md)，設計決策看 [`audits/DECISION_LOG.md`](audits/DECISION_LOG.md)。
+Batch 94～119 時期的架構筆記保留在 [`history/ARCHITECTURE_BATCH94-119.md`](history/ARCHITECTURE_BATCH94-119.md)。
+
+## 1. 三條規則
+
+1. **規則是資料。** 角色、技能、戰鬥規則、選單、版面都存在專案檔裡；引擎裡沒有任何一款範例遊戲的名字或數值。
+2. **一份規則，兩個介面。** 遊戲規則只在 `GameSessionRuntime`（不碰像素）；視窗、輸入、繪製在
+   `PlayableTestRuntime`。編輯器與自動測試直接呼叫前者，不需要開視窗。
+3. **熱迴圈往下沉。** 碰撞、投射物、粒子、天氣、移動、野外 AI 這些每幀大量計算的部分，放在可替換的
+   kernel（python／numpy／C++），上層保持作者看得懂的 Python。
+
+## 2. 套件分層
+
+由下往上；下層不 import 上層。
+
+| 層 | 套件 | 負責 |
+| --- | --- | --- |
+| 核心 | `core` | ECS：`Entity`、`Component`、`Scene`、`System`、`SystemScheduler`、事件匯流排；熱資料的欄位陣列（`core/columns.py`，每個場景一組 `array.array`）；prefab、序列化、版本遷移 |
+| 計算 | `kernels` | 三組結果逐位元相同的計算核心（見 [`NATIVE_KERNELS.md`](NATIVE_KERNELS.md)） |
+| 玩法積木 | `gameplay` | 數值、資源、公式（`expressions`）、標籤、效果、狀態、技能（Ability）、攻擊、投射物、動作時間軸 |
+| RPG 資料 | `rpg` | `RpgDatabase`（`rpg/actors.py`）與所有紀錄：職業、技能樹、裝備、掉落、任務、商店、寵物、選單規則與選單頁、標籤與屬性定義；回合制戰鬥的生命週期（`battle_lifecycle`）；內建字詞（`built_in_text`） |
+| 事件 | `events` | 事件程式的 VM、排程、對話、選項、世界指令的綁定 |
+| 圖像 | `graphics`、`render`、`platform` | 精靈、圖塊地圖、骨骼、光照、點陣字；繪製指令與管線；pygame、ModernGL、headless 三種後端與輸入、音訊 |
+| 戰鬥呈現 | `presentation` | 回合制戰鬥畫面：版面、HUD、指令選單、鏡頭、特效排程、角色與隊伍畫面 |
+| 素材 | `assets` | 素材庫、匯入、圖集、品質檢查、RPG Maker MV 匯入 |
+| 執行環境 | `runtime` | 場景系統、角色控制、碰撞、即時戰鬥（`action_*`）、存檔，以及下面兩個大類別 |
+| 專案 | `project.py`、`project_tools.py` | `Project`（專案檔的讀寫與版本）；升級與匯出 |
+| 工具 | `editor`、`multiplayer`、`authoring`、`export_web.py`、`frozen.py`、`validation` | 編輯器、多人連線、作者腳本 API、網頁匯出、免安裝版 app、壓力測試 |
+
+## 3. 一個專案從檔案到畫面
+
+```
+project.asteria.json ──Project.load_json──▶ Project ─┬─ scenes（ECS 場景）
+                                                    ├─ rpg_database（RpgDatabase）
+                                                    ├─ battle_presentation_library、input_map …
+                                                    └─ game_start ──instantiate──▶ GameRuntimeSave
+                                                                                      │
+                          GameSessionRuntime(project, runtime_save) ◀─────────────────┘
+                          （規則：移動、事件、戰鬥、背包、翻譯…；不碰像素）
+                                         │
+                          PlayableTestRuntime（視窗、輸入、繪製、選單、音訊）
+                                         │
+                                    pygame 視窗／ModernGL
+```
+
+- **讀檔**：`Project.load_json(path, registry)` 檢查 `schema` 與版本（目前接受 2～11），舊格式在
+  `core/migration.py` 與各紀錄的讀取函式裡升級；`asteria-upgrade` 把檔案寫回最新格式。
+- **新遊戲**：`project.game_start.instantiate(project)` 產生 `GameRuntimeSave`（`runtime/game_save.py`）：
+  場景、玩家位置、隊伍、背包、裝備、技能樹分配、任務、世界狀態。存檔就是這個物件的 JSON。
+- **規則**：`GameSessionRuntime`（`runtime/game_session.py`）由 `runtime/session/` 的 mixin 組成，一個模組
+  管一塊規則：`field_play`、`action_play`、`gear`、`scene_events`、`battle_events`、`messages`
+  （翻譯 `tr()`、資料名稱）、`party`、`inventory_use`、`builds`、`encounters`、`ability_use`、`pets`、
+  `strikes`、`turns`、`economy`、`interactions`、`map_tiles`、`rewards`。
+- **畫面**：`PlayableTestRuntime`（`runtime/playable_test_runtime.py`）由 `runtime/playtest/` 的 mixin 組成：
+  `resources`、`environment`、`text_draw`、`field_view`、`multiplayer`、`field_ui`、`action_scenes`、
+  `title_build`、`workshop`、`battle_flow`、`menus_input`、`save_slots`、`menus_draw`、`menu_fit`、
+  `menu_pages`、`capture`。它只處理輸入、像素、選單導覽與特效播放；規則一律呼叫 session。
+- **進入點**：`asteria-preview`（`runtime/preview.py`）讀專案、建立或讀取存檔；專案資料夾有
+  `playable_test_manifest.json` 時交給 `run_playable_test_runtime`，否則跑一般的場景預覽。
+
+## 4. 場景與每一幀
+
+- `Scene` 持有實體（依加入順序）、每種元件的索引（`scene.query` 不掃描全部實體）、欄位陣列的 slot，以及
+  `SystemScheduler`。`Scene.update(dt)` 依 `order` 執行系統；更新途中加入或移除的實體延到這一幀結束才生效。
+- 野外的系統（`runtime/systems.py`、`character_control`、`collision`、`field_ai`、`projectiles`…）從場景索引
+  讀元件，每幀共用同一個碰撞世界，數量多的部分交給 kernel。
+- 即時戰鬥：場景裡有 `CombatSceneComponent` 時，敵人在野外即時戰鬥，不切到回合制畫面（`runtime/action_play.py`、
+  `action_combat.py`）。
+- 回合制戰鬥：遭遇開始後，`rpg/battle_lifecycle.py` 管回合與結果，`presentation/` 把狀態轉成繪製指令，
+  `platform/pygame_battle_ui.py` 畫出來。
+
+## 5. 編輯器
+
+- `AsteriaEditorWindow`（`editor/shell.py`）持有一份 `EditorDocument`（`editor/model.py`）：目前的 `Project`、
+  是否有未存的修改，以及 `CommandStack`（`editor/commands.py`）。**每個修改都是一個可復原的指令**；表單停止
+  輸入約 0.35 秒後自動套用。
+- 七個工作區（Scene、Database、Battle、Presentation、Events、Code、Multiplayer）各自由 `*_widget.py`
+  （畫面）和 `*_authoring.py`（讀寫專案資料的 controller）組成；畫面不直接改資料。
+- 介面文字一律是英文原文，經 `editor/i18n.py` 依 `translations/zh_TW.json` 即時換成繁中。
+- **試玩**：`editor/runtime_launcher.py` 用 `sys.executable -m asteria.runtime.preview` 開一個子程序，加上
+  `--debug-port`；Debugger 與 Profiler 面板透過 `runtime/debug_server.py` 的本機通道讀遊戲狀態。在免安裝版
+  app 裡，`sys.executable` 就是 app 本身（`frozen.py`）。
+
+## 6. 匯出與發布
+
+| 成品 | 程式 | 內容 |
+| --- | --- | --- |
+| 遊戲資料夾 | `project_tools.package_game`（`asteria-export`） | 專案、它用到的每個檔案、引擎原始碼（`engine/asteria`）、`run_game.py`；需要 Python 與 pygame-ce |
+| 單檔 `.pyz`、macOS `.app` | 同上，`--pyz`、`--app` | 從原始碼版匯出的 `.app` 需要 Python；從免安裝版 app 匯出的內附播放器，不需要 Python |
+| 網頁版 | `export_web.py`（`asteria-export-web`） | pygbag 把 CPython 與 pygame-ce 編成 WebAssembly |
+| 免安裝版編輯器 | `scripts/build_app.py` | PyInstaller 凍結直譯器與函式庫；引擎以原始碼放在 app 裡（見 [`STANDALONE_APP.zh-TW.md`](STANDALONE_APP.zh-TW.md)） |
+
+匯出前會檢查 C++ kernel，必要時重新編譯並帶進成品；沒有 kernel 的平台退回 numpy 或純 Python。
+
+## 7. 多人連線
+
+`multiplayer/` 是和遊戲無關的積木：TCP session 與 lobby、client API、命令／狀態／事件、即時輸入同步、
+SQLite 玩家資料。遊戲透過 adapter 接上（`multiplayer/project_demo.py` 用專案本身的 ECS 戰鬥與背包）。
+伺服器以 `python -m asteria.multiplayer.server` 啟動；只適合本機或可信任的區域網路，設計與限制見
+[`audits/MULTIPLAYER_DESIGN.md`](audits/MULTIPLAYER_DESIGN.md)。
+
+## 8. 測試
+
+- `tests/` 全部在無頭環境跑（SDL dummy、Qt offscreen），約 3,600 項、5 分鐘；CI 在 Linux 與 macOS 跑。
+- 範例專案本身就是測試資料：`test_full_verification_campaign.py` 打完整段劇情，`test_party_rpg_demo.py`、
+  `test_arpg_demo.py` 逐一檢查機制。
+- 畫面與視窗的行為另外用 `scripts/*_live_check.py` 在真實 Cocoa 視窗驗證，截圖放 `docs/audits/evidence/`。

@@ -1,7 +1,7 @@
 # Party RPG Battle Demo
 
-A playable Asteria project whose battle uses breaks and boosts like a classic party RPG — built only from project data on top of
-the Complex Reference RPG's CC0 art (see `playable_assets/CREDITS.md`). The engine has no game-specific code; every
+A playable Asteria project whose battle uses breaks and boosts like a classic party RPG — built only from project data,
+with Foozle's CC0 Lucifer art (see `playable_assets/CREDITS.md`). File ▸ New Project… ▸ Party RPG copies it. The engine has no game-specific code; every
 rule below is an authored record you can open and change in the editor.
 
 ```bash

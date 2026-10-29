@@ -6,6 +6,22 @@ contracts\
 **Merged sources:** `ASTERIA_ASSET_CATALOG_SPEC.md` +
 `Asteria_USABLE_ASSET_GENERATION_SPEC.md`
 
+> **Where Asteria stands (2026-10-29).** This is a design specification: it records the goals and
+> principles the engine is built towards. What is implemented today is described in
+> [`docs/ENGINE_HANDBOOK.md`](../ENGINE_HANDBOOK.md), the user manual
+> ([`docs/manual/`](../manual/)) and the decision log
+> ([`docs/audits/DECISION_LOG.md`](../audits/DECISION_LOG.md)). Decisions that changed this
+> specification:
+>
+> - **No generated art.** Asteria ships no AI-generated art and has no image generator in its
+>   pipeline. The bundled art is third-party CC0 packs (mainly Foozle's Lucifer packs, in
+>   `asset_library/`; licences in [`THIRD_PARTY_ASSETS.md`](../../THIRD_PARTY_ASSETS.md)).
+> - **The Character Generator is cancelled** (decision log D2). Characters come from sprite sheets
+>   the author imports; the canonical asset path below still applies to them.
+> - Sections about generated Starter assets and Character Generator parts describe a plan that
+>   was not carried out; the asset contracts themselves (formats, anchors, frame topology) are
+>   what the importers and `asteria.assets` check.
+
 Defaults/presets are not engine hard limits unless explicitly declared
 as such.
 

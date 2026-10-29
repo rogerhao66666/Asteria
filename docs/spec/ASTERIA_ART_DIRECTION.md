@@ -4,6 +4,21 @@
 **Canonical role:** Official visual language, art-quality requirements
 and production-quality gates
 
+> **Where Asteria stands (2026-10-29).** This is a design specification: it records the goals and
+> principles the engine is built towards. What is implemented today is described in
+> [`docs/ENGINE_HANDBOOK.md`](../ENGINE_HANDBOOK.md), the user manual
+> ([`docs/manual/`](../manual/)) and the decision log
+> ([`docs/audits/DECISION_LOG.md`](../audits/DECISION_LOG.md)). Decisions that changed this
+> specification:
+>
+> - **No generated art.** Asteria ships no AI-generated art and has no image generator in its
+>   pipeline. The bundled art is third-party CC0 packs (mainly Foozle's Lucifer packs, in
+>   `asset_library/`; licences in [`THIRD_PARTY_ASSETS.md`](../../THIRD_PARTY_ASSETS.md)).
+> - **The Character Generator is cancelled** (decision log D2). Characters come from sprite sheets
+>   the author imports; the canonical asset path below still applies to them.
+> - The demos use the Foozle Lucifer packs as their main art; Ninja Adventure and a few other CC0
+>   packs fill gaps. The quality rules below still describe what official art should meet.
+
 # ASTERIA_ART_DIRECTION.md
 
 **Status:** Baseline v1\
