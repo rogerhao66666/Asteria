@@ -142,7 +142,7 @@
 
 ## Part B — Already removed in D7 (for the record; no action requested)
 
-These were removed on 2026-10-09 under your D7 authorization ("先備份後處理") and are backed up at `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-09_generated_art.zip` (outside the repo):
+These were removed on 2026-10-09 under your D7 authorization ("先備份後處理") and are backed up at `~/Documents/Vscode/Asteria_backup_2026-10-09_generated_art.zip` (outside the repo):
 
 | Item | Paths |
 |---|---|
@@ -177,7 +177,7 @@ These were removed on 2026-10-09 under your D7 authorization ("先備份後處�
 
 Conditions applied to every item: unused or migrated first; a complete replacement exists and passes tests; the canonical SPEC is unaffected; no generic engine capability is lost. Uncertain → kept and marked BLOCKED.
 
-**Backup:** `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_generator.zip` (18 files, outside the repo).
+**Backup:** `~/Documents/Vscode/Asteria_backup_2026-10-11_cb15_generator.zip` (18 files, outside the repo).
 **Rollback reference:** `git revert 71e76c1` (the single retirement commit); the parent `3c6dd57` is the last state with the Generator.
 
 | Item | Decision | Removed Files | Replacement | Dependency Check | Regression Tests |
@@ -216,7 +216,7 @@ retired the legacy code.
 | **Dependency check** | No reference to the removed names in `src/`, `scripts/`, `tests/` (grep). Every manifest in the repository resolves to canonical. Generic Animation / Attachment, Battle Presentation and the runtime backends are untouched. |
 | **Parity** | Animation, VFX, camera, audio, hit-stop, multi-hit, status, capture, boost, victory / defeat / game-over, battle entry and exit, save / load — on art-less projects too (`tests/test_battle_without_art.py`). |
 | **Regression tests** | Full suite 2168 at `94a71b2` (now 2180). `test_battle_without_art.py` (3), `test_canonical_battle_presentation.py`, `test_playable_battle_loop.py`. Real windows: `battle_without_art_pygame` and `battle_without_art_moderngl` PASS (victory by real key events, back to the field, F5 save), plus every earlier battle check. |
-| **Backup** | `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_legacy_battle.zip` (outside the repository) |
+| **Backup** | `~/Documents/Vscode/Asteria_backup_2026-10-11_cb15_legacy_battle.zip` (outside the repository) |
 | **Rollback** | `git revert 94a71b2` (single commit); its parent `37b0013` is the last state with the legacy screen. |
 
 **CB15 status after D19:** A1–A5, A7, A8 and A9 are retired; A6 (CreateCharacterCommand without the
@@ -267,5 +267,5 @@ the product.
 | **Tests** | 254 test functions that exercised only retired code were removed (31 batch-era files deleted, 6 trimmed by symbol, keeping their product tests). Line coverage of the kept product modules was measured before and after with a `sys.settrace` plugin. `attachments.py` 170 → 170 lines, `actor_visual_layers.py` 54 → 54, `fidelity.py` 7 → 7. `attachment_runtime.py` 207 → 206; the one lost line (replace an active attachment) has a new test, `test_attachment_runtime_replace.py`. Full suite 2181 → 1928 passed. |
 | **Regression** | Real machine re-run of battle, battle_features, battle_no_art, gameplay, editor, editor_tools, editor_d17, editor_workflows, b_items_replay and vfx: all PASS. The suite total is unchanged (49 PASS, 0 FAIL). |
 | **Matrix** | ENG-10, CAM-01, VFX-01 and ARPG-01 cited retired modules; they now cite the product modules. No status changed. |
-| **Backup** | `/Users/roger/Documents/Vscode/Asteria_backup_2026-10-11_cb15_unused_modules.zip` (35 modules + 33 test files as they were before the change) |
+| **Backup** | `~/Documents/Vscode/Asteria_backup_2026-10-11_cb15_unused_modules.zip` (35 modules + 33 test files as they were before the change) |
 | **Rollback** | `git revert 78dd3fb` (single commit; see DECISION_LOG D20-2) |

@@ -26,15 +26,19 @@ def test_skill_v2_has_deterministic_control_contract():
 
 
 def test_pipeline_places_source_integrity_before_canonicalization():
-    text = read("ASTERIA_ASSET_PIPELINE.md")
+    text = read("docs/spec/ASTERIA_ASSET_PIPELINE.md")
     section = text[text.index("# 37. Deterministic animation production control") :]
     assert section.index("Source Integrity") < section.index("canonicalization + stabilization")
     assert "generation provider must not silently invent or replace these semantics" in section
 
 
 def test_canonical_docs_share_production_control_invariant():
-    for rel in ["ASTERIA_ASSET_SPEC.md", "ASTERIA_ART_DIRECTION.md", "ASTERIA_PROGRESS.md"]:
+    for rel in [
+        "docs/spec/ASTERIA_ASSET_SPEC.md",
+        "docs/spec/ASTERIA_ART_DIRECTION.md",
+        "docs/history/ASTERIA_PROGRESS.md",
+    ]:
         text = read(rel)
         assert "Master Reference" in text
-    assert "starter defaults/examples" in read("ASTERIA_ASSET_SPEC.md")
-    assert "temporal playback" in read("ASTERIA_ART_DIRECTION.md")
+    assert "starter defaults/examples" in read("docs/spec/ASTERIA_ASSET_SPEC.md")
+    assert "temporal playback" in read("docs/spec/ASTERIA_ART_DIRECTION.md")

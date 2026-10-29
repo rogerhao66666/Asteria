@@ -1,4 +1,4 @@
-> **歷史文件**（v0.94 的首次驗收清單）。現在的安裝與使用方式見 [`README.md`](README.md) 與 [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md)。
+> **歷史文件**（v0.94 的首次驗收清單）。現在的安裝與使用方式見 [`README.md`](../../README.md) 與 [`docs/ENGINE_HANDBOOK.md`](../ENGINE_HANDBOOK.md)。
 
 # Asteria — Mac First-Run Test
 

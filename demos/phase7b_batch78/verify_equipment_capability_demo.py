@@ -9,7 +9,10 @@ from asteria.rpg import EquipmentLoadout, EquipmentSlotDefinition, EquippedItem,
 
 root = Path(__file__).resolve().parents[2]
 document = EditorDocument()
-load_document(document, root / "AsteriaPhase7B_EquipmentCapabilityDemo.asteria.json")
+load_document(
+    document,
+    root / "reference_projects" / "legacy" / "AsteriaPhase7B_EquipmentCapabilityDemo.asteria.json",
+)
 project = document.project
 db = project.rpg_database
 state = RpgRuntimeState.from_data(

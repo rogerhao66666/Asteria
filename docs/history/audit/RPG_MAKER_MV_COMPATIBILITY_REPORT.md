@@ -4,7 +4,7 @@ Status: **PARTIAL — real source import boundary validated; interactive runtime
 
 The local Steam installation was found at:
 
-`/Users/roger/Library/Application Support/Steam/steamapps/common/RPG Maker MV`
+`~/Library/Application Support/Steam/steamapps/common/RPG Maker MV`
 
 Real files were tested from characters, faces, side-view actors, enemies, side-view enemies, tilesets, animations, pictures, and parallaxes. The adapter validates source image structure and translates MV-specific layouts to generic canonical metadata. It handles normal character sheets, `$` single-character sheets, `!` object-character alignment, Down/Left/Right/Up walking rows, middle idle frame, and the 18 side-view motions without adding MV assumptions to Animation Core, Runtime, Scene, Battle, or Presentation.
 

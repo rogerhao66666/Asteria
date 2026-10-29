@@ -1,5 +1,5 @@
 """Tests for the moderngl runtime backend (Phase 1 of the plan at
-/Users/roger/.claude/plans/proud-fluttering-map.md).
+~/.claude/plans/proud-fluttering-map.md).
 
 These exercise the real batching/shader/texture code in
 `ModernglRuntimeBackend` against a `moderngl.create_standalone_context()`

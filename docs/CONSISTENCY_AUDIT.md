@@ -13,7 +13,7 @@ Those 523/4 counts are the v0.94 base-package evidence. Batch 95 has since start
 The supplied `Asteria_v0.94.0a94_FULL_CANONICAL_REVIEW.zip` is the sole input
 authority for this package. Exact input filenames, SHA-256 hashes and the
 overlay/addition lists are in the
-[machine-readable audit](../review/MERGE_AND_INTEGRITY_AUDIT.json).
+[machine-readable audit](history/review/MERGE_AND_INTEGRITY_AUDIT.json).
 
 - Full v0.93 canonical: 448 files.
 - Original Batch 94 incremental delta: 8 files.
@@ -82,7 +82,7 @@ The machine-readable audit records exact inventories/counts and checks:
   test edits, selective exclusions or changes to frozen source.
 - Final ZIP has unique safe names, valid CRCs and per-file SHA-256 verification.
 
-[Test output](../review/PYTEST_RESULTS.txt) includes exact skipped tests/reasons.
+[Test output](history/review/PYTEST_RESULTS.txt) includes exact skipped tests/reasons.
 The file manifest covers every packaged file except itself. Temporary test
 runner dependencies and generated caches are not part of the deliverable.
 

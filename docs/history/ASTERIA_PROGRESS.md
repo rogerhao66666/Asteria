@@ -22,7 +22,7 @@ status, known gaps and NEXT
   `/private/tmp/asteria-project-native-to1iiyj_/result.json`.
 - Local/trusted-LAN sample scope. Guest IDs are development keys; server restart restores
   characters and starts a fresh transient world. Public deployment/authentication/WAN qualification
-  are separate work. [Gameplay template](docs/audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md).
+  are separate work. [Gameplay template](../audits/MULTIPLAYER_GAMEPLAY_TEMPLATE.md).
 
 # Asteria 編輯器 --- 進度紀錄
 

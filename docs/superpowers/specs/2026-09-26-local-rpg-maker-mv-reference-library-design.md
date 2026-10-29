@@ -19,7 +19,7 @@ and text.
 
 Source root:
 
-`/Users/roger/Library/Application Support/Steam/steamapps/common/RPG Maker MV`
+`~/Library/Application Support/Steam/steamapps/common/RPG Maker MV`
 
 Source trees:
 
@@ -28,7 +28,7 @@ Source trees:
 
 Destination root:
 
-`/Users/roger/Documents/Vscode/Asteria/local_reference/rpg_maker_mv`
+`~/Documents/Vscode/Asteria/local_reference/rpg_maker_mv`
 
 Destination trees preserve all relative paths:
 

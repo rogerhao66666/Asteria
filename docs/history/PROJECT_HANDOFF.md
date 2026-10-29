@@ -1,4 +1,4 @@
-> **歷史文件**（Batch 158 封存時的交接）。現況見 [`README.md`](README.md)、[`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md) 與 [`docs/audits/DECISION_LOG.md`](docs/audits/DECISION_LOG.md)。
+> **歷史文件**（Batch 158 封存時的交接）。現況見 [`README.md`](../../README.md)、[`docs/ENGINE_HANDBOOK.md`](../ENGINE_HANDBOOK.md) 與 [`docs/audits/DECISION_LOG.md`](../audits/DECISION_LOG.md)。
 
 # Asteria Project Handoff
 

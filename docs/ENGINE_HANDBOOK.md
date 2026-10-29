@@ -2,7 +2,7 @@
 
 **更新：** 2026-10-22（D51；D42–D51 的內容看 DECISION_LOG，缺口對照表見 [`audits/GAP_LIST.md`](audits/GAP_LIST.md)）。這份是「目前到底有什麼」的單一入口；細節和決策理由在
 [`docs/audits/DECISION_LOG.md`](audits/DECISION_LOG.md)（D1 ～ D51），規格在
-[`ASTERIA_SPEC.md`](../ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
+[`ASTERIA_SPEC.md`](spec/ASTERIA_SPEC.md)。舊的 `README.md`、`START_HERE_MAC.md`、各 BATCH 文件是歷史紀錄，
 不代表現狀。
 
 **給遊戲作者的使用手冊（D86）：** [`manual/USER_MANUAL.zh-TW.md`](manual/USER_MANUAL.zh-TW.md)（英文版 [`manual/USER_MANUAL.en.md`](manual/USER_MANUAL.en.md)）。從安裝到匯出的完整操作說明，附真實截圖；最後一章的 Python API 由 `scripts/manual_api_list.py` 產生。

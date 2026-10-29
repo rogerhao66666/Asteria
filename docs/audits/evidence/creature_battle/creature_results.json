@@ -13,7 +13,7 @@
  ],
  "check": "D58 creature battle screen in a real window",
  "driver": "cocoa",
- "art": "/Users/roger/Documents/Vscode/Asteria/docs/audits/evidence/creature_battle/art",
+ "art": "~/Documents/Vscode/Asteria/docs/audits/evidence/creature_battle/art",
  "steps": [
   {
    "step": "01_wild_appeared",

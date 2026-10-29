@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Work in the original `/Users/roger/Documents/Vscode/Asteria` repo. Preserve existing uncommitted changes. Do not commit.
+- Work in the original `~/Documents/Vscode/Asteria` repo. Preserve existing uncommitted changes. Do not commit.
 - Do not copy or mutate `local_reference/rpg_maker_mv`; use it read-only, and do not add MV files to Git.
 - Output grids: walking 144×192 (3×4 at 48px), damaged 144×48 (3×1 at 48px), side-view 576×384 (9×6 at 64px), face 144×144.
 - Body families are Male, Female, and Kid. Never silently composite parts across families or resize a source to disguise mismatched dimensions.

@@ -185,7 +185,7 @@
 **決策：** 使用者決定 `assets/` 底下的內容全部不要了，並授權「先備份後處理」。這覆蓋 D3／D4 原本「等待批准」的狀態。
 
 **已執行：**
-- 備份：`/Users/roger/Documents/Vscode/Asteria_backup_2026-10-09_generated_art.zip`（repo 外，30 MB，180 個項目，`unzip -t` 通過）。內容包括整個 `assets/`（含從 git 取出的 `ready_user_hero`）、下列被移除的程式／腳本／測試／設計文件，以及修改前的 `shell.py`、`assets/__init__.py`、`test_editor_mv_character_creator.py`
+- 備份：`~/Documents/Vscode/Asteria_backup_2026-10-09_generated_art.zip`（repo 外，30 MB，180 個項目，`unzip -t` 通過）。內容包括整個 `assets/`（含從 git 取出的 `ready_user_hero`）、下列被移除的程式／腳本／測試／設計文件，以及修改前的 `shell.py`、`assets/__init__.py`、`test_editor_mv_character_creator.py`
 - 刪除：`assets/`（目錄已不存在）；`assets/starter_character.py`、`starter_character_packs.py`、`starter_sprite.py`、`character_content_pack.py`；`editor/ready_character_library_widget.py`；`scripts/build_starter_template_art.py`、`rebuild_asteria_boss_aura.py`、`rebuild_starter_side_views.py`；測試 `test_asteria_boss_pack.py`、`test_character_content_packs.py`、`test_starter_character_art.py`、`test_starter_sprite.py`、`test_starter_character_native_pipeline.py`；starter art／boss sprites／content packs 的 6 份設計與計畫文件
 - 移除相依：Editor 的「Ready Characters」分頁；`assets/__init__.py` 的 3 個 import；`shell.py` 的 content-pack `instantiate` 分支；`test_editor_mv_character_creator.py` 的 Ready Characters 測試與斷言
 - Commit：只 commit 了 `ready_user_hero` 的刪除（`773d072`，branch `cleanup/remove-generated-art`，未 push）。其他變更跟你原本未提交的工作交織在一起，維持未提交
@@ -2112,7 +2112,7 @@ C2 之後 300 + 500 場景的拆解（numpy，每幀 ms）：場景 AI 5.1、俯
 
 **測試：** `tests/test_full_verification_campaign.py`（整段劇情）、`test_full_verification_b11.py`、`test_full_verification_b12.py`、`test_refine_materials.py`、`test_battle_rules_choice.py`、`test_battle_presentation_wiring.py`、`test_town_people_and_home.py`、`test_editor_quit.py`、`test_viewport_combat_boxes.py`、`test_map_prop_stamps.py`（每個擺設印章都是完整的圖）、`test_vfx_tool.py`。
 
-**實機證據：** [`evidence/full_verification_campaign/`](evidence/full_verification_campaign/)：整段劇情在 Cocoa 視窗跑完，先用真的按鍵走路與對話，再跑完 4 張地圖、9 場戰鬥；2026-10-22 重新產生（D51）。`d43_skill_tree_graph.png`：編輯器裡勇者技能樹的圖示卡片與箭頭。
+**實機證據：** [`evidence/full_verification_campaign/`](evidence/full_verification_campaign)：整段劇情在 Cocoa 視窗跑完，先用真的按鍵走路與對話，再跑完 4 張地圖、9 場戰鬥；2026-10-22 重新產生（D51）。`d43_skill_tree_graph.png`：編輯器裡勇者技能樹的圖示卡片與箭頭。
 
 **限制：** demo 的數值與流程是驗證用，沒有真人調過平衡；地圖區域等四個系統目前只在這個 demo 裡用到。
 

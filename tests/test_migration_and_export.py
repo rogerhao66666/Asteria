@@ -16,7 +16,10 @@ from asteria.kernels.build_native import ABI_VERSION as ABI
 from asteria.project_tools import export_game, load_project, package_game, upgrade_project
 
 OLD_PROJECT = (  # a project saved by an older build
-    Path(__file__).resolve().parents[1] / "AsteriaPhase7B_AbilityPassiveDemo.asteria.json"
+    Path(__file__).resolve().parents[1]
+    / "reference_projects"
+    / "legacy"
+    / "AsteriaPhase7B_AbilityPassiveDemo.asteria.json"
 )
 REF = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 

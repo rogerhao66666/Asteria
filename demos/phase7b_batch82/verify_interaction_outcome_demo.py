@@ -8,7 +8,9 @@ from asteria.gameplay import GameplaySubject, ResourcePool, StatBlock, TagSet
 from asteria.rpg import InteractionResolver, RpgDatabase
 
 ROOT = Path(__file__).resolve().parents[2]
-PROJECT = ROOT / "AsteriaPhase7B_InteractionOutcomeDemo.asteria.json"
+PROJECT = (
+    ROOT / "reference_projects" / "legacy" / "AsteriaPhase7B_InteractionOutcomeDemo.asteria.json"
+)
 
 
 def subject(stats=None, tags=()):

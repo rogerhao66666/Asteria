@@ -17,7 +17,10 @@ from asteria.rpg import BattleRuntime, Party, PartyMember
 
 root = Path(__file__).resolve().parents[2]
 document = EditorDocument()
-load_document(document, root / "AsteriaPhase7B_BattleResourcesDemo.asteria.json")
+load_document(
+    document,
+    root / "reference_projects" / "legacy" / "AsteriaPhase7B_BattleResourcesDemo.asteria.json",
+)
 project = document.project
 db = project.rpg_database
 
