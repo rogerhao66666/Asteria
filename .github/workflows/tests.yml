@@ -8,6 +8,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:  # the Actions tab's "Run workflow" button: also runs the macOS suite
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,8 +24,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - run: pip install "ruff>=0.16"
@@ -39,8 +40,8 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -51,5 +52,21 @@ jobs:
             libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 libfontconfig1 \
             libglib2.0-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 \
             libxcb-xkb1 libxrender1 libsdl2-2.0-0
+      - run: pip install -e ".[pygame,editor,mv,dev]"
+      - run: python -m pytest tests -q -p no:cacheprovider --durations=15
+
+  # macOS minutes cost ten times Linux minutes on a private repository, so this suite runs on
+  # pull requests and on demand (Actions > tests > Run workflow), not on every push to main.
+  # It catches what Linux cannot: the macOS fonts (CJK sizing), Cocoa paths, .app exports.
+  tests-macos:
+    if: github.event_name != 'push'
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
       - run: pip install -e ".[pygame,editor,mv,dev]"
       - run: python -m pytest tests -q -p no:cacheprovider --durations=15

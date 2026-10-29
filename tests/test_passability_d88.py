@@ -112,7 +112,9 @@ def test_the_passability_preview_marks_the_blocking_box_in_red():
 
     project = _demo()
     image = passability_preview(project, DEMO, _entity(project, "Starfall Chest"))
-    reds = sum(1 for r, g, b, _a in image.getdata() if r > 200 and g < 120 and b < 120)
+    # get_flattened_data replaces getdata (removed in Pillow 14); older Pillow has only getdata
+    pixels = getattr(image, "get_flattened_data", image.getdata)()
+    reds = sum(1 for r, g, b, _a in pixels if r > 200 and g < 120 and b < 120)
     assert image.width > 100 and reds > 50
 
 
