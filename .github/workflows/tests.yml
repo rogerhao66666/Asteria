@@ -1,13 +1,17 @@
 name: tests
 
-# Lint and format check (ruff), then the whole test suite headless (SDL dummy drivers, Qt
-# offscreen). The suite runs locally before each commit; this workflow runs only on demand
-# (Actions > tests > Run workflow), so pushes and pull requests use no Actions minutes.
+# Every push to main and every pull request: the lint and format check (ruff), about a
+# minute. The whole test suite (headless: SDL dummy drivers, Qt offscreen) runs locally - on
+# the Mac before each commit and in Docker before each push (.githooks/pre-push) - and here
+# only on demand (Actions > tests > Run workflow), to keep within the free Actions minutes.
 # Real-window checks (scripts/*_live_check.py) need a desktop and stay local; the evidence
 # they produce is committed under docs/audits.
 
 on:
-  workflow_dispatch:  # the Actions tab's "Run workflow" button: Linux and macOS suites
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:  # the Actions tab's "Run workflow" button: also the Linux and macOS suites
 
 concurrency:
   # with the event: a manual run (workflow_dispatch) must not cancel the push run of a commit
@@ -33,6 +37,7 @@ jobs:
       - run: ruff format --check src scripts tests reference_projects
 
   tests:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -58,7 +63,7 @@ jobs:
   # macOS minutes cost ten times Linux minutes on a private repository.
   # It catches what Linux cannot: the macOS fonts (CJK sizing), Cocoa paths, .app exports.
   tests-macos:
-    if: github.event_name != 'push'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     timeout-minutes: 45
     steps:

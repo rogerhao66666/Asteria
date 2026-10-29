@@ -765,14 +765,15 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 - 每行 Python ≤ 99 字元（skill：`.claude/skills/line-length`）。
 - 維護者的 clone 執行 `git config core.hooksPath .githooks`：提交 hook 會阻擋共同作者 trailer，並確認 author 是
   `rogerhao66666`；推送 hook 推到 main 前在 Docker 跑測試（見下一條）。外部貢獻者不要啟用它，否則自己的提交會被擋下。
-- **測試只在本地跑，GitHub Actions 只能手動觸發**（2026-10-30；每月免費額度在 10 月用完）。
+- **GitHub 上只自動跑 lint，測試在本地跑**（2026-10-30；每月免費額度在 10 月用完）。
+  - GitHub：推到 main 與 PR 只跑 `ruff check`／`ruff format --check`（約 1 分鐘）；Linux 與 macOS 全套只在手動 Run workflow 時跑。
   - 每批提交前：在 Mac 上用 `.venv` 跑全套（抓 macOS 字型、Cocoa 的問題）。
   - 推到 main 前：`.githooks/pre-push` 會自動在 Docker 的乾淨 Linux（Python 3.13）裡，測「要推的那個 commit」本身。這跟 GitHub CI 跑的一樣，其他 session 還沒提交的檔案不算在內。大約 5～6 分鐘，Docker Desktop 要開著；沒過就不會推。
   - 指令要在背景跑，或把逾時設長，因為推送會等測試跑完。
   - 想手動測：`scripts/docker_tests.sh`（3.12 和 3.13 都測，測目前的檔案）、`scripts/docker_tests.sh --commit HEAD 3.13`、`PINS="PySide6==6.11.2" scripts/docker_tests.sh 3.13`。
   - 映像檔只在 `pyproject.toml` 改了之後才會重建（`docker/Dockerfile`）。
   - Docker 裡會略過 55 項，都是預期的：RPG Maker MV 參考檔不在 repo 裡；沒裝 moderngl、pygbag；沒有中文字型；universal binary 只在 macOS 有。
-  - 不要把 GitHub 的 push／PR 觸發加回來。
+  - 不要讓 GitHub 在 push／PR 時跑測試（lint 可以）。
 - 每一批的結果寫進 `docs/audits/DECISION_LOG.md`（中文，六段式：做了什麼、證據、限制）。
 - UI 和實機的東西一定在 Cocoa 真實視窗驗證，附截圖，放 `docs/audits/evidence/real_machine/`。
 - 編輯器要好看：有顏色、有圖示、版面密但不擠；稽核腳本要乾淨。
