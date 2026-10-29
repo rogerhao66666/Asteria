@@ -10,9 +10,9 @@ requires-python=">=3.12"
 [project.optional-dependencies]
 pygame=["pygame-ce>=2.5"]
 moderngl=["moderngl>=5.8", "pygame-ce>=2.5", "Pillow>=10"]
-# PySide6 6.12 segfaults collecting a widget <-> window reference cycle (CI, 2026-10-28);
-# lift the cap once the editor has none left
-editor=["PySide6>=6.8,<6.12"]
+# PySide6 6.12 segfaults collecting a cycle between a widget and a child that keeps it in an
+# attribute: a child holds its owner weakly (tests/test_widget_cycles.py)
+editor=["PySide6>=6.8"]
 mv=["Pillow>=10"]
 fast=["numpy>=2"]
 web=["pygbag>=0.9"]

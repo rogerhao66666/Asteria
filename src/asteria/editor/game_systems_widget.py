@@ -9,6 +9,7 @@ and edit canonical record data; every Apply goes through
 from __future__ import annotations
 
 import copy
+import weakref
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
@@ -566,14 +567,16 @@ class _LazyIconCombo(QComboBox):
 
     def __init__(self, owner):
         super().__init__()
-        self._owner = owner
+        # a weak reference: the picker holds this list, and PySide6 6.12 segfaults collecting
+        # a cycle between a widget and the widget it sits in
+        self._owner = weakref.ref(owner)
 
     def showPopup(self):  # noqa: N802 - Qt API
-        self._owner._fill_all()
+        self._owner()._fill_all()
         super().showPopup()
 
     def findData(self, *args, **kwargs):  # noqa: N802 - Qt API
-        self._owner._fill_all()
+        self._owner()._fill_all()
         return super().findData(*args, **kwargs)
 
 

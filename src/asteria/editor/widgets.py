@@ -1,3 +1,5 @@
+import weakref
+
 try:
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import (
@@ -28,7 +30,8 @@ class _HierarchyTree(QTreeWidget if QT_AVAILABLE else object):
 
     def __init__(self, owner):
         super().__init__()
-        self._owner = owner
+        # weak: the panel holds this tree; PySide6 6.12 segfaults collecting that cycle
+        self._owner = weakref.ref(owner)
         self.setObjectName("ProjectHierarchyTree")
 
     def dropEvent(self, event):  # noqa: N802 - Qt API
@@ -39,7 +42,7 @@ class _HierarchyTree(QTreeWidget if QT_AVAILABLE else object):
             QAbstractItemView.BelowItem: "below",
         }.get(self.dropIndicatorPosition(), "on")
         payload = None if target is None else target.data(0, Qt.UserRole)
-        self._owner.drop_selected(payload, position)
+        self._owner().drop_selected(payload, position)
         event.ignore()  # the tree is rebuilt from the model
 
 
