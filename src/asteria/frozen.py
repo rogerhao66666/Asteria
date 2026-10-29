@@ -71,7 +71,12 @@ def player_executable(player):
             name = plistlib.load(handle)["CFBundleExecutable"]
         return player / "Contents" / "MacOS" / name
     suffix = ".exe" if os.name == "nt" else ""
-    return player / f"{PLAYER_NAME}{suffix}"
+    program = player / f"{PLAYER_NAME}{suffix}"
+    if not program.exists():  # an exported game: build_player_game named it after its folder
+        named = player / f"{player.name}{suffix}"
+        if named.exists():
+            return named
+    return program
 
 
 def run_python_style(argv):

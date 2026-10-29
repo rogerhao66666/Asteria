@@ -39,11 +39,12 @@ def note_command(project, store, key, text):
     """The undoable command setting the note (``""`` removes it), or None if unchanged."""
     from .game_systems_authoring import _MapCommand
 
-    notes = project.rpg_database.author_notes.setdefault(str(store), {})
-    old = notes.get(str(key)) or None
+    author_notes = project.rpg_database.author_notes
+    old = author_notes.get(str(store), {}).get(str(key)) or None
     new = str(text) if str(text or "").strip() else None
     if new == old:
-        return None
+        return None  # nothing changed: the database is left untouched (no empty store added)
+    notes = author_notes.setdefault(str(store), {})
     return _MapCommand(notes, str(key), new, old, f"Note on {key}")
 
 

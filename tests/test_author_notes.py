@@ -133,6 +133,9 @@ def test_game_data_records_have_a_note_box_and_players_see_it():
     box = family.note_box
     assert box.key == "antidote" and box.shown is not None  # the game shows items' words
     assert box.shown.parent() is not box  # it stands under the description, in the form
+    before = {store: dict(notes) for store, notes in db.author_notes.items()}
+    box.flush()
+    assert box.apply() is False and db.author_notes == before  # no change: nothing written
     box.text.setPlainText("Cheaper than the shop's")
     box.flush()
     assert db.author_notes["items"]["antidote"] == "Cheaper than the shop's"
@@ -143,6 +146,8 @@ def test_game_data_records_have_a_note_box_and_players_see_it():
     assert db.description_hidden("item", "antidote")
     document.undo()
     assert not db.description_hidden("item", "antidote")
+    family.refresh()  # the window refreshes after an undo; the form keeps its layout
+    assert box.shown.isChecked()  # and the kept switch follows the database
     family.category.setCurrentIndex(family.category.findData("actors"))
     family.select_ids([next(iter(sorted(db.actors)))])
     assert family.note_box.shown is None  # the game never shows an actor's description

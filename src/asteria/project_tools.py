@@ -348,7 +348,9 @@ def build_player_game(game_folder, output_dir, *, name, player, identifier=None)
         program.rename(program.with_name(program.name.replace(PLAYER_NAME, slug)))
         shutil.copytree(game_folder, target / "game", ignore=skip)
         return target
-    app = Path(output_dir) / f"{name}.app"
+    # the bundle keeps the game's name (spaces and all) but never a path separator
+    bundle = "".join("-" if c in "/\\:" else c for c in str(name).strip()) or slug
+    app = Path(output_dir) / f"{bundle}.app"
     shutil.rmtree(app, ignore_errors=True)
     shutil.copytree(player, app, symlinks=True)
     contents = app / "Contents"

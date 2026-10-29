@@ -114,7 +114,7 @@ def cjk_size(font, pg=None, path=None):
     line = max(1, round(font.get_height() * 1.25))
     if pg is None:
         return line
-    path = path or cjk_font_path(pg)
+    path = path or _system_cjk_path(pg)
     if not path:
         return line
     key = (path, line)
@@ -128,6 +128,16 @@ def cjk_size(font, pg=None, path=None):
 
 
 _CJK_SIZES = {}  # (CJK face file, line height) -> the point size that sets that line
+_SYSTEM_CJK = {}  # ASTERIA_CJK_FONT -> the face cjk_font_path chose (None: no CJK face)
+
+
+def _system_cjk_path(pg):
+    """``cjk_font_path`` looked up once (per ``ASTERIA_CJK_FONT``), not on every CJK line drawn
+    or measured: it probes the disk and, without a system face, pygame's font list."""
+    bundled = os.environ.get("ASTERIA_CJK_FONT", "")
+    if bundled not in _SYSTEM_CJK:
+        _SYSTEM_CJK[bundled] = cjk_font_path(pg)
+    return _SYSTEM_CJK[bundled]
 
 
 def _centre(font, char, cache):
