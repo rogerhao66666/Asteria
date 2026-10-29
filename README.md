@@ -125,10 +125,9 @@ ruff format --check src scripts tests reference_projects
 scripts/docker_tests.sh                          # the suite on a clean Linux in Docker
 ```
 
-GitHub Actions runs only the lint and format check on every push and pull request. The full test
-suite runs locally: `scripts/docker_tests.sh` runs it on a clean Linux in Docker, and the
-maintainer's pre-push hook runs it automatically. The Linux and macOS suites on GitHub run only when
-started by hand. To contribute, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+GitHub Actions runs the lint and format check and the whole test suite on Linux (Python 3.12 and
+3.13) and macOS on every push and pull request. `scripts/docker_tests.sh` runs the suite on a clean
+Linux in Docker on your own machine. To contribute, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Documentation
 

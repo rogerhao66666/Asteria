@@ -102,8 +102,8 @@ ruff check src scripts tests reference_projects  # 每行 ≤ 99 字元
 ruff format --check src scripts tests reference_projects
 ```
 
-GitHub Actions 在每次 push 與 PR 只跑 lint 與格式檢查；全套測試在本機跑（`scripts/docker_tests.sh` 用 Docker
-在乾淨的 Linux 跑，維護者的推送 hook 會自動執行），GitHub 上的 Linux 與 macOS 測試只在手動觸發時跑。
+GitHub Actions 在每次 push 與 PR 跑 lint、格式檢查，以及 Linux（Python 3.12、3.13）與 macOS 的全套測試；
+在自己的電腦上，`scripts/docker_tests.sh` 會用 Docker 在乾淨的 Linux 跑全套。
 想參與：請看 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
 
 ## 文件

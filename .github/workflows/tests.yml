@@ -2,8 +2,8 @@ name: tests
 
 # Every push to main and every pull request: the lint and format check (ruff), then the whole
 # test suite headless (SDL dummy drivers, Qt offscreen) on Linux (3.12, 3.13) and macOS. The
-# repository is public, so Actions minutes (macOS included) are free. Locally the suite also
-# runs in Docker before each push (.githooks/pre-push).
+# repository is public, so Actions minutes (macOS included) are free. Locally,
+# scripts/docker_tests.sh runs the suite on a clean Linux in Docker.
 # Real-window checks (scripts/*_live_check.py) need a desktop and stay local; the evidence
 # they produce is committed under docs/audits.
 

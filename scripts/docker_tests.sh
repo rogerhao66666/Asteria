@@ -5,7 +5,7 @@
 #   scripts/docker_tests.sh 3.12               # one version
 #   scripts/docker_tests.sh 3.13 -- -x tests/test_mouse_control.py   # pytest arguments
 #   PINS="PySide6==6.11.2" scripts/docker_tests.sh 3.13              # other package versions
-#   scripts/docker_tests.sh --commit HEAD 3.13   # exactly one commit (.githooks/pre-push)
+#   scripts/docker_tests.sh --commit HEAD 3.13   # exactly one commit
 #
 # The container gets only the files git knows (tracked, plus new files not ignored), so a
 # test that leans on something that exists only on this Mac (an ignored file, a path under
