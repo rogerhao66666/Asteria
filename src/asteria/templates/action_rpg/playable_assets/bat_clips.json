@@ -3,88 +3,24 @@
     "attack2_down": {
       "keyframes": [
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 33
+          "duration": 0.08,
+          "frame_index": 16
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 34
+          "duration": 0.08,
+          "frame_index": 17
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 35
+          "duration": 0.08,
+          "frame_index": 18
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 36
+          "duration": 0.08,
+          "frame_index": 19
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 37
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 38
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 39
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 40
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 41
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 42
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 43
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 44
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 45
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 46
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 47
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 48
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 49
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 50
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 51
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 52
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 53
+          "duration": 0.08,
+          "frame_index": 20
         }
       ],
       "loop": false
@@ -92,88 +28,24 @@
     "attack2_left": {
       "keyframes": [
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 191
+          "duration": 0.08,
+          "frame_index": 78
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 192
+          "duration": 0.08,
+          "frame_index": 79
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 193
+          "duration": 0.08,
+          "frame_index": 80
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 194
+          "duration": 0.08,
+          "frame_index": 81
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 195
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 196
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 197
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 198
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 199
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 200
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 201
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 202
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 203
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 204
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 205
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 206
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 207
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 208
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 209
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 210
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 211
+          "duration": 0.08,
+          "frame_index": 82
         }
       ],
       "loop": false
@@ -181,88 +53,24 @@
     "attack2_right": {
       "keyframes": [
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 270
+          "duration": 0.08,
+          "frame_index": 109
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 271
+          "duration": 0.08,
+          "frame_index": 110
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 272
+          "duration": 0.08,
+          "frame_index": 111
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 273
+          "duration": 0.08,
+          "frame_index": 112
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 274
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 275
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 276
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 277
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 278
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 279
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 280
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 281
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 282
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 283
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 284
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 285
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 286
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 287
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 288
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 289
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 290
+          "duration": 0.08,
+          "frame_index": 113
         }
       ],
       "loop": false
@@ -270,88 +78,24 @@
     "attack2_up": {
       "keyframes": [
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 112
+          "duration": 0.08,
+          "frame_index": 47
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 113
+          "duration": 0.08,
+          "frame_index": 48
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 114
+          "duration": 0.08,
+          "frame_index": 49
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 115
+          "duration": 0.08,
+          "frame_index": 50
         },
         {
-          "duration": 0.01904761904761905,
-          "frame_index": 116
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 117
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 118
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 119
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 120
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 121
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 122
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 123
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 124
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 125
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 126
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 127
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 128
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 129
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 130
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 131
-        },
-        {
-          "duration": 0.01904761904761905,
-          "frame_index": 132
+          "duration": 0.08,
+          "frame_index": 51
         }
       ],
       "loop": false
@@ -359,88 +103,24 @@
     "attack3_down": {
       "keyframes": [
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 54
+          "duration": 0.1,
+          "frame_index": 21
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 55
+          "duration": 0.1,
+          "frame_index": 22
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 56
+          "duration": 0.1,
+          "frame_index": 23
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 57
+          "duration": 0.1,
+          "frame_index": 24
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 58
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 59
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 60
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 61
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 62
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 63
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 64
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 65
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 66
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 67
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 68
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 69
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 70
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 71
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 72
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 73
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 74
+          "duration": 0.1,
+          "frame_index": 25
         }
       ],
       "loop": false
@@ -448,88 +128,24 @@
     "attack3_left": {
       "keyframes": [
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 212
+          "duration": 0.1,
+          "frame_index": 83
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 213
+          "duration": 0.1,
+          "frame_index": 84
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 214
+          "duration": 0.1,
+          "frame_index": 85
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 215
+          "duration": 0.1,
+          "frame_index": 86
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 216
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 217
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 218
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 219
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 220
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 221
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 222
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 223
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 224
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 225
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 226
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 227
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 228
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 229
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 230
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 231
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 232
+          "duration": 0.1,
+          "frame_index": 87
         }
       ],
       "loop": false
@@ -537,88 +153,24 @@
     "attack3_right": {
       "keyframes": [
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 291
+          "duration": 0.1,
+          "frame_index": 114
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 292
+          "duration": 0.1,
+          "frame_index": 115
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 293
+          "duration": 0.1,
+          "frame_index": 116
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 294
+          "duration": 0.1,
+          "frame_index": 117
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 295
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 296
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 297
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 298
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 299
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 300
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 301
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 302
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 303
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 304
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 305
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 306
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 307
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 308
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 309
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 310
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 311
+          "duration": 0.1,
+          "frame_index": 118
         }
       ],
       "loop": false
@@ -626,88 +178,24 @@
     "attack3_up": {
       "keyframes": [
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 133
+          "duration": 0.1,
+          "frame_index": 52
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 134
+          "duration": 0.1,
+          "frame_index": 53
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 135
+          "duration": 0.1,
+          "frame_index": 54
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 136
+          "duration": 0.1,
+          "frame_index": 55
         },
         {
-          "duration": 0.023809523809523808,
-          "frame_index": 137
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 138
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 139
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 140
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 141
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 142
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 143
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 144
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 145
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 146
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 147
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 148
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 149
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 150
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 151
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 152
-        },
-        {
-          "duration": 0.023809523809523808,
-          "frame_index": 153
+          "duration": 0.1,
+          "frame_index": 56
         }
       ],
       "loop": false
@@ -715,88 +203,28 @@
     "attack_down": {
       "keyframes": [
         {
-          "duration": 0.014285714285714285,
+          "duration": 0.049999999999999996,
+          "frame_index": 10
+        },
+        {
+          "duration": 0.049999999999999996,
+          "frame_index": 11
+        },
+        {
+          "duration": 0.049999999999999996,
           "frame_index": 12
         },
         {
-          "duration": 0.014285714285714285,
+          "duration": 0.049999999999999996,
           "frame_index": 13
         },
         {
-          "duration": 0.014285714285714285,
+          "duration": 0.049999999999999996,
           "frame_index": 14
         },
         {
-          "duration": 0.014285714285714285,
+          "duration": 0.049999999999999996,
           "frame_index": 15
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 16
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 17
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 18
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 19
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 20
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 21
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 22
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 23
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 24
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 25
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 26
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 27
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 28
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 29
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 30
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 31
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 32
         }
       ],
       "loop": false
@@ -804,88 +232,28 @@
     "attack_left": {
       "keyframes": [
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 170
+          "duration": 0.049999999999999996,
+          "frame_index": 72
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 171
+          "duration": 0.049999999999999996,
+          "frame_index": 73
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 172
+          "duration": 0.049999999999999996,
+          "frame_index": 74
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 173
+          "duration": 0.049999999999999996,
+          "frame_index": 75
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 174
+          "duration": 0.049999999999999996,
+          "frame_index": 76
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 175
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 176
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 177
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 178
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 179
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 180
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 181
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 182
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 183
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 184
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 185
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 186
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 187
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 188
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 189
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 190
+          "duration": 0.049999999999999996,
+          "frame_index": 77
         }
       ],
       "loop": false
@@ -893,88 +261,28 @@
     "attack_right": {
       "keyframes": [
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 249
+          "duration": 0.049999999999999996,
+          "frame_index": 103
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 250
+          "duration": 0.049999999999999996,
+          "frame_index": 104
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 251
+          "duration": 0.049999999999999996,
+          "frame_index": 105
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 252
+          "duration": 0.049999999999999996,
+          "frame_index": 106
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 253
+          "duration": 0.049999999999999996,
+          "frame_index": 107
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 254
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 255
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 256
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 257
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 258
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 259
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 260
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 261
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 262
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 263
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 264
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 265
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 266
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 267
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 268
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 269
+          "duration": 0.049999999999999996,
+          "frame_index": 108
         }
       ],
       "loop": false
@@ -982,88 +290,28 @@
     "attack_up": {
       "keyframes": [
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 91
+          "duration": 0.049999999999999996,
+          "frame_index": 41
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 92
+          "duration": 0.049999999999999996,
+          "frame_index": 42
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 93
+          "duration": 0.049999999999999996,
+          "frame_index": 43
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 94
+          "duration": 0.049999999999999996,
+          "frame_index": 44
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 95
+          "duration": 0.049999999999999996,
+          "frame_index": 45
         },
         {
-          "duration": 0.014285714285714285,
-          "frame_index": 96
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 97
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 98
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 99
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 100
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 101
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 102
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 103
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 104
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 105
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 106
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 107
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 108
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 109
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 110
-        },
-        {
-          "duration": 0.014285714285714285,
-          "frame_index": 111
+          "duration": 0.049999999999999996,
+          "frame_index": 46
         }
       ],
       "loop": false
@@ -1089,10 +337,6 @@
         {
           "duration": 0.18,
           "frame_index": 4
-        },
-        {
-          "duration": 0.18,
-          "frame_index": 5
         }
       ],
       "loop": true
@@ -1101,27 +345,23 @@
       "keyframes": [
         {
           "duration": 0.18,
-          "frame_index": 158
+          "frame_index": 62
         },
         {
           "duration": 0.18,
-          "frame_index": 159
+          "frame_index": 63
         },
         {
           "duration": 0.18,
-          "frame_index": 160
+          "frame_index": 64
         },
         {
           "duration": 0.18,
-          "frame_index": 161
+          "frame_index": 65
         },
         {
           "duration": 0.18,
-          "frame_index": 162
-        },
-        {
-          "duration": 0.18,
-          "frame_index": 163
+          "frame_index": 66
         }
       ],
       "loop": true
@@ -1130,27 +370,23 @@
       "keyframes": [
         {
           "duration": 0.18,
-          "frame_index": 237
+          "frame_index": 93
         },
         {
           "duration": 0.18,
-          "frame_index": 238
+          "frame_index": 94
         },
         {
           "duration": 0.18,
-          "frame_index": 239
+          "frame_index": 95
         },
         {
           "duration": 0.18,
-          "frame_index": 240
+          "frame_index": 96
         },
         {
           "duration": 0.18,
-          "frame_index": 241
-        },
-        {
-          "duration": 0.18,
-          "frame_index": 242
+          "frame_index": 97
         }
       ],
       "loop": true
@@ -1159,27 +395,23 @@
       "keyframes": [
         {
           "duration": 0.18,
-          "frame_index": 79
+          "frame_index": 31
         },
         {
           "duration": 0.18,
-          "frame_index": 80
+          "frame_index": 32
         },
         {
           "duration": 0.18,
-          "frame_index": 81
+          "frame_index": 33
         },
         {
           "duration": 0.18,
-          "frame_index": 82
+          "frame_index": 34
         },
         {
           "duration": 0.18,
-          "frame_index": 83
-        },
-        {
-          "duration": 0.18,
-          "frame_index": 84
+          "frame_index": 35
         }
       ],
       "loop": true
@@ -1187,20 +419,24 @@
     "jump_down": {
       "keyframes": [
         {
-          "duration": 0.125,
-          "frame_index": 75
+          "duration": 0.1,
+          "frame_index": 26
         },
         {
-          "duration": 0.125,
-          "frame_index": 76
+          "duration": 0.1,
+          "frame_index": 27
         },
         {
-          "duration": 0.125,
-          "frame_index": 77
+          "duration": 0.1,
+          "frame_index": 28
         },
         {
-          "duration": 0.125,
-          "frame_index": 78
+          "duration": 0.1,
+          "frame_index": 29
+        },
+        {
+          "duration": 0.1,
+          "frame_index": 30
         }
       ],
       "loop": false
@@ -1208,20 +444,24 @@
     "jump_left": {
       "keyframes": [
         {
-          "duration": 0.125,
-          "frame_index": 233
+          "duration": 0.1,
+          "frame_index": 88
         },
         {
-          "duration": 0.125,
-          "frame_index": 234
+          "duration": 0.1,
+          "frame_index": 89
         },
         {
-          "duration": 0.125,
-          "frame_index": 235
+          "duration": 0.1,
+          "frame_index": 90
         },
         {
-          "duration": 0.125,
-          "frame_index": 236
+          "duration": 0.1,
+          "frame_index": 91
+        },
+        {
+          "duration": 0.1,
+          "frame_index": 92
         }
       ],
       "loop": false
@@ -1229,20 +469,24 @@
     "jump_right": {
       "keyframes": [
         {
-          "duration": 0.125,
-          "frame_index": 312
+          "duration": 0.1,
+          "frame_index": 119
         },
         {
-          "duration": 0.125,
-          "frame_index": 313
+          "duration": 0.1,
+          "frame_index": 120
         },
         {
-          "duration": 0.125,
-          "frame_index": 314
+          "duration": 0.1,
+          "frame_index": 121
         },
         {
-          "duration": 0.125,
-          "frame_index": 315
+          "duration": 0.1,
+          "frame_index": 122
+        },
+        {
+          "duration": 0.1,
+          "frame_index": 123
         }
       ],
       "loop": false
@@ -1250,26 +494,34 @@
     "jump_up": {
       "keyframes": [
         {
-          "duration": 0.125,
-          "frame_index": 154
+          "duration": 0.1,
+          "frame_index": 57
         },
         {
-          "duration": 0.125,
-          "frame_index": 155
+          "duration": 0.1,
+          "frame_index": 58
         },
         {
-          "duration": 0.125,
-          "frame_index": 156
+          "duration": 0.1,
+          "frame_index": 59
         },
         {
-          "duration": 0.125,
-          "frame_index": 157
+          "duration": 0.1,
+          "frame_index": 60
+        },
+        {
+          "duration": 0.1,
+          "frame_index": 61
         }
       ],
       "loop": false
     },
     "walk_down": {
       "keyframes": [
+        {
+          "duration": 0.1,
+          "frame_index": 5
+        },
         {
           "duration": 0.1,
           "frame_index": 6
@@ -1285,14 +537,6 @@
         {
           "duration": 0.1,
           "frame_index": 9
-        },
-        {
-          "duration": 0.1,
-          "frame_index": 10
-        },
-        {
-          "duration": 0.1,
-          "frame_index": 11
         }
       ],
       "loop": true
@@ -1301,27 +545,23 @@
       "keyframes": [
         {
           "duration": 0.1,
-          "frame_index": 164
+          "frame_index": 67
         },
         {
           "duration": 0.1,
-          "frame_index": 165
+          "frame_index": 68
         },
         {
           "duration": 0.1,
-          "frame_index": 166
+          "frame_index": 69
         },
         {
           "duration": 0.1,
-          "frame_index": 167
+          "frame_index": 70
         },
         {
           "duration": 0.1,
-          "frame_index": 168
-        },
-        {
-          "duration": 0.1,
-          "frame_index": 169
+          "frame_index": 71
         }
       ],
       "loop": true
@@ -1330,27 +570,23 @@
       "keyframes": [
         {
           "duration": 0.1,
-          "frame_index": 243
+          "frame_index": 98
         },
         {
           "duration": 0.1,
-          "frame_index": 244
+          "frame_index": 99
         },
         {
           "duration": 0.1,
-          "frame_index": 245
+          "frame_index": 100
         },
         {
           "duration": 0.1,
-          "frame_index": 246
+          "frame_index": 101
         },
         {
           "duration": 0.1,
-          "frame_index": 247
-        },
-        {
-          "duration": 0.1,
-          "frame_index": 248
+          "frame_index": 102
         }
       ],
       "loop": true
@@ -1359,27 +595,23 @@
       "keyframes": [
         {
           "duration": 0.1,
-          "frame_index": 85
+          "frame_index": 36
         },
         {
           "duration": 0.1,
-          "frame_index": 86
+          "frame_index": 37
         },
         {
           "duration": 0.1,
-          "frame_index": 87
+          "frame_index": 38
         },
         {
           "duration": 0.1,
-          "frame_index": 88
+          "frame_index": 39
         },
         {
           "duration": 0.1,
-          "frame_index": 89
-        },
-        {
-          "duration": 0.1,
-          "frame_index": 90
+          "frame_index": 40
         }
       ],
       "loop": true

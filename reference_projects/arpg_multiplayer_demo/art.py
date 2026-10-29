@@ -63,14 +63,16 @@ class Assets:
         pygame.image.save(surface, str(path))
         return self._add(key, "texture", relative, name)
 
-    def sheet(self, key, surface, frames, name, pivot=(0.5, 0.5)):
-        """``frames``: ``(x, y, w, h)`` rectangles; returns the sprite sheet id."""
+    def sheet(self, key, surface, frames, name, pivot=(0.5, 0.5), pivots=None):
+        """``frames``: ``(x, y, w, h)`` rectangles; ``pivots``, when given, one ``(x, y)`` per
+        frame in place of the one ``pivot``; returns the sprite sheet id."""
         texture = self.texture(key, surface, name)
+        pivots = pivots or [pivot] * len(frames)
         data = {
             "texture_asset_id": texture,
             "frames": [
-                {"x": x, "y": y, "width": w, "height": h, "pivot_x": pivot[0], "pivot_y": pivot[1]}
-                for x, y, w, h in frames
+                {"x": x, "y": y, "width": w, "height": h, "pivot_x": px, "pivot_y": py}
+                for (x, y, w, h), (px, py) in zip(frames, pivots)
             ],
         }
         self._json(f"{key}_sheet.json", data)

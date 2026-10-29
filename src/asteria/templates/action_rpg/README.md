@@ -30,7 +30,7 @@ show pictures, and enemies show their boons and harms as small squares over the 
 on (L) shows a target frame at the top with the enemy's name, life and each status with its name
 and seconds left. The five status glyphs are drawn in `art.py` (no sheet had them).
 
-Controls: WASD move, J attack, K dodge, 1-4 skills (4 = potion), Space jump (side view), E talk,
+Controls: WASD move, J attack, K dodge, 1-6 skill slots, Q potion, Space jump (side view), E talk,
 F pick up, B bag (a grid with a tooltip that compares stats with what you wear and shows set
 bonuses), C skill tree, Esc pause. Beaten bosses stay dead after save and load
 (`defeat_switch`); each class has its own look (`ClassAppearance`); the mine has parallax

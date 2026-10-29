@@ -23,6 +23,7 @@ from asteria.core import Component, Field, Transform, component_schema, world_po
 
 COMBAT_MODES = ("encounter", "action")
 VIEWS = ("topdown", "side")
+WALLS_COVER = ("auto", "always", "never")
 
 # input action -> default key / gamepad bindings, added only when the project's input map has no
 # such action
@@ -80,6 +81,15 @@ ARPG_ACTIONS = {
             tooltip="World units the camera leads the player by.",
         ),
         Field(
+            "walls_cover_characters",
+            str,
+            "auto",
+            choices=WALLS_COVER,
+            tooltip="Solid map tiles draw over the parts of characters reaching into them (a "
+            "sword swung at a wall stops at its face). auto: in side view only (top-down "
+            "characters stand in front of walls).",
+        ),
+        Field(
             "background_color",
             str,
             "",
@@ -103,6 +113,7 @@ class CombatSceneComponent(Component):
         self.respawn_heal = True
         self.draw_colliders = False
         self.camera_look_ahead = 0.0
+        self.walls_cover_characters = "auto"
         self.player_life_resource = ""
         self.background_color = ""
 
@@ -112,6 +123,15 @@ def combat_scene(scene):
     for _, settings in scene.query(CombatSceneComponent):
         return settings
     return None
+
+
+def walls_cover_characters(settings):
+    """Whether solid tiles are drawn over characters reaching into them, from a scene's
+    ``CombatSceneComponent`` (``None``: no settings, never)."""
+    mode = getattr(settings, "walls_cover_characters", "auto")
+    if mode == "auto":
+        return getattr(settings, "view", "topdown") == "side"
+    return mode == "always"
 
 
 def missing_action_bindings(input_map):
@@ -513,6 +533,8 @@ __all__ = [
     "ARPG_ACTIONS",
     "COMBAT_MODES",
     "VIEWS",
+    "WALLS_COVER",
+    "walls_cover_characters",
     "ActionHud",
     "CombatSceneComponent",
     "combat_scene",

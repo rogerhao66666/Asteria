@@ -11,7 +11,8 @@ press **Run Project**, then change things one at a time.
 | W A S D | move |
 | J | attack (one binding per class: `w_slash\|r_shot\|m_bolt\|punch`) |
 | K / Left Shift | dodge |
-| 1 - 4 | skills (4 is the potion) |
+| 1 - 6 | skill slots |
+| Q | potion |
 | Space | jump (side view) |
 | E | talk | F | pick up | L | lock on |
 | B | bag (grid, compares with what you wear) | C | skill tree | Esc | pause |

@@ -272,7 +272,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | Rustdeep Mine（礦坑，橫向） | 平台、單向平台、梯子、爬行者、蝙蝠、無人機、Rust Golem Boss；視差背景 |
 
 - 三職業（Warrior／Ranger／Mage）各有技能樹加共用屬性樹，每級 2 點技能點。
-- 同一組按鍵：J 攻擊（綁定 `w_slash|r_shot|m_bolt|punch`）、K 閃避、1–4 技能（4 是藥水）、Space 跳、
+- 同一組按鍵：J 攻擊（綁定 `w_slash|r_shot|m_bolt|punch`）、K 閃避、1–6 技能欄、Q 藥水、Space 跳、
   E 對話、F 撿取、L 鎖定、B 背包、C 技能樹、Esc 暫停。
 - 掉寶：Common／Magic／Rare／Legendary、隨機詞綴、三件套裝、唯一裝備；藥水是技能消耗的道具；
   鍛造與商店。
@@ -742,6 +742,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 效能 | 野外系統從場景索引讀元件、碰撞世界每幀共用、編輯器只重畫看得到的圖塊、多人伺服器每個基準只編碼一次（PR #1） |
 | CI | GitHub Actions 的 Linux 與 macOS 全套測試；PySide6 6.12 回收 widget ↔ 視窗循環參照時會當掉，`pyproject.toml` 暫時限制 `PySide6<6.12` |
 | 開源前整理 | MIT 授權；範例改名 `party_rpg_demo`、`arpg_demo`；根目錄文件搬進 `docs/` |
+| 橫向場景的腳與牆 | 橫向的角色站在碰撞框底部（`character_control.feet_y`，圖片與骨骼都用）；`CombatScene.walls_cover_characters`（`auto`／`always`／`never`，auto＝只在橫向）把實心地圖磚畫在角色伸進牆的部分上面，揮劍停在牆面；ARPG 範例每個方向用自己的腳底對齊點、Cave Bat 改成拿掉影子的騎蝙蝠哥布林、Crawler 改成地上的哥布林、Drill Drone 不再埋進地板；測試涵蓋平地、單向平台、木橋、走道、台階、牆邊、跳躍、走下台階、跳上台階 |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 

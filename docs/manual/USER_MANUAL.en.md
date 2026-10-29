@@ -497,6 +497,13 @@ Action RPGs fight on the map. Attacks, projectiles, loot rarities and affixes ar
 ▸ Real-Time Combat**; enemy behaviour in **Behavior Trees**; the bottom HUD (orbs, action bar,
 cooldowns) is the **Action RPG HUD** menu screen (chapter 9).
 
+The scene's **Combat Scene** component sets how the fight is seen. In side view a character
+stands on the bottom of its collision box, so its feet are on the floor, ledge or bridge that
+holds it. **Walls Cover Characters** draws solid map tiles over the parts of a character that
+reach into them: a sword swung at a wall stops at its face. `auto` does this in side view only
+(top-down characters stand in front of walls); `always` and `never` choose for themselves. A
+monster with no gravity flies; every other one walks on the ground.
+
 ![Action RPG town with the action HUD](images/game_arpg_town.png)
 
 ---

@@ -327,7 +327,7 @@ def dungeon(atlas):
         "ladders": ladders,
         "walkers": [on(x) for x in (18, 27, 38, 49, 62)],
         "bats": [((x + 0.5) * s, (heights[x] - 5) * s) for x in (24, 44, 58)],
-        "drills": [on(x) for x in (35, 72)],
+        "drills": [on(x, 10) for x in (35, 72)],  # a drill's box is 10 below its middle
         "drill_high": ((71.5) * s, top * s - 12),
         "boss": on(88, 24),
     }

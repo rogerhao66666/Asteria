@@ -1440,8 +1440,9 @@ def make_art(assets):
             assets, "skull_elite", "skeleton_hunter", "Bone Champion", height=30
         ),
         "cyclops": la.character(assets, "cyclops", "skeleton_king", "Skeleton King", height=64),
-        "walker": la.character(assets, "walker", "goblin_rider", "Crawler", height=22),
-        "bat": la.character(assets, "bat", "goblin_slinger", "Cave Imp", height=20),
+        # the walker on its feet, the bat a rider on a flying bat (no shadow: it is in the air)
+        "walker": la.character(assets, "walker", "goblin_slinger", "Crawler", height=22),
+        "bat": la.character(assets, "bat", "goblin_rider", "Cave Bat", height=20, shadow=False),
         "drill": la.character(assets, "drill", "skeleton_ancient", "Ancient Drone", height=24),
         "golem": la.character(assets, "golem", "goblin_beast", "Beast Golem", height=40),
         **{f"fx_{k}": v for k, v in la.effect_sheets(assets).items()},

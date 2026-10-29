@@ -514,7 +514,7 @@
         "metadata": {
           "source": "reference_projects/arpg_demo/build_project.py"
         },
-        "name": "Cave Imp",
+        "name": "Cave Bat",
         "source_path": "playable_assets/bat.png"
       },
       {
@@ -526,7 +526,7 @@
         "metadata": {
           "source": "reference_projects/arpg_demo/build_project.py"
         },
-        "name": "Cave Imp Sheet",
+        "name": "Cave Bat Sheet",
         "source_path": "playable_assets/bat_sheet.json"
       },
       {
@@ -538,7 +538,7 @@
         "metadata": {
           "source": "reference_projects/arpg_demo/build_project.py"
         },
-        "name": "Cave Imp Animations",
+        "name": "Cave Bat Animations",
         "source_path": "playable_assets/bat_clips.json"
       },
       {
@@ -29946,7 +29946,7 @@
                 "scale_x": 1.0,
                 "scale_y": 1.0,
                 "x": 639.0,
-                "y": 262.0
+                "y": 260.0
               },
               "type": "asteria.Transform",
               "version": 1
@@ -30084,7 +30084,7 @@
                 "scale_x": 1.0,
                 "scale_y": 1.0,
                 "x": 1305.0,
-                "y": 244.0
+                "y": 242.0
               },
               "type": "asteria.Transform",
               "version": 1
