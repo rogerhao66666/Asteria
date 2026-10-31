@@ -46,7 +46,7 @@ class EditorTheme:
     primary: str = "#6a83e8"
     primary_hi: str = "#7d93ef"
     primary_text: str = "#ffffff"
-    selection: str = "#34406b"
+    selection: str = "#2e3340"
     selection_text: str = "#ffffff"
     focus: str = "#6a83e8"
     danger_bg: str = "#33232a"
@@ -189,71 +189,54 @@ QTabBar::tab {
 }
 QMainWindow > QTabBar::tab { min-width: 0; padding: 6px 8px; background: $base; }
 QTabBar#BottomPanelDockTabs, QTabBar#LeftSceneDockTabs { background: $base; }
+/* the panels' tabs: a strip of names, the open one underlined (no boxes) */
 QTabBar#BottomPanelDockTabs::tab,
 QTabBar#LeftSceneDockTabs::tab {
-    background: $panel; color: $text_dim;
-    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
-    border-bottom: 2px solid transparent; border-left: 0; border-radius: 0;
-    min-width: 0; padding: 6px 6px; margin: 0; font-weight: 700;
+    background: transparent; color: $text_dim;
+    border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    min-width: 0; padding: 6px 8px; margin: 0 2px; font-weight: 600;
 }
-QTabBar#BottomPanelDockTabs::tab:first,
-QTabBar#LeftSceneDockTabs::tab:first { border-left: 1px solid $border_strong; }
 QTabBar#BottomPanelDockTabs::tab:selected,
-QTabBar#LeftSceneDockTabs::tab:selected {
-    background: $raised; color: $text;
-    border-top: 1px solid $border_strong; border-bottom: 2px solid $primary;
-}
+QTabBar#LeftSceneDockTabs::tab:selected { color: $text; border-bottom: 2px solid $primary; }
 QTabBar#BottomPanelDockTabs::tab:hover:!selected,
-QTabBar#LeftSceneDockTabs::tab:hover:!selected {
-    background: $hover; color: $text;
-}
+QTabBar#LeftSceneDockTabs::tab:hover:!selected { color: $text; }
 QTabBar::tab:selected { background: $raised; color: $text; border-bottom: 2px solid $primary; }
 QTabBar::tab:hover:!selected { background: $hover; color: $text; }
 QTabWidget#DatabaseWorkspaceTabs::pane,
 QTabWidget#PresentationWorkspaceTabs::pane,
 QTabWidget#EventsWorkspaceTabs::pane {
-    border: 1px solid $border_strong; border-radius: 0; top: -1px; background: $panel;
-    border-bottom: 1px solid $border_strong; padding: 10px 12px;
+    border: 0; border-top: 1px solid $border; border-radius: 0; top: -1px; background: $base;
+    padding: 10px 12px;
 }
 QTabBar#DatabaseWorkspaceTabBar,
 QTabBar#PresentationWorkspaceTabBar,
 QTabBar#EventsWorkspaceTabBar { background: transparent; }
+/* a workspace's pages: a strip of names under the toolbar, one level below the workspace
+   buttons; the open one is underlined in the workspace's colour (_workspace_rules) */
 QTabBar#DatabaseWorkspaceTabBar::tab,
 QTabBar#PresentationWorkspaceTabBar::tab,
 QTabBar#EventsWorkspaceTabBar::tab {
-    background: $panel; color: $text_dim;
-    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
-    border-bottom: 1px solid $border_strong; border-left: 0; border-radius: 0;
-    min-width: 0; padding: 6px 9px; margin: 0; font-weight: 700;
+    background: transparent; color: $text_dim;
+    border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    min-width: 0; padding: 7px 11px; margin: 0 2px; font-weight: 600;
 }
-QTabBar#DatabaseWorkspaceTabBar::tab:first,
-QTabBar#PresentationWorkspaceTabBar::tab:first,
-QTabBar#EventsWorkspaceTabBar::tab:first { border-left: 1px solid $border_strong; }
 QTabBar#DatabaseWorkspaceTabBar::tab:selected,
 QTabBar#PresentationWorkspaceTabBar::tab:selected,
-QTabBar#EventsWorkspaceTabBar::tab:selected {
-    background: $raised; color: $text;
-    border-top: 1px solid $border_strong;
-    border-bottom: 1px solid $primary;
-}
+QTabBar#EventsWorkspaceTabBar::tab:selected { color: $text; }
 QTabBar#DatabaseWorkspaceTabBar::tab:hover:!selected,
 QTabBar#PresentationWorkspaceTabBar::tab:hover:!selected,
-QTabBar#EventsWorkspaceTabBar::tab:hover:!selected { background: $hover; color: $text; }
+QTabBar#EventsWorkspaceTabBar::tab:hover:!selected { color: $text; }
 QTabWidget#EnemyAIRuleTabs::pane {
-    border: 1px solid $border_strong; border-radius: 0;
+    border: 0; border-top: 1px solid $border; border-radius: 0;
     top: -1px; background: $panel; padding: 10px;
 }
 QTabBar#EnemyAIRuleTabBar::tab {
-    background: $panel; color: $text_dim; font-weight: 700;
-    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
-    border-bottom: 1px solid $border_strong; border-left: 0;
-    border-radius: 0; margin: 0; padding: 6px 9px;
+    background: transparent; color: $text_dim; font-weight: 600;
+    border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    margin: 0 2px; padding: 6px 9px;
 }
-QTabBar#EnemyAIRuleTabBar::tab:first { border-left: 1px solid $border_strong; }
-QTabBar#EnemyAIRuleTabBar::tab:selected {
-    background: $raised; color: $text; border-bottom: 1px solid $primary;
-}
-QTabBar#EnemyAIRuleTabBar::tab:hover:!selected { background: $hover; color: $text; }
+QTabBar#EnemyAIRuleTabBar::tab:selected { color: $text; }
+QTabBar#EnemyAIRuleTabBar::tab:hover:!selected { color: $text; }
 QGroupBox#EnemyAISectionCard {
     background: $panel; border: 1px solid $border_strong;
     border-radius: 0; margin: 0; padding: 0;
@@ -290,20 +273,15 @@ QWidget[presentationPage="true"] QWidget[presentationSidebar="true"] QListWidget
     border: 0;
 }
 QTabWidget[presentationInnerTabs="true"]::pane {
-    border: 1px solid $border_strong; border-radius: 0; top: -1px; padding: 10px;
+    border: 0; border-top: 1px solid $border; border-radius: 0; top: -1px; padding: 10px;
 }
 QTabBar[presentationInnerTabs="true"]::tab {
-    background: $panel; color: $text_dim; font-weight: 700;
-    border-top: 1px solid $border_strong; border-right: 1px solid $border_strong;
-    border-bottom: 1px solid $border_strong; border-left: 0;
-    border-radius: 0; margin: 0; padding: 6px 9px;
+    background: transparent; color: $text_dim; font-weight: 600;
+    border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    margin: 0 2px; padding: 6px 9px;
 }
-QTabBar[presentationInnerTabs="true"]::tab:first {
-    border-left: 1px solid $border_strong;
-}
-QTabBar[presentationInnerTabs="true"]::tab:selected {
-    background: $raised; color: $text; border-bottom: 1px solid $primary;
-}
+QTabBar[presentationInnerTabs="true"]::tab:selected { color: $text; }
+QTabBar[presentationInnerTabs="true"]::tab:hover:!selected { color: $text; }
 QFrame#AuthoringSidebarCard QListWidget {
     background: $list; border: 0; border-radius: 0;
 }
@@ -348,10 +326,14 @@ QTreeWidget, QListWidget, QTableWidget, QTreeView, QListView, QTableView {
 QTreeWidget#ProjectHierarchyTree, QListWidget#AssetList {
     border: 0; border-radius: 0;
 }
-QTreeWidget::item, QListWidget::item { min-height: 22px; padding: 1px 4px; }
-QTreeWidget::item:selected, QListWidget::item:selected, QTableWidget::item:selected {
-    background: $selection; color: $selection_text;
+QTreeWidget::item, QListWidget::item {
+    min-height: 22px; padding: 1px 4px; border-left: 3px solid transparent;
 }
+/* the chosen line: a quiet band with a stripe of the accent at its left */
+QTreeWidget::item:selected, QListWidget::item:selected {
+    background: $selection; color: $selection_text; border-left: 3px solid $primary;
+}
+QTableWidget::item:selected { background: $selection; color: $selection_text; }
 QTreeWidget::item:hover, QListWidget::item:hover { background: $hover; }
 QHeaderView::section {
     background: $header; color: $text_dim; border: 0; border-right: 1px solid $border;
@@ -463,7 +445,18 @@ QToolButton {
     background: transparent; border: 1px solid transparent; border-radius: 6px;
     padding: 5px 9px; color: $text_dim;
 }
-QToolButton[workspace] { font-weight: 700; }
+/* the workspace switch is the top level: larger than the tabs inside a workspace */
+QToolButton[workspace] { font-size: 13px; font-weight: 600; padding: 6px 11px; }
+/* Run: a plain button with a green icon, not a coloured block; Stop and Reset View: icons */
+QToolButton#PlayButton {
+    background: $raised; border: 1px solid $border_strong; color: $text; font-size: 13px;
+    font-weight: 600; padding: 5px 12px;
+}
+QToolButton#PlayButton:hover { background: $hover; }
+QToolButton#PlayButton:disabled {
+    background: transparent; border-color: $border; color: $text_muted;
+}
+QToolButton#StopButton, QToolButton#ResetViewButton { padding: 6px; }
 QToolButton:hover { background: $hover; color: $text; }
 /* a formula's insert buttons (D94): real buttons, the menu's own arrow hidden (the text has ▾) */
 QToolButton#FormulaName, QToolButton#FormulaFunctions, QToolButton#FormulaOperator {
@@ -474,13 +467,14 @@ QToolButton#FormulaOperator:hover { background: $hover; }
 QToolButton#FormulaName::menu-indicator, QToolButton#FormulaFunctions::menu-indicator {
     image: none; width: 0; }
 QToolButton:checked { background: $selection; border-color: $primary; color: $selection_text; }
+/* the Presentation pages (a strip that wraps onto more rows): the open one underlined */
 QToolButton#WrappingTabButton {
-    background: $panel; border: 1px solid $border_strong; border-radius: 0;
-    padding: 5px 9px; font-weight: 700;
+    background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    padding: 7px 11px; margin: 0 2px; font-weight: 600; color: $text_dim;
 }
-QToolButton#WrappingTabButton:hover { background: $hover; color: $text; }
+QToolButton#WrappingTabButton:hover { background: transparent; color: $text; }
 QToolButton#WrappingTabButton:checked {
-    background: $raised; color: $text; border-bottom: 2px solid $primary;
+    background: transparent; color: $text; border-bottom: 2px solid $primary;
 }
 
 QFrame#DockContentCard {
@@ -645,9 +639,8 @@ font-size: 11px; }
 /* -- toolbar and status bar
 ---------------------------------------------------------------------- */
 QToolBar {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 $toolbar_top, stop:1
-    $toolbar_bottom);
-    border-bottom: 1px solid $border; spacing: 3px; padding: 5px 6px;
+    background: $panel; border: 0; border-bottom: 1px solid $border; spacing: 2px;
+    padding: 4px 10px;
 }
 QToolBar::separator { background: $border; width: 1px; margin: 4px 8px; }
 QStatusBar { background: $base; color: $text_dim; border-top: 1px solid $border; }
@@ -669,17 +662,36 @@ QSplitter::handle:hover { background: $primary; }
 )
 
 
+# each workspace's page tabs, underlined in that workspace's colour
+_PAGE_TAB_BARS = (
+    ("DatabaseWorkspaceTabBar", "rpg"),
+    ("PresentationWorkspaceTabBar", "ui"),
+    ("EnemyAIRuleTabBar", "rpg"),
+    ("EventsWorkspaceTabBar", "events"),
+)
+
+
 def _workspace_rules(palette):
     rules = []
     for name, colour in WORKSPACE_ACCENTS.items():
         r, g, b = (int(colour[i : i + 2], 16) for i in (1, 3, 5))
-        alpha = 0.22 if palette.dark else 0.16
+        alpha = 0.14 if palette.dark else 0.12
         rules.append(
             f'QToolButton[workspace="{name}"]:checked '
             f"{{ background: rgba({r}, {g}, {b}, {alpha}); "
-            f"border: 1px solid {colour}; color: {palette.text}; }}"
+            f"border: 1px solid rgba({r}, {g}, {b}, 0.55); color: {palette.text}; }}"
         )
         rules.append(f'QToolButton[workspace="{name}"]:hover:!checked {{ color: {colour}; }}')
+    for bar, name in _PAGE_TAB_BARS:
+        rules.append(
+            f"QTabBar#{bar}::tab:selected "
+            f"{{ border-bottom: 2px solid {WORKSPACE_ACCENTS[name]}; }}"
+        )
+    rules.append(  # the Presentation pages wrap onto more rows: buttons, not a QTabBar
+        "QToolButton#WrappingTabButton:checked, "
+        'QTabBar[presentationInnerTabs="true"]::tab:selected '
+        f"{{ border-bottom: 2px solid {WORKSPACE_ACCENTS['ui']}; }}"
+    )
     return "\n".join(rules)
 
 
@@ -703,17 +715,21 @@ QLineEdit#FormName {{ font-size: 18px; font-weight: 600; padding: 4px 6px; }}
 QLabel#FormTitle {{ font-size: 18px; font-weight: 600; padding: 2px 0; }}
 QFrame#FormSection, QFrame#FormSubSection {{ background: {p.panel}; border: 1px solid {p.border};
     border-radius: 8px; }}
-QToolButton#FormSectionTitle, QToolButton#FormSectionTitle:checked,
-QToolButton#FormSectionTitle:hover {{ border: none; background: transparent; font-weight: 700;
-    font-size: 14px; color: {p.primary_hi}; padding: 2px 0; }}
+QToolButton#FormSectionTitle, QToolButton#FormSectionTitle:checked {{ border: none;
+    background: transparent; font-weight: 600; font-size: 13px; color: {p.text};
+    padding: 2px 0; }}
+QToolButton#FormSectionTitle:hover {{ border: none; background: transparent;
+    color: {p.primary_hi}; }}
 QLabel#FormFieldLabel {{ color: {p.text_dim}; }}
 QFrame#FormCard {{ background: {p.list_alt}; border: 1px solid {p.border_strong};
     border-radius: 6px; }}
-QToolButton#FormChip {{ background: {p.selection}; color: {p.selection_text}; border: none;
-    border-radius: 10px; padding: 3px 8px; }}
-QToolButton#FormChip:hover {{ background: {p.danger_border}; }}
-QToolButton#FormAddChip {{ background: transparent; color: {p.primary_hi};
-    border: 1px dashed {p.border_strong}; border-radius: 10px; padding: 3px 8px; }}
+QToolButton#FormChip {{ background: {p.raised}; color: {p.text};
+    border: 1px solid {p.border_strong}; border-radius: 11px; padding: 2px 8px; }}
+QToolButton#FormChip:hover {{ background: {p.danger_bg}; border-color: {p.danger_border};
+    color: {p.danger_text}; }}
+QToolButton#FormAddChip {{ background: transparent; color: {p.text_dim};
+    border: 1px dashed {p.border_strong}; border-radius: 11px; padding: 2px 8px; }}
+QToolButton#FormAddChip:hover {{ color: {p.text}; border-color: {p.text_muted}; }}
 QPushButton#FormAddButton {{ color: {p.primary_hi}; }}
 QToolButton#FormCardMore {{ border: none; color: {p.text_muted}; font-size: 12px;
     padding: 1px; }}

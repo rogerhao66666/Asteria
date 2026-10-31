@@ -30,6 +30,7 @@ from .game_flow_overview_widget import GameFlowOverviewWidget
 from .hierarchy import build_reorder_entity_command
 from .i18n import english
 from .icons import icon as workspace_icon
+from .icons import switch_icon
 from .inspector import build_inspector_fields
 from .integrated_authoring import IntegratedAuthoringControllers
 from .model import EditorDocument
@@ -70,6 +71,7 @@ try:
         QMessageBox,
         QProxyStyle,
         QScrollArea,
+        QSizePolicy,
         QStyle,
         QTabBar,
         QTextEdit,
@@ -116,10 +118,10 @@ from .widgets import InspectorWidget, ProjectTreeWidget, asset_icon_name
 
 if QApplication is not None:
 
-    class _CenteredDockTabStyle(QProxyStyle):
+    class _DockTabStyle(QProxyStyle):  # the panels' tabs start at the left, as a strip
         def styleHint(self, hint, option=None, widget=None, returnData=None):
             if hint == QStyle.StyleHint.SH_TabBar_Alignment:
-                return int(Qt.AlignmentFlag.AlignHCenter)
+                return int(Qt.AlignmentFlag.AlignLeft)
             return super().styleHint(hint, option, widget, returnData)
 
 
@@ -454,7 +456,11 @@ class AsteriaEditorWindow(QMainWindow):
         )
         self.addDockWidget(Qt.BottomDockWidgetArea, self.problems_dock)
         self.tabifyDockWidget(bottom, self.problems_dock)
-        console.raise_()
+        # the Console starts closed (it is empty) and opens itself the first time it is written to
+        bottom.raise_()
+        console.hide()
+        self._console_waits = True
+        self.console.textChanged.connect(self._console_written)
         # Default dock sizes: wide enough that panel tables (Inspector Property / Value / Type) and
         # the
         # project tree read without clipping; the central workspace keeps the rest.
@@ -524,11 +530,11 @@ class AsteriaEditorWindow(QMainWindow):
             elif "Project" in titles:
                 bar.setObjectName("LeftSceneDockTabs")
             if bar.objectName() in {"BottomPanelDockTabs", "LeftSceneDockTabs"}:
-                if not isinstance(bar.style(), _CenteredDockTabStyle):
+                if not isinstance(bar.style(), _DockTabStyle):
                     # a QProxyStyle owns the style it wraps: give it its own base, made from
                     # the application style's name. Wrapping the shared application style
                     # deleted it with the window, and QApplication then crashed on exit.
-                    style = _CenteredDockTabStyle(QApplication.style().name())
+                    style = _DockTabStyle(QApplication.style().name())
                     style.setParent(self)
                     bar.setStyle(style)
             bar.setUsesScrollButtons(bar.objectName() != "LeftSceneDockTabs")
@@ -1104,7 +1110,7 @@ class AsteriaEditorWindow(QMainWindow):
         ):
             action.setCheckable(True)
             action.triggered.connect(lambda checked=False, m=mode: self.workspace.set_mode(m))
-            action.setIcon(workspace_icon(_WORKSPACE_ICON[mode]))
+            action.setIcon(switch_icon(_WORKSPACE_ICON[mode]))
             toolbar.addAction(action)
             toolbar.widgetForAction(action).setProperty("workspace", _WORKSPACE_ICON[mode])
         workspace_menu = self.view_menu.addMenu("Workspace")
@@ -1127,15 +1133,29 @@ class AsteriaEditorWindow(QMainWindow):
         # buttons
         # and took the central area's width, so it stays hidden.
         self.workspace.tabs.hide()
-        toolbar.addSeparator()
+        # workspaces on the left, the run controls apart on the right (a stretch between)
+        spacer = QWidget(toolbar)
+        spacer.setObjectName("ToolbarSpacer")
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
         self.play_action.setIcon(workspace_icon("play"))
         self.stop_action.setIcon(workspace_icon("stop"))
         self.reset_view_action.setIcon(workspace_icon("target"))
+        self.play_action.setToolTip("Run Project (F6)")
+        self.stop_action.setToolTip("Stop (Shift+F6)")
+        self.reset_view_action.setToolTip("Reset View (Ctrl+0)")
+        toolbar.addAction(self.reset_view_action)
+        toolbar.addSeparator()
         toolbar.addAction(self.play_action)
         toolbar.addAction(self.stop_action)
-        toolbar.addAction(self.reset_view_action)
         toolbar.widgetForAction(self.play_action).setObjectName("PlayButton")
-        toolbar.widgetForAction(self.stop_action).setObjectName("StopButton")
+        for action, name in (
+            (self.stop_action, "StopButton"),
+            (self.reset_view_action, "ResetViewButton"),
+        ):  # icon only: the tool tip names them
+            button = toolbar.widgetForAction(action)
+            button.setObjectName(name)
+            button.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
         self._refresh_actions()
 
@@ -2825,9 +2845,24 @@ class AsteriaEditorWindow(QMainWindow):
         self.viewport.update()
 
     def save_layout(self):
-        self.layout_settings.setValue("editor/geometry", self.saveGeometry())
-        self.layout_settings.setValue("editor/dock_state", self.saveState(self.LAYOUT_VERSION))
-        self.layout_settings.setValue("editor/dock_mode", self.workspace.mode.value)
+        settings = self.layout_settings
+        settings.setValue("editor/geometry", self.saveGeometry())
+        states = dict(getattr(self, "_workspace_dock_states", {}))
+        states[self.workspace.mode] = self.saveState(self.LAYOUT_VERSION)
+        for mode, state in states.items():  # each workspace's own arrangement of panels
+            settings.setValue(f"editor/dock_state/{WorkspaceMode(mode).value}", state)
+        settings.setValue("editor/dock_state", states[self.workspace.mode])
+        settings.setValue("editor/dock_mode", self.workspace.mode.value)
+
+    def _console_written(self):
+        """The Console opens itself the first time something is written to it."""
+        if not getattr(self, "_console_waits", False) or not self.console.toPlainText().strip():
+            return
+        self._console_waits = False
+        dock = self.findChild(QDockWidget, "ConsoleDock")
+        if dock is not None:
+            dock.show()
+            dock.raise_()
 
     LEFT_TITLES = {
         "Project": "ProjectSceneDock",
@@ -2859,8 +2894,10 @@ class AsteriaEditorWindow(QMainWindow):
 
     # Panels a workspace starts without (it keeps whatever the user opens or closes afterwards).
     # The database, battle, presentation, event and code editors use the whole window, the way RPG
-    # Maker's database does; the Scene workspace keeps the Inspector and the bottom panels.
+    # Maker's database does; the Scene workspace keeps the Project tree, the Inspector and the
+    # bottom panels.
     WORKSPACE_HIDDEN_DOCKS = (
+        "ProjectSceneDock",
         "InspectorDock",
         "AssetsDock",
         "ConsoleDock",
@@ -2938,18 +2975,26 @@ class AsteriaEditorWindow(QMainWindow):
         self.hide_stale_dock_tab_bars()
 
     def restore_layout(self, settings):
-        """Restore the dock layout and window geometry saved when the editor last closed."""
+        """Restore the window geometry and each workspace's dock layout saved when the editor
+        last closed; the workspace shown now gets its layout at once, the others when opened."""
         self.layout_settings = settings
         geometry = settings.value("editor/geometry")
-        state = settings.value("editor/dock_state")
-        saved_mode = settings.value("editor/dock_mode")
         if geometry is not None:
             self.restoreGeometry(geometry)
-        mode_matches = saved_mode == self.workspace.mode.value
-        restored = (
-            state is not None and mode_matches and self.restoreState(state, self.LAYOUT_VERSION)
-        )
-        if state is not None and not mode_matches:
+        states = self.__dict__.setdefault("_workspace_dock_states", {})
+        for mode in WorkspaceMode:
+            state = settings.value(f"editor/dock_state/{mode.value}")
+            if state is not None:
+                states[mode] = state
+        # a layout saved before each workspace kept its own: it is the one of the workspace it
+        # was saved in
+        state = settings.value("editor/dock_state")
+        saved_mode = settings.value("editor/dock_mode")
+        if state is not None and saved_mode in {mode.value for mode in WorkspaceMode}:
+            states.setdefault(WorkspaceMode(saved_mode), state)
+        own = states.get(self.workspace.mode)
+        restored = own is not None and self.restoreState(own, self.LAYOUT_VERSION)
+        if own is not None and not restored:
             self.restoreState(self._default_dock_state, self.LAYOUT_VERSION)
         self._layout_restored = bool(restored)
         # the left panel always opens on Project, whichever tab the last session ended on

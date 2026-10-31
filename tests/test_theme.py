@@ -33,41 +33,23 @@ def test_dock_tab_bar_fills_the_unoccupied_strip_with_the_window_base():
     assert expected in ASTERIA_DARK_QSS
 
 
-def test_bottom_panel_tabs_are_joined_square_tabs_like_the_sidebar():
+def test_panel_tabs_are_a_strip_of_names_with_the_open_one_underlined():
     rules = ASTERIA_DARK_QSS.split("}")
     for name in ("BottomPanelDockTabs", "LeftSceneDockTabs"):
         selector = f"QTabBar#{name}::tab"
-        rule = next(item for item in rules if selector in item)
-        styles = rule.split("{", 1)[1]
-        assert "border-top: 1px solid" in styles
-        assert "border-right: 1px solid" in styles
-        assert "border-bottom: 2px solid transparent" in styles
-        assert "border-left: 0" in styles
-        assert "border-radius: 0" in styles
-        assert "margin: 0;" in styles
-    assert "QTabBar#BottomPanelDockTabs::tab:first" in ASTERIA_DARK_QSS
+        styles = next(item for item in rules if selector in item).split("{", 1)[1]
+        assert "background: transparent" in styles
+        assert "border: 0; border-bottom: 2px solid transparent; border-radius: 0" in styles
+        assert "font-weight: 600" in styles
+        selected = next(item for item in rules if f"{selector}:selected" in item)
+        assert f"border-bottom: 2px solid {ASTERIA_DARK.primary}" in selected
 
 
-def test_scene_sidebar_tabs_use_a_compact_joined_style():
-    expected = (
-        f"QTabBar#LeftSceneDockTabs::tab {{\n"
-        f"    background: {ASTERIA_DARK.panel}; color: {ASTERIA_DARK.text_dim};\n"
-        f"    border-top: 1px solid {ASTERIA_DARK.border_strong};"
-    )
-    assert expected in ASTERIA_DARK_QSS
-    assert "border-bottom: 2px solid transparent; border-left: 0; border-radius: 0;" in (
-        ASTERIA_DARK_QSS
-    )
-    assert "min-width: 0; padding: 6px 6px; margin: 0;" in ASTERIA_DARK_QSS
-
-
-def test_workspace_and_dock_tab_labels_use_bold_weight():
-    assert "QToolButton[workspace] { font-weight: 700; }" in ASTERIA_DARK_QSS
-    for name in ("BottomPanelDockTabs", "LeftSceneDockTabs"):
-        selector = f"QTabBar#{name}::tab"
-        rules = ASTERIA_DARK_QSS.split("}")
-        rule = next(item for item in rules if selector in item)
-        assert "font-weight: 700" in rule
+def test_workspace_buttons_are_the_top_level():
+    # the workspace switch is the top level: larger type than the tabs inside a workspace
+    workspace = "QToolButton[workspace] { font-size: 13px; font-weight: 600; padding: 6px 11px; }"
+    assert workspace in ASTERIA_DARK_QSS
+    assert "QToolButton#PlayButton {" in ASTERIA_DARK_QSS
 
 
 def test_dock_content_cards_have_a_visible_square_frame():
@@ -81,29 +63,20 @@ def test_dock_content_cards_have_a_visible_square_frame():
     assert "QGroupBox#DebugActionsCard" in ASTERIA_DARK_QSS
 
 
-def test_database_presentation_and_event_tabs_use_cards_with_square_content_panes():
-    for name in ("Database", "Presentation", "Events"):
+def test_workspace_page_tabs_are_underlined_in_the_workspace_colour():
+    rules = ASTERIA_DARK_QSS.split("}")
+    for name, accent in (("Database", "rpg"), ("Presentation", "ui"), ("Events", "events")):
         tab_selector = f"QTabBar#{name}WorkspaceTabBar::tab"
-        selected_selector = f"{tab_selector}:selected"
+        tab_styles = next(rule for rule in rules if tab_selector in rule).split("{", 1)[1]
+        assert "background: transparent" in tab_styles
+        assert "border: 0; border-bottom: 2px solid transparent" in tab_styles
+        colour = WORKSPACE_ACCENTS[accent]
+        underline = f"{tab_selector}:selected {{ border-bottom: 2px solid {colour}; }}"
+        assert underline in ASTERIA_DARK_QSS
         pane_selector = f"QTabWidget#{name}WorkspaceTabs::pane"
-        assert tab_selector in ASTERIA_DARK_QSS
-        assert selected_selector in ASTERIA_DARK_QSS
-        assert pane_selector in ASTERIA_DARK_QSS
-        rules = ASTERIA_DARK_QSS.split("}")
-        tab_rule = next(rule for rule in rules if tab_selector in rule)
-        selected_rule = next(rule for rule in rules if selected_selector in rule)
-        pane_rule = next(rule for rule in rules if pane_selector in rule)
-        tab_styles = tab_rule.split("{", 1)[1]
-        selected_styles = selected_rule.split("{", 1)[1]
-        pane_styles = pane_rule.split("{", 1)[1]
-        assert "border-top: 1px solid" in tab_styles
-        assert "border-right: 1px solid" in tab_styles
-        assert "border-bottom: 1px solid" in tab_styles
-        assert "border-bottom: 1px solid" in selected_styles
-        assert "border-radius: 0" in tab_styles
-        assert "border-radius: 0" in pane_styles
-        assert "top: -1px" in pane_styles
-        assert "border-bottom: 1px solid" in pane_styles
+        pane_styles = next(rule for rule in rules if pane_selector in rule).split("{", 1)[1]
+        assert "border: 0; border-top: 1px solid" in pane_styles
+        assert "border-radius: 0" in pane_styles and "top: -1px" in pane_styles
 
 
 def test_workspace_overflow_arrows_have_visible_scoped_controls():

@@ -19,7 +19,7 @@ def app():
 
 
 def test_the_dock_tab_style_has_its_own_base_and_the_app_style_survives_the_window(app):
-    from asteria.editor.shell import AsteriaEditorWindow, _CenteredDockTabStyle
+    from asteria.editor.shell import AsteriaEditorWindow, _DockTabStyle
 
     window = AsteriaEditorWindow(None)
     bar = QTabBar(window)  # a dock tab bar as Qt makes it for the bottom panel
@@ -28,7 +28,7 @@ def test_the_dock_tab_style_has_its_own_base_and_the_app_style_survives_the_wind
     window.hide_stale_dock_tab_bars()
     shared = QApplication.style()
     # the proxies hang under the window (a style sheet may wrap what bar.style() returns)
-    proxies = [p for p in window.findChildren(QProxyStyle) if isinstance(p, _CenteredDockTabStyle)]
+    proxies = [p for p in window.findChildren(QProxyStyle) if isinstance(p, _DockTabStyle)]
     assert proxies, "no dock tab bar got the centred style"
     assert all(p.baseStyle() is not shared for p in proxies)
     name = shared.name()

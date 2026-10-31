@@ -32,6 +32,7 @@ def test_every_dock_appears_in_exactly_one_visible_tab_strip():
     try:
         window.resize(1280, 800)
         window.show()
+        window.console.setText("hello")  # the Console opens once something is written to it
         _settle(app)
         for _round in range(2):  # stays clean after a resize and after switching tabs
             groups = _visible_groups(window)
@@ -72,7 +73,7 @@ def test_bottom_panel_tabs_have_a_dedicated_tab_bar_identity():
         window.deleteLater()
 
 
-def test_bottom_panel_tabs_remain_centered_in_their_original_position():
+def test_bottom_panel_tabs_start_at_the_left_as_a_strip():
     from PySide6.QtWidgets import QApplication, QTabBar
 
     from asteria.editor.shell import AsteriaEditorWindow
@@ -92,8 +93,8 @@ def test_bottom_panel_tabs_remain_centered_in_their_original_position():
         )
         first = bar.tabRect(0)
         last = bar.tabRect(bar.count() - 1)
-        tab_center = (first.left() + last.right()) / 2
-        assert abs(tab_center - bar.width() / 2) <= 1
+        assert first.left() <= 4  # a strip of names from the left edge, not centred
+        assert first.left() < bar.width() - last.right()  # the spare room is on the right
     finally:
         window.close()
         window.deleteLater()
@@ -124,7 +125,7 @@ def test_scene_sidebar_tabs_have_a_dedicated_tab_bar_identity():
         window.deleteLater()
 
 
-def test_scene_sidebar_tabs_remain_centered_in_their_original_position():
+def test_scene_sidebar_tabs_start_at_the_left_as_a_strip():
     from PySide6.QtWidgets import QApplication, QTabBar
 
     from asteria.editor.shell import AsteriaEditorWindow
@@ -144,8 +145,8 @@ def test_scene_sidebar_tabs_remain_centered_in_their_original_position():
         )
         first = bar.tabRect(0)
         last = bar.tabRect(bar.count() - 1)
-        tab_center = (first.left() + last.right()) / 2
-        assert abs(tab_center - bar.width() / 2) <= 1
+        assert first.left() <= 4  # a strip of names from the left edge, not centred
+        assert first.left() < bar.width() - last.right()  # the spare room is on the right
     finally:
         window.close()
         window.deleteLater()
@@ -398,13 +399,12 @@ def test_non_scene_saved_layout_does_not_hide_scene_docks(tmp_path, saved_mode):
         assert not target.restore_layout(settings)
         target.show()
         _settle(app)
-        for name in (
+        for name in (  # (the Console starts closed while it is empty)
             "ProjectSceneDock",
             "TilePaletteDock",
             "LayersDock",
             "InspectorDock",
             "AssetsDock",
-            "ConsoleDock",
         ):
             dock = target.findChild(QDockWidget, name)
             assert dock is not None and not dock.isHidden(), name
@@ -429,18 +429,21 @@ def test_each_workspace_keeps_its_own_panels():
         _settle(app)
         inspector = window.findChild(QDockWidget, "InspectorDock")
         console = window.findChild(QDockWidget, "ConsoleDock")
-        assert (
-            inspector.isVisible() and console.isVisible()
-        )  # Scene keeps the Inspector and the bottom panels
+        project = window.findChild(QDockWidget, "ProjectSceneDock")
+        # Scene keeps the Project tree, the Inspector and the bottom panels; the Console
+        # starts closed while it is empty and opens itself when written to
+        assert inspector.isVisible() and project.isVisible() and not console.isVisible()
+        window.console.setText("Playing: Astral Gate")
+        _settle(app)
+        assert console.isVisible()
         window.workspace.set_mode(WorkspaceMode.RPG)
         _settle(app)
-        assert (
-            not inspector.isVisible() and not console.isVisible()
-        )  # the database uses the whole window
+        assert not inspector.isVisible() and not console.isVisible()
+        assert not project.isVisible()  # the database uses the whole window
         console.show()  # the user opens the console in the Database workspace...
         window.workspace.set_mode(WorkspaceMode.SCENE)
         _settle(app)
-        assert inspector.isVisible()
+        assert inspector.isVisible() and project.isVisible()
         window.workspace.set_mode(WorkspaceMode.RPG)
         _settle(app)
         assert console.isVisible() and not inspector.isVisible()  # ...and it stays open there
@@ -449,3 +452,44 @@ def test_each_workspace_keeps_its_own_panels():
     finally:
         window.close()
         window.deleteLater()
+
+
+def test_each_workspace_layout_is_kept_between_sessions(tmp_path):
+    from PySide6.QtCore import QSettings
+    from PySide6.QtWidgets import QApplication, QDockWidget
+
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.editor.workspace import WorkspaceMode
+
+    app = QApplication.instance() or QApplication([])
+    settings = QSettings(str(tmp_path / "layout.ini"), QSettings.IniFormat)
+    first = AsteriaEditorWindow()
+    first.restore_layout(settings)
+    first.show()
+    _settle(app)
+    first.workspace.set_mode(WorkspaceMode.RPG)
+    _settle(app)
+    first.findChild(QDockWidget, "ProblemsDock").show()  # opened in the Database workspace
+    _settle(app)
+    first.workspace.set_mode(WorkspaceMode.SCENE)
+    _settle(app)
+    first.findChild(QDockWidget, "InspectorDock").hide()  # closed in Scene
+    _settle(app)
+    first.close()  # saves every workspace's layout
+    _settle(app)
+    assert settings.value("editor/dock_state/rpg") is not None
+    second = AsteriaEditorWindow()
+    try:
+        assert second.restore_layout(settings)  # Scene, as it was left
+        second.show()
+        _settle(app)
+        assert not second.findChild(QDockWidget, "InspectorDock").isVisible()
+        assert second.findChild(QDockWidget, "ProjectSceneDock").isVisible()
+        second.workspace.set_mode(WorkspaceMode.RPG)
+        _settle(app)
+        assert second.findChild(QDockWidget, "ProblemsDock").isVisible()
+        assert not second.findChild(QDockWidget, "ProjectSceneDock").isVisible()
+    finally:
+        second.close()
+        second.deleteLater()
+        first.deleteLater()

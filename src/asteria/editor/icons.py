@@ -894,3 +894,23 @@ def icon(name, color=None):
     disabled = pixmap(name, 24, "#8a8f99", 2.0)
     result.addPixmap(disabled, QIcon.Disabled)
     return result
+
+
+@lru_cache(maxsize=64)
+def switch_icon(name):
+    """A QIcon for a checkable button: grey while off, in its colour while on or hovered.
+
+    The workspace buttons use it so only the workspace you are in shows its colour.
+    """
+    if name not in DRAWINGS:
+        return QIcon()
+    result = QIcon()
+    for size in (16, 20, 24, 32):
+        for ratio in (1.0, 2.0, 3.0):
+            grey = pixmap(name, size, ACCENTS["muted"], ratio)
+            colour = pixmap(name, size, None, ratio)
+            result.addPixmap(grey, QIcon.Normal, QIcon.Off)
+            result.addPixmap(colour, QIcon.Active, QIcon.Off)
+            result.addPixmap(colour, QIcon.Normal, QIcon.On)
+            result.addPixmap(colour, QIcon.Active, QIcon.On)
+    return result

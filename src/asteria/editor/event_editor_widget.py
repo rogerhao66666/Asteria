@@ -23,7 +23,7 @@ from .event_editing import describe_instruction
 
 OLD_EMPTY_HINT = "Select an Entity to edit events"
 EMPTY_HINT = (
-    "Pick a person or object in the Scene (or in the Project tree) to see and edit what "
+    "Pick a person or object in the Scene, or from the list below, to see and edit what "
     "happens when the player talks to it, touches it or enters the map."
 )
 
