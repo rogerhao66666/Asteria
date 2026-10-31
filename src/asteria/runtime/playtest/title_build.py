@@ -43,16 +43,17 @@ class TitleBuildMixin:
         subtitle = self.manifest.get("subtitle") or tr("title.subtitle", "Complex Reference RPG")
         text = c.tone("text", (245, 245, 250))
         c.text("subtitle", subtitle, self.width / 2, 180, size=36, color=text, center=True)
-        box = c.panel("options", (280, 250, 400, 150))
-        dx, dy = box[0] - 280, box[1] - 250
+        left = self.width // 2 - 200  # the menu box sits under the name, centred like it
+        box = c.panel("options", (left, 250, 400, 150))
+        dx, dy = box[0] - left, box[1] - 250
         if self._multiplayer_connected() or self._network_gameplay_frozen():
             server = tr("title.server_session", "N   Enter Server Session")
-            self.hotspot(self.text(server, 310 + dx, 282 + dy, size=25, color=text), key="n")
+            self.hotspot(self.text(server, left + 30 + dx, 282 + dy, size=25, color=text), key="n")
             reload = tr("title.server_save", "L   Reload Server Save")
-            self.hotspot(self.text(reload, 310 + dx, 330 + dy, size=25, color=text), key="l")
+            self.hotspot(self.text(reload, left + 30 + dx, 330 + dy, size=25, color=text), key="l")
             self.text(
                 tr("title.guest", "Guest: {player}", player=self.multiplayer_bridge.player_id),
-                310 + dx,
+                left + 30 + dx,
                 372 + dy,
                 size=16,
                 color=c.tone("muted", (170, 210, 240)),
@@ -61,10 +62,10 @@ class TitleBuildMixin:
             return
         size = c.size("options", 28)
         words = tr("title.new_game", "N   New Game")
-        rect = self.text(words, 330 + dx, 282 + dy, size=size, color=text)
+        rect = self.text(words, left + 50 + dx, 282 + dy, size=size, color=text)
         self.hotspot(rect.inflate(16, 10), key="n")  # a click is the key on the row
         words = tr("title.load_game", "L   Load Game")
-        rect = self.text(words, 330 + dx, 330 + dy, size=size, color=text)
+        rect = self.text(words, left + 50 + dx, 330 + dy, size=size, color=text)
         self.hotspot(rect.inflate(16, 10), key="l")
         from asteria.runtime.save_slots import SaveSlots
 
@@ -78,7 +79,7 @@ class TitleBuildMixin:
             tr("title.saves", "{count} save(s) found", count=used)
             if used
             else tr("title.no_saves", "No saves yet"),
-            330 + dx,
+            left + 50 + dx,
             372 + dy,
             size=18,
             color=c.tone("muted", (170, 210, 240)),
