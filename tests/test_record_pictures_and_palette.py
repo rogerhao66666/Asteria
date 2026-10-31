@@ -76,7 +76,9 @@ def test_the_tile_palette_wraps_a_wide_tileset_into_strips(monkeypatch):
     grid.resize(230, 400)
     grid.set_source(tileset, SimpleNamespace(frames=frames))
     assert grid._columns == 20 and grid._rows == 3
-    assert grid.zoom() == 2 and grid._cell_px() == (32, 32)
+    assert grid.zoom() == 1 and grid._cell_px() == (16, 16)  # true size until zoomed
+    grid.set_zoom(2)
+    assert grid._cell_px() == (32, 32)
     assert grid.per_strip() == 7  # 230 px / 32 px
     assert grid.strips() == 3  # 20 columns in strips of 7
     for col, row in ((0, 0), (6, 2), (7, 0), (13, 1), (19, 2)):
@@ -87,3 +89,30 @@ def test_the_tile_palette_wraps_a_wide_tileset_into_strips(monkeypatch):
     assert grid.minimumHeight() == 3 * (3 * 32 + grid.GAP) - grid.GAP
     grid.set_zoom(1)
     assert grid.per_strip() == 14 and grid.strips() == 2
+
+
+def test_the_tile_palette_drops_the_atlas_empty_rows_and_columns(monkeypatch):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.tile_palette_widget import TileGrid
+
+    QApplication.instance() or QApplication([])
+    # tiles in atlas columns 0, 1 and 5 and rows 0 and 3: a gap of columns and rows between
+    frames = [
+        SimpleNamespace(x=col * 16, y=row * 16, width=16, height=16)
+        for row in (0, 3)
+        for col in (0, 1, 5)
+    ]
+    tiles = {
+        index: SimpleNamespace(frame_index=index, collision=False, terrain=None, tags=())
+        for index in range(len(frames))
+    }
+    grid = TileGrid()
+    grid.resize(230, 200)
+    grid.set_source(
+        SimpleNamespace(tile_width=16, tile_height=16, tiles=tiles), SimpleNamespace(frames=frames)
+    )
+    assert (grid._columns, grid._rows) == (3, 2)  # packed, holes gone
+    assert sorted(grid._cells) == [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+    assert grid._frames[(2, 1)] == (5 * 16, 3 * 16, 16, 16)  # still the atlas picture
