@@ -1131,6 +1131,14 @@ class RecordForm(QScrollArea):
         if icon_box is not None:
             names.addSpacing(4)
             names.addLayout(icon_box)
+        picture = self.record_picture(self._title, 56) if self._title else None
+        if picture is not None:  # an actor's or enemy's own picture (record_pictures)
+            portrait = QLabel()
+            portrait.setObjectName("FormPortrait")
+            portrait.setFixedSize(64, 64)
+            portrait.setAlignment(Qt.AlignCenter)
+            portrait.setPixmap(picture)
+            row.addWidget(portrait, 0, Qt.AlignTop)
         row.addLayout(names, 1)
         self._layout.addWidget(card)
 
@@ -1350,6 +1358,14 @@ class RecordForm(QScrollArea):
         if key in self.field_choices:
             return [Choice(str(v), str(v)) for v, _icon in self.field_choices[key]()]
         return self.vocabulary.choices(source) if source else ()
+
+    def record_picture(self, record_id, size=56):
+        """The record's own picture (a battle portrait or sprite), or None."""
+        if self.document is None or not record_id:
+            return None
+        from .record_pictures import record_picture
+
+        return record_picture(self.document, str(record_id), size)
 
     def icon(self, icon_id):
         """A QIcon for an icon id (a project picture or ``forged:<kind>``), cached."""

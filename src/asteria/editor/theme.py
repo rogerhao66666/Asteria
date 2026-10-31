@@ -218,7 +218,7 @@ QTabBar#PresentationWorkspaceTabBar::tab,
 QTabBar#EventsWorkspaceTabBar::tab {
     background: transparent; color: $text_dim;
     border: 0; border-bottom: 2px solid transparent; border-radius: 0;
-    min-width: 0; padding: 7px 11px; margin: 0 2px; font-weight: 600;
+    min-width: 0; padding: 7px 11px; margin: 0 2px; font-size: 13px; font-weight: 600;
 }
 QTabBar#DatabaseWorkspaceTabBar::tab:selected,
 QTabBar#PresentationWorkspaceTabBar::tab:selected,
@@ -470,7 +470,7 @@ QToolButton:checked { background: $selection; border-color: $primary; color: $se
 /* the Presentation pages (a strip that wraps onto more rows): the open one underlined */
 QToolButton#WrappingTabButton {
     background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
-    padding: 7px 11px; margin: 0 2px; font-weight: 600; color: $text_dim;
+    padding: 7px 11px; margin: 0 2px; font-size: 13px; font-weight: 600; color: $text_dim;
 }
 QToolButton#WrappingTabButton:hover { background: transparent; color: $text; }
 QToolButton#WrappingTabButton:checked {
@@ -763,6 +763,8 @@ def _form_rules(p):
     """The record forms of every editor page: header card, sections, cards, chips, hints."""
     return f"""
 QFrame#FormHeader {{ background: {p.raised}; border: 1px solid {p.border}; border-radius: 8px; }}
+QLabel#FormPortrait {{ background: {p.input}; border: 1px solid {p.border_strong};
+    border-radius: 8px; }}
 QLineEdit#FormName {{ font-size: 18px; font-weight: 600; padding: 4px 6px; }}
 QLabel#FormTitle {{ font-size: 18px; font-weight: 600; padding: 2px 0; }}
 QFrame#FormSection, QFrame#FormSubSection {{ background: {p.panel}; border: 1px solid {p.border};

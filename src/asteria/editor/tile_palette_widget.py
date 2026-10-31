@@ -26,11 +26,15 @@ from .tile_palette import build_tile_palette, terrain_ids
 
 
 class TileGrid(QWidget):
-    """The tileset as a picture, laid out the way its atlas is: click a tile, or drag over a
-    block of tiles to paint with the whole block (a stamp)."""
+    """The tileset as a picture: click a tile, or drag over a block of tiles to paint with the
+    whole block (a stamp). Tiles are drawn ``zoom`` times their size so they can be told apart,
+    and a tileset wider than the panel is cut into strips laid under each other (the way RPG
+    Maker's palette wraps a tileset), each strip keeping its tiles side by side."""
 
     if Signal is not None:
         blockSelected = Signal(object)  # rows of tile ids
+
+    GAP = 6  # pixels between two strips
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -41,7 +45,8 @@ class TileGrid(QWidget):
         self._frames = {}  # (col, row) -> the tile's picture rect in the texture
         self._columns = self._rows = 0
         self._tile_size = (16, 16)
-        self._selection = None  # (c0, r0, c1, r1)
+        self._zoom = 2
+        self._selection = None  # (c0, r0, c1, r1), tileset cells
         self._drag = None
         self.setMinimumHeight(60)
 
@@ -76,21 +81,56 @@ class TileGrid(QWidget):
         self._fit()
         self.update()
 
+    def set_zoom(self, zoom):
+        """Draw tiles at ``zoom`` times their size (1-4)."""
+        self._zoom = max(1, min(4, int(zoom)))
+        self._fit()
+        self.update()
+
+    def zoom(self):
+        return self._zoom
+
     def _cell_px(self):
-        width = max(1, self.width())
-        return max(12, min(48, width // max(1, self._columns)))
+        """``(width, height)`` of a drawn tile."""
+        return self._tile_size[0] * self._zoom, self._tile_size[1] * self._zoom
+
+    def per_strip(self):
+        """How many tileset columns fit side by side in the panel."""
+        return max(1, self.width() // max(1, self._cell_px()[0]))
+
+    def strips(self):
+        return -(-self._columns // self.per_strip()) if self._columns else 0
+
+    def _strip_height(self):
+        return self._rows * self._cell_px()[1] + self.GAP
 
     def _fit(self):
-        self.setMinimumHeight(max(60, self._rows * self._cell_px()))
+        strips = self.strips()
+        height = strips * self._strip_height() - self.GAP if strips else 0
+        self.setMinimumHeight(max(60, height))
 
     def resizeEvent(self, event):  # noqa: N802 - Qt API
         super().resizeEvent(event)
         self._fit()
 
+    def rect_of(self, col, row):
+        """Where tileset cell ``(col, row)`` is drawn: ``(x, y, width, height)``."""
+        cw, ch = self._cell_px()
+        strip, shown_col = divmod(col, self.per_strip())
+        return shown_col * cw, strip * self._strip_height() + row * ch, cw, ch
+
     def _cell_at(self, pos):
-        size = self._cell_px()
-        col, row = int(pos.x()) // size, int(pos.y()) // size
-        if 0 <= col < self._columns and 0 <= row < self._rows:
+        cw, ch = self._cell_px()
+        strip_height = self._strip_height()
+        x, y = int(pos.x()), int(pos.y())
+        if x < 0 or y < 0:
+            return None
+        strip, offset = divmod(y, strip_height)
+        shown_col, row = x // cw, offset // ch
+        if shown_col >= self.per_strip() or row >= self._rows:
+            return None
+        col = strip * self.per_strip() + shown_col
+        if 0 <= col < self._columns:
             return col, row
         return None
 
@@ -127,6 +167,10 @@ class TileGrid(QWidget):
         if self._drag is None:
             return
         cell = self._cell_at(event.position()) or self._drag
+        per = self.per_strip()
+        if cell[0] // per != self._drag[0] // per:  # a block stays inside one strip
+            first = (self._drag[0] // per) * per
+            cell = (min(max(cell[0], first), first + per - 1, self._columns - 1), cell[1])
         self._selection = (*self._drag, *cell)
         self.update()
 
@@ -154,25 +198,31 @@ class TileGrid(QWidget):
 
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(28, 30, 38))
-        size = self._cell_px()
+        cw, ch = self._cell_px()
         for (col, row), _tile in self._cells.items():
-            target = QRect(col * size, row * size, size, size)
+            target = QRect(*self.rect_of(col, row))
             frame = self._frames.get((col, row))
             if self._image is not None and frame is not None:
                 painter.drawImage(target, self._image, QRect(*frame))
             else:
                 painter.fillRect(target.adjusted(1, 1, -1, -1), QColor(70, 76, 92))
         painter.setPen(QPen(QColor(255, 255, 255, 28), 1))
-        for col in range(self._columns + 1):
-            painter.drawLine(col * size, 0, col * size, self._rows * size)
-        for row in range(self._rows + 1):
-            painter.drawLine(0, row * size, self._columns * size, row * size)
+        per = self.per_strip()
+        for strip in range(self.strips()):
+            top = strip * self._strip_height()
+            columns = min(per, self._columns - strip * per)
+            width, height = columns * cw, self._rows * ch
+            for col in range(columns + 1):
+                painter.drawLine(col * cw, top, col * cw, top + height)
+            for row in range(self._rows + 1):
+                painter.drawLine(0, top + row * ch, width, top + row * ch)
         if self._selection is not None:
             c0, r0, c1, r1 = self._selection
             c0, c1 = sorted((c0, c1))
             r0, r1 = sorted((r0, r1))
+            x, y, _w, _h = self.rect_of(c0, r0)
             painter.setPen(QPen(QColor(255, 206, 96), 2))
-            painter.drawRect(c0 * size, r0 * size, (c1 - c0 + 1) * size, (r1 - r0 + 1) * size)
+            painter.drawRect(x, y, (c1 - c0 + 1) * cw, (r1 - r0 + 1) * ch)
         painter.end()
 
 
@@ -356,14 +406,23 @@ class TilePaletteWidget(QWidget):
         self.layer_label = QLabel("Layer: —")
         self.layer_label.setObjectName("MutedLabel")
         self.layer_label.setWordWrap(True)  # a narrow dock wraps a long layer name
+        layer_row = QHBoxLayout()  # the layer's name, and the tiles' size on screen
+        layer_row.addWidget(self.layer_label, 1)
+        layer_row.addWidget(QLabel("Zoom"))
+        self.zoom_spin = QSpinBox()
+        self.zoom_spin.setObjectName("TileZoomSpin")
+        self.zoom_spin.setRange(1, 4)
+        self.zoom_spin.setValue(2)
+        self.zoom_spin.setSuffix(" ×")
+        self.zoom_spin.setToolTip("How many times their size the tiles below are drawn")
+        layer_row.addWidget(self.zoom_spin)
         brush_row = QHBoxLayout()
-        brush_row.addWidget(self.layer_label, 1)
         brush_row.addWidget(QLabel("Brush"))
         self.brush_spin = QSpinBox()
         self.brush_spin.setObjectName("BrushSizeSpin")
         self.brush_spin.setRange(1, 9)
         self.brush_spin.setSuffix(" × tiles")
-        # the layer label beside it stretches: keep room for "9 × tiles" and the arrows
+        # keep room for "9 × tiles" and the arrows
         self.brush_spin.setMinimumWidth(
             self.brush_spin.fontMetrics().horizontalAdvance("9 × tiles") + 64
         )
@@ -372,18 +431,21 @@ class TilePaletteWidget(QWidget):
             "Drag over several tiles below to paint with the whole block."
         )
         brush_row.addWidget(self.brush_spin)
-        # right under the tool buttons: the brush and the tileset picture come first
-        layout.insertLayout(2, brush_row)
+        brush_row.addStretch(1)
+        # right under the tool buttons: the layer, the brush and the tileset picture come first
+        layout.insertLayout(2, layer_row)
+        layout.insertLayout(3, brush_row)
         self.tool_hint = QLabel(
             "B Paint · G Fill · R Rectangle · E Erase · S Select · right-click: pick from map"
         )
         self.tool_hint.setObjectName("MutedLabel")
         self.tool_hint.setWordWrap(True)
-        layout.insertWidget(3, self.tool_hint)
+        layout.insertWidget(4, self.tool_hint)
         self.tool_hint.hide()  # the keys are written on the tool strip's buttons
 
         self.grid = TileGrid()
-        layout.insertWidget(4, self.grid)
+        self.zoom_spin.valueChanged.connect(self.grid.set_zoom)
+        layout.insertWidget(5, self.grid)
 
         self.select_button.clicked.connect(lambda: self._set_mode("select"))
         self.paint_button.clicked.connect(lambda: self._set_mode("paint"))

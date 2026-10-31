@@ -1105,6 +1105,11 @@ class AdapterFamilyWidget(QWidget):
             item.setData(Qt.UserRole, key)
             icon_id = getattr(record, "icon_id", "")
             icon = icon_for(icon_id) if icon_for and icon_id else None
+            if icon is None:  # an actor's or enemy's own picture, when the project has one
+                from PySide6.QtGui import QIcon
+
+                picture = getattr(self.editor, "record_picture", lambda *_: None)(key, 22)
+                icon = QIcon(picture) if picture is not None else None
             if icon is not None:
                 item.setIcon(icon)
 
