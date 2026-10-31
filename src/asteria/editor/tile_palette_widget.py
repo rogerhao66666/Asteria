@@ -44,6 +44,7 @@ class TileGrid(QWidget):
         self._cells = {}  # (col, row) -> tile id
         self._frames = {}  # (col, row) -> the tile's picture rect in the texture
         self._columns = self._rows = 0
+        self._pages, self._pieces, self._col_place, self._col_at, self._lines = [], [], {}, {}, 0
         self._tile_size = (16, 16)
         self._zoom = 1
         self._selection = None  # (c0, r0, c1, r1), tileset cells
@@ -57,6 +58,8 @@ class TileGrid(QWidget):
         self._image = None
         if tileset is None:
             self._columns = self._rows = 0
+            self._pages, self._pieces, self._col_place, self._col_at = [], [], {}, {}
+            self._lines = 0
             self.updateGeometry()
             self.update()
             return
@@ -73,23 +76,88 @@ class TileGrid(QWidget):
             else:  # no picture known: tiles in id order, eight to a row
                 cell = (len(self._cells) % 8, len(self._cells) // 8)
             self._cells.setdefault(cell, item.tile_id)
-        self._compact()
         if texture_path is not None:
             image = QImage(str(texture_path))
             self._image = None if image.isNull() else image
+        self._compact()
         self._fit()
         self.update()
 
     def _compact(self):
-        """Drop the atlas's empty columns and rows, so the tiles sit together instead of
-        around holes; tiles that were side by side stay side by side."""
-        columns = sorted({c for c, _ in self._cells})
+        """Drop the atlas's empty rows, and read its empty columns as the gaps between the
+        pages the artist drew side by side (a terrain block, then the next): each page is laid
+        out whole where it fits, so a tree or a wall is not cut at the panel's edge."""
+        for cell in self._blank_cells():  # see-through tiles filling a whole row or column
+            self._cells.pop(cell, None)
+            self._frames.pop(cell, None)
         rows = sorted({r for _, r in self._cells})
-        col_at = {c: i for i, c in enumerate(columns)}
         row_at = {r: i for i, r in enumerate(rows)}
-        self._cells = {(col_at[c], row_at[r]): t for (c, r), t in self._cells.items()}
-        self._frames = {(col_at[c], row_at[r]): f for (c, r), f in self._frames.items()}
-        self._columns, self._rows = len(columns), len(rows)
+        self._cells = {(c, row_at[r]): t for (c, r), t in self._cells.items()}
+        self._frames = {(c, row_at[r]): f for (c, r), f in self._frames.items()}
+        self._rows = len(rows)
+        columns = sorted({c for c, _ in self._cells})
+        self._columns = (columns[-1] + 1) if columns else 0
+        self._pages = []  # (first column, last column) of each run of used columns
+        for column in columns:
+            if self._pages and self._pages[-1][1] == column - 1:
+                self._pages[-1] = (self._pages[-1][0], column)
+            else:
+                self._pages.append((column, column))
+        self._place()
+
+    def _blank_cells(self):
+        """The cells of the atlas's fully see-through columns and rows: a tileset often lists
+        every cell of its picture as a tile, the empty lanes between its pages included."""
+        if self._image is None or not self._frames:
+            return ()
+        try:
+            import numpy as np
+            from PySide6.QtGui import QImage
+        except ImportError:
+            return ()
+        image = self._image.convertToFormat(QImage.Format_ARGB32)
+        width, height = image.width(), image.height()
+        data = np.frombuffer(image.constBits(), dtype=np.uint8)
+        alpha = data.reshape(height, image.bytesPerLine())[:, : width * 4].reshape(
+            height, width, 4
+        )[:, :, 3]
+        tw, th = self._tile_size
+        columns = {c for c, _ in self._cells}
+        rows = {r for _, r in self._cells}
+
+        def blank(cells):
+            return all(
+                frame is None
+                or not alpha[frame[1] : frame[1] + th, frame[0] : frame[0] + tw].any()
+                for frame in (self._frames.get(cell) for cell in cells)
+            )
+
+        blank_columns = {c for c in columns if blank([(c, r) for r in rows])}
+        blank_rows = {r for r in rows if blank([(c, r) for c in columns])}
+        return [(c, r) for (c, r) in self._cells if c in blank_columns or r in blank_rows]
+
+    def _place(self):
+        """Lay the pages out in lines as wide as the panel: a page wider than the panel is cut
+        into pieces, a page that fits stays whole, pages share a line when they fit together
+        with a column between them."""
+        per = self.per_strip()
+        self._col_place = {}  # atlas column -> (line, shown column)
+        self._col_at = {}  # (line, shown column) -> atlas column
+        self._pieces = []  # (line, shown column, first atlas column, last atlas column)
+        line, x = 0, 0
+        for first, last in getattr(self, "_pages", ()):
+            column = first
+            while column <= last:
+                width = min(per, last - column + 1)
+                if x and x + width > per:  # no room on this line: the next one
+                    line, x = line + 1, 0
+                self._pieces.append((line, x, column, column + width - 1))
+                for offset in range(width):
+                    self._col_place[column + offset] = (line, x + offset)
+                    self._col_at[(line, x + offset)] = column + offset
+                x += width + 1  # a column between two pages on one line
+                column += width
+        self._lines = line + 1 if self._pieces else 0
 
     def set_zoom(self, zoom):
         """Draw tiles at ``zoom`` times their size (1-4)."""
@@ -109,14 +177,16 @@ class TileGrid(QWidget):
         return max(1, self.width() // max(1, self._cell_px()[0]))
 
     def strips(self):
-        return -(-self._columns // self.per_strip()) if self._columns else 0
+        """How many lines the pages take."""
+        return getattr(self, "_lines", 0)
 
     def _strip_height(self):
         return self._rows * self._cell_px()[1] + self.GAP
 
     def _fit(self):
-        strips = self.strips()
-        height = strips * self._strip_height() - self.GAP if strips else 0
+        self._place()
+        lines = self.strips()
+        height = lines * self._strip_height() - self.GAP if lines else 0
         self.setMinimumHeight(max(60, height))
 
     def resizeEvent(self, event):  # noqa: N802 - Qt API
@@ -126,23 +196,27 @@ class TileGrid(QWidget):
     def rect_of(self, col, row):
         """Where tileset cell ``(col, row)`` is drawn: ``(x, y, width, height)``."""
         cw, ch = self._cell_px()
-        strip, shown_col = divmod(col, self.per_strip())
-        return shown_col * cw, strip * self._strip_height() + row * ch, cw, ch
+        line, shown = self._col_place.get(col, (0, col))
+        return shown * cw, line * self._strip_height() + row * ch, cw, ch
+
+    def _piece_of(self, col):
+        """The piece (a page, or the part of one on a line) holding atlas column ``col``."""
+        for piece in self._pieces:
+            if piece[2] <= col <= piece[3]:
+                return piece
+        return None
 
     def _cell_at(self, pos):
         cw, ch = self._cell_px()
-        strip_height = self._strip_height()
         x, y = int(pos.x()), int(pos.y())
         if x < 0 or y < 0:
             return None
-        strip, offset = divmod(y, strip_height)
-        shown_col, row = x // cw, offset // ch
-        if shown_col >= self.per_strip() or row >= self._rows:
+        line, offset = divmod(y, self._strip_height())
+        shown, row = x // cw, offset // ch
+        col = self._col_at.get((line, shown))
+        if col is None or row >= self._rows:
             return None
-        col = strip * self.per_strip() + shown_col
-        if 0 <= col < self._columns:
-            return col, row
-        return None
+        return col, row
 
     def select_tile(self, tile_id, rows=None):
         """Highlight a picked tile (or the block ``rows`` when it is laid out that way)."""
@@ -177,10 +251,9 @@ class TileGrid(QWidget):
         if self._drag is None:
             return
         cell = self._cell_at(event.position()) or self._drag
-        per = self.per_strip()
-        if cell[0] // per != self._drag[0] // per:  # a block stays inside one strip
-            first = (self._drag[0] // per) * per
-            cell = (min(max(cell[0], first), first + per - 1, self._columns - 1), cell[1])
+        piece = self._piece_of(self._drag[0])
+        if piece is not None:  # a block stays inside the piece it started in
+            cell = (min(max(cell[0], piece[2]), piece[3]), cell[1])
         self._selection = (*self._drag, *cell)
         self.update()
 
@@ -211,6 +284,15 @@ class TileGrid(QWidget):
         palette = CURRENT["palette"]
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(palette.raised))
+        if not self._cells:  # nothing to paint with: say so instead of an empty box
+            from .i18n import translate
+
+            painter.setPen(QColor(palette.text_muted))
+            painter.drawText(
+                self.rect(), Qt.AlignCenter, translate("This scene has no tile map yet")
+            )
+            painter.end()
+            return
         cw, ch = self._cell_px()
         for (col, row), _tile in self._cells.items():
             target = QRect(*self.rect_of(col, row))
@@ -219,19 +301,19 @@ class TileGrid(QWidget):
                 painter.drawImage(target, self._image, QRect(*frame))
             else:
                 painter.fillRect(target.adjusted(1, 1, -1, -1), QColor(70, 76, 92))
-        per = self.per_strip()
-        for strip in range(self.strips()):
-            top = strip * self._strip_height()
-            columns = min(per, self._columns - strip * per)
-            width, height = columns * cw, self._rows * ch
-            painter.setPen(QPen(QColor(255, 255, 255, 28), 1))
-            for col in range(columns + 1):
-                painter.drawLine(col * cw, top, col * cw, top + height)
+        painter.setPen(QPen(QColor(255, 255, 255, 28), 1))
+        height = self._rows * ch
+        for line, shown, first, last in self._pieces:  # a faint grid over each piece
+            left, top = shown * cw, line * self._strip_height()
+            width = (last - first + 1) * cw
+            for col in range(last - first + 2):
+                painter.drawLine(left + col * cw, top, left + col * cw, top + height)
             for row in range(self._rows + 1):
-                painter.drawLine(0, top + row * ch, width, top + row * ch)
-            if strip:  # a rule through the gap above this strip
-                painter.setPen(QPen(QColor(palette.border_strong), 1))
-                painter.drawLine(0, top - self.GAP // 2, self.width(), top - self.GAP // 2)
+                painter.drawLine(left, top + row * ch, left + width, top + row * ch)
+        painter.setPen(QPen(QColor(palette.border_strong), 1))
+        for line in range(1, self.strips()):  # a rule through the gap above each line
+            y = line * self._strip_height() - self.GAP // 2
+            painter.drawLine(0, y, self.width(), y)
         if self._selection is not None:
             c0, r0, c1, r1 = self._selection
             c0, c1 = sorted((c0, c1))

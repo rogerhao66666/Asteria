@@ -91,28 +91,39 @@ def test_the_tile_palette_wraps_a_wide_tileset_into_strips(monkeypatch):
     assert grid.per_strip() == 14 and grid.strips() == 2
 
 
-def test_the_tile_palette_drops_the_atlas_empty_rows_and_columns(monkeypatch):
+def test_the_tile_palette_keeps_the_atlas_pages_whole(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtCore import QPointF
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor.tile_palette_widget import TileGrid
 
     QApplication.instance() or QApplication([])
-    # tiles in atlas columns 0, 1 and 5 and rows 0 and 3: a gap of columns and rows between
+    # two pages of 8 columns with two empty columns between, as a tileset is often drawn,
+    # then an empty row and a third page of 4 columns
     frames = [
         SimpleNamespace(x=col * 16, y=row * 16, width=16, height=16)
-        for row in (0, 3)
-        for col in (0, 1, 5)
+        for row in (0, 1, 3)
+        for col in (*range(8), *range(10, 18), *range(20, 24))
     ]
     tiles = {
         index: SimpleNamespace(frame_index=index, collision=False, terrain=None, tags=())
         for index in range(len(frames))
     }
     grid = TileGrid()
-    grid.resize(230, 200)
+    grid.resize(14 * 16, 200)  # 14 columns fit: a page of 8 stays whole, two do not fit together
     grid.set_source(
         SimpleNamespace(tile_width=16, tile_height=16, tiles=tiles), SimpleNamespace(frames=frames)
     )
-    assert (grid._columns, grid._rows) == (3, 2)  # packed, holes gone
-    assert sorted(grid._cells) == [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
-    assert grid._frames[(2, 1)] == (5 * 16, 3 * 16, 16, 16)  # still the atlas picture
+    assert grid._rows == 3  # the empty row is gone
+    assert grid._pages == [(0, 7), (10, 17), (20, 23)]
+    assert grid.strips() == 2  # page 1 alone; pages 2 and 3 share the next line (8 + 1 + 4)
+    assert grid.rect_of(10, 0)[:2] == (0, 3 * 16 + grid.GAP)
+    assert grid.rect_of(20, 0)[0] == 9 * 16  # a column between the two pages
+    assert grid._frames[(20, 2)] == (20 * 16, 3 * 16, 16, 16)  # still the atlas picture
+    for col in (0, 7, 10, 17, 20, 23):
+        x, y, w, h = grid.rect_of(col, 2)
+        assert grid._cell_at(QPointF(x + w / 2, y + h / 2)) == (col, 2)
+    grid.resize(4 * 16, 200)  # narrower than a page: the page is cut into pieces of 4
+    grid._fit()  # (a hidden widget gets no resize event; the window's palette does)
+    assert grid.strips() == 2 + 2 + 1 and grid.rect_of(4, 0)[:2] == (0, grid._strip_height())
