@@ -12,6 +12,7 @@ from asteria.runtime import (
 from .collision_overlay import build_collision_cells, build_combat_boxes
 from .commands import CommandTransaction
 from .editing import build_set_component_field_command
+from .entity_kinds import kind_of
 from .entity_render import (
     build_camera_frames,
     build_entity_sprite_draws,
@@ -37,7 +38,7 @@ from .tile_palette import STROKE_MODES, TileToolState
 from .viewport import ViewportCamera, pick_entity, scene_markers, selected_scene
 
 try:
-    from PySide6.QtCore import QEvent, QPointF, Qt, QTimer, Signal
+    from PySide6.QtCore import QEvent, QPointF, QRectF, Qt, QTimer, Signal
     from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF
     from PySide6.QtWidgets import QWidget
 except ImportError:
@@ -521,6 +522,34 @@ class SceneViewportWidget(QWidget):
             return True
         return super().event(event)
 
+    def _paint_name_pill(self, painter, marker, tint):
+        """The entity's name in a pill of its kind's colour beside its marker: the same colour
+        the project tree and the Inspector give it, so what it is reads at a glance."""
+        metrics = painter.fontMetrics()
+        text = marker.entity.name
+        width = metrics.horizontalAdvance(text) + 14
+        height = metrics.height() + 4
+        x = marker.screen_x + marker.radius + 5
+        y = marker.screen_y - height / 2
+        # names of entities standing together step down instead of writing over each other
+        pill = QRectF(x, y, width, height)
+        for _ in range(8):
+            if not any(pill.intersects(other) for other in self._pill_rects):
+                break
+            pill.translate(0, height + 2)
+        self._pill_rects.append(pill)
+        x, y = pill.x(), pill.y()
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(QPen(QColor(255, 255, 255), 1.5) if marker.selected else Qt.NoPen)
+        painter.setBrush(QBrush(QColor(tint.red(), tint.green(), tint.blue(), 235)))
+        painter.drawRoundedRect(QRectF(x, y, width, height), height / 2, height / 2)
+        painter.setPen(QPen(QColor(20, 21, 26), 1))
+        painter.drawText(
+            QRectF(x + 7, y, width - 14, height), Qt.AlignVCenter | Qt.AlignLeft, text
+        )
+        painter.restore()
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(32, 34, 38))
@@ -617,6 +646,7 @@ class SceneViewportWidget(QWidget):
         painter.drawLine(0, int(self.camera.pan_y), self.width(), int(self.camera.pan_y))
 
         markers = self.markers()
+        self._pill_rects = []
         for m in markers:
             renderer = m.entity.try_get(SpriteRenderer2D)
             has_sprite = (
@@ -627,14 +657,15 @@ class SceneViewportWidget(QWidget):
             )
             if has_sprite and not m.selected:
                 continue
+            tint = QColor(kind_of(m.entity).colour)
             if m.selected:
-                painter.setPen(QPen(QColor(255, 196, 64), 2))
-                painter.setBrush(QBrush(QColor(255, 196, 64, 80)))
+                painter.setPen(QPen(QColor(255, 255, 255), 2))
+                painter.setBrush(QBrush(QColor(tint.red(), tint.green(), tint.blue(), 150)))
             else:
-                painter.setPen(QPen(QColor(190, 196, 210), 1))
-                painter.setBrush(QBrush(QColor(120, 132, 160, 90)))
+                painter.setPen(QPen(tint, 1.5))
+                painter.setBrush(QBrush(QColor(tint.red(), tint.green(), tint.blue(), 90)))
             painter.drawEllipse(QPointF(m.screen_x, m.screen_y), m.radius, m.radius)
-            painter.drawText(int(m.screen_x + m.radius + 3), int(m.screen_y - 3), m.entity.name)
+            self._paint_name_pill(painter, m, tint)
 
         if self._box_start is not None and self._box_end is not None:
             x1, y1 = self._box_start.x(), self._box_start.y()

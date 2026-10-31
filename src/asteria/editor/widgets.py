@@ -6,6 +6,7 @@ try:
         QAbstractItemView,
         QCheckBox,
         QComboBox,
+        QHBoxLayout,
         QLabel,
         QLineEdit,
         QPushButton,
@@ -130,6 +131,7 @@ class ProjectTreeWidget(QWidget):
             if project is None:
                 return
 
+            from .entity_kinds import kind_of
             from .icons import icon
 
             folder_icons = {"Scenes": "scene", "Prefabs": "prefab", "Assets": "folder"}
@@ -150,7 +152,11 @@ class ProjectTreeWidget(QWidget):
                     name = asset_icon_name(getattr(value, "source_path", ""))
                 elif kind is None and name is None:
                     name = "prefab"
-                if name:
+                if kind == "entity":  # its kind's icon and colour, the same as on the map
+                    shape = kind_of(value)
+                    tree_item.setIcon(0, icon(shape.icon, shape.colour))
+                    tree_item.setToolTip(0, translate(shape.label))
+                elif name:
                     tree_item.setIcon(0, icon(name))
                 if kind is not None:
                     tree_item.setData(0, Qt.UserRole, (kind, value))
@@ -251,6 +257,10 @@ class InspectorWidget(QWidget):
         self._field_models = {}
         self.title = QLabel("Nothing selected")
         self.title.setObjectName("SectionLabel")
+        # an entity's kind (camera, trigger, prop...) in the colour it has on the map
+        self.kind_badge = QLabel("")
+        self.kind_badge.setObjectName("KindBadge")
+        self.kind_badge.hide()
         self.error = QLabel("")
         self.error.setObjectName("ErrorLabel")
         self.error.setWordWrap(True)
@@ -260,7 +270,11 @@ class InspectorWidget(QWidget):
         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.empty_state = self._empty_state()
         layout = QVBoxLayout(self)
-        layout.addWidget(self.title)
+        head = QHBoxLayout()
+        head.setSpacing(8)
+        head.addWidget(self.title, 1)
+        head.addWidget(self.kind_badge, 0)
+        layout.addLayout(head)
         layout.addWidget(self.error)
         layout.addWidget(self.scroll, 1)
         layout.addWidget(self.empty_state, 1)
@@ -295,6 +309,18 @@ class InspectorWidget(QWidget):
         self.empty_state.setVisible(empty)
         self.scroll.setVisible(not empty)
         self.title.setVisible(not empty)
+        self.kind_badge.hide()  # shown again by show_entity
+
+    def _show_kind(self, entity):
+        from .entity_kinds import kind_of
+        from .i18n import translate
+
+        shape = kind_of(entity)
+        self.kind_badge.setText(translate(shape.label))
+        self.kind_badge.setProperty("entityKind", shape.kind)
+        self.kind_badge.style().unpolish(self.kind_badge)
+        self.kind_badge.style().polish(self.kind_badge)
+        self.kind_badge.show()
 
     def _page(self):
         page = QWidget()
@@ -352,6 +378,7 @@ class InspectorWidget(QWidget):
 
         self._set_empty(False)
         self.title.setText(entity.name or "Entity")
+        self._show_kind(entity)
         self.error.setText("")
         page, column = self._page()
         head = Section("Entity", compact=True)

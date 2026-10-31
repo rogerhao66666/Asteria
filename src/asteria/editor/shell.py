@@ -34,6 +34,7 @@ from .icons import switch_icon
 from .inspector import build_inspector_fields
 from .integrated_authoring import IntegratedAuthoringControllers
 from .model import EditorDocument
+from .panel_switch import PANELS, PanelSwitch
 from .playmode import PlayModeError, create_play_session
 from .playtest_profiles import PlaytestProfileLibrary
 from .project_workspace import ProjectWorkspaceController
@@ -54,11 +55,12 @@ from .structure import (
     build_remove_entity_command,
     build_rename_command,
 )
+from .tool_strip import ToolStrip
 from .workspace import EditorWorkspace, WorkspaceMode
 
 try:
     from PySide6.QtCore import QSize, Qt, QTimer
-    from PySide6.QtGui import QAction, QKeySequence
+    from PySide6.QtGui import QAction, QKeySequence, QShortcut
     from PySide6.QtWidgets import (
         QApplication,
         QDockWidget,
@@ -385,6 +387,14 @@ class AsteriaEditorWindow(QMainWindow):
         self.tile_layers.moveRequested.connect(self._move_tile_layer)
         self.tile_layers.visibilityChanged.connect(self._set_tile_layer_visible)
         self.tile_layers.collisionChanged.connect(self._set_tile_layer_collision)
+        # the left panels' keys (P / T / L) and the tools over the map; the panels' switch is
+        # built with their title bars below
+        self.panel_shortcuts = []
+        for name, _drawing, key, _words in PANELS:
+            shortcut = QShortcut(QKeySequence(key), self)
+            shortcut.activated.connect(lambda n=name: self.show_left_panel(n))
+            self.panel_shortcuts.append(shortcut)
+        self.tool_strip = ToolStrip(self.viewport, self.tile_palette)
 
         self.event_editor.bindingRequested.connect(self._event_add_binding)
         self.event_editor.bindingChanged.connect(self._event_binding_changed)
@@ -486,6 +496,15 @@ class AsteriaEditorWindow(QMainWindow):
             self.problems_dock: ("problems", "problems"),
         }.items():
             decorate_dock(dock, icon_name, accent)
+        # the left panels' switch: coloured squares (P / T / L) in each panel's title bar, in
+        # place of its icon
+        self.panel_switches = []
+        for dock in (left, palette_dock, layers_dock):
+            bar = dock.titleBarWidget()
+            switch = PanelSwitch(self, bar)
+            bar.icon_label.hide()
+            bar.layout().insertWidget(1, switch)
+            self.panel_switches.append(switch)
         for dock in self.findChildren(QDockWidget):
             dock.dockLocationChanged.connect(self._schedule_dock_tab_cleanup)
             dock.topLevelChanged.connect(self._schedule_dock_tab_cleanup)
@@ -529,6 +548,13 @@ class AsteriaEditorWindow(QMainWindow):
                 bar.setObjectName("BottomPanelDockTabs")
             elif "Project" in titles:
                 bar.setObjectName("LeftSceneDockTabs")
+            if bar.objectName() == "LeftSceneDockTabs":
+                # the panel switch above the panels is the strip; Qt's bar stays, as tall as
+                # nothing, so the docks keep their tab group
+                bar.setMaximumHeight(0)
+                if not bar.property("_switch_synced"):
+                    bar.setProperty("_switch_synced", True)
+                    bar.currentChanged.connect(lambda _index: self._sync_panel_switches())
             if bar.objectName() in {"BottomPanelDockTabs", "LeftSceneDockTabs"}:
                 if not isinstance(bar.style(), _DockTabStyle):
                     # a QProxyStyle owns the style it wraps: give it its own base, made from
@@ -788,6 +814,8 @@ class AsteriaEditorWindow(QMainWindow):
         ):
             if action is not None:
                 action.setChecked(current == candidate)
+        for shortcut in getattr(self, "panel_shortcuts", ()):  # P / T / L: Scene's keys
+            shortcut.setEnabled(current == WorkspaceMode.SCENE)
         self._switch_workspace_docks(current)
         # rebuilt only when something changed since it was last shown: switching back and
         # forth between Game Data and Battle no longer rebuilds every page each time
@@ -2891,6 +2919,22 @@ class AsteriaEditorWindow(QMainWindow):
         for index in range(bar.count()):
             if self.LEFT_TITLES.get(english(bar.tabText(index))) == str(name):
                 bar.setCurrentIndex(index)
+        self._sync_panel_switches()
+
+    def show_left_panel(self, name):
+        """Open one of the left panels (Project, Tiles, Layers) by its dock's object name: the
+        panel switch's buttons and the P / T / L keys."""
+        dock = self.findChild(QDockWidget, str(name))
+        if dock is None:
+            return
+        dock.show()
+        dock.raise_()
+        self.show_left_tab(name)
+
+    def _sync_panel_switches(self):
+        current = self.current_left_tab()
+        for switch in getattr(self, "panel_switches", ()):
+            switch.sync(current)
 
     # Panels a workspace starts without (it keeps whatever the user opens or closes afterwards).
     # The database, battle, presentation, event and code editors use the whole window, the way RPG

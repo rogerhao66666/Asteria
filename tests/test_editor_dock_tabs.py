@@ -125,7 +125,7 @@ def test_scene_sidebar_tabs_have_a_dedicated_tab_bar_identity():
         window.deleteLater()
 
 
-def test_scene_sidebar_tabs_start_at_the_left_as_a_strip():
+def test_scene_sidebar_tab_bar_hides_behind_the_panel_switch():
     from PySide6.QtWidgets import QApplication, QTabBar
 
     from asteria.editor.shell import AsteriaEditorWindow
@@ -143,10 +143,14 @@ def test_scene_sidebar_tabs_start_at_the_left_as_a_strip():
             and bar.isVisible()
             and "Project" in [bar.tabText(i) for i in range(bar.count())]
         )
-        first = bar.tabRect(0)
-        last = bar.tabRect(bar.count() - 1)
-        assert first.left() <= 4  # a strip of names from the left edge, not centred
-        assert first.left() < bar.width() - last.right()  # the spare room is on the right
+        assert bar.height() == 0  # Qt's strip stays for the tab group, the switch shows
+        assert len(window.panel_switches) == 3  # one row at the top of each left panel
+        window.show_left_panel("LayersDock")
+        _settle(app)
+        assert window.current_left_tab() == "LayersDock"
+        for switch in window.panel_switches:
+            checked = [n for n, b in switch.buttons.items() if b.isChecked()]
+            assert checked == ["LayersDock"]
     finally:
         window.close()
         window.deleteLater()

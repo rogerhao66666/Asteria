@@ -1,10 +1,17 @@
+"""The Layers panel: the map's layers as rows, each with an eye that shows or hides it, a
+swatch of the layer's colour and its name (a "collision" mark on a collision layer), the way
+LDtk lists layers; below, the controls to add, remove and reorder them and the collision switch.
+"""
+
 try:
-    from PySide6.QtCore import Qt, Signal
+    from PySide6.QtCore import QSize, Qt, Signal
+    from PySide6.QtGui import QColor, QPainter
     from PySide6.QtWidgets import (
         QCheckBox,
         QHBoxLayout,
         QLabel,
         QListWidget,
+        QListWidgetItem,
         QSizePolicy,
         QToolButton,
         QVBoxLayout,
@@ -14,6 +21,33 @@ except ImportError:
     QWidget = object
     Signal = None
     Qt = None
+
+# a layer's colour, by its place in the map (a collision layer is always the coral)
+LAYER_COLOURS = ("#8a6a4a", "#86bf58", "#dca545", "#9a84e0", "#4aa9dc", "#55aeb8", "#e8894a")
+COLLISION_COLOUR = "#e06a5c"
+
+
+def layer_colour(index, collision=False):
+    if collision:
+        return COLLISION_COLOUR
+    return LAYER_COLOURS[index % len(LAYER_COLOURS)]
+
+
+class _Swatch(QWidget):
+    """A small rounded bar of one colour."""
+
+    def __init__(self, colour, parent=None):
+        super().__init__(parent)
+        self.colour = QColor(colour)
+        self.setFixedSize(4, 15)
+
+    def paintEvent(self, event):  # noqa: N802 - Qt API
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(self.colour)
+        painter.drawRoundedRect(self.rect(), 2, 2)
+        painter.end()
 
 
 class TileLayersWidget(QWidget):
@@ -30,6 +64,7 @@ class TileLayersWidget(QWidget):
             raise RuntimeError("PySide6 is required")
         super().__init__(parent)
         self._tilemap = None
+        self.eye_buttons = []
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
@@ -74,9 +109,7 @@ class TileLayersWidget(QWidget):
         group_layout.addWidget(controls)
         layout.addWidget(layer_group, 1)
 
-        self.visible = QCheckBox("Visible")
         self.collision = QCheckBox("Collision layer")
-        layout.addWidget(self.visible)
         layout.addWidget(self.collision)
 
         self.list.currentRowChanged.connect(self._on_selected)
@@ -84,7 +117,6 @@ class TileLayersWidget(QWidget):
         self.remove_button.clicked.connect(self._on_remove)
         self.up_button.clicked.connect(lambda: self._on_move(-1))
         self.down_button.clicked.connect(lambda: self._on_move(1))
-        self.visible.toggled.connect(self._on_visible)
         self.collision.toggled.connect(self._on_collision)
 
     def _layers(self):
@@ -99,9 +131,6 @@ class TileLayersWidget(QWidget):
         layer = self.current_layer()
         if layer is None:
             return
-        self.visible.blockSignals(True)
-        self.visible.setChecked(layer.visible)
-        self.visible.blockSignals(False)
         self.collision.blockSignals(True)
         self.collision.setChecked(layer.collision_enabled)
         self.collision.blockSignals(False)
@@ -117,29 +146,51 @@ class TileLayersWidget(QWidget):
         if layer is not None:
             self.moveRequested.emit(layer, self.list.currentRow() + delta)
 
-    def _on_visible(self, value):
-        layer = self.current_layer()
-        if layer is not None:
-            self.visibilityChanged.emit(layer, bool(value))
-
     def _on_collision(self, value):
         layer = self.current_layer()
         if layer is not None:
             self.collisionChanged.emit(layer, bool(value))
 
+    def _row(self, index, layer):
+        """One layer's row: the eye, the colour, the name and a mark on a collision layer."""
+        from .icons import icon
+
+        row = QWidget()
+        box = QHBoxLayout(row)
+        box.setContentsMargins(4, 0, 6, 0)
+        box.setSpacing(7)
+        eye = QToolButton(row)
+        eye.setObjectName("LayerEyeButton")
+        eye.setCheckable(True)
+        eye.setChecked(bool(layer.visible))
+        eye.setIconSize(QSize(15, 15))
+        eye.setIcon(icon("eye" if layer.visible else "eye_off"))
+        eye.setToolTip("Show or hide this layer")
+        eye.toggled.connect(lambda on, item=layer: self.visibilityChanged.emit(item, bool(on)))
+        box.addWidget(eye)
+        box.addWidget(_Swatch(layer_colour(index, layer.collision_enabled), row))
+        name = QLabel(layer.name, row)
+        name.setObjectName("LayerName")
+        name.setProperty("off", not layer.visible)
+        box.addWidget(name, 1)
+        if layer.collision_enabled:
+            badge = QLabel("collision", row)
+            badge.setObjectName("LayerBadge")
+            box.addWidget(badge)
+        self.eye_buttons.append(eye)
+        return row
+
     def set_tilemap(self, tilemap, active_layer=None):
         self._tilemap = tilemap
         self.list.clear()
+        self.eye_buttons = []
         if tilemap is None:
             return
-        for layer in tilemap.layers:
-            badges = []
-            if not layer.visible:
-                badges.append("hidden")
-            if layer.collision_enabled:
-                badges.append("collision")
-            suffix = f"  · {' / '.join(badges)}" if badges else ""
-            self.list.addItem(layer.name + suffix)
+        for index, layer in enumerate(tilemap.layers):
+            item = QListWidgetItem()
+            item.setSizeHint(QSize(0, 28))
+            self.list.addItem(item)
+            self.list.setItemWidget(item, self._row(index, layer))
         if tilemap.layers:
             index = tilemap.layers.index(active_layer) if active_layer in tilemap.layers else 0
             self.list.setCurrentRow(index)

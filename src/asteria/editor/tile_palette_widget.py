@@ -237,6 +237,19 @@ class TilePaletteWidget(QWidget):
             button.setCheckable(True)
             brushes.addWidget(button)
         layout.addLayout(brushes)
+        # the tool strip over the map shows these tools; the buttons keep the mode (and the
+        # tests' handle)
+        for button in (
+            self.select_button,
+            self.paint_button,
+            self.erase_button,
+            self.fill_button,
+            self.rect_button,
+            self.terrain_button,
+            self.region_button,
+            self.doodad_button,
+        ):
+            button.hide()
 
         self.terrain_combo = QComboBox()
         self.terrain_combo.setToolTip("Terrains: tiles with a terrain id and mask:<n> tags")
@@ -367,6 +380,7 @@ class TilePaletteWidget(QWidget):
         self.tool_hint.setObjectName("MutedLabel")
         self.tool_hint.setWordWrap(True)
         layout.insertWidget(3, self.tool_hint)
+        self.tool_hint.hide()  # the keys are written on the tool strip's buttons
 
         self.grid = TileGrid()
         layout.insertWidget(4, self.grid)

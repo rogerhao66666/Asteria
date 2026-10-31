@@ -168,6 +168,83 @@ def _target(p, c):  # reset view
         p.drawLine(QPointF(*a), QPointF(*b))
 
 
+def _camera(p, c):  # a camera body with its lens
+    _rounded(p, 3, 7, 15, 11, 2.5, c)
+    p.drawPath(_poly([(18, 10.5), (21.5, 8.5), (21.5, 16.5), (18, 14.5)]))
+    p.setBrush(QColor(c))
+    p.drawEllipse(QPointF(10.5, 12.5), 2.2, 2.2)
+
+
+def _eye(p, c):
+    p.setBrush(Qt.NoBrush)
+    p.drawPath(_poly([(2.5, 12), (6, 7.5), (12, 5.5), (18, 7.5), (21.5, 12)]))
+    p.drawPath(_poly([(2.5, 12), (6, 16.5), (12, 18.5), (18, 16.5), (21.5, 12)]))
+    p.setBrush(QColor(c))
+    p.drawEllipse(QPointF(12, 12), 2.8, 2.8)
+
+
+def _eye_off(p, c):  # the eye, struck through
+    p.setBrush(Qt.NoBrush)
+    p.drawPath(_poly([(2.5, 12), (6, 7.5), (12, 5.5), (18, 7.5), (21.5, 12)]))
+    p.drawPath(_poly([(2.5, 12), (6, 16.5), (12, 18.5), (18, 16.5), (21.5, 12)]))
+    p.drawLine(QPointF(4.5, 20), QPointF(19.5, 4.5))
+
+
+def _tool_select(p, c):  # an arrow cursor
+    p.setBrush(_fill(c, 120))
+    p.drawPath(
+        _poly(
+            [(5, 3), (19, 11), (12.5, 12.5), (16.5, 20), (14, 21), (10.5, 13.5), (5, 18), (5, 3)]
+        )
+    )
+
+
+def _tool_paint(p, c):  # a brush
+    p.setBrush(_fill(c, 120))
+    p.drawPath(_poly([(14, 3), (21, 10), (12, 19), (5, 12), (14, 3)]))
+    p.drawPath(_poly([(5, 12), (12, 19), (3, 21), (5, 12)]))
+
+
+def _tool_fill(p, c):  # a paint bucket and a drop
+    p.setBrush(_fill(c, 120))
+    p.drawPath(_poly([(10, 3), (19, 12), (11, 20), (2.5, 11.5), (10, 3)]))
+    p.setBrush(QColor(c))
+    p.drawPath(_poly([(20, 14), (22.5, 18.5), (20, 21), (17.5, 18.5), (20, 14)]))
+
+
+def _tool_rect(p, c):  # a dashed rectangle
+    pen = _pen(c)
+    pen.setStyle(Qt.DashLine)
+    p.setPen(pen)
+    p.setBrush(_fill(c, 60))
+    p.drawRoundedRect(QRectF(3.5, 5, 17, 14), 2, 2)
+    p.setPen(_pen(c))
+
+
+def _tool_erase(p, c):  # an eraser
+    p.setBrush(_fill(c, 120))
+    p.drawPath(_poly([(14, 3.5), (21, 10.5), (12, 19.5), (7, 19.5), (3.5, 16), (14, 3.5)]))
+    p.drawLine(QPointF(8.5, 9), QPointF(15.5, 16))
+    p.drawLine(QPointF(9, 21), QPointF(21, 21))
+
+
+def _terrain(p, c):  # two hills
+    p.setBrush(_fill(c))
+    p.drawPath(_poly([(2.5, 19), (9, 8), (13, 14.5), (15.5, 11), (21.5, 19), (2.5, 19)]))
+
+
+def _region(p, c):  # a dashed area with a pin
+    pen = _pen(c)
+    pen.setStyle(Qt.DashLine)
+    p.setPen(pen)
+    p.setBrush(_fill(c, 50))
+    p.drawRoundedRect(QRectF(3, 8, 18, 12), 2, 2)
+    p.setPen(_pen(c))
+    p.setBrush(QColor(c))
+    p.drawEllipse(QPointF(12, 8), 3, 3)
+    p.drawLine(QPointF(12, 11), QPointF(12, 15))
+
+
 def _folder(p, c):
     p.setBrush(_fill(c))
     p.drawPath(
@@ -800,6 +877,16 @@ DRAWINGS = {
     "net": _net,
     "interact": _hand_icon,
     "assets": _folder,
+    "camera": _camera,
+    "eye": _eye,
+    "eye_off": _eye_off,
+    "tool_select": _tool_select,
+    "tool_paint": _tool_paint,
+    "tool_fill": _tool_fill,
+    "tool_rect": _tool_rect,
+    "tool_erase": _tool_erase,
+    "terrain": _terrain,
+    "region": _region,
 }
 
 # default colour per icon (an accent name or a hex colour)
@@ -859,6 +946,16 @@ DEFAULT_COLOR = {
     "net": "#9a84e0",
     "interact": "#dca545",
     "warning": "warning",
+    "camera": "ui",
+    "eye": "muted",
+    "eye_off": "muted",
+    "tool_select": "muted",
+    "tool_paint": "muted",
+    "tool_fill": "muted",
+    "tool_rect": "muted",
+    "tool_erase": "muted",
+    "terrain": "#86bf58",
+    "region": "#55aeb8",
 }
 
 

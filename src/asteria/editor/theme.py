@@ -600,6 +600,23 @@ QToolButton#LayerControlButton {
 QToolButton#LayerControlButton:hover { background: $hover; }
 QToolButton#LayerControlButton:pressed { background: $panel; }
 
+/* -- the Scene workspace: panel switch, tool strip, layers (LDtk-like) ------------------------ */
+QToolButton#PanelSwitchButton { border: 2px solid transparent; border-radius: 8px; padding: 0; }
+QToolButton#PanelSwitchButton:checked { border: 2px solid $text; }
+QFrame#ToolStrip { background: $raised; border: 1px solid $border_strong; border-radius: 8px; }
+QFrame#ToolStripRule { background: $border_strong; margin: 2px 4px; }
+QToolButton#ToolStripButton { border: 0; border-radius: 6px; padding: 0; background: transparent; }
+QToolButton#ToolStripButton:hover { background: $hover; }
+QToolButton#ToolStripButton:checked { background: #46b896; }
+QToolButton#LayerEyeButton {
+    border: 0; border-radius: 4px; padding: 2px; background: transparent;
+}
+QToolButton#LayerEyeButton:hover { background: $hover; }
+QLabel#LayerName { color: $text; background: transparent; }
+QLabel#LayerName[off="true"] { color: $text_muted; }
+QLabel#LayerBadge { color: $text_muted; font-size: 10px; background: transparent; }
+QLabel#KindBadge { border-radius: 9px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+
 /* -- labels
 -------------------------------------------------------------------------------------- */
 QLabel { color: $text; qproperty-indent: 0; }  /* padding counts as a frame: no hidden indent */
@@ -704,7 +721,42 @@ def _see_through(colour, alpha=0.86):
 def build_qss(palette):
     tokens = {f.name: getattr(palette, f.name) for f in fields(palette)}
     tokens["help_bg"] = _see_through(palette.raised)
-    return _TEMPLATE.substitute(tokens) + _workspace_rules(palette) + _form_rules(palette) + "\n"
+    return (
+        _TEMPLATE.substitute(tokens)
+        + _workspace_rules(palette)
+        + _form_rules(palette)
+        + _scene_rules(palette)
+        + "\n"
+    )
+
+
+def _scene_rules(palette):
+    """The Scene workspace's colours: each panel switch button in its panel's colour, an
+    entity's kind badge in its kind's colour (the same one the map and the tree use)."""
+    from .entity_kinds import KINDS
+    from .icons import ACCENTS
+
+    rules = []
+    for name, accent in (
+        ("ProjectSceneDock", "project"),
+        ("TilePaletteDock", "tiles"),
+        ("LayersDock", "layers"),
+    ):
+        colour = ACCENTS[accent]
+        r, g, b = (int(colour[i : i + 2], 16) for i in (1, 3, 5))
+        lit = [min(255, int(v + (255 - v) * 0.18)) for v in (r, g, b)]
+        hover = f"#{lit[0]:02x}{lit[1]:02x}{lit[2]:02x}"
+        rules.append(f'QToolButton#PanelSwitchButton[panel="{name}"] {{ background: {colour}; }}')
+        rules.append(
+            f'QToolButton#PanelSwitchButton[panel="{name}"]:hover {{ background: {hover}; }}'
+        )
+    for kind in KINDS.values():
+        r, g, b = (int(kind.colour[i : i + 2], 16) for i in (1, 3, 5))
+        rules.append(
+            f'QLabel#KindBadge[entityKind="{kind.kind}"] {{ background: rgba({r}, {g}, {b}, 0.18);'
+            f" color: {kind.colour}; border: 1px solid rgba({r}, {g}, {b}, 0.55); }}"
+        )
+    return "\n".join(rules)
 
 
 def _form_rules(p):
