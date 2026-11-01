@@ -44,7 +44,7 @@ class RuntimeProcess:
         if self._log_file is not None:
             self._log_file.close()
             self._log_file = None
-        for path in (self.snapshot_path, self.save_snapshot_path):
+        for path in (self.snapshot_path, self.save_snapshot_path, self.log_path):
             if path is None:
                 continue
             try:

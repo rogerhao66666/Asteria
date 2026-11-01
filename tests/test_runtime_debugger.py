@@ -212,6 +212,9 @@ def test_launcher_passes_debug_spawn_and_captures_the_log(tmp_path):
     assert int(args[args.index("--debug-port") + 1]) == process.debug_port and process.debug_token
     assert "hello from the game" in process.read_log()
     process.stop()
+    # stopping the game removes its temp files, the log included
+    assert not process.snapshot_path.exists()
+    assert not process.log_path.exists()
 
 
 def test_shell_play_from_selection_restart_and_debugger_attach(monkeypatch, tmp_path):
