@@ -151,11 +151,11 @@ def test_a_fighter_picks_its_battlefield_sheet_and_icon_from_lists(monkeypatch):
         assert "battle.combatant.hero_02" in listed and "battle.combatant.astral_tyrant" in listed
         assert not any(str(item).startswith("battle.fx.") for item in listed)  # no effects
         asked = []
-        monkeypatch.setattr(  # Browse… opens the picture dialog (stubbed: it returns a pick)
+        monkeypatch.setattr(  # a double-click opens the picture dialog (stubbed: a pick)
             "asteria.editor.sprite_sheet_picker.pick_sprite_sheet",
             lambda document, parent=None, battle=False: asked.append(battle) or "battle.fx.fire",
         )
-        sheet.browse.click()
+        sheet.preview.doubleClicked.emit()
         assert asked == [True] and sheet.text() == "battle.fx.fire"  # any kind, if chosen
         sheet.setText("battle.combatant.hero_02")
         assert data["battlefield_asset_id"] == "battle.combatant.hero_02"

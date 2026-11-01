@@ -326,11 +326,14 @@ QTreeWidget, QListWidget, QTableWidget, QTreeView, QListView, QTableView {
 QTreeWidget#ProjectHierarchyTree, QListWidget#AssetList {
     border: 0; border-radius: 0;
 }
-QTreeWidget::item, QListWidget::item {
+QTreeWidget::item { min-height: 22px; padding: 1px 4px; }
+QListWidget::item {
     min-height: 22px; padding: 1px 4px; border-left: 3px solid transparent;
 }
-/* the chosen line: a quiet band with a stripe of the accent at its left */
-QTreeWidget::item:selected, QListWidget::item:selected {
+/* the chosen line: a quiet band (in a list, with a stripe of the accent at its left; a tree's
+   indented rows read better without it) */
+QTreeWidget::item:selected { background: $selection; color: $selection_text; }
+QListWidget::item:selected {
     background: $selection; color: $selection_text; border-left: 3px solid $primary;
 }
 QTableWidget::item:selected { background: $selection; color: $selection_text; }

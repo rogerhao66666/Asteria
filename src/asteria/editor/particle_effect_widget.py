@@ -297,10 +297,12 @@ class ParticleEffectWidget(QWidget):
                 widget = QComboBox()
                 widget.addItems(CHOICES[f.name])
                 widget.currentTextChanged.connect(self._edited)
-            elif f.name == "image":
-                widget = QComboBox()
-                widget.setEditable(True)
-                widget.currentTextChanged.connect(self._edited)
+            elif f.name == "image":  # an icon picture, chosen as a record's icon is
+                from .game_systems_widget import _IconPicker
+                from .image_tools import IconLibrary
+
+                widget = _IconPicker(IconLibrary(self.document))
+                widget.changed.connect(self._edited)
             elif f.name.startswith("color"):
                 widget = _ColorButton(value)
                 widget.changed = self._edited
@@ -329,22 +331,12 @@ class ParticleEffectWidget(QWidget):
     def _set_inputs(self, definition):
         self._loading = True
         try:
-            from .image_tools import icon_choices
-
-            image = self.inputs["image"]
-            image.clear()
-            image.addItem("")
-            for choice, icon in icon_choices(self.document):
-                if icon is not None:
-                    image.addItem(icon, choice)
-                else:
-                    image.addItem(choice)
             for name, widget in self.inputs.items():
                 value = getattr(definition, name)
                 if name in CHOICES:
                     widget.setCurrentText(value)
                 elif name == "image":
-                    widget.setCurrentText(value)
+                    widget.setText(value)
                 elif name.startswith("color"):
                     widget.rgba = tuple(value)
                     widget._show()
@@ -362,7 +354,9 @@ class ParticleEffectWidget(QWidget):
         """The definition the form shows now (raises ValueError when a value is not accepted)."""
         values = {}
         for name, widget in self.inputs.items():
-            if name in CHOICES or name == "image":
+            if name == "image":
+                values[name] = widget.text()
+            elif name in CHOICES:
                 values[name] = widget.currentText().strip()
             elif name.startswith("color"):
                 values[name] = widget.rgba

@@ -3661,9 +3661,29 @@
   "Search pages, records, scenes and entities…": "搜尋頁面、資料、場景與物件…",
   "Open another scene": "開啟其他場景",
   "Page": "頁面",
-  "Battle Presentation": "戰鬥演出"
+  "Battle Presentation": "戰鬥演出",
+  "The picture in menus and lists. Double-click it to choose another; Browse… in there brings in your own file.": "在選單與清單中顯示的圖片。雙擊它換一張；裡面的「瀏覽…」可匯入自己的檔案。",
+  "Choose an Icon": "選擇圖示",
+  "Choose a Portrait": "選擇肖像",
+  "Pictures by kind: the folder each one sits in": "依種類分類的圖片：依所在資料夾",
+  "Filter by name…": "依名稱篩選…",
+  "A picture file from anywhere, copied into the project": "任何位置的圖檔，會複製進專案",
+  "Open Folder": "開啟資料夾",
+  "Leave the field without a picture": "這個欄位不放圖片",
+  "Double-click to choose an icon": "雙擊選擇圖示",
+  "Double-click to choose a portrait": "雙擊選擇肖像",
+  "Double-click to choose the battlefield picture": "雙擊選擇戰場圖",
+  "Built-in": "內建",
+  "Choose What Is Worn": "選擇穿戴的物件",
+  "Choose a Layer Picture": "選擇圖層圖片",
+  "Double-click to choose a picture": "雙擊選擇圖片",
+  "Use Sheet as VFX": "把圖集當作特效"
  },
  "patterns": [
+  [
+   "(?P<f>\\S+) in the project: pictures put there show up here",
+   "專案中的 {f}：放進去的圖片會出現在這裡"
+  ],
   [
    "(?P<a>\\d+) shown · (?P<b>\\d+) in the project",
    "顯示 {a} 筆 · 專案共 {b} 筆"

@@ -389,8 +389,12 @@ class VFXEditorWidget(QWidget):
         if not options:
             self.status.setText("No other sprite sheets in the project")
             return
-        asset_id, ok = QInputDialog.getItem(
-            self, "Use Sheet as VFX", "Sprite sheet:", options, 0, False
+        from .sprite_sheet_picker import PicturePickerDialog
+
+        # the effect pictures not marked yet, as pictures; any other one comes by Browse…
+        dialog = PicturePickerDialog(
+            self.api.document, self, battle=True, category_id="effects", sheet_ids=options
         )
-        if ok:
-            self.use_sheet(asset_id)
+        dialog.setWindowTitle("Use Sheet as VFX")
+        if dialog.exec() and dialog.chosen:
+            self.use_sheet(dialog.chosen)

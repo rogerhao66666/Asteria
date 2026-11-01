@@ -237,14 +237,23 @@ class FlowLayout(QLayout):
 
     def _place(self, rect, apply):
         x, y, line = rect.x(), rect.y(), 0
+        row = []  # (item, its place, its size) on the line being filled
+
+        def lay(row, line):  # each centred in its line: a short one level with tall ones
+            for item, point, hint in row:
+                item.setGeometry(QRect(point + QPoint(0, (line - hint.height()) // 2), hint))
+
         for item in self._items:
             hint = item.sizeHint()
             if x + hint.width() > rect.right() and line > 0:
-                x, y, line = rect.x(), y + line + self.spacing(), 0
-            if apply:
-                item.setGeometry(QRect(QPoint(x, y), hint))
+                if apply:
+                    lay(row, line)
+                x, y, line, row = rect.x(), y + line + self.spacing(), 0, []
+            row.append((item, QPoint(x, y), hint))
             x += hint.width() + self.spacing()
             line = max(line, hint.height())
+        if apply:
+            lay(row, line)
         return y + line - rect.y()
 
 
@@ -1088,25 +1097,24 @@ class RecordForm(QScrollArea):
         row = QHBoxLayout(card)
         row.setContentsMargins(12, 10, 12, 10)
         row.setSpacing(12)
+        picks = self._picture_pick(data)  # what a double-click on the picture changes
+        icon_picker = None
         if "icon_id" in data and self.icon_library is not None:
+            # the record's icon, chosen as a character's picture is: a framed square, a
+            # double-click opens the pictures by kind (items, weapons, skills… alike)
             from .game_systems_widget import _IconPicker
 
-            picker = _IconPicker(self.icon_library)
-            picker.preview.setFixedSize(56, 56)
-            picker.setText(str(data.get("icon_id") or ""))
-            picker.changed.connect(lambda p=picker: self._set(data, "icon_id", p.text()))
-            picker.setToolTip(HELP["icon_id"])
-            icon_box = QHBoxLayout()
-            label = _small("Icon")
-            label.setWordWrap(False)
-            # level with the list beside it (centred on the picture and Browse…, the word
-            # floated between them)
-            picker.combo.ensurePolished()
-            label.setFixedHeight(picker.combo.sizeHint().height())
-            icon_box.addWidget(label, 0, Qt.AlignTop)
-            icon_box.addWidget(picker, 1)
-        else:
-            icon_box = None
+            icon_picker = _IconPicker(self.icon_library)
+            icon_picker.preview.setFixedSize(64, 64)
+            icon_picker.setText(str(data.get("icon_id") or ""))
+            icon_picker.changed.connect(lambda p=icon_picker: self._set(data, "icon_id", p.text()))
+            icon_picker.preview.setToolTip(HELP["icon_id"])
+        icon_box = None
+        if icon_picker is not None and picks is not None:  # its own picture first: the icon
+            icon_box = QHBoxLayout()  # beside the name, small
+            icon_picker.preview.setFixedSize(36, 36)
+            icon_box.addWidget(_small("Icon"), 0, Qt.AlignVCenter)
+            icon_box.addWidget(icon_picker, 1)
         names = QVBoxLayout()
         name_key = next((k for k in NAME_KEYS if isinstance(data.get(k), str)), None)
         if name_key is not None:
@@ -1135,8 +1143,10 @@ class RecordForm(QScrollArea):
             names.addSpacing(4)
             names.addLayout(icon_box)
         picture = self.record_picture(self._title, 56) if self._title else None
-        picks = self._picture_pick(data)  # what a double-click on the picture changes
-        if picture is not None or picks is not None:
+        if icon_picker is not None and icon_box is None:  # the icon is the record's picture
+            icon_picker.name.hide()
+            row.addWidget(icon_picker, 0, Qt.AlignTop)
+        elif picture is not None or picks is not None:
             # the record's own picture (record_pictures); a double-click on the box picks
             # another sprite sheet: an actor's look on the map, a fighter's battlefield sheet
             from .sprite_sheet_picker import PictureBox

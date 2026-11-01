@@ -125,7 +125,10 @@ class CharacterCompositionWidget(QWidget):
         # attachments
         self.attachments = QListWidget()
         self.attachment_id = QLineEdit()
-        self.item_sheet = QComboBox()
+        from .sprite_sheet_picker import SheetPickerBox
+
+        # what is worn: a weapon, a hat… (Items & Gear); another kind comes by Browse…
+        self.item_sheet = SheetPickerBox(self.api.document, "items", title="Choose What Is Worn")
         self.attach_socket = QComboBox()
         self.item_frame = QSpinBox()
         self.item_frame.setRange(0, 999)
@@ -158,7 +161,9 @@ class CharacterCompositionWidget(QWidget):
 
         # layers
         self.layers = QListWidget()
-        self.layer_sheet = QComboBox()
+        self.layer_sheet = SheetPickerBox(  # the same frame of another character's sheet
+            self.api.document, "characters", title="Choose a Layer Picture"
+        )
         self.layer_component = QLineEdit("foreground")
         self.layer_z = _spin(-10, 10, 1.0)
         self.layer_clips = QLineEdit()
@@ -247,13 +252,12 @@ class CharacterCompositionWidget(QWidget):
         current = select or self.sheet
         ids = list(self.api.sheets())
         self.sheet_list.blockSignals(True)
-        from .animation_editor_widget import fill_sheet_combo, fill_sheet_list
+        from .animation_editor_widget import fill_sheet_list
 
         project = self.api.document.project
         fill_sheet_list(self.sheet_list, ids, project)
         self.sheet_list.blockSignals(False)
-        for combo in (self.item_sheet, self.layer_sheet):
-            fill_sheet_combo(combo, ids, project)
+        self.layer_sheet.set_choices(ids)
         self._pixmaps.clear()
         if ids:
             self.sheet_list.setCurrentRow(ids.index(current) if current in ids else 0)
@@ -441,7 +445,7 @@ class CharacterCompositionWidget(QWidget):
             lambda: self.api.attach(
                 self.sheet,
                 attachment_id,
-                self.item_sheet.currentData() or self.item_sheet.currentText(),
+                self.item_sheet.value(),
                 self.attach_socket.currentText(),
                 rotation=self.attach_rotation.value(),
                 scale=self.attach_scale.value(),
@@ -457,7 +461,7 @@ class CharacterCompositionWidget(QWidget):
         return self._try(
             lambda: self.api.add_layer(
                 self.sheet,
-                self.layer_sheet.currentData() or self.layer_sheet.currentText(),
+                self.layer_sheet.value(),
                 component_id=self.layer_component.text().strip() or "foreground",
                 z=self.layer_z.value(),
                 clips=clips,

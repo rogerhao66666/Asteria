@@ -202,3 +202,76 @@ def import_battle_picture(document, path, name=None):
         )
     )
     return asset_id
+
+
+# a map clip each battle clip is taken from (heroes stand on the right facing left)
+_BATTLE_FROM_MAP = {"idle": ("idle_left", "idle_down"), "move": ("walk_left", "walk_down")}
+
+
+def battle_sheet_for(document, sheet_id):
+    """A battle sprite for the map sheet ``sheet_id`` (any character the map can show): the
+    sheet itself when it is a battle sprite already, else one made of the same picture, frame
+    size and frames - its idle and move clips from the sheet's own (made once, then reused).
+    Returns the battle asset id."""
+    from asteria.assets.canonical import AssetSource, CanonicalAsset
+
+    project = document.project
+    known = {asset.asset_id: asset for asset in project.assets.snapshot()}
+    if sheet_id in known and "combatant" in getattr(known[sheet_id], "tags", ()):
+        return sheet_id
+    views = document.asset_views
+    sheet = views.sprite_sheet(sheet_id)
+    texture = project.assets.get(str(sheet.texture.asset_id))
+    if texture is None or not sheet.frames:
+        raise PictureImportError(f"{sheet_id}: no picture to draw in battle")
+    first = sheet.frames[0]
+    size = (int(first.width), int(first.height))
+    source = str(texture.source_path)
+    for asset in known.values():  # made before: the same picture, the same frames
+        meta = dict(getattr(asset, "metadata", ()) or ())
+        same_frame = tuple(meta.get("frame_size", ())) == size
+        if asset.source.uri == source and same_frame and "combatant" in asset.tags:
+            return asset.asset_id
+    width, height = _image_size(_project_dir(document) / source)
+    columns = max(1, width // size[0])
+    grid = all(  # the battle sheet cuts the picture in a grid: the map frames must be it
+        (f.x, f.y) == ((i % columns) * size[0], (i // columns) * size[1])
+        for i, f in enumerate(sheet.frames)
+    )
+    clips = {}
+    record = project.assets.get(sheet_id)
+    from .picture_categories import paired_clip_set_id
+
+    clip_set_id = paired_clip_set_id(project, record) if record is not None else None
+    clip_set = views.clip_set(clip_set_id) if clip_set_id else None
+    for battle_clip, names in _BATTLE_FROM_MAP.items():
+        clip = next((clip_set.clips[n] for n in names if clip_set and n in clip_set.clips), None)
+        if clip is None or not grid:
+            continue
+        clips[battle_clip] = {
+            "frames": [k.frame_index for k in clip.keyframes],
+            "frame_duration": float(clip.keyframes[0].duration) if clip.keyframes else 0.2,
+            "loop": True,
+        }
+    clips.setdefault("idle", {"frames": [0], "frame_duration": 0.2, "loop": True})
+    from .sprite_sheet_picker import sheet_label
+
+    base = f"battle.combatant.{_key(sheet_label(document, sheet_id))}"
+    asset_id, counter = base, 2
+    while asset_id in known:
+        asset_id, counter = f"{base}_{counter}", counter + 1
+    project.assets.register(
+        CanonicalAsset(
+            asset_id,
+            "sprite_sheet",
+            AssetSource(source, "project", (("license", "as the map picture's"),)),
+            tags=frozenset({"battle", "combatant"}),
+            metadata=(
+                ("clips", clips),
+                ("frame_size", size),
+                ("pivot", (float(first.pivot_x), float(first.pivot_y))),
+                ("category", "characters"),
+            ),
+        )
+    )
+    return asset_id

@@ -16,9 +16,10 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
-from .dialogue_command_dialog import _PortraitPicker, fit_pixmap
+from .dialogue_command_dialog import _PortraitPicker
 from .image_tools import SpriteSheetLibrary
 from .picture_categories import sheets_by_category
 from .record_pictures import framed, sprite_sheet_pixmap
@@ -35,30 +36,33 @@ class BattleCharacterLibrary(SpriteSheetLibrary):
 
 
 class SpriteSheetPicker(_PortraitPicker):
-    """A fighter's battlefield picture: the project's battle characters, and Browse… for the
-    picture dialog (every kind, the project's folders, a file from anywhere)."""
+    """A fighter's battlefield picture: a double-click opens the picture dialog (the battle
+    characters, the project's folder, a file from anywhere)."""
 
     def __init__(self, document, parent=None):
         super().__init__(BattleCharacterLibrary(document), parent)
-        self.browse.setToolTip("All the pictures by kind, or a picture file of your own")
-        self.combo.setToolTip("The project's battle pictures of characters and monsters")
+        self.preview.setToolTip("Double-click to choose the battlefield picture")
         self._shown()
 
-    def _browse(self):
+    def choose(self):
         chosen = pick_sprite_sheet(self.library.document, self, battle=True)
         if chosen:
             self._fill()
             self.setText(chosen)
+
+    def _show_name(self):
+        self.name.setText(sheet_label(self.library.document, self.text()) or "None")
+        self.name.setToolTip(self.text())
 
     def _shown(self, *_):
         document = getattr(self.library, "document", None)
         pixmap = sprite_sheet_pixmap(document, self.text()) if document is not None else None
         side = self.PREVIEW - 8
         if pixmap is None or pixmap.isNull():
-            self.preview.setPixmap(QPixmap())
-            self.preview.setText("None")
-        else:
-            self.preview.setPixmap(fit_pixmap(pixmap, side, side))
+            self.preview.setPixmap(None)
+        else:  # without its empty margin, sharp pixels: as the record's own picture
+            self.preview.setPixmap(framed(pixmap, side))
+        self._show_name()
         self.changed.emit()
 
 
@@ -124,7 +128,8 @@ class PictureBox(QLabel):
     def setPixmap(self, pixmap):  # noqa: N802 - Qt API
         if pixmap is None or pixmap.isNull():
             super().setPixmap(QPixmap())
-            self.setText("None")
+            # an empty frame says "None"; a small one beside its name (which says it) stays bare
+            self.setText("None" if self.width() >= 56 else "")
         else:
             self.setText("")
             super().setPixmap(pixmap)
@@ -139,7 +144,16 @@ class PicturePickerDialog(QDialog):
     alike), as a grid of first frames; the pictures waiting in the project's folders for
     that kind; a picture file from anywhere (Browse…); and the folder to drop pictures in."""
 
-    def __init__(self, document, parent=None, *, battle=False, category_id="characters"):
+    def __init__(
+        self,
+        document,
+        parent=None,
+        *,
+        battle=False,
+        category_id="characters",
+        sheet_ids=None,
+        fighter=None,
+    ):
         from PySide6.QtWidgets import QHBoxLayout, QPushButton, QTabBar
 
         from .picture_categories import CATEGORIES, OTHER
@@ -151,19 +165,31 @@ class PicturePickerDialog(QDialog):
         self.setWindowTitle("Choose a Picture")
         library = SpriteSheetLibrary(document) if battle else WalkingSheetLibrary(document)
         self._choices = dict(library.choices())
+        # a fighter's picture (battle, no list of its own): every character the map shows
+        # too, one picked made a battle sprite; a page's own list stays as it is
+        self.fighter = bool(battle and sheet_ids is None) if fighter is None else fighter
+        if self.fighter:
+            self._choices = _with_map_sheets(document, self._choices)
+        if sheet_ids is not None:  # only these (a page's own list), each with its picture
+            wanted = set(sheet_ids)
+            self._choices = {k: v for k, v in self._choices.items() if k in wanted}
         self._grouped = sheets_by_category(document, tuple(self._choices))
         column = QVBoxLayout(self)
         self.tabs = QTabBar(self)
         self.tabs.setDrawBase(False)
         self._tab_ids = []
+        # a picture for a character shows characters only (heroes and monsters alike), never
+        # map tiles or objects; ``category_id=None`` lists every kind, a tab each
         for kind in (*CATEGORIES, OTHER):
             count = len(self._grouped.get(kind.category_id, ()))
-            if count or kind.category_id == category_id:
+            if kind.category_id == category_id or (category_id is None and count):
                 self.tabs.addTab(f"{kind.label} ({count})")
                 self._tab_ids.append(kind.category_id)
-        self.tabs.addTab(f"All ({len(self._choices)})")
-        self._tab_ids.append(None)
+        if category_id is None:
+            self.tabs.addTab(f"All ({len(self._choices)})")
+            self._tab_ids.append(None)
         self.tabs.setToolTip("Pictures sorted by kind; monsters are characters too")
+        self.tabs.setVisible(self.tabs.count() > 1)  # one kind: no tabs to choose between
         column.addWidget(self.tabs)
         self.listing = QListWidget(self)
         self.listing.setViewMode(QListWidget.IconMode)
@@ -194,6 +220,9 @@ class PicturePickerDialog(QDialog):
         self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
+        self.ok_button = self.buttons.button(QDialogButtonBox.Ok)
+        self.ok_button.setEnabled(False)  # nothing picked yet: OK waits for a picture
+        self.listing.itemSelectionChanged.connect(self._picked)
         row.addWidget(self.buttons)
         column.addLayout(row)
         self.tabs.currentChanged.connect(self._fill)
@@ -223,8 +252,16 @@ class PicturePickerDialog(QDialog):
             item.setData(Qt.UserRole, ("file", relative))
             item.setToolTip(f"{relative}: in the project's folder, not used yet")
             self.listing.addItem(item)
-        if self.listing.count():
-            self.listing.setCurrentRow(0)
+        self.listing.setCurrentRow(-1)  # nothing picked until the author clicks a picture
+        self.listing.clearSelection()
+        self._picked()
+
+    def picked(self):
+        items = self.listing.selectedItems()
+        return items[0] if items else None
+
+    def _picked(self):
+        self.ok_button.setEnabled(self.picked() is not None)
 
     def _file_icon(self, relative):
         from .picture_import import WALK_COLUMNS, WALK_ROWS, _project_dir
@@ -239,14 +276,31 @@ class PicturePickerDialog(QDialog):
         return QIcon(framed(pixmap, 48))
 
     def accept(self):
-        item = self.listing.currentItem()
-        if item is None:
-            return super().reject()
+        item = self.picked()
+        if item is None:  # OK is off until a picture is picked
+            return None
         kind, value = item.data(Qt.UserRole)
         chosen = value if kind == "sheet" else self._import(value)
+        if chosen and kind == "sheet" and self.fighter:
+            chosen = self._battle_sheet(value)
         if chosen:
             self.chosen = chosen
             super().accept()
+
+    def _battle_sheet(self, sheet_id):
+        """A map sheet picked for the battlefield, as a battle sprite (picture_import)."""
+        from PySide6.QtWidgets import QMessageBox
+
+        from .picture_import import PictureImportError, battle_sheet_for
+
+        try:
+            chosen = battle_sheet_for(self.document, sheet_id)
+        except (PictureImportError, OSError) as exc:
+            QMessageBox.warning(self, "Picture", str(exc))
+            return None
+        if chosen != sheet_id:
+            resolve_pictures(self.document, self.parent())
+        return chosen
 
     def browse(self):
         from PySide6.QtWidgets import QFileDialog
@@ -293,6 +347,95 @@ class PicturePickerDialog(QDialog):
             return
         folder.mkdir(parents=True, exist_ok=True)
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
+
+
+def _with_map_sheets(document, battle_choices):
+    """The battle sprites and every sheet the map has loaded, without a picture twice (a
+    battle sprite made from a map sheet stands for it)."""
+    project = getattr(document, "project", None)
+    views = getattr(document, "asset_views", None)
+    if project is None or views is None:
+        return dict(battle_choices)
+    known = {a.asset_id: a for a in project.assets.snapshot()}
+    drawn = {known[k].source.uri for k in battle_choices if k in known}
+    merged = dict(battle_choices)
+    for sheet_id, icon in WalkingSheetLibrary(document).choices():
+        try:
+            texture = project.assets.get(str(views.sprite_sheet(sheet_id).texture.asset_id))
+        except Exception:  # noqa: BLE001 - a sheet that cannot be read is left out
+            continue
+        if texture is not None and str(texture.source_path) not in drawn:
+            merged[sheet_id] = icon
+    return merged
+
+
+class SheetPickerBox(QWidget):
+    """A sprite sheet field of a page (Character Composition, Battle Effects): the sheet's
+    first frame in a framed square and its name; a double-click opens the picture dialog with
+    that field's kind only (``category_id``) - any other picture comes by Browse… there."""
+
+    changed = Signal()
+
+    def __init__(self, document, category_id, parent=None, *, title="Choose a Picture"):
+        from PySide6.QtWidgets import QHBoxLayout
+
+        super().__init__(parent)
+        self.document = document
+        self.category_id = category_id
+        self.title = title
+        self._value = ""
+        self.sheet_ids = None  # the sheets the page offers (None: every sheet of the kind)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+        self.preview = PictureBox()
+        self.preview.setFixedSize(44, 44)
+        self.preview.setToolTip("Double-click to choose a picture")
+        self.preview.doubleClicked.connect(self.choose)
+        self.name = QLabel()
+        row.addWidget(self.preview, 0, Qt.AlignVCenter)
+        row.addWidget(self.name, 1)
+        self._shown()
+
+    def set_choices(self, sheet_ids):
+        self.sheet_ids = tuple(sheet_ids)
+
+    def choose(self):
+        dialog = PicturePickerDialog(
+            self.document,
+            self,
+            battle=True,
+            category_id=self.category_id,
+            sheet_ids=None if self.sheet_ids is None else self.sheet_ids,
+            fighter=False,  # worn things and layers are drawn as they are
+        )
+        dialog.setWindowTitle(self.title)
+        if dialog.exec() == QDialog.Accepted and dialog.chosen:
+            self.set_value(dialog.chosen)
+
+    def value(self):
+        return self._value
+
+    currentData = value  # noqa: N815 - read as the combo box it replaces
+    currentText = value  # noqa: N815
+
+    def set_value(self, sheet_id):
+        sheet_id = str(sheet_id or "")
+        changed = sheet_id != self._value
+        self._value = sheet_id
+        self._shown()
+        if changed:
+            self.changed.emit()
+
+    def _shown(self):
+        pixmap = sprite_sheet_pixmap(self.document, self._value) if self._value else None
+        side = self.preview.width() - 6
+        if pixmap is None or pixmap.isNull():
+            self.preview.setPixmap(None)
+        else:
+            self.preview.setPixmap(framed(pixmap, side))
+        self.name.setText(sheet_label(self.document, self._value) if self._value else "None")
+        self.name.setToolTip(self._value)
 
 
 def resolve_pictures(document, widget=None):

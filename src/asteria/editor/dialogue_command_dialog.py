@@ -67,14 +67,15 @@ def fit_pixmap(pixmap, width, height):
 
 
 class _PortraitPicker(_IconPicker):
-    """The icon field's list and Browse…, for portraits: a bigger preview of the picture."""
+    """The icon field, for portraits: a bigger picture; a double-click opens the portraits."""
 
     PREVIEW = 64
+    TITLE = "Choose a Portrait"
 
     def __init__(self, library, parent=None):
         super().__init__(library, parent)
         self.preview.setFixedSize(self.PREVIEW, self.PREVIEW)
-        self.browse.setToolTip("Use a picture file of your own as the portrait")
+        self.preview.setToolTip("Double-click to choose a portrait")
         self._shown()
 
     def _shown(self, *_):
@@ -86,19 +87,8 @@ class _PortraitPicker(_IconPicker):
             self.preview.setText("None")  # the frame says there is no picture yet
         else:
             self.preview.setPixmap(fit_pixmap(pixmap, side, side))
-        self.combo.setToolTip(self.text())
+        self._show_name()
         self.changed.emit()
-
-    def _browse(self):
-        from PySide6.QtWidgets import QFileDialog
-
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Choose a portrait", "", "Images (*.png *.jpg *.jpeg *.webp)"
-        )
-        if path and self.library is not None:
-            portrait_id = self.library.import_file(path)
-            self._fill()
-            self.setText(portrait_id)
 
 
 class _MessagePreview(QWidget):

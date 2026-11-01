@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFrame,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -580,37 +579,53 @@ class _LazyIconCombo(QComboBox):
 
 
 class _IconPicker(QWidget):
-    """An icon field: a list of the project's icons and the built-in library (each with its
-    picture), a preview and Browse… to bring in a picture file of one's own. Paths show as their
-    file name; the tooltip has the whole id."""
+    """An icon field, chosen as a character's picture is: the icon in a framed square and its
+    name; a double-click on the square opens the icons as a grid of pictures (IconPickerDialog:
+    by where they come from, a filter, Browse… for a picture file of one's own). The list
+    behind it (``combo``, hidden) holds the value; the tooltip has the whole id."""
 
     changed = Signal()
 
     def __init__(self, library, parent=None):
+        from .sprite_sheet_picker import PictureBox
+
         super().__init__(parent)
         self.library = library
-        # picture on the left; the list over Browse… so a narrow form column shows a whole id
-        row = QGridLayout(self)
+        row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
-        self.preview = QLabel()
+        row.setSpacing(8)
+        self.preview = PictureBox()
         self.preview.setObjectName("IconPreview")  # a framed square (theme)
         self.preview.setFixedSize(36, 36)
-        self.preview.setAlignment(Qt.AlignCenter)
+        self.preview.setToolTip("Double-click to choose an icon")
+        self.preview.doubleClicked.connect(self.choose)
+        self.name = QLabel()
+        self.name.setObjectName("IconName")
         self.combo = _LazyIconCombo(self)
+        self.combo.hide()  # the value and the icons' list; the dialog is what shows them
         self._filled = False  # the whole list is added when it is first opened
-        self.combo.setMaxVisibleItems(12)
-        # a long list must not make Qt measure every entry each time the form is laid out
-        self.combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.combo.setMinimumContentsLength(14)
-        self.browse = QPushButton("Browse…")
-        self.browse.setToolTip("Use a picture file of your own as the icon")
-        self.browse.clicked.connect(self._browse)
-        row.addWidget(self.preview, 0, 0, 2, 1, Qt.AlignTop)
-        row.addWidget(self.combo, 0, 1)
-        row.addWidget(self.browse, 1, 1, Qt.AlignLeft)
-        row.setColumnStretch(1, 1)
+        row.addWidget(self.preview, 0, Qt.AlignVCenter)
+        row.addWidget(self.name, 1)
         self._fill()
         self.combo.currentIndexChanged.connect(self._shown)
+
+    TITLE = "Choose an Icon"
+
+    def choose(self):
+        """The picture dialog; the chosen picture becomes the field's (None empties it)."""
+        from .icon_picker_dialog import pick_icon
+
+        chosen = pick_icon(self.library, self, current=self.text(), title=self.TITLE)
+        if chosen is not None and chosen != self.text():
+            if chosen:
+                self._fill()  # a picture brought in by Browse… joins the list
+            self.setText(chosen)
+
+    def _show_name(self):
+        from .icon_picker_dialog import icon_name
+
+        self.name.setText(icon_name(self.text()) if self.text() else "None")
+        self.name.setToolTip(self.text())
 
     @staticmethod
     def _label(icon_id):
@@ -670,18 +685,9 @@ class _IconPicker(QWidget):
             side = min(self.preview.width(), self.preview.height()) - 8  # inside its frame
             self.preview.setPixmap(icon.pixmap(side, side))
         else:
-            self.preview.setText("None")  # the frame says there is no picture yet
-        self.combo.setToolTip(self.text())
+            self.preview.setPixmap(None)  # the frame says there is no picture yet
+        self._show_name()
         self.changed.emit()
-
-    def _browse(self):
-        from PySide6.QtWidgets import QFileDialog
-
-        path, _ = QFileDialog.getOpenFileName(self, "Choose an icon", "", "Images (*.png)")
-        if path and self.library is not None:
-            icon_id = self.library.import_file(path)
-            self._fill()
-            self.setText(icon_id)
 
     def text(self):
         return str(self.combo.currentData() or "")

@@ -381,7 +381,10 @@ HELP = {
     " so far), source and target: value * (0.9 + random() * 0.2). Only stats declared in Game"
     " Systems ▸ Stats can be read. Empty: the damage is kept as it is.",
     "display_name": "What players see.",
-    "icon_id": "The picture in menus and lists. Pick one, or Browse for your own file.",
+    "icon_id": (
+        "The picture in menus and lists. Double-click it to choose another; Browse… in there "
+        "brings in your own file."
+    ),
     "internal_id": "Other records refer to this one by its internal ID, so it stays fixed."
     " Use Duplicate to make a copy with a new one.",
     "picture_box": "The actor's picture: how it looks on the map (the party leader looks like"

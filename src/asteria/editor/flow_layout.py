@@ -78,11 +78,13 @@ class FlowLayout(QLayout):
         if row:
             rows.append((row, line))
         if apply:
-            for placed, _ in rows:
+            for placed, height in rows:
                 shift = 0
                 if right_aligned and placed:
                     last = placed[-1]
                     shift = max(0, area.right() + 1 - (last[1].x() + last[2].width()))
                 for item, point, hint in placed:
-                    item.setGeometry(QRect(point + QPoint(shift, 0), hint))
+                    # centred in its row: a checkbox or a label level with the buttons beside it
+                    down = (height - hint.height()) // 2
+                    item.setGeometry(QRect(point + QPoint(shift, down), hint))
         return y + line - rect.y() + m.bottom()

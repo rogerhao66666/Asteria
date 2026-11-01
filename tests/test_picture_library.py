@@ -62,13 +62,26 @@ def test_the_picture_dialog_starts_at_characters(monkeypatch):
         document = window.document
         dialog = PicturePickerDialog(document, window)
         tabs = [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())]
-        assert tabs[0].startswith("Characters") and tabs[-1].startswith("All")
+        assert len(tabs) == 1 and tabs[0].startswith("Characters")  # no map tiles to wade
+        assert dialog.tabs.isHidden()
         shown = [dialog.listing.item(i).data(0x0100)[1] for i in range(dialog.listing.count())]
         assert shown and all(sheet_category(document, s) == "characters" for s in shown)
         kinds = {sheet_category(document, s) for s in document.asset_views.sprite_sheet_ids()}
         assert {"characters", "tilesets", "objects"} <= kinds  # the map's tiles are apart
+        # nothing is picked when it opens: OK waits for a click on a picture
+        assert dialog.picked() is None and not dialog.ok_button.isEnabled()
+        dialog.accept()
+        assert dialog.result() == 0 and dialog.chosen is None
+        dialog.listing.item(1).setSelected(True)
+        assert dialog.ok_button.isEnabled()
+        every = PicturePickerDialog(document, window, category_id=None)  # every kind, tabbed
+        names = [every.tabs.tabText(i) for i in range(every.tabs.count())]
+        assert names[0].startswith("Characters") and names[-1].startswith("All")
+        every.listing.item(0).setSelected(True)
+        every.tabs.setCurrentIndex(0)  # another tab (it opens on All): picked afresh
+        assert not every.ok_button.isEnabled()
         battle = PicturePickerDialog(document, window, battle=True)
-        assert battle.tabs.tabText(0).startswith("Characters")
+        assert battle.tabs.count() == 1 and battle.tabs.tabText(0).startswith("Characters")
         shown = [battle.listing.item(i).data(0x0100)[1] for i in range(battle.listing.count())]
         assert shown and not any(s.startswith("battle.fx.") for s in shown)  # no effects
         app.processEvents()
@@ -136,4 +149,80 @@ def test_the_leader_wears_the_players_look_and_a_new_picture_walks(monkeypatch, 
         assert (sprite.sprite_sheet_asset_id, animator.clip_set_id, player.name) == before
         assert get_actor_appearance(document, "hero_01").sprite_sheet_asset_id == before[0]
     finally:
+        _close(window)
+
+
+def test_an_icon_is_chosen_from_its_kind_as_a_picture(monkeypatch):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.game_systems_widget import _IconPicker
+    from asteria.editor.icon_picker_dialog import IconPickerDialog
+    from asteria.editor.image_tools import IconLibrary
+
+    app = QApplication.instance() or QApplication([])
+    window = _window(DEMO / "project.asteria.json")
+    try:
+        document = window.document
+        library = IconLibrary(document)
+        current = "playable_assets/lucifer/icons/I_Clock.png"
+        dialog = IconPickerDialog(library, window, current=current)
+        assert dialog.listing.count() == len(library.choices())  # icons only, no other kind
+        assert dialog.picked() is None and not dialog.ok_button.isEnabled()
+        dialog.filter.setText("clock")
+        assert 0 < dialog.listing.count() < 20
+        dialog.listing.item(0).setSelected(True)
+        dialog.accept()
+        assert dialog.chosen and "clock" in dialog.chosen.lower()
+        picker = _IconPicker(library)
+        picker.setText(current)
+        assert picker.name.text() == "I_Clock" and picker.combo.isHidden()
+        monkeypatch.setattr(
+            "asteria.editor.icon_picker_dialog.pick_icon",
+            lambda *a, **k: "forged:fire",
+        )
+        picker.preview.doubleClicked.emit()  # a double-click on the picture chooses
+        assert picker.text() == "forged:fire"
+        app.processEvents()
+    finally:
+        _close(window)
+
+
+def test_a_fighter_chooses_from_every_character_and_a_map_one_becomes_a_battle_sprite(
+    monkeypatch,
+):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.picture_import import _image_size, _project_dir
+    from asteria.editor.sprite_sheet_picker import PicturePickerDialog
+    from asteria.runtime.battle_visuals import BattleVisualResolver
+
+    app = QApplication.instance() or QApplication([])
+    window = _window(DEMO / "project.asteria.json")
+    try:
+        document = window.document
+        walking = PicturePickerDialog(document, window)
+        battle = PicturePickerDialog(document, window, battle=True)
+        assert battle.listing.count() >= walking.listing.count()  # every map character too
+        known = {a.asset_id for a in document.project.assets.snapshot()}
+        row = next(
+            i
+            for i in range(battle.listing.count())
+            if battle.listing.item(i).data(0x0100)[1] not in known
+            or not battle.listing.item(i).data(0x0100)[1].startswith("battle.")
+        )
+        map_sheet = battle.listing.item(row).data(0x0100)[1]
+        battle.listing.item(row).setSelected(True)
+        battle.accept()
+        chosen = battle.chosen
+        assert chosen.startswith("battle.combatant.") and chosen != map_sheet
+        root = _project_dir(document)
+        resolver = BattleVisualResolver(document.project, lambda uri: _image_size(root / uri))
+        assert resolver.sprite_sheet(chosen).frames and "idle" in resolver.clip_set(chosen).clips
+        again = PicturePickerDialog(document, window, battle=True)  # made once, then reused
+        assert again._battle_sheet(map_sheet) == chosen
+        app.processEvents()
+    finally:
+        document.mark_saved()
         _close(window)

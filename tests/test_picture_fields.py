@@ -91,7 +91,7 @@ def document(tmp_path):
     return document
 
 
-def test_the_record_tree_makes_every_picture_key_a_picker_with_browse(document):
+def test_the_record_tree_makes_every_picture_key_a_picture_box(document):
     from asteria.editor.authoring_hub_widget import StructuredRecordEditor
     from asteria.editor.game_systems_widget import _IconPicker
     from asteria.editor.image_tools import IconLibrary
@@ -107,7 +107,8 @@ def test_the_record_tree_makes_every_picture_key_a_picker_with_browse(document):
         if isinstance(widget, _IconPicker):
             pickers[item.data(0, 0x0100)[-1]] = widget
     assert set(pickers) == {"icon_id", "card_image", "sprite", "portrait"}
-    assert all(p.browse.text() == "Browse…" for p in pickers.values())
+    # a framed picture each; a double-click opens the pictures by kind (with Browse… inside)
+    assert all(p.preview.toolTip().startswith("Double-click") for p in pickers.values())
 
 
 def test_the_layout_inspector_chooses_every_picture_from_a_file(document):
