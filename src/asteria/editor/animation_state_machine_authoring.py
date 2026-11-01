@@ -98,6 +98,30 @@ class AnimationStateMachineAuthoring:
             asset_id, definition, f"State machine for {asset_id}", layout={clip: [40.0, 40.0]}
         )
 
+    def create_from_clips(self, asset_id):
+        """A state for every clip of the sheet (idle first when it has one); a clip that does
+        not loop (an attack, a hit) goes back to the first state when it finishes."""
+        if self.definition(asset_id) is not None:
+            raise StateMachineAuthoringError(f"{asset_id} already has a state machine")
+        clips = self.clips(asset_id)
+        if not clips:
+            raise StateMachineAuthoringError(f"{asset_id} has no clips")
+        initial = "idle" if "idle" in clips else clips[0]
+        order = [initial, *(c for c in clips if c != initial)]
+        data = self.animation.data(asset_id)["clips"]
+        transitions = tuple(
+            AnimationTransition(clip, initial, when_finished=True)
+            for clip in order[1:]
+            if not data.get(clip, {}).get("loop", True)
+        )
+        definition = AnimationStateMachineDefinition(
+            {clip: clip for clip in order}, initial, transitions
+        )
+        layout = {
+            clip: [40.0 + (i % 4) * 170, 40.0 + (i // 4) * 110] for i, clip in enumerate(order)
+        }
+        return self._commit(asset_id, definition, f"States from clips of {asset_id}", layout)
+
     def remove_machine(self, asset_id):
         return self._commit(asset_id, None, f"Remove state machine of {asset_id}")
 

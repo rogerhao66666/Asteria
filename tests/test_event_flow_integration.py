@@ -365,3 +365,18 @@ def test_a_sequence_runs_dialogue_and_music_tracks_in_parallel(runtime, resource
     _frames(runtime, 3)
     assert game.pending_dialogue is None and game.save.event_context.get_switch("scene_done")
     assert not game.event_errors
+
+
+def test_entity_events_lists_the_scenes_people_and_objects_until_one_is_picked(window):
+    editor = window.event_editor
+    window.document.select_scene(window.viewport.current_scene())
+    window.refresh_selection_context()
+    scene = window.viewport.current_scene()
+    assert editor.picker.count() == len(list(scene.entities())) > 0  # not an empty page
+    assert editor.body.isHidden() and not editor.picker.isHidden()
+    first = editor.picker.item(0)
+    assert "event" in first.text()  # how many events each one has, those with events first
+    editor.picker.itemClicked.emit(first)
+    assert window.document.selection.value is first.data(0x0100)
+    assert editor.picker.isHidden() and not editor.body.isHidden()
+    assert editor.title.text().startswith("Events — ")

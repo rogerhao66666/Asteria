@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from math import atan2, cos, sin
 
-from PySide6.QtCore import QPointF, QRectF, Signal
-from PySide6.QtGui import QBrush, QColor, QPen, QPolygonF
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
+from PySide6.QtGui import QBrush, QColor, QIcon, QImage, QPen, QPixmap, QPolygonF
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -21,9 +21,11 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QPushButton,
     QSpinBox,
     QSplitter,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -37,6 +39,23 @@ from .ui_fit import fit_list_to_width
 
 NODE_W, NODE_H = 120, 44
 ANY = "*"
+
+
+def _trimmed(image):
+    """``image`` without its see-through border: a small figure in a big frame fills its tile."""
+    image = image.convertToFormat(QImage.Format_ARGB32)
+    width, height = image.width(), image.height()
+    xs, ys = [], []
+    for y in range(0, height, 2):
+        for x in range(0, width, 2):
+            if image.pixelColor(x, y).alpha() > 16:
+                xs.append(x)
+                ys.append(y)
+    if not xs:
+        return image
+    left, top = max(0, min(xs) - 2), max(0, min(ys) - 2)
+    right, bottom = min(width, max(xs) + 3), min(height, max(ys) + 3)
+    return image.copy(left, top, right - left, bottom - top)
 
 
 class _StateNode(QGraphicsRectItem):
@@ -80,8 +99,7 @@ class StateMachineGraphView(QGraphicsView):
         scene.clear()
         self.nodes = {}
         if definition is None:
-            scene.addSimpleText("No state machine yet — Create one for this sheet.")
-            scene.blockSignals(False)
+            scene.blockSignals(False)  # the page shows its starter in place of the graph
             return
         states = list(definition.states)
         if any(t.source == ANY for t in definition.transitions):
@@ -271,9 +289,14 @@ class AnimationStateMachineWidget(QWidget):
             right.addWidget(w)
         right_box = QWidget()
         right_box.setLayout(right)
+        self.inspector = right_box  # hidden while the sheet has no machine to inspect
 
+        self.starter = self._build_starter()
+        self.middle = QStackedWidget()
+        self.middle.addWidget(self.graph)
+        self.middle.addWidget(self.starter)
         split = QSplitter()
-        for w in (left_box, self.graph, right_box):
+        for w in (left_box, self.middle, right_box):
             split.addWidget(w)
         split.setStretchFactor(1, 1)
         layout = QVBoxLayout(self)
@@ -281,6 +304,83 @@ class AnimationStateMachineWidget(QWidget):
         self.selected_state = None
         self._preview_steps = []
         self.refresh()
+
+    def _build_starter(self):
+        """In place of the graph while the sheet has no machine: the clips it can play (their
+        first frames) and the two ways to start."""
+        page = QWidget()
+        page.setObjectName("StateMachineStarter")
+        column = QVBoxLayout(page)
+        column.setContentsMargins(24, 20, 24, 20)
+        self.starter_title = QLabel()
+        self.starter_title.setObjectName("EmptyStateTitle")
+        self.starter_title.setWordWrap(True)
+        column.addWidget(self.starter_title)
+        row = QHBoxLayout()
+        self.from_clips_button = QPushButton("One State per Clip")
+        self.from_clips_button.setProperty("role", "primary")
+        self.from_clips_button.setToolTip(
+            "A state for every clip, starting at idle; a clip that does not loop (an attack, "
+            "a hit) goes back to idle when it finishes"
+        )
+        self.from_clips_button.clicked.connect(self.create_from_clips)
+        self.from_idle_button = QPushButton("Start with Idle Only")
+        self.from_idle_button.setToolTip("One state playing idle; add the others yourself")
+        self.from_idle_button.clicked.connect(
+            lambda: self._try(lambda: self.api.create(self.sheet), "Created")
+        )
+        row.addWidget(self.from_clips_button)
+        row.addWidget(self.from_idle_button)
+        row.addStretch(1)
+        column.addLayout(row)
+        caption = QLabel("Clips this sheet can play")
+        caption.setObjectName("MutedLabel")
+        column.addWidget(caption)
+        self.starter_clips = QListWidget()
+        self.starter_clips.setObjectName("StateMachineStarterClips")
+        self.starter_clips.setViewMode(QListWidget.IconMode)
+        self.starter_clips.setIconSize(QSize(64, 64))
+        self.starter_clips.setGridSize(QSize(120, 112))
+        self.starter_clips.setResizeMode(QListWidget.Adjust)
+        self.starter_clips.setMovement(QListWidget.Static)
+        self.starter_clips.setSelectionMode(QListWidget.NoSelection)
+        self.starter_clips.setWordWrap(True)
+        column.addWidget(self.starter_clips, 1)
+        return page
+
+    def create_from_clips(self):
+        return self._try(lambda: self.api.create_from_clips(self.sheet), "States made from clips")
+
+    def _fill_starter(self):
+        from .animation_editor_widget import sheet_title
+        from .i18n import translate
+
+        sheet = self.sheet
+        self.starter_title.setText(
+            f"{sheet_title(self.api.document.project, sheet)} has no state machine yet"
+        )
+        self.starter_clips.clear()
+        try:
+            data = self.api.animation.data(sheet)["clips"]
+            image = QImage(str(self.api.animation.image_path(sheet)))
+        except Exception:  # noqa: BLE001 - a sheet that cannot be read shows its clip names
+            data, image = {}, QImage()
+        for clip in self.api.clips(sheet):
+            info = data.get(clip, {})
+            frames = info.get("frames") or [0]
+            label = f"{clip}\n{len(frames)} frames" + (" · loop" if info.get("loop") else "")
+            item = QListWidgetItem(translate(label))
+            if not image.isNull():
+                try:
+                    x, y, w, h = self.api.animation.frame_rect(sheet, frames[0])
+                except Exception:  # noqa: BLE001
+                    w = 0
+                if w:
+                    picture = _trimmed(image.copy(x, y, w, h)).scaled(
+                        64, 64, Qt.KeepAspectRatio, Qt.FastTransformation
+                    )
+                    item.setIcon(QIcon(QPixmap.fromImage(picture)))
+            self.starter_clips.addItem(item)
 
     @property
     def sheet(self):
@@ -307,6 +407,10 @@ class AnimationStateMachineWidget(QWidget):
             return
         definition = self.api.definition(self.sheet)
         self.graph.show_machine(definition, self.api.layout(self.sheet), self.preview_state)
+        self.middle.setCurrentWidget(self.graph if definition is not None else self.starter)
+        self.inspector.setVisible(definition is not None)
+        if definition is None:
+            self._fill_starter()
         self.state_clip.clear()
         self.state_clip.addItems(list(self.api.clips(self.sheet)))
         self.transitions.clear()

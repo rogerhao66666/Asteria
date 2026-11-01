@@ -1,11 +1,12 @@
 try:
-    from PySide6.QtCore import Signal
+    from PySide6.QtCore import Qt, Signal
     from PySide6.QtWidgets import (
         QComboBox,
         QFormLayout,
         QHBoxLayout,
         QLabel,
         QListWidget,
+        QListWidgetItem,
         QPushButton,
         QVBoxLayout,
         QWidget,
@@ -20,6 +21,7 @@ except ImportError:
 
 
 from .event_editing import describe_instruction
+from .i18n import translate
 
 OLD_EMPTY_HINT = "Select an Entity to edit events"
 EMPTY_HINT = (
@@ -37,6 +39,7 @@ class EventEditorWidget(QWidget):
         removeCommandRequested = Signal(int)
         moveCommandRequested = Signal(int, int)
         editCommandRequested = Signal(int)
+        entityPicked = Signal(object)
 
     def __init__(self, parent=None):
         if not QT_AVAILABLE:
@@ -118,6 +121,12 @@ class EventEditorWidget(QWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(12)
         layout.addWidget(self.title)
+        # with nothing picked: the scene's people and objects, those with events first
+        self.picker = QListWidget()
+        self.picker.setObjectName("EventEntityPicker")
+        self.picker.setToolTip("Click to see and edit its events")
+        self.picker.itemClicked.connect(self._picked)
+        layout.addWidget(self.picker, 1)
         # everything below the title: greyed out until a person or object is picked
         self.body = QWidget()
         body = QVBoxLayout(self.body)
@@ -136,9 +145,20 @@ class EventEditorWidget(QWidget):
 
         self.show_empty(EMPTY_HINT)
 
-    def show_empty(self, message):
+    def show_empty(self, message, candidates=()):
+        """``candidates``: ``(entity, event count)`` of the scene shown, listed to pick from;
+        the editing part is hidden until one is picked."""
         self._refreshing = True
         self.body.setEnabled(False)
+        self.picker.clear()
+        ordered = sorted(candidates, key=lambda pair: (-pair[1], pair[0].name.lower()))
+        for entity, count in ordered:
+            events = f"{count} event{'s' if count != 1 else ''}" if count else "no events yet"
+            item = QListWidgetItem(translate(f"{entity.name}   ·   {events}"))
+            item.setData(Qt.UserRole, entity)
+            self.picker.addItem(item)
+        self.picker.setVisible(self.picker.count() > 0)
+        self.body.setVisible(self.picker.count() == 0)
         try:
             self.title.setText(EMPTY_HINT if message == OLD_EMPTY_HINT else message)
             self.binding_combo.clear()
@@ -153,6 +173,8 @@ class EventEditorWidget(QWidget):
     def set_entity_context(self, entity, bindings, registry):
         self._refreshing = True
         try:
+            self.picker.hide()
+            self.body.show()
             self.body.setEnabled(True)
             self.title.setText(f"Events — {entity.name}")
             entity_bindings = list(bindings.for_entity(entity.id))
@@ -174,6 +196,9 @@ class EventEditorWidget(QWidget):
                 self.conditions.setText("Conditions: Always")
         finally:
             self._refreshing = False
+
+    def _picked(self, item):
+        self.entityPicked.emit(item.data(Qt.UserRole))
 
     def _show_binding(self, binding, registry):
         self.trigger_combo.setCurrentText(binding.trigger.value.title())

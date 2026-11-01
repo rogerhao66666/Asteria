@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QFrame,
     QGroupBox,
     QHBoxLayout,
@@ -41,7 +40,7 @@ from asteria.rpg.enemy_ai import (
 from .authoring_sidebar import authoring_sidebar
 from .enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
 from .flow_layout import FlowLayout
-from .responsive_form import ResponsiveColumns
+from .responsive_form import FlowForm, ResponsiveColumns, flow_form
 from .ui_fit import fit_combo_boxes
 
 SUBJECT_PARAM = {
@@ -267,7 +266,7 @@ class EnemyAIEditorWidget(QWidget):
         bind_row.addWidget(self.enemy, 1)
         bind_row.addWidget(bind)
         overview = QGroupBox("Overview")
-        form = QFormLayout(overview)
+        form = flow_form(overview)  # side by side as the card's width allows
         self.actions_per_ready.setMinimumWidth(88)  # keep the number readable in a narrow card
         form.addRow("Actions per turn", self.actions_per_ready)
         form.addRow("Starting phase", self.initial_phase)
@@ -307,14 +306,14 @@ class EnemyAIEditorWidget(QWidget):
         self.weight.setRange(0.0, 999.0)
         self.weight.setDecimals(2)
         rule_box = QGroupBox("Selected Rule")
-        rule_form = QFormLayout(rule_box)
+        rule_form = flow_form(rule_box, column_width=170)
         rule_form.addRow("Action", self.action_kind)
         rule_form.addRow("Ability", self.ability)
         rule_form.addRow("Hook", self.hook)
         rule_form.addRow("Target", self.target)
         rule_form.addRow("Priority", self.priority)
         rule_form.addRow("Weight", self.weight)
-        rule_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
+
         rule_buttons_box = QWidget()
         rule_buttons = FlowLayout(rule_buttons_box)  # wraps in a narrow column
         for label, slot in (
@@ -356,14 +355,14 @@ class EnemyAIEditorWidget(QWidget):
         self.enter_hook = QLineEdit()
         self.exit_hook = QLineEdit()
         phase_box = QGroupBox("Selected Phase")
-        phase_form = QFormLayout(phase_box)
+        phase_form = flow_form(phase_box, column_width=170)
         phase_form.addRow("Priority", self.phase_priority)
         phase_form.addRow("Rules (none = all)", self.phase_rules)
         self.phase_actions.setMinimumWidth(88)
         phase_form.addRow("Actions per turn", self.phase_actions)
         phase_form.addRow("On enter hook", self.enter_hook)
         phase_form.addRow("On exit hook", self.exit_hook)
-        phase_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
+
         phase_buttons_box = QWidget()
         phase_buttons = FlowLayout(phase_buttons_box)  # wraps in a narrow column
         for label, slot in (
@@ -406,11 +405,10 @@ class EnemyAIEditorWidget(QWidget):
         self.can_act = QCheckBox("Can act")
         self.can_act.setChecked(True)
         self.can_act.toggled.connect(lambda _v: self.run_preview())
-        self.resource_form = QFormLayout()
+        self.resource_form = FlowForm(column_width=130)  # Shield, MP, HP side by side
         self.resource_form.setVerticalSpacing(10)
         self.resource_form.setHorizontalSpacing(12)
-        self.resource_form.setRowWrapPolicy(QFormLayout.WrapLongRows)
-        self.resource_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+
         self.resource_inputs = {}
         self.decision = QListWidget()
         self.phase_label = QLabel("")
@@ -419,11 +417,11 @@ class EnemyAIEditorWidget(QWidget):
         self.problem_list = QListWidget()
         preview = QGroupBox("Decision Preview")
         pv = QVBoxLayout(preview)
-        top = QFormLayout()
+        top = FlowForm(column_width=110)  # the round and "can act" on one line
         top.addRow("Round", self.round_index)
-        top.addRow(self.can_act)
-        pv.addLayout(top)
-        pv.addLayout(self.resource_form)
+        top.addRow("", self.can_act)
+        pv.addWidget(top)
+        pv.addWidget(self.resource_form)
         pv.addWidget(self.phase_label)
         pv.addWidget(QLabel("Would pick"))
         pv.addWidget(self.decision)

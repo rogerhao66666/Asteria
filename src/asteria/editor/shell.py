@@ -101,8 +101,7 @@ from asteria.events import (
 from asteria.graphics import TileLayer
 from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 
-from .animation_widget import AnimationWidget
-from .authoring_context import animation_context, scene_authoring_source
+from .authoring_context import scene_authoring_source
 from .resource_resolver import EditorResourceError, resolve_project_resources
 from .skeleton_widget import SkeletonViewerWidget
 from .skeleton_workspace_page import SkeletonWorkspacePage
@@ -192,7 +191,6 @@ class AsteriaEditorWindow(QMainWindow):
         self.viewport = SceneViewportWidget(self.document)
         self.code_workspace = CodeWorkspaceWidget(self.document, self)
         self.event_editor = EventEditorWidget(self)
-        self.animation_widget = AnimationWidget(self)
 
         self.authoring_controllers = IntegratedAuthoringControllers(self.document)
         self.project_workspace_controller = ProjectWorkspaceController(self.document)
@@ -241,6 +239,13 @@ class AsteriaEditorWindow(QMainWindow):
         )
         self.game_start_editor.changed.connect(self.refresh_all)
         self.rpg_workspace.addTab(self.game_start_editor, "Game Start")
+        from .input_map_widget import InputMapWidget
+
+        # the game's keys and buttons: a setting of the game, beside where it starts (not a
+        # page of how the game looks)
+        self.input_map_editor = InputMapWidget(self.document, self)
+        self.input_map_editor.changed.connect(self.refresh_all)
+        self.rpg_workspace.addTab(self.input_map_editor, "Controls")
         self.battle_authoring = FamilyHostWidget(
             "Battle Rules", self.authoring_controllers.battle_categories, self
         )
@@ -266,7 +271,6 @@ class AsteriaEditorWindow(QMainWindow):
         )
         self.menu_layout_editor.changed.connect(self._refresh_actions)
         self.ui_workspace.addTab(self.menu_layout_editor, "Menu Screens")
-        self.ui_workspace.addTab(self.animation_widget, "Animation Preview")
         from .action_timeline_widget import ActionTimelineWidget
         from .animation_editor_widget import AnimationEditorWidget
 
@@ -296,11 +300,6 @@ class AsteriaEditorWindow(QMainWindow):
         self.particle_editor = ParticleEffectWidget(self.document, self)
         self.particle_editor.changed.connect(self.refresh_all)
         self.ui_workspace.addTab(self.particle_editor, "Particle Effects")
-        from .input_map_widget import InputMapWidget
-
-        self.input_map_editor = InputMapWidget(self.document, self)
-        self.input_map_editor.changed.connect(self.refresh_all)
-        self.ui_workspace.addTab(self.input_map_editor, "Controls")
 
         self.game_flow_overview = GameFlowOverviewWidget(self.document, self)
         self.events_workspace = ScrollingTabWidget(self)
@@ -405,6 +404,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.viewport.placementCancelled.connect(self.cancel_character_placement)
 
         self.event_editor.bindingRequested.connect(self._event_add_binding)
+        self.event_editor.entityPicked.connect(self._event_entity_picked)
         self.event_editor.bindingChanged.connect(self._event_binding_changed)
         self.event_editor.addConditionRequested.connect(self._event_add_condition)
         self.event_editor.addCommandRequested.connect(self._event_add_command)
@@ -893,6 +893,7 @@ class AsteriaEditorWindow(QMainWindow):
         WorkspaceMode.RPG: (
             "game_systems_editor",
             "game_start_editor",
+            "input_map_editor",
             "enemy_ai_editor",
             "behavior_tree_editor",
         ),
@@ -902,7 +903,6 @@ class AsteriaEditorWindow(QMainWindow):
             "composition_editor",
             "action_timeline_editor",
             "vfx_editor",
-            "input_map_editor",
         ),
         WorkspaceMode.EVENT: ("event_flow_editor",),
     }
@@ -1390,7 +1390,6 @@ class AsteriaEditorWindow(QMainWindow):
         resolve_project_resources(self.document)
         self.viewport.texture_cache.clear()
         self._sync_scene_authoring_context()
-        self._sync_animation_context()
 
     def _sync_scene_authoring_context(self):
         self.set_tilemap_render_source(scene_authoring_source(self.document))
@@ -1422,25 +1421,9 @@ class AsteriaEditorWindow(QMainWindow):
         if MapRuleAuthoringController(self.document).remove_region_rule(region_id):
             self.refresh_all()
 
-    def _sync_animation_context(self):
-        clip_set, current = animation_context(self.document)
-        if clip_set is None:
-            self.animation_widget.set_clips(())
-            self.animation_widget.set_status(
-                "Pick a character in the Scene (one with an Animator) to play its animations "
-                "here. Sprite Animation edits a sheet's animations directly."
-                if current is None
-                else f"Missing animation asset for {current}"
-            )
-            return
-        names = tuple(clip_set.clips)
-        self.animation_widget.set_clips(names, current)
-        self.animation_widget.set_status(f"{len(names)} clips available")
-
     def refresh_selection_context(self):
         self.refresh_inspector()
         self._sync_scene_authoring_context()
-        self._sync_animation_context()
         self._sync_event_context()
         self.code_workspace.refresh_project_context()
         self._refresh_actions()
@@ -1460,12 +1443,29 @@ class AsteriaEditorWindow(QMainWindow):
         entity = self._selected_event_entity()
         return entity.scene if entity is not None else None
 
+    def _event_candidates(self, project):
+        """``(entity, event count)`` for every entity of the scene shown."""
+        scene = self.viewport.current_scene() if project is not None else None
+        if scene is None:
+            return ()
+        bindings = bindings_for_scene(project, scene)
+        return tuple(
+            (entity, len(list(bindings.for_entity(entity.id)))) for entity in scene.entities()
+        )
+
+    def _event_entity_picked(self, entity):
+        self.document.select_entity(entity)
+        self.refresh_selection_context()
+        self.project_tree.refresh()
+
     def _sync_event_context(self):
         project = self.document.project
         entity = self._selected_event_entity()
         scene = self._selected_event_scene()
         if project is None or entity is None or scene is None:
-            self.event_editor.show_empty("Select an Entity to edit events")
+            self.event_editor.show_empty(
+                "Select an Entity to edit events", self._event_candidates(project)
+            )
             return
         bindings = bindings_for_scene(project, scene)
         self.event_editor.set_entity_context(entity, bindings, project.event_programs)
@@ -1763,8 +1763,6 @@ class AsteriaEditorWindow(QMainWindow):
 
     def set_animation_clip_set_view(self, clip_set_id, clip_set):
         self.document.asset_views.set_clip_set(clip_set_id, clip_set)
-        self.animation_widget.set_clips(tuple(clip_set.clips))
-        self.animation_widget.set_status(f"{len(clip_set.clips)} clips available")
 
     def set_sprite_sheet_view(self, asset_id, sprite_sheet):
         self.document.asset_views.set_sprite_sheet(asset_id, sprite_sheet)
@@ -1879,7 +1877,6 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_asset_list()
         self.refresh_inspector()
         self._sync_scene_authoring_context()
-        self._sync_animation_context()
         self._sync_event_context()
         # the workspace on screen is rebuilt now; the others when they are next opened
         self._refresh_epoch = getattr(self, "_refresh_epoch", 0) + 1

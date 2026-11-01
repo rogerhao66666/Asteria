@@ -1,6 +1,7 @@
 """A small dock that plays an imported 2D skeleton so a rig can be checked before use."""
 
 import weakref
+from pathlib import Path
 
 try:
     from PySide6.QtCore import QEvent, Qt, QTimer, Signal
@@ -9,12 +10,13 @@ try:
         QComboBox,
         QDoubleSpinBox,
         QFileDialog,
-        QFormLayout,
         QFrame,
         QGroupBox,
         QHBoxLayout,
         QLabel,
         QLineEdit,
+        QListWidget,
+        QListWidgetItem,
         QPushButton,
         QScrollArea,
         QSlider,
@@ -36,6 +38,7 @@ from .commands import (
     SetAttributeCommand,
     SetSkeletonCommand,
 )
+from .responsive_form import flow_form
 from .scene_render import resolve_texture_source
 from .skeleton_editing import add_bone, delete_bone, edit_bone, set_key
 from .skeleton_view import bone_segments, bounds, load_rig
@@ -46,6 +49,48 @@ try:
 except ImportError:
     Bone = None
     save_skeleton = None
+
+
+def humanoid_rig(skeleton_id="humanoid"):
+    """A starting figure: hips, spine, head, two arms, two legs, and an empty idle clip."""
+    from asteria.graphics.skeleton import Skeleton, SkeletonClip
+
+    bones = (
+        Bone("hips"),
+        Bone("spine", "hips", rotation=-90, length=40),
+        Bone("head", "spine", x=40, length=18),
+        Bone("arm_l", "spine", x=34, rotation=225, length=30),
+        Bone("arm_r", "spine", x=34, rotation=135, length=30),
+        Bone("leg_l", "hips", rotation=110, length=44),
+        Bone("leg_r", "hips", rotation=70, length=44),
+    )
+    return Skeleton(skeleton_id, bones, (), {"idle": SkeletonClip("idle", 1.0)})
+
+
+def empty_rig(skeleton_id="rig"):
+    """One root bone and an empty idle clip, to build any shape from."""
+    from asteria.graphics.skeleton import Skeleton, SkeletonClip
+
+    root = Bone("root", length=30)
+    return Skeleton(skeleton_id, (root,), (), {"idle": SkeletonClip("idle", 1.0)})
+
+
+def project_rigs(document):
+    """``(name, source)`` for every rig of the project: a ``.asteria.skeleton.json`` file in
+    its folder, or one already on an entity of a scene (source: the entity)."""
+    found = []
+    project = getattr(document, "project", None)
+    if project is None:
+        return found
+    if getattr(document, "file_path", None):
+        root = Path(document.file_path).parent
+        for path in sorted(root.rglob("*.asteria.skeleton.json"))[:40]:
+            found.append((path.name.removesuffix(".asteria.skeleton.json"), path))
+    for scene in project.scenes():
+        for entity in scene.entities():
+            if entity.try_get(SkeletonAnimation2DComponent) is not None:
+                found.append((f"{entity.name} · {scene.name}", entity))
+    return found
 
 
 class _Canvas(QWidget):
@@ -64,15 +109,8 @@ class _Canvas(QWidget):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(32, 34, 38))
         segments = self.owner.segments()
-        if not segments:  # say what to do instead of an empty grey box
-            painter.setPen(QColor(150, 158, 175))
-            painter.drawText(
-                self.rect().adjusted(24, 0, -24, 0),
-                Qt.AlignCenter | Qt.TextWordWrap,
-                'No rig open. Click "Open rig…" to load a skeleton, then pick a bone below '
-                'to move it or key it on the timeline; "Attach to selected entity" puts it '
-                "on a character in the scene.",
-            )
+        if not segments:  # a faint figure beside the starter: what a rig looks like
+            self._paint_sample(painter)
             return
         left, top, right, bottom = bounds(segments)
         scale = min(self.width() / max(right - left, 1), self.height() / max(bottom - top, 1))
@@ -89,6 +127,25 @@ class _Canvas(QWidget):
                 int(s.y1 * scale + oy),
             )
         painter.setPen(QPen(QColor(255, 210, 90), 4))
+        for s in segments:
+            painter.drawPoint(int(s.x0 * scale + ox), int(s.y0 * scale + oy))
+
+    def _paint_sample(self, painter):
+        segments = bone_segments(humanoid_rig())
+        left, top, right, bottom = bounds(segments, margin=4)
+        scale = min(self.width() * 0.3 / (right - left), self.height() * 0.7 / (bottom - top))
+        ox = self.width() * 0.2 - (left + right) / 2 * scale
+        oy = self.height() / 2 - (top + bottom) / 2 * scale
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(QColor(120, 200, 255, 90), 3))
+        for s in segments:
+            painter.drawLine(
+                int(s.x0 * scale + ox),
+                int(s.y0 * scale + oy),
+                int(s.x1 * scale + ox),
+                int(s.y1 * scale + oy),
+            )
+        painter.setPen(QPen(QColor(255, 210, 90, 120), 7))
         for s in segments:
             painter.drawPoint(int(s.x0 * scale + ox), int(s.y0 * scale + oy))
 
@@ -227,6 +284,7 @@ class SkeletonViewerWidget(QWidget):
             top.addWidget(widget)
         layout.addLayout(top)
         self.canvas = _Canvas(self)
+        self.starter = self._build_starter()
         layout.addWidget(self.canvas, 1)
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, self.TICKS)
@@ -313,9 +371,92 @@ class SkeletonViewerWidget(QWidget):
             self.key_easing,
         )
 
+    def _build_starter(self):
+        """Over the empty canvas: start a rig from a figure or from one bone, open a rig
+        file, or pick one the project already has."""
+        row = QHBoxLayout(self.canvas)
+        row.setContentsMargins(16, 12, 16, 12)
+        row.addStretch(2)
+        panel = QWidget(self.canvas)
+        panel.setObjectName("SkeletonStarter")
+        column = QVBoxLayout(panel)
+        column.setContentsMargins(0, 0, 0, 0)
+        title = QLabel("No rig open", panel)
+        title.setObjectName("EmptyStateTitle")
+        column.addWidget(title)
+        buttons = QHBoxLayout()
+        self.new_humanoid_button = QPushButton("New Humanoid Rig", panel)
+        self.new_humanoid_button.setProperty("role", "primary")
+        self.new_humanoid_button.setToolTip(
+            "Hips, spine, head, two arms and two legs (the figure on the left), "
+            "ready to pose and key"
+        )
+        self.new_humanoid_button.clicked.connect(lambda: self.new_rig(humanoid_rig()))
+        self.new_empty_button = QPushButton("New Empty Rig", panel)
+        self.new_empty_button.setToolTip("One root bone: add the others with Add Bone below")
+        self.new_empty_button.clicked.connect(lambda: self.new_rig(empty_rig()))
+        self.open_file_button = QPushButton("Open Rig File…", panel)
+        self.open_file_button.setToolTip("An Asteria, Spine or DragonBones skeleton (.json)")
+        self.open_file_button.clicked.connect(self._choose)
+        for button in (self.new_humanoid_button, self.new_empty_button, self.open_file_button):
+            buttons.addWidget(button)
+        column.addLayout(buttons)
+        self.rigs_caption = QLabel("Rigs in this project", panel)
+        self.rigs_caption.setObjectName("MutedLabel")
+        column.addWidget(self.rigs_caption)
+        self.rig_list = QListWidget(panel)
+        self.rig_list.setObjectName("SkeletonStarterRigs")
+        self.rig_list.setMaximumHeight(120)
+        self.rig_list.setToolTip("Double-click to open")
+        self.rig_list.itemDoubleClicked.connect(self._open_listed)
+        column.addWidget(self.rig_list)
+        column.addStretch(1)
+        row.addWidget(panel, 3)
+        row.addStretch(1)
+        self._fill_starter()
+        return panel
+
+    def _fill_starter(self):
+        self.rig_list.clear()
+        for name, source in project_rigs(self.document):
+            item = QListWidgetItem(name)
+            item.setData(Qt.UserRole, source)
+            item.setToolTip(str(source) if isinstance(source, Path) else "On an entity")
+            self.rig_list.addItem(item)
+        has_rigs = self.rig_list.count() > 0
+        self.rigs_caption.setVisible(has_rigs)
+        self.rig_list.setVisible(has_rigs)
+
+    def _open_listed(self, item):
+        source = item.data(Qt.UserRole)
+        if isinstance(source, Path):
+            return self.open_rig(source)
+        import json
+
+        from asteria.graphics.skeleton_data import skeleton_from_data
+
+        component = source.try_get(SkeletonAnimation2DComponent)
+        try:
+            skeleton = skeleton_from_data(json.loads(component.skeleton_json))
+        except (ValueError, TypeError, AttributeError) as exc:
+            self.status.setText(f"Could not load: {exc}")
+            return False
+        self.set_skeleton(skeleton)
+        self.file_path = None
+        self.status.setText(f"{skeleton.skeleton_id}: {len(skeleton.bones)} bones")
+        return True
+
+    def new_rig(self, skeleton):
+        """Start editing a new rig (Save rig… writes it to a file)."""
+        self.set_skeleton(skeleton)
+        self.file_path = None
+        self.status.setText(f"New rig {skeleton.skeleton_id}: {len(skeleton.bones)} bones")
+        return True
+
     def set_document(self, document):
         self.document = document
         self._texture_cache.clear()
+        self._fill_starter()
         self.canvas.update()
 
     def attach_to_selected(self):
@@ -363,7 +504,7 @@ class SkeletonViewerWidget(QWidget):
 
     def _build_bone_editor(self, layout):
         group = QGroupBox("Bones")
-        form = QFormLayout(group)
+        form = flow_form(group, column_width=170)  # the numbers side by side, not a row each
         self.bone_combo = QComboBox(group)
         self.bone_name = QLineEdit(group)
         self.bone_parent = QComboBox(group)
@@ -391,6 +532,7 @@ class SkeletonViewerWidget(QWidget):
         self.delete_bone_button = QPushButton("Delete Bone")
         for button in (self.apply_bone_button, self.add_bone_button, self.delete_bone_button):
             actions.addWidget(button)
+        actions.addStretch(1)
         form.addRow(actions)
         layout.addWidget(group)
         self.bone_combo.currentTextChanged.connect(self._load_bone_form)
@@ -400,7 +542,7 @@ class SkeletonViewerWidget(QWidget):
 
     def _build_key_editor(self, layout):
         group = QGroupBox("Animation Keys")
-        form = QFormLayout(group)
+        form = flow_form(group, column_width=170)
         self.track_bone = QComboBox(group)
         self.track_channel = QComboBox(group)
         self.track_channel.addItems(("x", "y", "rotation", "scale_x", "scale_y"))
@@ -423,6 +565,7 @@ class SkeletonViewerWidget(QWidget):
         self.delete_key_button = QPushButton("Delete Key")
         actions.addWidget(self.save_key_button)
         actions.addWidget(self.delete_key_button)
+        actions.addStretch(1)
         form.addRow(actions)
         layout.addWidget(group)
         self.track_bone.currentTextChanged.connect(lambda _: self._refresh_keys())
@@ -473,6 +616,7 @@ class SkeletonViewerWidget(QWidget):
 
     def set_skeleton(self, skeleton):
         self.skeleton = skeleton
+        self.starter.setVisible(skeleton is None)
         clip_name = self.clip_combo.currentText()
         self.clip_combo.blockSignals(True)
         self.clip_combo.clear()

@@ -215,6 +215,53 @@ class ResponsiveForm(QWidget):
         self.grid.setRowStretch(2 * row + 2, 1)
 
 
+class FlowForm(ResponsiveForm):
+    """A ResponsiveForm read as a QFormLayout (``addRow``, ``rowCount``, ``removeRow``), so a
+    page's label / field form flows into columns - small numbers side by side, not a whole row
+    each - with its code unchanged. A layout given as a field is held in a plain widget."""
+
+    def __init__(self, parent=None, *, column_width=200, max_columns=4):
+        super().__init__(parent, column_width=column_width, max_columns=max_columns)
+
+    @staticmethod
+    def _widget(item):
+        if isinstance(item, QWidget):
+            return item
+        holder = QWidget()
+        item.setContentsMargins(0, 0, 0, 0)
+        holder.setLayout(item)
+        return holder
+
+    def addRow(self, first, second=None):  # noqa: N802 - QFormLayout's name
+        if second is None:  # a widget or a row of buttons across the whole form
+            self.add_wide(self._widget(first))
+        else:
+            self.add_row(str(first), self._widget(second))
+
+    def rowCount(self):  # noqa: N802
+        return len(self.rows)
+
+    def removeRow(self, index):  # noqa: N802
+        widget, _wide = self.rows.pop(index)
+        for part in (widget.caption, widget.field) if isinstance(widget, _Pair) else (widget,):
+            part.setParent(None)
+            part.deleteLater()
+        self._place(force=True)
+
+    def setRowWrapPolicy(self, *_args):  # noqa: N802 - the columns take care of it
+        pass
+
+    setFieldGrowthPolicy = setVerticalSpacing = setHorizontalSpacing = setRowWrapPolicy  # noqa: N815
+
+
+def flow_form(group, *, column_width=200):
+    """A FlowForm filling ``group`` (a QGroupBox, a QWidget) in place of ``QFormLayout(group)``."""
+    form = FlowForm(column_width=column_width)
+    column = QVBoxLayout(group)
+    column.addWidget(form)
+    return form
+
+
 class ResponsiveSplit(QWidget):
     """``first`` beside ``second`` when at least ``side_by_side_at`` pixels wide, else ``first``
     above."""

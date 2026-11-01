@@ -124,3 +124,26 @@ def test_graph_editor_builds_moves_and_previews(api):
         ("speed", ">", 0.5),
         ("grounded", "==", True),
     ]
+
+
+def test_a_sheet_without_a_machine_shows_its_clips_and_starts_from_them(api):
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.animation_state_machine_widget import AnimationStateMachineWidget
+
+    QApplication.instance() or QApplication([])
+    widget = AnimationStateMachineWidget(api.document)
+    widget.refresh(select=SHEET)
+    assert widget.middle.currentWidget() is widget.starter  # not an empty graph
+    clips = api.clips(SHEET)
+    assert widget.starter_clips.count() == len(clips)
+    assert not widget.starter_clips.item(0).icon().isNull()  # the clip's first frame
+    assert widget.create_from_clips()
+    definition = api.definition(SHEET)
+    assert set(definition.states) == set(clips) and definition.initial == "idle"
+    data = api.animation.data(SHEET)["clips"]
+    back = {t.source for t in definition.transitions if t.when_finished}
+    assert back == {c for c in clips if c != "idle" and not data[c].get("loop", True)}
+    assert widget.middle.currentWidget() is widget.graph
+    assert set(widget.graph.nodes) >= set(clips)

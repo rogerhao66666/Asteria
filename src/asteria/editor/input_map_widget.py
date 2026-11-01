@@ -12,7 +12,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QFormLayout,
     QFrame,
     QHBoxLayout,
     QInputDialog,
@@ -176,7 +175,9 @@ class InputMapWidget(QWidget):
         mouse_row.addWidget(self.click_move)
         mouse_row.addWidget(_help_tip(move_help))
         mouse_row.addStretch(1)
-        form = QFormLayout()
+        from .responsive_form import FlowForm
+
+        form = FlowForm(column_width=180)  # the device, code and direction on one line
         form.addRow("Device", self.device)
         form.addRow("Code", self.code)
         form.addRow("Direction (axes / hats)", self.direction)
@@ -191,7 +192,7 @@ class InputMapWidget(QWidget):
         heading.setObjectName("AuthoringSidebarTitle")
         right.addWidget(heading)
         right.addWidget(self.bindings, 1)
-        right.addLayout(form)
+        right.addWidget(form)
         brow = QHBoxLayout()
         brow.addWidget(add_binding)
         brow.addWidget(remove_binding)

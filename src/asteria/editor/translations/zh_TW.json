@@ -185,7 +185,6 @@
   "Anchor Y": "錨點 Y",
   "Anchor on member": "錨定在成員上",
   "Animation Keys": "動畫關鍵影格",
-  "Animation Preview": "動畫預覽",
   "Animation States": "動畫狀態",
   "Animation Timing": "動畫時機",
   "Animation frames": "動畫影格數",
@@ -3677,7 +3676,27 @@
   "Choose What Is Worn": "選擇穿戴的物件",
   "Choose a Layer Picture": "選擇圖層圖片",
   "Double-click to choose a picture": "雙擊選擇圖片",
-  "Use Sheet as VFX": "把圖集當作特效"
+  "Use Sheet as VFX": "把圖集當作特效",
+  "Clips this sheet can play": "這張圖可播放的動作",
+  "One State per Clip": "每個動作一個狀態",
+  "Start with Idle Only": "只從待機開始",
+  "A state for every clip, starting at idle; a clip that does not loop (an attack, a hit) goes back to idle when it finishes": "每個動作建立一個狀態，從待機開始；不循環的動作（攻擊、受擊）播完後回到待機",
+  "One state playing idle; add the others yourself": "只建立一個播放待機的狀態，其餘自行加入",
+  "States made from clips": "已依動作建立狀態",
+  "No rig open": "尚未開啟骨架",
+  "New Humanoid Rig": "新增人形骨架",
+  "New Empty Rig": "新增空白骨架",
+  "Open Rig File…": "開啟骨架檔…",
+  "Rigs in this project": "專案中的骨架",
+  "Double-click to open": "雙擊開啟",
+  "Hips, spine, head, two arms and two legs (the figure on the left), ready to pose and key": "臀部、脊椎、頭、雙手與雙腳（左邊的人形），可直接擺姿勢與打關鍵影格",
+  "One root bone: add the others with Add Bone below": "只有一根根骨骼：用下方的新增骨骼加入其他骨骼",
+  "An Asteria, Spine or DragonBones skeleton (.json)": "Asteria、Spine 或 DragonBones 骨架（.json）",
+  "On an entity": "在實體上",
+  "Click to see and edit its events": "點一下查看並編輯它的事件",
+  "No sockets yet. Name a point on the body (hand_r, head) below, then Add Socket.": "還沒有掛點。在下方為身體上的一個點命名（hand_r、head），再按新增掛點。",
+  "Nothing worn yet. Add a socket, then choose what is worn below and Attach.": "還沒有穿戴物。先新增掛點，再於下方選擇要穿戴的東西並按附加。",
+  "No layers yet. Choose another sheet below to draw over (or behind) this body.": "還沒有圖層。在下方選另一張圖，疊在這個身體上方（或後方）。"
  },
  "patterns": [
   [
@@ -3919,6 +3938,30 @@
   [
    "(?P<x>.+)  ⓘ",
    "{x!T}  ⓘ"
+  ],
+  [
+   "(?P<s>.+) has no state machine yet",
+   "{s} 還沒有狀態機"
+  ],
+  [
+   "(?P<c>\\S+)\\n(?P<n>\\d+) frames · loop",
+   "{c}\n{n} 影格 · 循環"
+  ],
+  [
+   "(?P<c>\\S+)\\n(?P<n>\\d+) frames",
+   "{c}\n{n} 影格"
+  ],
+  [
+   "(?P<e>.+)   ·   (?P<n>\\d+) events?",
+   "{e}   ·   {n} 個事件"
+  ],
+  [
+   "(?P<e>.+)   ·   no events yet",
+   "{e}   ·   尚無事件"
+  ],
+  [
+   "New rig (?P<r>\\S+): (?P<n>\\d+) bones",
+   "新骨架 {r}：{n} 根骨骼"
   ]
  ]
 }

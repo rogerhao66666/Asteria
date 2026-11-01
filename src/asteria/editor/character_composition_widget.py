@@ -11,12 +11,11 @@ from __future__ import annotations
 from math import cos, radians, sin
 
 from PySide6.QtCore import QRectF, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QPen, QPixmap, QTransform
+from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QPixmap, QTransform
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QGraphicsScene,
     QGraphicsView,
     QGroupBox,
@@ -39,6 +38,8 @@ from .character_composition_authoring import (
     CharacterCompositionAuthoring,
     CompositionAuthoringError,
 )
+from .i18n import translate
+from .responsive_form import FlowForm
 from .ui_fit import fit_combo_boxes, fit_list_to_width
 
 PREVIEW_SCALE = 3.0
@@ -71,6 +72,27 @@ class _FittedView(QGraphicsView):
         self._refit()
 
 
+class _HintList(QListWidget):
+    """A list that says what to do first while it is empty."""
+
+    def __init__(self, hint):
+        super().__init__()
+        self.hint = hint
+        self.setMaximumHeight(110)  # a few rows; the preview above gets the height
+
+    def paintEvent(self, event):  # noqa: N802 - Qt API
+        super().paintEvent(event)
+        if self.count():
+            return
+        painter = QPainter(self.viewport())
+        painter.setPen(self.palette().placeholderText().color())
+        painter.drawText(
+            self.viewport().rect().adjusted(12, 8, -12, -8),
+            Qt.AlignCenter | Qt.TextWordWrap,
+            translate(self.hint),
+        )
+
+
 class CharacterCompositionWidget(QWidget):
     changed = Signal()
 
@@ -89,10 +111,12 @@ class CharacterCompositionWidget(QWidget):
         self.clip = QComboBox()
         self.clip.currentTextChanged.connect(lambda _t: self._draw_preview())
         self.preview = _FittedView(QGraphicsScene(self))
-        self.preview.setMinimumSize(200, 160)
+        self.preview.setMinimumSize(200, 300)  # the body large enough to place sockets on
 
         # sockets
-        self.sockets = QListWidget()
+        self.sockets = _HintList(
+            "No sockets yet. Name a point on the body (hand_r, head) below, then Add Socket."
+        )
         self.sockets.currentTextChanged.connect(self._socket_selected)
         self.socket_id = QLineEdit()
         self.socket_parent = QComboBox()
@@ -112,18 +136,21 @@ class CharacterCompositionWidget(QWidget):
             )
         )
         sockets_box = QGroupBox("Sockets (body pixels from the pivot; key per frame)")
-        form = QFormLayout()
+        form = FlowForm(column_width=130)  # small numbers side by side, not a row each
         form.addRow("Id", self.socket_id)
         form.addRow("Parent", self.socket_parent)
-        form.addRow("X / Y", self._pair(self.socket_x, self.socket_y))
+        form.addRow("X", self.socket_x)
+        form.addRow("Y", self.socket_y)
         form.addRow("Rotation", self.socket_rotation)
         column = QVBoxLayout(sockets_box)
-        column.addWidget(self.sockets, 1)
-        column.addLayout(form)
+        column.addWidget(self.sockets)
+        column.addWidget(form)
         column.addLayout(self._row(add_socket, key_socket, remove_socket))
 
         # attachments
-        self.attachments = QListWidget()
+        self.attachments = _HintList(
+            "Nothing worn yet. Add a socket, then choose what is worn below and Attach."
+        )
         self.attachment_id = QLineEdit()
         from .sprite_sheet_picker import SheetPickerBox
 
@@ -146,21 +173,25 @@ class CharacterCompositionWidget(QWidget):
             )
         )
         attachments_box = QGroupBox("Attachments (worn on a socket)")
-        form = QFormLayout()
+        form = FlowForm(column_width=130)
         form.addRow("Id", self.attachment_id)
         form.addRow("Sprite sheet", self.item_sheet)
         form.addRow("Frame", self.item_frame)
         form.addRow("Socket", self.attach_socket)
-        form.addRow("Scale / Rotation", self._pair(self.attach_scale, self.attach_rotation))
-        form.addRow("Grip X / Y", self._pair(self.grip_x, self.grip_y))
+        form.addRow("Scale", self.attach_scale)
+        form.addRow("Rotation", self.attach_rotation)
+        form.addRow("Grip X", self.grip_x)
+        form.addRow("Grip Y", self.grip_y)
         form.addRow("", self.front)
         column = QVBoxLayout(attachments_box)
-        column.addWidget(self.attachments, 1)
-        column.addLayout(form)
+        column.addWidget(self.attachments)
+        column.addWidget(form)
         column.addLayout(self._row(attach, detach))
 
         # layers
-        self.layers = QListWidget()
+        self.layers = _HintList(
+            "No layers yet. Choose another sheet below to draw over (or behind) this body."
+        )
         self.layer_sheet = SheetPickerBox(  # the same frame of another character's sheet
             self.api.document, "characters", title="Choose a Layer Picture"
         )
@@ -177,14 +208,14 @@ class CharacterCompositionWidget(QWidget):
             )
         )
         layers_box = QGroupBox("Layers (same frame of another sheet; z < 0 draws behind)")
-        form = QFormLayout()
+        form = FlowForm(column_width=130)
         form.addRow("Sprite sheet", self.layer_sheet)
         form.addRow("Component", self.layer_component)
         form.addRow("Z", self.layer_z)
         form.addRow("Clips", self.layer_clips)
         column = QVBoxLayout(layers_box)
-        column.addWidget(self.layers, 1)
-        column.addLayout(form)
+        column.addWidget(self.layers)
+        column.addWidget(form)
         column.addLayout(self._row(add_layer, remove_layer))
 
         self.status = QLabel(
@@ -197,7 +228,12 @@ class CharacterCompositionWidget(QWidget):
         lv.addWidget(self.sheet_list, 1)
         middle = QWidget()
         mv = QVBoxLayout(middle)
-        mv.addLayout(self._row(QLabel("Frame"), self.frame, QLabel("Clip"), self.clip))
+        # the frame and the clip together at the left, not spread over the whole width
+        self.frame.setMaximumWidth(96)
+        self.clip.setMinimumWidth(180)
+        frame_row = self._row(QLabel("Frame"), self.frame, QLabel("Clip"), self.clip)
+        frame_row.addStretch(1)
+        mv.addLayout(frame_row)
         mv.addWidget(self.preview, 1)
         # sheets and preview on top; sockets, attachments and layers side by side below (as many
         # columns as fit)
@@ -211,8 +247,8 @@ class CharacterCompositionWidget(QWidget):
         splitter = QSplitter(Qt.Vertical)
         splitter.addWidget(top)
         splitter.addWidget(boxes)
-        splitter.setStretchFactor(0, 2)
-        splitter.setStretchFactor(1, 3)
+        splitter.setStretchFactor(0, 1)  # the preview takes what the boxes leave
+        splitter.setStretchFactor(1, 0)
         layout = QVBoxLayout(self)
         layout.addWidget(splitter, 1)
         layout.addWidget(self.status)

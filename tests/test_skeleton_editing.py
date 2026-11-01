@@ -346,3 +346,29 @@ def test_the_canvas_and_timeline_hold_the_viewer_weakly(app):
         assert widget not in gc.get_referents(part.__dict__)
     del widget, part
     gc.collect()  # crashed here (segfault) while the parts held the viewer
+
+
+def test_no_rig_open_offers_new_rigs_and_the_projects_rigs(app, tmp_path):
+    from asteria.editor.skeleton_widget import SkeletonViewerWidget, humanoid_rig, project_rigs
+
+    widget = SkeletonViewerWidget()
+    assert not widget.starter.isHidden()  # the empty canvas offers a start
+    widget.new_humanoid_button.click()
+    assert widget.starter.isHidden() and widget.skeleton.skeleton_id == "humanoid"
+    assert widget.bone_combo.count() == len(humanoid_rig().bones)
+    assert widget.clip_combo.currentText() == "idle"
+    save_skeleton(tmp_path / "knight.asteria.skeleton.json", humanoid_rig("knight"))
+
+    class Document:
+        file_path = tmp_path / "project.asteria.json"
+
+        class project:  # noqa: N801
+            @staticmethod
+            def scenes():
+                return ()
+
+    assert [name for name, _ in project_rigs(Document)] == ["knight"]
+    fresh = SkeletonViewerWidget(document=Document)
+    assert fresh.rig_list.count() == 1 and not fresh.rig_list.isHidden()
+    fresh._open_listed(fresh.rig_list.item(0))
+    assert fresh.skeleton.skeleton_id == "knight" and fresh.starter.isHidden()

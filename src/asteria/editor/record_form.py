@@ -582,7 +582,17 @@ class AmountTable(QWidget):
         row.addStretch(1)
         layout.addLayout(row)
         self._labels = {c.value: c.label for c in self.choices}
+        self.per_row = 2  # name / number pairs on a row: as many as the width holds
         self._build()
+
+    PAIR_MIN = 300  # a pair's width at the least: its name, its number, ✕ and the gap
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        per_row = max(2, min(6, event.size().width() // self.PAIR_MIN))
+        if per_row != self.per_row and len(self.values) > 2:
+            self.per_row = per_row  # a wide page: 3, 4… pairs a row, not half of it empty
+            self._build()
 
     def _build(self):
         while self.grid.count():
@@ -595,7 +605,7 @@ class AmountTable(QWidget):
         order = {c.value: i for i, c in enumerate(self.choices)}
         ordered = sorted(self.values.items(), key=lambda kv: (order.get(kv[0], 1e9), kv[0]))
         for index, (key, value) in enumerate(ordered):
-            row, column = divmod(index, 2)
+            row, column = divmod(index, self.per_row)
             column *= 4
             name = QLabel(self._labels.get(key) or label_for(key))
             name.setToolTip(key)
@@ -615,8 +625,10 @@ class AmountTable(QWidget):
             self.grid.addWidget(name, row, column)
             self.grid.addWidget(box, row, column + 1)
             self.grid.addWidget(remove, row, column + 2)
-        self.grid.setColumnMinimumWidth(3, 32)
-        self.grid.setColumnStretch(7, 1)
+        for column in range(4 * 6):
+            self.grid.setColumnStretch(column, 0)
+            self.grid.setColumnMinimumWidth(column, 32 if column % 4 == 3 else 0)
+        self.grid.setColumnStretch(4 * self.per_row - 1, 1)
         from .ui_fit import layout_widgets  # not itemAt: see layout_widgets
 
         for widget in layout_widgets(self.grid):  # new rows count at once, not once shown
