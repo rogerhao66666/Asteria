@@ -209,7 +209,7 @@ def test_problems_name_broken_real_time_combat_references():
     assert warning.severity == "warning"
 
 
-def test_the_list_actions_fit_a_narrow_column_and_the_completion_list_closes_with_its_page():
+def test_the_record_actions_sit_at_the_foot_and_the_completion_list_closes_with_its_page():
     QtWidgets = pytest.importorskip("PySide6.QtWidgets")
     from asteria.editor.code_workspace import CodeWorkspaceWidget
     from asteria.editor.combat_workspace import CombatWorkspace
@@ -224,7 +224,12 @@ def test_the_list_actions_fit_a_narrow_column_and_the_completion_list_closes_wit
     for button in (widget.new_button, widget.duplicate_button, widget.delete_button):
         needed = button.fontMetrics().horizontalAdvance(button.text())
         assert button.width() >= needed + 12, button.text()  # the whole label is visible
-    assert widget.new_button.width() > widget.duplicate_button.width()  # "New" spans the column
+    # at the page's foot, right of Undo / Redo, as on every record page
+    undo = widget.findChild(QtWidgets.QPushButton, "FormUndoButton")
+    at = undo.mapTo(widget, undo.rect().topLeft())  # inside the Undo / Redo pair
+    assert undo is not None and abs(widget.new_button.y() - at.y()) <= 4  # one row
+    assert at.x() < widget.new_button.x() < widget.duplicate_button.x()
+    assert widget.duplicate_button.x() < widget.delete_button.x()
     assert "Attack" in widget.new_button.toolTip()
     widget.close()
 

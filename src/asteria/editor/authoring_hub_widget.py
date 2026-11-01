@@ -1007,6 +1007,7 @@ class AdapterFamilyWidget(QWidget):
         self.browser.setContextMenuPolicy(Qt.CustomContextMenu)
         self.browser.customContextMenuRequested.connect(self._context_menu)
         browser_panel = QWidget()
+        browser_panel.setProperty("sidePanel", True)  # Focus Mode folds it away
         browser_layout = QVBoxLayout(browser_panel)
         browser_layout.setContentsMargins(0, 0, 0, 0)
         filter_row = QHBoxLayout()
@@ -1052,7 +1053,6 @@ class AdapterFamilyWidget(QWidget):
         split.addWidget(self.detail_stack)
         split.setStretchFactor(1, 1)
 
-        actions = QHBoxLayout()
         self.view_button = QPushButton("Graph View")
         self.view_button.clicked.connect(self.toggle_skill_tree_view)
         self.save_layout_button = QPushButton("Save Graph Layout")
@@ -1066,16 +1066,14 @@ class AdapterFamilyWidget(QWidget):
         self.duplicate_button.clicked.connect(self.duplicate_selected)
         self.apply_button.clicked.connect(self.apply_selected)
         self.delete_button.clicked.connect(self.delete_selected)
-        actions.addWidget(self.view_button)
-        actions.addWidget(self.save_layout_button)
-        actions.addStretch(1)
-        from .undo_buttons import UndoRedoButtons
+        from .record_actions import record_action_bar
 
-        self.undo_buttons = UndoRedoButtons()  # edits apply on their own: a step back or on
-        actions.addWidget(self.undo_buttons)
-        actions.addWidget(self.new_button)
-        actions.addWidget(self.duplicate_button)
-        actions.addWidget(self.delete_button)
+        actions, self.undo_buttons = record_action_bar(
+            self.new_button,
+            self.duplicate_button,
+            self.delete_button,
+            extras=(self.view_button, self.save_layout_button),
+        )
         self.apply_button.hide()  # kept for scripts; edits apply on their own
 
         layout = QVBoxLayout(self)

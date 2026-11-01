@@ -46,7 +46,6 @@ from .project_empty_state import ProjectEmptyState
 from .record_form import Picker
 from .responsive_form import ResponsiveForm, ResponsiveSplit
 from .ui_fit import fit_combo_to_items
-from .undo_buttons import UndoRedoButtons
 
 _BIG = 1_000_000_000
 
@@ -699,13 +698,46 @@ class _IconPicker(QWidget):
         self._shown()
 
 
+NAME_FIELD_KEYS = ("name", "display_name", "title", "label")
+HEADER_EXTRAS = ("short_name", "icon_id")  # beside the name, as in Game Data's header
+
+
+def _header_keys(fields):
+    """The fields of a record's header card: its id, its name (with its short name and its
+    icon)."""
+    keys = [f.key for f in fields[:1] if f.kind == "id"]
+    names = [f.key for f in fields if f.kind == "text" and f.key in NAME_FIELD_KEYS]
+    if names:
+        keys.append(names[0])
+        keys.extend(f.key for f in fields if f.key in HEADER_EXTRAS and not f.when)
+    return tuple(keys)
+
+
+def _form_card(name, body):
+    """``body`` in a card styled as record_form's (FormHeader, FormSection)."""
+    card = QFrame()
+    card.setObjectName(name)
+    column = QVBoxLayout(card)
+    column.setContentsMargins(12, 10, 12, 10)
+    column.addWidget(body)
+    return card
+
+
 class RecordForm(QWidget):
     """Widgets for one record described by a tuple of FormField specs."""
 
     changed = Signal()
 
     def __init__(
-        self, fields, references, parent=None, *, column_width=250, icons=None, document=None
+        self,
+        fields,
+        references,
+        parent=None,
+        *,
+        column_width=250,
+        icons=None,
+        document=None,
+        cards=False,
     ):
         super().__init__(parent)
         self.document = document  # whose project fills key drop-downs (currencies, stats)
@@ -721,8 +753,20 @@ class RecordForm(QWidget):
         self.grid = ResponsiveForm(self, column_width=self.column_width)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
-        outer.addWidget(self.grid)
+        # ``cards``: a page's own form, laid out as Game Data's (record_form): its id and name
+        # in the header card, the other fields in a card below
+        self.head_grid = None
+        head_keys = _header_keys(self.fields) if cards else ()
+        if head_keys:
+            self.head_grid = ResponsiveForm(self, column_width=self.column_width)
+            outer.addWidget(_form_card("FormHeader", self.head_grid))
+            outer.addSpacing(10)
+            outer.addWidget(_form_card("FormSection", self.grid))
+            outer.addStretch(1)
+        else:
+            outer.addWidget(self.grid)
         self._rows = {}  # field key -> its row in the grid (shown or hidden by ``when``)
+        self._grids = {}  # field key -> the grid holding its row
         for f in self.fields:
             widget = self._build(f)
             self._watch(f, widget)
@@ -735,10 +779,14 @@ class RecordForm(QWidget):
             widget = self.widgets[f.key]
             if f.key == "description_shown":
                 continue
+            grid = self.head_grid if f.key in head_keys else self.grid
+            self._grids[f.key] = grid
+            if f.key in head_keys and f.kind == "text" and f.key in NAME_FIELD_KEYS:
+                widget.setObjectName("FormName")  # the record's name, large as in Game Data
             if f.kind in ("group", "table", "translations"):  # a caption, the box below it
-                self._rows[f.key] = self.grid.add_row(f.label, widget, span=True, help_text=f.help)
+                self._rows[f.key] = grid.add_row(f.label, widget, span=True, help_text=f.help)
             else:
-                self._rows[f.key] = self.grid.add_row(
+                self._rows[f.key] = grid.add_row(
                     f.label,
                     widget,
                     help_text=f.help,
@@ -764,7 +812,7 @@ class RecordForm(QWidget):
             key, values = f.when
             control = self.widgets.get(key)
             value = control.currentData() if isinstance(control, QComboBox) else None
-            self.grid.set_shown(self._rows[f.key], value in values)
+            self._grids[f.key].set_shown(self._rows[f.key], value in values)
 
     def _edited(self, *_args):
         if not self._loading:
@@ -1134,7 +1182,6 @@ class GameSystemsEditorWidget(QWidget):
         self.status = QLabel("")
         self.status.setWordWrap(True)
         self.used_by = QLabel("")
-        buttons = QHBoxLayout()
         self.record_buttons = []  # not on the Pause Menu page: it adds and removes its own
         for label, slot in (
             ("New…", self._new_clicked),
@@ -1143,7 +1190,6 @@ class GameSystemsEditorWidget(QWidget):
         ):
             button = QPushButton(label)
             button.clicked.connect(slot)
-            buttons.addWidget(button)
             self.record_buttons.append(button)
         from PySide6.QtWidgets import QStackedWidget
 
@@ -1159,12 +1205,12 @@ class GameSystemsEditorWidget(QWidget):
         # a gacha banner: draw 10,000 times and show the real spread (U5)
         self.simulate_button = QPushButton("Simulate 10,000 Pulls")
         self.simulate_button.clicked.connect(self.simulate_selected)
-        buttons.addWidget(self.simulate_button)
         self.simulation = QLabel("")
         self.simulation.setWordWrap(True)
         self.simulation.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        buttons.addStretch(1)
-        buttons.addWidget(UndoRedoButtons())  # edits apply on their own: a step back or on
+        from .record_actions import record_action_bar
+
+        buttons, _undo = record_action_bar(*self.record_buttons, extras=(self.simulate_button,))
         split = QSplitter()
         split.addWidget(authoring_sidebar("Game Systems", self.sidebar, header=self.kind_box))
         split.addWidget(self.scroll)
@@ -1246,7 +1292,11 @@ class GameSystemsEditorWidget(QWidget):
         return names.get(str(key)) or words(str(key).replace(".", " "))
 
     def set_kind(self, kind_id):
-        self.kind_box.setCurrentIndex(self.kind_box.findData(kind_id))
+        """Show ``kind_id``'s page; a menu kind is the Pause Menu page (D97), and a kind the
+        list does not have leaves the page as it is."""
+        index = self.kind_box.findData(PAUSE_MENU if kind_id in MENU_KINDS else kind_id)
+        if index >= 0:
+            self.kind_box.setCurrentIndex(index)
 
     def show_record(self, kind_id, record_id):
         """Open ``kind_id``'s record ``record_id`` (a problem's jump): a menu record opens on
@@ -1277,6 +1327,9 @@ class GameSystemsEditorWidget(QWidget):
             self.form = None
             return
         self.flush_edits()
+        if self.kind_id not in FORMS and self.kind_id != PAUSE_MENU:
+            self.kind_box.setCurrentIndex(0)  # no kind chosen: the first (refreshes again)
+            return
         pause = self.kind_id == PAUSE_MENU
         self.sidebar.setCurrentIndex(1 if pause else 0)
         for button in self.record_buttons:
@@ -1298,6 +1351,7 @@ class GameSystemsEditorWidget(QWidget):
             self.controller.references,
             icons=self.controller.icon_library,
             document=self.controller.document,
+            cards=True,
         )
         self.form.changed.connect(self._apply_timer.start)
         from .ui_fit import swap_scroll_page

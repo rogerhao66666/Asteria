@@ -237,3 +237,18 @@ def test_apply_without_changes_round_trips_every_kind(window):
         editor.refresh(key)
         assert editor.apply(), (kind.kind_id, editor.status.text())
         assert api.get(kind.kind_id, key) == before
+
+
+def test_a_menu_kind_or_an_unknown_kind_never_leaves_the_page_without_a_kind(window):
+    from asteria.editor.game_systems_widget import MENU_KINDS, PAUSE_MENU
+
+    editor = window.game_systems_editor
+    for kind_id in MENU_KINDS:  # merged into the Pause Menu page (D97): no row of their own
+        editor.set_kind("shops")
+        editor.set_kind(kind_id)
+        assert editor.kind_id == PAUSE_MENU
+    editor.set_kind("shops")
+    editor.set_kind("no_such_kind")
+    assert editor.kind_id == "shops"
+    editor.kind_box.setCurrentIndex(-1)  # nothing chosen: the first kind, not a KeyError
+    assert editor.kind_id == editor.kind_box.itemData(0) and editor.form is not None

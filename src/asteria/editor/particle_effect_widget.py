@@ -227,9 +227,9 @@ class ParticleEffectWidget(QWidget):
         title.setObjectName("SectionTitle")
         left.addWidget(title)
         left.addWidget(self.list, 1)
-        for button in (new, duplicate, delete):
-            left.addWidget(button)
+        self.record_buttons = (new, duplicate, delete)
         left_panel = QWidget()
+        left_panel.setProperty("sidePanel", True)  # Focus Mode folds it away
         left_panel.setLayout(left)
 
         self.form = ResponsiveForm(column_width=230)
@@ -265,6 +265,7 @@ class ParticleEffectWidget(QWidget):
         right.addWidget(self.preview, 1)
         right.addWidget(restart)
         right_panel = QWidget()
+        right_panel.setProperty("sidePanel", True)  # Focus Mode folds it away
         right_panel.setLayout(right)
 
         splitter = QSplitter()
@@ -273,8 +274,11 @@ class ParticleEffectWidget(QWidget):
         splitter.addWidget(right_panel)
         splitter.setStretchFactor(1, 2)
         splitter.setStretchFactor(2, 1)
+        from .record_actions import record_action_bar
+
         layout = QVBoxLayout(self)
-        layout.addWidget(splitter)
+        layout.addWidget(splitter, 1)
+        layout.addLayout(record_action_bar(*self.record_buttons)[0])
         self._build_form()
         self.refresh()
 

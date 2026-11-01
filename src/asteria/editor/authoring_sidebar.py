@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
 def authoring_sidebar(title, view, *, header=None, footer=None):
     card = QFrame()
     card.setObjectName("AuthoringSidebarCard")
+    card.setProperty("sidePanel", True)  # Focus Mode folds it away
     card.setMinimumWidth(220)
     card.setMaximumWidth(280)
     layout = QVBoxLayout(card)

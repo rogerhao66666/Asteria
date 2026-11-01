@@ -319,9 +319,12 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.multiplayer_workspace = MultiplayerWorkspaceWidget(self.document, self)
 
+        from .scene_tabs import SceneTabs, with_scene_tabs
+
+        self.scene_tabs = SceneTabs(self.document, self.show_scene, self)
         self.workspace = EditorWorkspace(
             {
-                WorkspaceMode.SCENE: self.viewport,
+                WorkspaceMode.SCENE: with_scene_tabs(self.viewport, self.scene_tabs),
                 WorkspaceMode.RPG: self.rpg_workspace,
                 WorkspaceMode.BATTLE: self.battle_authoring,
                 WorkspaceMode.UI: self.ui_workspace,
@@ -878,6 +881,7 @@ class AsteriaEditorWindow(QMainWindow):
                 action.setChecked(current == candidate)
         for shortcut in getattr(self, "panel_shortcuts", ()):  # P / T / L: Scene's keys
             shortcut.setEnabled(current == WorkspaceMode.SCENE)
+        self.set_focus_mode(False)  # each workspace keeps its own panels
         self._switch_workspace_docks(current)
         # rebuilt only when something changed since it was last shown: switching back and
         # forth between Game Data and Battle no longer rebuilds every page each time
@@ -1091,6 +1095,17 @@ class AsteriaEditorWindow(QMainWindow):
         self.reset_view_action.triggered.connect(self.viewport.reset_view)
         view_menu = self.view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.reset_view_action)
+        # both sides folded away for the map or the form alone; the same key brings them back
+        self.focus_mode_action = QAction("Focus Mode", self, checkable=True)
+        self.focus_mode_action.setShortcut("Ctrl+\\")
+        self.focus_mode_action.setToolTip("Hide the panels on both sides (again: back)")
+        self.focus_mode_action.toggled.connect(self.set_focus_mode)
+        view_menu.addAction(self.focus_mode_action)
+        self.search_action = QAction("Search Everything…", self)
+        self.search_action.setShortcut("Ctrl+K")
+        self.search_action.setToolTip("Find a page, a record, a scene or an entity by name or id")
+        self.search_action.triggered.connect(self.open_global_search)
+        view_menu.addAction(self.search_action)
         # attack reach and hit areas of real-time combat: a debug view, off by default
         self.combat_boxes_action = QAction("Show Hit && Hurt Boxes", self, checkable=True)
         self.combat_boxes_action.setChecked(self.viewport.show_combat_boxes)
@@ -1234,6 +1249,11 @@ class AsteriaEditorWindow(QMainWindow):
         self.play_action.setToolTip("Run Project (F6)")
         self.stop_action.setToolTip("Stop (Shift+F6)")
         self.reset_view_action.setToolTip("Reset View (Ctrl+0)")
+        from .icons import icon as _icon
+
+        self.search_action.setIcon(_icon("search", "#c9ccd4"))
+        self.search_action.setToolTip("Search Everything (Ctrl+K)")
+        toolbar.addAction(self.search_action)
         toolbar.addAction(self.reset_view_action)
         toolbar.addSeparator()
         toolbar.addAction(self.play_action)
@@ -1242,6 +1262,7 @@ class AsteriaEditorWindow(QMainWindow):
         for action, name in (
             (self.stop_action, "StopButton"),
             (self.reset_view_action, "ResetViewButton"),
+            (self.search_action, "SearchButton"),
         ):  # icon only: the tool tip names them
             button = toolbar.widgetForAction(action)
             button.setObjectName(name)
@@ -1874,6 +1895,15 @@ class AsteriaEditorWindow(QMainWindow):
             self.tile_palette.set_layer(self.viewport.tile_tools.active_layer)
         self._refresh_actions()
         self._refresh_title()
+        self.scene_tabs.sync(self.viewport.current_scene())
+
+    def show_scene(self, scene):
+        """Show ``scene`` on the map (a scene tab, the tabs' ▾ list)."""
+        if scene is None or self.viewport.current_scene() is scene:
+            return
+        self.document.selection.set_single("scene", scene)
+        self.refresh_all()
+        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def set_project(self, project, file_path=None):
         if self.play_session is not None and self.play_session.active:
@@ -3031,6 +3061,51 @@ class AsteriaEditorWindow(QMainWindow):
                 if dock is not None and not dock.isFloating():
                     dock.hide()
         self.hide_stale_dock_tab_bars()
+
+    def open_global_search(self, *, run=True):
+        """The search over everything (⌘K); ``run=False`` returns it without waiting."""
+        from .global_search import GlobalSearchDialog
+
+        dialog = GlobalSearchDialog(self)
+        if run:
+            dialog.exec()
+        return dialog
+
+    def set_focus_mode(self, on):
+        """Fold away the panels on both sides - the docks left and right of the map, and a
+        record page's list and preview (``sidePanel``) - or bring back the ones it folded."""
+        from PySide6.QtWidgets import QWidget
+
+        on = bool(on)
+        hidden = self.__dict__.setdefault("_focus_hidden", [])
+        if on == bool(hidden) and on == getattr(self, "_focus_on", False):
+            return
+        self._focus_on = on
+        if on:
+            sides = (Qt.LeftDockWidgetArea, Qt.RightDockWidgetArea)
+            for dock in self.findChildren(QDockWidget):
+                if dock.isVisible() and not dock.isFloating():
+                    if self.dockWidgetArea(dock) in sides:
+                        hidden.append(dock)
+            for panel in self.findChildren(QWidget):
+                side = panel.property("sidePanel") or panel.objectName() == "AuthoringPreviewCard"
+                if side and panel.isVisible():
+                    hidden.append(panel)
+            for widget in hidden:
+                widget.hide()
+        else:
+            while hidden:
+                widget = hidden.pop()
+                try:
+                    widget.show()
+                except RuntimeError:  # deleted while folded (a page rebuilt)
+                    pass
+            self.hide_stale_dock_tab_bars()
+        action = getattr(self, "focus_mode_action", None)
+        if action is not None and action.isChecked() != on:
+            action.blockSignals(True)
+            action.setChecked(on)
+            action.blockSignals(False)
 
     def _apply_default_dock_sizes(self):
         horizontal, widths, vertical, heights = self._default_dock_sizes

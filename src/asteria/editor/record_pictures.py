@@ -132,10 +132,26 @@ def sprite_sheet_frame(document, asset_id, frame_index):
 
 
 def sprite_sheet_pixmap(document, asset_id):
-    """The first (idle) frame of a sprite sheet asset as a QPixmap, or None."""
+    """The first (idle) frame of a sprite sheet asset as a QPixmap, or None; a sheet whose
+    first frame is empty (a tileset starting with a clear tile) shows its first drawn one."""
     if not asset_id or getattr(document, "project", None) is None:
         return None
-    return _first_frame(document, str(asset_id))
+    pixmap = _first_frame(document, str(asset_id))
+    if pixmap is None or not _blank(pixmap):
+        return pixmap
+    views = getattr(document, "asset_views", None)
+    sheet = views.sprite_sheet(str(asset_id)) if views is not None else None
+    for index in range(1, min(len(getattr(sheet, "frames", None) or ()), 64)):
+        frame = sprite_sheet_frame(document, str(asset_id), index)
+        if frame is not None and not _blank(frame):
+            return frame
+    return pixmap
+
+
+def _blank(pixmap):
+    from PySide6.QtGui import QRegion
+
+    return pixmap.hasAlphaChannel() and QRegion(pixmap.mask()).isEmpty()
 
 
 def _map_look(document, record_id):

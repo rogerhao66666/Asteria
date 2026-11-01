@@ -50,10 +50,8 @@ class BehaviorTreeEditorWidget(QWidget):
         new_button, delete_button = QPushButton("New…"), QPushButton("Delete")
         new_button.clicked.connect(self._new_clicked)
         delete_button.clicked.connect(self.delete_tree)
-        row = QHBoxLayout()
-        row.addWidget(new_button)
-        row.addWidget(delete_button)
-        left_box = authoring_sidebar("Behavior Trees", self.tree_list, footer=row)
+        self.record_buttons = (new_button, delete_button)
+        left_box = authoring_sidebar("Behavior Trees", self.tree_list)
 
         self.nodes = QTreeWidget()
         self.nodes.setObjectName("BehaviorTreeNodes")
@@ -140,13 +138,17 @@ class BehaviorTreeEditorWidget(QWidget):
         right.addWidget(node_box, 1)
         right.addWidget(self.status)
         right_box = QWidget()
+        right_box.setProperty("sidePanel", True)  # Focus Mode folds it away
         right_box.setLayout(right)
         split = QSplitter()
         for w in (left_box, center_box, right_box):
             split.addWidget(w)
         split.setStretchFactor(1, 1)
+        from .record_actions import record_action_bar
+
         layout = QVBoxLayout(self)
-        layout.addWidget(split)
+        layout.addWidget(split, 1)
+        layout.addLayout(record_action_bar(*self.record_buttons)[0])
         self.refresh()
 
     # -- state -----------------------------------------------------------------------------------

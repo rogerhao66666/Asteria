@@ -156,11 +156,9 @@ class ActionTimelineWidget(QWidget):
         left = QVBoxLayout()
         left.addWidget(QLabel("Ability Timelines"))
         left.addWidget(self.sequence_list, 1)
-        row = QHBoxLayout()
-        for b in (new_button, dup_button, del_button):
-            row.addWidget(b)
-        left.addLayout(row)
+        self.record_buttons = (new_button, dup_button, del_button)
         left_box = QWidget()
+        left_box.setProperty("sidePanel", True)  # Focus Mode folds it away
         left_box.setLayout(left)
 
         self.view = TimelineView()
@@ -235,6 +233,7 @@ class ActionTimelineWidget(QWidget):
         right.addWidget(self.status)
         right.addStretch(1)
         right_box = QWidget()
+        right_box.setProperty("sidePanel", True)  # Focus Mode folds it away
         right_box.setLayout(right)
 
         split = QSplitter()
@@ -242,8 +241,11 @@ class ActionTimelineWidget(QWidget):
         split.addWidget(center_box)
         split.addWidget(right_box)
         split.setStretchFactor(1, 1)
+        from .record_actions import record_action_bar
+
         layout = QVBoxLayout(self)
-        layout.addWidget(split)
+        layout.addWidget(split, 1)
+        layout.addLayout(record_action_bar(*self.record_buttons)[0])
         self.timer = QTimer(self)
         self.timer.setInterval(16)
         self.timer.timeout.connect(lambda: self.tick(0.016))

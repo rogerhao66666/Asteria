@@ -67,4 +67,5 @@ def test_no_page_prints_the_undo_line_any_more(app):
     editor = Path(__file__).resolve().parents[1] / "src" / "asteria" / "editor"
     for name in ("authoring_hub_widget.py", "game_systems_widget.py", "game_start_widget.py"):
         text = (editor / name).read_text(encoding="utf-8")
-        assert "Ctrl+Z undoes" not in text and "UndoRedoButtons()" in text, name
+        assert "Ctrl+Z undoes" not in text, name
+        assert "UndoRedoButtons()" in text or "record_action_bar(" in text, name

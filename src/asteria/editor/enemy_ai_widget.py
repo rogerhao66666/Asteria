@@ -249,10 +249,8 @@ class EnemyAIEditorWidget(QWidget):
         new_button, delete_button = QPushButton("New…"), QPushButton("Delete")
         new_button.clicked.connect(self._new_clicked)
         delete_button.clicked.connect(self.delete_ai)
-        row = QHBoxLayout()
-        row.addWidget(new_button)
-        row.addWidget(delete_button)
-        left_box = authoring_sidebar("Enemy AI", self.ai_list, footer=row)
+        self.record_buttons = (new_button, delete_button)
+        left_box = authoring_sidebar("Enemy AI", self.ai_list)
 
         # -- overview ------------------------------------------------------------------
         self.actions_per_ready = QSpinBox()
@@ -439,6 +437,7 @@ class EnemyAIEditorWidget(QWidget):
         right.addWidget(preview, 2)
         right.addWidget(checks, 1)
         right_box = QWidget()
+        right_box.setProperty("sidePanel", True)  # Focus Mode folds it away
         right_box.setLayout(right)
 
         split = QSplitter()
@@ -446,8 +445,11 @@ class EnemyAIEditorWidget(QWidget):
         split.addWidget(center_box)
         split.addWidget(right_box)
         split.setStretchFactor(1, 1)
+        from .record_actions import record_action_bar
+
         layout = QVBoxLayout(self)
-        layout.addWidget(split)
+        layout.addWidget(split, 1)
+        layout.addLayout(record_action_bar(*self.record_buttons)[0])
         for group in self.findChildren(QGroupBox):
             self._inset_section_title(group)
         self.refresh()

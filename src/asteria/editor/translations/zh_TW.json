@@ -3650,9 +3650,28 @@
   "playable_assets/characters in the project: pictures put there show up here": "專案裡的 playable_assets/characters：放進去的圖會出現在這裡",
   "The actor's picture: how it looks on the map (the party leader looks like the player), else its battle picture. Double-click to choose another among the characters, the pictures in the project's characters folder, or a file (Browse…); every map entity linked to the actor follows. The battle picture itself is set in Presentation ▸ Battle Screen ▸ Combatant Sprites.": "角色的圖：地圖上的樣子（隊伍隊長就是玩家的樣子），沒有就用戰鬥圖。雙擊可從角色圖、專案 characters 資料夾裡的圖，或電腦裡的檔案（瀏覽…）換一張；地圖上連到這個角色的實體都會跟著換。戰鬥圖本身在「演出 ▸ 戰鬥畫面 ▸ 戰鬥者圖像」設定。",
   "The fighter's battlefield picture. Double-click to choose another among the characters, or a file (Browse…) - the same as Pictures ▸ Battlefield picture below.": "戰鬥者在戰場上的圖。雙擊可從角色圖或電腦裡的檔案（瀏覽…）換一張，和下方「圖片 ▸ 戰場圖」是同一個設定。",
-  "The sprite sheet drawn on the battlefield; its clips (idle, attack…) animate the fighter. With no portrait, the Database shows its idle frame as the fighter's picture. Browse… brings in a picture file of your own.": "戰場上畫的角色圖集；它的動作片段（待機、攻擊…）讓戰鬥者動起來。沒有肖像時，資料庫會用它的待機格當人物圖。「瀏覽…」可匯入自己的圖檔。"
+  "The sprite sheet drawn on the battlefield; its clips (idle, attack…) animate the fighter. With no portrait, the Database shows its idle frame as the fighter's picture. Browse… brings in a picture file of your own.": "戰場上畫的角色圖集；它的動作片段（待機、攻擊…）讓戰鬥者動起來。沒有肖像時，資料庫會用它的待機格當人物圖。「瀏覽…」可匯入自己的圖檔。",
+  "Other records refer to this one by its internal ID, so it stays fixed. Use Duplicate to make a copy with a new one.": "其他資料用內部 ID 參照這一筆，所以它固定不變。要換新 ID 請用「複製」。",
+  "Focus Mode": "專注模式",
+  "Hide the panels on both sides (again: back)": "收起兩側面板（再按一次：恢復）",
+  "Search Everything…": "全域搜尋…",
+  "Search Everything": "全域搜尋",
+  "Search Everything (Ctrl+K)": "全域搜尋（Ctrl+K）",
+  "Find a page, a record, a scene or an entity by name or id": "用名稱或 ID 找頁面、資料、場景或物件",
+  "Search pages, records, scenes and entities…": "搜尋頁面、資料、場景與物件…",
+  "Open another scene": "開啟其他場景",
+  "Page": "頁面",
+  "Battle Presentation": "戰鬥演出"
  },
  "patterns": [
+  [
+   "(?P<a>\\d+) shown · (?P<b>\\d+) in the project",
+   "顯示 {a} 筆 · 專案共 {b} 筆"
+  ],
+  [
+   "Internal ID: (?P<id>\\S+)  ⓘ",
+   "內部 ID：{id}  ⓘ"
+  ],
   [
    "(?P<h>[A-Z][\\w &]+?) \\((?P<n>\\d+)\\)",
    "{h!T}（{n}）"

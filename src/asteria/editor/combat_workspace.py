@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QHeaderView,
     QInputDialog,
@@ -793,32 +792,20 @@ class CombatWorkspace(QWidget):
         self.list.currentItemChanged.connect(
             lambda current, _old: self.select(current.data(Qt.UserRole) if current else None)
         )
-        # short labels: the left column can be narrow; the tooltips carry the full wording
+        # at the page's foot, as on every record page (record_actions)
         self.new_button = QPushButton("New")
-        self.new_button.setProperty("role", "primary")
         self.new_button.clicked.connect(self.new_record)
         self.duplicate_button = QPushButton("Duplicate")
         self.duplicate_button.clicked.connect(self.duplicate_record)
         self.delete_button = QPushButton("Delete")
-        self.delete_button.setProperty("role", "danger")
         self.delete_button.clicked.connect(self.delete_record)
-        # two rows: "New" across the column, "Duplicate" and "Delete" side by side; the left
-        # column can be narrow, and this never clips or wraps whatever the icons add
-        actions = QGridLayout()
-        actions.setHorizontalSpacing(6)
-        actions.setVerticalSpacing(6)
-        actions.addWidget(self.new_button, 0, 0, 1, 2)
-        actions.addWidget(self.duplicate_button, 1, 0)
-        actions.addWidget(self.delete_button, 1, 1)
-        for button in (self.new_button, self.duplicate_button, self.delete_button):
-            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         left = QVBoxLayout()
         left.addLayout(kinds)
         left.addSpacing(6)
         left.addWidget(self.search)
         left.addWidget(self.list, 1)
-        left.addLayout(actions)
         left_panel = QWidget()
+        left_panel.setProperty("sidePanel", True)  # Focus Mode folds it away
         left_panel.setLayout(left)
         left_panel.setMinimumWidth(240)
 
@@ -930,9 +917,14 @@ class CombatWorkspace(QWidget):
         splitter.setStretchFactor(1, 3)
         splitter.setStretchFactor(2, 2)
         splitter.setSizes([250, 700, 380])
+        from .record_actions import record_action_bar
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
-        layout.addWidget(splitter)
+        layout.addWidget(splitter, 1)
+        layout.addLayout(
+            record_action_bar(self.new_button, self.duplicate_button, self.delete_button)[0]
+        )
         self.show_kind(self.kind_id)
 
     def minimumSizeHint(self):  # noqa: N802 - Qt API

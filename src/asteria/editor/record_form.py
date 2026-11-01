@@ -1125,13 +1125,10 @@ class RecordForm(QScrollArea):
                 heading = QLabel(title)
                 heading.setObjectName("FormTitle")
                 names.addWidget(heading)
-        if id_key is not None:
-            names.addWidget(
-                _small(
-                    f"Internal ID: {data[id_key]}   ·   other records refer to it by this, "
-                    "so it stays fixed (use Duplicate to make a copy with a new one)"
-                )
-            )
+        if id_key is not None:  # the id in the line, why it stays fixed in its ⓘ
+            line = _small(f"Internal ID: {data[id_key]}  ⓘ")
+            line.setToolTip(HELP["internal_id"])
+            names.addWidget(line)
         elif self._title:
             names.addWidget(_small(str(self._title)))
         if icon_box is not None:
