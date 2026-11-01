@@ -1,7 +1,9 @@
 """The asset library: art packs kept beside the engine that any project can take pictures from.
 
-The library is a folder of packs (``asset_library/<collection>/<pack>/...``, CC0 art with each
-pack's readme). It is never loaded by a game: importing a picture copies it into the project
+The library is a folder of packs sorted by what they hold (``asset_library/<kind>/<pack>/...``:
+``characters`` - heroes and monsters alike - ``tilesets``, ``objects``, ``items``, ``icons``,
+``effects``, ``ui``, ``models_3d``, ``fonts``), CC0 art with each pack's readme. It is never
+loaded by a game: importing a picture copies it into the project
 (``playable_assets/library/<pack>/...``) and registers it as a project asset, so the project
 stays self-contained. ``ASTERIA_ASSET_LIBRARY`` points at another library folder.
 """
@@ -25,6 +27,40 @@ def default_library_root():
     if override:
         return Path(override).expanduser()
     return Path(__file__).resolve().parents[3] / "asset_library"
+
+
+def find_pack(name, root=None):
+    """The folder of the pack called ``name``: ``root/name`` (a flat folder of packs), else
+    ``root/<kind>/name``; ``root/name`` when there is none, so a missing pack reads as one."""
+    root = Path(root or default_library_root())
+    direct = root / name
+    if direct.is_dir() or not root.is_dir():
+        return direct
+    for kind in sorted(p for p in root.iterdir() if p.is_dir()):
+        if (kind / name).is_dir():
+            return kind / name
+    return direct
+
+
+class PackFolder(os.PathLike):
+    """The library addressed by pack name, whatever kind folder holds the pack:
+    ``PackFolder(root) / "Foozle_2DT0003_Lucifer_Dungeon_Tileset_Pixel_Art" / "Png"``."""
+
+    def __init__(self, root=None):
+        self.root = Path(root or default_library_root())
+
+    def __truediv__(self, relative):
+        first, *rest = PurePosixPath(str(relative).replace("\\", "/")).parts
+        return find_pack(first, self.root).joinpath(*rest)
+
+    def __fspath__(self):
+        return str(self.root)
+
+    def __repr__(self):
+        return f"PackFolder({str(self.root)!r})"
+
+    def is_dir(self):
+        return self.root.is_dir()
 
 
 @dataclass(frozen=True, slots=True)

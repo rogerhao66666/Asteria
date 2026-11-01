@@ -12,7 +12,7 @@
 * **Starfall Chest** (``starfall``, a big chest): common / rare / mythical prizes for star
   stones, ten at once with a rare guaranteed, a mythical at the latest on pull 50 (softly
   likelier from 36), Cael at twice the weight (owned: an Elixir instead). The chests are
-  Foozle's Chest and Key Pack (CC0, ``asset_library/foozle/Foozle_2DO0002_Chest_and_Key_Pack``).
+  Foozle's Chest and Key Pack (CC0, ``asset_library/objects/Foozle_2DO0002_Chest_and_Key_Pack``).
 
 ``apply(project, root)`` adds what is missing and can run again; ``build_project.py`` runs it
 after ``trial_crafting``.

@@ -4,13 +4,13 @@
     .venv/bin/python scripts/build_kaykit_art.py --render   # photograph first (needs Blender)
     .venv/bin/python scripts/build_kaykit_art.py --keys knight,mage --render
 
-Sources: ``asset_library/kaykit/`` (characters, props and animations by Kay Lousberg, CC0).
+Sources: ``asset_library/models_3d/`` (characters, props and animations by Kay Lousberg, CC0).
 Frames: ``local_reference/free_assets/kaykit_render/raw/<key>/`` (git-ignored; ``--render``
 writes them with Blender through ``scripts/kaykit_render_blender.py``). Output, read by the
-demos: ``asset_library/kaykit/rendered/<key>_battle.png`` + ``.json`` (every battle clip on
-one grid, drawn with ``scaling: smooth``) and ``<key>_field.png`` + ``.json`` (the 3 x 4
-walking sheet: down, left, right, up). A demo build never needs Blender: only re-rendering
-does. ``--list`` prints the cast.
+demos: ``asset_library/characters/KayKit_Rendered_Sheets/<key>_battle.png`` + ``.json``
+(every battle clip on one grid, drawn with ``scaling: smooth``) and ``<key>_field.png`` +
+``.json`` (the 3 x 4 walking sheet: down, left, right, up). A demo build never needs
+Blender: only re-rendering does. ``--list`` prints the cast.
 
 ``--style toon`` shoots with cartoon shading (a few flat light bands) into ``raw/<key>_toon/``
 and assembles pixel-art sheets: frames shrunk to the Lucifer characters' pixel size, one shared
@@ -29,10 +29,10 @@ import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-LIBRARY = REPO / "asset_library" / "kaykit"  # three packs, each with its licence text
-ADVENTURERS = LIBRARY / "KayKit_Adventurers_2.0"
-ANIMATIONS = LIBRARY / "KayKit_Character_Animations_1.1"
-RENDERED = LIBRARY / "KayKit_Rendered_Sheets"
+LIBRARY = REPO / "asset_library"  # three packs, each with its licence text
+ADVENTURERS = LIBRARY / "models_3d" / "KayKit_Adventurers_2.0"
+ANIMATIONS = LIBRARY / "models_3d" / "KayKit_Character_Animations_1.1"
+RENDERED = LIBRARY / "characters" / "KayKit_Rendered_Sheets"
 RAW = REPO / "local_reference" / "free_assets" / "kaykit_render" / "raw"
 BLENDER_SCRIPT = REPO / "scripts" / "kaykit_render_blender.py"
 VIRTUAL_PIXEL = 3  # sheet pixels per battle layout unit (480 x 270): 1:1 in a 1440-wide window

@@ -1,6 +1,6 @@
 """The party's KayKit art: smooth 2D sheets photographed from CC0 3D chibi characters.
 
-``scripts/build_kaykit_art.py`` writes them to ``asset_library/kaykit/KayKit_Rendered_Sheets``
+``scripts/build_kaykit_art.py`` writes them to ``asset_library/characters/KayKit_Rendered_Sheets``
 (``<key>_battle.png`` + ``.json``: every battle clip on one grid; ``<key>_field.png`` +
 ``.json``: the 3 x 4 walking sheet). This module only copies and registers them; a demo build
 never needs Blender.
@@ -18,7 +18,7 @@ import shutil
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-RENDERED = REPO / "asset_library" / "kaykit" / "KayKit_Rendered_Sheets"
+RENDERED = REPO / "asset_library" / "characters" / "KayKit_Rendered_Sheets"
 SOURCE = (("license", "CC0 1.0"), ("source", "KayKit (Kay Lousberg), rendered sheets"))
 CAST = {  # party member -> rendered character (the user's choice, 2026-10-23)
     "hero_01": "knight",  # Roger: sword and shield

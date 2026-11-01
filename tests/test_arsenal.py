@@ -75,7 +75,7 @@ def test_rarity_sets_the_stats_and_sockets(project):
 
 
 def test_the_pictures_are_the_libraries_cc0_icons_copied_into_the_demo(project):
-    library = REPO / "asset_library" / "opengameart" / "7Soul_496_RPG_Icons"
+    library = REPO / "asset_library" / "icons" / "7Soul_496_RPG_Icons"
     assert "CC0" in (library / "Readme.txt").read_text(encoding="utf-8")
     for weapons in arsenal.WEAPONS.values():
         for weapon_id, _name, _rarity, _element, picture in weapons:

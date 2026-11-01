@@ -14,7 +14,7 @@
   element's attack and some magic - an orb in a weapon makes its blows carry that element.
 * **Cards** (4) more, for card sockets (destroyed when taken out, like the foes' cards).
 
-Pictures: 7Soul's CC0 icons (``asset_library/opengameart/7Soul_496_RPG_Icons``), copied into
+Pictures: 7Soul's CC0 icons (``asset_library/icons/7Soul_496_RPG_Icons``), copied into
 ``playable_assets/icons_7soul``. ``apply(project, root)`` adds what is missing and can run again;
 ``build_project.py`` runs it.
 """

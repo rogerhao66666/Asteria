@@ -22,9 +22,9 @@ import shutil
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-EQUIPMENT_ART = REPO / "asset_library/foozle/Foozle_2DS0005_Lucifer_Equipment_Pixel_Art/Equipment"
+EQUIPMENT_ART = REPO / "asset_library/items/Foozle_2DS0005_Lucifer_Equipment_Pixel_Art/Equipment"
 DOLL_ART = REPO / (
-    "asset_library/foozle/Foozle_UI_0002_Lucifer_RPG_UI_Pixel_Art/HUD/Inventory/Png/"
+    "asset_library/ui/Foozle_UI_0002_Lucifer_RPG_UI_Pixel_Art/HUD/Inventory/Png/"
     "InventoryEmptyFields.png"
 )
 ICON_DIR = "playable_assets/lucifer/icons"

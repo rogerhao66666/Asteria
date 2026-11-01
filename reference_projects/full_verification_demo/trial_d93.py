@@ -2,7 +2,7 @@
 
 D91 drew each job from the demo's gear (a sword for the Brave, a helmet for the Knight), so a
 job looked like an item. Now every job shows a figure or an emblem from the 7Soul icons (CC0,
-``asset_library/opengameart/7Soul_496_RPG_Icons``), copied unchanged into
+``asset_library/icons/7Soul_496_RPG_Icons``), copied unchanged into
 ``playable_assets/icons_7soul/`` like the demo's other 7Soul icons: fighters are figures in their
 colour, the holy jobs crosses and angels, the dark jobs shadows. No two jobs share a picture and
 no other record uses these ones. The D91 pictures (``lucifer/icons/job_*.png``) are removed.
@@ -17,7 +17,7 @@ import shutil
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SOURCE = HERE.parents[1] / "asset_library" / "opengameart" / "7Soul_496_RPG_Icons"
+SOURCE = HERE.parents[1] / "asset_library" / "icons" / "7Soul_496_RPG_Icons"
 FOLDER = "playable_assets/icons_7soul"
 # job: the 7Soul picture
 JOB_ICONS = {

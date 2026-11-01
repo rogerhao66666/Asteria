@@ -36,7 +36,7 @@ for key in ("SDL_VIDEODRIVER", "SDL_AUDIODRIVER", "QT_QPA_PLATFORM"):
     os.environ.pop(key, None)
 
 HP = "vitality"
-FOOZLE = REPO / "asset_library" / "foozle"
+FOOZLE = REPO / "asset_library" / "characters"  # the critter packs
 STAND_INS = {  # species -> (critter idle sheet, faces left)
     "cub": (
         "Foozle_2DC0022_RealmOfCritters_Mouse_Pixel_Art/Mouse/Spritesheet/Player Idle.png",

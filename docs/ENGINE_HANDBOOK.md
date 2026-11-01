@@ -80,7 +80,7 @@ GitHub Actions（`.github/workflows/tests.yml`）：每次 push 與 PR 跑 lint 
 | `reference_projects/` | `party_rpg_demo`、`arpg_demo` 以及其他參考專案 |
 | `src/asteria/templates` | 隨套件發布的 Party RPG 與 Action RPG 範本（由 `scripts/sync_templates.py` 複製） |
 | `src/asteria/frozen.py` | 免安裝版 app 裡的路徑與子程序啟動方式（D100） |
-| `asset_library/` | 隨 repo 附的 CC0 素材包（Foozle Lucifer 等），File ▸ Import from Asset Library… 從這裡挑 |
+| `asset_library/` | 隨 repo 附的 CC0 素材包，依種類分資料夾 `asset_library/<種類>/<素材包>/`：characters（角色與怪物）、tilesets、objects、items、icons、effects、ui、models_3d、fonts；File ▸ Import from Asset Library… 從這裡挑，腳本用 `find_pack(名稱)` 找包 |
 | `tests/` | 全部測試 |
 | `scripts/` | 實機驗證、編輯器稽核、量測、範本同步、免安裝版打包（`build_app.py`） |
 | `docs/manual/` | 給遊戲作者的使用手冊（中英文） |
@@ -414,7 +414,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 精靈表 | 中繼資料 `scaling`：`pixel`（預設）／`smooth`，戰鬥與地圖照它用最近鄰或平滑縮放；編輯器 Sprite Animation ▸ Sheet ▸ 縮放方式；playtest manifest `field.player_scaling` |
-| 素材 | `asset_library/kaykit/`（KayKit Adventurers 2.0、Character Animations 1.1，CC0）與渲染成品；`scripts/build_kaykit_art.py`（`--render` 用 Blender 拍，否則只組圖）、`scripts/kaykit_render_blender.py` |
+| 素材 | `asset_library/models_3d/`（KayKit Adventurers 2.0、Character Animations 1.1，CC0）與渲染成品 `asset_library/characters/KayKit_Rendered_Sheets/`；`scripts/build_kaykit_art.py`（`--render` 用 Blender 拍，否則只組圖）、`scripts/kaykit_render_blender.py` |
 | Demo | Full Verification 隊伍仍是 Lucifer 像素風；建置時 `ASTERIA_FV_PARTY=kaykit` 可換成 KayKit（`trial_kaykit.py`）；`build_kaykit_art.py --style toon` 產生卡通著色＋外框的像素版 |
 
 ### D56 新增（2026-10-23；細節見 DECISION_LOG）
@@ -437,7 +437,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 素材 | `asset_library/opengameart/7Soul_496_RPG_Icons/`（CC0，496 張 34×34） |
+| 素材 | `asset_library/icons/7Soul_496_RPG_Icons/`（CC0，496 張 34×34） |
 | Demo | Full Verification 九種武器類型（含新的書、拳、投擲與它們的普通攻擊）各 ≥5 把、五個稀有度；`trial_arsenal.py`；證據 `audits/evidence/arsenal/` |
 | Demo | 防具 18、飾品 19、道具 94（藥水、狀態藥、投擲、材料、屬性寶珠、卡片）；`trial_supplies.py`；會解除狀態的技能說明寫 removes |
 | 引擎 | 商店可以賣裝備：`ShopRuntime(receive_equipment=, equipment=)`，買下進裝備背包；商店清單跟著游標捲動；工坊精煉結果 `workshop.outcome.*` 有翻譯 |

@@ -9,27 +9,34 @@ bundled license file.
 project imports pictures from it (File > Import from Asset Library…, copied into the project's
 `playable_assets/library/`), and the Full Verification build reads its art from it.
 
-- `asset_library/foozle/` - 35 CC0 Foozle pixel packs from `~/Downloads/free_assets`: PNGs,
+Since 2026-11-01 the packs are sorted by what they hold, `asset_library/<kind>/<pack>/`:
+`characters/` (heroes and monsters alike: the Foozle character and critter packs, the KayKit
+rendered sheets), `tilesets/`, `objects/` (chests, traps), `items/` (equipment, pickups),
+`icons/` (the OpenGameArt icon packs), `effects/`, `ui/` (panels, HUD, numbers), `models_3d/`
+(KayKit) and `fonts/`. Each pack keeps its own folder name and readme; scripts find a pack by
+name (`asteria.assets.library.find_pack`). The entries below name each pack's kind folder.
+
+- Foozle (`characters/`, `tilesets/`, `objects/`, `items/`, `effects/`, `ui/`) - 35 CC0 Foozle pixel packs from `~/Downloads/free_assets`: PNGs,
   fonts and each pack's readme (1,300 files, 11 MB). Left out: the music packs (1.3 GB; the
   build reads the few tracks it uses from `ASTERIA_MUSIC_ASSETS`, default
   `~/Downloads/free_assets`, and keeps its copies), the isometric gold mines, the vector packs,
   the Chest and Key pack and the two robot packs (high-resolution, not pixel art), and
   **Critters Tileset 2 Old Castle (`Foozle_2DT0005`), whose licence is not CC0 and forbids
   redistributing the art files** - it stays local only.
-- `asset_library/opengameart/CC0_Ranged_Icons_HomoHikka/` - a bow (32x32, 48x48) by HomoHikka,
+- `asset_library/icons/CC0_Ranged_Icons_HomoHikka/` - a bow (32x32, 48x48) by HomoHikka,
   "Generic Fantasy RPG Items" (https://opengameart.org/node/115091), CC0 1.0, from the "CC0
   Ranged Icons" collection (https://opengameart.org/content/cc0-ranged-icons); downloaded
   2026-10-19. The Full Verification demo's Hunter's Bow and Longbow wear it with a Lucifer
   rarity outline.
-- `asset_library/opengameart/7Soul_496_RPG_Icons/` (added 2026-10-24, 1.9 MB) - "496 pixel art
+- `asset_library/icons/7Soul_496_RPG_Icons/` (added 2026-10-24, 1.9 MB) - "496 pixel art
   icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1),
   https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg, licence field
   CC0 (checked 2026-10-24; the author also calls them public domain). All 496 icons, 34x34,
   unchanged (`Readme.txt`). The Full Verification demo's added weapons (D61) wear them: every
   kind incl. books, fists and throwing weapons, which the Lucifer pack does not draw.
-- `asset_library/opengameart/CC0_Ranged_Icons_Falco276/` - three bows and two arrows (32x32) by
+- `asset_library/icons/CC0_Ranged_Icons_Falco276/` - three bows and two arrows (32x32) by
   Falco276 from the same collection (drawn from openclipart.org), CC0 1.0; not used yet.
-- `asset_library/kaykit/` (added 2026-10-23, 18 MB) - Kay Lousberg's CC0 3D chibi characters,
+- KayKit (`asset_library/models_3d/`, rendered sheets in `characters/`; added 2026-10-23, 18 MB) - Kay Lousberg's CC0 3D chibi characters,
   tried as the Full Verification party (the demo keeps its Lucifer party unless built with
   `ASTERIA_FV_PARTY=kaykit`): `KayKit_Adventurers_2.0/` (the six free characters as
   .glb with textures, the 31 hand-held props as gltf; `License.txt` CC0 1.0, from

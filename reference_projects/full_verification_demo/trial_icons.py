@@ -116,7 +116,7 @@ def _outline(image, color=(24, 16, 28, 255)):
 
 
 OUTLINE = {"common": (183, 183, 183), "rare": (209, 202, 128)}  # the Lucifer rarity outlines
-BOW = lucifer.FREE_ASSETS.parent / "opengameart" / "CC0_Ranged_Icons_HomoHikka" / "32x32"
+BOW = lucifer.FREE_ASSETS / "CC0_Ranged_Icons_HomoHikka" / "32x32"
 
 
 def _library_bow(rarity):

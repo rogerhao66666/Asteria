@@ -11,7 +11,7 @@ What a weapon gives follows its rarity (``TIERS``): its kind's main stat (``powe
 sockets - Magic one gem socket, Rare and above two gem sockets and a card socket. Every weapon
 carries the ``weapon`` tag, so the workshop refines it (``RefineRules`` "plus").
 
-The pictures are 7Soul's "496 pixel art icons" (CC0, ``asset_library/opengameart/
+The pictures are 7Soul's "496 pixel art icons" (CC0, ``asset_library/icons/
 7Soul_496_RPG_Icons``), copied into ``playable_assets/icons_7soul``. ``apply(project, root)``
 adds what is missing and can run again on a built project; ``build_project.py`` runs it.
 """
@@ -23,7 +23,7 @@ import json
 import shutil
 from pathlib import Path
 
-LIBRARY = Path(__file__).resolve().parents[2] / "asset_library" / "opengameart"
+LIBRARY = Path(__file__).resolve().parents[2] / "asset_library" / "icons"
 ICONS = LIBRARY / "7Soul_496_RPG_Icons"
 ICON_DIR = "playable_assets/icons_7soul"
 
@@ -101,7 +101,7 @@ def credits_rows():
         "| `icons_7soul/*.png` (the added weapons, armour, accessories and supplies, D61) | "
         '"496 pixel art icons for '
         'medieval/fantasy RPG" (https://opengameart.org/content/496-pixel-art-icons-for-'
-        "medievalfantasy-rpg), copied unmodified from `asset_library/opengameart/"
+        "medievalfantasy-rpg), copied unmodified from `asset_library/icons/"
         f"7Soul_496_RPG_Icons` | Henrique Lazarini (7Soul1) | {cc0} |"
     ]
 

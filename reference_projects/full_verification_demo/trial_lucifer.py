@@ -12,11 +12,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-# the CC0 Foozle pixel packs: the engine's asset library (asset_library/foozle in the repo)
-FREE_ASSETS = Path(
-    os.environ.get(
-        "ASTERIA_FREE_ASSETS", Path(__file__).resolve().parents[2] / "asset_library" / "foozle"
-    )
+from asteria.assets.library import PackFolder
+
+# the CC0 Foozle pixel packs: the engine's asset library (asset_library/<kind>/<pack> in the
+# repo), addressed by pack name - FREE_ASSETS / "Foozle_..." finds the pack in its kind folder
+FREE_ASSETS = PackFolder(
+    os.environ.get("ASTERIA_FREE_ASSETS", Path(__file__).resolve().parents[2] / "asset_library")
 )
 # the music packs are large and stay outside the repo; without them the copies kept in
 # playable_assets/audio are used
