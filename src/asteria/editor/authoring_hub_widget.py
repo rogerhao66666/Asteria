@@ -1047,6 +1047,7 @@ class AdapterFamilyWidget(QWidget):
         # the makers' own note: the last block of every record's form, scrolling with it
         self.note_box = AuthorNoteBox(document)
         self.editor.description_switch = self.note_box.switch
+        self.editor.siblings = self._sibling_records  # its numbers beside theirs
         self.editor.trailer = self.note_box
         split = QSplitter()
         split.addWidget(browser_panel)
@@ -1257,6 +1258,13 @@ class AdapterFamilyWidget(QWidget):
             if not self._list_chosen:  # a skill tree opens as its graph until List is asked for
                 self.detail_stack.setCurrentWidget(self.graph_view)
                 self.view_button.setText("List / Data View")
+
+    def _sibling_records(self):
+        """Every record of the kind shown, as the form edits them (for comparing)."""
+        adapter = self.adapter
+        if adapter is None:
+            return {}
+        return {key: adapter.encode(adapter.get(key)) for key in adapter.ids()}
 
     def toggle_skill_tree_view(self):
         if self.category_id != "graphs":

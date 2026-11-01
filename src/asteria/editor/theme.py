@@ -242,6 +242,9 @@ QGroupBox#EnemyAISectionCard {
     border-radius: 0; margin: 0; padding: 0;
 }
 QLabel#EnemyAISectionTitle { color: $text; font-weight: 700; }
+QFrame#EventSettingsCard {
+    background: $panel; border: 1px solid $border_strong; border-radius: 6px;
+}
 QFrame#AuthoringSidebarCard, QFrame#AuthoringPreviewCard {
     background: $panel; border: 1px solid $border_strong; border-radius: 0;
 }
@@ -778,12 +781,16 @@ QToolButton#FormSectionTitle, QToolButton#FormSectionTitle:checked {{ border: no
 QToolButton#FormSectionTitle:hover {{ border: none; background: transparent;
     color: {p.primary_hi}; }}
 QLabel#FormFieldLabel {{ color: {p.text_dim}; }}
+QLabel#FormTableHead {{ color: {p.text_muted}; font-weight: 600; }}
 QFrame#FormCard {{ background: {p.list_alt}; border: 1px solid {p.border_strong};
     border-radius: 6px; }}
 QToolButton#FormChip {{ background: {p.raised}; color: {p.text};
     border: 1px solid {p.border_strong}; border-radius: 11px; padding: 2px 8px; }}
 QToolButton#FormChip:hover {{ background: {p.danger_bg}; border-color: {p.danger_border};
     color: {p.danger_text}; }}
+QToolButton#FormRowRemove {{ background: transparent; color: {p.text_muted}; border: none;
+    padding: 0 6px; }}
+QToolButton#FormRowRemove:hover {{ color: {p.danger_text}; }}
 QToolButton#FormAddChip {{ background: transparent; color: {p.text_dim};
     border: 1px dashed {p.border_strong}; border-radius: 11px; padding: 2px 8px; }}
 QToolButton#FormAddChip:hover {{ color: {p.text}; border-color: {p.text_muted}; }}

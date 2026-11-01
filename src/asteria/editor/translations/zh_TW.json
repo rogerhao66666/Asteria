@@ -1907,7 +1907,7 @@
   "Poise damage": "韌性傷害",
   "Poison Dmg": "毒傷害",
   "Port": "連接埠",
-  "Portrait": "肖像",
+  "Portrait": "頭像",
   "Portrait (empty = their battle portrait)": "肖像（空白＝戰鬥肖像）",
   "Portrait HUD Zone ID": "肖像 HUD 區域 ID",
   "Portrait Party Layout": "肖像隊伍版面",
@@ -3696,7 +3696,51 @@
   "Click to see and edit its events": "點一下查看並編輯它的事件",
   "No sockets yet. Name a point on the body (hand_r, head) below, then Add Socket.": "還沒有掛點。在下方為身體上的一個點命名（hand_r、head），再按新增掛點。",
   "Nothing worn yet. Add a socket, then choose what is worn below and Attach.": "還沒有穿戴物。先新增掛點，再於下方選擇要穿戴的東西並按附加。",
-  "No layers yet. Choose another sheet below to draw over (or behind) this body.": "還沒有圖層。在下方選另一張圖，疊在這個身體上方（或後方）。"
+  "No layers yet. Choose another sheet below to draw over (or behind) this body.": "還沒有圖層。在下方選另一張圖，疊在這個身體上方（或後方）。",
+  "Content": "內容",
+  "Pick a person or object on the left (or in the Scene) to see and edit its events.": "從左邊（或場景中）選一個人物或物件，查看並編輯它的事件。",
+  "When the player talks to it": "玩家對它說話時",
+  "By itself when the map opens": "進入地圖時自動開始",
+  "Always, in the background": "一直在背景執行",
+  "The player faces it and presses the Action key (RPG Maker: Action Button)": "玩家面向它按下動作鍵（RPG Maker：按下確定鍵）",
+  "Starts on its own and holds the player until it ends (RPG Maker: Autorun)": "自動開始，執行完之前玩家不能動（RPG Maker：自動執行）",
+  "Keeps running beside play, the player still moves (RPG Maker: Parallel)": "與遊戲同時執行，玩家仍可移動（RPG Maker：並行處理）",
+  "When talked to": "對話時",
+  "Autorun": "自動執行",
+  "Background": "背景執行",
+  "A line of dialogue, with its speaker and portrait": "一句對話，含說話者與頭像",
+  "A question with answers the player picks": "讓玩家從選項中選擇的問題",
+  "Wait some seconds, or until a switch or variable is set": "等待幾秒，或等到開關／變數成立",
+  "Run the next commands only when a switch or variable says so": "只有開關／變數符合時才執行接下來的指令",
+  "Turn a switch on or off (remembered in the save)": "打開或關閉開關（會存進存檔）",
+  "Set a number the game remembers": "設定遊戲會記住的數字",
+  "Change the world: give items, start a battle, open a shop…": "改變世界：給道具、開始戰鬥、開商店…",
+  "Moves, camera and effects running side by side (a cutscene)": "同時進行的移動、鏡頭與特效（過場動畫）",
+  "People & Objects": "人物與物件",
+  "Each event of this person or object (RPG Maker: a page)": "這個人物或物件的每個事件（RPG Maker：事件頁）",
+  "+ New Event": "+ 新增事件",
+  "Another event: started another way, or on a switch": "另一個事件：用不同方式開始，或在開關打開時",
+  "The command list this event runs; several events may share one": "這個事件執行的指令清單；多個事件可共用同一份",
+  "Run only while a switch is on (RPG Maker: page conditions)": "只在開關打開時執行（RPG Maker：出現條件）",
+  "Starts": "開始方式",
+  "Runs": "執行",
+  "Only when": "條件",
+  "Double-click a command to change it": "雙擊指令即可修改",
+  "Move the command up": "指令上移",
+  "Move the command down": "指令下移",
+  "No event yet: + New Event makes one": "還沒有事件：按 + 新增事件 建立",
+  "Selected command": "選取的指令",
+  "Click a command to see it here.": "點一個指令就會顯示在這裡。",
+  "Also": "另有",
+  "Growth Curves": "成長曲線",
+  "Preview with": "預覽角色",
+  "Up to level": "顯示到等級",
+  "The actor whose base stats the job's growth is added to": "用哪個角色的基礎能力值加上這個職業的成長來預覽",
+  "How far the charts reach (only what is shown here)": "圖表顯示到幾級（只影響這裡的顯示）",
+  "No growth": "不成長",
+  "This entry's other fields (empty or rarely changed)": "這一筆的其他欄位（空白或很少更改）",
+  "Each bar reaches the strongest record of this kind; the tick marks the average of all of them.": "每條長條以同類中最高的一筆為滿格；刻線標出所有同類的平均值。",
+  "Where each entry stands, by its X and Y (only a picture)": "依各筆的 X、Y 畫出位置（只是示意圖）"
  },
  "patterns": [
   [
@@ -3962,6 +4006,46 @@
   [
    "New rig (?P<r>\\S+): (?P<n>\\d+) bones",
    "新骨架 {r}：{n} 根骨骼"
+  ],
+  [
+   "Lv (?P<l>\\d+): (?P<v>\\S+)",
+   "Lv {l}：{v}"
+  ],
+  [
+   "Cannot draw the curves yet: (?P<e>.+)",
+   "暫時無法畫出曲線：{e}"
+  ],
+  [
+   "(?P<n>\\S+) is ON",
+   "{n} 為 ON"
+  ],
+  [
+   "(?P<n>\\S+) is OFF",
+   "{n} 為 OFF"
+  ],
+  [
+   "Events — (?P<n>.+)",
+   "事件 — {n}"
+  ],
+  [
+   "(?P<a>.+) is ON and (?P<b>.+)",
+   "{a} 為 ON 且 {b!t}"
+  ],
+  [
+   "(?P<k>.+) compared",
+   "{k!T}：與同類比較"
+  ],
+  [
+   "Average (?P<a>\\S+) · strongest (?P<t>\\S+)",
+   "平均 {a} · 最高 {t}"
+  ],
+  [
+   "(?P<v>\\S+)  #(?P<r>\\d+) of (?P<n>\\d+)",
+   "{v}  第 {r} 名 / 共 {n}"
+  ],
+  [
+   "Edit the (?P<k>.+)",
+   "編輯{k!t}"
   ]
  ]
 }

@@ -1468,7 +1468,9 @@ class AsteriaEditorWindow(QMainWindow):
             )
             return
         bindings = bindings_for_scene(project, scene)
-        self.event_editor.set_entity_context(entity, bindings, project.event_programs)
+        self.event_editor.set_entity_context(
+            entity, bindings, project.event_programs, self._event_candidates(project)
+        )
 
     def _current_event_binding(self):
         project = self.document.project

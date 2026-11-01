@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLayout,
     QLineEdit,
@@ -42,13 +43,15 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QStyle,
     QStyleOptionComboBox,
+    QTableWidget,
+    QTableWidgetItem,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from .decor import hide_help_tip, show_help_tip
-from .i18n import english
+from .i18n import english, translate
 from .image_tools import picture_field
 from .record_vocabulary import (
     CATEGORY_HELP,
@@ -447,9 +450,12 @@ class PickDialog(QDialog):
 
 
 class ChipList(QWidget):
-    """A list of values as chips (click one to remove it) and an Add button with a picker."""
+    """A list of values as a table (as RPG Maker's Traits: a tag's kind and what it is, or a
+    record's name and id), ✕ on a row removes it, Add opens a picker."""
 
     edited = Signal()
+    ROW = 26  # a row's height: the table is as tall as its rows, no scrolling inside a form
+    SPLIT = 8  # more rows than this: the list in two halves side by side
 
     def __init__(self, values, choices, *, icons=None, allow_new=True, noun="entry", namer=None):
         super().__init__()
@@ -459,61 +465,116 @@ class ChipList(QWidget):
         self.icons = icons
         self.allow_new = allow_new
         self.noun = noun
-        self.flow = FlowLayout(self)
         self._labels = {c.value: c for c in self.choices}
-        self._build()
-
-    def hasHeightForWidth(self):  # noqa: N802 - Qt API: the chips wrap
-        return True
-
-    def heightForWidth(self, width):  # noqa: N802
-        return max(26, self.flow.heightForWidth(width))
-
-    def minimumSizeHint(self):  # noqa: N802 - a layout that ignores height-for-width still
-        width = self.width() if self.width() > 50 else 360  # gives the chips their rows
-        return QSize(120, self.heightForWidth(width))
-
-    def sizeHint(self):  # noqa: N802
-        return self.minimumSizeHint()
-
-    def resizeEvent(self, event):  # noqa: N802
-        super().resizeEvent(event)
-        self._fit()
-
-    def _fit(self):
-        """Ask for the height the chips need at this width (any parent layout honours it)."""
-        width = self.width() if self.width() > 50 else 360
-        needed = self.heightForWidth(width)
-        if self.minimumHeight() != needed:
-            self.setMinimumHeight(needed)
-            self.updateGeometry()
-
-    def _build(self):
-        while self.flow.count():
-            item = self.flow.takeAt(0)
-            if item.widget() is not None:
-                item.widget().hide()  # gone now, not only once the event loop runs
-                item.widget().deleteLater()
-        for value in self.values:
-            choice = self._labels.get(value)
-            chip = QToolButton()
-            chip.setObjectName("FormChip")
-            shown = choice.label if choice else (self.namer(value) if self.namer else value)
-            chip.setText(shown + "  ✕")
-            chip.setToolTip(f"{self.noun.title()}: {value}\nClick to remove")
-            if choice is not None and choice.icon and self.icons:
-                icon = self.icons(choice.icon)
-                if icon is not None:
-                    chip.setIcon(icon)
-                    chip.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-            chip.clicked.connect(lambda _c=False, v=value: self._remove(v))
-            self.flow.addWidget(chip)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(4)
+        self.table = QTableWidget(0, 3, self)
+        self.table.setObjectName("FormListTable")
+        self.heads = ("Type", "Content") if noun == "tag" else (noun.title(), "ID")
+        self.table.setHorizontalHeaderLabels([*self.heads, ""])
+        self.table.verticalHeader().hide()
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(False)
+        self.table.setFocusPolicy(Qt.ClickFocus)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.table.verticalHeader().setDefaultSectionSize(self.ROW)
+        self.table.horizontalHeader().setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.table.installEventFilter(self)
+        self.table.wheelEvent = lambda event: event.ignore()  # the form scrolls, not it
+        column.addWidget(self.table)
+        self.empty = _small(f"No {_plural(noun)} yet.")
+        column.addWidget(self.empty)
         add = QToolButton()
         add.setObjectName("FormAddChip")
         add.setText(f"+ Add {self.noun}")
         add.clicked.connect(self._add)
-        self.flow.addWidget(add)
-        self._fit()
+        row = QHBoxLayout()
+        row.addWidget(add)
+        row.addStretch(1)
+        column.addLayout(row)
+        self._build()
+
+    def eventFilter(self, watched, event):  # noqa: N802 - Qt API: Delete removes the rows
+        if (
+            watched is self.table
+            and event.type() == QEvent.KeyPress
+            and event.key() in (Qt.Key_Delete, Qt.Key_Backspace)
+        ):
+            spots = {(i.row(), i.column() // 3) for i in self.table.selectedIndexes()}
+            places = [band * self.table.rowCount() + row for row, band in spots]
+            gone = {self.values[p] for p in places if p < len(self.values)}
+            if gone:
+                self.values = [v for v in self.values if v not in gone]
+                self._build()
+                self.edited.emit()
+            return True
+        return super().eventFilter(watched, event)
+
+    def cells(self, value):
+        """The row's two cells in words: a tag's kind and what it is; a record's name and id."""
+        choice = self._labels.get(value)
+        shown = choice.label if choice else (self.namer(value) if self.namer else value)
+        if self.noun != "tag":
+            return shown, value
+        head, mark, rest = shown.partition(": ")
+        return (head, rest) if mark else ("Tag", shown)
+
+    def _shape(self):
+        """A long list (more than SPLIT rows) in two halves side by side: half as tall."""
+        table, bands = self.table, 2 if len(self.values) > self.SPLIT else 1
+        table.setColumnCount(3 * bands)
+        table.setHorizontalHeaderLabels([*self.heads, ""] * bands)
+        header = table.horizontalHeader()
+        for band in range(bands):
+            first = 3 * band
+            header.setSectionResizeMode(first, QHeaderView.Interactive)
+            header.setSectionResizeMode(first + 1, QHeaderView.Stretch)
+            header.setSectionResizeMode(first + 2, QHeaderView.Fixed)
+            header.resizeSection(first, 180 if bands == 1 else 120)
+            header.resizeSection(first + 2, 30)
+        rows = -(-len(self.values) // bands)
+        table.setRowCount(rows)
+        return rows
+
+    def _build(self):
+        table = self.table
+        table.clearContents()
+        rows = self._shape()
+        for index, value in enumerate(self.values):
+            band, row = divmod(index, rows) if rows else (0, 0)
+            base = 3 * band
+            first, second = self.cells(value)
+            left = QTableWidgetItem(translate(first))
+            right = QTableWidgetItem(translate(second) if self.noun == "tag" else second)
+            for item in (left, right):
+                item.setToolTip(f"{self.noun.title()}: {value}")
+            choice = self._labels.get(value)
+            if choice is not None and choice.icon and self.icons:
+                icon = self.icons(choice.icon)
+                if icon is not None:
+                    left.setIcon(icon)
+            if self.noun != "tag":
+                right.setForeground(QColor("#8b8e98"))  # the id, quieter than the name
+            table.setItem(row, base, left)
+            table.setItem(row, base + 1, right)
+            remove = QToolButton()
+            remove.setObjectName("FormRowRemove")
+            remove.setText("✕")
+            remove.setAutoRaise(True)
+            remove.setToolTip(f"Remove {first if self.noun != 'tag' else second}")
+            remove.clicked.connect(lambda _c=False, v=value: self._remove(v))
+            table.setCellWidget(row, base + 2, remove)
+        if self.noun != "tag":
+            for first in range(0, table.columnCount(), 3):
+                table.resizeColumnToContents(first)
+                table.setColumnWidth(first, max(180, min(320, table.columnWidth(first) + 16)))
+        table.setVisible(bool(self.values))
+        self.empty.setVisible(not self.values)
+        table.setFixedHeight(table.horizontalHeader().height() + self.ROW * rows + 4)
 
     def _remove(self, value):
         self.values = [v for v in self.values if v != value]
@@ -585,7 +646,7 @@ class AmountTable(QWidget):
         self.per_row = 2  # name / number pairs on a row: as many as the width holds
         self._build()
 
-    PAIR_MIN = 300  # a pair's width at the least: its name, its number, ✕ and the gap
+    PAIR_MIN = 230  # a pair's width at the least: its name, its number, ✕ and the gap
 
     def resizeEvent(self, event):  # noqa: N802 - Qt API
         super().resizeEvent(event)
@@ -610,9 +671,9 @@ class AmountTable(QWidget):
             name = QLabel(self._labels.get(key) or label_for(key))
             name.setToolTip(key)
             text_width = name.fontMetrics().horizontalAdvance(name.text()) + 10
-            name.setMinimumWidth(min(260, max(120, text_width)))  # long names are not cut
+            name.setMinimumWidth(min(220, max(72, text_width)))  # long names are not cut
             box = NumberBox(value, integer=isinstance(value, int), percent=self.percent)
-            box.setMaximumWidth(120)
+            box.setMaximumWidth(100)
             box.valueChanged.connect(lambda _v, k=key, b=box: self._set(k, b.number()))
             remove = QToolButton()
             remove.setText("✕")
@@ -662,6 +723,99 @@ class AmountTable(QWidget):
         if dialog.exec():
             for value in dialog.values():
                 self.values.setdefault(str(value), 0.0)
+            self._build()
+            self.edited.emit()
+
+
+class NumberMatrix(QWidget):
+    """``{row: {column: number}}`` as one table: a row per name (HP, MP…), a column per
+    value (Current, Maximum, Minimum), ✕ removes a row, Add one more."""
+
+    edited = Signal()
+    ORDER = ("current", "maximum", "minimum")
+
+    def __init__(self, values, labels, *, noun="entry"):
+        super().__init__()
+        self.labels = dict(labels)
+        rank = {"vitality": -2, "technique": -1}  # HP, MP first, then as the game lists
+        rank.update({k: i for i, k in enumerate(self.labels) if k not in rank})
+        ordered = sorted(values.items(), key=lambda kv: (rank.get(kv[0], 1e9), kv[0]))
+        self.values = {k: dict(v) for k, v in ordered}
+        self.noun = noun
+        first = next(iter(self.values.values()))
+        self.columns = sorted(
+            first, key=lambda c: (self.ORDER.index(c) if c in self.ORDER else 9, c)
+        )
+        self.grid = QGridLayout()
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setHorizontalSpacing(12)
+        self.grid.setVerticalSpacing(4)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.addLayout(self.grid)
+        add = QPushButton(f"+ Add {noun}")
+        add.setObjectName("FormAddButton")
+        add.clicked.connect(self._add)
+        row = QHBoxLayout()
+        row.addWidget(add)
+        row.addStretch(1)
+        column.addLayout(row)
+        self._build()
+
+    def _build(self):
+        while self.grid.count():
+            item = self.grid.takeAt(0)
+            if item.widget() is not None:
+                item.widget().hide()
+                item.widget().deleteLater()
+        for c, name in enumerate(self.columns, 1):
+            head = _small(label_for(name))
+            self.grid.addWidget(head, 0, c)
+        for r, (key, row) in enumerate(self.values.items(), 1):
+            name = QLabel(self.labels.get(key) or label_for(key))
+            name.setToolTip(key)
+            name.setMinimumWidth(80)
+            self.grid.addWidget(name, r, 0)
+            for c, column in enumerate(self.columns, 1):
+                value = row.get(column, 0.0)
+                box = NumberBox(value, integer=isinstance(value, int))
+                box.setMaximumWidth(120)
+                box.valueChanged.connect(
+                    lambda _v, k=key, n=column, b=box: self._set(k, n, b.number())
+                )
+                self.grid.addWidget(box, r, c)
+            remove = QToolButton()
+            remove.setObjectName("FormRowRemove")
+            remove.setText("✕")
+            remove.setToolTip(f"Remove {name.text()}")
+            remove.clicked.connect(lambda _c=False, k=key: self._remove(k))
+            self.grid.addWidget(remove, r, len(self.columns) + 1)
+        for c in range(len(self.columns) + 3):
+            self.grid.setColumnStretch(c, 0)
+        self.grid.setColumnStretch(len(self.columns) + 2, 1)
+
+    def value(self):
+        return {k: dict(v) for k, v in self.values.items()}
+
+    def _set(self, key, column, number):
+        self.values[key][column] = number
+        self.edited.emit()
+
+    def _remove(self, key):
+        if len(self.values) <= 1:
+            return  # the table keeps one row: its columns come from it
+        self.values.pop(key, None)
+        self._build()
+        self.edited.emit()
+
+    def _add(self):
+        from .record_vocabulary import Choice
+
+        free = [Choice(k, v) for k, v in self.labels.items() if k not in self.values]
+        dialog = PickDialog(f"Add {self.noun}", free, allow_new=True, parent=self)
+        if dialog.exec():
+            for value in dialog.values():
+                self.values.setdefault(str(value), {c: 0.0 for c in self.columns})
             self._build()
             self.edited.emit()
 
@@ -934,6 +1088,7 @@ class RecordForm(QScrollArea):
         self.optional = set()
         self.description_switch = None  # () -> a Players See It switch for the description
         self.trailer = None  # a widget kept at the end of every record's page (its Note)
+        self.siblings = None  # () -> {record id: data} of the records of the same kind
         self._data = None
         self._title = None
         self._icons = {}
@@ -1057,10 +1212,13 @@ class RecordForm(QScrollArea):
         self._header(data)
         record_id_key = self._id_key(data)
         name_key = next((k for k in NAME_KEYS if isinstance(data.get(k), str)), None)
-        basics = Section("Basics", hint=CATEGORY_HELP.get(self.category, ""))
-        tags = Section("Tags and lists")
-        numbers = Section("Numbers")
-        advanced = Section("Advanced", collapsed=True, hint="Filled in for you; rarely changed.")
+        # small fields three to a row, labels above them: a lone number no longer owns a row
+        basics = Section("Basics", hint=CATEGORY_HELP.get(self.category, ""), columns=3)
+        tags = Section("Tags and lists", columns=3)
+        numbers = Section("Numbers", columns=3)
+        advanced = Section(
+            "Advanced", collapsed=True, hint="Filled in for you; rarely changed.", columns=3
+        )
         nested = []
         for key, value in data.items():
             if key in FORMAT_KEYS or key in OWN_VIEW_KEYS or key in (record_id_key, name_key):
@@ -1079,7 +1237,9 @@ class RecordForm(QScrollArea):
                 nested.append((key, value, target is advanced))
             else:
                 self._field(target, data, key, value)
-        more = Section("More fields", collapsed=True, hint="Optional, nothing written yet.")
+        more = Section(
+            "More fields", collapsed=True, hint="Optional, nothing written yet.", columns=3
+        )
         for key in _FIRST_SECTIONS.get(self.category, ()):  # a fighter's pictures first
             for entry in [n for n in nested if n[0] == key]:
                 nested.remove(entry)
@@ -1089,6 +1249,11 @@ class RecordForm(QScrollArea):
         for section in (basics, numbers, tags):
             if section.form.count():
                 self._layout.addWidget(section)
+            if section is numbers and self.category in ("classes", "actors"):
+                self._layout.addWidget(self._growth_section())
+            if section is numbers:
+                for compare in self._comparison_sections(data):
+                    self._layout.addWidget(compare)
             else:  # only empty optional fields: they wait together at the end
                 for label, widget, help_text, key in section._more:
                     widget.show()
@@ -1102,6 +1267,42 @@ class RecordForm(QScrollArea):
             self._layout.addWidget(more)
         if advanced.has_rows():
             self._layout.addWidget(advanced)
+
+    def _comparison_sections(self, data):
+        """Each list of numbers (an enemy's stats) as bars beside the other records of its
+        kind, when there are some to compare with."""
+        siblings = self.siblings() if self.siblings is not None else {}
+        siblings = {k: v for k, v in siblings.items() if k != self._title and isinstance(v, dict)}
+        if not siblings:
+            return []
+        from .growth_curves import StatComparison
+
+        known = {c.value for kind in ("stats", "resources") for c in self.vocabulary.choices(kind)}
+        sections = []
+        for key, value in data.items():
+            if key in TECHNICAL or not _number_map(value) or len(value) < 3:
+                continue
+            if not set(value) <= known:  # stats and resources, not a position or a scale
+                continue
+            if not any(isinstance(other.get(key), dict) for other in siblings.values()):
+                continue
+            section = Section(
+                f"{label_for(key)} compared",
+                hint="Each bar reaches the strongest record of this kind; the tick marks the "
+                "average of all of them.",
+            )
+            section.add_wide(StatComparison(self, key, siblings))
+            sections.append(section)
+        return sections
+
+    def _growth_section(self):
+        """A job's (an actor's) stats level by level, as charts (growth_curves)."""
+        from .growth_curves import GrowthCurves
+
+        section = Section("Growth Curves")
+        self.growth_curves = GrowthCurves(self, self.category)
+        section.add_wide(self.growth_curves)
+        return section
 
     def _header(self, data):
         card = QFrame()
@@ -1192,11 +1393,26 @@ class RecordForm(QScrollArea):
                 self._field(section, parent, key, value, label="")
             elif _text_map(value) and value:
                 self._field(section, parent, key, value, label="")
+            elif _number_matrix(value):  # HP, MP… each with current / maximum / minimum
+                kind = map_source(str(key)) or "resources"
+                labels = {c.value: c.label for c in self.vocabulary.choices(kind)}
+                matrix = NumberMatrix(value, labels, noun=_noun(str(key)))
+                matrix.edited.connect(lambda m=matrix: self._set(parent, key, m.value()))
+                section.add_wide(matrix)
             else:
                 inner = _SubForm(self, value, key)
                 section.add_wide(inner)
         else:
-            section.add_wide(CardList(self, parent, key, value))
+            if _positions(value):  # where each entry stands, drawn above the list
+                from .growth_curves import PositionsPreview
+
+                names = self.vocabulary.names()
+                section.add_wide(
+                    PositionsPreview(
+                        self, lambda v=value: [(_entry_title(e, "", names), e) for e in v]
+                    )
+                )
+            section.add_wide(_entry_list(self, parent, key, value))
 
     def _field(self, section, data, key, value, *, label=None):
         widget = self.widget_for(data, key, value)
@@ -1216,6 +1432,7 @@ class RecordForm(QScrollArea):
                 column.setSpacing(4)
                 column.addWidget(widget)
                 column.addWidget(switch)
+                holder.setProperty("wide", True)  # long text: a whole row
                 widget = holder
         source = self._reference(data, str(key)) if isinstance(value, str) else None
         about = self.vocabulary.description(source, value) if source else ""
@@ -1373,7 +1590,7 @@ class RecordForm(QScrollArea):
         if isinstance(value, dict):
             return _SubForm(self, value, key)
         if isinstance(value, list):
-            return CardList(self, data, key, value)
+            return _entry_list(self, data, key, value)
         return QLabel(str(value))
 
     def vocabulary_tags(self):
@@ -1510,7 +1727,7 @@ class _SubForm(QWidget):
             if k in FORMAT_KEYS:
                 continue
             if isinstance(v, list) and not _scalar_list(k, v):
-                self.section.add_row(label_for(k), CardList(form, data, k, v), key=str(k))
+                self.section.add_row(label_for(k), _entry_list(form, data, k, v), key=str(k))
             else:
                 form._field(self.section, data, k, v)
 
@@ -1629,7 +1846,7 @@ class CardList(QWidget):
                 hidden += folded
                 target = extra if folded else section
                 if isinstance(value, list) and not _scalar_list(key, value):
-                    target.add_row(label_for(key), CardList(self.form, entry, key, value))
+                    target.add_row(label_for(key), _entry_list(self.form, entry, key, value))
                 else:
                     self.form._field(target, entry, key, value)
             body.addWidget(section)
@@ -1667,6 +1884,215 @@ class CardList(QWidget):
             self.form.restructure()
 
 
+TABLE_COLUMNS = 6  # an entry with more fields than this keeps its card
+
+
+def _table_columns(entries):
+    """The columns when ``entries`` read best as a table - each a few plain values (a stat
+    change, a drop): the fields any entry has written, in order; ``None`` when an entry holds
+    a written list or part (it keeps its card)."""
+    if not entries or not all(isinstance(e, dict) for e in entries):
+        return None
+    columns = []
+    for entry in entries:
+        for key, value in entry.items():
+            if key in FORMAT_KEYS or key in TECHNICAL or _empty_optional(value):
+                continue
+            if not _cell_value(key, value):
+                return None
+            if key not in columns:
+                columns.append(key)
+    if not columns or len(columns) > TABLE_COLUMNS:
+        return None
+    for entry in entries:  # a column one entry fills and another holds a part in
+        if any(not _cell_value(key, entry.get(key)) for key in columns):
+            return None
+    return columns
+
+
+def _positions(entries):
+    """Entries that each stand somewhere (a formation's slots): a number ``x`` and ``y``."""
+    numbers = (int, float)
+    return len(entries) > 1 and all(
+        isinstance(e, dict)
+        and isinstance(e.get("x"), numbers)
+        and isinstance(e.get("y"), numbers)
+        and not isinstance(e.get("x"), bool)
+        for e in entries
+    )
+
+
+def _cell_value(key, value):
+    """A value that fits a table cell: a plain value, or a few tags (opened from the cell)."""
+    if isinstance(value, list):
+        return _scalar_list(key, value) and len(value) <= 4
+    return isinstance(value, _SCALARS)
+
+
+class ListCell(QToolButton):
+    """A few tags in a table cell, in words; a click opens them to edit."""
+
+    def __init__(self, form, entry, key):
+        super().__init__()
+        self.form, self.entry, self.key = form, entry, key
+        self.setObjectName("FormListCell")
+        self.setToolTip(f"Edit the {label_for(key).lower()}")
+        self.clicked.connect(self.edit)
+        self._show()
+
+    def _show(self):
+        values = self.entry.get(self.key) or []
+        labels = {**self.form.vocabulary.names()}
+        labels.update({c.value: c.label for c in self.form.vocabulary_tags()})
+        words = [translate(str(labels.get(str(v), v))) for v in values]
+        self.setText(", ".join(words) if words else translate("(none)"))
+
+    def edit(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle(label_for(self.key))
+        column = QVBoxLayout(dialog)
+        widget = self.form.widget_for(self.entry, self.key, self.entry.get(self.key) or [])
+        column.addWidget(widget)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.accept)
+        column.addWidget(buttons)
+        dialog.resize(520, 300)
+        dialog.exec()
+        self._show()
+
+
+def _entry_list(form, parent, key, entries):
+    """A list of entries: a table when each is a few plain values, else cards."""
+    columns = _table_columns(entries)
+    if columns is not None:
+        return EntryTable(form, parent, key, entries, columns)
+    return CardList(form, parent, key, entries)
+
+
+class EntryTable(CardList):
+    """Entries as the rows of a table (as RPG Maker's Traits and drops): a column per field,
+    the edit buttons at the row's end; the fields an entry leaves empty open under its row
+    (⋯)."""
+
+    def __init__(self, form, parent, key, entries, columns):
+        QWidget.__init__(self)
+        self.form, self.parent_data, self.key = form, parent, key
+        self.entries, self.columns = entries, columns
+        self.names = form.vocabulary.names()
+        self.setObjectName("FormEntryTable")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        frame = QFrame()
+        frame.setObjectName("FormCard")
+        self.grid = QGridLayout(frame)
+        self.grid.setContentsMargins(8, 6, 8, 6)
+        self.grid.setHorizontalSpacing(10)
+        self.grid.setVerticalSpacing(4)
+        head = QLabel("#")
+        head.setObjectName("FormTableHead")
+        self.grid.addWidget(head, 0, 0)
+        for column, field in enumerate(columns, start=1):
+            title = QLabel(label_for(field) + ("  ⓘ" if HELP.get(field) else ""))
+            title.setObjectName("FormTableHead")
+            if HELP.get(field):
+                title.setToolTip(HELP[field])
+                _help_tip(title)
+            self.grid.addWidget(title, 0, column)
+            sample = next((e[field] for e in entries if field in e), "")
+            small = isinstance(sample, (bool, int, float))
+            self.grid.setColumnStretch(column, 0 if small else 2)
+        self.grid.setColumnStretch(len(columns) + 1, 1)  # the buttons keep to the right
+        for index, entry in enumerate(entries):
+            self._row(index, entry)
+        layout.addWidget(frame)
+        add = QPushButton(f"+ Add {_noun(key)}")
+        add.setObjectName("FormAddButton")
+        add.clicked.connect(self.add)
+        row = QHBoxLayout()
+        row.addWidget(add)
+        row.addStretch(1)
+        layout.addLayout(row)
+
+    def _row(self, index, entry):
+        line = 1 + 2 * index
+        number = QLabel(f"<b>{index + 1}</b>")
+        number.setToolTip(_entry_title(entry, _noun(self.key), self.names))
+        self.grid.addWidget(number, line, 0)
+        for column, field in enumerate(self.columns, start=1):
+            if isinstance(entry.get(field), list):
+                widget = ListCell(self.form, entry, field)
+            elif field in entry:
+                widget = self.form.widget_for(entry, field, entry[field])
+            else:
+                widget = None
+            if widget is None:
+                widget = _small("—")
+            elif isinstance(widget, QCheckBox):
+                widget.setText("")
+            self.grid.addWidget(widget, line, column, Qt.AlignVCenter)
+        hidden = [k for k in entry if k not in FORMAT_KEYS and k not in self.columns]
+        buttons = QHBoxLayout()
+        buttons.setSpacing(2)
+        buttons.addStretch(1)
+        more = None
+        if hidden:
+            more = QToolButton()
+            more.setText(f"⋯ {len(hidden)}")
+            more.setToolTip("This entry's other fields (empty or rarely changed)")
+            buttons.addWidget(more)
+        for text, tip, handler in (
+            ("↑", "Move up", lambda: self.move(index, -1)),
+            ("↓", "Move down", lambda: self.move(index, 1)),
+            ("⧉", "Duplicate", lambda: self.duplicate(index)),
+            ("✕", "Remove", lambda: self.remove(index)),
+        ):
+            button = QToolButton()
+            button.setText(text)
+            button.setToolTip(tip)
+            button.clicked.connect(handler)
+            buttons.addWidget(button)
+        self.grid.addLayout(buttons, line, len(self.columns) + 1)
+        if more is None:
+            return
+        holder = QWidget()
+        holder_layout = QVBoxLayout(holder)
+        holder_layout.setContentsMargins(16, 0, 0, 4)
+        self.grid.addWidget(holder, line + 1, 0, 1, len(self.columns) + 2)
+        opened = self._opened()
+        mark = ("row", id(self.entries), index)
+
+        def toggle(_checked=False):
+            if mark in opened:
+                opened.discard(mark)
+                holder.hide()
+                return
+            opened.add(mark)
+            if not holder_layout.count():
+                self._fill_extra(holder_layout, entry, hidden)
+            holder.show()
+
+        more.clicked.connect(toggle)
+        if mark in opened:
+            self._fill_extra(holder_layout, entry, hidden)
+        else:
+            holder.hide()
+
+    def _fill_extra(self, body, entry, keys):
+        section = Section("", compact=True, columns=3)
+        section.toggle.hide()
+        section.keeps_empty = True
+        section.setStyleSheet("QFrame#FormSection { border: none; background: transparent; }")
+        section.layout().setContentsMargins(0, 0, 0, 0)
+        for key in keys:
+            value = entry[key]
+            if isinstance(value, list) and not _scalar_list(key, value):
+                section.add_row(label_for(key), _entry_list(self.form, entry, key, value))
+            else:
+                self.form._field(section, entry, key, value)
+        body.addWidget(section)
+
+
 # -- helpers ----------------------------------------------------------------------------------
 _IDENTIFIER = re.compile(r"^[a-z0-9_.:\-]+$")
 FREE_TEXT = {"label", "name", "title", "text", "description", "message", "prefix", "suffix"}
@@ -1701,6 +2127,17 @@ def _number_map(value):
     return isinstance(value, dict) and all(
         isinstance(v, (int, float)) and not isinstance(v, bool) for v in value.values()
     )
+
+
+def _number_matrix(value):
+    """``{row: {column: number}}`` with every row's columns alike (a resource's current,
+    maximum and minimum): one table, not a card per row."""
+    if not isinstance(value, dict) or not value:
+        return False
+    rows = list(value.values())
+    if not all(isinstance(r, dict) and r and _number_map(r) for r in rows):
+        return False
+    return all(set(r) == set(rows[0]) for r in rows)
 
 
 def _text_map(value):
@@ -1789,7 +2226,7 @@ def _first_line_height(widget):
 def _is_wide(widget):
     """A field that needs a whole row: a list, a table, long text."""
     wide = (ChipList, AmountTable, TextTable, CardList, _SubForm, QPlainTextEdit, Section)
-    return isinstance(widget, wide)
+    return isinstance(widget, wide) or bool(widget.property("wide"))
 
 
 def _entry_title(entry, noun, names=None):

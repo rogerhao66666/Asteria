@@ -139,13 +139,15 @@ def test_a_help_tooltip_opens_right_beside_its_mark(app):
 
     install(app)
     _project, _document, family = _family("actors", "hero_01")
-    family.resize(1400, 900)
-    family.move(500, 100)
+    family.resize(1400, 700)  # on the 800-high test screen: a mark scrolled to is on it
+    family.move(500, 50)
     family.show()
     (title,) = [lb for lb in family.editor.findChildren(QLabel) if lb.text() == "Base Stats  ⓘ"]
     marks = [lb for lb in family.editor.findChildren(QLabel) if lb.text() == "ⓘ"]
     box = help_box()
     for label in (title, marks[0]):
+        family.editor.ensureWidgetVisible(label)  # on the screen (charts push it down)
+        app.processEvents()
         for inside in (QPoint(2, 2), QPoint(label.width() - 2, label.height() - 2)):
             event = QHelpEvent(QEvent.ToolTip, inside, label.mapToGlobal(inside))
             assert app.sendEvent(label, event)
@@ -197,3 +199,87 @@ def test_graph_positions_are_left_to_the_graph_view(app):
     assert not any("Positions in the graph view" in t for t in texts)  # dragged, not typed
     family.auto_apply()  # an edit elsewhere keeps the saved positions as they were
     assert project.rpg_database.progression_graphs["brave_tree"] is not None
+
+
+def test_a_job_shows_its_growth_curves_by_the_games_rules(app):
+    """As RPG Maker's Parameter Curves: a chart per stat, from the actor's base stats plus the
+    job's bonus and growth per level; an edit redraws them."""
+    from asteria.editor.growth_curves import CurveChart, growth_curves
+
+    project, _document, family = _family("classes", "archmage")
+    form = family.editor
+    curves = form.growth_curves
+    database = project.rpg_database
+    actor = database.actors[curves.actor.currentData()]
+    assert "archmage" in [c.class_id for c in actor.class_assignments]  # its own actors first
+    rows = {
+        key: values
+        for _kind, key, values in growth_curves(
+            actor.to_data(), [database.classes["archmage"].to_data()], 99
+        )
+    }
+    growth = database.classes["archmage"].level_growth["int"]
+    assert rows["int"][0] == actor.base_stats["int"]
+    assert abs(rows["int"][-1] - (actor.base_stats["int"] + growth * 98)) < 1e-6
+    charts = curves.findChildren(CurveChart)
+    assert len(charts) == len(rows) and charts[0].title == "HP"  # HP, MP first
+    form._data["level_growth"]["int"] = 5.0
+    curves.redraw()
+    int_chart = next(c for c in curves.findChildren(CurveChart) if c.title == "INT")
+    assert int_chart.values[-1] == actor.base_stats["int"] + 5.0 * 98
+
+
+def test_tags_are_a_table_and_resources_one_grid(app):
+    from asteria.editor.record_form import ChipList, NumberMatrix
+
+    _project, _document, family = _family("actors", "hero_01")
+    form = family.editor
+    (tags,) = [c for c in form.findChildren(ChipList) if "trait.cover" in c.values]
+    row = tags.values.index("trait.cover")
+    assert (tags.table.item(row, 0).text(), tags.table.item(row, 1).text()) == ("Trait", "Cover")
+    tags.table.cellWidget(row, 2).click()  # ✕ removes the row
+    assert "trait.cover" not in tags.values and tags.table.rowCount() == len(tags.values)
+    (matrix,) = form.findChildren(NumberMatrix)
+    assert list(matrix.values)[0] == "vitality" and matrix.columns[:2] == ["current", "maximum"]
+    matrix._set("vitality", "maximum", 4000.0)
+    assert form._data["base_resources"]["vitality"]["maximum"] == 4000.0
+
+
+def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
+    from asteria.editor.growth_curves import StatBar, StatComparison
+    from asteria.editor.record_form import CardList, ChipList, EntryTable
+
+    _project, _document, family = _family("equipment", "a_archon_robe")
+    form = family.editor
+    (changes,) = [t for t in form.findChildren(EntryTable) if t.key == "modifiers"]
+    assert changes.columns[:3] == ["stat", "operation", "value"]
+    cards = [c for c in form.findChildren(CardList) if c.key == "modifiers"]
+    assert cards == [changes]
+    before = len(changes.entries)
+    changes.duplicate(0)  # the row's buttons edit the list as a card's did
+    assert len(form._data["modifiers"]) == before + 1
+
+    _project, _document, family = _family("enemies", "crimson_warlord")
+    form = family.editor
+    (tags,) = [c for c in form.findChildren(ChipList) if "boss" in c.values]
+    assert len(tags.values) > ChipList.SPLIT and tags.table.columnCount() == 6
+    assert tags.table.rowCount() == -(-len(tags.values) // 2)  # two halves side by side
+    (stats,) = [c for c in form.findChildren(StatComparison) if c.key == "stats"]
+    bars = {bar.title: bar for bar in stats.findChildren(StatBar)}
+    attack = bars["ATK"]
+    assert attack.value == 108 and attack.count > 1
+    assert 1 <= attack.rank <= attack.count and attack.top >= attack.value
+
+
+def test_slots_show_where_they_stand_and_their_tags_in_a_cell(app):
+    from asteria.editor.growth_curves import PositionsPreview
+    from asteria.editor.record_form import EntryTable, ListCell
+
+    _project, _document, family = _family("formations", "standard_six")
+    form = family.editor
+    (preview,) = form.findChildren(PositionsPreview)
+    assert [name for name, _entry in preview.entries()][:2] == ["Slot 1", "Slot 2"]
+    (slots,) = form.findChildren(EntryTable)
+    assert "tags" in slots.columns
+    cells = slots.findChildren(ListCell)
+    assert len(cells) == len(slots.entries) and cells[0].text() == "Front"
