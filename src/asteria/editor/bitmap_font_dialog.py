@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -247,13 +246,9 @@ class BitmapFontDialog(QDialog):
             self.status.setText("Add a font, choose its picture and type its characters.")
 
     def _add(self):
-        name, ok = QInputDialog.getText(self, "Add font", "Font id")
-        name = str(name).strip()
-        if not ok or not name:
-            return
-        if name in self.work:
-            QMessageBox.information(self, "Add font", f"There is already a font {name}.")
-            return
+        from .authoring_hub_widget import _free_id
+
+        name = _free_id("", self.work, "font")  # its id made for it
         self.work[name] = MenuBitmapFont(name)
         self.names[name] = None
         self._fill_list(name)

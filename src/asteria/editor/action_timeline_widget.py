@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -415,25 +414,37 @@ class ActionTimelineWidget(QWidget):
             return False
         return self._try(lambda: self.api.delete(sid), f"Deleted {sid}")
 
+    def _skill_without_timeline(self, title):
+        """A skill that has no timeline yet, chosen by its name (a timeline is a skill's)."""
+        from .record_vocabulary import vocabulary_for
+        from .ui_fit import pick_choice
+
+        taken = set(self.api.sequences())
+        skills = vocabulary_for(self.api.document).choices("abilities")
+        pairs = [(c.value, c.label) for c in skills if c.value not in taken]
+        return pick_choice(self, title, "Skill:", pairs)
+
     def _new_clicked(self):
-        name, ok = QInputDialog.getText(self, "New Timeline", "Ability id:")
-        if ok and name.strip():
-            self.new_sequence(name.strip())
+        skill = self._skill_without_timeline("New Timeline")
+        if skill:
+            self.new_sequence(skill)
 
     def _duplicate_clicked(self):
-        name, ok = QInputDialog.getText(self, "Duplicate Timeline", "New ability id:")
-        if ok and name.strip():
-            self.duplicate_sequence(name.strip())
+        skill = self._skill_without_timeline("Copy Timeline to Skill")
+        if skill:
+            self.duplicate_sequence(skill)
 
     def _add_clicked(self):
-        name, ok = QInputDialog.getText(self, "Add Beat", "Beat id:")
-        if ok and name.strip():
-            self.add_beat(
-                name.strip(),
-                self.view.playhead,
-                self._pick(),
-                self.cue.currentText(),
-            )
+        """A beat at the playhead, its id made for it."""
+        from .authoring_hub_widget import _free_id
+
+        sid = self.sequence_id
+        if not sid:
+            return
+        taken = [beat.beat_id for beat in self.api.beats(sid)]
+        self.add_beat(
+            _free_id("", taken, "beat"), self.view.playhead, self._pick(), self.cue.currentText()
+        )
 
     # -- preview --------------------------------------------------------------------
     def toggle_play(self):

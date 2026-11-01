@@ -168,67 +168,44 @@ def window():
 
 
 def test_gui_shows_rules_phases_and_previews_the_boss(window):
+    """The tab edits with Game Data's own form (names, words, picks) and previews in words."""
+    from asteria.editor.record_form import _ai_context
+
     widget = window.enemy_ai_editor
     assert window.rpg_workspace.tabText(window.rpg_workspace.indexOf(widget)) == "Enemy AI"
     assert widget.select_ai(BOSS)
-    assert widget.rules.rowCount() == 4 and widget.phases.rowCount() == 3
-    assert (
-        widget.used_by.text() == "astral_tyrant"
-        and widget.problem_list.item(0).text() == "No problems"
-    )
-    assert (
-        widget.select_rule("nova")
-        and widget.rule_conditions.list.item(0).text() == "resource rage >= 30"
-    )
-    assert (
-        widget.select_phase("phase_2")
-        and widget.phase_conditions.list.item(0).text() == "vitality <= 65%"
-    )
-    assert (
-        widget.run_preview().phase_id == "phase_1"
-        and widget.decision.item(0).text() == "cleave  100%"
-    )
-    assert widget.curve.text() == "phase_1 ≤100%  →  phase_2 ≤60%  →  phase_3 ≤30%"
+    data = widget.family.editor._data
+    assert len(data["rules"]) == 4 and len(data["phases"]) == 3
+    assert widget.used_by.text() == "Astral Tyrant"  # by name, not id
+    assert widget.problem_list.item(0).text() == "No problems"
+    names = widget._names()
+    assert _ai_context(data, data["phases"][1], names) == "starts when HP % is at most 65 %"
+    assert widget.run_preview().phase_id == "phase_1"
+    assert widget.decision.item(0).text() == "1. Boss Cleave  100%"
+    assert widget.curve.text() == "Phase 1 ≤100%  →  Phase 2 ≤65%  →  Phase 3 ≤30%"
     widget.set_preview_resource("vitality", 9000 * 0.2)
     widget.set_preview_resource("rage", 40)
-    assert (
-        widget.decision.item(0).text() == "nova  100%"
-        and widget.phase_label.text() == "Phase: phase_3"
-    )
+    assert widget.decision.item(0).text() == "3. Boss Nova  100%"
+    assert widget.phase_label.text() == "Phase: Phase 3"
 
 
-def test_gui_edits_rules_conditions_phases_and_binding_with_undo(window):
+def test_gui_edits_rules_phases_and_binding_with_undo(window):
     widget = window.enemy_ai_editor
     document = window.document
     widget.select_ai(BOSS)
-    widget.select_rule("roar")
-    widget.priority.setValue(9)
-    widget.weight.setValue(3)
-    assert widget.apply_rule() and widget.api.rule(BOSS, "roar").priority == 9
-    assert widget.decision.item(0).text() == "roar  100%"  # preview follows the edit
-    widget.rule_conditions.kind.setCurrentText("round_index")
-    widget.rule_conditions.op.setCurrentText(">=")
-    widget.rule_conditions.value.setText("2")
-    widget.rule_conditions._add()
-    assert widget.api.rule(BOSS, "roar").conditions[0].params == {"op": ">=", "value": 2}
-    assert widget.rule_id == "roar" and widget.rule_conditions.list.count() == 1
-    widget.rule_conditions.value.setText("not-a-number")
-    widget.rule_conditions._add()
-    assert widget.last_error and widget.api.rule(BOSS, "roar").conditions[0].params["value"] == 2
-    widget.select_phase("phase_1")
-    widget.phase_rules.item(2).setCheckState(
-        widget.phase_rules.item(2).checkState().__class__.Checked
-    )  # nova
-    widget.phase_actions.setValue(2)
-    assert widget.apply_phase() and "nova" in widget.api.phase(BOSS, "phase_1").decision_rule_ids
-    assert widget.api.phase(BOSS, "phase_1").actions_per_ready == 2
-    assert widget.add_phase("phase_4") and widget.phase_id == "phase_4"
+    family = widget.family
+    data = family.editor._data
+    data["rules"][1]["priority"] = 9  # Boss Roar first
+    assert family.auto_apply() and widget.api.rule(BOSS, "roar").priority == 9
+    widget._load()
+    assert widget.decision.item(0).text() == "2. Boss Roar  100%"  # the preview follows
+    data = family.editor._data
+    data["phases"][0]["decision_rule_ids"].append("nova")
+    assert family.auto_apply() and "nova" in widget.api.phase(BOSS, "phase_1").decision_rule_ids
     assert widget.create_ai("wisp_ai") and widget.ai_id == "wisp_ai"
-    assert widget.bind_enemy("mender_wisp") and widget.used_by.text() == "mender_wisp"
+    assert widget.bind_enemy("mender_wisp") and widget.used_by.text() == "Mender Wisp"
     while document.undo():
         pass
-    assert (
-        widget.api.rule(BOSS, "roar").priority == 4
-        and not widget.api.rule(BOSS, "roar").conditions
-    )
+    assert widget.api.rule(BOSS, "roar").priority == 4
+    assert "nova" not in widget.api.phase(BOSS, "phase_1").decision_rule_ids
     assert "wisp_ai" not in widget.api.ai_ids()

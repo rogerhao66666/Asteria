@@ -176,7 +176,7 @@ def test_an_icon_is_chosen_from_its_kind_as_a_picture(monkeypatch):
         assert dialog.chosen and "clock" in dialog.chosen.lower()
         picker = _IconPicker(library)
         picker.setText(current)
-        assert picker.name.text() == "I_Clock" and picker.combo.isHidden()
+        assert picker.name.text() == "Clock" and picker.combo.isHidden()  # in words
         monkeypatch.setattr(
             "asteria.editor.icon_picker_dialog.pick_icon",
             lambda *a, **k: "forged:fire",

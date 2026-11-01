@@ -9,9 +9,10 @@ and edit canonical record data; every Apply goes through
 from __future__ import annotations
 
 import copy
+import re
 import weakref
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QSignalBlocker, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -287,6 +288,9 @@ class _TableField(QGroupBox):
         if {"name", "operator", "value"} <= set(row):
             name = str(row.get("name") or "(no name yet)")
             return f"{row.get('source', '')} {name} {row.get('operator', '==')} {row['value']}"
+        for name_key in ("display_name", "name", "label", "title"):  # a rarity: "Common"
+            if any(f.key == name_key for f in self.fields) and str(row.get(name_key) or ""):
+                return str(row[name_key])
         first = self.fields[0]
         value = row.get(first.key, "")
         if first.kind in ("ref", "optional_ref") and value:
@@ -295,6 +299,14 @@ class _TableField(QGroupBox):
                     return choice.label
         if value in ("", None):
             return f"(new {first.label.lower()})"
+        if first.kind == "text":  # a name the project gives it (a prize: Healing Herb)
+            for choice in self.detail._text_choices(first.key):
+                if choice.value == str(value):
+                    return choice.label
+            if re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", str(value)):
+                from .record_vocabulary import words
+
+                return words(value)
         if first.kind == "choice":  # a kind of thing (a menu block): in words, with its place
             from .i18n import translate
             from .record_vocabulary import words
@@ -308,7 +320,8 @@ class _TableField(QGroupBox):
 
     def _commit(self):
         if 0 <= self._current < len(self.rows):
-            self.rows[self._current] = self.detail.data()
+            # the form's fields over the row: what it does not show (a prize's id) is kept
+            self.rows[self._current] = {**self.rows[self._current], **self.detail.data()}
             item = self.list.item(self._current)
             if item is not None:
                 item.setText(self._label(self.rows[self._current]))
@@ -388,6 +401,7 @@ _TEXT_SOURCES = {
     "sprite_sheet_asset_id": "assets:sprite_sheet",
     "battle_background": "assets:texture",
     "target": "enemies+items",
+    "target_id": "items+equipment+actors",  # a gacha prize
     "target_key": "enemies",
 }
 _SWITCH_KEYS = (
@@ -395,6 +409,8 @@ _SWITCH_KEYS = (
     "switch", "unlock_switch",
 )  # fmt: skip
 _VALUE_KEYS = {  # a field offering the values another field uses
+    "asset_id": "asset_id",  # a music track's audio
+    "rarity": "rarity",  # a gacha prize's rarity: one of the banner's
     "side": "side",
     "event": "event",
     "default_difficulty": "difficulty_id",
@@ -419,6 +435,11 @@ class _TextPicker(Picker):
             if "/" in value and "." in name:  # a file path: its name, the path in the tip
                 self.addItem(name, value)
                 self.setItemData(self.count() - 1, value, Qt.ToolTipRole)
+            elif re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", value):  # an id: in words
+                from .record_vocabulary import words
+
+                self.addItem(words(value), value)
+                self.setItemData(self.count() - 1, f"ID: {value}", Qt.ToolTipRole)
             else:
                 self.addItem(value, value)
             self._values.append(value)
@@ -457,6 +478,37 @@ class _Group(QGroupBox):
 
     def hasHeightForWidth(self):  # noqa: N802 - Qt API
         return False
+
+
+class _Ticks(QWidget):
+    """A group of switches only (Base Stats: Actors, Enemies), as ticks in one row; it reads
+    and writes like a group's form."""
+
+    changed = Signal()
+
+    def __init__(self, fields, parent=None):
+        super().__init__(parent)
+        self.form = self
+        self.checks = {}
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(24)
+        for f in fields:
+            check = QCheckBox(translate(f.label))
+            if f.help:
+                check.setToolTip(translate(f.help))
+            check.toggled.connect(self.changed)
+            self.checks[f.key] = check
+            layout.addWidget(check)
+        layout.addStretch(1)
+
+    def set_data(self, data):
+        for key, check in self.checks.items():
+            with QSignalBlocker(check):
+                check.setChecked(bool((data or {}).get(key, False)))
+
+    def data(self):
+        return {key: check.isChecked() for key, check in self.checks.items()}
 
 
 _FLAT_KINDS = ("text", "int", "float", "bool", "choice", "ref", "optional_ref", "optional_int")
@@ -878,7 +930,7 @@ class RecordForm(QWidget):
                  "factions": "faction", "states": "state", "classes": "job",
                  "actors": "character", "currencies": "currency"}  # fmt: skip
         nouns.update({"progression_tracks": "track", "carry_parts": "part"})
-        nouns.update({"stat_set_on": "record", "stat_columns": "column"})
+        nouns.update({"stat_columns": "column"})
         if source in nouns:
             return nouns[source]
         by_key = {"bonuses": "stat", "growth": "stat", "stat_growth": "stat", "stats": "stat",
@@ -911,14 +963,14 @@ class RecordForm(QWidget):
             used = set()
             for other in _SWITCH_KEYS:
                 used.update(vocabulary.values_for(other))
-            return [Choice(v, v) for v in sorted(used)]
+            return [Choice(v, words(v)) for v in sorted(used)]
         if key in _VALUE_KEYS:
             values = vocabulary.values_for(_VALUE_KEYS[key])
             return [Choice(v, words(v)) for v in values]
         return []
 
     def _reference_choices(self, f):
-        from .record_vocabulary import Choice, map_source
+        from .record_vocabulary import Choice, map_source, record_name
 
         vocabulary = self._vocabulary()
         known = ("items", "actors", "enemies", "equipment", "classes", "abilities", "states",
@@ -929,8 +981,11 @@ class RecordForm(QWidget):
             return [*vocabulary.choices("items"), *vocabulary.choices("equipment")]
         if f.source:
             out = []
+            database = getattr(vocabulary.project, "rpg_database", None)
             for entry in self.references(f.source):
-                value, label = entry if isinstance(entry, tuple) else (entry, entry)
+                value, label = entry if isinstance(entry, tuple) else (entry, None)
+                if label is None:  # a bare id: the record's own name, else the id in words
+                    label = record_name(database, f.source, value)
                 out.append(Choice(str(value), str(label)))
             return out
         kind = map_source(f.key)
@@ -1025,6 +1080,8 @@ class RecordForm(QWidget):
             return AmountTable({}, self._reference_choices(f), noun=self._noun(f))
         if f.kind == "pairs":
             return _KeyValueTable(("Threshold", "Name"))
+        if f.kind == "group" and all(g.kind == "bool" for g in f.fields):
+            return _Ticks(f.fields)
         if f.kind == "group":
             box = _Group(f.label)
             layout = QVBoxLayout(box)
@@ -1190,8 +1247,8 @@ class GameSystemsEditorWidget(QWidget):
         self.used_by = QLabel("")
         self.record_buttons = []  # not on the Pause Menu page: it adds and removes its own
         for label, slot in (
-            ("New…", self._new_clicked),
-            ("Duplicate…", self._duplicate_clicked),
+            ("New", self._new_clicked),  # at once: no dialog, so no "…"
+            ("Duplicate", self._duplicate_clicked),
             ("Delete", self.delete_selected),
         ):
             button = QPushButton(label)
@@ -1472,46 +1529,40 @@ class GameSystemsEditorWidget(QWidget):
         return self._attempt(lambda: self.controller.delete(self.kind_id, key), f"Deleted {key}")
 
     def _new_clicked(self):
+        """A new record at once: its id made for it (the name is set in the form); a capture
+        rule belongs to an enemy, picked by name."""
+        from .authoring_hub_widget import _free_id
+
         kind = self.kind_id
         if kind == "capture_rules":
-            choices = [
-                x
-                for x in self.controller.references("enemies")
-                if x not in self.controller.ids(kind)
-            ]
-            key, ok = QInputDialog.getItem(self, "New Capture Rule", "Enemy:", choices, 0, False)
+            key = self._pick_enemy("New Capture Rule")
         else:
-            from .authoring_hub_widget import _free_id
-
-            noun = self.kind_box.currentText()
-            key, ok = QInputDialog.getText(
-                self,
-                f"New - {noun}",
-                "Internal ID - other records refer to it by this, so it stays fixed\n"
-                "(lowercase letters, numbers and _; the name players see is set in the form):",
-                text=_free_id("", self.controller.ids(kind), "new"),
-            )
-        if ok and str(key).strip():
+            key = _free_id("", self.controller.ids(kind), "new")
+        if key:
             self.new_record(key)
 
+    def _pick_enemy(self, title):
+        """An enemy without a capture rule, chosen by its name (None: cancelled or none)."""
+        from .record_vocabulary import record_name
+
+        taken = set(self.controller.ids("capture_rules"))
+        ids = [x for x in self.controller.references("enemies") if x not in taken]
+        names = [record_name(self.controller.database, "enemies", x) for x in ids]
+        if not ids:
+            return None
+        name, ok = QInputDialog.getItem(self, title, "Enemy:", names, 0, False)
+        return ids[names.index(name)] if ok and name in names else None
+
     def _duplicate_clicked(self):
+        """A copy at once, its id made from the original's (a capture rule: to another enemy,
+        picked by name)."""
         if self.selected_id is None:
             return
         from .authoring_hub_widget import _free_id
 
-        if self.kind_id == "capture_rules":  # a capture rule belongs to one enemy: pick another
-            taken = self.controller.ids(self.kind_id)
-            choices = [x for x in self.controller.references("enemies") if x not in taken]
-            key, ok = QInputDialog.getItem(self, "Copy to Enemy", "Enemy:", choices, 0, False)
-            if ok and str(key).strip():
-                self.duplicate_as(key)
-            return
-        key, ok = QInputDialog.getText(
-            self,
-            "Duplicate",
-            "Internal ID for the copy - other records refer to it by this, so it stays fixed\n"
-            "(lowercase letters, numbers and _):",
-            text=_free_id(self.selected_id, self.controller.ids(self.kind_id)),
-        )
-        if ok and key.strip():
+        if self.kind_id == "capture_rules":
+            key = self._pick_enemy("Copy to Enemy")
+        else:
+            key = _free_id(self.selected_id, self.controller.ids(self.kind_id))
+        if key:
             self.duplicate_as(key)

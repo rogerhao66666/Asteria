@@ -42,7 +42,7 @@ def test_every_game_systems_form_ends_with_a_note():
     assert keys[keys.index("description") + 1] == "description_shown"
     assert "description_shown" not in [f.key for f in FORMS["derived_stats"]]
     derived = next(f for f in FORMS["derived_stats"] if f.key == "description")
-    assert derived.label == "Description (editor only)"  # the game never shows it
+    assert derived.label == "Description" and "does not show" in derived.help  # editor only
 
 
 def test_a_note_and_players_see_it_are_one_undo_step():
@@ -165,7 +165,7 @@ def test_players_see_it_stands_on_the_description_line():
     QApplication.instance() or QApplication([])
     form = RecordForm(FORMS["tag_definitions"], lambda _kind: ())
     switch = form.widgets["description_shown"]
-    assert switch.text() == "Players See It"
+    assert switch.text() == "Shown"
     assert "description_shown" not in form._rows  # no row of its own
     assert switch.parent() is form._rows["description"]  # beside the description's label
     form.deleteLater()

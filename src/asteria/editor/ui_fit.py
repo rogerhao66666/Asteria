@@ -134,3 +134,40 @@ def swap_scroll_page(scroll, page):
         old.hide()
         scroll._retired_page = old  # held (not a child, so it is never found among them)
         old.deleteLater()
+
+
+class WordCombo(QComboBox):
+    """A drop-down of engine values shown in words ("ease_in" reads "Ease In"); its API is
+    the values': ``addItems``, ``currentText`` and ``setCurrentText`` take and give them."""
+
+    def addItems(self, values):  # noqa: N802 - Qt API
+        from .record_vocabulary import words
+
+        for value in values:
+            value = str(value)
+            self.addItem(words(value), value)
+            self.setItemData(self.count() - 1, value, Qt.ToolTipRole)
+
+    def currentText(self):  # noqa: N802 - Qt API
+        value = self.currentData()
+        return super().currentText() if value is None else str(value)
+
+    def setCurrentText(self, text):  # noqa: N802 - Qt API
+        index = self.findData(str(text))
+        if index >= 0:
+            self.setCurrentIndex(index)
+        else:
+            super().setCurrentText(text)
+
+
+def pick_choice(parent, title, label, pairs):
+    """One of ``pairs`` (``(value, name)``) chosen by its name in a small list; the value, or
+    None when cancelled or there is nothing to choose."""
+    from PySide6.QtWidgets import QInputDialog
+
+    pairs = list(pairs)
+    if not pairs:
+        return None
+    names = [name for _value, name in pairs]
+    name, ok = QInputDialog.getItem(parent, title, label, names, 0, False)
+    return pairs[names.index(name)][0] if ok and name in names else None

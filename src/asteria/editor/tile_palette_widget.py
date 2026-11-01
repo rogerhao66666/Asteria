@@ -23,6 +23,7 @@ except ImportError:
     Qt = None
 
 from .tile_palette import build_tile_palette, terrain_ids
+from .ui_fit import WordCombo
 
 
 class TileGrid(QWidget):
@@ -406,7 +407,7 @@ class TilePaletteWidget(QWidget):
         self.region_spin.setRange(0, 255)
         self.region_spin.setValue(1)
         self.region_erase = QCheckBox("Erase region")
-        self.doodad_combo = QComboBox()
+        self.doodad_combo = WordCombo()  # Grave Cross, not grave_cross
         for label, widget in (
             ("Terrain", self.terrain_combo),
             ("Region id", self.region_spin),
@@ -704,8 +705,8 @@ class TilePaletteWidget(QWidget):
             return
         self.areaRuleChanged.emit(rule)
 
-    def _doodad_changed(self, name):
-        self.doodadChanged.emit(self._doodads.get(name))
+    def _doodad_changed(self, _shown):
+        self.doodadChanged.emit(self._doodads.get(self.doodad_combo.currentText()))
 
     def set_doodads(self, doodads):
         """Offer the project's doodad definitions (``{id: DoodadDefinition}``) to place."""

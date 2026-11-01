@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
 
 from asteria.runtime.debug_server import DebugClient, DebugClientError
 
+from .record_vocabulary import label_for
+
 # command -> (label, [(arg, kind)]) ; kinds: text, number, bool, json
 ACTIONS = {
     "give_item": ("Give item", [("item_id", "text"), ("quantity", "number")]),
@@ -203,7 +205,7 @@ class DebuggerWidget(QWidget):
             if kind == "bool":
                 widget.setChecked(True)
             self.arg_widgets[name] = (widget, kind)
-            self.args_form.addRow(name, widget)
+            self.args_form.addRow(label_for(name), widget)  # "Item", not item_id
 
     def set_args(self, command, **values):
         self.command.setCurrentIndex(self.command.findData(command))

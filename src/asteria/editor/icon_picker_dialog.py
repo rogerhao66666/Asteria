@@ -5,6 +5,8 @@ the project's folder to drop pictures in. None empties the field."""
 
 from __future__ import annotations
 
+import re
+
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
     QDialog,
@@ -19,9 +21,14 @@ from PySide6.QtWidgets import (
 
 
 def icon_name(icon_id):
-    """``icon.alchemy_salt`` → alchemy_salt, ``…/I_Clock.png`` → I_Clock."""
+    """A picture's name in words: ``icon.alchemy_salt`` → "Alchemy Salt", ``…/I_Clock.png``
+    → "Clock" (the pack's one-letter prefix dropped); the tooltip keeps the whole id."""
+    from .record_vocabulary import words
+
     name = icon_id.rsplit("/", 1)[-1].removeprefix("icon.")
-    return name.rsplit(".", 1)[0] if name.lower().endswith(".png") else name
+    name = name.rsplit(".", 1)[0] if name.lower().endswith(".png") else name
+    name = re.sub(r"^[A-Za-z]_(?=[A-Za-z])", "", name)  # I_Clock, S_Fire
+    return words(name.replace("-", " "))
 
 
 class IconPickerDialog(QDialog):

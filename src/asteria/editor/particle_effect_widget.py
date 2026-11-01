@@ -462,12 +462,11 @@ class ParticleEffectWidget(QWidget):
             )
             if not ok:
                 return None
-        if effect_id is None:
-            effect_id, ok = QInputDialog.getText(
-                self, "New Particle Effect", "Id:", text=f"particles.{preset_name}"
-            )
-            if not ok:
-                return None
+        if effect_id is None:  # its id made from the preset
+            from .authoring_hub_widget import _free_id
+
+            effect_id, taken = f"particles.{preset_name}", self.api.ids()
+            effect_id = _free_id(effect_id, taken, "new") if effect_id in taken else effect_id
         try:
             created = self.api.create(effect_id, preset_name)
         except ParticleAuthoringError as exc:
@@ -481,12 +480,10 @@ class ParticleEffectWidget(QWidget):
         source = self.selected_id
         if source is None:
             return None
-        if new_id is None:
-            new_id, ok = QInputDialog.getText(
-                self, "Duplicate Particle Effect", "New id:", text=f"{source}_copy"
-            )
-            if not ok:
-                return None
+        if new_id is None:  # the copy's id made from the original's
+            from .authoring_hub_widget import _free_id
+
+            new_id = _free_id(source, self.api.ids())
         try:
             created = self.api.duplicate(source, new_id)
         except ParticleAuthoringError as exc:

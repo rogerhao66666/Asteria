@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QGroupBox,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -32,7 +31,8 @@ from asteria.events.conditions import EventCondition
 
 from .event_editing import describe_instruction, parse_world_args
 from .event_flow_authoring import BATTLE_HOOKS, EventFlowAuthoring, EventFlowError
-from .record_vocabulary import trigger_label
+from .record_vocabulary import trigger_label, words
+from .ui_fit import WordCombo
 
 COMPARATORS = ("<=", "<", "==", "!=", ">", ">=")
 
@@ -66,8 +66,8 @@ class EventFlowWidget(QWidget):
         self.common.setHorizontalHeaderLabels(["Program", "Trigger", "Runs while switch"])
         self._table(self.common)
         self.common.itemSelectionChanged.connect(self._common_selected)
-        self.common_program = QComboBox()
-        self.common_trigger = QComboBox()
+        self.common_program = WordCombo()
+        self.common_trigger = WordCombo()
         self.common_trigger.addItems(list(COMMON_TRIGGERS))
         self.common_switch = QLineEdit()
         self.common_switch.setPlaceholderText("switch name (empty = always)")
@@ -101,7 +101,7 @@ class EventFlowWidget(QWidget):
 
         for hook in BATTLE_HOOKS:  # the moment in words; the hook name is the data
             self.battle_hook.addItem(trigger_label(hook), hook)
-        self.battle_program = QComboBox()
+        self.battle_program = WordCombo()
         self.battle_once = QCheckBox("Once per battle")
         self.conditions = QListWidget()
         self.conditions.setMaximumHeight(80)
@@ -214,7 +214,8 @@ class EventFlowWidget(QWidget):
         for c in self.api.common_events():
             row = self.common.rowCount()
             self.common.insertRow(row)
-            for col, text in enumerate((c.program_id, c.trigger, c.switch or "—")):
+            cells = (words(c.program_id), words(c.trigger), c.switch or "—")
+            for col, text in enumerate(cells):
                 self.common.setItem(row, col, QTableWidgetItem(text))
         self.battle.setRowCount(0)
         self._battle_index = []
@@ -226,7 +227,7 @@ class EventFlowWidget(QWidget):
             when = " and ".join(describe_condition(c) for c in b.conditions) or translate("always")
             values = (
                 translate(trigger_label(b.hook_name)),
-                b.event_program_id,
+                words(b.event_program_id),
                 when,
                 translate("yes") if b.once else "",
             )
@@ -347,9 +348,10 @@ class EventFlowWidget(QWidget):
         )
 
     def _new_program_clicked(self):
-        value, ok = QInputDialog.getText(self, "New Event Program", "Program id:")
-        if ok and value.strip():
-            self._try(lambda: self.api.new_program(value.strip()), f"Created {value.strip()}")
+        from .authoring_hub_widget import _free_id
+
+        value = _free_id("", self.api.project.event_programs.ids(), "new_program")
+        self._try(lambda: self.api.new_program(value), f"Created {words(value)}")
 
 
 class SequenceEditorDialog(QDialog):

@@ -1,14 +1,13 @@
 """Growth curves (as RPG Maker's Parameter Curves): a small area chart per stat and resource,
-level 1 to the level shown, worked out by the game's own rules (``RpgActorRuntime``: base
-stats, the job's bonuses, its growth per level). A job's page shows them for an actor taking
-that job; an actor's page for the actor with its own jobs. The charts follow every edit."""
+level 1 to the level shown, worked out by the game's own rules (``RpgActorRuntime``: the
+job's bonuses and its growth per level). A job's page shows what the job gives, whoever takes
+it. The charts follow every edit."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
-    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -32,6 +31,14 @@ COLOURS = (  # one per chart, in order (RPG Maker's warm-to-cool row)
     "#7c6ad6",
     "#d06a9a",
 )
+
+
+def colour(index):
+    """The ``index``-th chart colour: the ten above, then new hues (golden-angle steps), so no
+    two charts on a page share one."""
+    if index < len(COLOURS):
+        return QColor(COLOURS[index])
+    return QColor.fromHsvF((0.13 + index * 0.618034) % 1.0, 0.55, 0.85)
 
 
 def growth_curves(actor_data, class_datas, max_level):
@@ -58,8 +65,10 @@ def growth_curves(actor_data, class_datas, max_level):
     stats = [runtime.effective_stats(level=level).to_data()["values"] for level in levels]
     keys = sorted({key for row in stats for key in row})
     curves = [("stat", key, [row.get(key, 0.0) for row in stats]) for key in keys]
-    for resource_id in sorted(runtime.resources.names()):
-        top = runtime.resources.maximum(resource_id)
+    grown_ids = {k for level in levels for k in runtime.level_resource_growth(level)}
+    for resource_id in sorted(set(runtime.resources.names()) | grown_ids):
+        has = resource_id in runtime.resources.names()
+        top = runtime.resources.maximum(resource_id) if has else 0.0
         grown = [runtime.level_resource_growth(level).get(resource_id, 0.0) for level in levels]
         curves.append(("resource", resource_id, [top + extra for extra in grown]))
     order = {"vitality": 0, "technique": 1}  # HP, MP first, as RPG Maker lists them
@@ -149,31 +158,25 @@ class CurveChart(QWidget):
 
 
 class GrowthCurves(QWidget):
-    """The charts of a job (``category`` "classes") or an actor ("actors") being edited in
-    ``form`` (a RecordForm); they are drawn again a moment after each edit."""
+    """The charts of the job being edited in ``form`` (a RecordForm): what the job itself
+    gives at each level - its bonuses and its growth per level - whoever takes it (an actor's
+    own starting stats come on top, and its jobs change in play). Drawn again a moment after
+    each edit."""
 
     COLUMNS = 4
 
-    def __init__(self, form, category):
+    def __init__(self, form, category="classes"):
         super().__init__()
         self.form, self.category = form, category
         self.setObjectName("GrowthCurves")
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         controls = QHBoxLayout()
-        self.actor = QComboBox()
-        self.actor.setToolTip("The actor whose base stats the job's growth is added to")
-        self.actor.currentIndexChanged.connect(lambda _i: self.redraw())
         self.max_level = QSpinBox()
         self.max_level.setRange(2, 999)
         self.max_level.setValue(99)
         self.max_level.setToolTip("How far the charts reach (only what is shown here)")
         self.max_level.valueChanged.connect(lambda _v: self.redraw())
-        if category == "classes":
-            controls.addWidget(QLabel("Preview with"))
-            controls.addWidget(self.actor)
-        else:
-            self.actor.hide()
         controls.addWidget(QLabel("Up to level"))
         controls.addWidget(self.max_level)
         controls.addStretch(1)
@@ -190,57 +193,39 @@ class GrowthCurves(QWidget):
         self._timer.setInterval(250)
         self._timer.timeout.connect(self.redraw)
         form.changed.connect(self._timer.start)
-        self._fill_actors()
         self.redraw()
 
     def _database(self):
         project = getattr(self.form.document, "project", None)
         return getattr(project, "rpg_database", None)
 
-    def _fill_actors(self):
-        database = self._database()
-        if database is None or self.category != "classes":
-            return
-        own = str(self.form._data.get("class_id", ""))
-        actors = sorted(
-            database.actors.values(),
-            key=lambda a: (
-                own not in [c.class_id for c in a.class_assignments],
-                a.display_name.lower(),
-            ),
-        )
-        self.actor.blockSignals(True)
-        for actor in actors:
-            self.actor.addItem(actor.display_name or actor.actor_id, actor.actor_id)
-        self.actor.blockSignals(False)
-
     def _inputs(self):
-        """``(actor data, [class data])`` from the record being edited."""
-        database = self._database()
-        data = self.form._data
-        if self.category == "classes":
-            actor_id = self.actor.currentData()
-            if database is None or actor_id not in database.actors:
-                from asteria.rpg.actors import ActorDefinition
+        """``(an empty actor, [the job])``: the job's own share, level by level."""
+        from asteria.rpg.actors import ActorDefinition
 
-                return ActorDefinition("preview").to_data(), [data]
-            return database.actors[actor_id].to_data(), [data]
-        classes = []
-        for assignment in data.get("class_assignments") or ():
-            if not isinstance(assignment, dict) or not assignment.get("enabled", True):
-                continue
-            definition = (database.classes if database else {}).get(assignment.get("class_id"))
-            if definition is not None:
-                classes.append(definition.to_data())
-        return data, classes
+        return ActorDefinition("preview").to_data(), [self.form._data]
+
+    def _charted(self, stat):
+        """A stat set to Grow with Level (Game Systems ▸ Stats); every stat that is not a
+        Stat Formula's when the project defines none."""
+        database = self._database()
+        if database is None:
+            return True
+        if stat in database.derived_stats:  # worked out from others, not grown
+            return False
+        definitions = database.stat_definitions
+        if not definitions:
+            return True
+        definition = definitions.get(stat)
+        return definition is not None and "classes" in definition.set_on
 
     def redraw(self):
         while self.grid.count():
-            item = self.grid.takeAt(0)
-            if item.widget() is not None:
-                item.widget().hide()
-                item.widget().setParent(None)  # gone now (not found among the children)
-                item.widget().deleteLater()
+            widget = self.grid.takeAt(0).widget()  # once: unparented, the item lets go of it
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)  # gone now (not found among the children)
+                widget.deleteLater()
         try:
             actor, classes = self._inputs()
             curves = growth_curves(actor, classes, self.max_level.value())
@@ -249,6 +234,12 @@ class GrowthCurves(QWidget):
             self.note.show()
             return
         self.note.hide()
+        curves = [c for c in curves if c[0] == "resource" or self._charted(c[1])]
+        curves = [c for c in curves if c[2] and max(c[2]) - min(c[2]) > 1e-9]  # flat: hidden
+        if not curves:
+            self.note.setText(translate("Nothing grows with level in this job."))
+            self.note.show()
+            return
         vocabulary = getattr(self.form, "vocabulary", None)
         names = {}
         if vocabulary is not None:
@@ -264,7 +255,7 @@ class GrowthCurves(QWidget):
         curves.sort(key=lambda c: (c[0] != "resource", rank.get(c[1], 1e9), c[1]))
         for index, (_kind, key, values) in enumerate(curves):
             title = names.get(key) or label_for(key)
-            chart = CurveChart(title, values, COLOURS[index % len(COLOURS)])
+            chart = CurveChart(title, values, colour(index))
             chart.setToolTip("")
             row, column = divmod(index, self.COLUMNS)
             self.grid.addWidget(chart, row, column)
@@ -274,7 +265,7 @@ class GrowthCurves(QWidget):
 
 class StatBar(QWidget):
     """One stat beside the others of its kind: a bar to the strongest record's value, a tick
-    at the average, the value and its place (``#2 of 14``)."""
+    at the average, the value."""
 
     def __init__(self, title, value, others, colour, parent=None):
         super().__init__(parent)
@@ -283,8 +274,6 @@ class StatBar(QWidget):
         values = [self.value, *(float(v) for v in others)]  # this record and the rest
         self.top = max([*values, 0.0]) or 1.0
         self.average = sum(values) / len(values)
-        self.rank = 1 + sum(1 for v in values[1:] if v > self.value)
-        self.count = len(values)
         self.setMinimumHeight(22)
         self.setToolTip(translate(f"Average {self.average:g} · strongest {self.top:g}"))
 
@@ -295,7 +284,7 @@ class StatBar(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         palette = self.palette()
-        name_width, tail = 70, 118
+        name_width, tail = 70, 64
         painter.setPen(palette.text().color())
         painter.drawText(
             QRectF(0, 0, name_width - 6, self.height()),
@@ -315,9 +304,10 @@ class StatBar(QWidget):
         painter.setPen(QPen(palette.text().color(), 2))
         painter.drawLine(QPointF(x, track.top() - 3), QPointF(x, track.bottom() + 3))
         painter.setPen(palette.text().color())
-        words = translate(f"{self.value:g}  #{self.rank} of {self.count}")
         painter.drawText(
-            QRectF(track.right() + 8, 0, tail - 8, self.height()), Qt.AlignVCenter, words
+            QRectF(track.right() + 8, 0, tail - 8, self.height()),
+            Qt.AlignVCenter,
+            f"{self.value:g}",
         )
 
 
@@ -341,6 +331,20 @@ class StatComparison(QWidget):
         self._timer.timeout.connect(self.redraw)
         form.changed.connect(self._timer.start)
         self.redraw()
+
+    def _charted(self, stat):
+        """A stat set to Grow with Level (Game Systems ▸ Stats); every stat that is not a
+        Stat Formula's when the project defines none."""
+        database = self._database()
+        if database is None:
+            return True
+        if stat in database.derived_stats:  # worked out from others, not grown
+            return False
+        definitions = database.stat_definitions
+        if not definitions:
+            return True
+        definition = definitions.get(stat)
+        return definition is not None and "classes" in definition.set_on
 
     def redraw(self):
         while self.grid.count():
@@ -371,7 +375,7 @@ class StatComparison(QWidget):
                 names.get(stat) or label_for(stat),
                 own[stat],
                 others,
-                COLOURS[index % len(COLOURS)],
+                colour(index),
             )
             row, column = divmod(index, self.COLUMNS)
             self.grid.addWidget(bar, row, column)
@@ -421,7 +425,7 @@ class PositionsPreview(QWidget):
         for index, (name, x, y) in enumerate(points):
             at = QPointF(dx + (x - left) * scale, dy + (y - top) * scale)
             painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor(COLOURS[index % len(COLOURS)]))
+            painter.setBrush(colour(index))
             painter.drawEllipse(at, 9, 9)
             painter.setPen(palette.base().color())
             painter.drawText(

@@ -42,6 +42,7 @@ from .responsive_form import flow_form
 from .scene_render import resolve_texture_source
 from .skeleton_editing import add_bone, delete_bone, edit_bone, set_key
 from .skeleton_view import bone_segments, bounds, load_rig
+from .ui_fit import WordCombo
 
 try:
     from asteria.graphics.skeleton import Bone
@@ -544,12 +545,12 @@ class SkeletonViewerWidget(QWidget):
         group = QGroupBox("Animation Keys")
         form = flow_form(group, column_width=170)
         self.track_bone = QComboBox(group)
-        self.track_channel = QComboBox(group)
+        self.track_channel = WordCombo(group)
         self.track_channel.addItems(("x", "y", "rotation", "scale_x", "scale_y"))
         self.key_combo = QComboBox(group)
         self.key_time = self._number(group, minimum=0, maximum=1000000, step=0.01)
         self.key_value = self._number(group)
-        self.key_easing = QComboBox(group)
+        self.key_easing = WordCombo(group)
         self.key_easing.addItems(("linear", "step", "ease_in", "ease_out", "ease_in_out"))
         for label, field in (
             ("Track bone", self.track_bone),

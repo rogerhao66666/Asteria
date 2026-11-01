@@ -26,7 +26,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QHeaderView,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -46,6 +45,7 @@ from PySide6.QtWidgets import (
 from .combat_authoring import KINDS, CombatAuthoringController, CombatAuthoringError
 from .icons import icon
 from .responsive_form import ResponsiveForm
+from .ui_fit import WordCombo
 
 SOURCES = (
     ("constant", "Constant"),
@@ -1106,8 +1106,8 @@ class CombatWorkspace(QWidget):
         elif kind == "bool":
             widget = QCheckBox()
             widget.toggled.connect(self._edited)
-        elif kind == "choice":
-            widget = QComboBox()
+        elif kind == "choice":  # engine words ("attacker_facing") read as words
+            widget = QComboBox() if field.name == "position" else WordCombo()
             widget.addItems(field.choices)
             widget.setEditable(field.name == "position")
             widget.currentTextChanged.connect(self._edited)
@@ -1291,8 +1291,11 @@ class CombatWorkspace(QWidget):
         self.changed.emit()
 
     def _ask_id(self, title, default=""):
-        text, ok = QInputDialog.getText(self, title, "Id (letters, numbers, _):", text=default)
-        return text.strip() if ok and text.strip() else None
+        """A free id for a new record (made, not typed): ``default`` or "new", numbered."""
+        from .authoring_hub_widget import _free_id
+
+        base = default or ""
+        return _free_id(base, self.api.ids(self.kind_id), "copy" if base else "new")
 
     def new_record(self, record_id=None):
         spec = self.api.kind(self.kind_id)

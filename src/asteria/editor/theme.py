@@ -782,6 +782,9 @@ QToolButton#FormSectionTitle:hover {{ border: none; background: transparent;
     color: {p.primary_hi}; }}
 QLabel#FormFieldLabel {{ color: {p.text_dim}; }}
 QLabel#FormTableHead {{ color: {p.text_muted}; font-weight: 600; }}
+QLabel#FormTagEffect {{ color: {p.text_muted}; }}
+QFrame#FormRowMore {{ border: none; border-left: 2px solid {p.primary};
+    margin-left: 18px; }}
 QFrame#FormCard {{ background: {p.list_alt}; border: 1px solid {p.border_strong};
     border-radius: 6px; }}
 QToolButton#FormChip {{ background: {p.raised}; color: {p.text};

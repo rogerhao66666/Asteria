@@ -82,6 +82,7 @@ REFERENCES = {  # field name -> vocabulary source
     "slot_id": "slots",
     "blocks_slots": "slots",
     "composition_id": "gauges",
+    "command_pages": "presentation:interaction",  # a battle layout's command menu pages
     "rules_id": None,  # a record's own id
     "source_ability_id": "abilities",
     "result_ability_id": "abilities",
@@ -182,7 +183,19 @@ TECHNICAL = {
 
 
 # -- the names and help shown beside fields ---------------------------------------------------
+# a job's role (ClassAssignment.role): the runtime shows the "primary" job as the character's
+# job and gives "secondary" ones the Sub Job share of job points; other words are the project's
+JOB_ROLES = {"primary": "Main job", "secondary": "Sub job"}
+
+JOB_HELP = {  # a job entry's fields (an actor's Jobs), where the same names mean other things
+    "role": "Main job: shown as the character's job. Sub job: earns the Sub Job share of job"
+    " points (Game Systems ▸ Job Points). Any other word is kept for your own rules.",
+    "priority": "When jobs add to the same stat, lower numbers are added first.",
+}
+
 LABELS = {
+    "progression_track_ids": "Progress Tracks",
+    "assignment_id": "Entry ID",
     "expression": "Formula",  # a skill's damage, a stat formula (D94)
     "chance_expression": "Chance Formula",
     "initiative_expression": "Turn Order Formula",
@@ -192,37 +205,189 @@ LABELS = {
     "display_name": "Name",
     "class_assignments": "Jobs",
     "base_stats": "Base Stats",
-    "base_resources": "HP, MP and other resources",
-    "granted_tags": "Tags it gives",
-    "granted_abilities": "Skills it gives",
+    "base_resources": "Resources",
+    "granted_tags": "Tags",
+    "granted_abilities": "Skills",
     "stat_bonuses": "Stat bonuses",
     "resource_bonuses": "Resource bonuses",
-    "level_growth": "Growth per level",
-    "resource_growth": "Resource growth per level",
-    "unlock_level": "Unlocks at level",
-    "unlock_classes": "Needs these jobs first",
+    "level_growth": "Stat Growth",
+    "resource_growth": "Resource Growth",
+    "unlock_level": "Unlock Level",
+    "unlock_classes": "Required Jobs",
     "icon_id": "Icon",
-    "apply_states": "States it applies",
+    "apply_states": "States",
     "hits": "Hits",
     "costs": "Costs",
     "battle_costs": "Battle costs",
-    "cooldown_turns": "Cooldown (turns)",
-    "maximum_targets": "Most targets",
-    "minimum_targets": "Fewest targets",
-    "allow_self": "Can target itself",
+    "cooldown_turns": "Cooldown",
+    "maximum_targets": "Max Targets",
+    "minimum_targets": "Min Targets",
+    "allow_self": "Self Target",
     "modifiers": "Stat changes",
     "sockets": "Sockets",
-    "required_capabilities": "Needs (capabilities)",
-    "any_capabilities": "Needs one of (capabilities)",
-    "forbidden_capabilities": "Not with (capabilities)",
-    "blocks_slots": "Also takes (two-handed)",
+    "required_capabilities": "Required Capabilities",
+    "any_capabilities": "Any Capability",
+    "forbidden_capabilities": "Forbidden Capabilities",
+    "blocks_slots": "Blocked Slots",
     "rarity": "Rarity",
-    "stack_limit": "Most in one stack",
+    "stack_limit": "Stack Limit",
     "reward": "Reward",
     "drop_table_id": "Drop table",
     "multiplier": "Multiplier",
     "flat_delta": "Adds",
-    "outcome_tags": "Tags on the result",
+    "outcome_tags": "Result Tags",
+    "success_tags": "Success Tags",
+    "failure_tags": "Failure Tags",
+    "source_tags_all": "Attacker: All Tags",
+    "source_tags_any": "Attacker: Any Tag",
+    "target_tags_all": "Target: All Tags",
+    "target_tags_any": "Target: Any Tag",
+    "blocked_source_tags": "Attacker: Blocked Tags",
+    "blocked_target_tags": "Target: Blocked Tags",
+    "required_source_tags": "Attacker: Required Tags",
+    "required_target_tags": "Target needs",
+    "base_chance": "Chance",
+    "minimum_chance": "Never below",
+    "maximum_chance": "Never above",
+    "source_stat_terms": "Attacker Stats",
+    "target_stat_terms": "Target Stats",
+    "multiplier_source_terms": "Attacker Multiplier Stats",
+    "multiplier_target_terms": "Target Multiplier Stats",
+    "contributed_tags": "Active Tags",
+    "duration": "Lasts",
+    "power": "Power ×",
+    "periodic": "Every turn",
+    "on_apply": "When applied",
+    "on_remove": "When removed",
+    "on_expire": "On Expire",
+    "max_stacks": "Most stacks",
+    "terms": "Terms",
+    "coefficient": "Times",
+    "key": "Stat / resource",
+    "source": "Reads",
+    "operations": "What it does",
+    "operation": "How",
+    "target": "Changes",
+    "value": "Amount",
+    # ability evolutions
+    "source_ability_id": "Source Skill",
+    "result_ability_id": "Becomes",
+    "progression_track_id": "Rank Track",
+    "minimum_rank": "Min Rank",
+    "retain_source": "Keep Source Skill",
+    "required_tags": "Required Tags",
+    "blocked_tags": "Blocked Tags",
+    # skill trees
+    "max_rank": "Most ranks",
+    "rank_costs": "Cost per rank",
+    "rewards": "Rank Rewards",
+    "prerequisites": "Needs all of",
+    "any_prerequisites": "Needs one of",
+    "exclusive_group": "Exclusive Group",
+    "granted_capabilities": "Capabilities",
+    "unlocked_passives": "Passives",
+    "node_positions": "Graph Positions",
+    "editor_view": "Opens as",
+    # skills
+    "menu_category": "Menu Page",
+    "input_workflow": "Input steps",
+    "requires_pet": "Needs a pet",
+    "requires_items": "Required Items",
+    "item_costs": "Uses up items",
+    "currency_costs": "Costs money",
+    "gauge_costs": "Gauge Costs",
+    "follow_tags": "Follow Tags",
+    "forms": "Forms",
+    "battle_resource_gains": "Battle Points",
+    "commands": "Commands",
+    "concoct_station": "Station",
+    "cooldown_seconds": "Cooldown (s)",
+    "move_while_acting": "Move While Acting",
+    "interrupts_actions": "Interrupts",
+    "cooldown_formula": "Cooldown formula",
+    "targeting": "Targets",
+    "effects": "What it does",
+    "use_effects": "When used",
+    "destroyed_on_removal": "Destroy on Removal",
+    "timeline_id": "Timeline",
+    # states
+    "immune_target_tags": "Immune Tags",
+    "duration_multiplier": "Duration ×",
+    "prevent_action": "Prevents Action",
+    "blocked_ability_tags": "Blocked Skill Tags",
+    "allowed_ability_tags": "Allowed Skill Tags",
+    "tick_trigger": "Counts down",
+    "tick_amount": "Tick Amount",
+    "remove_triggers": "Removed when",
+    "interaction_tags": "Tick Tags",
+    "target_override": "Target Override",
+    "interval": "Every (turns)",
+    "growth": "Grows by",
+    # targeting and timing
+    "relation": "Targets",
+    "selection_mode": "Selection",
+    "selection_count": "Pick Count",
+    "adjacent_to_actor": "Adjacent Only",
+    "active_only": "Standing Only",
+    "startup": "Wind-up (s)",
+    "cast_time": "Cast time (s)",
+    "recovery": "Recovery (s)",
+    "interruptible": "Interruptible",
+    "interrupt_threshold": "Interrupt Threshold",
+    "cost_commit": "Cost Timing",
+    "interrupt_cost": "Interrupt Cost",
+    # enemies and encounters
+    "members": "Who is in it",
+    "count": "How many",
+    "weight": "Weight",
+    "pet_species_id": "Pet Species",
+    "level_max": "Max Level",
+    "reserve": "Reserve",
+    "moves": "Moves",
+    "genes": "Genes",
+    "max_uses": "Max Uses",
+    "experience": "Experience",
+    "currencies": "Money",
+    "loot": "Drops",
+    "phases": "Phases",
+    "actions_per_ready": "Actions per turn",
+    "initial_phase_id": "Starting Phase",
+    # resources and gauges
+    "start_mode": "Starts at",
+    "start_value": "Start Value",
+    "end_mode": "After battle",
+    "overflow_limit": "Overflow",
+    "subject_maximum": "Fighter Maximum",
+    "impacts": "Change Rules",
+    "thresholds": "Thresholds",
+    "recipient": "Recipient",
+    "delta": "Changes by",
+    "value_scale": "× the damage",
+    "required_outcome_tags_all": "Result: All Tags",
+    "required_outcome_tags_any": "Result: Any Tag",
+    "blocked_outcome_tags": "Result: Blocked Tags",
+    # presentation
+    "battlefield_visible": "On Battlefield",
+    "hud_visible": "In HUD",
+    "battlefield_asset_id": "Battlefield picture",
+    "portrait_asset_id": "Portrait",
+    "small_portrait_asset_id": "Small portrait",
+    "clip_role": "Animation",
+    "fallback_state_id": "Fallback",
+    "persistent": "Persistent",
+    "z_order": "Draw Order",
+    "page_size": "Rows per page",
+    "playback_rate": "Playback speed",
+    "transition_duration": "Blend time (s)",
+}
+HELP = {
+    "unlock_classes": "Needs these jobs first",
+    "minimum_targets": "Fewest targets",
+    "maximum_targets": "Most targets",
+    "allow_self": "Can target itself",
+    "required_capabilities": "Needs (capabilities)",
+    "any_capabilities": "Needs one of (capabilities)",
+    "forbidden_capabilities": "Not with (capabilities)",
     "success_tags": "Tags when it succeeds",
     "failure_tags": "Tags when it fails",
     "source_tags_all": "Attacker needs all of",
@@ -232,141 +397,48 @@ LABELS = {
     "blocked_source_tags": "Not when the attacker has",
     "blocked_target_tags": "Not when the target has",
     "required_source_tags": "Attacker needs",
-    "required_target_tags": "Target needs",
-    "base_chance": "Chance",
-    "minimum_chance": "Never below",
-    "maximum_chance": "Never above",
     "source_stat_terms": "Attacker stats add",
     "target_stat_terms": "Target stats add",
     "multiplier_source_terms": "Multiplier grows with attacker stats",
     "multiplier_target_terms": "Multiplier grows with target stats",
-    "contributed_tags": "Tags while active",
-    "duration": "Lasts",
-    "power": "Power ×",
-    "periodic": "Every turn",
-    "on_apply": "When applied",
-    "on_remove": "When removed",
     "on_expire": "When it runs out",
-    "max_stacks": "Most stacks",
-    "terms": "Read from (stat: coefficient)",
-    "coefficient": "Times",
-    "key": "Stat / resource",
-    "source": "Reads",
-    "operations": "What it does",
-    "operation": "How",
-    "target": "Changes",
-    "value": "Amount",
-    # ability evolutions
-    "source_ability_id": "Skill that changes",
-    "result_ability_id": "Becomes",
-    "progression_track_id": "Rank counted on (track)",
-    "minimum_rank": "Needs rank at least",
-    "retain_source": "Keep the original skill too",
-    "required_tags": "Needs these tags",
-    "blocked_tags": "Not when it has these tags",
-    # skill trees
-    "max_rank": "Most ranks",
-    "rank_costs": "Cost per rank",
     "rewards": "Each rank gives",
-    "prerequisites": "Needs all of",
-    "any_prerequisites": "Needs one of",
-    "exclusive_group": "Only one from group",
-    "granted_capabilities": "Capabilities it gives",
     "unlocked_passives": "Passives it unlocks",
     "node_positions": "Positions in the graph view",
-    "editor_view": "Opens as",
-    # skills
-    "menu_category": "Battle menu page",
-    "input_workflow": "Input steps",
-    "requires_pet": "Needs a pet",
-    "requires_items": "Needs items (kept)",
-    "item_costs": "Uses up items",
-    "currency_costs": "Costs money",
     "gauge_costs": "Costs party gauge",
     "follow_tags": "Tags carried into follow-ups",
-    "forms": "Forms (cast choices)",
-    "battle_resource_gains": "Gives battle points",
     "commands": "World commands it runs",
     "concoct_station": "Concoction station",
     "cooldown_seconds": "Cooldown (seconds, real-time)",
     "move_while_acting": "Can move while acting (0-1)",
     "interrupts_actions": "Interrupts the target",
-    "cooldown_formula": "Cooldown formula",
-    "targeting": "Targets",
-    "effects": "What it does",
-    "use_effects": "When used",
     "destroyed_on_removal": "Destroyed when taken out",
     "timeline_id": "Animation timeline",
-    # states
     "immune_target_tags": "Immune when the target has",
-    "duration_multiplier": "Duration ×",
-    "prevent_action": "Stops the holder from acting",
     "blocked_ability_tags": "Blocks skills tagged",
     "allowed_ability_tags": "Only skills tagged",
-    "tick_trigger": "Counts down",
     "tick_amount": "Turns used per count",
-    "remove_triggers": "Removed when",
     "interaction_tags": "Damage tags of its ticks",
-    "target_override": "Makes it target",
-    "interval": "Every (turns)",
-    "growth": "Grows by",
-    # targeting and timing
-    "relation": "Who it targets",
-    "selection_mode": "How targets are picked",
     "selection_count": "How many are picked",
     "adjacent_to_actor": "Only neighbours",
     "active_only": "Only fighters still standing",
-    "startup": "Wind-up (s)",
-    "cast_time": "Cast time (s)",
-    "recovery": "Recovery (s)",
     "interruptible": "Can be interrupted",
     "interrupt_threshold": "Interrupted by damage over",
     "cost_commit": "Costs are paid",
     "interrupt_cost": "If interrupted, the cost is",
-    # enemies and encounters
-    "members": "Who is in it",
-    "count": "How many",
-    "weight": "How likely (weight)",
-    "pet_species_id": "Pet species (a creature foe)",
-    "level_max": "Level up to (0 = exactly the level)",
-    "reserve": "Waits on the bench",
-    "moves": "Moves (empty: what its species taught it)",
-    "genes": "Genes (its own numbers)",
-    "max_uses": "Uses before resting (0 = unlimited)",
-    "experience": "Experience",
-    "currencies": "Money",
     "loot": "Items it may drop",
-    "phases": "Phases",
-    "actions_per_ready": "Actions per turn",
-    # resources and gauges
-    "start_mode": "Starts at",
     "start_value": "Starting value",
-    "end_mode": "After battle",
     "overflow_limit": "Can go over by",
     "subject_maximum": "Maximum comes from the fighter",
-    "impacts": "What changes it",
-    "thresholds": "When it reaches",
     "recipient": "Who it changes",
-    "delta": "Changes by",
-    "value_scale": "× the damage",
     "required_outcome_tags_all": "Only when the result has all of",
     "required_outcome_tags_any": "Only when the result has one of",
     "blocked_outcome_tags": "Not when the result has",
-    # presentation
-    "battlefield_visible": "Shown on the battlefield",
-    "hud_visible": "Shown in the HUD",
-    "battlefield_asset_id": "Battlefield picture",
-    "portrait_asset_id": "Portrait",
-    "small_portrait_asset_id": "Small portrait",
-    "clip_role": "Animation to play",
-    "fallback_state_id": "If missing, use",
     "persistent": "Stays after it plays",
     "z_order": "Drawn in front order",
-    "page_size": "Rows per page",
-    "playback_rate": "Playback speed",
-    "transition_duration": "Blend time (s)",
-}
-HELP = {
+    "progression_track_ids": "The Tracks (Game Data ▸ Tracks) whose milestones this job gives."
+    " When no job picks any, every track counts.",
+    "assignment_id": "Names this job entry in saves; set for you.",
     # formulas (D94): typed or built with the buttons; variables are declared stats only
     "expression": "The amount as a formula of source (the one acting) and target: source.power"
     " * 2 - target.defense. Only stats declared in Game Systems ▸ Stats can be read. Empty:"
@@ -588,7 +660,7 @@ class ProjectVocabulary:
         def records(mapping, name_key="display_name"):
             for key in sorted(mapping):
                 value = mapping[key]
-                label = getattr(value, name_key, "") or key
+                label = getattr(value, name_key, "") or getattr(value, "name", "") or key
                 yield Choice(str(key), str(label), str(getattr(value, "icon_id", "") or ""))
 
         if source == "abilities":
@@ -674,10 +746,39 @@ class ProjectVocabulary:
                 if asset.asset_id not in seen:
                     seen.add(asset.asset_id)
                     yield Choice(asset.asset_id, words(asset.asset_id.rsplit(".", 1)[-1]))
+        elif source.startswith("presentation:"):  # a battle screen profile, in words
+            presentation = project.battle_presentation_library
+            for key in sorted(presentation.ids(source.split(":", 1)[1])):
+                yield Choice(str(key), words(key))
+        elif source.startswith("store:"):  # any other kind of record, by its name
+            store = source.split(":", 1)[1]
+            for owner in (db, library):
+                mapping = getattr(owner, store, None)
+                if isinstance(mapping, dict) or hasattr(mapping, "keys"):
+                    for key in sorted(mapping.keys()):
+                        yield Choice(str(key), record_name(owner, store, key))
+                    break
         elif source == "currencies":
             names = set(getattr(project.game_start, "currencies", {}) or {}) | {"gold"}
             for name in sorted(names):
                 yield Choice(name, words(name))
+
+    def store_for(self, key):
+        """The project's own list of records a ``<kind>_id`` / ``<kind>_ids`` field names
+        (``formation_id`` -> the formations, ``attack_id`` -> the attacks), or None."""
+        project = self.project
+        key = str(key)
+        if project is None or not key.endswith(("_id", "_ids")):
+            return None
+        stem = key.rsplit("_", 1)[0]
+        for owner in (project.rpg_database, project.gameplay_library):
+            for store in (f"{stem}s", f"{stem}es", stem):
+                mapping = getattr(owner, store, None)
+                if isinstance(mapping, dict) or (
+                    hasattr(mapping, "keys") and hasattr(mapping, "__getitem__")
+                ):
+                    return f"store:{store}"
+        return None
 
     def description(self, source, key):
         """What a skill / item / state says about itself (shown under its picker)."""
@@ -757,6 +858,12 @@ class ProjectVocabulary:
             elif self.project is not None:
                 _collect(self.project.rpg_database.to_data(), self._values)
                 _collect(self.project.gameplay_library.to_data(), self._values)
+            presentation = getattr(self.project, "battle_presentation_library", None)
+            if presentation is not None:  # battle screen profiles: channels, easings...
+                try:
+                    _collect(presentation.to_data(), self._values)
+                except Exception:  # noqa: BLE001 - a profile that cannot save offers nothing
+                    pass
         return tuple(sorted(self._values.get(str(key), ())))
 
     def tags(self):
@@ -798,6 +905,21 @@ ACRONYMS = frozenset({
     "hp", "sp", "mp", "bp", "tp", "ap", "jp", "xp", "exp", "atb", "ai", "hud", "ui", "id",
     "vfx", "fx", "str", "dex", "int", "luk", "vit", "agi", "npc", "aoe", "ko", "dps", "rpg",
 })  # fmt: skip
+
+
+def record_name(owner, store, key):
+    """A record's name as a list shows it: its display name, name or title in ``owner``'s
+    store ``store`` (the database's quests, the library's attacks...), else its id in words."""
+    mapping = getattr(owner, str(store), None) if owner is not None else None
+    try:
+        record = mapping[key] if mapping is not None and key in mapping else None
+    except TypeError:
+        record = None
+    for field in ("display_name", "name", "title", "label"):
+        name = getattr(record, field, None)
+        if isinstance(name, str) and name.strip():
+            return name
+    return words(key)
 
 
 def words(text):
@@ -856,7 +978,18 @@ def label_for(key):
         return _POINTS[key]
     if key.endswith("_id") and REFERENCES.get(key):
         return field_label(key[:-3])
+    if key.endswith("_id") and key.removesuffix("_id") in _KNOWN_STORES:  # formation_id
+        return field_label(key[:-3])
+    if key.endswith("_ids"):  # roster_actor_ids -> "Roster Actors": a list of names
+        return field_label(key[:-4]) + "s"
     return field_label(key)
+
+
+# the record kinds a ``<kind>_id`` field names (picked by name: no "ID" in its label)
+_KNOWN_STORES = {
+    "formation", "quest", "faction", "shop", "attack", "projectile", "timeline", "banner",
+    "workstation", "recipe", "track", "office", "board", "page", "tree", "species",
+}  # fmt: skip
 
 
 _POINTS = {"ap": "Ability Points", "stat_points": "Stat Points", "skill_points": "Skill Points"}
@@ -901,10 +1034,14 @@ def engine_enums():
     import re
 
     found = {}  # field -> {frozenset of allowed values, ...}
+    literal = {}  # the same from sets written in a check: for fields not found otherwise
     tuple_check = re.compile(r"if\s+(\w+)\s+not\s+in\s+([A-Z][A-Z0-9_]+)\s*:")
     enum_set = re.compile(r'__setattr__\(\s*self,\s*"(\w+)",\s*([A-Z]\w+)\(\s*\1\s*\)')
     enum_local = re.compile(r"\b(\w+)\s*=\s*([A-Z]\w+)\(\s*\1\s*\)")
     enum_data = re.compile(r'([A-Z]\w+)\(\s*data(?:\.get\(|\[)\s*"(\w+)"')
+    # ``if self.party_hud not in {"column", "bottom_row"}:`` - a set written in the check
+    literal_check = re.compile(r"if\s+(?:self\.)?(\w+)\s+not\s+in\s+[{(]([^{}()]*)[})]\s*:")
+    quoted = re.compile(r"""["']([A-Za-z0-9_.\-]*)["']""")
     for package in ("rpg", "gameplay", "presentation"):
         base = importlib.import_module(f"asteria.{package}")
         for info in pkgutil.iter_modules(base.__path__):
@@ -920,12 +1057,18 @@ def engine_enums():
                     isinstance(v, str) for v in values
                 ):
                     found.setdefault(field, set()).add(frozenset(v for v in values if v))
+            for field, body in literal_check.findall(source):
+                values = quoted.findall(body)
+                if values and len(values) == body.count(",") + 1 - body.rstrip().endswith(","):
+                    literal.setdefault(field, set()).add(frozenset(v for v in values if v))
             pairs = enum_set.findall(source) + enum_local.findall(source)
             pairs += [(field, kind) for kind, field in enum_data.findall(source)]
             for field, enum_name in pairs:
                 kind = getattr(module, enum_name, None)
                 if isinstance(kind, type) and issubclass(kind, enum.Enum):
                     found.setdefault(field, set()).add(frozenset(str(m.value) for m in kind))
+    for field, sets in literal.items():
+        found.setdefault(field, sets)
     # a name whose records disagree (``kind``, ``mode``...) is left to the values in use
     _ENGINE_ENUMS = {
         field: tuple(sorted(next(iter(sets))))
@@ -937,30 +1080,30 @@ def engine_enums():
 
 # -- tags in words ------------------------------------------------------------------------------
 _TAG_PREFIXES = (  # prefix -> how the rest reads
-    ("capability.weapon.", "Can use: {} weapons"),
-    ("capability.armor.", "Can wear: {} armour"),
+    ("capability.weapon.", "Weapon: {}"),
+    ("capability.armor.", "Armor: {}"),
     ("capability.", "Can: {}"),
     ("class.", "Job: {}"),
     ("job.", "Job tree: {}"),
-    ("weak.", "Weak to {}"),
-    ("resist.", "Resists {}"),
-    ("absorb.", "Absorbs {}"),
-    ("immune.", "Immune to {}"),
-    ("damage.", "{} damage"),
-    ("weapon.", "{} weapon blow"),
+    ("weak.", "Weak: {}"),
+    ("resist.", "Resists: {}"),
+    ("absorb.", "Absorbs: {}"),
+    ("immune.", "Immune: {}"),
+    ("damage.", "Damage: {}"),
+    ("weapon.", "Weapon Blow: {}"),
     ("equip.", "Equipment: {}"),
     ("status.", "Has status: {}"),
     ("state.", "In state: {}"),
     ("stance.", "Stance: {}"),
     ("trait.", "Trait: {}"),
-    ("attune.", "Attuned to {}"),
+    ("attune.", "Attuned: {}"),
     ("mastery.", "Mastery: {}"),
     ("weather.", "Weather: {}"),
     ("rune.", "Rune: {}"),
-    ("roster.", "Party slot {}"),
+    ("roster.", "Party Slot: {}"),
     ("boost.", "Boosted: {}"),
     ("set.", "Set: {}"),
-    ("tier.", "Tier {}"),
+    ("tier.", "Tier: {}"),
     ("form.", "Form: {}"),
     ("vigil.", "Vigil: {}"),
     ("action.", "Action: {}"),
@@ -992,7 +1135,7 @@ _PLAIN_TAGS = {
 
 
 def tag_label(tag, names=None):
-    """A tag in words: ``capability.weapon.ring`` -> "Can use: Ring weapons", ``class.brave``
+    """A tag in words: ``capability.weapon.ring`` -> "Weapon: Ring", ``class.brave``
     -> "Job: Brave" (``names`` gives records' display names by id)."""
     tag = str(tag)
     names = names or {}
@@ -1013,6 +1156,83 @@ def tag_label(tag, names=None):
             rest = names.get(rest) or words(rest.replace(".", " · ").replace(":", " · "))
             return f"{words(head)}: {rest}"
     return words(tag)
+
+
+# an enemy AI rule's action (rpg/enemy_ai.py ACTION_KINDS), in words
+# an effect step's kind (gameplay.effects.EffectOperationKind) in words
+OPERATION_KINDS = {
+    "resource_delta": "Change a Resource",
+    "resource_set": "Set a Resource",
+    "stat_delta": "Change a Stat",
+    "tag_add": "Add a Tag",
+    "tag_remove": "Remove a Tag",
+}
+
+AI_ACTIONS = {"ability": "Skill", "hook": "Custom Code"}
+PHASE_START_HELP = (
+    "The boss moves into this phase once all of these hold (HP % at most 30 %...). None: only"
+    " as the Starting Phase."
+)
+PHASE_PRIORITY_HELP = "When several phases could start at once, the highest number wins."
+PHASE_RULES_HELP = (
+    "The rules the boss may use in this phase. None: every rule. A rule's own conditions"
+    " still apply."
+)
+AI_CONDITIONS = {  # rpg/enemy_ai.py CONDITION_KINDS, in words
+    "always": "Always",
+    "round_index": "Round",
+    "resource": "Resource",
+    "resource_ratio": "Resource %",
+    "stat": "Stat",
+    "memory": "Memory",
+    "phase": "Phase",
+    "can_act": "Can act",
+}
+AI_COMPARISONS = {  # rpg/enemy_ai.py COMPARISONS, in words
+    "<": "is below",
+    "<=": "is at most",
+    ">": "is above",
+    ">=": "is at least",
+    "==": "is",
+    "!=": "is not",
+}
+AI_ACTION_HELP = (
+    "Skill: the enemy uses the skill picked below. Custom Code: the hook named below runs"
+    " (Code ▸ hooks), for actions no skill can do."
+)
+
+_TAG_MEANINGS = (  # prefix -> what carrying the tag does, said plainly (a tag row's Effect)
+    ("capability.weapon.", "Can equip {} weapons"),
+    ("capability.armor.", "Can wear {} armour"),
+    ("class.", "Counts as {} (rules and gear can ask for it)"),
+    ("job.", "A skill of the {} job"),
+    ("weak.", "Takes more {} damage"),
+    ("resist.", "Takes less {} damage"),
+    ("absorb.", "Heals from {} damage"),
+    ("immune.", "Not affected by {}"),
+    ("damage.", "Deals {} damage"),
+    ("weapon.", "A blow with a {} weapon"),
+    ("state.", "Counts as being {}"),
+    ("status.", "Counts as being {}"),
+)
+
+
+def tag_meaning(tag, names=None, definitions=None):
+    """What carrying ``tag`` does, in a plain sentence: ``capability.weapon.book`` -> "Can
+    equip Book weapons"; else the project's own definition of it (Game Systems ▸ Tags) or the
+    engine's meaning; "" when nothing says."""
+    from asteria.rpg.tag_definitions import built_in, definition_for
+
+    tag = str(tag)
+    names = names or {}
+    for prefix, pattern in _TAG_MEANINGS:
+        if tag.startswith(prefix):
+            rest = tag[len(prefix) :]
+            return pattern.format(names.get(rest) or words(rest.replace(".", " · ")))
+    definition = definition_for(definitions or {}, tag) if definitions else None
+    if definition is not None and definition.description:
+        return definition.description
+    return built_in(tag) or ""
 
 
 # -- triggers (moments in a battle) in words ----------------------------------------------------

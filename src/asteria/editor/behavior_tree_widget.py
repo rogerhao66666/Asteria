@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QGroupBox,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -280,6 +279,6 @@ class BehaviorTreeEditorWidget(QWidget):
         return result
 
     def _new_clicked(self):
-        value, ok = QInputDialog.getText(self, "New Behavior Tree", "Tree id:")
-        if ok and value.strip():
-            self.create_tree(value.strip())
+        from .authoring_hub_widget import _free_id
+
+        self.create_tree(_free_id("", self.api.ids(), "new_tree"))  # its id made for it

@@ -122,8 +122,8 @@ def _with_formula_fields(data):
 
 
 def _count_heading(label, category_label, count):
-    """The list heading names what is listed: "Actors · 12 records"."""
-    label.setText(f"{category_label} · {count} record" + ("" if count == 1 else "s"))
+    """The list heading names what is listed: "Actors" (no count: the list shows them)."""
+    label.setText(category_label)
 
 
 def _category_icons(browser, category_label):
@@ -1384,18 +1384,7 @@ class AdapterFamilyWidget(QWidget):
     def duplicate_selected(self):
         if self.selected_id is None or self.adapter.duplicate is None:
             return False
-        from PySide6.QtWidgets import QInputDialog
-
-        value, ok = QInputDialog.getText(
-            self,
-            "Duplicate",
-            "Internal ID for the copy - other records refer to it by this, so it stays fixed\n"
-            "(lowercase letters, numbers and _; the name players see is set in the form):",
-            text=_free_id(self.selected_id, self._ids),
-        )
-        if not ok or not value.strip():
-            return False
-        return self.duplicate_selected_as(value.strip())
+        return self.duplicate_selected_as(_free_id(self.selected_id, self._ids))  # id made
 
     # -- record clipboard, multi-delete, batch edit (EDT-03, EDT-13, EDT-14) ----------------
     def _run(self, title, operation):

@@ -72158,7 +72158,7 @@
         },
         "costs": [],
         "description": "Physical / Non-elemental: inflicts Defence Down, Power Down",
-        "display_name": "W Charge",
+        "display_name": "Crushing Charge",
         "effects": [
           {
             "effect": {
@@ -72239,7 +72239,7 @@
         },
         "costs": [],
         "description": "Magic / Fire: inflicts Burn",
-        "display_name": "W Cinder",
+        "display_name": "Cinder Blast",
         "effects": [
           {
             "effect": {
@@ -72309,7 +72309,7 @@
         },
         "costs": [],
         "description": "Physical / Non-elemental: 3 hits, inflicts Bleed",
-        "display_name": "W Combo",
+        "display_name": "Triple Slash",
         "effects": [
           {
             "effect": {
@@ -72403,7 +72403,7 @@
         },
         "costs": [],
         "description": "Physical / Non-elemental",
-        "display_name": "W Counter",
+        "display_name": "Axe Counter",
         "effects": [
           {
             "effect": {
@@ -72495,7 +72495,7 @@
         },
         "costs": [],
         "description": "Support: user gains Stance Fury, Attack Up, removes Stance Bulwark",
-        "display_name": "W Cry",
+        "display_name": "War Cry",
         "effects": [],
         "icon_id": "playable_assets/lucifer/icons/skill_w_cry.png",
         "schema": "asteria.ability_definition",
@@ -72520,7 +72520,7 @@
         },
         "costs": [],
         "description": "Magic / Dark: heals the user",
-        "display_name": "W Drain",
+        "display_name": "Dark Drain",
         "effects": [
           {
             "effect": {
@@ -72620,7 +72620,7 @@
         },
         "costs": [],
         "description": "Magic / Dark + Fire: 4 hits, inflicts Silence",
-        "display_name": "W Eclipse",
+        "display_name": "Eclipse",
         "effects": [
           {
             "effect": {
@@ -72739,7 +72739,7 @@
         },
         "costs": [],
         "description": "Support: user gains Stance Bulwark, Ward, removes Stance Fury",
-        "display_name": "W Iron",
+        "display_name": "Iron Stance",
         "effects": [],
         "icon_id": "playable_assets/lucifer/icons/skill_w_iron.png",
         "schema": "asteria.ability_definition",
@@ -72771,7 +72771,7 @@
         },
         "costs": [],
         "description": "Magic / Dark: inflicts Defence Down",
-        "display_name": "W Mark",
+        "display_name": "Doom Mark",
         "effects": [
           {
             "effect": {
@@ -72853,7 +72853,7 @@
         },
         "costs": [],
         "description": "Healing",
-        "display_name": "W Mend",
+        "display_name": "Mend",
         "effects": [
           {
             "effect": {
@@ -72921,7 +72921,7 @@
         },
         "costs": [],
         "description": "Physical / Non-elemental: 2 hits, inflicts Poison, Bleed",
-        "display_name": "W Poison",
+        "display_name": "Venom Stab",
         "effects": [
           {
             "effect": {
@@ -73012,7 +73012,7 @@
         },
         "costs": [],
         "description": "Magic / Lightning: 2 hits, inflicts Stun",
-        "display_name": "W Roar",
+        "display_name": "Thunder Roar",
         "effects": [
           {
             "effect": {
@@ -73104,7 +73104,7 @@
         },
         "costs": [],
         "description": "Support",
-        "display_name": "W Summon",
+        "display_name": "Summon Minions",
         "effects": [],
         "icon_id": "playable_assets/lucifer/icons/skill_w_summon.png",
         "schema": "asteria.ability_definition",
@@ -77400,7 +77400,7 @@
             "enabled": true,
             "priority": 10,
             "progression_track_ids": [],
-            "role": "main",
+            "role": "primary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77458,7 +77458,7 @@
             "enabled": true,
             "priority": 10,
             "progression_track_ids": [],
-            "role": "main",
+            "role": "primary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77469,7 +77469,7 @@
             "enabled": true,
             "priority": 5,
             "progression_track_ids": [],
-            "role": "sub",
+            "role": "secondary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77517,7 +77517,7 @@
             "enabled": true,
             "priority": 10,
             "progression_track_ids": [],
-            "role": "main",
+            "role": "primary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77528,7 +77528,7 @@
             "enabled": true,
             "priority": 5,
             "progression_track_ids": [],
-            "role": "sub",
+            "role": "secondary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77575,7 +77575,7 @@
             "enabled": true,
             "priority": 10,
             "progression_track_ids": [],
-            "role": "main",
+            "role": "primary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77586,7 +77586,7 @@
             "enabled": true,
             "priority": 5,
             "progression_track_ids": [],
-            "role": "sub",
+            "role": "secondary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -77626,7 +77626,7 @@
             "enabled": true,
             "priority": 10,
             "progression_track_ids": [],
-            "role": "main",
+            "role": "primary",
             "schema": "asteria.rpg.class_assignment",
             "tags": [],
             "version": 1
@@ -85938,12 +85938,14 @@
           "int": 1.9,
           "luk": 0.3,
           "speed": 0.4,
-          "str": 0.5
+          "str": 0.5,
+          "vit": 0.74
         },
         "resource_bonuses": {
           "technique": 260.0
         },
         "resource_growth": {
+          "technique": 11.5,
           "vitality": 70.0
         },
         "schema": "asteria.rpg.class",
@@ -85969,13 +85971,15 @@
           "defense": 1.2,
           "dex": 0.4,
           "int": 1.7,
-          "luk": 0.3
+          "luk": 0.3,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 140.0,
           "vitality": 400.0
         },
         "resource_growth": {
+          "technique": 10.5,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86021,13 +86025,15 @@
           "int": 1.3,
           "luk": 0.9,
           "speed": 0.8,
-          "str": 1.8
+          "str": 1.8,
+          "vit": 1.3
         },
         "resource_bonuses": {
           "technique": 120.0,
           "vitality": 800.0
         },
         "resource_growth": {
+          "technique": 8.5,
           "vitality": 160.0
         },
         "schema": "asteria.rpg.class",
@@ -86063,12 +86069,14 @@
           "dex": 0.7,
           "int": 1.4,
           "luk": 0.3,
-          "speed": 0.6
+          "speed": 0.6,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 120.0
         },
         "resource_growth": {
+          "technique": 9.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86101,12 +86109,14 @@
           "evade": 0.1,
           "luk": 0.6,
           "speed": 1.2,
-          "str": 0.8
+          "str": 0.8,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 90.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86133,13 +86143,15 @@
           "dex": 0.4,
           "int": 1.8,
           "luk": 0.3,
-          "str": 0.5
+          "str": 0.5,
+          "vit": 0.99
         },
         "resource_bonuses": {
           "technique": 160.0,
           "vitality": 500.0
         },
         "resource_growth": {
+          "technique": 11.0,
           "vitality": 110.0
         },
         "schema": "asteria.rpg.class",
@@ -86172,12 +86184,14 @@
           "dex": 1.2,
           "luk": 0.75,
           "speed": 1.6,
-          "str": 0.9
+          "str": 0.9,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 30.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86204,13 +86218,15 @@
           "defense": 2.0,
           "dex": 0.4,
           "luk": 0.3,
-          "str": 1.5
+          "str": 1.5,
+          "vit": 0.99
         },
         "resource_bonuses": {
           "technique": 50.0,
           "vitality": 300.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 110.0
         },
         "schema": "asteria.rpg.class",
@@ -86241,13 +86257,15 @@
           "defense": 3.4,
           "dex": 0.4,
           "luk": 0.3,
-          "str": 0.6
+          "str": 0.6,
+          "vit": 1.24
         },
         "resource_bonuses": {
           "technique": 30.0,
           "vitality": 900.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 150.0
         },
         "schema": "asteria.rpg.class",
@@ -86277,13 +86295,15 @@
           "dex": 0.4,
           "int": 1.0,
           "luk": 0.3,
-          "str": 1.4
+          "str": 1.4,
+          "vit": 0.99
         },
         "resource_bonuses": {
           "technique": 100.0,
           "vitality": 400.0
         },
         "resource_growth": {
+          "technique": 7.0,
           "vitality": 110.0
         },
         "schema": "asteria.rpg.class",
@@ -86318,12 +86338,14 @@
           "dex": 0.6,
           "luk": 0.3,
           "speed": 0.4,
-          "str": 1.7
+          "str": 1.7,
+          "vit": 1.11
         },
         "resource_bonuses": {
           "vitality": 500.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 130.0
         },
         "schema": "asteria.rpg.class",
@@ -86348,12 +86370,14 @@
         "level_growth": {
           "dex": 0.4,
           "int": 1.5,
-          "luk": 0.3
+          "luk": 0.3,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 120.0
         },
         "resource_growth": {
+          "technique": 9.5,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86385,12 +86409,14 @@
           "dex": 0.65,
           "int": 1.8,
           "luk": 0.3,
-          "speed": 0.5
+          "speed": 0.5,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 90.0
         },
         "resource_growth": {
+          "technique": 11.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86421,12 +86447,14 @@
           "dex": 0.65,
           "int": 1.5,
           "luk": 0.3,
-          "speed": 0.5
+          "speed": 0.5,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 140.0
         },
         "resource_growth": {
+          "technique": 9.5,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86452,12 +86480,14 @@
         "level_growth": {
           "dex": 0.4,
           "int": 1.3,
-          "luk": 0.3
+          "luk": 0.3,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 80.0
         },
         "resource_growth": {
+          "technique": 8.5,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86491,12 +86521,14 @@
           "evade": 0.15,
           "luk": 1.35,
           "speed": 1.8,
-          "str": 0.7
+          "str": 0.7,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 40.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86528,12 +86560,14 @@
           "defense": 1.2,
           "dex": 0.4,
           "int": 1.6,
-          "luk": 0.3
+          "luk": 0.3,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 120.0
         },
         "resource_growth": {
+          "technique": 10.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86560,6 +86594,7 @@
         "icon_id": "playable_assets/icons_7soul/S_Ice08.png",
         "resource_bonuses": {},
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 0.0
         },
         "schema": "asteria.rpg.class",
@@ -86567,7 +86602,10 @@
           "defense": 10.0,
           "power": 20.0
         },
-        "version": 1
+        "version": 1,
+        "level_growth": {
+          "vit": 0.3
+        }
       },
       {
         "class_id": "weapon_master",
@@ -86592,12 +86630,14 @@
           "dex": 0.9,
           "luk": 0.66,
           "speed": 1.0,
-          "str": 1.3
+          "str": 1.3,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 40.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -86629,12 +86669,14 @@
           "dex": 0.9,
           "luk": 0.3,
           "speed": 1.0,
-          "str": 1.2
+          "str": 1.2,
+          "vit": 0.8
         },
         "resource_bonuses": {
           "technique": 60.0
         },
         "resource_growth": {
+          "technique": 2.0,
           "vitality": 80.0
         },
         "schema": "asteria.rpg.class",
@@ -102570,31 +102612,31 @@
           "data.ability.vial_poison.description": "\u9b54\u6cd5\uff0f\u95c7\uff1a\u65bd\u52a0\u4e2d\u6bd2\u3001\u529b\u91cf\u4e0b\u964d",
           "data.ability.vial_poison.name": "\u6bd2\u85e5\u74f6",
           "data.ability.w_charge.description": "\u7269\u7406\uff0f\u7121\u5c6c\u6027\uff1a\u65bd\u52a0\u9632\u79a6\u4e0b\u964d\u3001\u529b\u91cf\u4e0b\u964d",
-          "data.ability.w_charge.name": "\u6230\u58eb\u00b7\u885d\u92d2",
+          "data.ability.w_charge.name": "\u7c89\u788e\u885d\u92d2",
           "data.ability.w_cinder.description": "\u9b54\u6cd5\uff0f\u706b\uff1a\u65bd\u52a0\u71c3\u71d2",
-          "data.ability.w_cinder.name": "\u6230\u58eb\u00b7\u9918\u71fc",
+          "data.ability.w_cinder.name": "\u9918\u71fc\u7206\u7834",
           "data.ability.w_combo.description": "\u7269\u7406\uff0f\u7121\u5c6c\u6027\uff1a3 \u6bb5\u653b\u64ca\uff0c\u65bd\u52a0\u6d41\u8840",
-          "data.ability.w_combo.name": "\u6230\u58eb\u00b7\u9023\u64ca",
+          "data.ability.w_combo.name": "\u4e09\u9023\u65ac",
           "data.ability.w_counter.description": "\u7269\u7406\uff0f\u7121\u5c6c\u6027",
-          "data.ability.w_counter.name": "\u6230\u58eb\u00b7\u53cd\u64ca",
+          "data.ability.w_counter.name": "\u65a7\u64ca\u53cd\u64ca",
           "data.ability.w_cry.description": "\u8f14\u52a9\uff1a\u81ea\u8eab\u7372\u5f97\u72c2\u6012\u67b6\u52e2\u3001\u653b\u64ca\u63d0\u5347\uff0c\u89e3\u9664\u58c1\u58d8\u67b6\u52e2",
-          "data.ability.w_cry.name": "\u6230\u58eb\u00b7\u5436\u558a",
+          "data.ability.w_cry.name": "\u6230\u543c",
           "data.ability.w_drain.description": "\u9b54\u6cd5\uff0f\u95c7\uff1a\u6cbb\u7642\u81ea\u8eab",
-          "data.ability.w_drain.name": "\u6230\u58eb\u00b7\u6c72\u53d6",
+          "data.ability.w_drain.name": "\u9ed1\u6697\u5438\u53d6",
           "data.ability.w_eclipse.description": "\u9b54\u6cd5\uff0f\u95c7\uff0b\u706b\uff1a4 \u6bb5\u653b\u64ca\uff0c\u65bd\u52a0\u6c89\u9ed8",
-          "data.ability.w_eclipse.name": "\u6230\u58eb\u00b7\u65e5\u8755",
+          "data.ability.w_eclipse.name": "\u65e5\u8755",
           "data.ability.w_iron.description": "\u8f14\u52a9\uff1a\u81ea\u8eab\u7372\u5f97\u58c1\u58d8\u67b6\u52e2\u3001\u5b88\u8b77\uff0c\u89e3\u9664\u72c2\u6012\u67b6\u52e2",
-          "data.ability.w_iron.name": "\u6230\u58eb\u00b7\u92fc\u9435",
+          "data.ability.w_iron.name": "\u92fc\u9435\u67b6\u52e2",
           "data.ability.w_mark.description": "\u9b54\u6cd5\uff0f\u95c7\uff1a\u65bd\u52a0\u9632\u79a6\u4e0b\u964d",
-          "data.ability.w_mark.name": "\u6230\u58eb\u00b7\u5370\u8a18",
+          "data.ability.w_mark.name": "\u5384\u904b\u5370\u8a18",
           "data.ability.w_mend.description": "\u6cbb\u7642",
-          "data.ability.w_mend.name": "\u6230\u58eb\u00b7\u6cbb\u7652",
+          "data.ability.w_mend.name": "\u6cbb\u7652",
           "data.ability.w_poison.description": "\u7269\u7406\uff0f\u7121\u5c6c\u6027\uff1a2 \u6bb5\u653b\u64ca\uff0c\u65bd\u52a0\u4e2d\u6bd2\u3001\u6d41\u8840",
-          "data.ability.w_poison.name": "\u6230\u58eb\u00b7\u4e2d\u6bd2",
+          "data.ability.w_poison.name": "\u6bd2\u5203\u523a\u64ca",
           "data.ability.w_roar.description": "\u9b54\u6cd5\uff0f\u96f7\uff1a2 \u6bb5\u653b\u64ca\uff0c\u65bd\u52a0\u6688\u7729",
-          "data.ability.w_roar.name": "\u6230\u58eb\u00b7\u5486\u54ee",
+          "data.ability.w_roar.name": "\u96f7\u9cf4\u5486\u54ee",
           "data.ability.w_summon.description": "\u8f14\u52a9",
-          "data.ability.w_summon.name": "\u6230\u58eb\u00b7\u53ec\u559a",
+          "data.ability.w_summon.name": "\u53ec\u559a\u50d5\u5f9e",
           "data.ability.war_cry.description": "\u8f14\u52a9\uff1a\u65bd\u52a0\u653b\u64ca\u63d0\u5347\u3001\u654f\u92b3\u5fc3\u667a",
           "data.ability.war_cry.name": "\u6230\u543c",
           "data.ability.water_holy.description": "\u6cbb\u7642\uff1a\u81ea\u8eab\u7372\u5f97\u5b88\u8b77",

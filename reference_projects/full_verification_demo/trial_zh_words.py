@@ -840,6 +840,17 @@ WORDS = {
     "Cry": "吶喊",
     "Drain": "汲取",
     "Eclipse": "日蝕",
+    # -- the Crimson boss's skills, named by what they do (D100) ------------------------------
+    "Crushing Charge": "粉碎衝鋒",
+    "Cinder Blast": "餘燼爆破",
+    "Triple Slash": "三連斬",
+    "Axe Counter": "斧擊反擊",
+    "Dark Drain": "黑暗吸取",
+    "Iron Stance": "鋼鐵架勢",
+    "Doom Mark": "厄運印記",
+    "Venom Stab": "毒刃刺擊",
+    "Thunder Roar": "雷鳴咆哮",
+    "Summon Minions": "召喚僕從",
     "Mark": "印記",
     "Roar": "咆哮",
     # equipment growth of the reference weapons, in words

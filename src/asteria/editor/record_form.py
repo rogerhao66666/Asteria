@@ -50,13 +50,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.rpg.enemy_ai import CONDITION_PARAMS
+
 from .decor import hide_help_tip, show_help_tip
 from .i18n import english, translate
 from .image_tools import picture_field
 from .record_vocabulary import (
+    AI_ACTION_HELP,
     CATEGORY_HELP,
     HELP,
     NOT_REFERENCES,
+    PHASE_PRIORITY_HELP,
+    PHASE_RULES_HELP,
+    PHASE_START_HELP,
     REFERENCES,
     TECHNICAL,
     TERM_KEY_SOURCES,
@@ -66,6 +72,7 @@ from .record_vocabulary import (
     label_for,
     map_source,
     tag_label,
+    tag_meaning,
     trigger_label,
     vocabulary_for,
     words,
@@ -93,7 +100,10 @@ _LIST_TEMPLATES = {  # what a new entry of an empty list starts as
     },
     "sockets": {"socket_id": "", "accepted_tags": ["gem"], "locked": False},
 }
-_ENUMS = {}  # hand-kept fixed sets; the engine's own checks are read (engine_enums)
+# hand-kept fixed sets; the engine's own checks are read (engine_enums)
+_EASINGS = ("linear", "ease_in", "ease_out", "ease_in_out", "smoothstep")  # easing_value
+_ENUMS = {"easing": _EASINGS, "transition_easing": _EASINGS}
+_ENUMS["default_transition_easing"] = _EASINGS
 
 
 def _engine_template(key):
@@ -454,24 +464,39 @@ class ChipList(QWidget):
     record's name and id), ✕ on a row removes it, Add opens a picker."""
 
     edited = Signal()
-    ROW = 26  # a row's height: the table is as tall as its rows, no scrolling inside a form
+    ROW = 30  # a row's height (a drop-down fits): the table is as tall as its rows
     SPLIT = 8  # more rows than this: the list in two halves side by side
 
-    def __init__(self, values, choices, *, icons=None, allow_new=True, noun="entry", namer=None):
+    def __init__(
+        self,
+        values,
+        choices,
+        *,
+        icons=None,
+        allow_new=True,
+        noun="entry",
+        namer=None,
+        meaning=None,
+        detail=None,
+    ):
         super().__init__()
+        self.detail = detail  # a record row's second column in words, instead of its id
         self.namer = namer  # words for a value that is not a listed choice (a new tag)
+        self.meaning = meaning  # a tag -> what carrying it does, beside its drop-downs
         self.values = [str(v) for v in values]
         self.choices = tuple(choices)
         self.icons = icons
         self.allow_new = allow_new
         self.noun = noun
         self._labels = {c.value: c for c in self.choices}
+        self._pending = False  # a new tag row waiting for its pick
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(4)
         self.table = QTableWidget(0, 3, self)
         self.table.setObjectName("FormListTable")
-        self.heads = ("Type", "Content") if noun == "tag" else (noun.title(), "ID")
+        second = "When" if detail else ""
+        self.heads = ("Type", "Content") if noun == "tag" else (noun.title(), second)
         self.table.setHorizontalHeaderLabels([*self.heads, ""])
         self.table.verticalHeader().hide()
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -515,28 +540,150 @@ class ChipList(QWidget):
         return super().eventFilter(watched, event)
 
     def cells(self, value):
-        """The row's two cells in words: a tag's kind and what it is; a record's name and id."""
+        """The row's two cells in words: a tag's kind and what it is; a record's name (and its
+        detail, when the list has one)."""
         choice = self._labels.get(value)
         shown = choice.label if choice else (self.namer(value) if self.namer else value)
         if self.noun != "tag":
-            return shown, value
+            return shown, (self.detail(value) if self.detail else "")
         head, mark, rest = shown.partition(": ")
         return (head, rest) if mark else ("Tag", shown)
 
+    def _groups(self):
+        """``{type: [(value, content)]}`` of every tag on offer and in the list (the rows'
+        drop-downs: a type, then a tag of that type)."""
+        groups = {}
+        for value in dict.fromkeys([*(c.value for c in self.choices), *self.values]):
+            head, rest = self.cells(value)
+            groups.setdefault(head, []).append((value, rest))
+        return groups
+
+    def _record_picker(self, row, base, value):
+        """A record row's drop-down (a skill, an item…), with icons; typing narrows it.
+        ``value`` None: the new row "+ Add" opened, kept out until one is picked."""
+        box = QComboBox()
+        box.setObjectName("FormRecordPick")
+        box.setEditable(True)
+        box.setInsertPolicy(QComboBox.NoInsert)
+        _wheel_guard(box)
+        box.setFixedHeight(self.ROW - 2)
+        if value is None:
+            box.addItem(translate("Choose…"), None)
+        from .record_vocabulary import Choice
+
+        taken = set(self.values) - {value}
+        offered = [c for c in self.choices if c.value not in taken]
+        if value is not None and value not in {c.value for c in offered}:
+            offered.insert(0, self._labels.get(value) or Choice(value, self.cells(value)[0]))
+        for choice in offered:
+            icon = self.icons(choice.icon) if choice.icon and self.icons else None
+            box.addItem(icon or QIcon(), translate(choice.label), choice.value)
+            box.setItemData(box.count() - 1, choice.value, Qt.ToolTipRole)
+        box.completer().setFilterMode(Qt.MatchContains)
+        box.completer().setCompletionMode(QCompleter.PopupCompletion)
+        box.setCurrentIndex(max(0, box.findData(value)) if value is not None else 0)
+
+        def picked(_index=None):
+            picked_value = box.currentData()
+            typed = box.currentText().strip()
+            if box.findText(typed) < 0 and typed and self.allow_new:
+                picked_value = typed  # typed: a new value
+            if not picked_value or picked_value == value or picked_value in self.values:
+                return
+            if value is None:
+                self._pending = False
+                self.add_values([picked_value])
+            else:
+                self.values[self.values.index(value)] = picked_value
+                self._build()
+                self.edited.emit()
+
+        box.activated.connect(picked)
+        self.table.setCellWidget(row, base, box)
+        return box
+
+    def _pickers(self, row, base, value, groups):
+        """A tag row's two drop-downs: its type and, of that type, which tag. ``value`` None:
+        the new row "+ Add tag" opened, kept out of the list until a tag is picked."""
+        kind = QComboBox()
+        kind.setObjectName("FormTagType")
+        for head in sorted(groups, key=lambda h: (h != "Tag", translate(h).lower())):
+            kind.addItem(translate(head), head)
+        content = QComboBox()
+        content.setObjectName("FormTagContent")
+        content.setEditable(self.allow_new)  # a new tag can be typed when the field allows
+        for box in (kind, content):
+            _wheel_guard(box)
+            box.setFixedHeight(self.ROW - 2)
+        head = self.cells(value)[0] if value is not None else None
+        kind.setCurrentIndex(max(0, kind.findData(head)) if head else 0)
+
+        def fill(keep=None):
+            content.blockSignals(True)
+            content.clear()
+            if keep is None:
+                content.addItem(translate("Choose…"), None)
+            taken = set(self.values) - {keep}
+            for tag, shown in groups.get(kind.currentData(), ()):
+                if tag not in taken:
+                    content.addItem(translate(shown), tag)
+                    content.setItemData(content.count() - 1, tag, Qt.ToolTipRole)
+            content.setCurrentIndex(max(0, content.findData(keep)) if keep else 0)
+            content.blockSignals(False)
+
+        def picked(_index):
+            tag = content.currentData()
+            if tag is None and self.allow_new and content.currentText().strip():
+                tag = content.currentText().strip()  # typed: a new tag
+            if not tag or tag in self.values:
+                return
+            if value is None:
+                self._pending = False
+                self.add_values([tag])
+            else:
+                self.values[self.values.index(value)] = tag
+                self._build()
+                self.edited.emit()
+
+        fill(value)
+        kind.currentIndexChanged.connect(lambda _i: fill(None))
+        content.activated.connect(picked)
+        self.table.setCellWidget(row, base, kind)
+        effect = self.meaning(value) if self.meaning and value is not None else ""
+        if not effect:
+            self.table.setCellWidget(row, base + 1, content)
+            return content
+        cell = QWidget()  # the pick, then what it does in plain words
+        line = QHBoxLayout(cell)
+        line.setContentsMargins(0, 0, 8, 0)
+        line.setSpacing(12)
+        content.setMinimumWidth(160)
+        line.addWidget(content, 1)
+        said = QLabel(translate(effect))
+        said.setObjectName("FormTagEffect")
+        said.setToolTip(translate(effect))
+        line.addWidget(said, 2)
+        self.table.setCellWidget(row, base + 1, cell)
+        return content
+
     def _shape(self):
         """A long list (more than SPLIT rows) in two halves side by side: half as tall."""
-        table, bands = self.table, 2 if len(self.values) > self.SPLIT else 1
+        count = len(self.values) + (1 if self._pending else 0)
+        table, bands = self.table, 2 if count > self.SPLIT else 1
         table.setColumnCount(3 * bands)
         table.setHorizontalHeaderLabels([*self.heads, ""] * bands)
         header = table.horizontalHeader()
         for band in range(bands):
             first = 3 * band
-            header.setSectionResizeMode(first, QHeaderView.Interactive)
+            names_only = self.noun != "tag" and self.detail is None  # the name fills the row
+            header.setSectionResizeMode(
+                first, QHeaderView.Stretch if names_only else QHeaderView.Interactive
+            )
             header.setSectionResizeMode(first + 1, QHeaderView.Stretch)
             header.setSectionResizeMode(first + 2, QHeaderView.Fixed)
             header.resizeSection(first, 180 if bands == 1 else 120)
             header.resizeSection(first + 2, 30)
-        rows = -(-len(self.values) // bands)
+        rows = -(-count // bands)
         table.setRowCount(rows)
         return rows
 
@@ -544,6 +691,7 @@ class ChipList(QWidget):
         table = self.table
         table.clearContents()
         rows = self._shape()
+        groups = self._groups() if self.noun == "tag" else None
         for index, value in enumerate(self.values):
             band, row = divmod(index, rows) if rows else (0, 0)
             base = 3 * band
@@ -568,13 +716,37 @@ class ChipList(QWidget):
             remove.setToolTip(f"Remove {first if self.noun != 'tag' else second}")
             remove.clicked.connect(lambda _c=False, v=value: self._remove(v))
             table.setCellWidget(row, base + 2, remove)
+            if groups is not None:  # a tag: its type, then which one, from lists
+                self._pickers(row, base, value, groups)
+            else:  # a record: picked from the list of them
+                self._record_picker(row, base, value)
+        if self._pending:
+            index = len(self.values)
+            band, row = divmod(index, rows) if rows else (0, 0)
+            if groups is not None:
+                self._pickers(row, 3 * band, None, groups).setFocus()
+            else:
+                self._record_picker(row, 3 * band, None).setFocus()
+            cancel = QToolButton()  # a row not picked yet goes away as any other
+            cancel.setObjectName("FormRowRemove")
+            cancel.setText("✕")
+            cancel.setAutoRaise(True)
+            cancel.setToolTip(translate("Remove"))
+            cancel.clicked.connect(self._cancel)
+            table.setCellWidget(row, 3 * band + 2, cancel)
         if self.noun != "tag":
             for first in range(0, table.columnCount(), 3):
-                table.resizeColumnToContents(first)
-                table.setColumnWidth(first, max(180, min(320, table.columnWidth(first) + 16)))
-        table.setVisible(bool(self.values))
-        self.empty.setVisible(not self.values)
+                if self.detail is not None:
+                    table.setColumnWidth(first, 320 if table.columnCount() == 3 else 220)
+                # a record row is its name; the id is only in the tooltip (no second column)
+                table.setColumnHidden(first + 1, self.detail is None)
+        table.setVisible(bool(self.values) or self._pending)
+        self.empty.setVisible(not self.values and not self._pending)
         table.setFixedHeight(table.horizontalHeader().height() + self.ROW * rows + 4)
+
+    def _cancel(self):
+        self._pending = False
+        self._build()
 
     def _remove(self, value):
         self.values = [v for v in self.values if v != value]
@@ -582,12 +754,10 @@ class ChipList(QWidget):
         self.edited.emit()
 
     def _add(self):
-        free = [c for c in self.choices if c.value not in self.values]
-        dialog = PickDialog(
-            f"Add {self.noun}", free, icons=self.icons, allow_new=self.allow_new, parent=self
-        )
-        if dialog.exec():
-            self.add_values(dialog.values())
+        """A new row: its value picked from lists (a tag's type, then the tag; a record by
+        name); nothing is added until then."""
+        self._pending = True
+        self._build()
 
     def setText(self, text):  # noqa: N802 - the former comma-separated text field's API
         self.values = [v.strip() for v in str(text).split(",") if v.strip()]
@@ -718,6 +888,10 @@ class AmountTable(QWidget):
         self.edited.emit()
 
     def _add(self):
+        if self.noun == "tag":  # a new row: pick its type, then the tag, from lists
+            self._pending = True
+            self._build()
+            return
         free = [c for c in self.choices if c.value not in self.values]
         dialog = PickDialog(f"Add {self.noun}", free, allow_new=True, parent=self)
         if dialog.exec():
@@ -825,10 +999,12 @@ class TextTable(QWidget):
 
     edited = Signal()
 
-    def __init__(self, values, noun="entry"):
+    def __init__(self, values, noun="entry", choices=None):
         super().__init__()
         self.rows = [[str(k), str(v)] for k, v in dict(values).items()]
         self.noun = noun
+        self.choices = choices  # name -> the records its text may name (a projectile), or None
+        self._named = len(self.rows)  # rows that came with a name: shown in words
         self.grid = QGridLayout()
         self.grid.setContentsMargins(0, 0, 0, 0)
         layout = QVBoxLayout(self)
@@ -850,11 +1026,21 @@ class TextTable(QWidget):
                 item.widget().hide()  # gone now, not only once the event loop runs
                 item.widget().deleteLater()
         for index, (key, value) in enumerate(self.rows):
-            k, v = QLineEdit(key), QLineEdit(value)
-            k.setPlaceholderText("name")
-            v.setPlaceholderText("text")
-            k.textEdited.connect(lambda t, i=index: self._set(i, 0, t))
-            v.textEdited.connect(lambda t, i=index: self._set(i, 1, t))
+            if index < self._named and key:  # a written name reads as words ("Projectile")
+                k = QLabel(label_for(key))
+                k.setToolTip(key)
+            else:
+                k = QLineEdit(key)
+                k.setPlaceholderText("name")
+                k.textEdited.connect(lambda t, i=index: self._set(i, 0, t))
+            options = self.choices(key) if self.choices and key else None
+            if options:  # it names a record: picked by its name
+                v = Picker(options, value, allow_none=True)
+                v.picked.connect(lambda p=v, i=index: self._set(i, 1, p.value() or ""))
+            else:
+                v = QLineEdit(value)
+                v.setPlaceholderText("text")
+                v.textEdited.connect(lambda t, i=index: self._set(i, 1, t))
             remove = QToolButton()
             remove.setText("✕")
             k.ensurePolished()
@@ -870,6 +1056,7 @@ class TextTable(QWidget):
 
     def _remove(self, index):
         del self.rows[index]
+        self._named -= index < self._named
         self._build()
         self.edited.emit()
 
@@ -970,7 +1157,7 @@ class Section(QFrame):
         self._more.append((label, widget, help_text, key))
         widget.hide()
         widget.setParent(self)
-        self.more_button.setText(f"＋ Show {len(self._more)} more field(s)  (empty)")
+        self.more_button.setText("＋ Empty fields")
         self.more_button.show()
 
     def show_more(self):
@@ -1249,7 +1436,7 @@ class RecordForm(QScrollArea):
         for section in (basics, numbers, tags):
             if section.form.count():
                 self._layout.addWidget(section)
-            if section is numbers and self.category in ("classes", "actors"):
+            if section is numbers and self.category == "classes":  # an actor's jobs change
                 self._layout.addWidget(self._growth_section())
             if section is numbers:
                 for compare in self._comparison_sections(data):
@@ -1350,8 +1537,10 @@ class RecordForm(QScrollArea):
             line = _small(f"Internal ID: {data[id_key]}  ⓘ")
             line.setToolTip(HELP["internal_id"])
             names.addWidget(line)
-        elif self._title:
-            names.addWidget(_small(str(self._title)))
+        elif self._title:  # a profile without a name: its id in words (the id in the tip)
+            line = _small(words(str(self._title)))
+            line.setToolTip(f"ID: {self._title}")
+            names.addWidget(line)
         if icon_box is not None:
             names.addSpacing(4)
             names.addLayout(icon_box)
@@ -1419,7 +1608,7 @@ class RecordForm(QScrollArea):
         if widget is None:
             return
         text = label_for(key) if label is None else label
-        help_text = HELP.get(str(key), "")
+        help_text = _help(data, key)
         if key == "description" and label is None and data is self._data:
             from .record_notes import description_words
 
@@ -1516,6 +1705,47 @@ class RecordForm(QScrollArea):
                 picker = Picker(choices, value or "", icons=self.icon)
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
                 return picker
+            if skey == "initial_phase_id" and "phases" in data:  # an AI's starting phase
+                from .record_vocabulary import Choice
+
+                phases = [p.get("phase_id") for p in data["phases"] if isinstance(p, dict)]
+                choices = [Choice(str(p), words(str(p))) for p in phases if p]
+                picker = Picker(choices, value or "", allow_none=True)
+                picker.setEditable(False)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or None))
+                return picker
+            if skey == "role" and "class_id" in data:  # a job's role: main or sub job
+                from .record_vocabulary import JOB_ROLES, Choice
+
+                known = dict(JOB_ROLES)
+                for used in [*self.vocabulary.values_for(skey), value or ""]:
+                    if used:  # a project's own word stays a choice (the engine keeps it)
+                        known.setdefault(used, label_for(used))
+                choices = [Choice(v, words) for v, words in known.items()]
+                picker = Picker(choices, value or "", allow_none=False)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
+                return picker
+            if skey == "slot_id" and self.category == "parties":  # a formation's place
+                return self._party_slot(data, key, value)
+            if skey == "kind" and set(data) == {"kind", "target", "value"}:
+                return self._operation_kind(data, value)  # an effect's step, in words
+            if skey == "kind" and set(data) == {"cue_id", "time", "kind", "payload"}:
+                from asteria.gameplay.action_timeline import ActionCueKind
+
+                from .record_vocabulary import Choice
+
+                choices = [Choice(k.value, words(k.value)) for k in ActionCueKind]
+                picker = Picker(choices, value or "", allow_none=False)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
+                return picker  # a timeline cue: Hitbox, Projectile, Gameplay Event...
+            if skey.endswith("_tag") and not is_tag_field(skey):  # one tag (a hit's tag)
+                picker = Picker(self.vocabulary_tags(), value or "", allow_other=True)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
+                return picker
+            if skey == "target" and str(data.get("kind", "")).startswith("tag_"):
+                picker = Picker(self.vocabulary_tags(), value or "", allow_other=True)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
+                return picker  # the tag a step adds or removes
             from .record_vocabulary import engine_enums
 
             fixed = _ENUMS.get(skey) or engine_enums().get(skey)
@@ -1569,7 +1799,14 @@ class RecordForm(QScrollArea):
             if noun == "tag":
                 names = self.vocabulary.names()
                 namer = lambda tag, n=names: tag_label(tag, n)  # noqa: E731
-            chips = ChipList(value, choices, icons=self.icon, noun=noun, namer=namer)
+            db = getattr(getattr(self.vocabulary, "project", None), "rpg_database", None)
+            defs = getattr(db, "tag_definitions", None) or {}
+            meaning = (  # noqa: E731
+                (lambda tag, n=names, d=defs: tag_meaning(tag, n, d)) if noun == "tag" else None
+            )
+            chips = ChipList(
+                value, choices, icons=self.icon, noun=noun, namer=namer, meaning=meaning
+            )
             chips.edited.connect(lambda c=chips: self._set(data, key, list(c.values)))
             return chips
         if isinstance(value, dict) and _number_map(value):
@@ -1584,7 +1821,12 @@ class RecordForm(QScrollArea):
             table.edited.connect(lambda t=table: self._set(data, key, dict(t.values)))
             return table
         if isinstance(value, dict) and _text_map(value):
-            table = TextTable(value)
+
+            def named(name, part=value):
+                source = self._reference(part, name)
+                return self._choices(source, name) if source else None
+
+            table = TextTable(value, choices=named)
             table.edited.connect(lambda t=table: self._set(data, key, t.value()))
             return table
         if isinstance(value, dict):
@@ -1614,7 +1856,13 @@ class RecordForm(QScrollArea):
             return "stats"
         if key in NOT_REFERENCES.get(self.category, ()):
             return None
-        return REFERENCES.get(key)
+        if key in REFERENCES:
+            return REFERENCES[key]
+        tail = "_".join(key.split("_")[-2:])  # roster_actor_ids -> actor_ids: the actors
+        if key.endswith(("_id", "_ids")) and tail != key and REFERENCES.get(tail):
+            return REFERENCES[tail]
+        store = getattr(self.vocabulary, "store_for", None)
+        return store(key) if store is not None else None  # formation_id, attack_id...
 
     def _choices(self, source, key):
         from .record_vocabulary import Choice
@@ -1695,6 +1943,48 @@ class RecordForm(QScrollArea):
         self._icons[icon_id] = icon
         return icon
 
+    def _party_slot(self, data, key, value):
+        """Where a party member stands: one of the party's formation's places, in words."""
+        from .record_vocabulary import Choice
+
+        project = getattr(self.vocabulary, "project", None)
+        formations = getattr(getattr(project, "rpg_database", None), "formations", {}) or {}
+        formation = formations.get((self._data or {}).get("formation_id"))
+        slots = [str(getattr(x, "slot_id", "")) for x in getattr(formation, "slots", ())]
+        choices = [Choice(x, words(x)) for x in slots if x]
+        picker = Picker(choices, value or "", allow_none=False)
+        picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
+        return picker
+
+    def _operation_kind(self, data, value):
+        """An effect step's kind picked in words; a new kind gets a target and an amount it
+        can use (a tag step has no amount; a stat or resource step starts at 0)."""
+        from .record_vocabulary import OPERATION_KINDS, Choice
+
+        choices = [Choice(k, words) for k, words in OPERATION_KINDS.items()]
+        picker = Picker(choices, value or "", allow_none=False)
+        picker.setEditable(False)
+
+        def picked(p=picker):
+            kind = p.value()
+            if not kind or kind == data.get("kind"):
+                return
+            data["kind"] = kind
+            if kind.startswith("tag_"):
+                data["value"] = None
+                options = [c.value for c in self.vocabulary_tags()] or ["tag"]
+            else:
+                if not isinstance(data.get("value"), (int, float, dict)):
+                    data["value"] = 0.0
+                source = "stats" if kind == "stat_delta" else "resources"
+                options = [c.value for c in self.vocabulary.choices(source)]
+            if options and data.get("target") not in options:
+                data["target"] = options[0]
+            QTimer.singleShot(0, self.restructure)  # the target's list follows the kind
+
+        picker.picked.connect(picked)
+        return picker
+
     # -- writing back ---------------------------------------------------------------------------
     def _set(self, container, key, value):
         container[key] = value
@@ -1742,7 +2032,7 @@ class CardList(QWidget):
         super().__init__()
         self.form, self.parent_data, self.key = form, parent, key
         self.entries = entries
-        self.names = form.vocabulary.names()  # card titles show names, not ids
+        self.names = _title_names(form.vocabulary)  # card titles show names, not ids
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
@@ -1753,7 +2043,7 @@ class CardList(QWidget):
         if not entries:
             layout.addWidget(_small(f"No {label_for(key).lower()} yet."))
         elif self.folded:
-            layout.addWidget(_small(f"{len(entries)} entries - click ▸ to open one."))
+            layout.addWidget(_small("Click ▸ to open one."))
         for index, entry in enumerate(entries):
             layout.addWidget(self._card(index, entry, noun))
         add = QPushButton(f"+ Add {noun}")
@@ -1780,6 +2070,9 @@ class CardList(QWidget):
             arrow.setObjectName("FormCardMore")
             head.addWidget(arrow)
         title = QLabel(f"<b>{index + 1}.</b>  {_entry_title(entry, noun, self.names)}")
+        context = _ai_context(self.form._data, entry, self.names)
+        if context:  # which phases use the rule / when the phase starts, quieter
+            title.setText(f"{title.text()}  <span style='color:#8b8e98'>{context}</span>")
         head.addWidget(title, 1)
         for text, tip, handler in (
             ("↑", "Move up", lambda: self.move(index, -1)),
@@ -1838,12 +2131,28 @@ class CardList(QWidget):
             extra.setStyleSheet(plain)
             extra.toggle.setObjectName("FormCardMore")
             extra.layout().setContentsMargins(0, 0, 0, 0)
-            hidden = 0
+            if _is_ai_condition(entry):  # when an AI rule applies: one line of picks
+                self._ai_condition(section, index, entry)
+                body.addWidget(section)
+                return
+            if _is_boss_phase(entry):  # a boss phase: its name, when it starts, its rules
+                self._boss_phase(section, extra, index, entry)
+                body.addWidget(section)
+                if extra.form.count():
+                    body.addWidget(extra)
+                return
+            rule = _is_ai_rule(entry)
+            if rule:  # an enemy AI rule: its action picked, its id made from it (folded)
+                self._ai_action(section, extra, index, entry)
             for key, value in entry.items():
-                if key in FORMAT_KEYS:
+                if key in FORMAT_KEYS or (rule and key in ("action_kind", "payload")):
                     continue
-                folded = key in TECHNICAL or _empty_optional(value)
-                hidden += folded
+                folded = (
+                    key in TECHNICAL
+                    or _empty_optional(value)
+                    or (rule and key == "rule_id")
+                    or _own_id(self.key, key)  # a node's node_id: made for it, folded
+                )
                 target = extra if folded else section
                 if isinstance(value, list) and not _scalar_list(key, value):
                     target.add_row(label_for(key), _entry_list(self.form, entry, key, value))
@@ -1851,10 +2160,218 @@ class CardList(QWidget):
                     self.form._field(target, entry, key, value)
             body.addWidget(section)
             if extra.form.count():
-                extra.toggle.setText(f"More ({hidden})")
                 body.addWidget(extra)
         else:
             body.addWidget(self.form.widget_for(self.entries, index, entry))
+
+    def _ai_action(self, section, extra, index, entry):
+        """What an AI rule does, picked: Skill or Custom Code, then which skill (or hook)."""
+        from .record_vocabulary import AI_ACTIONS, Choice
+
+        payload = entry["payload"]
+        kinds = dict(AI_ACTIONS)
+        kinds.setdefault(entry["action_kind"], label_for(entry["action_kind"]))
+        kind = Picker([Choice(k, w) for k, w in kinds.items()], entry["action_kind"])
+        kind.setEditable(False)
+        kind.picked.connect(lambda: self._ai_kind(index, kind.value()))
+        section.add_row(translate("Action"), kind, help_text=translate(AI_ACTION_HELP))
+        if entry["action_kind"] == "ability":
+            skills = self.form.vocabulary.choices("abilities")
+            pick = Picker(skills, payload.get("ability_id", ""), icons=self.form.icon)
+            pick.picked.connect(lambda: self._ai_target(index, "ability_id", pick.value()))
+            section.add_row(translate("Skill"), pick)
+        elif entry["action_kind"] == "hook":
+            hook = QLineEdit(str(payload.get("hook", "")))
+            hook.editingFinished.connect(lambda: self._ai_target(index, "hook", hook.text()))
+            section.add_row(translate("Hook"), hook)
+        for key, value in payload.items():  # anything else the rule passes on
+            if key not in ("ability_id", "hook"):
+                self.form._field(extra, payload, key, value)
+
+    def _ai_condition(self, section, index, entry):
+        """A condition as picks: what is checked (in words), which resource / stat / phase,
+        how it compares, the amount, and Not."""
+        from .record_vocabulary import AI_COMPARISONS, AI_CONDITIONS, Choice
+
+        params = entry["params"]
+        kinds = dict(AI_CONDITIONS)
+        kinds.setdefault(entry["kind"], label_for(entry["kind"]))
+        kind = Picker([Choice(k, w) for k, w in kinds.items()], entry["kind"], allow_none=False)
+        kind.setEditable(False)
+        kind.picked.connect(lambda: self._ai_condition_kind(index, kind.value()))
+        section.add_row(translate("Check"), kind)
+        sources = {"resource_id": "resources", "stat_id": "stats"}
+        for key in CONDITION_PARAMS.get(entry["kind"], ()):
+            value = params.get(key)
+            if key in sources:
+                choices = self.form.vocabulary.choices(sources[key])
+                pick = Picker(choices, str(value or ""), icons=self.form.icon)
+                pick.picked.connect(lambda p=pick, k=key: self._ai_param(index, k, p.value()))
+                section.add_row(translate(label_for(sources[key][:-1])), pick)
+            elif key == "op":
+                ops = [Choice(o, w) for o, w in AI_COMPARISONS.items()]
+                pick = Picker(ops, str(value or "=="), allow_none=False)
+                pick.setEditable(False)
+                pick.picked.connect(lambda p=pick: self._ai_param(index, "op", p.value()))
+                section.add_row(translate("Compare"), pick)
+            elif key == "value" and entry["kind"] == "phase":
+                phases = [
+                    Choice(str(ph.get("phase_id")), words(str(ph.get("phase_id"))))
+                    for ph in self.form._data.get("phases") or ()
+                    if isinstance(ph, dict) and ph.get("phase_id")
+                ]
+                pick = Picker(phases, str(value or ""), allow_none=False)
+                pick.picked.connect(lambda p=pick: self._ai_param(index, "value", p.value()))
+                section.add_row(translate("Phase"), pick)
+            elif key == "value":
+                share = entry["kind"] == "resource_ratio"
+                box = NumberBox(value, integer=entry["kind"] == "round_index", percent=share)
+                box.valueChanged.connect(
+                    lambda _v, b=box: self._ai_param(index, "value", b.number(), rebuild=False)
+                )
+                section.add_row(translate("Round" if entry["kind"] == "round_index" else
+                                          "Amount"), box)  # fmt: skip
+            else:  # a memory key: the project's own word
+                text = QLineEdit(str(value or ""))
+                text.editingFinished.connect(
+                    lambda t=text, k=key: self._ai_param(index, k, t.text().strip())
+                )
+                section.add_row(translate(label_for(key)), text)
+        negate = QCheckBox(translate("Not"))
+        negate.setChecked(bool(entry.get("negate")))
+        negate.setToolTip(translate("Ticked: the rule applies when this is not so."))
+        negate.toggled.connect(lambda on: self._ai_param(index, None, bool(on)))
+        section.add_row("", negate)
+
+    def _boss_phase(self, section, extra, index, entry):
+        """A phase as plain choices: its name, Starts When (conditions), Priority, the
+        rules it uses (picked by name), and the rest folded."""
+        from .record_vocabulary import Choice
+
+        name = QLineEdit(words(str(entry["phase_id"])))
+        name.setToolTip(translate("Its name; rules and conditions follow a rename."))
+        name.editingFinished.connect(lambda: self._phase_rename(index, name.text()))
+        section.add_row(translate("Phase"), name)
+        priority = NumberBox(entry.get("priority", 0), integer=True)
+        priority.valueChanged.connect(
+            lambda _v: (entry.__setitem__("priority", priority.number()), self.form.changed.emit())
+        )
+        section.add_row(translate("Priority"), priority, help_text=translate(PHASE_PRIORITY_HELP))
+        conditions = entry.setdefault("conditions", [])
+        section.add_row(
+            translate("Starts When"),
+            _entry_list(self.form, entry, "conditions", conditions),
+            help_text=translate(PHASE_START_HELP),
+        )
+        rules = [r for r in self.form._data.get("rules") or () if _is_ai_rule(r)]
+        names = self.names or {}
+        choices = [
+            Choice(r["rule_id"], f"{i}. {_entry_name(r, 'rule', names)}")
+            for i, r in enumerate(rules, 1)
+        ]
+        detail = {
+            r["rule_id"]: "  ·  ".join(_ai_condition_words(c, names) for c in r["conditions"])
+            for r in rules
+            if r.get("conditions")
+        }
+        used = ChipList(
+            entry.get("decision_rule_ids") or [],
+            choices,
+            icons=self.form.icon,
+            allow_new=False,
+            noun="rule",
+            detail=lambda v, d=detail: d.get(v, ""),
+        )
+        used.edited.connect(
+            lambda: (entry.__setitem__("decision_rule_ids", list(used.values)),
+                     self.form.changed.emit())
+        )  # fmt: skip
+        section.add_row(translate("Rules Used"), used, help_text=translate(PHASE_RULES_HELP))
+        for key in ("actions_per_ready", "enter_hook", "exit_hook"):
+            if key in entry:
+                self.form._field(extra, entry, key, entry[key])
+
+    def _phase_rename(self, index, text):
+        """A phase's new name becomes its id everywhere it is named: the starting phase and
+        every Phase condition of the record."""
+        entry = self.entries[index]
+        new = re.sub(r"\W+", "_", text.strip().lower()).strip("_")
+        old = entry["phase_id"]
+        taken = {p.get("phase_id") for i, p in enumerate(self.entries) if i != index}
+        if not new or new == old or new in taken:
+            self.form.restructure()  # the name shown again as it was
+            return
+        entry["phase_id"] = new
+        data = self.form._data
+        if data.get("initial_phase_id") == old:
+            data["initial_phase_id"] = new
+        for owner in [*(data.get("rules") or ()), *(data.get("phases") or ())]:
+            for condition in owner.get("conditions") or () if isinstance(owner, dict) else ():
+                if condition.get("kind") == "phase" and condition["params"].get("value") == old:
+                    condition["params"]["value"] = new
+        self.form.restructure()
+
+    def _ai_condition_kind(self, index, kind):
+        entry = self.entries[index]
+        if not kind or kind == entry["kind"]:
+            return
+        entry["kind"] = kind
+        entry["params"] = _ai_condition_defaults(kind, self.form)
+        self.form.restructure()
+
+    def _ai_param(self, index, key, value, *, rebuild=True):
+        entry = self.entries[index]
+        if key is None:
+            entry["negate"] = value
+        else:
+            entry["params"][key] = value
+        if rebuild:
+            self.form.restructure()  # the card's title says the condition in words
+        else:
+            self.form.changed.emit()
+
+    def _ai_kind(self, index, kind):
+        entry = self.entries[index]
+        if not kind or kind == entry["action_kind"]:
+            return
+        entry["action_kind"] = kind
+        payload = {k: v for k, v in entry["payload"].items() if k not in ("ability_id", "hook")}
+        if kind == "ability":
+            skills = self.form.vocabulary.choices("abilities")
+            payload["ability_id"] = skills[0].value if skills else ""
+        elif kind == "hook":
+            payload["hook"] = ""
+        entry["payload"] = payload
+        self._ai_rename(index)
+        self.form.restructure()
+
+    def _ai_target(self, index, key, value):
+        entry = self.entries[index]
+        value = str(value or "").strip()
+        if not value or entry["payload"].get(key) == value:
+            return
+        entry["payload"][key] = value
+        self._ai_rename(index)
+        self.form.restructure()
+
+    def _ai_rename(self, index):
+        """The rule's id follows what it does (``beast_maul``, ``beast_maul_2``); the record's
+        phases that list the old id list the new one."""
+        entry = self.entries[index]
+        payload = entry["payload"]
+        base = re.sub(r"\W+", "_", str(payload.get("ability_id") or payload.get("hook") or "rule"))
+        used = {e.get("rule_id") for i, e in enumerate(self.entries) if i != index}
+        new, n = base, 2
+        while new in used:
+            new, n = f"{base}_{n}", n + 1
+        old = entry.get("rule_id")
+        if new == old:
+            return
+        entry["rule_id"] = new
+        for phase in self.form._data.get("phases") or ():
+            ids = phase.get("decision_rule_ids") if isinstance(phase, dict) else None
+            if isinstance(ids, list) and old in ids:
+                phase["decision_rule_ids"] = [new if x == old else x for x in ids]
 
     def add(self):
         if self.entries:
@@ -1887,16 +2404,28 @@ class CardList(QWidget):
 TABLE_COLUMNS = 6  # an entry with more fields than this keeps its card
 
 
-def _table_columns(entries):
+# lists whose table shows these fields (the rest under ⋯), whatever the entries hold
+TABLE_FIELDS = {"class_assignments": ("class_id", "role")}
+
+
+def _table_columns(entries, key=""):
     """The columns when ``entries`` read best as a table - each a few plain values (a stat
     change, a drop): the fields any entry has written, in order; ``None`` when an entry holds
     a written list or part (it keeps its card)."""
     if not entries or not all(isinstance(e, dict) for e in entries):
         return None
+    if str(key) in TABLE_FIELDS:
+        columns = [k for k in TABLE_FIELDS[str(key)] if any(k in e for e in entries)]
+        if all(_cell_value(k, e.get(k)) for e in entries for k in columns):
+            return columns
+        return None
     columns = []
+    list_key = key
     for entry in entries:
         for key, value in entry.items():
             if key in FORMAT_KEYS or key in TECHNICAL or _empty_optional(value):
+                continue
+            if _own_id(list_key, key):  # a slot's slot_id: made for it, under ⋯
                 continue
             if not _cell_value(key, value):
                 return None
@@ -1910,6 +2439,14 @@ def _table_columns(entries):
     return columns
 
 
+def _own_id(list_key, key):
+    """``key`` is the id each entry of the list ``list_key`` is made with (``slots`` ->
+    ``slot_id``, ``nodes`` -> ``node_id``): generated, unique, and kept out of sight."""
+    stem = str(list_key)
+    stem = stem[:-2] if stem.endswith(("ches", "shes", "xes")) else stem.removesuffix("s")
+    return bool(stem) and str(key) == f"{stem}_id"
+
+
 def _positions(entries):
     """Entries that each stand somewhere (a formation's slots): a number ``x`` and ``y``."""
     numbers = (int, float)
@@ -1920,6 +2457,16 @@ def _positions(entries):
         and not isinstance(e.get("x"), bool)
         for e in entries
     )
+
+
+def _help(data, key):
+    """A field's help; a job entry's own words for the names other records use too."""
+    from .record_vocabulary import JOB_HELP
+
+    if isinstance(data, dict) and "class_id" in data and "assignment_id" in data:
+        if str(key) in JOB_HELP:
+            return JOB_HELP[str(key)]
+    return HELP.get(str(key), "")
 
 
 def _cell_value(key, value):
@@ -1963,7 +2510,7 @@ class ListCell(QToolButton):
 
 def _entry_list(form, parent, key, entries):
     """A list of entries: a table when each is a few plain values, else cards."""
-    columns = _table_columns(entries)
+    columns = _table_columns(entries, key)
     if columns is not None:
         return EntryTable(form, parent, key, entries, columns)
     return CardList(form, parent, key, entries)
@@ -1978,7 +2525,7 @@ class EntryTable(CardList):
         QWidget.__init__(self)
         self.form, self.parent_data, self.key = form, parent, key
         self.entries, self.columns = entries, columns
-        self.names = form.vocabulary.names()
+        self.names = _title_names(form.vocabulary)
         self.setObjectName("FormEntryTable")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1993,10 +2540,11 @@ class EntryTable(CardList):
         head.setObjectName("FormTableHead")
         self.grid.addWidget(head, 0, 0)
         for column, field in enumerate(columns, start=1):
-            title = QLabel(label_for(field) + ("  ⓘ" if HELP.get(field) else ""))
+            about = _help(entries[0], field)
+            title = QLabel(label_for(field) + ("  ⓘ" if about else ""))
             title.setObjectName("FormTableHead")
-            if HELP.get(field):
-                title.setToolTip(HELP[field])
+            if about:
+                title.setToolTip(about)
                 _help_tip(title)
             self.grid.addWidget(title, 0, column)
             sample = next((e[field] for e in entries if field in e), "")
@@ -2038,8 +2586,10 @@ class EntryTable(CardList):
         more = None
         if hidden:
             more = QToolButton()
-            more.setText(f"⋯ {len(hidden)}")
-            more.setToolTip("This entry's other fields (empty or rarely changed)")
+            more.setText("⋯")
+            more.setToolTip(
+                translate("More settings: ") + ", ".join(translate(label_for(k)) for k in hidden)
+            )
             buttons.addWidget(more)
         for text, tip, handler in (
             ("↑", "Move up", lambda: self.move(index, -1)),
@@ -2055,9 +2605,10 @@ class EntryTable(CardList):
         self.grid.addLayout(buttons, line, len(self.columns) + 1)
         if more is None:
             return
-        holder = QWidget()
+        holder = QFrame()
+        holder.setObjectName("FormRowMore")  # framed: it belongs to the row above
         holder_layout = QVBoxLayout(holder)
-        holder_layout.setContentsMargins(16, 0, 0, 4)
+        holder_layout.setContentsMargins(12, 4, 0, 6)
         self.grid.addWidget(holder, line + 1, 0, 1, len(self.columns) + 2)
         opened = self._opened()
         mark = ("row", id(self.entries), index)
@@ -2103,7 +2654,7 @@ def _closed_set(key, values):
     target...) becomes a drop-down of them."""
     if key in FREE_TEXT or key.endswith("_id") or key.endswith("_label"):
         return False
-    return 1 < len(values) <= 24 and all(_IDENTIFIER.match(v) for v in values)
+    return 1 <= len(values) <= 24 and all(_IDENTIFIER.match(v) for v in values)
 
 
 def _scalar_list(key, value):
@@ -2177,7 +2728,10 @@ def _noun(key):
     special = {"operations": "step", "impacts": "rule", "entries": "entry", "members": "member"}
     if word in special:
         return special[word]
-    return _singular(word) if word and word not in ("ids", "id") else "entry"
+    if word == "ids":  # roster_actor_ids -> actor
+        parts = str(key).split("_")
+        word = parts[-2].lower() if len(parts) > 1 else ""
+    return _singular(word) if word and word != "id" else "entry"
 
 
 def _plural(noun):
@@ -2240,7 +2794,113 @@ def _entry_title(entry, noun, names=None):
     return title
 
 
+def _title_names(vocabulary):
+    """Display names by id for card titles: records, then stats and resources as the game
+    writes them (HP, not Vitality)."""
+    names = dict(vocabulary.names())
+    choices = getattr(vocabulary, "choices", None)
+    for kind in ("stats", "resources") if choices else ():
+        names.update({c.value: c.label for c in choices(kind)})
+    return names
+
+
+def _is_boss_phase(entry):
+    """A boss phase of an enemy AI: ``phase_id`` and the rules it uses."""
+    return isinstance(entry, dict) and "phase_id" in entry and "decision_rule_ids" in entry
+
+
+def _ai_context(data, entry, names):
+    """A quiet second part of a card's title: the phases an AI rule belongs to and when it
+    applies ("Opening · Round is 1"); when a phase starts ("starts when HP % is at most 30 %",
+    "at the start")."""
+    names = names or {}
+    if _is_ai_rule(entry):
+        phases = [
+            words(str(p["phase_id"]))
+            for p in data.get("phases") or ()
+            if _is_boss_phase(p) and entry["rule_id"] in (p.get("decision_rule_ids") or ())
+        ]
+        when = [_ai_condition_words(c, names) for c in entry.get("conditions") or ()]
+        return "  ·  ".join([", ".join(phases)] * bool(phases) + when)
+    if _is_boss_phase(entry):
+        when = [_ai_condition_words(c, names) for c in entry.get("conditions") or ()]
+        if when:
+            return "starts when " + " and ".join(when)
+        return "at the start" if data.get("initial_phase_id") == entry["phase_id"] else ""
+    return ""
+
+
+def _is_ai_condition(entry):
+    """An enemy AI condition: a ``kind`` the engine checks, its ``params`` and ``negate``."""
+    return (
+        isinstance(entry, dict)
+        and isinstance(entry.get("kind"), str)
+        and isinstance(entry.get("params"), dict)
+        and "negate" in entry
+    )
+
+
+def _ai_condition_defaults(kind, form):
+    """A new condition of ``kind`` that works as it is: HP at most 50 %, round 1…"""
+    vocabulary = form.vocabulary
+
+    def first(source, fallback):
+        choices = vocabulary.choices(source)
+        values = [c.value for c in choices]
+        return fallback if fallback in values or not values else values[0]
+
+    phases = [p.get("phase_id") for p in form._data.get("phases") or () if isinstance(p, dict)]
+    health = first("resources", "vitality")
+    return {
+        "round_index": {"op": "==", "value": 1},
+        "resource": {"resource_id": health, "op": "<=", "value": 100.0},
+        "resource_ratio": {"resource_id": health, "op": "<=", "value": 0.5},
+        "stat": {"stat_id": first("stats", "atk"), "op": ">=", "value": 10.0},
+        "memory": {"key": "flag", "op": "==", "value": 1},
+        "phase": {"op": "==", "value": phases[0] if phases else ""},
+    }.get(kind, {})
+
+
+def _ai_condition_words(entry, names):
+    """A condition in one line: "HP is at most 50 %", "Round is 1", "Not: Can act"."""
+    from .record_vocabulary import AI_COMPARISONS, AI_CONDITIONS
+
+    p, kind = entry["params"], entry["kind"]
+    what = AI_CONDITIONS.get(kind) or words(kind)
+    op = AI_COMPARISONS.get(str(p.get("op", "")), str(p.get("op", "")))
+    value = p.get("value")
+    if kind == "resource_ratio" and isinstance(value, (int, float)):
+        value = f"{value * 100:g} %"
+    elif isinstance(value, float):
+        value = f"{value:g}"
+    target = p.get("resource_id") or p.get("stat_id") or p.get("key")
+    if target:
+        what = names.get(target) or words(str(target))
+        if kind == "resource_ratio":
+            what = f"{what} %"
+    if kind == "phase":
+        value = words(str(value))
+    text = f"{what} {op} {value}" if "op" in p else what
+    return f"Not: {text}" if entry.get("negate") else text
+
+
+def _is_ai_rule(entry):
+    """An enemy AI decision rule: ``rule_id``, ``action_kind`` and its ``payload``."""
+    return (
+        isinstance(entry, dict)
+        and "rule_id" in entry
+        and isinstance(entry.get("action_kind"), str)
+        and isinstance(entry.get("payload"), dict)
+    )
+
+
 def _entry_name(entry, noun, names):
+    if _is_ai_condition(entry):
+        return _ai_condition_words(entry, names)
+    if _is_ai_rule(entry):  # named by what it does: the skill, else the hook
+        target = entry["payload"].get("ability_id") or entry["payload"].get("hook")
+        if isinstance(target, str) and target:
+            return names.get(target) or words(target)
     if isinstance(entry, dict):
         for key in ("display_name", "name", "label", "state", "stat", "ability_id", "class_id",
                     "item_id", "resource", "command", "socket_id", "form_id", "key",

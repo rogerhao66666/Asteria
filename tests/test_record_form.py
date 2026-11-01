@@ -202,31 +202,33 @@ def test_graph_positions_are_left_to_the_graph_view(app):
 
 
 def test_a_job_shows_its_growth_curves_by_the_games_rules(app):
-    """As RPG Maker's Parameter Curves: a chart per stat, from the actor's base stats plus the
-    job's bonus and growth per level; an edit redraws them."""
-    from asteria.editor.growth_curves import CurveChart, growth_curves
+    """As RPG Maker's Parameter Curves: a chart per stat the job raises, its own share level
+    by level (whoever takes it); an edit redraws them. An actor's page has none (its jobs
+    change in play)."""
+    from asteria.editor.growth_curves import CurveChart, GrowthCurves
 
     project, _document, family = _family("classes", "archmage")
     form = family.editor
     curves = form.growth_curves
     database = project.rpg_database
-    actor = database.actors[curves.actor.currentData()]
-    assert "archmage" in [c.class_id for c in actor.class_assignments]  # its own actors first
-    rows = {
-        key: values
-        for _kind, key, values in growth_curves(
-            actor.to_data(), [database.classes["archmage"].to_data()], 99
-        )
-    }
-    growth = database.classes["archmage"].level_growth["int"]
-    assert rows["int"][0] == actor.base_stats["int"]
-    assert abs(rows["int"][-1] - (actor.base_stats["int"] + growth * 98)) < 1e-6
-    charts = curves.findChildren(CurveChart)
-    assert len(charts) == len(rows) and charts[0].title == "HP"  # HP, MP first
+    job = database.classes["archmage"]
+    charts = {chart.title: chart for chart in curves.findChildren(CurveChart)}
+    assert charts["INT"].values[0] == job.stat_bonuses.get("int", 0.0)
+    gained = charts["INT"].values[-1] - charts["INT"].values[0]
+    assert abs(gained - job.level_growth["int"] * 98) < 1e-6
+    mana = charts["MP"].values[-1] - charts["MP"].values[0]  # from the job's own MP bonus
+    assert abs(mana - job.resource_growth["technique"] * 98) < 1e-6
+    # HP, MP first; then only the stats set to Grow with Level (not ATK, a formula's)
+    titles = list(charts)
+    grown = [s for s in job.level_growth if "classes" in database.stat_definitions[s].set_on]
+    assert titles[:2] == ["HP", "MP"] and len(titles) == 2 + len(grown)
+    assert "ATK" not in titles and "VIT" in titles
     form._data["level_growth"]["int"] = 5.0
     curves.redraw()
     int_chart = next(c for c in curves.findChildren(CurveChart) if c.title == "INT")
-    assert int_chart.values[-1] == actor.base_stats["int"] + 5.0 * 98
+    assert int_chart.values[-1] == int_chart.values[0] + 5.0 * 98
+    _project, _document, family = _family("actors", "hero_01")
+    assert not family.editor.findChildren(GrowthCurves)
 
 
 def test_tags_are_a_table_and_resources_one_grid(app):
@@ -246,6 +248,8 @@ def test_tags_are_a_table_and_resources_one_grid(app):
 
 
 def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
+    from PySide6.QtWidgets import QToolButton
+
     from asteria.editor.growth_curves import StatBar, StatComparison
     from asteria.editor.record_form import CardList, ChipList, EntryTable
 
@@ -255,6 +259,8 @@ def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
     assert changes.columns[:3] == ["stat", "operation", "value"]
     cards = [c for c in form.findChildren(CardList) if c.key == "modifiers"]
     assert cards == [changes]
+    marks = {b.text() for b in changes.findChildren(QToolButton) if "⋯" in b.text()}
+    assert marks == {"⋯"}  # the button for the rest says nothing more, no count
     before = len(changes.entries)
     changes.duplicate(0)  # the row's buttons edit the list as a card's did
     assert len(form._data["modifiers"]) == before + 1
@@ -267,8 +273,7 @@ def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
     (stats,) = [c for c in form.findChildren(StatComparison) if c.key == "stats"]
     bars = {bar.title: bar for bar in stats.findChildren(StatBar)}
     attack = bars["ATK"]
-    assert attack.value == 108 and attack.count > 1
-    assert 1 <= attack.rank <= attack.count and attack.top >= attack.value
+    assert attack.value == 108 and attack.top >= attack.value
 
 
 def test_slots_show_where_they_stand_and_their_tags_in_a_cell(app):
@@ -283,3 +288,199 @@ def test_slots_show_where_they_stand_and_their_tags_in_a_cell(app):
     assert "tags" in slots.columns
     cells = slots.findChildren(ListCell)
     assert len(cells) == len(slots.entries) and cells[0].text() == "Front"
+
+
+def test_stats_grow_with_level_by_a_switch_and_jobs_read_plainly(app):
+    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.editor.record_form import EntryTable, Picker
+
+    _project, document, family = _family("actors", "hero_01")
+    systems = GameSystemsAuthoringController(document)
+    data = systems.form_data("stat_definitions", "vit", info=False)
+    assert data["grows_with_level"] is True and "set_on" not in data
+    assert data["base_stats"] == {"actors": True, "enemies": False}  # a tick per record
+    data["grows_with_level"] = False  # Game Systems ▸ Stats: VIT no longer grows
+    systems.edit("stat_definitions", "vit", data)
+    assert "classes" not in document.project.rpg_database.stat_definitions["vit"].set_on
+    data["grows_with_level"] = True
+    systems.edit("stat_definitions", "vit", data)
+    assert document.project.rpg_database.stat_definitions["vit"].set_on == ("actors", "classes")
+    data["base_stats"] = {"actors": True, "enemies": True}
+    systems.edit("stat_definitions", "vit", data)
+    stat = document.project.rpg_database.stat_definitions["vit"]
+    assert stat.set_on == ("actors", "classes", "enemies")
+
+    (jobs,) = [t for t in family.editor.findChildren(EntryTable) if t.key == "class_assignments"]
+    assert jobs.columns == ["class_id", "role"]
+    roles = [p for p in jobs.findChildren(Picker) if p.value() in ("primary", "secondary")]
+    assert roles and roles[0].currentText() == "Main job"  # in words, no ⚠
+
+
+def test_a_tag_is_picked_by_its_type_then_from_a_list(app):
+    from PySide6.QtWidgets import QComboBox
+
+    from asteria.editor.record_form import ChipList
+
+    _project, _document, family = _family("actors", "hero_01")
+    (tags,) = [c for c in family.editor.findChildren(ChipList) if "trait.cover" in c.values]
+    row = tags.values.index("trait.cover")
+
+    def pick(at):  # the content drop-down, beside what the tag does when that is known
+        cell = tags.table.cellWidget(at, 1)
+        return cell if isinstance(cell, QComboBox) else cell.findChild(QComboBox)
+
+    kind = tags.table.cellWidget(row, 0)
+    content = pick(row)
+    assert isinstance(kind, QComboBox) and kind.currentText() == "Trait"
+    assert content.currentData() == "trait.cover"
+    other = next(i for i in range(content.count()) if content.itemData(i) != "trait.cover")
+    picked = content.itemData(other)
+    content.setCurrentIndex(other)
+    content.activated.emit(other)  # another trait, picked from the list
+    assert picked in tags.values and "trait.cover" not in tags.values
+    before = list(tags.values)
+    tags._add()  # "+ Add tag": a new row, nothing added until a tag is picked
+    assert tags.values == before and tags.table.rowCount() == len(before) + 1
+    new_content = pick(len(before))
+    cancel = tags.table.cellWidget(len(before), 2)
+    assert cancel.text() == "✕"  # a row not picked yet can be removed too
+    assert new_content.currentText() == "Choose…" and new_content.count() > 1
+    new_content.setCurrentIndex(1)
+    new_content.activated.emit(1)
+    assert len(tags.values) == len(before) + 1
+    tags._add()
+    tags.table.cellWidget(len(tags.values), 2).click()
+    assert not tags._pending and tags.table.rowCount() == len(tags.values)
+
+
+def test_a_tag_row_says_what_the_tag_does(app):
+    from PySide6.QtWidgets import QLabel
+
+    from asteria.editor.record_form import ChipList
+    from asteria.editor.record_vocabulary import tag_label, tag_meaning
+
+    assert tag_label("capability.weapon.book") == "Weapon: Book"  # type, then content
+    assert tag_meaning("capability.weapon.book") == "Can equip Book weapons"
+    _project, _document, family = _family("classes", "archmage")
+    (tags,) = [c for c in family.editor.findChildren(ChipList) if c.noun == "tag"]
+    said = [w.text() for w in tags.findChildren(QLabel) if w.objectName() == "FormTagEffect"]
+    assert "Can equip Book weapons" in said
+
+
+def test_an_enemy_ai_rule_picks_its_action_and_names_itself(app):
+    from PySide6.QtWidgets import QToolButton
+
+    from asteria.editor.record_form import CardList, Picker, _entry_title
+
+    _project, _document, family = _family("ai", "goblin_beast_ai")
+    form = family.editor
+    (rules,) = [c for c in form.findChildren(CardList) if c.key == "rules"]
+    first = rules.entries[0]
+    assert first["payload"]["ability_id"] == "beast_maul"
+    assert _entry_title(first, "rule") == "Beast Maul"  # the skill, not the rule's id
+    kinds = [p for p in rules.findChildren(Picker) if p.value() == "ability"]
+    assert kinds and kinds[0].currentText() == "Skill"  # an action in words, picked
+    other = rules.entries[1]["payload"]["ability_id"]
+    rules._ai_target(0, "ability_id", other)  # the same skill as rule 2: its id follows
+    (rules,) = [c for c in form.findChildren(CardList) if c.key == "rules"]
+    assert rules.entries[0]["rule_id"] == other
+    rules._ai_target(1, "ability_id", "beast_maul")
+    rules._ai_target(1, "ability_id", other)  # a second rule of that skill: a free id
+    (rules,) = [c for c in form.findChildren(CardList) if c.key == "rules"]
+    assert rules.entries[1]["rule_id"] == f"{other}_2"
+    assert form._data["rules"][0]["payload"] == {"ability_id": other}
+    rules._ai_kind(0, "hook")  # custom code instead: the hook replaces the skill
+    assert form._data["rules"][0]["payload"] == {"hook": ""}
+    folds = [b.text() for b in form.findChildren(QToolButton) if b.objectName() == "FormCardMore"]
+    assert folds and not any(ch.isdigit() for text in folds for ch in text)  # "More", no count
+
+
+def test_an_enemy_ai_condition_is_picked_in_words_with_defaults(app):
+    from asteria.editor.record_form import CardList, Picker, _entry_title
+
+    _project, _document, family = _family("ai", "crimson_ai")
+    form = family.editor
+    rules = form._data["rules"]
+    assert _entry_title(rules[0]["conditions"][0], "condition") == "Round is 1"
+    (cards,) = [c for c in form.findChildren(CardList) if c.key == "rules"]
+    cards._opened().add((id(cards.entries), 0))  # the first rule's card, open
+    form.restructure()
+    (conditions,) = [c for c in form.findChildren(CardList) if c.entries is rules[0]["conditions"]]
+    words = {p.currentText() for p in conditions.findChildren(Picker)}
+    assert {"Round", "is"} <= words  # what is checked and how it compares, in words
+    conditions._ai_condition_kind(0, "resource_ratio")  # another check: works as it is
+    condition = conditions.entries[0]
+    assert condition["params"] == {"resource_id": "vitality", "op": "<=", "value": 0.5}
+    assert _entry_title(condition, "condition", {"vitality": "HP"}) == "HP % is at most 50 %"
+
+
+def test_boss_phases_read_plainly_and_pick_their_rules_by_name(app):
+    from asteria.editor.record_form import CardList, ChipList, _ai_context
+
+    _project, _document, family = _family("ai", "crimson_ai")
+    form = family.editor
+    data = form._data
+    (cards,) = [c for c in form.findChildren(CardList) if c.key == "phases"]
+    last = data["phases"][2]
+    assert _ai_context(data, last, cards.names) == "starts when HP % is at most 30 %"
+    assert _ai_context(data, data["phases"][0], cards.names) == "at the start"
+    assert _ai_context(data, data["rules"][0], cards.names) == "Opening  ·  Round is 1"
+    cards._opened().add((id(cards.entries), 0))
+    form.restructure()
+    (cards,) = [c for c in form.findChildren(CardList) if c.key == "phases"]
+    first = data["phases"][0]["decision_rule_ids"]
+    (used,) = [c for c in cards.findChildren(ChipList) if c.noun == "rule" and c.values == first]
+    assert used.heads == ("Rule", "When")
+    assert used.cells(data["rules"][0]["rule_id"]) == ("1. Iron Stance", "Round is 1")
+    cards._phase_rename(0, "First Clash")  # a rename reaches every place that names it
+    assert data["phases"][0]["phase_id"] == "first_clash"
+    assert data["initial_phase_id"] == "first_clash"
+
+
+def test_an_effect_step_picks_its_kind_in_words(app):
+    from PySide6.QtCore import QCoreApplication
+
+    from asteria.editor.record_form import Picker
+
+    _project, _document, family = _family("abilities", "add_bite")
+    form = family.editor
+    kinds = [p for p in form.findChildren(Picker) if p.value() == "resource_delta"]
+    assert kinds and kinds[0].currentText() == "Change a Resource"  # not "resource_delta"
+    step = form._data["effects"][0]["effect"]["operations"][0]
+    kinds[0].setCurrentIndex(kinds[0].findData("tag_add"))
+    kinds[0].picked.emit()
+    assert step["kind"] == "tag_add" and step["value"] is None  # a tag step has no amount
+    QCoreApplication.processEvents()
+    targets = [p for p in form.findChildren(Picker) if p.value() == step["target"]]
+    assert targets  # the tag is picked too
+    assert family.auto_apply()  # what it became decodes
+
+
+def test_ids_are_picked_by_name_or_made_and_folded(app):
+    from PySide6.QtWidgets import QLineEdit
+
+    from asteria.editor.record_form import Picker, _own_id
+
+    _project, _document, family = _family("parties", "main_party")
+    form = family.editor
+    formation = [p for p in form.findChildren(Picker) if p.value() == "standard_six"]
+    assert formation and formation[0].currentText() != "standard_six"  # a formation by name
+    slots = [p for p in form.findChildren(Picker) if p.value() == "slot_1"]
+    assert slots and slots[0].currentText() == "Slot 1"  # where a member stands, in words
+    typed = [e.text() for e in form.findChildren(QLineEdit) if e.isVisibleTo(form)]
+    assert "slot_1" not in typed
+    assert _own_id("slots", "slot_id") and _own_id("nodes", "node_id")
+    assert not _own_id("slots", "actor_id")
+    assert family.heading.text() == family.category.currentText()  # no "· 1 record"
+
+
+def test_record_lists_show_names_and_icons_read_as_words(app):
+    from asteria.editor.icon_picker_dialog import icon_name
+    from asteria.editor.record_form import ChipList
+    from asteria.editor.record_vocabulary import Choice
+
+    assert icon_name("icon.alchemy_salt") == "Alchemy Salt"
+    assert icon_name("asset_library/x/I_Clock.png") == "Clock"
+    chips = ChipList(["fire"], [Choice("fire", "Fire Bolt")], noun="skill")
+    assert chips.table.isColumnHidden(1)  # the name only; the id is in the tooltip
+    assert chips.table.item(0, 0).toolTip().endswith("fire")

@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
-    QComboBox,
     QFrame,
     QHBoxLayout,
     QInputDialog,
@@ -30,6 +29,7 @@ from asteria.runtime.input_rebinding import describe_binding
 from .authoring_sidebar import authoring_sidebar
 from .record_form import _help_tip
 from .record_vocabulary import words as _words
+from .ui_fit import WordCombo
 
 
 @dataclass(slots=True)
@@ -128,7 +128,7 @@ class InputMapWidget(QWidget):
         remove_action.clicked.connect(
             lambda: self._try(lambda: self.api.remove_action(self.action_id))
         )
-        self.device = QComboBox()
+        self.device = WordCombo()  # Gamepad Button, not gamepad_button
         self.device.addItems(list(DEVICES))
         self.code = QLineEdit()
         self.code.setPlaceholderText("key name (a, left, space…) or pad button / axis number")
