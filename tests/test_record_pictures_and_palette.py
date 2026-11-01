@@ -127,3 +127,41 @@ def test_the_tile_palette_keeps_the_atlas_pages_whole(monkeypatch):
     grid.resize(4 * 16, 200)  # narrower than a page: the page is cut into pieces of 4
     grid._fit()  # (a hidden widget gets no resize event; the window's palette does)
     assert grid.strips() == 2 + 2 + 1 and grid.rect_of(4, 0)[:2] == (0, grid._strip_height())
+
+
+def test_a_fighter_picks_its_battlefield_sheet_and_icon_from_lists(monkeypatch):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.game_systems_widget import _IconPicker
+    from asteria.editor.record_form import RecordForm
+    from asteria.editor.sprite_sheet_picker import SpriteSheetPicker
+
+    app = QApplication.instance() or QApplication([])
+    window = _window(app)
+    try:
+        form = next(f for f in window.findChildren(RecordForm) if f.document is window.document)
+        data = {"battlefield_asset_id": "battle.combatant.hero_01", "icon_asset_id": None}
+        sheet = form.widget_for(data, "battlefield_asset_id", data["battlefield_asset_id"])
+        assert isinstance(sheet, SpriteSheetPicker)
+        assert sheet.text() == "battle.combatant.hero_01"
+        assert sheet.preview.pixmap() is not None and not sheet.preview.pixmap().isNull()
+        sheet._fill_all()
+        listed = [sheet.combo.itemData(i) for i in range(sheet.combo.count())]
+        assert "battle.combatant.hero_02" in listed and "battle.combatant.astral_tyrant" in listed
+        assert not any(str(item).startswith("battle.fx.") for item in listed)  # no effects
+        asked = []
+        monkeypatch.setattr(  # Browse… opens the picture dialog (stubbed: it returns a pick)
+            "asteria.editor.sprite_sheet_picker.pick_sprite_sheet",
+            lambda document, parent=None, battle=False: asked.append(battle) or "battle.fx.fire",
+        )
+        sheet.browse.click()
+        assert asked == [True] and sheet.text() == "battle.fx.fire"  # any kind, if chosen
+        sheet.setText("battle.combatant.hero_02")
+        assert data["battlefield_asset_id"] == "battle.combatant.hero_02"
+        icon = form.widget_for(data, "icon_asset_id", data["icon_asset_id"])
+        assert isinstance(icon, _IconPicker) and icon.text() == ""
+    finally:
+        window.runtime_monitor.stop()
+        window.close()
+        window.deleteLater()

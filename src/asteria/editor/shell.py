@@ -35,6 +35,7 @@ from .inspector import build_inspector_fields
 from .integrated_authoring import IntegratedAuthoringControllers
 from .model import EditorDocument
 from .panel_switch import PANELS, PanelSwitch
+from .place_character import DefaultAppearance, build_place_character_command
 from .playmode import PlayModeError, create_play_session
 from .playtest_profiles import PlaytestProfileLibrary
 from .project_workspace import ProjectWorkspaceController
@@ -60,7 +61,7 @@ from .workspace import EditorWorkspace, WorkspaceMode
 
 try:
     from PySide6.QtCore import QSize, Qt, QTimer
-    from PySide6.QtGui import QAction, QKeySequence, QShortcut
+    from PySide6.QtGui import QAction, QKeySequence, QPixmap, QShortcut, QTransform
     from PySide6.QtWidgets import (
         QApplication,
         QDockWidget,
@@ -394,7 +395,11 @@ class AsteriaEditorWindow(QMainWindow):
             shortcut = QShortcut(QKeySequence(key), self)
             shortcut.activated.connect(lambda n=name: self.show_left_panel(n))
             self.panel_shortcuts.append(shortcut)
-        self.tool_strip = ToolStrip(self.viewport, self.tile_palette)
+        self.tool_strip = ToolStrip(
+            self.viewport, self.tile_palette, on_character=self.place_default_character
+        )
+        self.viewport.characterToolRequested.connect(self.place_default_character)
+        self.viewport.placementCancelled.connect(self.cancel_character_placement)
 
         self.event_editor.bindingRequested.connect(self._event_add_binding)
         self.event_editor.bindingChanged.connect(self._event_binding_changed)
@@ -572,8 +577,9 @@ class AsteriaEditorWindow(QMainWindow):
         self.layout().invalidate()
         return bars
 
-    def begin_character_placement(self, visual, status_widget=None):
-        """Switch to Scene and wait for one map-cell click to place a ``CharacterVisualSet``."""
+    def begin_character_placement(self, visual, status_widget=None, ghost=None):
+        """Switch to Scene and wait for one map-cell click to place a ``CharacterVisualSet``;
+        ``ghost`` (a QPixmap of the character) rides under the mouse until then."""
         status_widget = status_widget or self._status_sink()
         bundle = visual
         project = self.document.project
@@ -586,9 +592,25 @@ class AsteriaEditorWindow(QMainWindow):
         self._pending_character_visual = bundle
         self._placement_status_widget = status_widget
         self.workspace.set_mode(WorkspaceMode.SCENE)
-        self.viewport.begin_character_placement()
-        status_widget.status.setText("Click a map cell to place this character")
+        self.viewport.begin_character_placement(ghost)
+        self._strip_sync("character")
+        status_widget.status.setText("Click a map cell to place this character (Escape cancels)")
         return bundle
+
+    def _strip_sync(self, mode=None):
+        strip = getattr(self, "tool_strip", None)
+        if strip is not None:
+            strip.sync(mode or self.viewport.tile_tools.mode)
+
+    def cancel_character_placement(self):
+        """Forget the character waiting to be placed (Escape over the map)."""
+        if getattr(self, "_pending_character_visual", None) is None:
+            return
+        self._pending_character_visual = None
+        self._placement_status_widget = None
+        self.viewport.end_character_placement()
+        self._strip_sync()
+        self.statusBar().showMessage("Character placement cancelled", 4000)
 
     def _status_sink(self):
         """Object with ``.status.setText`` that reports to the window status bar."""
@@ -596,6 +618,29 @@ class AsteriaEditorWindow(QMainWindow):
         return SimpleNamespace(
             status=SimpleNamespace(setText=lambda text: bar.showMessage(text, 6000))
         )
+
+    def place_default_character(self):
+        """The tool strip's character tool (N): carry a character that looks like the scene's
+        player to a cell and click; the actor and its map entity are made there. A project
+        with no sprite sheet yet asks for a walking sheet instead."""
+        from .place_character import default_appearance, shown_frame
+        from .record_pictures import sprite_sheet_frame
+
+        project = self.document.project
+        scene = self.viewport.current_scene()
+        if project is None or scene is None:
+            self.statusBar().showMessage("Open a project and a scene first", 6000)
+            return None
+        appearance = default_appearance(self.document, scene)
+        if appearance is None:
+            return self.place_character_from_sheet()
+        self._pending_character_name = None  # named New Character, New Character 2...
+        ghost = sprite_sheet_frame(
+            self.document, appearance.sprite_sheet_asset_id, shown_frame(self.document, appearance)
+        )
+        if ghost is not None and appearance.flip_x:
+            ghost = ghost.transformed(QTransform().scale(-1, 1))
+        return self.begin_character_placement(appearance, self._status_sink(), ghost)
 
     def place_character_from_sheet(self, path=None, name=None):
         """Place a playable character from any 3x4 walking sheet (rows down/left/right/up).
@@ -632,7 +677,10 @@ class AsteriaEditorWindow(QMainWindow):
             self.statusBar().showMessage(f"Cannot use sprite sheet: {exc}", 6000)
             return None
         self._pending_character_name = name.strip()
-        return self.begin_character_placement(visual, self._status_sink())
+        frame_w, frame_h = visual.frame_size
+        sheet = QPixmap(str(source))
+        ghost = None if sheet.isNull() else sheet.copy(frame_w, 0, frame_w, frame_h)  # standing
+        return self.begin_character_placement(visual, self._status_sink(), ghost)
 
     def set_actor_appearance(self, actor_id=None, sprite_sheet_asset_id=None):
         """Give an Actor a field sprite and push it onto every map entity linked to it."""
@@ -769,19 +817,31 @@ class AsteriaEditorWindow(QMainWindow):
         status_widget = getattr(self, "_placement_status_widget", None) or self._status_sink()
         if project is None or scene is None:
             self.viewport.end_character_placement()
+            self._strip_sync()
             self._pending_character_visual = None
             self._placement_status_widget = None
             status_widget.status.setText("Character placement cancelled: no active scene")
             return None
         cell = (int(cell[0]), int(cell[1]))
         try:
-            command = CreateCharacterCommand(
-                visual,
-                project,
-                scene,
-                cell,
-                display_name=getattr(self, "_pending_character_name", None),
-            )
+            if isinstance(visual, DefaultAppearance):  # the tool strip's character
+                command = build_place_character_command(
+                    project,
+                    scene,
+                    cell,
+                    visual,
+                    display_name=getattr(self, "_pending_character_name", None),
+                    tile_size=self.viewport._tile_size(),
+                )
+            else:
+                command = CreateCharacterCommand(
+                    visual,
+                    project,
+                    scene,
+                    cell,
+                    display_name=getattr(self, "_pending_character_name", None),
+                    tile_size=self.viewport._tile_size(),
+                )
             self.document.execute(command)
         except Exception as exc:
             status_widget.status.setText(f"Character creation failed: {exc}")
@@ -789,12 +849,14 @@ class AsteriaEditorWindow(QMainWindow):
         self._pending_character_visual = None
         self._placement_status_widget = None
         self.viewport.end_character_placement()
+        self._strip_sync()
         self.document.select_entity(command.created.entity)
         status_widget.status.setText(
             f"Created {command.created.actor.display_name} at map cell {cell[0]}, {cell[1]}"
         )
         # the new sheet joins the sprite sheet choices and draws in Scene
-        self._resolve_project_resources()
+        if not isinstance(visual, DefaultAppearance):  # a new sheet joins the sprite sheets
+            self._resolve_project_resources()
         self.refresh_all()
         return command.created
 

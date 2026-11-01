@@ -1057,6 +1057,9 @@ class AdapterFamilyWidget(QWidget):
         self.view_button.clicked.connect(self.toggle_skill_tree_view)
         self.save_layout_button = QPushButton("Save Graph Layout")
         self.save_layout_button.clicked.connect(self.save_graph_layout)
+        self.new_button = QPushButton("New…")
+        self.new_button.setToolTip("A new, empty record of this kind")
+        self.new_button.clicked.connect(self.new_record)
         self.duplicate_button = QPushButton("Duplicate…")
         self.apply_button = QPushButton("Apply Changes")
         self.delete_button = QPushButton("Delete")
@@ -1070,6 +1073,7 @@ class AdapterFamilyWidget(QWidget):
 
         self.undo_buttons = UndoRedoButtons()  # edits apply on their own: a step back or on
         actions.addWidget(self.undo_buttons)
+        actions.addWidget(self.new_button)
         actions.addWidget(self.duplicate_button)
         actions.addWidget(self.delete_button)
         self.apply_button.hide()  # kept for scripts; edits apply on their own
@@ -1209,6 +1213,14 @@ class AdapterFamilyWidget(QWidget):
         self._name_rows()
         _count_heading(self.heading, self.category.currentText(), len(self._ids))
         self.duplicate_button.setEnabled(adapter.duplicate is not None and bool(self._ids))
+        # a new record is shaped after one that exists: a kind with none yet has no shape
+        can_new = adapter.create is not None and bool(adapter.ids())
+        self.new_button.setEnabled(can_new)
+        self.new_button.setToolTip(
+            "A new, empty record of this kind"
+            if can_new
+            else "No record of this kind yet to take the shape from"
+        )
         is_graph = self.category_id == "graphs"
         self.view_button.setVisible(is_graph)
         self.save_layout_button.setVisible(is_graph)
@@ -1316,6 +1328,39 @@ class AdapterFamilyWidget(QWidget):
         if current in self._ids:
             self.browser.setCurrentRow(self._ids.index(current))
         return True
+
+    def new_record_as(self, new_id, name=None):
+        """A new record of the shown kind, as empty as the kind allows, named ``name``."""
+        from .record_blank import blank_record
+
+        adapter = self.adapter
+        if adapter is None or adapter.create is None:
+            raise AuthoringHubError("this kind cannot take new records here")
+        ids = adapter.ids()
+        if not ids:
+            raise AuthoringHubError("no record of this kind yet to take the shape from")
+        new_id = str(new_id).strip()
+        if new_id in ids:
+            raise AuthoringHubError(f"{new_id} already exists")
+        template = adapter.encode(adapter.get(ids[0]))
+        value = blank_record(adapter, template, new_id, str(name or new_id))
+        adapter.create(new_id, value)
+        self.changed.emit()
+        self.refresh(keep=[new_id])
+        return new_id
+
+    def new_record(self):
+        if self.adapter is None or self.adapter.create is None or not self.adapter.ids():
+            return None
+        dialog = _NewRecordDialog(self.category.currentText(), self.adapter.ids(), self)
+        if dialog.exec() != QDialog.Accepted:
+            return None
+        try:
+            return self.new_record_as(dialog.record_id(), dialog.name())
+        except (AuthoringHubError, ValueError, KeyError, TypeError) as exc:
+            self.last_error = str(exc)
+            QMessageBox.warning(self, "New", str(exc))
+            return None
 
     def duplicate_selected_as(self, new_id):
         key = self.selected_id
@@ -1485,6 +1530,54 @@ class AdapterFamilyWidget(QWidget):
             action.setEnabled(enabled)
             action.triggered.connect(handler)
         menu.exec(self.browser.viewport().mapToGlobal(pos))
+
+
+class _NewRecordDialog(QDialog if QT_AVAILABLE else object):
+    """The name players see and the internal id of a record about to be made; the id follows
+    the name until it is typed by hand."""
+
+    def __init__(self, kind_label, taken, parent=None):
+        super().__init__(parent)
+        from .record_blank import suggest_id
+
+        self.setWindowTitle(f"New: {kind_label}")
+        self._taken = tuple(taken)
+        self._suggest = suggest_id
+        self._typed_id = False
+        form = QFormLayout(self)
+        self.name_edit = QLineEdit(self)
+        self.name_edit.setPlaceholderText("Name players see")
+        self.id_edit = QLineEdit(self)
+        self.id_edit.setPlaceholderText("lowercase letters, numbers and _")
+        self.id_edit.setToolTip("Other records refer to it by this, so it stays fixed once made")
+        form.addRow("Name", self.name_edit)
+        form.addRow("Internal ID", self.id_edit)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        form.addRow(self.buttons)
+        self.name_edit.textChanged.connect(self._name_changed)
+        self.id_edit.textEdited.connect(self._id_typed)
+        self.id_edit.textChanged.connect(self._check)
+        self._check()
+
+    def _name_changed(self, text):
+        if not self._typed_id:
+            self.id_edit.setText(self._suggest(text, self._taken))
+
+    def _id_typed(self, _text):
+        self._typed_id = True
+
+    def _check(self, *_):
+        value = self.id_edit.text().strip()
+        ok = bool(value) and value not in self._taken
+        self.buttons.button(QDialogButtonBox.Ok).setEnabled(ok)
+
+    def name(self):
+        return self.name_edit.text().strip() or self.record_id()
+
+    def record_id(self):
+        return self.id_edit.text().strip()
 
 
 class BatchEditDialog(QDialog if QT_AVAILABLE else object):

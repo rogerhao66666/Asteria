@@ -23,15 +23,20 @@ TOOLS = (
     ("terrain", "terrain", "", "Terrain"),
     ("region", "region", "", "Region"),
     ("doodad", "doodad", "", "Doodad"),
+    None,
+    # a character: pick a walking sheet, carry its picture to a cell, and the actor, its
+    # animations and its entity are made in one step (the shell's place_character_from_sheet)
+    ("character", "entity", "N", "Place Character from Sprite Sheet… (N)"),
 )
 MARGIN = 12
 
 
 class ToolStrip(QFrame):
-    def __init__(self, viewport, palette):
+    def __init__(self, viewport, palette, on_character=None):
         super().__init__(viewport)
         self.setObjectName("ToolStrip")
         self.palette_ref = palette
+        self.on_character = on_character
         column = QVBoxLayout(self)
         column.setContentsMargins(4, 4, 4, 4)
         column.setSpacing(2)
@@ -51,7 +56,10 @@ class ToolStrip(QFrame):
             button.setIconSize(QSize(16, 16))
             button.setIcon(icon(drawing, "#d4d6dd"))
             button.setToolTip(words)
-            button.clicked.connect(lambda checked=False, m=mode: palette.handle_tool_key(m))
+            if mode == "character":
+                button.clicked.connect(lambda checked=False: self._character())
+            else:
+                button.clicked.connect(lambda checked=False, m=mode: palette.handle_tool_key(m))
             column.addWidget(button)
             self.buttons[mode] = button
         palette.modeChanged.connect(self.sync)
@@ -59,6 +67,13 @@ class ToolStrip(QFrame):
         self.move(MARGIN, MARGIN)
         self.adjustSize()
         self.raise_()
+
+    def _character(self):
+        if self.on_character is not None:
+            self.on_character()
+        viewport = self.parent()
+        if not getattr(viewport, "character_placement_active", False):  # nothing to place
+            self.sync(getattr(getattr(viewport, "tile_tools", None), "mode", "select"))
 
     def sync(self, mode):
         for name, button in self.buttons.items():

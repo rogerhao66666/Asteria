@@ -103,52 +103,89 @@ class ActorAppearanceLibrary:
 def get_actor_appearance(document, actor_id):
     """Current field appearance for an Actor, or None if it has none yet.
 
-    An unsaved project has no sidecar to read, so the linked map entity's
-    SpriteRenderer2D is the fallback source of truth — it is what
-    apply_actor_appearance wrote, and what the map is actually drawing.
+    What the map draws comes first - the linked entity's (or, for the party
+    leader, the player's) SpriteRenderer2D, which apply_actor_appearance wrote
+    and undo puts back - then this session's choice, then the sidecar, which
+    remembers the look of an actor not on any map yet.
     """
-    if document.file_path is not None:
-        stored = ActorAppearanceLibrary(document.file_path.parent).get(actor_id)
-        if stored is not None:
-            return stored
+    on_map = _appearance_from_map(document, actor_id)
+    if on_map is not None:
+        return on_map
     session = getattr(document, "session_appearances", {}).get(str(actor_id))
     if session is not None:
         return session
-    return _appearance_from_map(document, actor_id)
+    if document.file_path is not None:
+        return ActorAppearanceLibrary(document.file_path.parent).get(actor_id)
+    return None
 
 
-def _appearance_from_map(document, actor_id):
-    from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
+def party_leader_entity(document, actor_id):
+    """The map entity the player walks as, when ``actor_id`` leads the starting party (the
+    first active member of Game Start's party) - the leader looks like the player on the
+    map, as in RPG Maker; else None."""
+    project = document.project
+    start = getattr(project, "game_start", None) if project is not None else None
+    if start is None or not start.player_entity_id:
+        return None
+    state = start.rpg_state_data or {}
+    party = list(state.get("party_active_actor_ids") or state.get("party_actor_ids") or ())
+    if not party or party[0] != str(actor_id):
+        return None
+    for scene in project.scenes():
+        entity = scene.get_entity(start.player_entity_id)
+        if entity is not None:
+            return entity
+    return None
+
+
+def linked_entities(document, actor_id):
+    """``(entity, renamed)`` for every map entity that looks like the actor: those linked to
+    it (named after it too), then the player's entity when it leads the party (its name is
+    the scene's own)."""
+    from asteria.runtime import ActorLinkComponent
 
     if document.project is None:
-        return None
+        return []
+    found = []
     for scene in document.project.scenes():
         for entity in scene.entities():
             link = entity.try_get(ActorLinkComponent)
-            if link is None or link.actor_id != str(actor_id):
-                continue
-            sprite = entity.try_get(SpriteRenderer2D)
-            if sprite is not None and sprite.sprite_sheet_asset_id:
-                return ActorAppearance(
-                    str(actor_id),
-                    sprite.sprite_sheet_asset_id,
-                    sprite.frame_index,
-                    sprite.flip_x,
-                )
+            if link is not None and link.actor_id == str(actor_id):
+                found.append((entity, True))
+    leader = party_leader_entity(document, actor_id)
+    if leader is not None and all(entity is not leader for entity, _ in found):
+        found.append((leader, False))
+    return found
+
+
+def _appearance_from_map(document, actor_id):
+    from asteria.runtime import SpriteRenderer2D
+
+    for entity, _renamed in linked_entities(document, actor_id):
+        sprite = entity.try_get(SpriteRenderer2D)
+        if sprite is not None and sprite.sprite_sheet_asset_id:
+            return ActorAppearance(
+                str(actor_id),
+                sprite.sprite_sheet_asset_id,
+                sprite.frame_index,
+                sprite.flip_x,
+            )
     return None
 
 
 def apply_actor_appearance(document, actor_id, sprite_sheet_asset_id, frame_index=0, flip_x=False):
     """Persist an Actor's field appearance/name and push both onto every map
-    Entity linked to it via ActorLinkComponent — one undoable step.
+    Entity that looks like it (linked via ActorLinkComponent, or the player's
+    when it leads the party) — one undoable step. A sheet with its own walking
+    animations brings them along.
 
     Shared by the main window (menu-driven edits) and the Character tab's
     Actors panel (AdapterFamilyWidget), neither of which should duplicate
     this sync logic.
     """
-    from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
+    from asteria.runtime import Animator2DComponent, SpriteRenderer2D
 
-    from .commands import AddComponentCommand, CommandTransaction, SetAttributeCommand
+    from .commands import AddComponentCommand, CommandTransaction
     from .structure import build_rename_command
 
     if document.project is None:
@@ -173,32 +210,65 @@ def apply_actor_appearance(document, actor_id, sprite_sheet_asset_id, frame_inde
         "flip_x": bool(flip_x),
     }
     tx = CommandTransaction("Sync Actor to Map")
-    for scene in document.project.scenes():
-        for entity in scene.entities():
-            link = entity.try_get(ActorLinkComponent)
-            if link is None or link.actor_id != str(actor_id):
-                continue
-            if actor is not None and entity.name != actor.display_name:
-                tx.add(build_rename_command(entity, actor.display_name))
-            sprite = entity.try_get(SpriteRenderer2D)
-            if sprite is None:
-                new_sprite = SpriteRenderer2D()
-                for field_name, value in target_fields.items():
-                    setattr(new_sprite, field_name, value)
-                tx.add(AddComponentCommand(entity, new_sprite))
-            else:
-                for field_name, new_value in target_fields.items():
-                    old_value = getattr(sprite, field_name)
-                    if old_value != new_value:
-                        tx.add(
-                            SetAttributeCommand(
-                                sprite,
-                                field_name,
-                                new_value,
-                                old_value,
-                                f"Set {field_name}",
-                            )
-                        )
+    clip_set_id, clips = _walking_clips(document, sprite_sheet_asset_id)
+    for entity, renamed in linked_entities(document, actor_id):
+        if renamed and actor is not None and entity.name != actor.display_name:
+            tx.add(build_rename_command(entity, actor.display_name))
+        sprite = entity.try_get(SpriteRenderer2D)
+        if sprite is None:
+            new_sprite = SpriteRenderer2D()
+            for field_name, value in target_fields.items():
+                setattr(new_sprite, field_name, value)
+            tx.add(AddComponentCommand(entity, new_sprite))
+        else:
+            _set_fields(tx, sprite, target_fields)
+        animator = entity.try_get(Animator2DComponent)
+        if animator is not None and clip_set_id:  # the new sheet walks with its own clips
+            fields = {"clip_set_id": clip_set_id}
+            if animator.default_clip not in clips:
+                fields["default_clip"] = _standing_clip(clips)
+            _set_fields(tx, animator, fields)
     if tx.commands:
         document.execute(tx)
     return True
+
+
+def _set_fields(tx, target, fields):
+    from .commands import SetAttributeCommand
+
+    for field_name, new_value in fields.items():
+        old_value = getattr(target, field_name)
+        if old_value != new_value:
+            label = f"Set {field_name}"
+            tx.add(SetAttributeCommand(target, field_name, new_value, old_value, label))
+
+
+def _walking_clips(document, sheet_id):
+    """``(clip set id, clip names)`` of the animations that go with a sprite sheet (the
+    animation file beside it), or ``(None, ())``."""
+    from .picture_categories import paired_clip_set_id
+
+    project = document.project
+    clip_set_id = paired_clip_set_id(project, project.assets.get(str(sheet_id)))
+    views = getattr(document, "asset_views", None)
+    clip_set = views.clip_set(clip_set_id) if views is not None and clip_set_id else None
+    if clip_set is None:
+        return None, ()
+    return clip_set_id, tuple(clip_set.clips)
+
+
+def _standing_clip(clips):
+    for name in ("idle_down", "idle", *clips):
+        if name in clips:
+            return name
+    return ""
+
+
+def standing_frame(document, sheet_id):
+    """The frame a sheet's character stands in (its idle clip's first frame), else 0."""
+    clip_set_id, clips = _walking_clips(document, sheet_id)
+    if not clip_set_id:
+        return 0
+    clip = document.asset_views.clip_set(clip_set_id).clips.get(_standing_clip(clips))
+    keyframes = getattr(clip, "keyframes", None) or ()
+    return int(keyframes[0].frame_index) if keyframes else 0

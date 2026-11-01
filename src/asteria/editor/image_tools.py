@@ -391,7 +391,8 @@ class IconLibrary:
 
         project = getattr(self.document, "project", None)
         icons = () if project is None else project.assets.query(kind=self.KIND)
-        stamp = (id(project), tuple(sorted(a.asset_id for a in icons)))
+        folder = getattr(self.document, "file_path", None)  # pictures are read from there
+        stamp = (id(project), folder, tuple(sorted(a.asset_id for a in icons)))
         now = time.monotonic()
         # kept on the document: every library made for it (one per page) shares the list
         holder = self.document if self.document is not None else self
@@ -426,6 +427,35 @@ class IconLibrary:
         if not target.exists():
             shutil.copyfile(source, target)
         return target.relative_to(root).as_posix()
+
+
+class SpriteSheetLibrary(IconLibrary):
+    """The project's sprite sheets (a fighter's battlefield picture), each listed with its
+    first frame. Sheets are not imported here: a battle sheet needs its frame size and clips,
+    which the Assets panel's import brings along."""
+
+    KIND = "sprite_sheet"
+    CACHE = "_sprite_sheet_choices_cache"
+
+    def _build(self):
+        from PySide6.QtGui import QIcon
+
+        from .record_pictures import framed, sprite_sheet_pixmap
+
+        project = getattr(self.document, "project", None)
+        if project is None:
+            return ()
+        choices = []
+        for asset in sorted(project.assets.query(kind=self.KIND), key=lambda a: a.asset_id):
+            pixmap = sprite_sheet_pixmap(self.document, asset.asset_id)
+            icon = None
+            if pixmap is not None and not pixmap.isNull():
+                icon = QIcon(framed(pixmap, 48))
+            choices.append((asset.asset_id, icon))
+        return tuple(choices)
+
+    def import_file(self, path):
+        raise NotImplementedError("sprite sheets come in through the picture dialog's Browse")
 
 
 class PortraitLibrary(IconLibrary):

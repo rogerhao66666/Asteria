@@ -63,6 +63,10 @@ class SceneViewportWidget(QWidget):
         tilesPicked = Signal(object)
         # a tool key (B / G / R / E / S, [ and ]) pressed over the map
         toolKeyPressed = Signal(str)
+        # N over the map, or the tool strip's character button: place a character
+        characterToolRequested = Signal()
+        # Escape while a character waits to be placed
+        placementCancelled = Signal()
 
     def __init__(self, document, parent=None):
         if Qt is None:
@@ -90,6 +94,8 @@ class SceneViewportWidget(QWidget):
         self._drag_entity = None
         self._drag_start_world = None
         self.character_placement_active = False
+        self._placement_ghost = None  # the character's picture, carried under the mouse
+        self._placement_cell = None
         self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
 
@@ -220,13 +226,51 @@ class SceneViewportWidget(QWidget):
         world_x, world_y = self.camera.screen_to_world(x, y)
         return (floor(world_x / 48), floor(world_y / 48))
 
-    def begin_character_placement(self):
+    def begin_character_placement(self, ghost=None):
+        """Wait for a map-cell click; ``ghost`` (a QPixmap of the character) follows the mouse
+        so what is about to be placed, and where, is seen before the click."""
         self.character_placement_active = True
+        self._placement_ghost = ghost
+        self._placement_cell = None
         self.setCursor(Qt.CrossCursor)
+        self.update()
 
     def end_character_placement(self):
         self.character_placement_active = False
+        self._placement_ghost = None
+        self._placement_cell = None
         self.unsetCursor()
+        self.update()
+
+    def _tile_size(self):
+        source = self.render_source
+        if source is None:
+            return (48, 48)
+        return (int(source.tilemap.tile_width), int(source.tilemap.tile_height))
+
+    def _paint_placement_ghost(self, painter):
+        """The character waiting to be placed, standing on the cell under the mouse."""
+        from asteria.assets.scene_placement import character_cell_position
+
+        cell, ghost = self._placement_cell, self._placement_ghost
+        if cell is None or ghost is None or ghost.isNull():
+            return
+        tile_w, tile_h = self._tile_size()
+        zoom = self.camera.zoom
+        world_x, world_y = character_cell_position(cell[0], cell[1], (tile_w, tile_h))
+        sx, sy = self.camera.world_to_screen(world_x, world_y)
+        width, height = ghost.width() * zoom, ghost.height() * zoom
+        painter.save()
+        painter.setOpacity(0.75)
+        painter.drawPixmap(
+            QRectF(sx - width / 2, sy - height, width, height), ghost, QRectF(ghost.rect())
+        )
+        painter.setOpacity(1.0)
+        painter.setPen(QPen(QColor(70, 184, 150), 2))
+        painter.setBrush(Qt.NoBrush)
+        cx, cy = self.camera.world_to_screen(cell[0] * tile_w, cell[1] * tile_h)
+        painter.drawRect(QRectF(cx, cy, tile_w * zoom, tile_h * zoom))
+        painter.restore()
 
     def _append_tile_stroke(self, cell):
         if cell is None:
@@ -476,6 +520,14 @@ class SceneViewportWidget(QWidget):
     )
 
     def keyPressEvent(self, event):
+        if self.character_placement_active and event.key() == Qt.Key_Escape:
+            self.placementCancelled.emit()
+            event.accept()
+            return
+        if event.key() == Qt.Key_N and not event.modifiers() & ~Qt.KeypadModifier:
+            self.characterToolRequested.emit()
+            event.accept()
+            return
         tool = self.TOOL_KEYS.get(event.key())
         if tool and not event.modifiers() & ~Qt.KeypadModifier and self.render_source is not None:
             self.toolKeyPressed.emit(tool)  # the Tiles panel switches tool / brush size
@@ -666,6 +718,9 @@ class SceneViewportWidget(QWidget):
                 painter.setBrush(QBrush(QColor(tint.red(), tint.green(), tint.blue(), 90)))
             painter.drawEllipse(QPointF(m.screen_x, m.screen_y), m.radius, m.radius)
             self._paint_name_pill(painter, m, tint)
+
+        if self.character_placement_active:
+            self._paint_placement_ghost(painter)
 
         if self._box_start is not None and self._box_end is not None:
             x1, y1 = self._box_start.x(), self._box_start.y()
@@ -883,6 +938,9 @@ class SceneViewportWidget(QWidget):
             self.update()
             event.accept()
             return
+        if self.character_placement_active:
+            self._placement_cell = self.cell_at_screen(event.position().x(), event.position().y())
+            self.update()
         if self._tile_stroke_cells and self.tile_tools.mode in STROKE_MODES:
             self._append_tile_stroke(
                 self._screen_to_tile(event.position().x(), event.position().y())

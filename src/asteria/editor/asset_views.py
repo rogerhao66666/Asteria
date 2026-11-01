@@ -43,6 +43,9 @@ class EditorAssetViews:
     def sprite_sheet_ids(self):
         return tuple(sorted(self._sprite_sheets))
 
+    def tileset_ids(self):
+        return tuple(sorted(self._tilesets))
+
     def clip_set_ids(self):
         return tuple(sorted(self._clip_sets))
 

@@ -382,6 +382,23 @@ HELP = {
     " Systems ▸ Stats can be read. Empty: the damage is kept as it is.",
     "display_name": "What players see.",
     "icon_id": "The picture in menus and lists. Pick one, or Browse for your own file.",
+    "picture_box": "The actor's picture: how it looks on the map (the party leader looks like"
+    " the player), else its battle picture. Double-click to choose another among the"
+    " characters, the pictures in the project's characters folder, or a file (Browse…);"
+    " every map entity linked to the actor follows. The battle picture itself is set in"
+    " Presentation ▸ Battle Screen ▸ Combatant Sprites.",
+    "battle_picture_box": "The fighter's battlefield picture. Double-click to choose another"
+    " among the characters, or a file (Browse…) - the same as Pictures ▸ Battlefield picture"
+    " below.",
+    "battlefield_visible": "Draws this fighter's sprite on the battlefield. Off, it keeps its"
+    " card in the HUD but has no body on the field.",
+    "hud_visible": "Gives this fighter a card in the battle HUD (name, bars, portrait). Off,"
+    " it fights without one.",
+    "battlefield_asset_id": "The sprite sheet drawn on the battlefield; its clips (idle,"
+    " attack…) animate the fighter. With no portrait, the Database shows its idle frame as"
+    " the fighter's picture. Browse… brings in a picture file of your own.",
+    "icon_asset_id": "A small icon for this fighter. The built-in battle layouts do not show"
+    " it yet.",
     "portrait_style": "Face: a dialogue line's portrait sits inside the message window. "
     "Bust: the figure stands above the window.",
     "portrait_size": "Face: its width and height in pixels. Bust: its height. 0 = fit the "

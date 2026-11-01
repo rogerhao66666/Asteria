@@ -63,6 +63,7 @@ class CreateCharacterCommand:
         *,
         display_name: str | None = None,
         failure_injector: Callable[[str], None] | None = None,
+        tile_size: tuple[int, int] = (48, 48),
     ):
         if project.scene(scene.id) is not scene:
             raise ValueError("target scene does not belong to project")
@@ -84,7 +85,7 @@ class CreateCharacterCommand:
         actor = ActorDefinition(actor_id, display_name or key, tags=tags)
         clip_set = _directional_clips()
         entity = Entity(display_name or key, entity_id=entity_id)
-        x, y = character_cell_position(*self.cell)
+        x, y = character_cell_position(*self.cell, tuple(tile_size))
         entity.add_component(Transform(x, y))
         sprite = entity.add_component(SpriteRenderer2D())
         sprite.sprite_sheet_asset_id = visual.walking_asset.asset_id

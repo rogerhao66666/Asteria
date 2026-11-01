@@ -1059,6 +1059,12 @@ class RecordForm(QScrollArea):
             else:
                 self._field(target, data, key, value)
         more = Section("More fields", collapsed=True, hint="Optional, nothing written yet.")
+        for key in _FIRST_SECTIONS.get(self.category, ()):  # a fighter's pictures first
+            for entry in [n for n in nested if n[0] == key]:
+                nested.remove(entry)
+                box = Section(_SECTION_TITLES.get((self.category, key)) or label_for(key))
+                self._nested(box, data, key, entry[1])
+                self._layout.addWidget(box)
         for section in (basics, numbers, tags):
             if section.form.count():
                 self._layout.addWidget(section)
@@ -1132,12 +1138,19 @@ class RecordForm(QScrollArea):
             names.addSpacing(4)
             names.addLayout(icon_box)
         picture = self.record_picture(self._title, 56) if self._title else None
-        if picture is not None:  # an actor's or enemy's own picture (record_pictures)
-            portrait = QLabel()
-            portrait.setObjectName("FormPortrait")
-            portrait.setFixedSize(64, 64)
-            portrait.setAlignment(Qt.AlignCenter)
+        picks = self._picture_pick(data)  # what a double-click on the picture changes
+        if picture is not None or picks is not None:
+            # the record's own picture (record_pictures); a double-click on the box picks
+            # another sprite sheet: an actor's look on the map, a fighter's battlefield sheet
+            from .sprite_sheet_picker import PictureBox
+
+            portrait = PictureBox()
             portrait.setPixmap(picture)
+            if picks is not None:
+                portrait.setToolTip(HELP[picks])
+                portrait.doubleClicked.connect(
+                    lambda box=portrait, d=data: self.pick_picture(d, box)
+                )
             row.addWidget(portrait, 0, Qt.AlignTop)
         row.addLayout(names, 1)
         self._layout.addWidget(card)
@@ -1220,6 +1233,21 @@ class RecordForm(QScrollArea):
             picker = _IconPicker(self.icon_library)
             picker.setText(str(value or ""))
             picker.changed.connect(lambda p=picker: self._set(data, key, p.text()))
+            return picker
+        if skey == "battlefield_asset_id" and self.document is not None:
+            # a fighter's sprite sheet: the project's sheets, each with its first frame
+            from .sprite_sheet_picker import SpriteSheetPicker
+
+            picker = SpriteSheetPicker(self.document)
+            picker.setText(str(value or ""))
+            picker.changed.connect(lambda p=picker: self._set(data, key, p.text()))
+            return picker
+        if skey == "icon_asset_id" and self.icon_library is not None:
+            from .game_systems_widget import _IconPicker
+
+            picker = _IconPicker(self.icon_library)
+            picker.setText(str(value or ""))
+            picker.changed.connect(lambda p=picker: self._set(data, key, p.text() or None))
             return picker
         if skey in _PORTRAIT_KEYS and self.icon_library is not None:
             # a fighter's portrait (its party card in battle): the portrait pictures, as the
@@ -1358,6 +1386,44 @@ class RecordForm(QScrollArea):
         if key in self.field_choices:
             return [Choice(str(v), str(v)) for v, _icon in self.field_choices[key]()]
         return self.vocabulary.choices(source) if source else ()
+
+    def _picture_pick(self, data):
+        """Which help entry (and which change) a double-click on the record's picture makes:
+        ``picture_box`` for an actor (its look on the map), ``battle_picture_box`` for a
+        fighter's combatant sprites record (its battlefield sheet), else None."""
+        if self.document is None or not self._title:
+            return None
+        if self.category == "actors":
+            return "picture_box"
+        if self.category == "combatant_visuals" and isinstance(data.get("assets"), dict):
+            return "battle_picture_box"
+        return None
+
+    def pick_picture(self, data, box=None, sheet_id=None):
+        """Give the record another picture, chosen from the project's sprite sheets (a dialog,
+        or ``sheet_id`` straight away). An actor: its look on the map, every entity linked to
+        it following, undoably. A fighter: its battlefield sheet."""
+        from .record_pictures import forget_pictures
+        from .sprite_sheet_picker import pick_sprite_sheet
+
+        which = self._picture_pick(data)
+        if which is None:
+            return None
+        if sheet_id is None:
+            sheet_id = pick_sprite_sheet(self.document, self, battle=which == "battle_picture_box")
+        if not sheet_id:
+            return None
+        if which == "picture_box":
+            from .actor_appearance import apply_actor_appearance, standing_frame
+
+            frame = standing_frame(self.document, sheet_id)
+            apply_actor_appearance(self.document, str(self._title), str(sheet_id), frame)
+        else:
+            self._set(data["assets"], "battlefield_asset_id", str(sheet_id))
+        forget_pictures()
+        if box is not None:
+            box.setPixmap(self.record_picture(self._title, 56))
+        return str(sheet_id)
 
     def record_picture(self, record_id, size=56):
         """The record's own picture (a battle portrait or sprite), or None."""
@@ -1637,6 +1703,9 @@ def _numbers(text):
 
 
 _CLIP_KEYS = {"combatant_visuals": ("clip_role", "state_id", "fallback_state_id")}
+# sections shown first on a kind's page, and what they are called there
+_FIRST_SECTIONS = {"combatant_visuals": ("assets",)}
+_SECTION_TITLES = {("combatant_visuals", "assets"): "Pictures"}
 _PORTRAIT_KEYS = ("portrait_asset_id", "small_portrait_asset_id")  # pictures a fighter shows
 
 
