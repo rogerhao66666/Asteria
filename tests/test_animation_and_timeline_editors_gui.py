@@ -90,4 +90,4 @@ def test_action_timeline_moves_beats_by_drag_and_previews(window):
     window.document.undo()
     window.document.undo()
     window.document.undo()
-    assert next(b.at for b in editor.api.beats("fire_arc") if b.beat_id == "impact") == 0.32
+    assert next(b.at for b in editor.api.beats("fire_arc") if b.beat_id == "impact") == 0.3

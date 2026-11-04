@@ -242,7 +242,8 @@ def _combat(project, found):
             if kind == "hitbox" and payload.get("hit_tag") and payload["hit_tag"] not in attacks:
                 add(
                     "warning",
-                    f"timeline {timeline.timeline_id}: hit tag {payload['hit_tag']} is not an "
+                    f"timeline {timeline.timeline_id}: hit property {payload['hit_tag']} is not"
+                    " an "
                     f"attack (no damage)",
                     target,
                 )
@@ -449,8 +450,8 @@ def _tags(project, found, data=None):
             found.append(
                 Problem(
                     "warning",
-                    "Tags",
-                    f"tag {tag} is used but not defined: add it in Game Systems ▸ Tags",
+                    "Properties",
+                    f"property {tag} is used but not defined: add it in Game Systems ▸ Properties",
                     ("game_system", "tag_definitions", ""),
                 )
             )
@@ -537,7 +538,7 @@ def collect_problems(document, *, resource_root=None):
         ("Field / Events", lambda: _field(project, found)),
         ("Real-Time Combat", lambda: _combat(project, found)),
         ("Stats", lambda: _stats(project, found)),
-        ("Tags", lambda: _tags(project, found, data)),
+        ("Properties", lambda: _tags(project, found, data)),
         ("Formulas", lambda: _formulas(project, found, data)),
         ("Sprites", lambda: _sprites(document, found, resource_root)),
         ("Action Timeline", lambda: _timelines(document, found)),

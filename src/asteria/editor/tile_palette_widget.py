@@ -448,7 +448,9 @@ class TilePaletteWidget(QWidget):
         form.setContentsMargins(0, 0, 0, 0)
         self.region_rule_form.setMinimumWidth(0)
         self.region_rule_form.setMinimumHeight(0)
-        self.damage_resource = QLineEdit()
+        from .game_systems_widget import _TextPicker
+
+        self.damage_resource = _TextPicker(())  # HP, MP...: the project's, filled on show
         self.damage_per_second = self._rule_spin()
         self.can_kill = QCheckBox("Can defeat player")
         self.slippery = QCheckBox("Slippery floor")
@@ -628,6 +630,17 @@ class TilePaletteWidget(QWidget):
         self.set_region_layer(ruleset.region_layer if ruleset is not None else "regions")
         self._refresh_area_rule_form()
 
+    def _fill_resources(self):
+        """The resources a floor can drain, by name (the window's project)."""
+        document = getattr(self.window(), "document", None)
+        if document is None or document.project is None or self.damage_resource.count() > 1:
+            return
+        from .record_vocabulary import vocabulary_for
+
+        for choice in vocabulary_for(document).choices("resources"):
+            self.damage_resource.addItem(choice.label, choice.value)
+            self.damage_resource._values.append(choice.value)
+
     def set_region_layer(self, layer_name):
         self.region_layer_label.setText(f"Region layer: {layer_name or 'regions'}")
 
@@ -653,6 +666,7 @@ class TilePaletteWidget(QWidget):
             f"Ruleset: {ruleset.rules_id} · " + ("Existing rule" if existing else "No rule yet")
         )
         self.remove_region_rule.setEnabled(existing is not None)
+        self._fill_resources()
         values = (
             (self.damage_resource, rule.damage_resource),
             (self.damage_per_second, rule.damage_per_second),

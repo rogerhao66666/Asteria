@@ -44,6 +44,22 @@ class EventFlowError(ValueError):
     pass
 
 
+def _names_in(data, source, opcode, found):
+    """The names ``data`` sets (``opcode``) or asks about (a condition of ``source``)."""
+    if isinstance(data, dict):
+        name = None
+        if data.get("opcode") == opcode:
+            name = (data.get("args") or {}).get("name")
+        elif data.get("source") == source:
+            name = data.get("name")
+        if isinstance(name, str) and name:
+            found.add(name)
+        data = list(data.values())
+    if isinstance(data, (list, tuple)):
+        for value in data:
+            _names_in(value, source, opcode, found)
+
+
 @dataclass(slots=True)
 class _ProjectListCommand:
     project: object
@@ -89,6 +105,18 @@ class EventFlowAuthoring:
             raise EventFlowError("project required")
         return self.document.project
 
+    def names_used(self, source):
+        """The switches (``source`` "switch") or variables ("variable") the events use."""
+        project, found = self.project, set()
+        opcode = {"switch": "SET_SWITCH", "variable": "SET_VARIABLE"}[source]
+        for program_id in project.event_programs.ids():
+            _names_in(project.event_programs.get(program_id).to_data(), source, opcode, found)
+        for binding in project.lifecycle_event_bindings:
+            _names_in([c.to_data() for c in binding.conditions], source, opcode, found)
+        if source == "switch":
+            found.update(c.switch for c in project.common_events if c.switch)
+        return tuple(sorted(found))
+
     def _set(self, attr, values, label):
         old = list(getattr(self.project, attr))
         self.document.execute(_ProjectListCommand(self.project, attr, list(values), old, label))
@@ -107,6 +135,24 @@ class EventFlowAuthoring:
             AddEventProgramCommand(self.project.event_programs, program_id, program)
         )
         return program
+
+    def delete_program(self, program_id):
+        """Delete an event program nothing runs any more (one undo step); a program still in
+        use (a common event, a menu entry, a map event...) is refused with what uses it."""
+        from .event_editing import RemoveEventProgramCommand
+
+        program_id = str(program_id)
+        self._check_program(program_id)
+        program = self.project.event_programs.get(program_id)
+        command = RemoveEventProgramCommand(self.project.event_programs, program_id, program)
+        command.redo()
+        try:
+            self.project.validate()
+        except ValueError as exc:
+            command.undo()
+            raise EventFlowError(f"still in use: {exc}") from exc
+        command.undo()
+        self.document.execute(command)
 
     # -- common events --------------------------------------------------------------------------
     def common_events(self):

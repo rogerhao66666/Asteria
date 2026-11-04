@@ -62,6 +62,21 @@ class _Running:
     # the Hitbox2D shape a hitbox cue replaced (width, height, offset_x, offset_y), restored after
     hitbox_shape: tuple | None = None
     reshaped: object = None  # that Hitbox2D component
+    clip: str = ""  # the strip its last animation cue asked for
+
+
+def action_clip(run):
+    """The strip an action has its body play now (``attack``, ``attack2``, ...), empty while it
+    is still waiting for its animation cue. An action with no such cue plays the plain swing."""
+    if run is None:
+        return ""
+    timeline = getattr(run, "timeline", None)
+    if timeline is None:  # a server's snapshot of an action already says
+        return str(getattr(run, "clip", ""))
+    if run.clip:
+        return run.clip
+    has_cue = any(cue.kind == ActionCueKind.ANIMATION for cue in timeline.cues)
+    return "" if has_cue else "attack"
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,6 +178,7 @@ class EntityActionSystem(System):
         payload = dict(cue.payload)
         kind = cue.kind
         if kind == ActionCueKind.ANIMATION:
+            run.clip = str(payload.get("clip") or payload.get("role") or run.clip)
             animator = entity.try_get(Animator2DComponent)
             if animator is not None:
                 animator.default_clip = str(

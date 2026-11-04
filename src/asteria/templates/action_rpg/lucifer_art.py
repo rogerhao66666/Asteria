@@ -53,6 +53,33 @@ ACTIONS = {  # clip role: the Lucifer strips it may come from (first that exists
 }
 
 
+# (pack, strip) or (pack, strip, facing): frames skipped at the start of a slow wind-up, so that a
+# skill's blow can land early on the drawn blow
+SHORT_WINDUP = {
+    ("warrior", "Attack02"): 1,
+    ("warrior", "Attack03"): 1,
+    ("cultist", "Attack01"): 6,
+    ("sorceress", "Attack02"): 2,
+    ("sorceress", "Attack03"): 1,
+    ("goblin_rider", "Attack01"): 2,
+    ("goblin_rider", "Attack01", "Up"): 1,  # its upward strip draws the blow a frame sooner
+}
+
+
+def swing_order(lucifer_key, role, direction, indices):
+    """The order a clip plays a strip's frames in (the frames themselves stay as drawn): the
+    strips drawn swinging from the bottom up cut from above."""
+    facing = FOLDERS[direction]
+    names = ACTIONS[role][0]
+    source = next((n for n in names if lucifer._facing_strip(lucifer_key, facing, n)), None)
+    order = lucifer.CUT_FROM_ABOVE.get((lucifer_key, facing, source))
+    played = [indices[i] for i in order] if order else list(indices)
+    skipped = SHORT_WINDUP.get((lucifer_key, source, facing))
+    if skipped is None:
+        skipped = SHORT_WINDUP.get((lucifer_key, source), 0)
+    return played[skipped:]
+
+
 def _without_shadow(frame):
     """A frame without its drawn ground shadow (the half-see-through dark pixels under a
     figure): a creature in the air has no floor to cast it on."""
@@ -120,7 +147,8 @@ def character(assets, key, lucifer_key, name, *, height=26, shadow=True):
         elif role == "walk":
             clips[f"walk_{direction}"] = (indices, 0.1, True)
         else:
-            clips[f"{role}_{direction}"] = (indices, ACTIONS[role][1] / len(indices), False)
+            played = swing_order(lucifer_key, role, direction, indices)
+            clips[f"{role}_{direction}"] = (played, ACTIONS[role][1] / len(indices), False)
     return sheet_id, assets.clips(key, clips, name)
 
 

@@ -81,12 +81,11 @@ class _ViewWidthDelegate(QStyledItemDelegate):
 
 def fill_named(listing, ids, namer):
     """Fill a record list with names in words (``namer(id)``); each row keeps its id as its
-    data and in its tooltip, so the list reads like the game while the editor works on ids."""
+    data, so the list reads like the game while the editor works on ids."""
     listing.clear()
     for key in ids:
         item = QListWidgetItem(namer(key) or str(key))
         item.setData(Qt.UserRole, key)
-        item.setToolTip(f"Internal ID: {key}")
         listing.addItem(item)
 
 
@@ -158,6 +157,74 @@ class WordCombo(QComboBox):
             self.setCurrentIndex(index)
         else:
             super().setCurrentText(text)
+
+
+class ValueCombo(WordCombo):
+    """A drop-down of ``(value, words)``: ``currentText`` and ``setCurrentText`` take and give
+    the value. A value not on the list (a name from older data) joins it rather than being
+    lost. Editable, it also takes a name of the author's own; ``offer_new`` adds an entry that
+    makes one with a click, ready to use as it is or to rename."""
+
+    NEW = "\0new"  # the data of the entry that makes a new name
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._new = None
+        self.currentIndexChanged.connect(self._maybe_new)
+
+    def offer_new(self, label, stem):
+        self._new = (label, stem)
+
+    def _maybe_new(self, _index=0):
+        if self._new is None or self.currentData() != self.NEW:
+            return
+        taken = {self.itemData(i) for i in range(self.count())}
+        stem, name, number = self._new[1], self._new[1], 1
+        while name in taken:
+            number += 1
+            name = f"{stem}_{number}"
+        self.setCurrentText(name)
+
+    def set_choices(self, pairs, *, none=None):
+        """The list, keeping the value held; ``none``: the words of the empty value."""
+        held = self.currentText() if self.count() or self.isEditable() else ""
+        held = "" if held == self.NEW else held
+        self.blockSignals(True)
+        self.clear()
+        if none is not None:
+            self.addItem(none, "")
+        for value, shown in pairs:
+            self.addItem(str(shown), str(value))
+            self.setItemData(self.count() - 1, str(value), Qt.ToolTipRole)
+        if self._new is not None:
+            self.addItem(f"+ {self._new[0]}", self.NEW)
+        if self.currentData() == self.NEW:  # nothing but that entry: it isn't made until clicked
+            self.setCurrentIndex(-1)
+        self.blockSignals(False)
+        if held:
+            self.setCurrentText(held)
+
+    def currentText(self):  # noqa: N802 - Qt API
+        if not self.isEditable():
+            value = super().currentText()
+            return "" if value == self.NEW else value
+        shown = QComboBox.currentText(self).strip()
+        found = self.findText(shown)
+        value = str(self.itemData(found)) if found >= 0 else shown
+        return "" if value == self.NEW else value
+
+    def setCurrentText(self, text):  # noqa: N802 - Qt API
+        from .record_vocabulary import words
+
+        found = self.findData(str(text))
+        if found < 0:
+            at = self.findData(self.NEW)  # the entry that makes a new one stays last
+            at = self.count() if at < 0 else at
+            blocked = self.blockSignals(True)  # the entry moving down is not a click on it
+            self.insertItem(at, words(text), str(text))
+            self.blockSignals(blocked)
+            found = at
+        self.setCurrentIndex(found)
 
 
 def pick_choice(parent, title, label, pairs):

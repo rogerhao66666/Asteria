@@ -260,6 +260,7 @@ random, so status hits differed on every run).
 |---|---|---|
 | Attributes | STR, DEX, INT, LUK (and VIT for health) from stat points in the Attributes tree, which every hero's tree screen now shows; each actor starts with its own, every job grows them (the jobs' old attack growth became attribute growth) | Game Data > Skill Trees, Jobs |
 | Formulas | power += 2 STR + 0.5 DEX; magic += 2 INT + 0.5 LUK; defense += 1 STR + 0.5 DEX; magic_defense += 1 INT + 0.5 LUK + 0.5 defense; accuracy += 1 DEX + 0.5 LUK; evade += 0.5 DEX + 1 LUK; crit += 0.5 LUK + 0.2 DEX; crit_damage += 0.3 LUK + 0.1 STR; speed += 0.3 DEX | Game Systems > Stat Formulas |
+| Shared formulas | All 10 formulas run on both sides, with no fixed amounts except `bp_power`'s 100. Every hero's base stats took the amounts (+11 STR, +12 INT, +5 LUK, +6 VIT); enemy MDEF was lowered by half its DEF and MATK raised to buy back the heroes' extra MDEF (`trial_shared_formulas.py`) |
 | Hit | 95% + 0.3% x attacker accuracy - 0.3% x target evasion, 30% to 100%; Blind: half the blows miss | Battle > Chance Checks |
 | Critical | 5% + 0.3% x crit, at most 65%; damage x(2 + 1% x crit_damage) | Chance Checks, Damage Interactions |
 | Block | defence-based, x0.5, physical blows only (spells are not blocked) | Chance Checks |

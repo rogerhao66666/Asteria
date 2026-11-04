@@ -191,16 +191,16 @@ def test_common_and_battle_events_panel_edits_the_project_with_undo(window):
     panel.refresh()
     panel.common_program.setCurrentText("rest_routine")
     panel.common_trigger.setCurrentText("parallel")
-    panel.common_switch.setText("resting")
+    panel.common_switch.setCurrentText("resting")
     assert panel.add_common()
     project = window.document.project
     assert project.common_events[-1] == CommonEvent("rest_routine", "parallel", "resting")
     panel.battle_hook.setCurrentIndex(panel.battle_hook.findData("rpg.battle.round_started"))
     panel.battle_program.setCurrentText("rest_routine")
     panel.cond_source.setCurrentText("battle")
-    panel.cond_name.setText("round")
+    panel.cond_name.setCurrentText("round")
     panel.cond_op.setCurrentText(">=")
-    panel.cond_value.setText("3")
+    panel.cond_number.setValue(3)
     assert panel.add_condition()
     panel.battle_once.setChecked(True)
     assert panel.add_battle()
@@ -227,7 +227,7 @@ def test_sequence_editor_builds_tracks_and_the_event_editor_inserts_and_edits_th
     dialog._add_step_clicked()
     dialog.add_track("camera")
     dialog.opcode.setCurrentText("WORLD")
-    dialog.fields["args"].setText("entity=Astral Tyrant, zoom=1.5")
+    dialog.world.set_command("CAMERA_FOCUS", {"entity": "Astral Tyrant", "zoom": 1.5})
     dialog.fields["wait"].setText("0.5")
     dialog._add_step_clicked()
     args = dialog.result_args()
@@ -384,3 +384,218 @@ def test_entity_events_lists_the_scenes_people_and_objects_beside_the_events(win
     assert editor.title.text().startswith("Events — ")
     assert editor.trigger_combo.currentData() in ("action", "autorun", "parallel")
     assert editor.commands.item(0).text().startswith("◆")  # the commands as RPG Maker lists
+
+
+def test_conditions_read_in_words_and_are_picked(window):
+    from asteria.editor.event_flow_widget import describe_condition
+    from asteria.editor.record_vocabulary import words
+    from asteria.events.conditions import EventCondition as Condition
+
+    names = {"warlord": "Crimson Warlord"}
+    said = lambda *args: describe_condition(Condition(*args), names)  # noqa: E731
+    assert said("battle", "hp_ratio:warlord", "<=", 0.5) == "Crimson Warlord HP % is at most 50 %"
+    assert said("battle", "alive:warlord", "==", False) == "Crimson Warlord is down"
+    assert said("battle", "round", ">=", 3) == "Round is at least 3"
+    assert said("switch", "throne.hot", "==", True) == "Throne · Hot is on"
+    assert said("switch", "throne.hot", "!=", True) == "Throne · Hot is off"
+    assert said("variable", "gold", ">", 2.5) == "Gold is above 2.5"
+    assert words("door.crypt.stairs_up") == "Door · Crypt · Stairs Up"
+    assert words("v1.5") == "V1.5"
+
+    panel = window.event_flow_editor
+    panel.api.new_program("switch_on")
+    panel.refresh()
+    panel.cond_source.setCurrentText("switch")
+    assert panel.cond_name.isEditable()
+    panel.cond_name.setCurrentText("gate.open")
+    panel.cond_flag.setCurrentText("false")
+    assert panel.add_condition()
+    assert panel._condition_values[-1] == Condition("switch", "gate.open", "==", False)
+    panel.cond_source.setCurrentText("battle")
+    assert not panel.cond_name.isEditable() and panel.cond_name.currentText() == "round"
+    panel.cond_number.setValue(2)
+    assert panel.add_condition()
+    assert panel._condition_values[-1].value == 2
+    assert panel.conditions.item(0).text() == "Gate · Open is off"
+    panel.conditions.setCurrentRow(0)
+    panel.remove_condition()
+    assert [c.name for c in panel._condition_values] == ["round"]
+
+
+def test_a_world_command_is_a_form_of_its_own_fields_and_loses_nothing(window):
+    from asteria.editor.world_command_form import WorldCommandDialog, WorldCommandForm
+    from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
+
+    form = WorldCommandForm(window.document)
+    for command, keys in WORLD_COMMAND_ARGUMENTS.items():
+        form.set_command(command)
+        assert set(form.fields) == set(keys), command
+    # records by their names, numbers unset until used, what no field holds still kept
+    args = {"item_id": "x_not_listed", "quantity": 3, "their_own": "kept", "shaped": [1, 2]}
+    form.set_command("GIVE_ITEM", args)
+    assert form.result_args() == args and form.other.text() == "their_own=kept"
+    assert form.fields["quantity"].value() == 3
+    # another command keeps what the two share
+    form.set_command("SET_POSITION", {"entity": "player", "x": 4})
+    form.command.setCurrentText("WALK_TO")
+    assert form.command_name() == "WALK_TO" and form.result_args()["entity"] == "player"
+    # a walk is clicked, and reads back the way MOVE_ROUTE reads it
+    form.set_command("MOVE_ROUTE", {"entity": "player"})
+    for direction in ("up", "up", "left"):
+        form.fields["route"].add(direction)
+    assert form.result_args()["route"] == "up 2, left 1"
+    # a name that must be there and can be anything comes ready made
+    form.set_command("TIMER_START")
+    assert form.result_args()["timer_id"] == "new_timer" and not form.missing()
+    # the window refuses until what the engine needs is there
+    dialog = WorldCommandDialog(window.document, command="MOVE_ROUTE", args={"entity": "player"})
+    dialog.accept()
+    assert "Route" in dialog.error.text()
+    dialog.deleteLater()
+    form.deleteLater()
+
+
+def test_a_new_name_takes_one_click_and_stays_free(window):
+    from asteria.editor.event_name_dialog import SwitchDialog, VariableDialog, name_picker
+    from asteria.editor.ui_fit import ValueCombo
+
+    combo = name_picker(window.document, "switch", "door_open")
+    combo.setCurrentIndex(combo.findData(ValueCombo.NEW))
+    assert combo.currentText() == "new_switch"
+    combo.setCurrentIndex(combo.findData(ValueCombo.NEW))
+    assert combo.currentText() == "new_switch_2"
+    assert combo.itemData(combo.count() - 1) == ValueCombo.NEW
+
+    picked = SwitchDialog(window.document, "Set Switch", name="door_open", value=False)
+    assert (picked.name(), picked.value()) == ("door_open", False)
+    copied = VariableDialog(window.document, args={"name": "gold", "from_variable": "score"})
+    assert copied.result_args() == {"name": "gold", "from_variable": "score"}
+    number = VariableDialog(window.document, args={"name": "gold", "value": 5})
+    assert number.result_args() == {"name": "gold", "value": 5}
+    text = VariableDialog(window.document, args={"name": "gold", "value": "5"})
+    assert text.result_args() == {"name": "gold", "value": "5"}
+    for dialog in (picked, copied, number, text):
+        dialog.deleteLater()
+
+
+def test_world_and_switch_commands_are_made_and_edited_by_dialogs(window, monkeypatch):
+    from asteria.editor.workspace import WorkspaceMode
+
+    window.workspace.set_mode(WorkspaceMode.EVENT)
+    boss = next(
+        e for e in window.document.project.scenes()[0].entities() if e.name == "Astral Tyrant"
+    )
+    window.document.selection.set_single("entity", boss)
+    window.refresh_all()
+    program = window.document.project.event_programs.require("boss_interaction_event")
+    made = {"command": "GIVE_ITEM", "args": {"item_id": "herb"}}
+    monkeypatch.setattr(window, "_world_dialog", lambda command="", args=None: made)
+    window._event_add_command("world")
+    program = window.document.project.event_programs.require("boss_interaction_event")
+    index = next(i for i, x in enumerate(program.instructions) if x.args == made)
+    changed = {"command": "GIVE_ITEM", "args": {"item_id": "herb", "quantity": 2}}
+    monkeypatch.setattr(window, "_world_dialog", lambda command="", args=None: changed)
+    assert window._event_edit_command(index)
+    program = window.document.project.event_programs.require("boss_interaction_event")
+    assert program.instructions[index].args["args"]["quantity"] == 2
+    monkeypatch.setattr(window, "_switch_dialog", lambda *a, **k: ("gate", False))
+    window._event_add_command("switch")
+    program = window.document.project.event_programs.require("boss_interaction_event")
+    added = next(x for x in program.instructions if x.opcode == "SET_SWITCH")
+    assert added.args == {"name": "gate", "value": False}
+
+
+def test_a_new_command_goes_before_the_end_and_rows_name_records(window, monkeypatch):
+    from asteria.editor.event_editing import describe_instruction
+    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.world_command_form import record_names
+    from asteria.events import EventInstruction, EventProgram
+
+    window.workspace.set_mode(WorkspaceMode.EVENT)
+    boss = next(
+        e for e in window.document.project.scenes()[0].entities() if e.name == "Astral Tyrant"
+    )
+    window.document.selection.set_single("entity", boss)
+    window.refresh_all()
+    programs = window.document.project.event_programs
+    programs.replace(
+        "boss_interaction_event", EventProgram([EventInstruction("END", {})], name="x")
+    )
+    window.refresh_all()
+    monkeypatch.setattr(window, "_switch_dialog", lambda *a, **k: ("gate", True))
+    window.event_editor.commands.clearSelection()
+    window._event_add_command("switch")
+    rows = programs.require("boss_interaction_event").instructions
+    assert [x.opcode for x in rows] == ["SET_SWITCH", "END"]
+
+    scene = window.document.project.scenes()[0]
+    transfer = EventInstruction("WORLD", {"command": "TRANSFER", "args": {"scene_id": scene.id}})
+    said = describe_instruction(transfer, record_names(window.document))
+    assert scene.id not in said and "Scene: " in said
+
+
+def test_a_sequence_step_is_edited_where_it_stands():
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.event_flow_widget import SequenceEditorDialog
+
+    _app = QApplication.instance() or QApplication([])
+
+    tracks = [
+        {
+            "name": "camera",
+            "instructions": [
+                {"opcode": "MOVE", "args": {"entity": "player", "x": 3, "y": 4, "note": "keep"}},
+                {
+                    "opcode": "WORLD",
+                    "args": {
+                        "command": "CAMERA_FOCUS",
+                        "args": {"entity": "player", "zoom": 2.0},
+                        "wait": 0.5,
+                    },
+                },
+                {"opcode": "SOMETHING_ELSE", "args": {"a": 1}},
+            ],
+        }
+    ]
+    dialog = SequenceEditorDialog({"tracks": tracks})
+    try:
+        assert not dialog.update_step_button.isEnabled()  # nothing selected yet
+        dialog.steps.setCurrentRow(0)
+        assert dialog.opcode.currentText() == "MOVE" and dialog.fields["x"].text() == "3"
+        dialog.fields["x"].setText(9)
+        dialog._update_step_clicked()
+        step = dialog.current_track["instructions"][0]
+        assert step["args"]["x"] == 9 and step["args"]["y"] == 4 and step["args"]["note"] == "keep"
+        assert dialog.steps.currentRow() == 0 and len(dialog.current_track["instructions"]) == 3
+
+        dialog.steps.setCurrentRow(1)
+        assert dialog.world.command_name() == "CAMERA_FOCUS"
+        assert dialog.fields["wait"].text() == "0.5"
+        dialog._update_step_clicked()  # unchanged: as it was
+        assert dialog.current_track["instructions"][1] == tracks[0]["instructions"][1]
+
+        dialog.steps.setCurrentRow(2)  # a kind the form doesn't have: left alone
+        assert not dialog.update_step_button.isEnabled()
+    finally:
+        dialog.close()
+
+
+def test_an_if_command_is_edited_and_keeps_its_jump():
+    from types import SimpleNamespace
+
+    from asteria.editor.shell import AsteriaEditorWindow
+
+    edit = AsteriaEditorWindow._edited_event_command
+    window = SimpleNamespace(_switch_dialog=lambda title, name, value: (name + "_2", not value))
+    condition = {
+        "source": "switch", "name": "door", "operator": "==", "value": True, "scope_id": None,
+    }  # fmt: skip
+    jump = EventInstruction("JUMP_IF", {"condition": condition, "label": "out"})
+    edited = edit(window, jump)
+    assert edited.opcode == "JUMP_IF" and edited.args["label"] == "out"
+    assert edited.args["condition"] == dict(condition, name="door_2", value=False)
+    other = dict(condition, source="variable", operator=">")
+    assert edit(window, EventInstruction("JUMP_IF", {"condition": other, "label": "x"})) is None
+    window._switch_dialog = lambda *_args: None  # cancelled
+    assert not edit(window, jump)

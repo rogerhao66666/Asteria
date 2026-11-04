@@ -24,7 +24,9 @@ class BattleAnimationRole(str, Enum):
     KO = "ko"
 
 
-_TRANSIENT_ROLE_NAMES = {"attack", "hit"}
+# A fighter stays in these until told otherwise; anything else a move plays (attack, attack2, a
+# clip of the author's own) goes back to rest when it has played.
+_RESTING_ROLE_NAMES = {"idle", "ko", "weak"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,7 +253,7 @@ class BattleCombatantAnimator:
         if self.animator.playing:
             self.animator.update(dt * rule.playback_rate)
 
-        if _role_name(self.role) in _TRANSIENT_ROLE_NAMES and not self.animator.playing:
+        if _role_name(self.role) not in _RESTING_ROLE_NAMES and not self.animator.playing:
             if self.recovery_remaining <= 0.0:
                 self.recovery_remaining = rule.recovery_hold
             if self.recovery_remaining > 0.0:

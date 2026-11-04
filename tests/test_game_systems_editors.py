@@ -252,3 +252,121 @@ def test_a_menu_kind_or_an_unknown_kind_never_leaves_the_page_without_a_kind(win
     assert editor.kind_id == "shops"
     editor.kind_box.setCurrentIndex(-1)  # nothing chosen: the first kind, not a KeyError
     assert editor.kind_id == editor.kind_box.itemData(0) and editor.form is not None
+
+
+def test_ids_are_made_not_typed_and_rows_read_by_name(window):
+    from asteria.editor.game_systems_widget import _IdLine
+
+    editor = window.game_systems_editor
+    editor.set_kind("quests")
+    editor._new_clicked()  # no dialog: the id is made
+    key = editor.selected_id
+    assert key and key.startswith("new")
+    head = _field(editor.form, "quest_id")
+    assert isinstance(head, _IdLine) and head.text() == key  # "Internal ID: new  ⓘ"
+    objectives = _field(editor.form, "objectives")
+    objectives.set_rows([])
+    first, second = objectives.add_row(), objectives.add_row()
+    ids = [r["objective_id"] for r in objectives.values()]
+    assert len(set(ids)) == 2 and not first.widgets["objective_id"].isVisible()
+    assert second is not None and editor.apply(), editor.status.text()
+    editor._duplicate_clicked()
+    assert editor.selected_id not in (None, key)  # a copy with a made id
+
+
+def test_the_form_shows_no_id_line_and_a_closed_list_is_picked_in_words(monkeypatch):
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.game_systems_authoring import FORMS
+    from asteria.editor.game_systems_widget import RecordForm
+    from asteria.editor.record_form import ChipList
+
+    QApplication.instance() or QApplication([])
+    _document, controller = _controller()
+    form = RecordForm(
+        FORMS["ability_loadout_rules"],
+        controller.references,
+        icons=controller.icon_library,
+        document=controller.document,
+        cards=True,
+    )
+    form.show()
+    assert form.head_grid is None  # no name: no card holding only an id
+    assert not form.widgets["rules_id"].isVisible()
+    sources = form.widgets["limited_sources"]
+    assert isinstance(sources, ChipList) and sources.allow_new is False
+    assert {c.value for c in sources.choices} >= {"learned", "class", "equipment", "passive"}
+    assert "learned" not in [c.label for c in sources.choices]  # words, not the code
+    form.set_data({**form.data(), "rules_id": "kept", "limited_sources": ["class"]})
+    assert form.data()["rules_id"] == "kept"  # hidden, still carried
+
+
+def test_hp_and_mp_are_stats_on_pets_and_enemy_levels_and_stay_where_the_engine_keeps_them(window):
+    from asteria.rpg import BattleResourceDefinition, PetSpeciesDefinition
+
+    editor = window.game_systems_editor
+    database = window.document.project.rpg_database
+    database.battle_resources["shield"] = BattleResourceDefinition("shield")
+    api = editor.controller
+    api.create_new("pet_species", "wolf")
+    api.edit(
+        "pet_species",
+        "wolf",
+        PetSpeciesDefinition(
+            "wolf",
+            "Wolf",
+            stats={"power": 5.0},
+            growth={},
+            resources={"vitality": 40.0, "shield": 3.0},
+        ),
+    )
+    editor.set_kind("pet_species")
+    editor.refresh("wolf")
+    stats, pools = _field(editor.form, "stats"), _field(editor.form, "resources")
+    assert stats.values == {"vitality": 40.0, "power": 5.0} and pools.values == {"shield": 3.0}
+    assert "vitality" in {c.value for c in stats.choices}
+    assert "shield" in {c.value for c in pools.choices}
+    assert "vitality" not in {c.value for c in pools.choices}
+    assert "vitality" in {c.value for c in _field(editor.form, "growth").choices}
+
+    assert editor.apply()  # nothing changed: nothing moves
+    species = api.get("pet_species", "wolf")
+    assert species.stats == {"power": 5.0}
+    assert species.resources == {"vitality": 40.0, "shield": 3.0}
+
+    stats = _field(editor.form, "stats")  # applying built the form again
+    stats._set("vitality", 60.0)  # HP edited among the stats is the resource the engine reads
+    stats._set("speed", 7.0)
+    assert editor.apply()
+    species = api.get("pet_species", "wolf")
+    assert species.stats == {"power": 5.0, "speed": 7.0}
+    assert species.resources == {"vitality": 60.0, "shield": 3.0}
+
+    api.create_new("enemy_level_rules", "levels")
+    editor.set_kind("enemy_level_rules")
+    editor.refresh("levels")
+    stats = _field(editor.form, "stat_growth")
+    stats._set("vitality", 0.1)
+    stats._set("power", 0.05)
+    assert editor.apply()
+    rules = api.get("enemy_level_rules", "levels")
+    assert dict(rules.resource_growth) == {"vitality": 0.1}
+    assert dict(rules.stat_growth) == {"power": 0.05}
+    editor.refresh("levels")
+    assert _field(editor.form, "stat_growth").values == {"vitality": 0.1, "power": 0.05}
+    assert _field(editor.form, "resource_growth").values == {}
+
+
+def test_a_pets_hp_grows_from_its_own_amount_with_only_a_growth():
+    from asteria.rpg import PetSpeciesDefinition
+
+    species = PetSpeciesDefinition(
+        "wolf", "Wolf", stats={}, growth={"vitality": 5.0}, resources={"vitality": 40.0}
+    )
+    assert species.resources_at(1) == {"vitality": 40.0}
+    assert species.resources_at(3) == {"vitality": 50.0}
+    grown = PetSpeciesDefinition(
+        "cub", "Cub", stats={"vitality": 9.0}, growth={"vitality": 1.0}, resources={"vitality": 40}
+    )
+    assert grown.resources_at(3) == {"vitality": 11.0}  # a stat of its name still decides

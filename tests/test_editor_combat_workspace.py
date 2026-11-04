@@ -2,6 +2,8 @@
 previews), the scene
 view's collider / hurtbox / hitbox overlay, and the Problems checks for real-time combat."""
 
+from pathlib import Path
+
 import pytest
 
 from asteria.core import Entity, Scene, Transform
@@ -60,6 +62,7 @@ def test_every_kind_is_created_edited_duplicated_deleted_and_undone():
 
 def test_the_workspace_form_edits_the_record_and_previews_live():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.attack_preview import sample_damage
     from asteria.editor.combat_workspace import (
         AttackPreview,
         CombatWorkspace,
@@ -83,6 +86,7 @@ def test_the_workspace_form_edits_the_record_and_previews_live():
     formula.multipliers.add_row([2.0, "Element.Fire", "Creature.Plant"])
     formula.changed.emit()
     assert widget.preview.record.knockback == 240 and widget.preview.record.knockdown
+    assert sample_damage(widget.preview.record, widget.preview.formulas) == (80, True)
     assert "Apply" in widget.status.text()
     widget.apply()
     attack = document.project.gameplay_library.attacks["slash"]
@@ -193,7 +197,7 @@ def test_problems_name_broken_real_time_combat_references():
         "attack ghost not found",
         "projectile none not found",
         "unknown timeline lost",
-        "hit tag custom is not an attack",
+        "hit property custom is not an attack",
         "unknown ability zap",
         "unknown ability nothing",
         "drop table no_table not found",
@@ -205,7 +209,7 @@ def test_problems_name_broken_real_time_combat_references():
         located.target == ("combat", "projectiles", "dart")
         and located.location == "projectiles / dart"
     )
-    warning = next(p for m, p in messages.items() if "hit tag custom" in m)
+    warning = next(p for m, p in messages.items() if "hit property custom" in m)
     assert warning.severity == "warning"
 
 
@@ -245,3 +249,258 @@ def test_the_record_actions_sit_at_the_foot_and_the_completion_list_closes_with_
     qapp.processEvents()
     assert not code.completer.popup().isVisible()
     code.close()
+
+
+def _hit(**values):
+    return AttackDefinition("hit", **values)
+
+
+def test_the_attack_preview_plays_the_hit_by_this_attacks_numbers():
+    from asteria.editor.attack_preview import attacker_state, plan_for, target_state
+
+    plan = plan_for(_hit(hitstop=0.2, hitstun=0.5, knockback=300, target_iframes=1.0))
+    assert target_state(plan, plan.hit_at - 0.01).sheet == "idle"
+    assert attacker_state(plan, plan.hit_at - 0.01).sheet == "swing"
+    # both hold still through the freeze, the sword out and the target white
+    frozen = target_state(plan, plan.moves_at - 0.01)
+    assert frozen.flash and frozen.x == 0
+    assert (
+        attacker_state(plan, plan.hit_at).frame == attacker_state(plan, plan.moves_at - 0.01).frame
+    )
+    # then the push fades towards speed / decay, and the stun runs from there
+    moving = target_state(plan, plan.moves_at + 0.1)
+    assert moving.sheet == "hurt" and 0 < moving.x < plan.push_distance == 30
+    assert target_state(plan, plan.moves_at + 0.6).sheet == "idle"
+    assert plan.total > plan.hit_at + 1.0
+    assert any(target_state(plan, plan.hit_at + 0.3 + i / 100).faint for i in range(10))
+    # a knock-down replaces the stun: down for its time, then up again; a lift falls back
+    down = plan_for(_hit(hitstun=9.0, knockdown=True, knockdown_time=0.8, knockback_lift=120))
+    assert down.stun == 0 and down.down == 0.8 and down.lift == 120
+    assert target_state(down, down.moves_at + 0.1).height > 0
+    lying = target_state(down, down.moves_at + 0.7)
+    assert (lying.sheet, lying.height) == ("down", 0)
+    assert target_state(down, down.moves_at + 1.0).sheet == "down"
+    assert target_state(down, down.moves_at + 1.4).sheet == "idle"
+    # the angle turns the push: straight up is all lift, and it can come back at the swordsman
+    assert abs(plan_for(_hit(knockback=100, knockback_angle=-90)).push) < 1e-6
+    assert plan_for(_hit(knockback=100, knockback_angle=-90)).lift == 100
+    assert plan_for(_hit(knockback=100, knockback_angle=180)).push_distance == -10
+
+
+def test_the_attack_preview_shows_a_sample_of_the_damage_or_says_there_is_none():
+    from asteria.editor.attack_preview import sample_damage
+    from asteria.gameplay.formulas import ValueFormula
+
+    assert sample_damage(_hit(), {}) == (None, False)
+    assert sample_damage(_hit(damage=ValueFormula.constant(25)), {}) == (25, False)
+    shared = _hit(damage_formula_id="f")
+    assert sample_damage(shared, {"f": ValueFormula.constant(7)}) == (7, False)
+    assert sample_damage(shared, {}) == (None, False)
+
+
+def test_the_attack_preview_runs_only_while_seen_and_draws_without_the_art():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor import attack_preview
+    from asteria.editor.attack_preview import AttackPreview, plan_for
+
+    qapp = QApplication.instance() or QApplication([])
+    preview = AttackPreview()
+    attack = _hit(hitstop=0.1, knockback=200, knockdown=True)
+    preview.show_record(attack)
+    preview.resize(380, 560)
+    preview.show()
+    qapp.processEvents()
+    assert preview._timer.isActive()
+    preview._tick()
+    assert preview.time > 0
+    preview.slow_check.setChecked(True)
+    before = preview.time
+    preview._tick()
+    assert preview.time - before == pytest.approx(0.033 * attack_preview.SLOW)
+    preview.seek(plan_for(attack).total - 0.001)
+    preview._tick()
+    assert preview.time < 0.1  # it loops
+    preview._toggle_play()
+    assert not preview._timer.isActive() and preview.play_button.text() == "Play"
+    preview._toggle_play()
+    assert preview._timer.isActive() and preview.play_button.text() == "Pause"
+    preview.hide()
+    assert not preview._timer.isActive()
+    # another attack starts from its beginning; an edit of this one keeps playing where it is
+    preview.seek(0.7)
+    preview.show_record(_hit(hitstop=0.3))
+    assert preview.time == 0.7
+    preview.show_record(AttackDefinition("other"))
+    assert preview.time == 0
+    # with the art pack missing the same motion is drawn with stand-ins
+    saved = dict(attack_preview._sprites)
+    attack_preview._sprites.clear()
+    real = attack_preview.find_pack
+    attack_preview.find_pack = lambda name: Path("no such pack")
+    try:
+        preview.show_record(attack)
+        for moment in (0.1, 0.5, 0.9, 1.5):
+            preview.seek(moment)
+            assert not preview.grab().isNull()
+        assert attack_preview._sprites[("target", "idle")] is None
+    finally:
+        attack_preview.find_pack = real
+        attack_preview._sprites.clear()
+        attack_preview._sprites.update(saved)
+    preview.show_record(None)
+    assert not preview.grab().isNull()
+
+
+def test_combat_fields_are_picked_and_keep_values_not_on_the_list():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.combat_workspace import CombatWorkspace
+    from asteria.editor.record_form import ChipList
+    from asteria.gameplay.projectiles import ProjectileDefinition as Shot
+
+    qapp = QApplication.instance() or QApplication([])
+    document = _document()
+    library = document.project.gameplay_library
+    library.add_attack(AttackDefinition("slash", "Big Slash", on_hit_event="old_event"))
+    library.projectiles["arrow"] = Shot("arrow", attack_id="gone", wall_mask=0b101)
+    widget = CombatWorkspace(document)
+    widget.resize(1500, 900)
+    widget.show()
+    qapp.processEvents()
+    # an empty value reads in words; a name no list has stays, ready to apply unchanged
+    assert widget.inputs["damage_resource"].itemText(0) == "The target's life"
+    assert widget.inputs["on_hit_event"].currentText() == "old_event"
+    assert isinstance(widget.inputs["tags"], ChipList)
+    widget.inputs["tags"].values = ["Element.Fire"]
+    widget.inputs["tags"].edited.emit()
+    assert widget.preview.record.tags == ("element.fire",)
+    widget.apply()
+    assert library.attacks["slash"].on_hit_event == "old_event"
+    # the formula's reads follow its source; a constant reads nothing
+    formula = widget.inputs["damage"]
+    formula.terms.add_row()
+    cell = formula.terms.table.cellWidget(0, 1).field
+    assert not cell.isEnabled()
+    source = formula.terms.table.cellWidget(0, 0).field
+    source.setCurrentIndex(source.findData("source_stat"))
+    assert cell.isEnabled()
+
+    widget.show_kind("projectiles")
+    assert widget.inputs["attack_id"].currentText() == "gone"
+    widget.inputs["attack_id"].setCurrentText("slash")
+    assert widget.inputs["attack_id"].itemText(widget.inputs["attack_id"].currentIndex()) == (
+        "Big Slash"
+    )
+    # the wall layers are ticked; layers past the menu's end stay as they are
+    layers = widget.inputs["wall_mask"]
+    assert layers.value == 0b101 and layers.text() == "Layer 1, 3"
+    layers.layers[1].setChecked(True)
+    assert widget.preview.record.wall_mask == 0b111
+    layers.set_value(0xFFFFFFFF)
+    assert layers.text() == "Every layer"
+    layers.layers[0].setChecked(False)
+    assert layers.value == 0xFFFFFFFE
+
+
+def test_a_damage_formula_keeps_its_exact_numbers_through_the_form():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.combat_workspace import FormulaEditor
+
+    QApplication.instance() or QApplication([])
+    editor = FormulaEditor()
+    editor.terms.add_row(["source_stat", "power", 1.278])
+    assert editor.terms.rows()[0] == ["source_stat", "power", 1.278]
+    assert editor.terms.table.cellWidget(0, 2).field.text() == "1.278"
+
+
+def test_the_swing_is_a_cut_from_above_and_always_shows_the_slash():
+    from asteria.editor import attack_preview as ap
+
+    # the swordsman stands on the right: facing left the art comes down as drawn
+    assert ap.SHEETS[("attacker", "swing")][1] == "Left/Png/WarriorLeftAttack01.png"
+    assert ap.SHEETS[("target", "idle")][1] == "Right/Png/SkeletonWithSwordRightIdle.png"
+    for attack in (_hit(), _hit(hitstop=0.2)):
+        plan = ap.plan_for(attack)
+        steps = int((plan.moves_at + ap.FOLLOW - ap.LEAD) / 0.01)
+        frames = []
+        for step in range(steps):
+            figure = ap.attacker_state(plan, ap.LEAD + step * 0.01)
+            if figure.sheet == "swing" and (not frames or frames[-1] != figure.frame):
+                frames.append(figure.frame)
+        assert frames == [0, 1, 2, 3, 4, 5]
+        assert ap.attacker_state(plan, plan.hit_at).frame == ap.SWING_HIT_FRAME
+    # it steps in for the blow, and is back where it started when the swing is over
+    plan = ap.plan_for(_hit())
+    assert ap.attacker_state(plan, ap.LEAD - 0.01).x == 0
+    assert ap.attacker_state(plan, plan.hit_at).x == ap.LUNGE
+    assert ap.attacker_state(plan, plan.moves_at + ap.FOLLOW).x == 0
+
+
+def test_a_long_stun_flinches_red_then_stands_dazed_and_a_pushed_monster_fades_back():
+    from asteria.editor import attack_preview as ap
+
+    plan = ap.plan_for(_hit(hitstun=2.0, knockback=100))
+    flinch = ap.target_state(plan, plan.moves_at + 0.02)
+    assert flinch.sheet == "hurt" and not flinch.dazed
+    dazed = ap.target_state(plan, plan.moves_at + 1.0)
+    assert (dazed.sheet, dazed.frame, dazed.dazed) == ("idle", 0, True)
+    assert not ap.target_state(plan, plan.moves_at + 2.1).dazed
+    assert ap.target_fade(plan, 0.0) == 0 and ap.target_fade(plan, plan.total) == 0
+    assert ap.target_fade(plan, 1.0) == 1
+    still = ap.plan_for(_hit(hitstun=2.0))
+    assert ap.target_fade(still, 0.0) == 1  # it never left
+
+
+def test_the_attack_preview_names_the_attack_and_every_setting_shows():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.attack_preview import AttackPreview
+
+    qapp = QApplication.instance() or QApplication([])
+    preview = AttackPreview()
+    preview.resize(380, 520)
+    preview.names = {"luk": "Luck", "mp": "MP"}
+    preview.show_record(AttackDefinition("a", display_name="First"))
+    preview.time = 0.1
+    qapp.processEvents()
+    first = preview.grab().toImage()
+    preview.show_record(AttackDefinition("b", display_name="Second"))
+    preview.time = 0.1
+    qapp.processEvents()
+    assert preview.grab().toImage() != first  # the same numbers, but it says which attack
+
+    def words(**values):
+        attack = _hit(**values)
+        return " | ".join(text for text, _color in preview._chips(attack, None, False))
+
+    assert "Crit 10% ×1.5" in words(critical_chance=0.1)
+    assert "Crit 0% + Luck ×2" in words(critical_chance_stat="luk", critical_multiplier=2.0)
+    assert "Lowers MP" in words(damage_resource="mp")
+    assert "Targets ≤ 3" in words(max_targets=3)
+    assert "On Hit: boom" in words(on_hit_event="boom")
+    assert "Push 100/s 30°" in words(knockback=100, knockback_angle=30)
+    assert "Fixed direction" in words(knockback=100, knockback_direction="fixed")
+    assert "Freezes the whole game" in words(hitstop=0.1, hitstop_scope="global")
+    assert "Freezes" not in words(hitstop=0.1)
+    assert "Weapon: Ring" in words(tags=("capability.weapon.ring",))
+    preview.close()
+
+
+def test_pause_sits_right_under_the_stage_with_room_around_it():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.attack_preview import AttackPreview, plan_for
+
+    qapp = QApplication.instance() or QApplication([])
+    preview = AttackPreview()
+    for attack in (_hit(), _hit(hitstop=0.1, hitstun=0.5, knockdown=True, target_iframes=0.5)):
+        for height in (320, 500, 900):
+            preview.resize(380, height)
+            preview.show_record(attack)
+            qapp.processEvents()
+            layout = preview._layout(attack)
+            box = preview.controls.geometry()
+            assert box.top() == round(layout.ground + 10)
+            assert box.bottom() < layout.bars <= height
+            assert preview.play_button.pos().x() >= 12
+            assert (
+                layout.bars + len(preview._bar_rows(plan_for(attack))) * preview.BAR_ROW <= height
+            )
+    preview.close()

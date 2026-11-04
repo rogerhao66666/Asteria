@@ -40,6 +40,36 @@ PACKS = {
     "skeleton_king": "Foozle_2DC0021_Lucifer_Skeleton_King_Pixel_Art",
 }
 UI_PACK = "Foozle_UI_0002_Lucifer_RPG_UI_Pixel_Art"
+# (pack, facing, strip): the order a strip plays in when it is drawn swinging from the bottom up,
+# or back up after the blow. Played this way the blade only comes down, with the same rhythm as
+# the strip of the opposite facing; the frames themselves stay as drawn.
+CUT_FROM_ABOVE = {
+    ("warrior", "Right", "Attack01"): (4, 3, 2, 1, 0, 5),
+    ("warrior", "Up", "Attack01"): (4, 3, 2, 1, 0, 5),
+    ("skeleton_grunt", "Right", "Attack01"): (0, 1, 2, 3, 4, 7, 6, 5),
+    ("skeleton_grunt", "Up", "Attack01"): (0, 1, 2, 3, 4, 7, 6, 5),
+    ("skeleton_king", "Right", "Attack01"): (5, 6, 7, 8, 9, 0, 1, 2),
+    ("skeleton_king", "Left", "Attack01"): (0, 1, 2, 3, 4, 5, 6, 7),
+    ("skeleton_king", "Up", "Attack01"): (9, 9, 9, 8, 7, 6, 5, 4, 3, 2),
+    ("skeleton_ancient", "Right", "Attack02"): (4, 5, 6, 7, 8),
+    ("skeleton_ancient", "Left", "Attack02"): (4, 5, 6, 7, 8),
+}
+# the frame of a battle clip its stroke lands on, and how long a frame lasts: the skills' impacts
+# (0.24 s and 0.30 s after the swing starts) fall on the stroke whoever swings
+STRIKE_BEAT = {"attack": 2, "attack2": 2, "attack3": 2}
+STRIKE_SECONDS = {"attack": 0.085, "attack2": 0.105, "attack3": 0.085}
+MIN_STROKE = 12  # pure white source pixels: fewer are a highlight, not a stroke or a flash
+# (pack, strip): the blow's frame where it is not drawn in white (flames, red rings, a ground ring)
+COLOURED_STRIKE = {
+    ("sorceress", "Attack01"): 2,
+    ("sorceress", "Attack02"): 4,
+    ("sorceress", "Attack03"): 3,
+    ("necromancer", "Attack01"): 4,
+    ("necromancer", "Attack02"): 3,
+    ("necromancer", "Attack03"): 9,
+    ("skeleton_king", "Attack03"): 9,
+    ("goblin_beast", "Attack03"): 3,
+}
 EXTRA_STATES = ("attack2", "attack3")  # the second and third attack animations
 
 
@@ -90,13 +120,17 @@ def character_sheet(key, *, scale=2, cast="Attack02", transform="Jump", facing="
         "transform": transform,
     }
     source, mirror = _source_facing(facing)
-    strips = {}
+    strips, orders, strikes = {}, {}, {}
     for role, anim in wanted.items():
         path = _find(key, anim, source) or _find(
             key, "Attack01" if role.startswith("attack") else "Idle", source
         )
         strips[role] = _strip_frames(path, mirror)
-    return sheet_from_strips(strips, scale=scale)
+        if role.startswith("attack"):
+            strip = path.stem[-len("Attack01") :]
+            orders[role] = CUT_FROM_ABOVE.get((key, source, strip))
+            strikes[role] = COLOURED_STRIKE.get((key, strip))
+    return sheet_from_strips(strips, scale=scale, orders=orders, strikes=strikes)
 
 
 FADE = 5  # source pixels over which a picture cut off at its cell edge fades out
@@ -141,9 +175,35 @@ def fade_cut_edges(frame, edges=("left", "top", "right"), width=FADE):
     return out
 
 
-def sheet_from_strips(strips, *, scale=2):
+def _white_pixels(frame):
+    data = frame.convert("RGBA").tobytes()
+    return sum(data[i + 3] > 200 and min(data[i : i + 3]) >= 245 for i in range(0, len(data), 4))
+
+
+def strike_frame(frames):
+    """Where in ``frames`` the blow is: the first frame nearly as white as the whitest (a drawn
+    slash, burst or shot flash), or ``None`` for a strip that draws none."""
+    white = [_white_pixels(f) for f in frames]
+    if max(white, default=0) < MIN_STROKE:
+        return None
+    return next(i for i, w in enumerate(white) if w >= max(white) * 0.6)
+
+
+def on_the_beat(indices, strike, beat):
+    """``indices`` with the frames before the blow thinned out (or the first one held) so that the
+    blow is frame ``beat``. A strip already moving on its first frame is left as it is."""
+    if strike is None or strike == 0:
+        return list(indices)
+    before = list(indices[:strike])
+    before = before[-beat:] if strike > beat else [before[0]] * (beat - strike) + before
+    return [*before, *indices[strike:]]
+
+
+def sheet_from_strips(strips, *, scale=2, orders=None, strikes=None):
     """``strips`` (role -> frames: idle, attack, attack2, attack3, cast, hit, ko, transform) on
-    one battle sheet: ``(image, (frame w, frame h), clips, body_height)``."""
+    one battle sheet: ``(image, (frame w, frame h), clips, body_height)``. ``orders`` gives a role
+    the order it plays its frames in (see ``CUT_FROM_ABOVE``), ``strikes`` the frame of its blow
+    when that is not drawn in white."""
     from PIL import Image
 
     cell = max(max(f.width, f.height) for frames in strips.values() for f in frames)
@@ -163,7 +223,7 @@ def sheet_from_strips(strips, *, scale=2):
     cells = {role: [f.crop(box) for f in frames] for role, frames in cells.items()}
     order, clips, frames = [], {}, []
 
-    def add(role, source_role, *, duration, loop, reverse=False, hold=False, hit=None):
+    def add(role, source_role, *, duration, loop, reverse=False, hold=False):
         source = cells[source_role]
         if reverse:
             source = source[::-1]
@@ -171,18 +231,30 @@ def sheet_from_strips(strips, *, scale=2):
         frames.extend(source)
         indices = list(range(start, start + len(source)))
         clip = {"frames": indices, "frame_duration": duration, "loop": loop}
-        if hit is not None:
-            clip["events"] = {str(hit): ["hit"]}
         clips[role] = clip
         order.append(role)
 
-    def hit_frame(role):  # the strike lands a little past the middle of the swing
-        return max(1, round(len(cells[role]) * 0.55))
+    def add_swing(role):
+        add(role, role, duration=STRIKE_SECONDS[role], loop=False)
+        played = clips[role]["frames"]
+        drawn = cells[role]
+        wanted = (orders or {}).get(role)
+        if wanted:
+            played = [played[i] for i in wanted]
+            drawn = [drawn[i] for i in wanted]
+        strike = (strikes or {}).get(role)
+        strike = strike_frame(drawn) if strike is None else strike
+        clips[role]["frames"] = on_the_beat(played, strike, STRIKE_BEAT[role])
+        # with no stroke drawn, the blow lands a little past the middle of the swing
+        if strike is None:
+            at = max(1, round(len(played) * 0.55))
+        else:
+            at = clips[role]["frames"].index(played[strike])
+        clips[role]["events"] = {str(at): ["hit"]}
 
     add("idle", "idle", duration=0.18, loop=True)
-    add("attack", "attack", duration=0.085, loop=False, hit=hit_frame("attack"))
-    add("attack2", "attack2", duration=0.085, loop=False, hit=hit_frame("attack2"))
-    add("attack3", "attack3", duration=0.08, loop=False, hit=hit_frame("attack3"))
+    for role in STRIKE_BEAT:
+        add_swing(role)
     add("cast", "cast", duration=0.1, loop=False)
     add("hit", "hit", duration=0.08, loop=False)
     add("ko", "ko", duration=0.12, loop=False)

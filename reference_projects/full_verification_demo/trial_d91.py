@@ -477,16 +477,16 @@ TAGS = {
     "damage.*": (
         "Element",
         "屬性",
-        "The element a hit deals (damage.fire): weak.*, resist.*,"
-        " immune.* and absorb.* tags of the target read it.",
-        "攻擊帶的屬性（damage.fire）：目標的 weak.*、resist.*、immune.*、absorb.* 標籤會讀它。",
+        "The element a hit deals (for example Fire): the target's Weak, Resist, Immune and"
+        " Absorb properties compare with it.",
+        "攻擊帶的屬性（例如火）：會和目標的弱點、抗性、免疫、吸收特徵比對。",
     ),
     "weapon.*": (
         "Weapon Type",
         "武器種類",
-        "The weapon a hit is made with (weapon.sword): the"
-        " target's weak.* and resist.* tags read it.",
-        "攻擊使用的武器（weapon.sword）：目標的 weak.*、resist.* 標籤會讀它。",
+        "The weapon a hit is made with (for example Sword): the target's Weak and Resist"
+        " properties compare with it.",
+        "攻擊使用的武器（例如劍）：會和目標的弱點、抗性特徵比對。",
     ),
     "physical": (
         "Physical",
@@ -553,19 +553,19 @@ TAGS = {
         "Skill",
         "技能",
         "Any skill (a label every skill carries).",
-        "所有技能都帶的分類標籤。",
+        "所有技能都帶的分類特徵。",
     ),
     "outcome.*": (
         "Outcome",
         "判定結果",
-        "Put on a hit by a battle check (outcome.crit, outcome.evade); gauges and rules read it.",
-        "戰鬥判定加在攻擊上的結果（outcome.crit、outcome.evade）；量表與規則會讀它。",
+        "Put on a hit by a battle check (a critical hit, a dodge); gauges and rules read it.",
+        "戰鬥判定加在攻擊上的結果（爆擊、閃避）；量表與規則會讀它。",
     ),
     # -- what a battler is ------------------------------------------------------------------
     "weak.*": (
         "Weakness",
         "弱點",
-        "Takes more damage from that element or weapon (a damage rule reads target weak.<x>).",
+        "Takes more damage from that element or weapon.",
         "受該屬性或武器攻擊時傷害增加（傷害規則讀取）。",
     ),
     "resist.*": (
@@ -577,8 +577,8 @@ TAGS = {
     "immune.*": (
         "Immunity",
         "免疫",
-        "Cannot get that state or effect (immune.stun, immune.kill).",
-        "不會受到該狀態或效果（immune.stun、immune.kill）。",
+        "Cannot get that state or effect (for example Stun or instant death).",
+        "不會受到該狀態或效果（例如暈眩或即死）。",
     ),
     "absorb.*": (
         "Absorb",
@@ -601,14 +601,14 @@ TAGS = {
     "status.*": (
         "Ailment",
         "異常狀態",
-        "Carried while an ailment lasts (status.poison).",
-        "異常狀態持續時帶有（status.poison）。",
+        "Carried while an ailment lasts (for example Poison).",
+        "異常狀態持續時帶有（例如中毒）。",
     ),
     "state.*": (
         "Battle State",
         "戰鬥狀態",
-        "Carried while a battle state lasts (state.taunt).",
-        "戰鬥狀態持續時帶有（state.taunt）。",
+        "Carried while a battle state lasts (for example Taunt).",
+        "戰鬥狀態持續時帶有（例如挑釁）。",
     ),
     "stance.*": ("Stance", "架勢", "Carried while a stance lasts.", "架勢持續時帶有。"),
     "trait.*": (
@@ -627,8 +627,8 @@ TAGS = {
     "class.*": (
         "Job",
         "職業",
-        "Every job gives its holder class.<job>; rules can ask for it.",
-        "每個職業給持有者 class.<job>；規則可以要求它。",
+        "Every job gives its holder this property; rules and gear can ask for it.",
+        "每個職業都給持有者這個特徵；規則和裝備可以要求它。",
     ),
     "job.*": ("Job Skill", "職業技能", "A skill that belongs to that job.", "屬於該職業的技能。"),
     "capability.weapon.*": (
@@ -674,8 +674,9 @@ TAGS = {
     "equip.*": (
         "Weapon Kind",
         "武器類型",
-        "What weapon a piece is (equip.sword); it asks for capability.weapon.<kind>.",
-        "裝備是哪種武器（equip.sword）；需要 capability.weapon.<種類>。",
+        "What kind of weapon a piece is (for example Sword); only a job that can equip that"
+        " kind can use it.",
+        "裝備是哪種武器（例如劍）；只有能裝備這種武器的職業才能使用。",
     ),
     "weapon": (
         "Weapon",
@@ -796,8 +797,8 @@ TAGS = {
     "rune": (
         "Rune Node",
         "符文節點",
-        "A rune node (gives a rune.* tag).",
-        "符文節點（給予 rune.* 標籤）。",
+        "A rune node: picking it gives a Rune property.",
+        "符文節點：選了會給予符文特徵。",
     ),
     "mastery": ("Mastery Node", "精通節點", "A mastery node.", "精通節點。"),
     "book": ("Book Node", "書籍節點", "A node of the book branch.", "書籍分支的節點。"),

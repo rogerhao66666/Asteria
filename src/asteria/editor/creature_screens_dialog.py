@@ -529,7 +529,7 @@ class SettingsTree(QTreeWidget):
     }
 
     def _add_setting(self, path):
-        name, ok = QInputDialog.getText(self, "Add a setting", "Name")
+        name, ok = QInputDialog.getText(self, "Add a setting", "Name", text="new_setting")
         if not ok or not name.strip():
             return
         kind, ok = QInputDialog.getItem(self, "Add a setting", "Kind", list(self.KINDS), 0, False)

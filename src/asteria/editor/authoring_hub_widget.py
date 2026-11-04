@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 
 try:
@@ -179,6 +180,8 @@ def _coerce_list(text, original):
 
 _FORMAT_KEYS = ("schema", "version")
 _ACRONYMS = {
+    "tag": "Property",  # the word the editor uses for tags
+    "tags": "Properties",
     "id": "ID",
     "ids": "IDs",
     "hp": "HP",
@@ -218,6 +221,16 @@ def _free_id(base, taken, suffix="copy"):
     while candidate in taken:
         candidate, number = f"{base}{number}{family}", number + 1
     return candidate
+
+
+def _new_name(kind_label):
+    """A new record's name from its kind: "Enemies / Bosses" -> "New Enemy", "Loot Rarities"
+    -> "New Loot Rarity"."""
+    from .record_form import _singular
+
+    head = re.split(r" / | \(", str(kind_label))[0].split() or ["Record"]
+    last = head[-1] if head[-1].isupper() else _singular(head[-1].lower())  # "AI" stays
+    return " ".join(["New", *head[:-1], last[:1].upper() + last[1:]])
 
 
 def field_label(key):
@@ -458,7 +471,9 @@ class StructuredRecordEditor(QTreeWidget):
         if name is None:
             from PySide6.QtWidgets import QInputDialog
 
-            name, ok = QInputDialog.getText(self, "Add Field", "Name (e.g. a resource id):")
+            name, ok = QInputDialog.getText(
+                self, "Add Field", "Name (e.g. a resource id):", text="new_field"
+            )
             if not ok or not str(name).strip():
                 return None
         data = self.record()
@@ -638,7 +653,7 @@ _NODE_KINDS = (
     ("passive", "#a46be0", "Unlocks a passive"),
     ("choice", "#e0954f", "One of an exclusive group"),
     ("stats", "#4caf7d", "Stats / resources"),
-    ("other", "#7b8496", "Tags / capabilities"),
+    ("other", "#7b8496", "Properties / capabilities"),
 )
 _NODE_W, _NODE_H, _ICON = 176.0, 64.0, 40
 
@@ -1058,10 +1073,10 @@ class AdapterFamilyWidget(QWidget):
         self.view_button.clicked.connect(self.toggle_skill_tree_view)
         self.save_layout_button = QPushButton("Save Graph Layout")
         self.save_layout_button.clicked.connect(self.save_graph_layout)
-        self.new_button = QPushButton("New…")
+        self.new_button = QPushButton("New")
         self.new_button.setToolTip("A new, empty record of this kind")
         self.new_button.clicked.connect(self.new_record)
-        self.duplicate_button = QPushButton("Duplicate…")
+        self.duplicate_button = QPushButton("Duplicate")
         self.apply_button = QPushButton("Apply Changes")
         self.delete_button = QPushButton("Delete")
         self.duplicate_button.clicked.connect(self.duplicate_selected)
@@ -1085,7 +1100,7 @@ class AdapterFamilyWidget(QWidget):
 
     def _name_rows(self):
         """Each row shows the record's name (and its own icon when it has one); the id stays
-        in the tooltip and after the name when the two differ."""
+        after the name when the two differ."""
         icon_for = getattr(self.editor, "icon", None)
         for row, key in enumerate(self._ids):
             item = self.browser.item(row)
@@ -1102,9 +1117,8 @@ class AdapterFamilyWidget(QWidget):
                 except Exception:  # noqa: BLE001 - a record that cannot be encoded keeps its id
                     data = None
                 name = record_title(self.category_id, data, self.editor.vocabulary, key)
-            if name:  # the name only; the internal id is in the tooltip and the filter
+            if name:  # the name only; the internal id is in the filter
                 item.setText(name)
-            item.setToolTip(f"Internal ID: {key}")
             item.setData(Qt.UserRole, key)
             icon_id = getattr(record, "icon_id", "")
             icon = icon_for(icon_id) if icon_for and icon_id else None
@@ -1356,13 +1370,15 @@ class AdapterFamilyWidget(QWidget):
         return new_id
 
     def new_record(self):
+        """A new record made at once: "New Ability" with an id made from it; renamed in its
+        form."""
+        from .record_blank import suggest_id
+
         if self.adapter is None or self.adapter.create is None or not self.adapter.ids():
             return None
-        dialog = _NewRecordDialog(self.category.currentText(), self.adapter.ids(), self)
-        if dialog.exec() != QDialog.Accepted:
-            return None
+        name = _new_name(self.category.currentText())
         try:
-            return self.new_record_as(dialog.record_id(), dialog.name())
+            return self.new_record_as(suggest_id(name, self.adapter.ids()), name)
         except (AuthoringHubError, ValueError, KeyError, TypeError) as exc:
             self.last_error = str(exc)
             QMessageBox.warning(self, "New", str(exc))
@@ -1500,7 +1516,7 @@ class AdapterFamilyWidget(QWidget):
             ("Cut", self.cut_selected, has and editable),
             ("Paste", self.paste, self.can_paste()),
             (
-                "Duplicate…",
+                "Duplicate",
                 self.duplicate_selected,
                 has and not many and self.adapter.duplicate is not None,
             ),
@@ -1525,54 +1541,6 @@ class AdapterFamilyWidget(QWidget):
             action.setEnabled(enabled)
             action.triggered.connect(handler)
         menu.exec(self.browser.viewport().mapToGlobal(pos))
-
-
-class _NewRecordDialog(QDialog if QT_AVAILABLE else object):
-    """The name players see and the internal id of a record about to be made; the id follows
-    the name until it is typed by hand."""
-
-    def __init__(self, kind_label, taken, parent=None):
-        super().__init__(parent)
-        from .record_blank import suggest_id
-
-        self.setWindowTitle(f"New: {kind_label}")
-        self._taken = tuple(taken)
-        self._suggest = suggest_id
-        self._typed_id = False
-        form = QFormLayout(self)
-        self.name_edit = QLineEdit(self)
-        self.name_edit.setPlaceholderText("Name players see")
-        self.id_edit = QLineEdit(self)
-        self.id_edit.setPlaceholderText("lowercase letters, numbers and _")
-        self.id_edit.setToolTip("Other records refer to it by this, so it stays fixed once made")
-        form.addRow("Name", self.name_edit)
-        form.addRow("Internal ID", self.id_edit)
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
-        form.addRow(self.buttons)
-        self.name_edit.textChanged.connect(self._name_changed)
-        self.id_edit.textEdited.connect(self._id_typed)
-        self.id_edit.textChanged.connect(self._check)
-        self._check()
-
-    def _name_changed(self, text):
-        if not self._typed_id:
-            self.id_edit.setText(self._suggest(text, self._taken))
-
-    def _id_typed(self, _text):
-        self._typed_id = True
-
-    def _check(self, *_):
-        value = self.id_edit.text().strip()
-        ok = bool(value) and value not in self._taken
-        self.buttons.button(QDialogButtonBox.Ok).setEnabled(ok)
-
-    def name(self):
-        return self.name_edit.text().strip() or self.record_id()
-
-    def record_id(self):
-        return self.id_edit.text().strip()
 
 
 class BatchEditDialog(QDialog if QT_AVAILABLE else object):

@@ -103,9 +103,28 @@ def inspector_choices(document, component, field):
         return build_asset_id_choices(
             document.asset_views.clip_set_ids(), field.value, label="clip set"
         )
-    if field.choices:
-        return tuple((str(choice), choice) for choice in field.choices)
+    if field.choices:  # engine words read as words ("top_down" -> "Top Down")
+        from .record_vocabulary import words
+
+        return tuple(
+            (words(choice) if isinstance(choice, str) else str(choice), choice)
+            for choice in field.choices
+        )
+    named = field.name.endswith(("_id", "_resource")) or field.name == "resource"
+    if named and isinstance(field.value, str) and document.project is not None:
+        from .record_vocabulary import REFERENCES, vocabulary_for
+
+        vocabulary = vocabulary_for(document)
+        source = REFERENCES.get(field.name) or vocabulary.store_for(field.name)
+        if source:  # a skill, an item, a resource...: picked by its name
+            choices = [("— None —", "")] + [(c.label, c.value) for c in vocabulary.choices(source)]
+            return _with_missing(choices, field.value, words_for(field.name))
     return None
+
+
+def words_for(name):
+    """``damage_resource`` -> "damage resource" (what a missing value is said to be)."""
+    return str(name).removesuffix("_id").replace("_", " ")
 
 
 def build_parent_choices(component):

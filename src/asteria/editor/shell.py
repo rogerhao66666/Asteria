@@ -19,7 +19,6 @@ from .event_editing import (
     ReplaceEventBindingCommand,
     ReplaceEventProgramCommand,
     bindings_for_scene,
-    parse_world_args,
     program_with_insert,
     program_with_move,
     program_with_remove,
@@ -58,6 +57,7 @@ from .structure import (
 )
 from .tool_strip import ToolStrip
 from .workspace import EditorWorkspace, WorkspaceMode
+from .world_command_form import record_names
 
 try:
     from PySide6.QtCore import QSize, Qt, QTimer
@@ -99,7 +99,6 @@ from asteria.events import (
     EventTriggerKind,
 )
 from asteria.graphics import TileLayer
-from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
 
 from .authoring_context import scene_authoring_source
 from .resource_resolver import EditorResourceError, resolve_project_resources
@@ -1468,6 +1467,7 @@ class AsteriaEditorWindow(QMainWindow):
             )
             return
         bindings = bindings_for_scene(project, scene)
+        self.event_editor.names = record_names(self.document)
         self.event_editor.set_entity_context(
             entity, bindings, project.event_programs, self._event_candidates(project)
         )
@@ -1529,12 +1529,10 @@ class AsteriaEditorWindow(QMainWindow):
         bindings, binding = self._current_event_binding()
         if binding is None:
             return
-        name, ok = QInputDialog.getText(
-            self, "Event Condition", "Switch name:", text="quest_started"
-        )
-        if not ok or not name.strip():
+        picked = self._switch_dialog("Event Condition")
+        if picked is None:
             return
-        cond = EventTriggerCondition(EventCondition("switch", name.strip(), "==", True))
+        cond = EventTriggerCondition(EventCondition("switch", picked[0], "==", picked[1]))
         replacement = replace_binding_fields(
             binding, conditions=tuple(binding.conditions) + (cond,)
         )
@@ -1545,7 +1543,7 @@ class AsteriaEditorWindow(QMainWindow):
         """Modal sequence editor; returns SEQUENCE args or None (tests replace this)."""
         from .event_flow_widget import SequenceEditorDialog
 
-        dialog = SequenceEditorDialog(args, self)
+        dialog = SequenceEditorDialog(args, self, document=self.document)
         return dialog.result_args() if dialog.exec() == SequenceEditorDialog.Accepted else None
 
     def _dialogue_dialog(self, args=None):
@@ -1561,7 +1559,7 @@ class AsteriaEditorWindow(QMainWindow):
         args or None (tests replace this)."""
         from .choice_command_dialog import ChoiceCommandDialog
 
-        dialog = ChoiceCommandDialog(args, parent=self)
+        dialog = ChoiceCommandDialog(args, parent=self, document=self.document)
         return dialog.result_args() if dialog.exec() == ChoiceCommandDialog.Accepted else None
 
     def _wait_dialog(self, args=None):
@@ -1572,9 +1570,78 @@ class AsteriaEditorWindow(QMainWindow):
         dialog = WaitCommandDialog(args, parent=self)
         return dialog.result_args() if dialog.exec() == WaitCommandDialog.Accepted else None
 
+    def _switch_dialog(self, title, name="", value=True):
+        """A switch picked or made, and on or off; ``(name, value)`` or None (tests replace
+        this)."""
+        from .event_name_dialog import SwitchDialog
+
+        dialog = SwitchDialog(self.document, title, self, name=name, value=value)
+        return (dialog.name(), dialog.value()) if dialog.exec() else None
+
+    def _variable_dialog(self, args=None):
+        """A variable picked or made and what it becomes; SET_VARIABLE args or None (tests
+        replace this)."""
+        from .event_name_dialog import VariableDialog
+
+        dialog = VariableDialog(self.document, self, args=args)
+        return dialog.result_args() if dialog.exec() else None
+
+    def _world_dialog(self, command="TRANSFER", args=None):
+        """A world command picked and filled in; WORLD args or None (tests replace this)."""
+        from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
+        from .world_command_form import WorldCommandDialog
+
+        dialog = WorldCommandDialog(
+            self.document, self, command=command, args=args, pictures_later=True
+        )
+        if not dialog.exec():
+            return None
+        command = dialog.command_name()
+        if command not in PICTURE_COMMANDS:
+            return {"command": command, "args": dialog.result_args()}
+        picture = PictureCommandDialog(command, args or {}, document=self.document, parent=self)
+        if not picture.exec():
+            return None
+        return {"command": picture.command.currentText(), "args": picture.result_args()}
+
+    def _replace_event_command(self, binding, program, index, instruction):
+        rows = list(program.instructions)
+        rows[index] = instruction
+        self.document.execute(
+            ReplaceEventProgramCommand(
+                self.document.project.event_programs,
+                binding.program_id,
+                EventProgram(rows, name=program.name),
+                program,
+            )
+        )
+
+    def _edited_event_command(self, instruction):
+        """The new form of a switch, variable or world command, or None when it isn't one of
+        those (or the dialog was cancelled)."""
+        args = instruction.args
+        if instruction.opcode == "SET_SWITCH":
+            picked = self._switch_dialog("Set Switch", args.get("name", ""), args.get("value"))
+            return picked and EventInstruction(
+                "SET_SWITCH", dict(args, name=picked[0], value=picked[1])
+            )
+        if instruction.opcode == "SET_VARIABLE":
+            changed = self._variable_dialog(args)
+            return changed and EventInstruction("SET_VARIABLE", changed)
+        if instruction.opcode == "WORLD":
+            changed = self._world_dialog(args.get("command", ""), args.get("args"))
+            return changed and EventInstruction("WORLD", dict(args, **changed))
+        condition = args.get("condition") if instruction.opcode == "JUMP_IF" else None
+        if condition and condition.get("source") == "switch" and condition.get("operator") == "==":
+            picked = self._switch_dialog("If", condition.get("name", ""), condition.get("value"))
+            return picked and EventInstruction(
+                "JUMP_IF", dict(args, condition=dict(condition, name=picked[0], value=picked[1]))
+            )
+        return None
+
     def _event_edit_command(self, index):
-        """Open the specialized editor for dialogue, choice, wait, sequence and picture
-        instructions."""
+        """Open the specialized editor for dialogue, choice, wait, sequence, switch, variable,
+        picture and world instructions."""
         from .event_flow_authoring import EventFlowAuthoring
         from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
 
@@ -1631,14 +1698,12 @@ class AsteriaEditorWindow(QMainWindow):
                     "args": dialog.result_args(),
                 },
             )
-            rows = list(program.instructions)
-            rows[index] = changed
-            new_program = EventProgram(rows, name=program.name)
-            self.document.execute(
-                ReplaceEventProgramCommand(
-                    project.event_programs, binding.program_id, new_program, program
-                )
-            )
+            self._replace_event_command(binding, program, index, changed)
+        elif instruction.opcode in ("SET_SWITCH", "SET_VARIABLE", "WORLD"):
+            changed = self._edited_event_command(instruction)
+            if changed is None:
+                return False
+            self._replace_event_command(binding, program, index, changed)
         else:
             return False
         self.refresh_all()
@@ -1658,58 +1723,22 @@ class AsteriaEditorWindow(QMainWindow):
             args = self._wait_dialog()
             return None if args is None else EventInstruction("WAIT", args)
         if kind == "if":
-            name, ok = QInputDialog.getText(self, "If", "Switch name:")
-            if not ok or not name.strip():
+            picked = self._switch_dialog("If")
+            if picked is None:
                 return None
-            condition = EventCondition("switch", name.strip(), "==", True).to_data()
+            condition = EventCondition("switch", picked[0], "==", picked[1]).to_data()
             return EventInstruction("JUMP_IF", {"condition": condition, "label": "target"})
         if kind == "switch":
-            name, ok = QInputDialog.getText(self, "Set Switch", "Switch name:")
-            if not ok or not name.strip():
+            picked = self._switch_dialog("Set Switch")
+            if picked is None:
                 return None
-            return EventInstruction("SET_SWITCH", {"name": name.strip(), "value": True})
+            return EventInstruction("SET_SWITCH", {"name": picked[0], "value": picked[1]})
         if kind == "variable":
-            name, ok = QInputDialog.getText(self, "Set Variable", "Variable name:")
-            if not ok or not name.strip():
-                return None
-            value, ok = QInputDialog.getText(
-                self, "Set Variable", "Value (@name copies that variable):"
-            )
-            if not ok:
-                return None
-            if value.startswith("@") and value[1:].strip():
-                return EventInstruction(
-                    "SET_VARIABLE", {"name": name.strip(), "from_variable": value[1:].strip()}
-                )
-            return EventInstruction("SET_VARIABLE", {"name": name.strip(), "value": value})
+            args = self._variable_dialog()
+            return None if args is None else EventInstruction("SET_VARIABLE", args)
         if kind == "world":
-            command, ok = QInputDialog.getText(self, "World Command", "Command:", text="TRANSFER")
-            if not ok or not command.strip():
-                return None
-            from .picture_command_dialog import PICTURE_COMMANDS, PictureCommandDialog
-
-            command = command.strip().upper()
-            if command in PICTURE_COMMANDS:
-                dialog = PictureCommandDialog(command, document=self.document, parent=self)
-                if not dialog.exec():
-                    return None
-                return EventInstruction(
-                    "WORLD", {"command": command, "args": dialog.result_args()}
-                )
-            raw_args, ok = QInputDialog.getText(
-                self,
-                "World Command",
-                "Arguments (key=value, ...):",
-                text=", ".join(f"{name}=" for name in WORLD_COMMAND_ARGUMENTS.get(command, ())),
-            )
-            if not ok:
-                return None
-            try:
-                args = parse_world_args(raw_args)
-            except ValueError as exc:
-                QMessageBox.warning(self, "World Command", str(exc))
-                return None
-            return EventInstruction("WORLD", {"command": command, "args": args})
+            args = self._world_dialog()
+            return None if args is None else EventInstruction("WORLD", args)
         return None
 
     def _event_add_command(self, kind):
@@ -1725,6 +1754,9 @@ class AsteriaEditorWindow(QMainWindow):
             return
         row = self.event_editor.selected_command_index()
         index = len(program.instructions) if row < 0 else row + 1
+        rows = program.instructions
+        if index == len(rows) and rows and rows[-1].opcode == "END":
+            index -= 1  # after the End it would never run
         new_program = program_with_insert(program, index, instruction)
         self.document.execute(
             ReplaceEventProgramCommand(

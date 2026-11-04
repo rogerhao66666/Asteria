@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QMessageBox,
     QPushButton,
     QScrollArea,
@@ -42,10 +43,40 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .attack_preview import AttackPreview, _Preview
 from .combat_authoring import KINDS, CombatAuthoringController, CombatAuthoringError
+from .i18n import translate
 from .icons import icon
+from .record_vocabulary import words
 from .responsive_form import ResponsiveForm
-from .ui_fit import WordCombo
+from .ui_fit import ValueCombo, WordCombo
+
+
+def _article(noun):
+    """ "an attack", "a projectile"."""
+    return ("an " if noun[:1] in "aeiou" else "a ") + noun
+
+
+def _pierce_words(pierce):
+    if pierce < 0:
+        return "Goes through every target"
+    return "Stops at the first target" if not pierce else f"Goes through {pierce} more"
+
+
+def _singular(label):
+    """ "Slots" -> "Slot", "Rarities" -> "Rarity"."""
+    if label.endswith("ies"):
+        return label[:-3] + "y"
+    return label.removesuffix("s")
+
+
+def _usage_words(entry):
+    """``timeline field_slash`` -> "Field Slash (timeline)"; other entries stay as written."""
+    kind, _, record_id = str(entry).partition(" ")
+    if kind in ("projectile", "timeline") and record_id:
+        return f"{words(record_id)} ({kind})"
+    return str(entry)
+
 
 SOURCES = (
     ("constant", "Constant"),
@@ -79,6 +110,20 @@ def _double(value=0.0, *, minimum=-1_000_000.0, maximum=1_000_000.0, step=1.0, d
     box.setSingleStep(step)
     box.setValue(float(value))
     return box
+
+
+class _ExactNumber(QDoubleSpinBox):
+    """A number kept to six places, shown without trailing zeros: 1.278 stays 1.278."""
+
+    def __init__(self, value=0.0, step=0.1):
+        super().__init__()
+        self.setRange(-1_000_000.0, 1_000_000.0)
+        self.setDecimals(6)
+        self.setSingleStep(step)
+        self.setValue(float(value))
+
+    def textFromValue(self, value):  # noqa: N802 - Qt API
+        return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
 def _int(value=0, *, minimum=0, maximum=1_000_000):
@@ -154,7 +199,12 @@ class _Table(QWidget):
             if kind == "choice":
                 widget = _CellCombo()
                 widget.setEditable(bool(options.get("editable")))
-                for key, label in options.get("items", ()):
+                items = options.get("items", ())
+                if "follows" in options:  # what it offers depends on the column it follows
+                    items = options["items_for"](values[options["follows"]] if values else None)
+                elif callable(items):
+                    items = items()
+                for key, label in items or ():
                     widget.addItem(label, key)
                 index = widget.findData(value) if value is not None else 0
                 if index >= 0:
@@ -164,9 +214,11 @@ class _Table(QWidget):
                 widget.currentIndexChanged.connect(self._emit)
                 widget.editTextChanged.connect(self._emit)
             elif kind == "float":
-                widget = _double(
-                    value or options.get("default", 0.0), step=options.get("step", 1.0)
-                )
+                start = value or options.get("default", 0.0)
+                if options.get("exact"):
+                    widget = _ExactNumber(start, options.get("step", 1.0))
+                else:
+                    widget = _double(start, step=options.get("step", 1.0))
                 # a narrow cell: no arrows (typing and the wheel still change it), so the
                 # number itself has the room
                 widget.setButtonSymbols(QDoubleSpinBox.NoButtons)
@@ -198,6 +250,9 @@ class _Table(QWidget):
                 room.addWidget(widget)
             cell.field = widget
             self.table.setCellWidget(row, column, cell)
+        for column, (_title, _kind, options) in enumerate(self.columns):
+            if "follows" in options:
+                self._follow(row, options["follows"], column, options["items_for"])
         # every field of the row as tall as the tallest (a text box was shorter than a number)
         fields = [self.table.cellWidget(row, c).field for c in range(len(self.columns))]
         tallest = max((f.sizeHint().height() for f in fields), default=self.ROW - 6)
@@ -206,6 +261,23 @@ class _Table(QWidget):
                 field.setFixedHeight(tallest)
         self.table.setRowHeight(row, max(self.ROW, tallest + 6))
         self._fit()
+
+    def _follow(self, row, leader, column, items_for):
+        """A cell's list comes from the choice in another; None turns the cell off."""
+        lead = self.table.cellWidget(row, leader).field
+        cell = self.table.cellWidget(row, column).field
+
+        def fill():
+            items = items_for(lead.currentData())
+            cell.blockSignals(True)
+            cell.clear()
+            for key, label in items or ():
+                cell.addItem(label, key)
+            cell.blockSignals(False)
+            cell.setEnabled(items is not None)
+
+        cell.setEnabled(items_for(lead.currentData()) is not None)
+        lead.currentIndexChanged.connect(fill)
 
     def rows(self):
         result = []
@@ -242,20 +314,32 @@ class FormulaEditor(QWidget):
     def _emit(self, *_args):
         self.changed.emit()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, *, pairs=None):
+        """``pairs``: what a term can read and a multiplier can ask for (see
+        ``CombatAuthoringController.pairs``)."""
         super().__init__(parent)
+        pairs = pairs or (lambda _source: ())
+
+        def readable(source):
+            if source is None or source == "constant":
+                return None
+            return pairs("resources" if "resource" in source else "stats")
+
+        def tag_items():
+            return (("", "Any"), *pairs("tags"))
+
         self.terms = _Table(
             (
                 ("Source", "choice", {"items": SOURCES}),
-                ("Stat", "text", {"placeholder": "power"}),
-                ("×", "float", {"default": 1.0, "step": 0.1}),
+                ("Stat", "choice", {"follows": 0, "items_for": readable, "editable": True}),
+                ("×", "float", {"default": 1.0, "step": 0.1, "exact": True}),
             )
         )
         self.multipliers = _Table(
             (
-                ("×", "float", {"default": 2.0, "step": 0.1}),
-                ("Attacker tags", "text", {"placeholder": "Element.Fire"}),
-                ("Target tags", "text", {"placeholder": "Creature.Plant"}),
+                ("×", "float", {"default": 2.0, "step": 0.1, "exact": True}),
+                ("Attacker properties", "choice", {"items": tag_items, "editable": True}),
+                ("Target properties", "choice", {"items": tag_items, "editable": True}),
             )
         )
         self.use_min, self.use_max = QCheckBox("Minimum"), QCheckBox("Maximum")
@@ -276,9 +360,9 @@ class FormulaEditor(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.terms)
-        multipliers = QLabel("Tag multipliers")
+        multipliers = QLabel("Property multipliers")
         multipliers.setToolTip(
-            "Weaknesses and resistances: × when the attacker and the target carry tags"
+            "Weaknesses and resistances: × when the attacker and the target carry properties"
         )
         multipliers.setObjectName("FieldLabel")
         layout.addWidget(multipliers)
@@ -353,6 +437,66 @@ class FormulaEditor(QWidget):
         self.summary.setText(f"= {text}")
 
 
+class _LayerMenu(QMenu):
+    """Stays open while layers are ticked."""
+
+    def mouseReleaseEvent(self, event):  # noqa: N802 - Qt API
+        action = self.actionAt(event.position().toPoint())
+        if action is not None and action.isCheckable():
+            action.trigger()
+            return
+        super().mouseReleaseEvent(event)
+
+
+class _LayerButton(QPushButton):
+    """Which collider layers count: every layer, or the ones ticked in its menu. Layers past
+    the menu's end stay as they are."""
+
+    changed = Signal()
+    EVERY = 0xFFFFFFFF
+    SHOWN = 16
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.value = self.EVERY
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        menu = _LayerMenu(self)
+        menu.addAction(translate("Every layer"), lambda: self._choose(self.EVERY))
+        menu.addAction(translate("No layer"), lambda: self._choose(0))
+        menu.addSeparator()
+        self.layers = []
+        for index in range(self.SHOWN):
+            action = menu.addAction(f"{translate('Layer')} {index + 1}")
+            action.setCheckable(True)
+            action.toggled.connect(lambda on, i=index: self._tick(i, on))
+            self.layers.append(action)
+        self.setMenu(menu)
+        self.set_value(self.EVERY)
+
+    def set_value(self, value):
+        self.value = int(value)
+        for index, action in enumerate(self.layers):
+            action.blockSignals(True)
+            action.setChecked(bool(self.value >> index & 1))
+            action.blockSignals(False)
+        self.setText(self._words())
+
+    def _words(self):
+        if self.value == self.EVERY:
+            return translate("Every layer")
+        if not self.value:
+            return translate("No layer")
+        ticked = [str(i + 1) for i in range(32) if self.value >> i & 1]
+        return f"{translate('Layer')} {', '.join(ticked)}"
+
+    def _choose(self, value):
+        self.set_value(value)
+        self.changed.emit()
+
+    def _tick(self, index, on):
+        self._choose(self.value | 1 << index if on else self.value & ~(1 << index))
+
+
 class _ColorButton(QPushButton):
     changed = Signal()
 
@@ -375,134 +519,20 @@ class _ColorButton(QPushButton):
         )
 
     def _pick(self):
-        chosen = QColorDialog.getColor(QColor(self.color), self, "Rarity colour")
+        chosen = QColorDialog.getColor(QColor(self.color), self, "Colour")
         if chosen.isValid():
             self.set_color(chosen.name())
             self.changed.emit()
 
 
 # -- previews -------------------------------------------------------------------------------------
-class _Preview(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.record = None
-        self.setMinimumSize(190, 260)
-
-    def show_record(self, record):
-        self.record = record
-        self.update()
-
-    def _start(self):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor(20, 22, 30))
-        return painter
-
-    @staticmethod
-    def _caption(painter, x, y, text, color=QColor(170, 178, 196), size=10, bold=False):
-        font = QFont()
-        font.setPointSize(size)
-        font.setBold(bold)
-        painter.setFont(font)
-        painter.setPen(color)
-        painter.drawText(QPointF(x, y), text)
-
-
-class AttackPreview(_Preview):
-    """Attacker, target and the knockback push; a time line of hit-stop, hitstun, down time and
-    i-frames."""
-
-    def paintEvent(self, _event):  # noqa: N802 - Qt API
-        painter = self._start()
-        a = self.record
-        if a is None:
-            painter.end()
-            return
-        w, h = self.width(), self.height()
-        ground = h * 0.46
-        ax, tx = w * 0.28, w * 0.58
-        painter.setPen(QPen(QColor(60, 66, 84), 1, Qt.DashLine))
-        painter.drawLine(QPointF(16, ground + 22), QPointF(w - 16, ground + 22))
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(90, 170, 255))
-        painter.drawEllipse(QPointF(ax, ground), 16, 16)
-        painter.setBrush(QColor(224, 92, 100))
-        painter.drawEllipse(QPointF(tx, ground), 16, 16)
-        self._caption(painter, ax - 26, ground + 40, "attacker")
-        self._caption(painter, tx - 16, ground + 40, "target")
-        angle = math.radians(
-            a.knockback_angle
-        )  # "fixed": a world angle; "away" / "facing": turned from the right
-        length = min(w * 0.3, 18 + abs(a.knockback) * 0.25)
-        dx, dy = (
-            math.cos(angle) * length,
-            math.sin(angle) * length - min(60, a.knockback_lift * 0.2),
-        )
-        if a.knockback or a.knockback_lift:
-            pen = QPen(QColor(255, 196, 90), 3)
-            painter.setPen(pen)
-            end = QPointF(tx + dx, ground + dy)
-            painter.drawLine(QPointF(tx, ground), end)
-            head = math.atan2(dy, dx)
-            for side in (-0.5, 0.5):
-                painter.drawLine(
-                    end,
-                    QPointF(
-                        end.x() - 10 * math.cos(head + side), end.y() - 10 * math.sin(head + side)
-                    ),
-                )
-            self._caption(
-                painter, end.x() - 20, end.y() - 10, f"{a.knockback:g}/s", QColor(255, 196, 90)
-            )
-        chips = []
-        if a.knockdown:
-            chips.append(("knocks down", QColor(255, 140, 90)))
-        if a.armor_break:
-            chips.append((f"breaks armor ≤ {a.armor_break}", QColor(200, 140, 255)))
-        if a.poise_damage:
-            chips.append((f"poise −{a.poise_damage:g}", QColor(120, 200, 255)))
-        if a.tags:
-            chips.append((", ".join(a.tags), QColor(140, 220, 160)))
-        x = 16
-        for text, color in chips:
-            width = 14 + len(text) * 6.4
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor(color.red(), color.green(), color.blue(), 50))
-            painter.drawRoundedRect(QRectF(x, 14, width, 20), 9, 9)
-            self._caption(painter, x + 7, 28, text, color)
-            x += width + 6
-        # time line
-        top = h * 0.66
-        scale = (w - 120) / max(
-            1.2,
-            a.hitstop
-            + a.hitstun
-            + (a.knockdown_time or (1.0 if a.knockdown else 0.0))
-            + a.target_iframes
-            + 0.2,
-        )
-        rows = (
-            ("hit-stop", a.hitstop, QColor(255, 220, 120)),
-            ("hitstun", a.hitstun, QColor(255, 140, 120)),
-            ("down", (a.knockdown_time or 1.0) if a.knockdown else 0.0, QColor(255, 110, 90)),
-            ("i-frames", a.target_iframes, QColor(120, 200, 255)),
-        )
-        for index, (label, seconds, color) in enumerate(rows):
-            y = top + index * 20
-            self._caption(painter, 16, y + 11, label)
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor(44, 48, 62))
-            painter.drawRoundedRect(QRectF(92, y, w - 112, 12), 4, 4)
-            if seconds:
-                painter.setBrush(color)
-                painter.drawRoundedRect(QRectF(92, y, max(3.0, seconds * scale), 12), 4, 4)
-                self._caption(painter, 96 + seconds * scale, y + 11, f"{seconds:g}s", color)
-        painter.end()
-
-
 class ProjectilePreview(_Preview):
     """A shot fired to the right (and one with a target above, for homing), simulated by the
     projectile kernel."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.attack_names = {}
 
     def paintEvent(self, _event):  # noqa: N802 - Qt API
         painter = self._start()
@@ -567,12 +597,16 @@ class ProjectilePreview(_Preview):
             painter.setPen(QPen(QColor(224, 92, 100, 90), 1, Qt.DotLine))
             painter.setBrush(Qt.NoBrush)
             painter.drawEllipse(spot, p.homing_range * zoom, p.homing_range * zoom)
+        attack = self.attack_names.get(p.attack_id) or words(p.attack_id)
         lines = [
-            f"{p.speed:g}/s for {p.lifetime:g}s  ·  range ≈ {p.speed * p.lifetime:.0f}",
-            f"on a wall: {p.wall}"
-            + (f" (≤ {p.bounce_limit} bounces)" if p.wall == "bounce" and p.bounce_limit else ""),
-            "pierces every target" if p.pierce < 0 else f"pierces {p.pierce} extra target(s)",
-            f"hits with: {p.attack_id or '— reports hits only'}",
+            f"{p.speed:g}/s  ·  {p.lifetime:g}s  ·  {translate('Range')} ≈ "
+            f"{p.speed * p.lifetime:.0f}",
+            f"{translate('On a wall')}: {translate(words(p.wall))}"
+            + (f" (≤ {p.bounce_limit})" if p.wall == "bounce" and p.bounce_limit else ""),
+            translate(_pierce_words(p.pierce)),
+            f"{translate('Hits with')}: {attack}"
+            if attack
+            else translate("Only reports its hits"),
         ]
         for index, text in enumerate(lines):
             self._caption(painter, 16, 22 + index * 16, text)
@@ -621,7 +655,9 @@ class RarityPreview(_Preview):
             )
             self._caption(painter, w - 60, y + 26, label, QColor(130, 136, 150))
         y = 140
-        self._caption(painter, 16, y, "Random affixes", QColor(200, 206, 220), bold=True)
+        self._caption(
+            painter, 16, y, translate("Random affixes"), QColor(200, 206, 220), bold=True
+        )
         for i in range(max(6, r.max_affixes)):
             filled = i < r.min_affixes
             maybe = r.min_affixes <= i < r.max_affixes
@@ -683,8 +719,9 @@ class AffixPreview(_Preview):
             painter,
             16,
             52,
-            f"item levels {levels[0]}–{a.max_level or '∞'}  ·  weight {a.weight:g}"
-            + (f"  ·  group {a.group}" if a.group else ""),
+            f"{translate('Item levels')} {levels[0]}–{a.max_level or '∞'}"
+            f"  ·  {translate('Weight')} {a.weight:g}"
+            + (f"  ·  {translate('Group')} {words(a.group)}" if a.group else ""),
             QColor(150, 158, 176),
         )
         top = 78
@@ -704,8 +741,12 @@ class AffixPreview(_Preview):
                 painter,
                 16,
                 y + 12,
-                f"{m.stat}  {sign}{lo1:g}–{hi1:g}"
-                + (f"  →  {lo2:g}–{hi2:g} at lv {levels[1]}" if m.per_level else ""),
+                f"{words(m.stat)}  {sign}{lo1:g}–{hi1:g}"
+                + (
+                    f"  →  {lo2:g}–{hi2:g} ({translate('Level')} {levels[1]})"
+                    if m.per_level
+                    else ""
+                ),
                 QColor(220, 224, 236),
             )
             for row, (lo, hi, color) in enumerate(
@@ -735,7 +776,7 @@ class AffixPreview(_Preview):
 EMPTY_HINTS = {
     "attacks": "An attack is what one landed hit does: damage, poise, knockback, hit-stop, "
     "super armor and "
-    "knockdown. Hitboxes name it in their hit tag.",
+    "knockdown. Hitboxes name it in their hit property.",
     "projectiles": "A projectile flies, homes, bounces or pierces, and applies an attack to "
     "what it hits. "
     "Action timelines fire it.",
@@ -812,8 +853,6 @@ class CombatWorkspace(QWidget):
         # middle: heading + cards + apply bar
         self.heading = QLabel()
         self.heading.setObjectName("RecordHeading")
-        self.record_label = QLabel()
-        self.record_label.setObjectName("RecordId")
         self.cards = QVBoxLayout()
         self.cards.setSpacing(10)
         holder = QWidget()
@@ -867,10 +906,15 @@ class CombatWorkspace(QWidget):
         # the live preview folds away in a narrow window (the form needs the room); the button
         # shows or hides it by hand, and a hand-set choice is kept
         self.preview_toggle = QToolButton()
-        self.preview_toggle.setText("Preview")
+        self.preview_toggle.setToolButtonStyle(Qt.ToolButtonTextOnly)  # its words, not a ▶
         self.preview_toggle.setCheckable(True)
         self.preview_toggle.setChecked(True)
-        self.preview_toggle.setToolTip("Show or hide the live preview")
+        self.preview_toggle.setText(translate("Hide Preview"))
+        self.preview_toggle.toggled.connect(
+            lambda shown: self.preview_toggle.setText(
+                translate("Hide Preview" if shown else "Show Preview")
+            )
+        )
         self.preview_toggle.clicked.connect(self._preview_toggled)
         self._preview_by_hand = False
         head = QHBoxLayout()
@@ -878,7 +922,6 @@ class CombatWorkspace(QWidget):
         head.addWidget(self.preview_toggle)
         middle = QVBoxLayout()
         middle.addLayout(head)
-        middle.addWidget(self.record_label)
         middle.addWidget(scroll, 1)
         middle.addWidget(self.empty, 1)
         middle.addLayout(bar)
@@ -960,17 +1003,24 @@ class CombatWorkspace(QWidget):
     # -- kinds and records ------------------------------------------------------------------------
     def refresh(self):
         for spec in KINDS:
-            self.kind_buttons[spec.kind_id].setText(
-                f"{spec.label}   {len(self.api.ids(spec.kind_id))}"
-            )
+            self.kind_buttons[spec.kind_id].setText(spec.label)  # no count: the list shows them
         self._fill_list()
+        # the form always shows a listed record: the first when the one shown went away (a
+        # delete, another project) - never "No attacks yet" beside a list that has some
+        item = self.list.currentItem()
+        if item is None and self.list.count():
+            self.list.setCurrentRow(0)
+        elif item is None:
+            self.select(None)
+        elif item.data(Qt.UserRole) != self.record_id or not self.form_area.isVisible():
+            self.select(item.data(Qt.UserRole))
 
     def show_kind(self, kind_id):
         self.kind_id = kind_id
         self.kind_buttons[kind_id].setChecked(True)
         spec = self.api.kind(kind_id)
-        self.new_button.setToolTip(f"New {spec.noun}…")
-        self.duplicate_button.setToolTip(f"Duplicate this {spec.noun.lower()}…")
+        self.new_button.setToolTip(f"New {spec.noun}")
+        self.duplicate_button.setToolTip(f"Duplicate this {spec.noun.lower()}")
         self.delete_button.setToolTip(f"Delete this {spec.noun.lower()}")
         self._build_form()
         if self.preview is not None:
@@ -1027,19 +1077,19 @@ class CombatWorkspace(QWidget):
             widget.setEnabled(enabled)
         self.form_area.setVisible(enabled)
         self.empty.setVisible(not enabled)
-        for widget in (self.heading, self.record_label, self.apply_button, self.revert_button):
+        for widget in (self.heading, self.apply_button, self.revert_button):
             widget.setVisible(enabled)
         if data is None:
             spec = self.api.kind(self.kind_id)
             self.empty_icon.setPixmap(icon(spec.icon, spec.accent).pixmap(56, 56))
             none = not self.api.ids(self.kind_id)
             self.empty_title.setText(
-                f"No {spec.label.lower()} yet" if none else f"Pick a {spec.noun.lower()}"
+                f"No {spec.label.lower()} yet" if none else f"Pick {_article(spec.noun.lower())}"
             )
             self.empty_hint.setText(
                 EMPTY_HINTS[self.kind_id] if none else "Choose one from the list on the left."
             )
-            self.empty_button.setText(f"New {spec.noun}…")
+            self.empty_button.setText(f"New {spec.noun}")
             self.empty_button.setIcon(icon("plus", "#ffffff"))
             self.status.setText("")
             self.usage.setText("")
@@ -1052,12 +1102,16 @@ class CombatWorkspace(QWidget):
         finally:
             self._loading = False
         self.heading.setText(data.get("display_name") or record_id)
-        self.record_label.setText(f"id  {record_id}")
-        used = self.api.usage(self.kind_id, record_id)
+        used = [_usage_words(entry) for entry in self.api.usage(self.kind_id, record_id)]
         self.usage.setText(("Used by: " + ", ".join(used)) if used else "Not used yet.")
         self._edited()
 
     # -- the form ---------------------------------------------------------------------------------
+    def _tag_words(self, tag):
+        from .record_vocabulary import tag_label, vocabulary_for
+
+        return tag_label(tag, vocabulary_for(self.document).names())
+
     def _build_form(self):
         while self.cards.count():  # the previous kind's cards go now, not at the next event loop
             item = self.cards.takeAt(0)
@@ -1074,24 +1128,16 @@ class CombatWorkspace(QWidget):
             card_layout = QVBoxLayout(card)
             card_layout.setContentsMargins(14, 12, 14, 12)
             card_layout.setSpacing(4)
-            heading = QLabel(title)
+            heading = QLabel(f"{title}  ⓘ" if hint else title)
+            heading.setToolTip(hint)
             heading.setObjectName("CardTitle")
             card_layout.addWidget(heading)
-            if hint:
-                note = QLabel(hint)
-                note.setObjectName("CardHint")
-                note.setWordWrap(True)
-                card_layout.addWidget(note)
             form = ResponsiveForm(column_width=210, max_columns=3)
             for field in fields:
                 widget = self._widget(field)
                 self.inputs[field.name] = widget
-                if field.kind in ("formula", "states", "modifiers"):
-                    form.add_row(field.label, widget, span=True)
-                else:
-                    form.add_row(field.label, widget)
-                if field.hint:
-                    widget.setToolTip(field.hint)
+                wide = field.kind in ("formula", "states", "modifiers", "chips")
+                form.add_row(field.label, widget, span=wide, help_text=field.hint)
             card_layout.addWidget(form)
             self.cards.addWidget(card)
 
@@ -1107,23 +1153,38 @@ class CombatWorkspace(QWidget):
             widget = QCheckBox()
             widget.toggled.connect(self._edited)
         elif kind == "choice":  # engine words ("attacker_facing") read as words
-            widget = QComboBox() if field.name == "position" else WordCombo()
+            widget = WordCombo()
             widget.addItems(field.choices)
-            widget.setEditable(field.name == "position")
             widget.currentTextChanged.connect(self._edited)
-        elif kind == "attack":
-            widget = QComboBox()
-            widget.setEditable(True)
+        elif kind == "pick":
+            widget = ValueCombo()
+            widget.setEditable(field.new)
+            widget.setProperty("i18n_choices", True)
+            made = {"events": "event", "groups": "group"}.get(field.source)
+            if made:
+                widget.offer_new(f"New {made.title()}", f"new_{made}")
             widget.currentTextChanged.connect(self._edited)
+        elif kind == "chips":
+            from .record_form import ChipList
+
+            noun = "tag" if field.source == "tags" else _singular(field.label).lower()
+            namer = self._tag_words if field.source == "tags" else None
+            widget = ChipList((), (), allow_new=field.new, noun=noun, namer=namer)
+            widget.edited.connect(self._edited)
+        elif kind == "picture":
+            from .game_systems_widget import _IconPicker
+            from .image_tools import SpriteSheetLibrary
+
+            widget = _IconPicker(SpriteSheetLibrary(self.document))
+            widget.changed.connect(self._edited)
         elif kind == "mask":
-            widget = QLineEdit()
-            widget.setPlaceholderText("0xFFFFFFFF = every layer")
-            widget.textChanged.connect(self._edited)
+            widget = _LayerButton()
+            widget.changed.connect(self._edited)
         elif kind == "color":
             widget = _ColorButton()
             widget.changed.connect(self._edited)
         elif kind == "formula":
-            widget = FormulaEditor()
+            widget = FormulaEditor(pairs=self.api.pairs)
             widget.changed.connect(self._edited)
         elif kind == "states":
             widget = _Table(
@@ -1131,7 +1192,7 @@ class CombatWorkspace(QWidget):
                     (
                         "State",
                         "choice",
-                        {"items": [(s, s) for s in self.api.choices("states")], "editable": True},
+                        {"items": lambda: self.api.pairs("states"), "editable": True},
                     ),
                     ("Chance", "float", {"default": 1.0, "step": 0.05}),
                     ("Seconds", "float", {"step": 0.5}),
@@ -1141,8 +1202,12 @@ class CombatWorkspace(QWidget):
         elif kind == "modifiers":
             widget = _Table(
                 (
-                    ("Stat", "text", {"placeholder": "power"}),
-                    ("Op", "choice", {"items": [(o, o) for o in OPERATIONS]}),
+                    (
+                        "Stat",
+                        "choice",
+                        {"items": lambda: self.api.pairs("stats"), "editable": True},
+                    ),
+                    ("Op", "choice", {"items": [(o, o.title()) for o in OPERATIONS]}),
                     ("Min", "float", {"step": 1.0}),
                     ("Max", "float", {"step": 1.0}),
                     ("Whole", "bool", {}),
@@ -1150,10 +1215,8 @@ class CombatWorkspace(QWidget):
                 )
             )
             widget.changed.connect(self._edited)
-        else:  # text, tags
+        else:  # text
             widget = QLineEdit()
-            if field.hint:
-                widget.setPlaceholderText(field.hint)
             widget.textChanged.connect(self._edited)
         widget.field = field
         return widget
@@ -1168,13 +1231,23 @@ class CombatWorkspace(QWidget):
             widget.setChecked(bool(value))
         elif kind == "choice":
             widget.setCurrentText(str(value or widget.field.choices[0]))
-        elif kind == "attack":
-            widget.clear()
-            widget.addItem("")
-            widget.addItems(self.api.choices("attack"))
+        elif kind == "pick":
+            field = widget.field
+            widget.set_choices(self.api.pairs(field.source), none=field.none or None)
             widget.setCurrentText(str(value or ""))
+        elif kind == "chips":
+            from .record_vocabulary import Choice
+
+            widget.choices = tuple(
+                Choice(v, shown) for v, shown in self.api.pairs(widget.field.source)
+            )
+            widget._labels = {c.value: c for c in widget.choices}
+            widget.values = [str(v) for v in value or ()]
+            widget._build()
+        elif kind == "picture":
+            widget.setText(str(value or ""))
         elif kind == "mask":
-            widget.setText(f"0x{int(value or 0):08X}")
+            widget.set_value(int(value or 0))
         elif kind == "color":
             widget.set_color(str(value or "#ffffff"))
         elif kind == "formula":
@@ -1197,8 +1270,6 @@ class CombatWorkspace(QWidget):
                     for m in value or ()
                 ]
             )
-        elif kind == "tags":
-            widget.setText(", ".join(value or ()))
         else:
             widget.setText("" if value is None else str(value))
 
@@ -1208,14 +1279,12 @@ class CombatWorkspace(QWidget):
             return widget.value()
         if kind == "bool":
             return widget.isChecked()
-        if kind in ("choice", "attack"):
+        if kind in ("choice", "pick"):
             return widget.currentText().strip()
+        if kind == "chips":
+            return list(widget.values)
         if kind == "mask":
-            text = widget.text().strip() or "0"
-            try:
-                return int(text, 0)
-            except ValueError:
-                return text  # the record refuses it with a reason
+            return widget.value
         if kind == "color":
             return widget.color
         if kind == "formula":
@@ -1242,8 +1311,6 @@ class CombatWorkspace(QWidget):
                 for stat, operation, lo, hi, integer, per in widget.rows()
                 if stat
             ]
-        if kind == "tags":
-            return [t.strip() for t in widget.text().replace(";", ",").split(",") if t.strip()]
         return widget.text().strip()
 
     def form_data(self):
@@ -1268,6 +1335,11 @@ class CombatWorkspace(QWidget):
         self.status.setObjectName("MutedLabel")
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
+        if isinstance(self.preview, AttackPreview) and self.document.project:
+            self.preview.formulas = self.document.project.gameplay_library.formulas
+            self.preview.names = dict(self.api.pairs("stats")) | dict(self.api.pairs("resources"))
+        if isinstance(self.preview, ProjectilePreview):
+            self.preview.attack_names = dict(self.api.pairs("attack"))
         if isinstance(self.preview, RarityPreview):
             rarities = (
                 dict(self.document.project.rpg_database.loot_rarities())
@@ -1291,11 +1363,14 @@ class CombatWorkspace(QWidget):
         self.changed.emit()
 
     def _ask_id(self, title, default=""):
-        """A free id for a new record (made, not typed): ``default`` or "new", numbered."""
+        """A free id for a new record (made, not typed): from ``title`` ("New Attack" ->
+        new_attack), or ``default`` with _copy, numbered."""
         from .authoring_hub_widget import _free_id
+        from .record_blank import suggest_id
 
-        base = default or ""
-        return _free_id(base, self.api.ids(self.kind_id), "copy" if base else "new")
+        if default:
+            return _free_id(default, self.api.ids(self.kind_id), "copy")
+        return suggest_id(title, self.api.ids(self.kind_id))
 
     def new_record(self, record_id=None):
         spec = self.api.kind(self.kind_id)
@@ -1303,7 +1378,7 @@ class CombatWorkspace(QWidget):
         if not record_id:
             return None
         try:
-            self.api.create(self.kind_id, record_id)
+            self.api.create(self.kind_id, record_id, name=f"New {spec.noun}")
         except CombatAuthoringError as exc:
             QMessageBox.warning(self, f"New {spec.noun}", str(exc))
             return None

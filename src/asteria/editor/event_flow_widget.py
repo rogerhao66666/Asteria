@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
@@ -11,6 +12,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QDoubleSpinBox,
     QFormLayout,
     QFrame,
     QGroupBox,
@@ -29,16 +31,39 @@ from PySide6.QtWidgets import (
 from asteria.events.common import COMMON_TRIGGERS
 from asteria.events.conditions import EventCondition
 
-from .event_editing import describe_instruction, parse_world_args
+from .event_editing import describe_instruction
 from .event_flow_authoring import BATTLE_HOOKS, EventFlowAuthoring, EventFlowError
-from .record_vocabulary import trigger_label, words
-from .ui_fit import WordCombo
+from .i18n import translate
+from .record_vocabulary import AI_COMPARISONS, trigger_label, vocabulary_for, words
+from .ui_fit import ValueCombo, WordCombo
 
 COMPARATORS = ("<=", "<", "==", "!=", ">", ">=")
 
 
-def describe_condition(c):
-    return f"{c.source} {c.name} {c.operator} {c.value}"
+def describe_condition(c, names=None):
+    """A condition in one line: "Crimson Warlord HP % is at most 50 %", "Round is at least 3",
+    "Throne · Hot is on"."""
+    names = names or {}
+    source = str(c.source).strip().lower()
+    kind, _, key = str(c.name).partition(":")
+    who = names.get(key) or words(key)
+    comparison = AI_COMPARISONS.get(c.operator, c.operator)
+    if source == "battle" and kind == "hp_ratio" and isinstance(c.value, (int, float)):
+        return f"{who} HP % {comparison} {c.value * 100:g} %"
+    holds = (c.operator == "!=") != bool(c.value)
+    if source == "battle" and kind == "alive":
+        return f"{who} {'is alive' if holds else 'is down'}"
+    if source == "switch" and c.operator in ("==", "!="):
+        return f"{words(c.name)} {'is on' if holds else 'is off'}"
+    value = f"{c.value:g}" if isinstance(c.value, (int, float)) else c.value
+    return f"{words(c.name)} {comparison} {value}"
+
+
+def _heading(title, help_text):
+    label = QLabel(f"{translate(title)}  ⓘ")
+    label.setObjectName("CardTitle")
+    label.setToolTip(help_text)
+    return label
 
 
 def _coerce(text):
@@ -69,11 +94,11 @@ class EventFlowWidget(QWidget):
         self.common_program = WordCombo()
         self.common_trigger = WordCombo()
         self.common_trigger.addItems(list(COMMON_TRIGGERS))
-        self.common_switch = QLineEdit()
-        self.common_switch.setPlaceholderText("switch name (empty = always)")
-        common_box = QGroupBox(
-            "Common events — reusable programs; autorun / parallel ones run while the switch is on"
-        )
+        self.common_switch = ValueCombo()
+        self.common_switch.setEditable(True)
+        self.common_switch.setProperty("i18n_choices", True)
+        self.common_switch.offer_new("New Switch", "new_switch")
+        common_box = QGroupBox()
         form = QFormLayout()
         form.addRow("Program", self.common_program)
         form.addRow("Trigger", self.common_trigger)
@@ -88,6 +113,13 @@ class EventFlowWidget(QWidget):
             b.clicked.connect(slot)
             buttons.addWidget(b)
         cv = QVBoxLayout(common_box)
+        cv.addWidget(
+            _heading(
+                "Common Events",
+                "Programs any event can call. Autorun and parallel ones run by themselves while "
+                "their switch is on.",
+            )
+        )
         cv.addWidget(self.common, 1)
         cv.addLayout(form)
         cv.addLayout(buttons)
@@ -105,32 +137,36 @@ class EventFlowWidget(QWidget):
         self.battle_once = QCheckBox("Once per battle")
         self.conditions = QListWidget()
         self.conditions.setMaximumHeight(80)
-        self.cond_source = QComboBox()
+        self.cond_source = WordCombo()
         self.cond_source.addItems(["battle", "switch", "variable"])
-        self.cond_name = QLineEdit()
-        self.cond_name.setPlaceholderText(
-            "round · hp_ratio:astral_tyrant · alive:mender_wisp · switch name"
-        )
-        self.cond_op = QComboBox()
-        self.cond_op.addItems(list(COMPARATORS))
-        self.cond_value = QLineEdit("0.5")
-        cond_row = QFormLayout()
+        self.cond_name = ValueCombo()
+        self.cond_name.setProperty("i18n_choices", True)
+        self.cond_op = ValueCombo()
+        self.cond_op.set_choices(AI_COMPARISONS.items())
+        self.cond_number = QDoubleSpinBox()
+        self.cond_number.setRange(-1_000_000.0, 1_000_000.0)
+        self.cond_flag = ValueCombo()
+        self.cond_row = QFormLayout()
         for label, field in (
             ("Source", self.cond_source),
             ("Name", self.cond_name),
             ("Comparison", self.cond_op),
-            ("Value", self.cond_value),
+            ("Value", self.cond_number),
+            ("State", self.cond_flag),
         ):
-            cond_row.addRow(label, field)
+            self.cond_row.addRow(label, field)
+        cond_row = self.cond_row
+        self.cond_source.currentIndexChanged.connect(lambda _i: self._source_changed())
+        self.cond_name.currentIndexChanged.connect(lambda _i: self._name_changed())
         add_cond, remove_cond = QPushButton("+ Condition"), QPushButton("− Condition")
         add_cond.clicked.connect(self.add_condition)
-        remove_cond.clicked.connect(lambda: self.conditions.takeItem(self.conditions.currentRow()))
+        remove_cond.clicked.connect(self.remove_condition)
         cond_buttons = QHBoxLayout()  # on their own line: the fields above keep their width
         for button in (add_cond, remove_cond):
             button.setMinimumWidth(button.fontMetrics().horizontalAdvance(button.text()) + 34)
             cond_buttons.addWidget(button)
         cond_buttons.addStretch(1)
-        battle_box = QGroupBox("Battle events — run a program when the battle reaches a moment")
+        battle_box = QGroupBox()
         bform = QFormLayout()
         bform.addRow("When", self.battle_hook)
         bform.addRow("Program", self.battle_program)
@@ -148,19 +184,22 @@ class EventFlowWidget(QWidget):
             b.clicked.connect(slot)
             bbuttons.addWidget(b)
         bv = QVBoxLayout(battle_box)
+        bv.addWidget(_heading("Battle Events", "Run a program when a battle reaches a moment."))
         bv.addWidget(self.battle, 1)
         bv.addLayout(bform)
         bv.addLayout(bbuttons)
 
-        new_program = QPushButton("New Program…")
+        self.program_pick = WordCombo()  # the program New made, or any other to delete
+        new_program = QPushButton("New Program")
         new_program.clicked.connect(self._new_program_clicked)
+        self.delete_program_button = QPushButton("Delete Program")
+        self.delete_program_button.clicked.connect(self.delete_program)
         top = QHBoxLayout()
-        hint = QLabel("Edit programs in Entity Events or Code.")
-        hint.setObjectName("MutedLabel")
-        hint.setWordWrap(True)
-        top.addWidget(hint, 1)
+        top.addWidget(_heading("Programs", "Their steps are edited in Entity Events or Code."))
         top.addStretch(1)
+        top.addWidget(self.program_pick)
         top.addWidget(new_program)
+        top.addWidget(self.delete_program_button)
         from .responsive_form import ResponsiveColumns
 
         layout = QVBoxLayout(self)
@@ -204,17 +243,28 @@ class EventFlowWidget(QWidget):
         if self.api.document.project is None:
             return
         programs = list(self.api.project.event_programs.ids())
-        for combo in (self.common_program, self.battle_program):
+        self.delete_program_button.setEnabled(bool(programs))
+        for combo in (self.common_program, self.battle_program, self.program_pick):
             current = combo.currentText()
             combo.clear()
             combo.addItems(programs)
             if current in programs:
                 combo.setCurrentText(current)
+        self.common_switch.set_choices(
+            [(name, words(name)) for name in self.api.names_used("switch")], none="Always"
+        )
+        self._fill_names()
+        if not self.cond_flag.count() and not self._condition_values:
+            self._name_changed()
         self.common.setRowCount(0)
         for c in self.api.common_events():
             row = self.common.rowCount()
             self.common.insertRow(row)
-            cells = (words(c.program_id), words(c.trigger), c.switch or "—")
+            cells = (
+                words(c.program_id),
+                words(c.trigger),
+                words(c.switch) if c.switch else translate("Always"),
+            )
             for col, text in enumerate(cells):
                 self.common.setItem(row, col, QTableWidgetItem(text))
         self.battle.setRowCount(0)
@@ -222,9 +272,8 @@ class EventFlowWidget(QWidget):
         for index, b in self.api.battle_events():
             row = self.battle.rowCount()
             self.battle.insertRow(row)
-            from .i18n import translate  # the editor's words in its language; ids stay
-
-            when = " and ".join(describe_condition(c) for c in b.conditions) or translate("always")
+            when = " and ".join(self._condition_words(c) for c in b.conditions)
+            when = when or translate("always")
             values = (
                 translate(trigger_label(b.hook_name)),
                 words(b.event_program_id),
@@ -245,13 +294,13 @@ class EventFlowWidget(QWidget):
         c = self.api.common_events()[row]
         self.common_program.setCurrentText(c.program_id)
         self.common_trigger.setCurrentText(c.trigger)
-        self.common_switch.setText(c.switch)
+        self.common_switch.setCurrentText(c.switch)
 
     def add_common(self):
         pid, trigger, switch = (
             self.common_program.currentText(),
             self.common_trigger.currentText(),
-            self.common_switch.text(),
+            self.common_switch.currentText(),
         )
         return self._try(
             lambda: self.api.add_common_event(pid, trigger, switch.strip()),
@@ -260,7 +309,7 @@ class EventFlowWidget(QWidget):
 
     def apply_common(self):
         row = self.common.currentRow()
-        trigger, switch = self.common_trigger.currentText(), self.common_switch.text().strip()
+        trigger, switch = self.common_trigger.currentText(), self.common_switch.currentText()
         return row >= 0 and self._try(
             lambda: self.api.set_common_event(row, trigger=trigger, switch=switch), "Saved"
         )
@@ -285,31 +334,92 @@ class EventFlowWidget(QWidget):
         self._condition_values = list(binding.conditions)
         self._show_conditions()
 
+    def _condition_words(self, condition):
+        return translate(describe_condition(condition, vocabulary_for(self.api.document).names()))
+
     def _show_conditions(self):
         self.conditions.clear()
-        self.conditions.addItems([describe_condition(c) for c in self._condition_values])
+        self.conditions.addItems([self._condition_words(c) for c in self._condition_values])
+
+    def _battle_values(self):
+        """What a battle condition can read, in words (session/battle_events.py)."""
+        database = self.api.project.rpg_database
+        pairs = [("round", "Round")]
+        for records in (database.enemies, database.actors):
+            for key, record in records.items():
+                name = getattr(record, "display_name", "") or words(key)
+                pairs.append((f"hp_ratio:{key}", f"{name} HP %"))
+                pairs.append((f"alive:{key}", f"{name} {translate('alive')}"))
+        return pairs
+
+    def _source_changed(self):
+        """Another source: its names, the first of them picked."""
+        self.cond_name.blockSignals(True)
+        self.cond_name.clear()
+        self.cond_name.setEditable(self.cond_source.currentText() != "battle")
+        self.cond_name.blockSignals(False)
+        self._fill_names()
+        self._name_changed()
+
+    def _fill_names(self):
+        """The names on offer come from the source: only a switch or a variable can be new."""
+        if self.api.document.project is None:
+            return
+        source = self.cond_source.currentText()
+        pairs = self._battle_values() if source == "battle" else ()
+        if source != "battle":
+            pairs = [(name, words(name)) for name in self.api.names_used(source)]
+            self.cond_name.offer_new(f"New {source.title()}", f"new_{source}")
+        else:
+            self.cond_name._new = None
+        self.cond_name.set_choices(pairs)
+
+    def _name_changed(self):
+        """The value in the kind that fits: a percent, a whole round, on or off, alive or down."""
+        source = self.cond_source.currentText()
+        name = self.cond_name.currentText()
+        percent = name.startswith("hp_ratio:")
+        alive = name.startswith("alive:")
+        flag = alive or source == "switch"
+        self.cond_row.setRowVisible(self.cond_op, not flag)
+        self.cond_row.setRowVisible(self.cond_number, not flag)
+        self.cond_row.setRowVisible(self.cond_flag, flag)
+        if flag:
+            pairs = (("true", "Alive"), ("false", "Down"))
+            if not alive:
+                pairs = (("true", "Turned on"), ("false", "Turned off"))
+            self.cond_flag.clear()
+            self.cond_flag.set_choices(pairs)
+            return
+        self.cond_number.setDecimals(0 if source == "battle" else 2)
+        self.cond_number.setSuffix(" %" if percent else "")
+        self.cond_number.setValue(50 if percent else 1)
 
     def add_condition(self):
-        name = self.cond_name.text().strip()
+        source = self.cond_source.currentText()
+        name = self.cond_name.currentText().strip()
         if not name:
-            self.status.setText("Condition needs a name")
+            self.status.setText(translate("Choose what the condition reads first."))
             return False
-        self._condition_values.append(
-            EventCondition(
-                self.cond_source.currentText(),
-                name,
-                self.cond_op.currentText(),
-                _coerce(self.cond_value.text()),
-            )
-        )
+        if name.startswith("alive:") or source == "switch":
+            operator, value = "==", self.cond_flag.currentText() == "true"
+        else:
+            operator, value = self.cond_op.currentText(), self.cond_number.value()
+            if name.startswith("hp_ratio:"):
+                value = value / 100
+            elif float(value).is_integer():
+                value = int(value)
+        self._condition_values.append(EventCondition(source, name, operator, value))
         self._show_conditions()
         return True
 
+    def remove_condition(self):
+        row = self.conditions.currentRow()
+        if 0 <= row < len(self._condition_values):
+            del self._condition_values[row]
+            self._show_conditions()
+
     def _form_conditions(self):
-        kept = {self.conditions.item(i).text() for i in range(self.conditions.count())}
-        self._condition_values = [
-            c for c in self._condition_values if describe_condition(c) in kept
-        ]
         return tuple(self._condition_values)
 
     def add_battle(self):
@@ -352,10 +462,85 @@ class EventFlowWidget(QWidget):
 
         value = _free_id("", self.api.project.event_programs.ids(), "new_program")
         self._try(lambda: self.api.new_program(value), f"Created {words(value)}")
+        self.program_pick.setCurrentText(value)  # ready to use, or to delete again
+
+    def delete_program(self):
+        """Delete the picked program (refused, with the reason, while something runs it)."""
+        value = self.program_pick.currentText()
+        return bool(value) and self._try(
+            lambda: self.api.delete_program(value), f"Deleted {words(value)}"
+        )
+
+
+class _Number(QDoubleSpinBox):
+    """A step's number; ``text`` / ``setText`` as every field of a step has them."""
+
+    def __init__(self, value):
+        super().__init__()
+        self.setRange(-1_000_000.0, 1_000_000.0)
+        self.setDecimals(2)
+        self.setSingleStep(0.5)
+        self.setValue(float(value or 0))
+
+    def text(self):
+        return f"{self.value():g}"
+
+    def setText(self, value):  # noqa: N802 - Qt-style
+        self.setValue(float(value or 0))
+
+
+class _Tick(QCheckBox):
+    """A step's yes or no."""
+
+    def __init__(self, value):
+        super().__init__()
+        self.setText(value)
+
+    def text(self):
+        return "true" if self.isChecked() else "false"
+
+    def setText(self, value):  # noqa: N802 - Qt-style
+        self.setChecked(str(value).strip().lower() == "true")
+
+
+class _Pick(ValueCombo):
+    """A step's value picked from a list; ``new``: a name of the author's own is fine too."""
+
+    def __init__(self, pairs, value, *, new=False, none=None):
+        super().__init__()
+        self.setEditable(new)
+        self.setProperty("i18n_choices", True)
+        self.set_choices(pairs, none=none)
+        self.setCurrentText(value)
+
+    def text(self):
+        return self.currentText()
+
+    def setText(self, value):  # noqa: N802 - Qt-style
+        self.setCurrentText(value)
+
+
+FACINGS = ("down", "up", "left", "right")
 
 
 class SequenceEditorDialog(QDialog):
     """Edit a SEQUENCE: parallel tracks, each an ordered list of track instructions."""
+
+    OPCODES = {
+        "MOVE": "Move",
+        "FACE": "Face a direction",
+        "ANIMATE": "Play an animation",
+        "DIALOGUE": "Dialogue",
+        "WORLD": "World command",
+        "WAIT": "Wait",
+    }
+    LABELS = {
+        "x": "X",
+        "y": "Y",
+        "portrait_asset_id": "Portrait",
+        "portrait_side": "Portrait side",
+    }
+    NUMBERS = ("x", "y", "duration", "wait", "seconds")
 
     FORMS = {
         "MOVE": (
@@ -373,12 +558,13 @@ class SequenceEditorDialog(QDialog):
             ("portrait_asset_id", ""),
             ("portrait_side", "left"),
         ),
-        "WORLD": (("command", "CAMERA_FOCUS"), ("args", "entity=player, zoom=1.5"), ("wait", "0")),
+        "WORLD": (("wait", "0"),),
         "WAIT": (("seconds", "0.5"),),
     }
 
-    def __init__(self, args=None, parent=None):
+    def __init__(self, args=None, parent=None, *, document=None):
         super().__init__(parent)
+        self.document = document
         self.setWindowTitle("Sequence — parallel tracks")
         args = dict(args or {})
         self.tracks = [
@@ -391,9 +577,12 @@ class SequenceEditorDialog(QDialog):
         add_track.clicked.connect(lambda: self.add_track(f"track{len(self.tracks) + 1}"))
         remove_track.clicked.connect(self.remove_track)
         self.steps = QListWidget()
-        self.opcode = QComboBox()
-        self.opcode.addItems(list(self.FORMS))
-        self.opcode.currentTextChanged.connect(self._build_form)
+        self.steps.currentRowChanged.connect(self._step_selected)
+        self.opcode = ValueCombo()
+        self.opcode.set_choices(self.OPCODES.items())
+        self.opcode.currentIndexChanged.connect(
+            lambda _i: self._build_form(self.opcode.currentText())
+        )
         self.form = QFormLayout()
         self.fields = {}
         add_step, remove_step, up, down = (
@@ -403,6 +592,9 @@ class SequenceEditorDialog(QDialog):
             QPushButton("↓"),
         )
         add_step.clicked.connect(self._add_step_clicked)
+        self.update_step_button = QPushButton("Update Step")
+        self.update_step_button.setEnabled(False)
+        self.update_step_button.clicked.connect(self._update_step_clicked)
         remove_step.clicked.connect(self.remove_step)
         up.clicked.connect(lambda: self.move_step(-1))
         down.clicked.connect(lambda: self.move_step(1))
@@ -410,8 +602,8 @@ class SequenceEditorDialog(QDialog):
         self.cutscene.setChecked(bool(args.get("cutscene", True)))
         self.skippable = QCheckBox("Player can skip (Esc) — everything lands on its end state")
         self.skippable.setChecked(bool(args.get("skippable", True)))
-        self.wait = QComboBox()
-        self.wait.addItems(["all", "none"])
+        self.wait = ValueCombo()
+        self.wait.set_choices((("all", "Every track"), ("none", "Nothing")))
         self.wait.setCurrentText(args.get("wait", "all"))
         self.error = QLabel("")
         self.error.setStyleSheet("color: #d9534f;")
@@ -437,7 +629,10 @@ class SequenceEditorDialog(QDialog):
         right.addLayout(order)
         right.addWidget(self.opcode)
         right.addLayout(self.form)
-        right.addWidget(add_step)
+        step_buttons = QHBoxLayout()
+        step_buttons.addWidget(add_step)
+        step_buttons.addWidget(self.update_step_button)
+        right.addLayout(step_buttons)
         body = QHBoxLayout()
         body.addLayout(left, 1)
         body.addLayout(right, 2)
@@ -463,7 +658,9 @@ class SequenceEditorDialog(QDialog):
     def _show_tracks(self, select=0):
         self.track_list.blockSignals(True)
         self.track_list.clear()
-        self.track_list.addItems([t["name"] for t in self.tracks])
+        self.track_list.addItems(
+            [re.sub(r"(\D)(\d+)$", r"\1 \2", words(t["name"])) for t in self.tracks]
+        )
         self.track_list.blockSignals(False)
         self.track_list.setCurrentRow(min(select, len(self.tracks) - 1))
         self._show_track()
@@ -475,8 +672,14 @@ class SequenceEditorDialog(QDialog):
             return
         from asteria.events import EventInstruction
 
+        from .world_command_form import record_names
+
+        names = record_names(self.document) if self.document is not None else None
         self.steps.addItems(
-            [describe_instruction(EventInstruction.from_data(x)) for x in track["instructions"]]
+            [
+                describe_instruction(EventInstruction.from_data(x), names)
+                for x in track["instructions"]
+            ]
         )
 
     @property
@@ -489,9 +692,64 @@ class SequenceEditorDialog(QDialog):
             self.form.removeRow(0)
         self.fields = {}
         for name, default in self.FORMS[opcode]:
-            edit = QLineEdit(default)
+            edit = self._field(name, default)
             self.fields[name] = edit
-            self.form.addRow(name, edit)
+            self.form.addRow(self.LABELS.get(name) or words(name), edit)
+        self.world = None
+        if opcode == "WORLD":
+            from .world_command_form import WorldCommandForm
+
+            self.world = WorldCommandForm(
+                self.document, command="CAMERA_FOCUS", args={"entity": "player", "zoom": 1.5}
+            )
+            self.form.insertRow(0, self.world)
+
+    def _field(self, name, default):
+        """Picked by clicking; only what the author writes (a line) is typed."""
+        if name in self.NUMBERS:
+            return _Number(default)
+        if name == "relative":
+            return _Tick(default)
+        if name == "facing":
+            return _Pick([(f, words(f)) for f in FACINGS], default)
+        if name == "portrait_side":
+            return _Pick((("left", "Left"), ("right", "Right")), default)
+        if name == "entity":
+            return _Pick(self._entities(), default, new=True)
+        if name == "clip":
+            return _Pick(self._clips(), default, new=True)
+        if name == "speaker":
+            pairs = self._speakers()
+            return _Pick(pairs, default, new=True, none="No speaker")
+        if name == "portrait_asset_id" and self.document is not None:
+            from .dialogue_command_dialog import _PortraitPicker
+            from .image_tools import PortraitLibrary
+
+            return _PortraitPicker(PortraitLibrary(self.document))
+        return QLineEdit(default)
+
+    def _entities(self):
+        """The player, then the entities of the project's scenes."""
+        pairs, seen = [("player", "Player")], {"player"}
+        project = getattr(self.document, "project", None)
+        for scene in project.scenes() if project is not None else ():
+            for entity in scene.entities():
+                if entity.name and entity.name not in seen:
+                    seen.add(entity.name)
+                    pairs.append((entity.name, entity.name))
+        return pairs
+
+    def _speakers(self):
+        """The actors by name; a line can be said by anyone, so another name can be typed."""
+        if self.document is None:
+            return []
+        actors = vocabulary_for(self.document).choices("actors")
+        return [(c.label, c.label) for c in actors]
+
+    def _clips(self):
+        if self.document is None:
+            return [("idle", "Idle")]
+        return [(c.value, c.label) for c in vocabulary_for(self.document).choices("clips")]
 
     def add_track(self, name):
         self.tracks.append({"name": str(name), "instructions": []})
@@ -507,10 +765,7 @@ class SequenceEditorDialog(QDialog):
         opcode = self.opcode.currentText()
         values = {k: w.text() for k, w in self.fields.items()}
         if opcode == "WORLD":
-            args = {
-                "command": values["command"].strip().upper(),
-                "args": parse_world_args(values["args"]),
-            }
+            args = {"command": self.world.command_name(), "args": self.world.result_args()}
             if float(values["wait"] or 0) > 0:
                 args["wait"] = float(values["wait"])
             return {"opcode": "WORLD", "args": args}
@@ -534,6 +789,49 @@ class SequenceEditorDialog(QDialog):
     def _add_step_clicked(self):
         try:
             self.add_step(self.step_from_form())
+        except ValueError as exc:
+            self.error.setText(str(exc))
+
+    def _step_selected(self, row):
+        """A step clicked: the form shows it, to change and update (a step of a kind the form
+        doesn't have stays as it is)."""
+        items = self.current_track["instructions"] if self.current_track else []
+        known = 0 <= row < len(items) and items[row].get("opcode") in self.FORMS
+        self.update_step_button.setEnabled(known and self._load_step(items[row]))
+
+    def _load_step(self, step):
+        opcode, args = step["opcode"], step.get("args") or {}
+        blocked = self.opcode.blockSignals(True)
+        self.opcode.setCurrentText(opcode)
+        self.opcode.blockSignals(blocked)
+        self._build_form(opcode)
+        try:
+            if opcode == "WORLD":
+                self.world.set_command(args.get("command", ""), args.get("args") or {})
+                self.fields["wait"].setText(args.get("wait", 0))
+                return True
+            for name, default in self.FORMS[opcode]:
+                self.fields[name].setText(args.get(name, default))
+        except (TypeError, ValueError):  # a value the form can't hold: not changed from here
+            return False
+        return True
+
+    def update_step(self, row):
+        """The selected step becomes what the form says; what the form doesn't show stays."""
+        items, new = self.current_track["instructions"], self.step_from_form()
+        old = items[row]
+        if old.get("opcode") == new["opcode"]:
+            shown = {name for name, _default in self.FORMS[new["opcode"]]}
+            shown |= {"command", "args"} if new["opcode"] == "WORLD" else set()
+            kept = {k: v for k, v in (old.get("args") or {}).items() if k not in shown}
+            new = dict(old, args={**kept, **new["args"]})
+        items[row] = new
+        self._show_track()
+        self.steps.setCurrentRow(row)
+
+    def _update_step_clicked(self):
+        try:
+            self.update_step(self.steps.currentRow())
         except ValueError as exc:
             self.error.setText(str(exc))
 

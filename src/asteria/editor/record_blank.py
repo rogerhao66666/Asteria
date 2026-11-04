@@ -43,10 +43,21 @@ def _blanked(data, tier, new_id, name, id_key):
         elif key in _KEEP or isinstance(value, bool):
             out[key] = value
         elif isinstance(value, list):
-            out[key] = [] if tier < 3 else value[:1]
+            if tier < 3:
+                out[key] = []
+            elif value and isinstance(value[0], dict):  # one entry kept, itself emptied
+                out[key] = [_emptied_entry(value[0])]
+            else:
+                out[key] = value[:1]
         elif isinstance(value, dict):
             numbers = value and all(isinstance(v, (int, float)) for v in value.values())
-            out[key] = {} if (tier == 1 or numbers) else value
+            if tier == 1 or numbers:
+                out[key] = {}
+            elif tier == 2:  # a nested part (an enemy's reward) emptied the same way
+                part = _blanked(value, 2, new_id, name, None)
+                out[key] = {k: None if k.endswith("_id") else v for k, v in part.items()}
+            else:
+                out[key] = value
         elif isinstance(value, str):
             out[key] = "" if tier == 1 else value
         elif isinstance(value, (int, float)):
@@ -54,6 +65,31 @@ def _blanked(data, tier, new_id, name, id_key):
         else:
             out[key] = value
     return out
+
+
+def _emptied_entry(entry):
+    """A kept entry (a growth's first node) with what it gives or points at taken out, but its
+    shape kept: one part per rank stays one part per rank, each of them emptied in turn."""
+    out = {}
+    for key, value in entry.items():
+        if isinstance(value, list):
+            dicts = value and all(isinstance(v, dict) for v in value)
+            out[key] = [_emptied_entry(v) for v in value] if dicts else []
+        elif isinstance(value, dict):
+            numbers = value and all(isinstance(v, (int, float)) for v in value.values())
+            out[key] = {} if numbers else _emptied_entry(value)
+        else:
+            out[key] = value
+    return out
+
+
+def _kept_whole(template, id_key):
+    """Tier 4: the template's lists of entries keep their first entry as it is."""
+    return {
+        k: v[:1]
+        for k, v in template.items()
+        if k != id_key and isinstance(v, list) and v and isinstance(v[0], dict)
+    }
 
 
 def blank_record(adapter, template, new_id, name):
@@ -67,8 +103,12 @@ def blank_record(adapter, template, new_id, name):
             id_key = key
             break
     errors = []
-    for tier in (1, 2, 3):
-        data = _blanked(template, tier, new_id, name, id_key)
+    for tier in (1, 2, 3, 4):  # 4: tier 3 with a kept entry whole (its parts needed)
+        data = (
+            _blanked(template, tier, new_id, name, id_key)
+            if tier < 4
+            else {**_blanked(template, 3, new_id, name, id_key), **_kept_whole(template, id_key)}
+        )
         try:
             value = adapter.decode(data)
             validate = getattr(value, "validate", None)

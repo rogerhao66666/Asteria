@@ -46,7 +46,7 @@ class BehaviorTreeEditorWidget(QWidget):
         self.last_error = None
         self.tree_list = QListWidget()
         self.tree_list.currentTextChanged.connect(lambda _t: self._load())
-        new_button, delete_button = QPushButton("New…"), QPushButton("Delete")
+        new_button, delete_button = QPushButton("New"), QPushButton("Delete")
         new_button.clicked.connect(self._new_clicked)
         delete_button.clicked.connect(self.delete_tree)
         self.record_buttons = (new_button, delete_button)
@@ -178,8 +178,8 @@ class BehaviorTreeEditorWidget(QWidget):
 
     def _load(self, path=None):
         self.nodes.clear()
-        if self.tree_id is None:
-            return
+        if self.tree_id is None or self.tree_id not in self.api.ids():
+            return  # none picked, or the one picked was just deleted (the list refreshes next)
         tree = self.api.get(self.tree_id)
         items = {}
         for node_path, node in tree.root.walk():
@@ -266,14 +266,18 @@ class BehaviorTreeEditorWidget(QWidget):
         return self._try(lambda: self.api.move(self.tree_id, path, delta), "Moved", target)
 
     def create_tree(self, tree_id, root_kind="selector"):
-        result = self._try(lambda: self.api.create(tree_id, root_kind), f"Created {tree_id}")
+        result = self._try(
+            lambda: self.api.create(tree_id, root_kind), f"Created {_words(tree_id)}"
+        )
         if result:
             self.refresh(select=tree_id)
         return result
 
     def delete_tree(self):
         tree_id = self.tree_id
-        result = tree_id and self._try(lambda: self.api.delete(tree_id), f"Deleted {tree_id}")
+        result = tree_id and self._try(
+            lambda: self.api.delete(tree_id), f"Deleted {_words(tree_id)}"
+        )
         if result:
             self.refresh()
         return result

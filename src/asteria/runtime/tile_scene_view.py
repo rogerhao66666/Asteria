@@ -35,6 +35,7 @@ from .components2d import (
     ParallaxBackground2DComponent,
     SpriteRenderer2D,
 )
+from .entity_actions import action_clip
 from .grid_actors import GridMover2DComponent
 from .skeleton_component import SkeletonAnimation2DComponent, SkeletonSceneRuntime
 from .tilemap_field import AssetResources, tilemap_binding
@@ -92,11 +93,23 @@ class _Animated:
         self.time = 0.0
         self.last = None
         self.facing = "down"
+        self.action_time = None
+        self.action_clip = ""  # the clip of the last action, played out when the action ends
 
-    def update(self, dt, position, facing, attacking, stride=0.0, speed=1.0):
-        """``stride`` (world units of one whole walk clip, ``Animator2D.stride``): the walk
-        plays by the distance moved, so the feet keep pace with the ground; 0 plays it by its
-        frame times. ``speed`` scales the clip clock."""
+    def _plays_out(self, moved, dt):
+        """An action shorter than its picture (a shout, a quick cast) still shows all of it,
+        unless the figure walks off."""
+        clip = self.clips.clips.get(self.clip)
+        if moved or clip is None or self.clip != self.action_clip:
+            return False
+        return self.time + dt < sum(k.duration for k in clip.keyframes)
+
+    def update(self, dt, position, facing, attacking, stride=0.0, speed=1.0, action_time=None):
+        """``attacking``: the strip a running action asks for (``attack2``, or ``True`` for the
+        plain ``attack``). ``action_time``: how far that action is; when it goes back a new one
+        began, and the same strip starts over. ``stride`` (world units of one whole walk clip,
+        ``Animator2D.stride``): the walk plays by the distance moved, so the feet keep pace with
+        the ground; 0 plays it by its frame times. ``speed`` scales the clip clock."""
         distance = 0.0
         if self.last is not None:
             distance = (
@@ -107,9 +120,27 @@ class _Animated:
         if facing:
             self.facing = facing
         name = f"walk_{self.facing}" if moved else f"idle_{self.facing}"
-        if attacking and f"attack_{self.facing}" in self.clips.clips:
-            name = f"attack_{self.facing}"
-        if name != self.clip:
+        role = attacking if isinstance(attacking, str) else "attack" if attacking else ""
+        wanted = next(
+            (
+                clip
+                for clip in (f"{role}_{self.facing}", f"attack_{self.facing}")
+                if role and clip in self.clips.clips
+            ),
+            "",
+        )
+        began = (
+            bool(wanted)
+            and action_time is not None
+            and self.action_time is not None
+            and action_time < self.action_time
+        )
+        self.action_time = action_time if wanted else None
+        if wanted:
+            name = self.action_clip = wanted
+        elif self._plays_out(moved, dt):
+            name = self.clip
+        if name != self.clip or began:
             # a step taken from standing starts on the clip's first frame; the stride's part
             # of this move is not lost
             self.clip, self.time = name, 0.0
@@ -340,13 +371,15 @@ class TileSceneView:
             if entity is self.session.player and controller is None:
                 facing = self.session.facing
             t = entity.get(Transform)
+            run = running.get(entity.id)
             state.update(
                 dt,
                 (t.x, t.y),
                 facing,
-                entity.id in running,
+                action_clip(run),
                 float(getattr(animator, "stride", 0.0) or 0.0),
                 float(getattr(animator, "speed", 1.0) or 1.0),
+                action_time=None if run is None else run.time,
             )
         self.follow(dt)
 

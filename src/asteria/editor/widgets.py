@@ -433,7 +433,6 @@ class InspectorWidget(QWidget):
             help_text="Passable: the player walks through it. Blocks at its feet: a solid box "
             "at its foot (size it in Collider 2D below). Blocks its whole picture: nothing of "
             "it can be walked into (like an RPG Maker event set to Same as characters).",
-            key="passability",
         )
         if passability(entity) == "picture":
             again = QPushButton("Measure the Picture Again")
@@ -473,7 +472,7 @@ class InspectorWidget(QWidget):
         for f in fields:
             self._field_models[(id(component), f.name)] = f
             widget = self._field_widget(component, f, selected)
-            section.add_row(f.label, widget, help_text=f.tooltip or "", key=f.name)
+            section.add_row(f.label, widget, help_text=f.tooltip or "")
         return section
 
     def _field_widget(self, component, f, selected):

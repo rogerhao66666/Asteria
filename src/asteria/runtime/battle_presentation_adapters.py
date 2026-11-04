@@ -1047,6 +1047,13 @@ class CanonicalBattleAdapter:
         self.screen.present_result(outcome, perspective_side_ids=("heroes",))
         self.screen.coordinator.finish({"winning_sides": list(data["winning_sides"])})
 
+    def _flinches(self, source, target):
+        """A blow from the other side makes a fighter flinch; a guard or a friend's heal won't."""
+        members = self._battle.members  # the game has let go of it once the last blow is struck
+        if source not in members or target not in members:
+            return True
+        return members[source].side != members[target].side
+
     def _beat_cues(self, entry, beat):
         kind = CHANNEL_KINDS.get(beat.channel)
         if kind is None:
@@ -1057,6 +1064,8 @@ class CanonicalBattleAdapter:
             if beat.member_id in (None, "@source")
             else (targets if beat.member_id == "@target" else (beat.member_id,))
         )
+        if kind == ActionCueKind.ANIMATION and beat.cue == "hit" and beat.member_id == "@target":
+            members = tuple(m for m in members if self._flinches(entry.member_id, m))
         cues = []
         for member_id in members:
             payload = dict(beat.payload_dict())
@@ -1137,6 +1146,7 @@ class CanonicalBattleAdapter:
                         ),
                     )
                     for target, _ in entry.outcomes
+                    if self._flinches(entry.member_id, target)
                 )
                 # Effects configured per skill in the manifest (projects without motion sequences).
                 skill = (

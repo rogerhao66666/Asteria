@@ -78,11 +78,9 @@ ADD_COMMANDS = (
 )
 
 
-def command_line(instruction):
+def command_line(instruction, names=None):
     """``(text, colour)`` of a command as the list shows it: ◆ and its words."""
-    if instruction.opcode == "END":
-        return "◆", COMMAND_COLOURS["END"]
-    text = describe_instruction(instruction)
+    text = describe_instruction(instruction, names)
     return f"◆ {text}", COMMAND_COLOURS.get(instruction.opcode, "#e6e8ee")
 
 
@@ -104,7 +102,7 @@ def condition_words(binding):
     return translate(" and ".join(parts))
 
 
-def command_preview(instruction):
+def command_preview(instruction, names=None):
     """Rich text for the panel beside the list: a line of dialogue as its message window, any
     other command as its settings."""
     if instruction is None:
@@ -123,12 +121,18 @@ def command_preview(instruction):
             "<table width='100%' cellpadding='10' style='background:#1b2133;"
             f"border:1px solid #4a5578'><tr><td>{rows}</td></tr></table>"
         )
-    title = escape(describe_instruction(instruction).split("  ")[0])
+    title = escape(describe_instruction(instruction, names).split("  ")[0])
     values = dict(a)
     if instruction.opcode == "WORLD":
-        title = "World · " + escape(str(a.get("command", "")).replace("_", " ").title())
+        from .world_command_form import argument_label, command_words, value_words
+
+        said = translate(command_words(a.get("command", "")))
+        title = f"{translate('World')} · {escape(said)}"
         values = {k: v for k, v in a.items() if k != "command"}
         values.update(values.pop("args", None) or {})
+        values = {
+            translate(argument_label(k)): value_words(v, k, names) for k, v in values.items()
+        }
     rows = "".join(
         f"<tr><td style='color:#8b8e98;padding-right:12px'>{escape(str(k))}</td>"
         f"<td>{escape(str(v))}</td></tr>"
@@ -348,6 +352,8 @@ class EventEditorWidget(QWidget):
         finally:
             self._refreshing = False
 
+    names = None  # names(key, value): a record's name in a command (the shell sets it)
+
     def set_entity_context(self, entity, bindings, registry, candidates=()):
         self._refreshing = True
         try:
@@ -395,7 +401,7 @@ class EventEditorWidget(QWidget):
         program = registry.get(binding.program_id)
         if program is not None:
             for instruction in program.instructions:
-                text, colour = command_line(instruction)
+                text, colour = command_line(instruction, self.names)
                 item = QListWidgetItem(text)
                 item.setForeground(QColor(colour))
                 item.setData(Qt.UserRole, instruction)
@@ -405,7 +411,7 @@ class EventEditorWidget(QWidget):
     def _preview(self, *_args):
         item = self.commands.currentItem()
         instruction = item.data(Qt.UserRole) if item is not None else None
-        self.preview.setText(command_preview(instruction))
+        self.preview.setText(command_preview(instruction, self.names))
 
     def selected_binding_id(self):
         i = self.binding_combo.currentIndex()

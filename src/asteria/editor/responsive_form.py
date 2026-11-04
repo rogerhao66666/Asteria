@@ -15,6 +15,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
     QBoxLayout,
     QCheckBox,
+    QComboBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -64,6 +65,15 @@ def _caption_text(label, help_text):
     return f"{label}  ⓘ" if help_text else label
 
 
+def _field_height(switch):
+    """A switch beside fields is as tall as a box, so its tick and words sit level with the
+    middle of the drop-down or box next to it, not with its top."""
+    probe = QComboBox()  # never shown: only measured, styled by the app's own sheet
+    probe.ensurePolished()
+    switch.setMinimumHeight(max(switch.sizeHint().height(), probe.sizeHint().height()))
+    probe.deleteLater()
+
+
 def _field_cell(label, widget, help_text="", aside=None):
     """A label above its field (no crowded label column; every field gets the cell's whole
     width); ``aside`` stands at the right end of the label's line (a description's Players See
@@ -77,6 +87,7 @@ def _field_cell(label, widget, help_text="", aside=None):
         # level with the fields next to it
         widget.setText(label)
         label = " "
+        _field_height(widget)
     caption = QLabel(_caption_text(label, help_text))
     caption.setToolTip(help_text)
     caption.setObjectName("FieldLabel")
@@ -108,6 +119,7 @@ class _Pair:
         if isinstance(widget, QCheckBox) and not widget.text():
             widget.setText(label)  # a switch carries its own label beside the box
             label = ""
+            _field_height(widget)
         self.caption = QLabel(_caption_text(label, help_text) if label else "")
         self.caption.setToolTip(help_text)
         self.caption.setObjectName("FieldLabel")

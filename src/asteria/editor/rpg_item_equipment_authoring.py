@@ -55,7 +55,7 @@ class ItemEquipmentInformationArchitecture:
             "items",
             "Items",
             "list_detail",
-            ("Identity", "Stacking", "Tags", "Use Effects"),
+            ("Identity", "Stacking", "Properties", "Use Effects"),
         ),
         ItemEquipmentSection(
             "equipment",
@@ -63,7 +63,7 @@ class ItemEquipmentInformationArchitecture:
             "list_detail",
             (
                 "Identity",
-                "Slot & Tags",
+                "Slot & Properties",
                 "Requirements",
                 "Modifiers",
                 "Abilities & Triggers",
@@ -75,7 +75,13 @@ class ItemEquipmentInformationArchitecture:
             "attachments",
             "Attachments",
             "list_detail",
-            ("Identity", "Compatibility Tags", "Modifiers", "Abilities & Triggers", "Growth"),
+            (
+                "Identity",
+                "Compatibility Properties",
+                "Modifiers",
+                "Abilities & Triggers",
+                "Growth",
+            ),
         ),
         ItemEquipmentSection(
             "growth",
@@ -94,7 +100,7 @@ class ItemEquipmentInformationArchitecture:
             "recipes",
             "Crafting / Alchemy",
             "recipe_detail",
-            ("Recipe Identity", "Selection Steps", "Outputs", "Tags"),
+            ("Recipe Identity", "Selection Steps", "Outputs", "Properties"),
         ),
     )
     primary_navigation: str = "category_sidebar"

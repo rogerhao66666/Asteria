@@ -27,9 +27,13 @@ class CombatAuthoringError(ValueError):
 class FieldSpec:
     name: str
     label: str
-    kind: str  # float, int, bool, text, choice, tags, color, formula, attack, states, modifiers
+    # float, int, bool, text, choice, pick, chips, picture, color, formula, states, modifiers, mask
+    kind: str
     choices: tuple = ()
-    hint: str = ""
+    hint: str = ""  # what it means, on the ⓘ after its label
+    source: str = ""  # pick, chips: what is on offer (CombatAuthoringController.pairs)
+    none: str = ""  # pick: the words of the empty value ("" = it has no empty value)
+    new: bool = False  # pick, chips: the author can also name a new one
     minimum: float = 0.0
     maximum: float = 1_000_000.0
     step: float = 1.0
@@ -71,27 +75,33 @@ KINDS = (
                     _f(
                         "damage_formula_id",
                         "…or shared formula",
-                        "text",
-                        hint="Uses a formula from Formulas instead",
+                        "pick",
+                        source="formulas",
+                        none="None: the one above",
                     ),
                     _f(
                         "damage_resource",
                         "Lowers resource",
-                        "text",
-                        hint="Empty: the target's life resource",
+                        "pick",
+                        source="resources",
+                        none="The target's life",
                     ),
                     _f(
                         "tags",
-                        "Tags",
-                        "tags",
-                        hint="e.g. Element.Fire — formulas can multiply on them",
+                        "Properties",
+                        "chips",
+                        source="tags",
+                        new=True,
+                        hint="Damage formulas can multiply on these, e.g. Element.Fire.",
                     ),
                     _f("critical_chance", "Critical chance", maximum=1.0, step=0.05),
                     _f(
                         "critical_chance_stat",
                         "+ chance from stat",
-                        "text",
-                        hint="stat / 100 is added",
+                        "pick",
+                        source="stats",
+                        none="None",
+                        hint="This stat / 100 is added to the chance.",
                     ),
                     _f("critical_multiplier", "Critical ×", step=0.1),
                 ),
@@ -137,7 +147,14 @@ KINDS = (
                 "Gameplay states put on the target, and an event for game rules.",
                 (
                     _f("apply_states", "Applies states", "states"),
-                    _f("on_hit_event", "Event on hit", "text"),
+                    _f(
+                        "on_hit_event",
+                        "Event on hit",
+                        "pick",
+                        source="events",
+                        none="None",
+                        new=True,
+                    ),
                 ),
             ),
         ),
@@ -167,7 +184,7 @@ KINDS = (
                 "Hit",
                 "The attack it applies, its box, and how many targets it passes through.",
                 (
-                    _f("attack_id", "Attack on hit", "attack"),
+                    _f("attack_id", "Attack on hit", "pick", source="attack", none="None"),
                     _f("width", "Box width"),
                     _f("height", "Box height"),
                     _f("pierce", "Pierce (−1 = every target)", "int", minimum=-1),
@@ -178,7 +195,7 @@ KINDS = (
                 "What a wall does to it. One-way platforms never stop shots.",
                 (
                     _f("wall", "On a wall", "choice", choices=WALL_BEHAVIOURS),
-                    _f("wall_mask", "Wall layers (mask)", "mask"),
+                    _f("wall_mask", "Wall layers", "mask"),
                     _f("bounce_limit", "Bounces (0 = until it expires)", "int"),
                 ),
             ),
@@ -186,10 +203,17 @@ KINDS = (
                 "Look & Events",
                 "",
                 (
-                    _f("sprite", "Sprite", "text"),
-                    _f("clip", "Clip", "text"),
+                    _f("sprite", "Sprite", "picture"),
+                    _f("clip", "Clip", "pick", source="clips", none="None", new=True),
                     _f("align_to_velocity", "Turn with flight", "bool"),
-                    _f("on_end_event", "Event when it ends", "text"),
+                    _f(
+                        "on_end_event",
+                        "Event when it ends",
+                        "pick",
+                        source="events",
+                        none="None",
+                        new=True,
+                    ),
                 ),
             ),
         ),
@@ -233,8 +257,16 @@ KINDS = (
                 "Shown before (prefix) or after (suffix) the item's name.",
                 (
                     _f("display_name", "Name", "text"),
-                    _f("position", "Position", "choice", choices=("prefix", "suffix")),
-                    _f("group", "Exclusive group", "text", hint="One affix per group on an item"),
+                    _f("position", "Position", "pick", source="positions", new=True),
+                    _f(
+                        "group",
+                        "Exclusive group",
+                        "pick",
+                        source="groups",
+                        none="None",
+                        new=True,
+                        hint="An item rolls one affix per group.",
+                    ),
                     _f("weight", "Roll weight", step=1.0),
                     _f("min_level", "Item level from", "int"),
                     _f("max_level", "Item level up to (0 = any)", "int"),
@@ -244,9 +276,9 @@ KINDS = (
                 "Where it rolls",
                 "Empty lists mean any equipment, any slot, any rarity.",
                 (
-                    _f("allowed_tags", "Equipment tags", "tags"),
-                    _f("slots", "Slots", "tags"),
-                    _f("rarities", "Rarities", "tags"),
+                    _f("allowed_tags", "Equipment properties", "chips", source="tags", new=True),
+                    _f("slots", "Slots", "chips", source="slots"),
+                    _f("rarities", "Rarities", "chips", source="rarities"),
                 ),
             ),
             (
@@ -307,6 +339,44 @@ class CombatAuthoringController:
             return tuple(sorted(project.rpg_database.loot_rarities()))
         return ()
 
+    def pairs(self, source):
+        """``(value, words)`` of what a field can pick, for its drop-down or list."""
+        project = self.document.project
+        if project is None:
+            return ()
+        from .record_vocabulary import tag_label, vocabulary_for, words
+
+        library = project.gameplay_library
+        vocabulary = vocabulary_for(self.document)
+        if source == "attack":
+            return tuple(
+                (key, library.attacks[key].display_name or words(key))
+                for key in sorted(library.attacks)
+            )
+        if source == "formulas":
+            return tuple((key, words(key)) for key in sorted(library.formulas))
+        if source == "states":
+            names = vocabulary.names()
+            return tuple((key, names.get(key) or words(key)) for key in library.states.ids())
+        if source == "tags":
+            names = vocabulary.names()
+            return tuple((tag, tag_label(tag, names)) for tag in vocabulary.tags())
+        if source == "events":
+            used = {
+                value
+                for key in ("on_hit_event", "on_end_event", "gameplay_event")
+                for value in vocabulary.values_for(key)
+            }
+            return tuple((value, words(value)) for value in sorted(used))
+        if source == "groups":
+            used = {a.group for a in self._table("affixes").values() if a.group}
+            return tuple((value, words(value)) for value in sorted(used))
+        if source == "positions":
+            used = {a.position for a in self._table("affixes").values()}
+            others = sorted(used - {"prefix", "suffix"})
+            return tuple((value, words(value)) for value in ("prefix", "suffix", *others))
+        return tuple((c.value, c.label) for c in vocabulary.choices(source))
+
     # -- editing ---------------------------------------------------------------------------------
     def _execute(self, table, key, new, old, label):
         self.document.execute(_DefinitionCommand(table, key, new, old, label))
@@ -336,7 +406,7 @@ class CombatAuthoringController:
         )
         return record
 
-    def create(self, kind_id, record_id, *, source=None):
+    def create(self, kind_id, record_id, *, source=None, name=None):
         spec = self.kind(kind_id)
         record_id = str(record_id).strip()
         table = self._table(kind_id)
@@ -352,6 +422,8 @@ class CombatAuthoringController:
             record = self.build(kind_id, data)
         else:
             record = spec.record(record_id)
+            if name and getattr(record, "display_name", None) is not None:
+                record = self.build(kind_id, {**record.to_data(), "display_name": str(name)})
         self._execute(table, record_id, record, None, f"New {spec.noun} {record_id}")
         return record
 

@@ -95,7 +95,7 @@ LABEL_RULES = (
     (r"doodad", "doodad"),
     (r"capture", "net"),
     (r"stat formula|derived stat|^stats$", "gauge"),
-    (r"^tags$", "pin"),
+    (r"^properties$", "pin"),
     (r"world interactions?", "interact"),
     # workspace sub-tabs
     (r"^scene\b", "scene"),
@@ -357,7 +357,11 @@ HELP_MARK = "ⓘ"
 def shows_tooltip(widget):
     """Only help shows on hover (D90): a widget with an ⓘ in its text (a field's label, a
     section's mark). Ids, data keys and button explanations stay out of the way."""
-    text = widget.text() if isinstance(widget, (QLabel, QAbstractButton)) else ""
+    # the shown words, not an override's value (an id line's text() is its bare id)
+    if isinstance(widget, QLabel):
+        text = QLabel.text(widget)
+    else:
+        text = QAbstractButton.text(widget) if isinstance(widget, QAbstractButton) else ""
     return HELP_MARK in str(text or "")
 
 
@@ -416,8 +420,8 @@ def show_help_tip(widget):
     box = help_box()
     box.setText(text)
     box.setWordWrap(False)
-    box.setMinimumWidth(0)
-    box.setMaximumWidth(16777215)
+    box.setMinimumSize(0, 0)  # the last help's fixed size must not carry over to this one
+    box.setMaximumSize(16777215, 16777215)
     box.adjustSize()
     left_edge, right_edge = _mark_span(widget)
     mark = widget.mapToGlobal(QPoint(right_edge, 0))

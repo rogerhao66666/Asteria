@@ -246,7 +246,7 @@ def build_skills(looks):
         "Rend",
         5,
         2.0,
-        [(0.08, dict(width=28, height=24, offset_x=14))],
+        [(0.1, dict(width=28, height=24, offset_x=14))],
         AttackDefinition(
             "w_rend",
             damage=scaled("power", 1.3),
@@ -706,7 +706,7 @@ def build_skills(looks):
         armor=0.9,
         tags=magic,
     )
-    bolt = AttackDefinition(
+    frost_bolt = AttackDefinition(
         "m_frost_bolt",
         damage=scaled("magic", 1.0, defense=0.2, extra={"cold_dmg": 1.0}),
         tags=["Element.Ice"],
@@ -719,7 +719,7 @@ def build_skills(looks):
         3,
         0.5,
         [(0.1, {})],
-        bolt,
+        frost_bolt,
         ProjectileDefinition(
             "frost_bolt", attack_id="m_frost_bolt", speed=260, lifetime=1.2, sprite=ice
         ),
@@ -1153,13 +1153,13 @@ def add_trees(db, skill_names):
 # ability id: [(effect, at, offset_x, offset_y, scale, flags)]; ``rotate`` turns the picture to
 # the aim, ``follow`` keeps it on the user, offsets run along the aim
 SKILL_FX = {
-    "w_slash1": [("wind", 0.06, 16, 0, 0.6, "rotate")],
-    "w_slash2": [("wind", 0.06, 16, 0, 0.6, "rotate")],
+    "w_slash1": [("wind", 0.1, 16, 0, 0.6, "rotate")],
+    "w_slash2": [("wind", 0.1, 16, 0, 0.6, "rotate")],
     "w_slash3": [("blood_arc", 0.1, 20, 0, 0.9, "rotate")],
     "w_whirl": [("wind", 0.05, 0, 0, 1.8, ""), ("wind", 0.25, 0, 0, 1.8, "")],
     "w_leap": [("spike", 0.25, 12, 0, 1.1, "")],
     "w_shout": [("gold_burst", 0.1, 0, 0, 1.2, "follow")],
-    "w_rend": [("blood_arc", 0.08, 16, 0, 0.7, "rotate")],
+    "w_rend": [("blood_arc", 0.1, 16, 0, 0.7, "rotate")],
     "w_frenzy": [("blood_arc", 0.1, 0, 0, 1.2, "follow")],
     "w_execute": [("blood_arc", 0.18, 22, 0, 1.0, "rotate")],
     "w_rampage": [("blood_arc", at, 18, 0, 0.8, "rotate") for at in (0.08, 0.28, 0.48)],
@@ -1292,6 +1292,43 @@ ANIMATION = {
 }
 
 
+# (class letter, strip): when, from the start of the clip, its blow shows (see lucifer_art)
+STRIKE_WINDOW = {
+    ("w", "attack"): (0.1, 0.15),
+    ("w", "attack2"): (0.133, 0.2),
+    ("w", "attack3"): (0.1, 0.2),
+    ("r", "attack"): (0.055, 0.082),
+    ("r", "attack2"): (0.073, 0.109),
+    ("r", "attack3"): (0.091, 0.136),
+    ("m", "attack2"): (0.114, 0.171),
+    ("m", "attack3"): (0.143, 0.214),
+}
+BLOW_KINDS = ("hitbox", "projectile")
+
+
+def on_the_strike(cues, ability_id, role):
+    """``cues`` with the first blow on the frame the strip draws it: a blow too early waits for
+    it, with what follows it; a blow later than that has the body start its swing later."""
+    window = STRIKE_WINDOW.get((ability_id[0], role)) if ability_id[1:2] == "_" else None
+    blows = [c.time for c in cues if c.kind.value in BLOW_KINDS]
+    if window is None or not blows:
+        return list(cues), 0.0
+    first, (start, end) = min(blows), window
+    if first > end:
+        return list(cues), round(first - (start + end) / 2, 3)
+    if first >= start:
+        return list(cues), 0.0
+    late = start - first
+
+    def waited(cue):
+        kind = cue.kind.value
+        if kind in BLOW_KINDS or kind == "gameplay_event" or (kind == "vfx" and cue.time > 0):
+            return ActionCue(cue.cue_id, round(cue.time + late, 3), cue.kind, cue.payload)
+        return cue
+
+    return [waited(c) for c in cues], 0.0
+
+
 def assign_animations(library):
     """Point each listed skill's animation cue at its strip (one is added when it has none)."""
     for ability_id, role in ANIMATION.items():
@@ -1300,5 +1337,6 @@ def assign_animations(library):
         if timeline is None:
             continue
         cues = [c for c in timeline.cues if c.kind.value != "animation"]
-        cues.append(ActionCue(f"anim_{role}", 0.0, "animation", {"clip": role}))
+        cues, swing_at = on_the_strike(cues, ability_id, role)
+        cues.append(ActionCue(f"anim_{role}", swing_at, "animation", {"clip": role}))
         library.timelines[timeline.timeline_id] = ActionTimeline(timeline.timeline_id, cues)

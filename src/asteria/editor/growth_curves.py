@@ -346,6 +346,10 @@ class StatComparison(QWidget):
         definition = definitions.get(stat)
         return definition is not None and "classes" in definition.set_on
 
+    def _numbers(self, record):
+        """The bars of a record, as its form groups them (HP and MP among the stats)."""
+        return self.form.compared_numbers(record, self.key)
+
     def redraw(self):
         while self.grid.count():
             widget = self.grid.takeAt(0).widget()
@@ -353,7 +357,7 @@ class StatComparison(QWidget):
                 widget.hide()
                 widget.setParent(None)
                 widget.deleteLater()
-        own = self.form._data.get(self.key) or {}
+        own = self._numbers(self.form._data)
         vocabulary = getattr(self.form, "vocabulary", None)
         names, rank = {}, {"vitality": 0, "technique": 1}
         if vocabulary is not None:
@@ -366,10 +370,10 @@ class StatComparison(QWidget):
         keys = sorted(own, key=lambda k: (rank.get(k, 1e9), k))
         for index, stat in enumerate(keys):
             others = [
-                record[self.key][stat]
+                self._numbers(record)[stat]
                 for record in self.siblings.values()
                 if isinstance(record.get(self.key), dict)
-                and isinstance(record[self.key].get(stat), (int, float))
+                and isinstance(self._numbers(record).get(stat), (int, float))
             ]
             bar = StatBar(
                 names.get(stat) or label_for(stat),

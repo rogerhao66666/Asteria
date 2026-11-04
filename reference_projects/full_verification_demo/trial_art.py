@@ -109,7 +109,7 @@ def hero_and_boss_art(context):
                 name, image, frame, clips, tags, scale, states, body, kaykit.SOURCE, smooth=True
             )
             continue
-        if key in critters.CRITTERS:  # companions: Foozle's Critters, already facing left
+        if key in critters.CRITTERS:  # companions: Foozle's Critters, turned to face left
             image, frame, clips, _ = critters.character_sheet(key)
             register(name, image, frame, clips, tags, scale, states, None, critters.SOURCE)
             continue

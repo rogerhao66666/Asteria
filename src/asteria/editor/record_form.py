@@ -133,7 +133,7 @@ RECORD_LISTS = set(_LIST_TEMPLATES) | {
 
 
 def _choice_text(choice, repeated=()):
-    """A choice as players read it: its name only (the id is in the tooltip); a name two
+    """A choice as players read it: its name only; a name two
     choices share carries the id too, so they can be told apart."""
     if choice.label in repeated and choice.label != choice.value:
         return f"{choice.label}  ({choice.value})"
@@ -488,6 +488,7 @@ class ChipList(QWidget):
         self.icons = icons
         self.allow_new = allow_new
         self.noun = noun
+        self.word = "property" if noun == "tag" else noun  # what the buttons call it
         self._labels = {c.value: c for c in self.choices}
         self._pending = False  # a new tag row waiting for its pick
         column = QVBoxLayout(self)
@@ -511,11 +512,11 @@ class ChipList(QWidget):
         self.table.installEventFilter(self)
         self.table.wheelEvent = lambda event: event.ignore()  # the form scrolls, not it
         column.addWidget(self.table)
-        self.empty = _small(f"No {_plural(noun)} yet.")
+        self.empty = _small(f"No {_plural(self.word)} yet.")
         column.addWidget(self.empty)
         add = QToolButton()
         add.setObjectName("FormAddChip")
-        add.setText(f"+ Add {self.noun}")
+        add.setText(f"+ Add {self.word}")
         add.clicked.connect(self._add)
         row = QHBoxLayout()
         row.addWidget(add)
@@ -547,7 +548,7 @@ class ChipList(QWidget):
         if self.noun != "tag":
             return shown, (self.detail(value) if self.detail else "")
         head, mark, rest = shown.partition(": ")
-        return (head, rest) if mark else ("Tag", shown)
+        return (head, rest) if mark else ("Category", shown)
 
     def _groups(self):
         """``{type: [(value, content)]}`` of every tag on offer and in the list (the rows'
@@ -607,7 +608,7 @@ class ChipList(QWidget):
         the new row "+ Add tag" opened, kept out of the list until a tag is picked."""
         kind = QComboBox()
         kind.setObjectName("FormTagType")
-        for head in sorted(groups, key=lambda h: (h != "Tag", translate(h).lower())):
+        for head in sorted(groups, key=lambda h: (h != "Category", translate(h).lower())):
             kind.addItem(translate(head), head)
         content = QComboBox()
         content.setObjectName("FormTagContent")
@@ -701,7 +702,8 @@ class ChipList(QWidget):
             for item in (left, right):
                 item.setToolTip(f"{self.noun.title()}: {value}")
             choice = self._labels.get(value)
-            if choice is not None and choice.icon and self.icons:
+            # a record row's drop-down shows its icon itself: none drawn again beneath it
+            if groups is not None and choice is not None and choice.icon and self.icons:
                 icon = self.icons(choice.icon)
                 if icon is not None:
                     left.setIcon(icon)
@@ -738,7 +740,7 @@ class ChipList(QWidget):
             for first in range(0, table.columnCount(), 3):
                 if self.detail is not None:
                     table.setColumnWidth(first, 320 if table.columnCount() == 3 else 220)
-                # a record row is its name; the id is only in the tooltip (no second column)
+                # a record row is its name: no second column for the id
                 table.setColumnHidden(first + 1, self.detail is None)
         table.setVisible(bool(self.values) or self._pending)
         self.empty.setVisible(not self.values and not self._pending)
@@ -908,17 +910,21 @@ class NumberMatrix(QWidget):
     edited = Signal()
     ORDER = ("current", "maximum", "minimum")
 
-    def __init__(self, values, labels, *, noun="entry"):
+    def __init__(self, values, labels, *, noun="entry", columns=None, heads=None, new_row=None):
+        """``columns``: always these, so it can be empty; ``heads``: their words; ``new_row``:
+        what an added row starts with."""
         super().__init__()
         self.labels = dict(labels)
-        rank = {"vitality": -2, "technique": -1}  # HP, MP first, then as the game lists
-        rank.update({k: i for i, k in enumerate(self.labels) if k not in rank})
-        ordered = sorted(values.items(), key=lambda kv: (rank.get(kv[0], 1e9), kv[0]))
-        self.values = {k: dict(v) for k, v in ordered}
+        self.heads = dict(heads or {})
+        self.keep_one = columns is None  # its columns come from its first row
+        self.new_row = new_row
         self.noun = noun
-        first = next(iter(self.values.values()))
-        self.columns = sorted(
-            first, key=lambda c: (self.ORDER.index(c) if c in self.ORDER else 9, c)
+        self._order(values)
+        first = next(iter(self.values.values()), {})
+        self.columns = (
+            list(columns)
+            if columns
+            else sorted(first, key=lambda c: (self.ORDER.index(c) if c in self.ORDER else 9, c))
         )
         self.grid = QGridLayout()
         self.grid.setContentsMargins(0, 0, 0, 0)
@@ -936,14 +942,27 @@ class NumberMatrix(QWidget):
         column.addLayout(row)
         self._build()
 
+    def _order(self, values):
+        rank = {"vitality": -2, "technique": -1}  # HP, MP first, then as the game lists
+        rank.update({k: i for i, k in enumerate(self.labels) if k not in rank})
+        ordered = sorted(values.items(), key=lambda kv: (rank.get(kv[0], 1e9), kv[0]))
+        self.values = {k: dict(v) for k, v in ordered}
+
+    def set_values(self, values):
+        self._order(values)
+        self._build()
+
     def _build(self):
         while self.grid.count():
             item = self.grid.takeAt(0)
             if item.widget() is not None:
                 item.widget().hide()
                 item.widget().deleteLater()
+        if not self.values:
+            self.grid.addWidget(_small(f"No {_plural(self.noun)} yet."), 0, 0)
+            return
         for c, name in enumerate(self.columns, 1):
-            head = _small(label_for(name))
+            head = _small(self.heads.get(name) or label_for(name))
             self.grid.addWidget(head, 0, c)
         for r, (key, row) in enumerate(self.values.items(), 1):
             name = QLabel(self.labels.get(key) or label_for(key))
@@ -976,8 +995,8 @@ class NumberMatrix(QWidget):
         self.edited.emit()
 
     def _remove(self, key):
-        if len(self.values) <= 1:
-            return  # the table keeps one row: its columns come from it
+        if self.keep_one and len(self.values) <= 1:
+            return
         self.values.pop(key, None)
         self._build()
         self.edited.emit()
@@ -989,7 +1008,8 @@ class NumberMatrix(QWidget):
         dialog = PickDialog(f"Add {self.noun}", free, allow_new=True, parent=self)
         if dialog.exec():
             for value in dialog.values():
-                self.values.setdefault(str(value), {c: 0.0 for c in self.columns})
+                row = self.new_row(str(value)) if self.new_row else {}
+                self.values.setdefault(str(value), row or {c: 0.0 for c in self.columns})
             self._build()
             self.edited.emit()
 
@@ -1131,7 +1151,8 @@ class Section(QFrame):
             self.form.setVerticalSpacing(LABEL_GAP)  # a label to its field; rows: see below
         self.body.setVisible(not collapsed)
         self.toggle.toggled.connect(self._toggled)
-        self._more = []  # (label, widget, help, key) of empty fields, shown on request
+        self.labels = []  # every field's name, shown or waiting
+        self._more = []  # (label, widget, help) of empty fields, shown on request
         self.more_button = QToolButton()
         self.more_button.setObjectName("FormMoreButton")
         self.more_button.hide()
@@ -1152,18 +1173,19 @@ class Section(QFrame):
         layout.addWidget(self.body)
         layout.addWidget(self.more_button, 0, Qt.AlignLeft)
 
-    def add_empty(self, label, widget, *, help_text="", key=""):
+    def add_empty(self, label, widget, *, help_text=""):
         """An empty optional field: listed under "Show N more fields" until asked for."""
-        self._more.append((label, widget, help_text, key))
+        self.labels.append(label)
+        self._more.append((label, widget, help_text))
         widget.hide()
         widget.setParent(self)
         self.more_button.setText("＋ Empty fields")
         self.more_button.show()
 
     def show_more(self):
-        for label, widget, help_text, key in self._more:
+        for label, widget, help_text in self._more:
             widget.show()
-            self.add_row(label, widget, help_text=help_text, key=key)
+            self.add_row(label, widget, help_text=help_text)
         self._more = []
         self.more_button.hide()
 
@@ -1174,12 +1196,12 @@ class Section(QFrame):
         self.body.setVisible(open_)
         self.toggle.setArrowType(Qt.DownArrow if open_ else Qt.RightArrow)
 
-    def add_row(self, label, widget, *, help_text="", key=""):
+    def add_row(self, label, widget, *, help_text=""):
+        self.labels.append(label)
         row = self.form.rowCount()
         title = QLabel(label + ("  ⓘ" if help_text else ""))
         title.setObjectName("FormFieldLabel")
-        tip = (help_text + "\n\n" if help_text else "") + (f"data: {key}" if key else "")
-        title.setToolTip(tip.strip())  # on the label's left: not over the field
+        title.setToolTip(help_text)  # on the label's left: not over the field
         _help_tip(title)
         holder = QVBoxLayout()
         if self.columns:
@@ -1256,6 +1278,154 @@ class Section(QFrame):
 # the Base Stats a stat definition's "Set On" narrows (D91): an actor's starting stats, a
 # job's growth per level, an enemy's stats
 BASE_STAT_FIELDS = {"actors": ("base_stats",), "classes": ("level_growth",), "enemies": ("stats",)}
+# where the engine keeps a record's stats and its resources (HP, MP, a shield)
+PAIRED_NUMBERS = {
+    "actors": (("base_stats", "base_resources"),),
+    "classes": (("level_growth", "resource_growth"), ("stat_bonuses", "resource_bonuses")),
+    "enemies": (("stats", "resources"),),
+}
+
+
+def _paired_keys(category, key):
+    """The ``(stats, resources)`` fields ``key`` belongs to in a ``category``, or None."""
+    return next((p for p in PAIRED_NUMBERS.get(category, ()) if key in p), None)
+
+
+def _pool_amount(pool):
+    """A resource's one number: an actor's is ``{current, maximum, minimum}``."""
+    return pool["maximum"] if isinstance(pool, dict) else pool
+
+
+def basic_first(choices):
+    """The resources with HP and MP first, then as the game lists them."""
+    rank = {"vitality": 0, "technique": 1}
+    return sorted(choices, key=lambda c: rank.get(c.value, 2))
+
+
+class _PairedNumbers:
+    """A record's stats and resources as its form groups them: HP, MP and the like among the
+    stats, and under Resources only what is a mechanic of its own (a shield: a resource with a
+    Battle Resources rule). An actor's Resources also say how each starts; one that doesn't
+    start full or stop at 0 is listed there too, and HP can be added to give it such a start.
+    Editing writes each number back where the engine keeps it."""
+
+    def __init__(self, form, data, keys):
+        self.form, self.data = form, data
+        self.stats_key, self.pools_key = keys
+        self.as_record = form.category == "actors"
+        vocabulary = form.vocabulary
+        self.special = form._special_resources()
+        pools = basic_first(vocabulary.choices("resources"))
+        self.pool_ids = {c.value for c in pools}
+        stats = vocabulary.choices("stats")
+        if self.stats_key in BASE_STAT_FIELDS.get(form.category, ()):
+            stats = vocabulary.base_stat_choices(
+                form.category, stats, data.get(self.stats_key) or {}
+            )
+        self.stats = AmountTable(
+            form.compared_numbers(data, self.stats_key),
+            (*(c for c in pools if c.value not in self.special), *stats),
+            percent=False,
+            noun="stat",
+        )
+        if self.as_record:
+            self.pools = NumberMatrix(
+                self._listed(data.get(self.pools_key) or {}),
+                {c.value: c.label for c in pools},
+                noun="resource",
+                columns=("maximum", "current", "minimum"),
+                heads={"current": "Starts At"},
+                new_row=self._new_row,
+            )
+        else:
+            self.pools = AmountTable(
+                form.compared_numbers(data, self.pools_key),
+                [c for c in pools if c.value in self.special],
+                percent=False,
+                noun="resource",
+            )
+        self.tables = {self.stats_key: self.stats, self.pools_key: self.pools}
+        self.stats.edited.connect(lambda: self._edited(False))
+        self.pools.edited.connect(lambda: self._edited(True))
+
+    def _listed(self, pools):
+        return {
+            k: v
+            for k, v in pools.items()
+            if k in self.special or v["current"] < v["maximum"] or v["minimum"] != 0
+        }
+
+    def _new_row(self, key):
+        held = (self.data.get(self.pools_key) or {}).get(key)
+        if held is not None:
+            return dict(held)
+        project = getattr(self.form.vocabulary, "project", None)
+        rule = project.rpg_database.battle_resources.get(key) if project is not None else None
+        amount = (rule.maximum if rule is not None else None) or 100.0
+        return {"maximum": amount, "current": amount, "minimum": 0.0}
+
+    def _is_pool(self, key, held_pools, held_stats):
+        return key in held_pools or (key not in held_stats and key in self.pool_ids)
+
+    def _edited(self, from_pools):
+        if self.as_record:
+            self._actor_edited(from_pools)
+            return
+        held_pools = self.data.get(self.pools_key) or {}
+        held_stats = self.data.get(self.stats_key) or {}
+        pools = dict(self.pools.values)
+        stats = {k: v for k, v in held_stats.items() if k in held_pools}  # the id is both
+        for key, amount in self.stats.values.items():
+            if self._is_pool(key, held_pools, held_stats):
+                pools[key] = amount
+            else:
+                stats[key] = amount
+        self.data[self.pools_key] = pools
+        self.form._set(self.data, self.stats_key, stats)
+
+    def _actor_edited(self, from_pools):
+        held_pools = self.data.get(self.pools_key) or {}
+        held_stats = self.data.get(self.stats_key) or {}
+        rows = self.pools.values
+        pools, shown = {}, dict(self.stats.values)
+        stats = {k: v for k, v in held_stats.items() if k in held_pools}  # the id is both
+        if from_pools:
+            for key, row in rows.items():
+                old = held_pools.get(key)
+                full = old is not None and old["current"] >= old["maximum"]
+                still = old is not None and row["current"] == old["current"]
+                pools[key] = dict(row, current=row["maximum"]) if full and still else dict(row)
+                if key not in self.special:  # HP here is HP among the stats
+                    shown[key] = pools[key]["maximum"]
+        for key, amount in shown.items():
+            if not self._is_pool(key, held_pools, held_stats):
+                stats[key] = amount
+            elif key in pools:
+                pass
+            elif from_pools:  # taken off Resources: as any other, full and down to 0
+                pools[key] = {"current": amount, "maximum": amount, "minimum": 0.0}
+            else:
+                pools[key] = self._grown(held_pools.get(key), amount)
+        if not from_pools:  # the mechanics stay as they are, a removed stat leaves Resources
+            for key in rows:
+                if key in self.special and key not in pools:
+                    pools[key] = dict(held_pools.get(key) or rows[key])
+        self.data[self.pools_key] = pools
+        if shown != self.stats.values:
+            self.stats.values = shown
+            self.stats._build()
+        if not from_pools or {k: dict(v) for k, v in rows.items()} != self._listed(pools):
+            listed = {k: pools[k] for k in rows if k in pools}
+            self.pools.set_values({**listed, **self._listed(pools)})
+        self.form._set(self.data, self.stats_key, stats)
+
+    @staticmethod
+    def _grown(old, amount):
+        """One that starts full stays full; one that doesn't keeps its start."""
+        if old is None:
+            return {"current": amount, "maximum": amount, "minimum": 0.0}
+        current = amount if old["current"] >= old["maximum"] else old["current"]
+        return dict(old, maximum=amount, current=min(current, amount))
 
 
 class RecordForm(QScrollArea):
@@ -1269,6 +1439,7 @@ class RecordForm(QScrollArea):
         self.setFrameShape(QFrame.NoFrame)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.document = document
+        self._paired = {}  # the tables of PAIRED_NUMBERS being edited, by their fields
         self.field_choices = {}  # field -> callable ((value, QIcon or None), ...) (extra lists)
         self.icon_library = None
         self.category = ""
@@ -1401,7 +1572,7 @@ class RecordForm(QScrollArea):
         name_key = next((k for k in NAME_KEYS if isinstance(data.get(k), str)), None)
         # small fields three to a row, labels above them: a lone number no longer owns a row
         basics = Section("Basics", hint=CATEGORY_HELP.get(self.category, ""), columns=3)
-        tags = Section("Tags and lists", columns=3)
+        tags = Section("Lists", columns=3)
         numbers = Section("Numbers", columns=3)
         advanced = Section(
             "Advanced", collapsed=True, hint="Filled in for you; rarely changed.", columns=3
@@ -1415,7 +1586,10 @@ class RecordForm(QScrollArea):
             target = basics
             if key in TECHNICAL or (key in self.optional and _empty(value)):
                 target = advanced
-            if isinstance(value, dict) and _number_map(value) and not _nested_record(value):
+            paired = _paired_keys(self.category, key) is not None
+            if paired or (
+                isinstance(value, dict) and _number_map(value) and not _nested_record(value)
+            ):
                 section = target if target is advanced else numbers
                 self._field(section, data, key, value)
             elif isinstance(value, list) and _scalar_list(key, value):
@@ -1433,6 +1607,7 @@ class RecordForm(QScrollArea):
                 box = Section(_SECTION_TITLES.get((self.category, key)) or label_for(key))
                 self._nested(box, data, key, entry[1])
                 self._layout.addWidget(box)
+        tags.toggle.setText(_lists_title(tags.labels))
         for section in (basics, numbers, tags):
             if section.form.count():
                 self._layout.addWidget(section)
@@ -1442,9 +1617,9 @@ class RecordForm(QScrollArea):
                 for compare in self._comparison_sections(data):
                     self._layout.addWidget(compare)
             else:  # only empty optional fields: they wait together at the end
-                for label, widget, help_text, key in section._more:
+                for label, widget, help_text in section._more:
                     widget.show()
-                    more.add_row(label, widget, help_text=help_text, key=key)
+                    more.add_row(label, widget, help_text=help_text)
                 section._more = []
         for key, value, is_advanced in nested:
             box = Section(label_for(key), collapsed=is_advanced, hint=HELP.get(key, ""))
@@ -1454,6 +1629,33 @@ class RecordForm(QScrollArea):
             self._layout.addWidget(more)
         if advanced.has_rows():
             self._layout.addWidget(advanced)
+
+    def _special_resources(self):
+        """The resources that are a mechanic of their own: those with a Battle Resources rule."""
+        project = getattr(self.vocabulary, "project", None)
+        return set(getattr(getattr(project, "rpg_database", None), "battle_resources", ()) or ())
+
+    def compared_numbers(self, record, key):
+        """A record's numbers in the group its form shows them in (``record`` may be another
+        record of this kind): HP and MP with the stats, a shield with the resources."""
+        keys = _paired_keys(self.category, key)
+        if keys is None:
+            return record.get(key) or {}
+        special = self._special_resources()
+        pools = {k: _pool_amount(v) for k, v in (record.get(keys[1]) or {}).items()}
+        if key == keys[1]:
+            return {k: v for k, v in pools.items() if k in special}
+        return {
+            **(record.get(keys[0]) or {}),
+            **{k: v for k, v in pools.items() if k not in special},
+        }
+
+    def _paired_table(self, data, key):
+        keys = _paired_keys(self.category, key)
+        pair = self._paired.get(keys)
+        if pair is None or pair.data is not data:
+            pair = self._paired[keys] = _PairedNumbers(self, data, keys)
+        return pair.tables[key]
 
     def _comparison_sections(self, data):
         """Each list of numbers (an enemy's stats) as bars beside the other records of its
@@ -1467,6 +1669,8 @@ class RecordForm(QScrollArea):
         known = {c.value for kind in ("stats", "resources") for c in self.vocabulary.choices(kind)}
         sections = []
         for key, value in data.items():
+            if _paired_keys(self.category, key):
+                value = self.compared_numbers(data, key)
             if key in TECHNICAL or not _number_map(value) or len(value) < 3:
                 continue
             if not set(value) <= known:  # stats and resources, not a position or a scale
@@ -1533,13 +1737,8 @@ class RecordForm(QScrollArea):
                 heading = QLabel(title)
                 heading.setObjectName("FormTitle")
                 names.addWidget(heading)
-        if id_key is not None:  # the id in the line, why it stays fixed in its ⓘ
-            line = _small(f"Internal ID: {data[id_key]}  ⓘ")
-            line.setToolTip(HELP["internal_id"])
-            names.addWidget(line)
-        elif self._title:  # a profile without a name: its id in words (the id in the tip)
+        if id_key is None and self._title:  # a profile without a name: its id in words
             line = _small(words(str(self._title)))
-            line.setToolTip(f"ID: {self._title}")
             names.addWidget(line)
         if icon_box is not None:
             names.addSpacing(4)
@@ -1634,9 +1833,9 @@ class RecordForm(QScrollArea):
             and not section.keeps_empty
             and english(section.toggle.text()) != "Advanced"
         ):
-            section.add_empty(text, widget, help_text=help_text, key=str(key))
+            section.add_empty(text, widget, help_text=help_text)
         else:
-            section.add_row(text, widget, help_text=help_text, key=str(key))
+            section.add_row(text, widget, help_text=help_text)
 
     # -- one field ----------------------------------------------------------------------------
     def widget_for(self, data, key, value):
@@ -1725,6 +1924,18 @@ class RecordForm(QScrollArea):
                 picker = Picker(choices, value or "", allow_none=False)
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
                 return picker
+            if skey == "cue" or (
+                skey in ("member_id", "target_id") and str(value or "").startswith("@")
+            ):  # a motion beat's cue, or who it acts on ("@target"): the ones in use
+                return self._used_words(data, key, value)
+            if skey == "step_id":  # a recipe's step (Base, Catalyst...): the ones in use
+                from .record_vocabulary import Choice
+
+                used = [*self.vocabulary.values_for("step_id"), value or ""]
+                choices = [Choice(v, words(v)) for v in dict.fromkeys(used) if v]
+                picker = Picker(choices, value or "", allow_none=False)
+                picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
+                return picker
             if skey == "slot_id" and self.category == "parties":  # a formation's place
                 return self._party_slot(data, key, value)
             if skey == "kind" and set(data) == {"kind", "target", "value"}:
@@ -1809,6 +2020,8 @@ class RecordForm(QScrollArea):
             )
             chips.edited.connect(lambda c=chips: self._set(data, key, list(c.values)))
             return chips
+        if _paired_keys(self.category, skey) and data is self._data:
+            return self._paired_table(data, skey)
         if isinstance(value, dict) and _number_map(value):
             kind = map_source(skey)
             choices = self.vocabulary.choices(kind) if kind else ()
@@ -1943,6 +2156,25 @@ class RecordForm(QScrollArea):
         self._icons[icon_id] = icon
         return icon
 
+    _STAND_INS = {"@source": "The User", "@target": "The Target", "@actor": "The User"}
+
+    def _used_words(self, data, key, value):
+        """A value picked from those the project uses, in words ("battle.fx.slash" reads
+        "Slash", "@target" reads "The Target"); any other can be typed."""
+        from .record_vocabulary import Choice
+
+        used = [*self.vocabulary.values_for(str(key)), value or ""]
+        if str(value or "").startswith("@"):
+            used = [v for v in used if v.startswith("@")] + list(self._STAND_INS)
+        choices = [
+            Choice(v, self._STAND_INS.get(v) or words(v.rsplit(".", 1)[-1]))
+            for v in dict.fromkeys(used)
+            if v
+        ]
+        picker = Picker(choices, value or "", allow_none=False, allow_other=True)
+        picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
+        return picker
+
     def _party_slot(self, data, key, value):
         """Where a party member stands: one of the party's formation's places, in words."""
         from .record_vocabulary import Choice
@@ -2014,10 +2246,10 @@ class _SubForm(QWidget):
 
         # HP above MP (the saved order is alphabetical: technique before vitality)
         for k, v in sorted(data.items(), key=lambda kv: resource_order(kv[0])):
-            if k in FORMAT_KEYS:
+            if k in FORMAT_KEYS or k in TECHNICAL:  # an effect's effect_id: made, not shown
                 continue
             if isinstance(v, list) and not _scalar_list(k, v):
-                self.section.add_row(label_for(k), _entry_list(form, data, k, v), key=str(k))
+                self.section.add_row(label_for(k), _entry_list(form, data, k, v))
             else:
                 form._field(self.section, data, k, v)
 
@@ -2161,8 +2393,38 @@ class CardList(QWidget):
             body.addWidget(section)
             if extra.form.count():
                 body.addWidget(extra)
+        elif _node_pair(self.key, entry):  # [node, rank]: the node by name, then the rank
+            body.addWidget(self._node_needed(index, entry))
         else:
             body.addWidget(self.form.widget_for(self.entries, index, entry))
+
+    def _node_needed(self, index, entry):
+        """A node another needs, picked by name from the record's nodes, and its rank."""
+        from .record_vocabulary import Choice
+
+        nodes = [n for n in (self.form._data or {}).get("nodes") or () if isinstance(n, dict)]
+        choices = [
+            Choice(str(n["node_id"]), str(n.get("display_name") or words(str(n["node_id"]))))
+            for n in nodes
+            if n.get("node_id")
+        ]
+        row = QWidget()
+        line = QHBoxLayout(row)
+        line.setContentsMargins(0, 0, 0, 0)
+        node = Picker(choices, str(entry[0]), allow_none=False)
+        node.setEditable(False)
+        rank = NumberBox(entry[1], integer=True)
+        rank.setPrefix(translate("Rank") + " ")
+
+        def changed():
+            self.entries[index] = [node.value() or str(entry[0]), int(rank.number())]
+            self.form.changed.emit()
+
+        node.picked.connect(changed)
+        rank.valueChanged.connect(lambda _v: changed())
+        line.addWidget(node, 1)
+        line.addWidget(rank)
+        return row
 
     def _ai_action(self, section, extra, index, entry):
         """What an AI rule does, picked: Skill or Custom Code, then which skill (or hook)."""
@@ -2437,6 +2699,18 @@ def _table_columns(entries, key=""):
         if any(not _cell_value(key, entry.get(key)) for key in columns):
             return None
     return columns
+
+
+def _node_pair(list_key, entry):
+    """A ``[node id, rank]`` a node needs (equipment growth's prerequisites)."""
+    return (
+        str(list_key) in ("prerequisites", "any_prerequisites")
+        and isinstance(entry, list)
+        and len(entry) == 2
+        and isinstance(entry[0], str)
+        and isinstance(entry[1], int)
+        and not isinstance(entry[1], bool)
+    )
 
 
 def _own_id(list_key, key):
@@ -2734,6 +3008,17 @@ def _noun(key):
     return _singular(word) if word and word != "id" else "entry"
 
 
+def _lists_title(labels):
+    """A card of lists is called after what is in it: its one list, Properties and the other
+    one, or Lists when there are more."""
+    labels = list(dict.fromkeys(labels))
+    if len(labels) == 1:
+        return labels[0]
+    if len(labels) == 2 and "Properties" in labels:
+        return "Properties and " + next(x for x in labels if x != "Properties")
+    return "Lists"
+
+
 def _plural(noun):
     """``currency`` -> "currencies", ``entry`` -> "entries", ``stat`` -> "stats"."""
     noun = str(noun)
@@ -2779,7 +3064,16 @@ def _first_line_height(widget):
 
 def _is_wide(widget):
     """A field that needs a whole row: a list, a table, long text."""
-    wide = (ChipList, AmountTable, TextTable, CardList, _SubForm, QPlainTextEdit, Section)
+    wide = (
+        ChipList,
+        AmountTable,
+        NumberMatrix,
+        TextTable,
+        CardList,
+        _SubForm,
+        QPlainTextEdit,
+        Section,
+    )
     return isinstance(widget, wide) or bool(widget.property("wide"))
 
 

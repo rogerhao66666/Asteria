@@ -231,9 +231,13 @@ class FieldUiMixin:
             face = self.pg.font.Font(None, 16)
             parts = [face.render(line, False, picture.text_color) for line in lines]
             image = self.pg.Surface(
-                (max(1, max(p.get_width() for p in parts)), 16 * len(parts)), self.pg.SRCALPHA
+                (max(1, max(p.get_width() for p in parts)) + 1, 16 * len(parts) + 1),
+                self.pg.SRCALPHA,
             )
             for row, part in enumerate(parts):
+                if picture.shadow_color is not None:
+                    under = face.render(lines[row], False, picture.shadow_color)
+                    image.blit(under, (1, row * 16 + 1))
                 image.blit(part, (0, row * 16))
         if len(cache) > 256:  # (a clock's words change every second)
             cache.clear()

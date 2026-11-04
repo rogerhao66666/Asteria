@@ -98,7 +98,7 @@
         },
         {
           "duration": 0.05,
-          "frame_index": 145
+          "frame_index": 147
         },
         {
           "duration": 0.05,
@@ -106,7 +106,7 @@
         },
         {
           "duration": 0.05,
-          "frame_index": 147
+          "frame_index": 145
         }
       ],
       "loop": false
@@ -135,7 +135,7 @@
         },
         {
           "duration": 0.05,
-          "frame_index": 65
+          "frame_index": 67
         },
         {
           "duration": 0.05,
@@ -143,7 +143,7 @@
         },
         {
           "duration": 0.05,
-          "frame_index": 67
+          "frame_index": 65
         }
       ],
       "loop": false
@@ -246,7 +246,7 @@
         },
         {
           "duration": 0.0625,
-          "frame_index": 153
+          "frame_index": 155
         },
         {
           "duration": 0.0625,
@@ -254,7 +254,7 @@
         },
         {
           "duration": 0.0625,
-          "frame_index": 155
+          "frame_index": 153
         }
       ],
       "loop": false
@@ -283,7 +283,7 @@
         },
         {
           "duration": 0.0625,
-          "frame_index": 73
+          "frame_index": 75
         },
         {
           "duration": 0.0625,
@@ -291,7 +291,7 @@
         },
         {
           "duration": 0.0625,
-          "frame_index": 75
+          "frame_index": 73
         }
       ],
       "loop": false
@@ -394,7 +394,7 @@
         },
         {
           "duration": 0.0375,
-          "frame_index": 137
+          "frame_index": 139
         },
         {
           "duration": 0.0375,
@@ -402,7 +402,7 @@
         },
         {
           "duration": 0.0375,
-          "frame_index": 139
+          "frame_index": 137
         }
       ],
       "loop": false
@@ -431,7 +431,7 @@
         },
         {
           "duration": 0.0375,
-          "frame_index": 57
+          "frame_index": 59
         },
         {
           "duration": 0.0375,
@@ -439,7 +439,7 @@
         },
         {
           "duration": 0.0375,
-          "frame_index": 59
+          "frame_index": 57
         }
       ],
       "loop": false

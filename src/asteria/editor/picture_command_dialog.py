@@ -1,24 +1,41 @@
 """Structured editor and screen-space preview for picture world commands."""
 
-import weakref
 from pathlib import Path
 
-from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
+from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
-    QComboBox,
     QDialog,
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
+    QScrollArea,
     QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
+from .dialogue_command_dialog import _PortraitPicker, fit_pixmap
+from .image_tools import PictureLibrary
+from .menu_layout_authoring import MenuLayoutAuthoringController
+from .picture_preview import (
+    WHITE,
+    PicturePreview,
+    cycled_frame,
+    moved,
+    parse_rgb,
+    sheet_words,
+    system_words,
+    tinted,
+)
+from .record_vocabulary import vocabulary_for, words
 from .scene_render import resolve_texture_source
+from .ui_fit import ValueCombo
+from .world_command_form import _Color, command_words
 
 PICTURE_COMMANDS = (
     "SHOW_PICTURE",
@@ -28,40 +45,73 @@ PICTURE_COMMANDS = (
 )
 
 
-class _PicturePreview(QWidget):
-    def __init__(self, owner):
-        super().__init__()
-        # a weak reference: the owner holds this widget, and a cycle between a widget and
-        # the window it sits in crashed PySide6 6.12's garbage collection (a segfault)
-        self._owner = weakref.ref(owner)
-        self.setMinimumSize(280, 180)
+class _Name(ValueCombo):
+    """A name or record picked from a list; ``text`` / ``setText`` as a line has them."""
 
-    @property
-    def owner(self):
-        return self._owner()
+    def __init__(self, pairs, value, parent, *, none=None, new=None):
+        super().__init__(parent)
+        self.setEditable(new is not None)
+        self.setProperty("i18n_choices", True)
+        if new is not None:
+            self.offer_new(*new)
+        self.set_choices(pairs, none=none)
+        self.setCurrentText(value)
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(24, 26, 30))
-        stage = self.owner.stage_size
-        scale = min(self.width() / stage[0], self.height() / stage[1])
-        stage_w, stage_h = stage[0] * scale, stage[1] * scale
-        ox, oy = (self.width() - stage_w) / 2, (self.height() - stage_h) / 2
-        painter.setPen(QPen(QColor(78, 82, 92), 1))
-        painter.drawRect(int(ox), int(oy), int(stage_w), int(stage_h))
-        x = ox + self.owner.x.value() * scale
-        y = oy + self.owner.y.value() * scale
-        pixmap = self.owner.frame_pixmap()
-        if not pixmap.isNull():
-            width = pixmap.width() * self.owner.picture_scale.value() * scale
-            height = pixmap.height() * self.owner.picture_scale.value() * scale
-            painter.setOpacity(self.owner.opacity.value())
-            painter.drawPixmap(int(x), int(y), max(1, round(width)), max(1, round(height)), pixmap)
-            painter.setOpacity(1.0)
+    def text(self):
+        return self.currentText().strip()
+
+    def setText(self, value):  # noqa: N802 - Qt-style
+        self.setCurrentText(value)
+
+
+class _PicturePick(_PortraitPicker):
+    """The picture shown, chosen as every picture is: a double-click opens them."""
+
+    TITLE = "Choose a Picture"
+
+    def __init__(self, document, parent=None):
+        super().__init__(PictureLibrary(document), parent)
+        self.preview.setToolTip("Double-click to choose a picture")
+
+    def _icon_of(self, _picture):  # drawn from its file below: no need for the whole list
+        return None
+
+    def _shown(self, *_):
+        document = self.library.document
+        path = resolve_texture_source(document, self.text()) if document else None
+        pixmap = QPixmap(str(path)) if path is not None else QPixmap()
+        side = self.PREVIEW - 8  # inside its frame
+        if pixmap.isNull():
+            self.preview.setPixmap(QPixmap())
+            self.preview.setText("None")
         else:
-            painter.setPen(QPen(QColor(105, 220, 210), 1))
-            painter.drawRect(int(x), int(y), 36 * scale, 24 * scale)
-            painter.drawText(int(x) + 4, int(y) + 16 * scale, self.owner.picture_id.text())
+            self.preview.setPixmap(fit_pixmap(pixmap, side, side))
+        self._show_name()
+        self.changed.emit()
+
+
+class _ColorField(_Color):
+    """A colour ticked and picked; ``text``: "r,g,b", empty while it isn't ticked. One the
+    button can't show stays as it was written until another is picked."""
+
+    def __init__(self, value, tip, parent):
+        super().__init__()
+        self.setParent(parent)
+        self.tick.setToolTip(tip)
+        self._held = ""
+        self.changed.connect(self._picked)
+        if isinstance(value, (list, tuple)):
+            value = ",".join(str(c) for c in value)
+        plain = "".join(str(value or "").split())
+        if plain and not self.set_value(plain):
+            self.tick.setChecked(True)
+            self._held = str(value)
+
+    def _picked(self):
+        self._held = ""
+
+    def text(self):
+        return self._held or self.value() or ""
 
 
 class PictureCommandDialog(QDialog):
@@ -122,18 +172,25 @@ class PictureCommandDialog(QDialog):
         content = QHBoxLayout()
         form_box = QWidget(self)
         form = QFormLayout(form_box)
-        self.command = QComboBox(form_box)
-        self.command.addItems(PICTURE_COMMANDS)
-        self.command.setCurrentText(str(command).upper())
-        self.picture_id = QLineEdit(self._text("picture_id", "picture_1"), form_box)
-        self.asset_id = QLineEdit(self._text("asset_id", ""), form_box)
+        self.command = _Name(
+            [(c, command_words(c)) for c in PICTURE_COMMANDS], str(command).upper(), form_box
+        )
+        vocabulary = vocabulary_for(document) if document is not None else None
+        used = vocabulary.values_for("picture_id") if vocabulary is not None else ()
+        self.picture_id = _Name(
+            [(name, words(name)) for name in used if name],
+            self._text("picture_id", "picture_1"),
+            form_box,
+            new=("New Picture", "picture"),
+        )
+        self.asset_id = _PicturePick(document, form_box)
+        self.asset_id.setText(self._text("asset_id", ""))
         self.x = self._float("x", 0, form_box)
         self.y = self._float("y", 0, form_box)
         self.picture_scale = self._float("scale", 1, form_box, maximum=100)
         self.opacity = self._float("opacity", 1, form_box, maximum=1)
         self.tint = self._float("tint", 0, form_box, maximum=1)
-        self.tint_color = QLineEdit(self._text("tint_color", ""), form_box)
-        self.tint_color.setPlaceholderText("255, 255, 255")
+        self.tint_color = self._color("tint_color", "Not ticked: white", form_box)
         self.frame = self._int("frame", 0, form_box)
         self.columns = self._int("columns", 1, form_box, minimum=1)
         self.rows = self._int("rows", 1, form_box, minimum=1)
@@ -147,24 +204,42 @@ class PictureCommandDialog(QDialog):
         self.wave_amplitude = self._float("wave_amplitude", 0, form_box)
         self.wave_length = self._float("wave_length", 64, form_box)
         self.wave_speed = self._float("wave_speed", 0, form_box)
-        self.blend = QComboBox(form_box)
-        self.blend.addItems(("normal", "add"))
-        self.blend.setCurrentText(self._text("blend", "normal"))
+        self.blend = _Name(
+            (("normal", "Normal"), ("add", "Add (A Glow)")),
+            self._text("blend", "normal"),
+            form_box,
+        )
         self.words = QLineEdit(self._text("text", ""), form_box)
-        self.font = QLineEdit(self._text("font", ""), form_box)
-        self.text_color = QLineEdit(self._text("text_color", ""), form_box)
-        self.text_color.setPlaceholderText("255, 255, 255")
-        self.shadow_color = QLineEdit(self._text("shadow_color", ""), form_box)
-        self.text_align = QComboBox(form_box)
-        self.text_align.addItems(("left", "right", "center"))
-        self.text_align.setCurrentText(self._text("text_align", "left"))
-        self.layer = QLineEdit(self._text("layer", "screen"), form_box)
-        self.click_event = QLineEdit(self._text("click_event", ""), form_box)
+        fonts = () if document is None else MenuLayoutAuthoringController(document).fonts()
+        self.font = _Name(
+            [(key, words(key)) for key, _font in fonts],
+            self._text("font", ""),
+            form_box,
+            none="The Message Window's",
+        )
+        self.text_color = self._color("text_color", "Not ticked: white", form_box)
+        self.shadow_color = self._color("shadow_color", "Not ticked: no shadow", form_box)
+        self.text_align = _Name(
+            (("left", "Left End"), ("right", "Right End"), ("center", "Middle")),
+            self._text("text_align", "left"),
+            form_box,
+        )
+        self.layer = self._int("layer", 0, form_box, minimum=-1000)
+        project = getattr(document, "project", None)
+        programs = project.event_programs.ids() if project is not None else ()
+        self.click_event = _Name(
+            [(key, words(key)) for key in programs],
+            self._text("click_event", ""),
+            form_box,
+            none="Nothing",
+        )
         self.duration = self._float("duration", 0, form_box, maximum=3600)
         self.delay = self._float("delay", 0, form_box, maximum=3600)
-        self.easing = QComboBox(form_box)
-        self.easing.addItems(("linear", "ease_in", "ease_out", "ease_in_out"))
-        self.easing.setCurrentText(self._text("easing", "linear"))
+        self.easing = _Name(
+            [(e, words(e)) for e in ("linear", "ease_in", "ease_out", "ease_in_out")],
+            self._text("easing", "linear"),
+            form_box,
+        )
         self._form_fields = {
             "command": self.command,
             "picture_id": self.picture_id,
@@ -199,64 +274,73 @@ class PictureCommandDialog(QDialog):
         }
         labels = {
             "command": "Command",
-            "picture_id": "Picture ID",
-            "asset_id": "Texture asset ID",
+            "picture_id": "Picture",
+            "asset_id": "Image",
             "x": "X",
             "y": "Y",
             "scale": "Scale",
             "opacity": "Opacity",
-            "tint": "Tint (0 = own colours, 1 = all tint colour)",
-            "tint_color": "Tint colour (r, g, b; empty = white)",
+            "tint": ("Tint", "0 = own colours, 1 = all tint colour"),
+            "tint_color": "Tint colour",
             "frame": "Frame",
             "columns": "Sheet columns",
             "rows": "Sheet rows",
-            "frame_rate": "Cells a second (0 = still)",
-            "frame_loop": "Cells start again (off = play once, keep the last)",
-            "scroll_x": "Scroll right (image pixels a second, wraps round)",
-            "scroll_y": "Scroll down (image pixels a second, wraps round)",
-            "wave_amplitude": "Wave: rows shifted by up to (image pixels)",
-            "wave_length": "Wave: rows to a whole wave",
-            "wave_speed": "Wave: rows a second it travels up",
-            "blend": "Blend (add = its colours added: a glow)",
-            "text": "Words instead of an image (\\V[name] fills in a variable)",
-            "font": "Bitmap font ID (empty = the message window's)",
-            "text_color": "Letter colour (r, g, b; empty = white)",
-            "shadow_color": "Shadow colour (r, g, b; empty = none)",
-            "text_align": "Words' X is their (left / right end / middle)",
+            "frame_rate": ("Cells a second", "0 = still"),
+            "frame_loop": ("Cells start again", "Off: play once and keep the last"),
+            "scroll_x": ("Scroll right", "Image pixels a second; it wraps round"),
+            "scroll_y": ("Scroll down", "Image pixels a second; it wraps round"),
+            "wave_amplitude": ("Wave height", "Rows are shifted by up to this, in image pixels"),
+            "wave_length": ("Wave length", "Rows to a whole wave"),
+            "wave_speed": ("Wave speed", "Rows a second it travels up"),
+            "blend": ("Blend", "Add: its colours are added, a glow"),
+            "text": ("Words", "Words instead of an image; \\V[name] fills in a variable"),
+            "font": "Bitmap font",
+            "text_color": "Letter colour",
+            "shadow_color": "Shadow colour",
+            "text_align": ("Words' X is their", "Which part of the words stands at X"),
             "layer": "Layer",
             "click_event": "Click event",
             "duration": "Move duration (seconds)",
             "easing": "Easing",
             "delay": "Start after (seconds)",
         }
+        self._form = form
         for name, field in self._form_fields.items():
-            form.addRow(labels[name], field)
-        self.preview = _PicturePreview(self)
-        content.addWidget(form_box, 1)
+            label, tip = (labels[name], "") if isinstance(labels[name], str) else labels[name]
+            caption = QLabel(label, form_box)
+            if tip:
+                caption.setToolTip(tip)
+                field.setToolTip(tip)
+            form.addRow(caption, field)
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setWidget(form_box)
+        self.preview = PicturePreview(self)
+        content.addWidget(scroll, 1)
         content.addWidget(self.preview, 1)
         root.addLayout(content)
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         root.addWidget(buttons)
-        self.command.currentTextChanged.connect(self._sync_command_fields)
-        for field in (
-            self.asset_id,
-            self.x,
-            self.y,
-            self.picture_scale,
-            self.opacity,
-            self.frame,
-            self.columns,
-            self.rows,
-        ):
-            signal = field.textChanged if isinstance(field, QLineEdit) else field.valueChanged
-            signal.connect(self.preview.update)
+        self.command.currentIndexChanged.connect(self._sync_command_fields)
+        self._sheet_fonts = {}
+        for field in self._form_fields.values():  # whatever is changed shows at once
+            for signal in ("valueChanged", "textChanged", "currentIndexChanged", "toggled"):
+                if hasattr(field, signal):
+                    getattr(field, signal).connect(self.preview.refresh)
+            if hasattr(field, "changed"):
+                field.changed.connect(self.preview.refresh)
         self._sync_command_fields()
+        self.resize(900, 680)
 
     def _text(self, key, default):
         value = self._initial_args.get(key, default)
         return str(value if value is not None else default)
+
+    def _color(self, key, tip, parent):
+        return _ColorField(self._initial_args.get(key), tip, parent)
 
     def _float(self, key, default, parent, *, maximum=1000000):
         field = QDoubleSpinBox(parent)
@@ -268,16 +352,75 @@ class PictureCommandDialog(QDialog):
     def _int(self, key, default, parent, *, minimum=0):
         field = QSpinBox(parent)
         field.setRange(minimum, 1000000)
-        field.setValue(int(self._initial_args.get(key, default)))
+        try:
+            field.setValue(int(self._initial_args.get(key, default)))
+        except (TypeError, ValueError):  # the game reads a number: another word never worked
+            field.setValue(default)
         return field
 
     def _sync_command_fields(self):
         active = self._fields[self.command.currentText()]
         for name, field in self._form_fields.items():
-            field.setEnabled(name == "command" or name in active)
+            self._form.setRowVisible(field, name == "command" or name in active)
         self.preview.update()
 
-    def frame_pixmap(self):
+    def _applies(self, name):
+        return name in self._fields[self.command.currentText()]
+
+    def moves(self):
+        """Whether anything in this picture changes as time goes by."""
+        fields = ("frame_rate", "scroll_x", "scroll_y", "wave_amplitude")
+        return any(self._applies(name) and getattr(self, name).value() for name in fields)
+
+    def adds_light(self):
+        return self._applies("blend") and self.blend.text() == "add"
+
+    def _word_font(self):
+        """The bitmap font for the words: the one picked, else the message window's."""
+        project = getattr(self.document, "project", None)
+        if project is None:
+            return None
+        font_id = self.font.text()
+        if not font_id:
+            records = getattr(project.battle_presentation_library, "_records", {})
+            style = records.get("dialogue_window", {}).get("default")
+            settings = style.settings() if style is not None else None
+            font_id = (settings or {}).get("font_id", "")
+        if font_id not in self._sheet_fonts:
+            spec = MenuLayoutAuthoringController(self.document).font(font_id)
+            self._sheet_fonts[font_id] = sheet_words(self.document, spec)
+        return self._sheet_fonts[font_id]
+
+    def _words_image(self, words):
+        lines = words.split("\n")
+        color = parse_rgb(self.text_color.text(), WHITE)
+        shadow = parse_rgb(self.shadow_color.text())
+        font = self._word_font()
+        if font is not None and font.covers(lines):
+            return font.words(lines, color, shadow)
+        return system_words(lines, color, shadow)
+
+    def picture_image(self, age=0.0):
+        """(what this command shows now, whether that's words); (None, False) for nothing yet.
+        Words win over the picture, as they do in the game."""
+        words = self.words.text() if self._applies("text") else ""
+        if words:
+            image = self._words_image(words)
+        else:
+            pixmap = self.frame_pixmap(age)
+            if pixmap.isNull():
+                return None, False
+            image = pixmap.toImage().convertToFormat(QImage.Format_ARGB32_Premultiplied)
+        if self._applies("scroll_x"):
+            shift = self.scroll_x.value() * age, self.scroll_y.value() * age
+            wave = self.wave_amplitude.value(), self.wave_length.value(), self.wave_speed.value()
+            image = moved(image, shift, wave, age)
+        if self._applies("tint"):
+            color = parse_rgb(self.tint_color.text(), WHITE)
+            image = tinted(image, self.tint.value(), color)
+        return image, bool(words)
+
+    def frame_pixmap(self, age=0.0):
         if self.document is None or self.document.project is None:
             return QPixmap()
         path = resolve_texture_source(self.document, self.asset_id.text().strip())
@@ -286,6 +429,9 @@ class PictureCommandDialog(QDialog):
         pixmap = QPixmap(str(path))
         columns, rows = self.columns.value(), self.rows.value()
         frame = self.frame.value()
+        if self._applies("frame_rate"):
+            loop = self.frame_loop.isChecked()
+            frame = cycled_frame(frame, self.frame_rate.value(), columns * rows, loop, age)
         if pixmap.isNull() or frame >= columns * rows:
             return pixmap if frame == 0 else QPixmap()
         width, height = pixmap.width() // columns, pixmap.height() // rows
@@ -296,14 +442,14 @@ class PictureCommandDialog(QDialog):
     def result_args(self):
         command = self.command.currentText()
         all_values = {
-            "picture_id": self.picture_id.text().strip(),
-            "asset_id": self.asset_id.text().strip(),
+            "picture_id": self.picture_id.text(),
+            "asset_id": self.asset_id.text(),
             "x": self.x.value(),
             "y": self.y.value(),
             "scale": self.picture_scale.value(),
             "opacity": self.opacity.value(),
             "tint": self.tint.value(),
-            "tint_color": self.tint_color.text().strip(),
+            "tint_color": self.tint_color.text(),
             "frame": self.frame.value(),
             "columns": self.columns.value(),
             "rows": self.rows.value(),
@@ -316,12 +462,12 @@ class PictureCommandDialog(QDialog):
             "wave_speed": self.wave_speed.value(),
             "blend": self.blend.currentText(),
             "text": self.words.text(),
-            "font": self.font.text().strip(),
-            "text_color": self.text_color.text().strip(),
-            "shadow_color": self.shadow_color.text().strip(),
+            "font": self.font.text(),
+            "text_color": self.text_color.text(),
+            "shadow_color": self.shadow_color.text(),
             "text_align": self.text_align.currentText(),
-            "layer": self.layer.text().strip(),
-            "click_event": self.click_event.text().strip(),
+            "layer": self.layer.value(),
+            "click_event": self.click_event.text(),
             "duration": self.duration.value(),
             "easing": self.easing.currentText(),
             "delay": self.delay.value(),

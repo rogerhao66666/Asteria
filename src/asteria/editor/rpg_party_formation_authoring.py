@@ -60,7 +60,7 @@ class PartyFormationInformationArchitecture:
             "formations",
             "Formations",
             "formation_canvas",
-            ("Canvas", "Selected Slot", "Position", "Tags", "Adjacency"),
+            ("Canvas", "Selected Slot", "Position", "Properties", "Adjacency"),
         ),
         PartyFormationSection(
             "presentation",

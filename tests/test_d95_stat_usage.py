@@ -24,7 +24,7 @@ def test_the_card_names_every_record_and_its_page(project):
 
     text = stat_usage(project, "str")
     assert "1. Starting value of the actor</b> &nbsp;(Database ▸ Actors ▸ Base Stats)" in text
-    assert "Roger 21" in text and "Spirit Rider 19" in text
+    assert "Roger 32" in text and "Spirit Rider 30" in text
     assert "Database ▸ Classes / Jobs ▸ Growth per level" in text and "Brave +1.8" in text
     assert "Zealot +1.2" in text  # every job, none hidden behind "and N more"
     assert "Attributes ▸ STR: +1 a rank, up to 30 ranks" in text

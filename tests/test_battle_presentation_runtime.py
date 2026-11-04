@@ -113,6 +113,24 @@ def test_animation_cues_drive_attack_and_hit_then_return_to_idle():
     assert runtime.combatant("mimic").role == BattleAnimationRole.IDLE
 
 
+def test_any_clip_a_move_plays_goes_back_to_rest_when_it_has_played():
+    runtime = _runtime()
+    hero = runtime.combatant("hero")
+    hero.visual = BattleCombatantVisual(
+        "hero",
+        "sheet.hero",
+        "clips.hero",
+        BattleVisualAnchor(72, 104, "right", 0.1),
+        {"idle": "idle", "attack2": "slash"},
+    )
+    hero.timing_cache.clear()
+    assert hero.set_role("attack2")
+    assert hero.clip_name == "slash"
+    runtime.update(1.0)
+    assert hero.role == BattleAnimationRole.IDLE
+    assert hero.clip_name == "idle"
+
+
 def test_incapacitation_is_observed_as_ko_and_revive_returns_idle():
     hooks = LifecycleHookBus()
     coordinator = BattlePresentationCoordinator(_scene()).attach(hooks)

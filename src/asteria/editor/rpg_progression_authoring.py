@@ -88,7 +88,7 @@ class ProgressionEditorInformationArchitecture:
             "Abilities",
             "list_detail",
             ("ability_id", "tags"),
-            ("Targeting", "Costs", "Conditions", "Effects", "Tags"),
+            ("Targeting", "Costs", "Conditions", "Effects", "Properties"),
         ),
         ProgressionEditorSection(
             "passives",
@@ -109,7 +109,7 @@ class ProgressionEditorInformationArchitecture:
             "Skill Trees",
             "graph_detail",
             ("graph_id", "display_name", "node_count"),
-            ("Graph", "Selected Node", "Ranks & Costs", "Prerequisites", "Rewards", "Tags"),
+            ("Graph", "Selected Node", "Ranks & Costs", "Prerequisites", "Rewards", "Properties"),
         ),
         ProgressionEditorSection(
             "evolutions",

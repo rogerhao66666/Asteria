@@ -90,7 +90,7 @@ def tag_usage(project, tag_id):
     if engine:
         lines.append(t("Engine: {0}", t(engine)))
     if family is not None:
-        lines.append(t("Covers {0} tags: {1}", len(tags), _listed(tags) or t("none yet")))
+        lines.append(t("Covers {0} properties: {1}", len(tags), _listed(tags) or t("none yet")))
     uses = [u for x in tags for u in every.get(x, ())]
     carriers = [record for carries, _key, record in uses if carries]
     readers = [f"{record} ({words(key)})" for carries, key, record in uses if not carries]

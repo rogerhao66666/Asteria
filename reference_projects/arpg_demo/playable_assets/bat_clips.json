@@ -204,14 +204,6 @@
       "keyframes": [
         {
           "duration": 0.049999999999999996,
-          "frame_index": 10
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 11
-        },
-        {
-          "duration": 0.049999999999999996,
           "frame_index": 12
         },
         {
@@ -231,14 +223,6 @@
     },
     "attack_left": {
       "keyframes": [
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 72
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 73
-        },
         {
           "duration": 0.049999999999999996,
           "frame_index": 74
@@ -262,14 +246,6 @@
       "keyframes": [
         {
           "duration": 0.049999999999999996,
-          "frame_index": 103
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 104
-        },
-        {
-          "duration": 0.049999999999999996,
           "frame_index": 105
         },
         {
@@ -289,10 +265,6 @@
     },
     "attack_up": {
       "keyframes": [
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 41
-        },
         {
           "duration": 0.049999999999999996,
           "frame_index": 42

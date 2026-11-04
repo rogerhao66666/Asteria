@@ -139,6 +139,34 @@ def test_knockout_pose_waits_for_the_killing_blow(battle):
     assert state.defeated  # ...the KO pose follows the impact
 
 
+def test_a_guard_or_a_friends_heal_makes_nobody_flinch(battle):
+    runtime, adapter = battle
+    hero = runtime._battle_actor()
+    friend = next(m for m in runtime.game.active_hero_ids() if m != hero)
+    foe = next(iter(runtime.game.active_enemy_ids()))
+    assert not adapter._flinches(hero, hero)
+    assert not adapter._flinches(hero, friend)
+    assert adapter._flinches(hero, foe)
+    assert adapter._flinches(foe, hero)
+
+
+def test_the_last_blow_of_a_battle_still_plays_out(battle):
+    runtime, _adapter = battle
+    game = runtime.game
+    for _ in range(40):  # the game lets go of the battle before the last blow's beats run
+        for foe in game.active_enemy_ids():
+            member = game.battle.member(foe)
+            member.subject.resources.set_current(game.rules.knockout_resource_id, 1)
+        runtime._use_skill(0)
+        runtime._present_battle(0.0)
+        _settle(runtime)
+        if game.battle is None:
+            return
+        runtime._advance_to_hero_turn()
+        _settle(runtime)
+    raise AssertionError("the battle never ended")
+
+
 def test_capture_prompt_appears_in_the_canonical_action_menu(battle):
     from asteria.rpg import CaptureRule
 

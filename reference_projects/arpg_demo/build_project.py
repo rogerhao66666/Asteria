@@ -368,13 +368,13 @@ def combat_content(project, looks, icons):
         library.add_projectile(projectile)
 
     timelines = (
-        ActionTimeline("punch", [anim(0.0), hit("punch", 0.05), end("punch", 0.28)]),
+        ActionTimeline("punch", [anim(0.0), hit("punch", 0.1), end("punch", 0.28)]),
         # warrior: a three-hit combo, whirlwind, a leaping strike, a war cry
         ActionTimeline(
             "w_slash1",
             [
                 anim(0.0),
-                hit("w_cut", 0.06, width=26, height=20, offset_x=14),
+                hit("w_cut", 0.1, width=26, height=20, offset_x=14),
                 ActionCue("c1", 0.12, "combo_window", {"duration": 0.25, "next": "w_slash2"}),
                 end("w_slash1", 0.3),
             ],
@@ -383,7 +383,7 @@ def combat_content(project, looks, icons):
             "w_slash2",
             [
                 anim(0.0),
-                hit("w_cut", 0.06, width=26, height=20, offset_x=14),
+                hit("w_cut", 0.1, width=26, height=20, offset_x=14),
                 ActionCue("c2", 0.12, "combo_window", {"duration": 0.25, "next": "w_slash3"}),
                 end("w_slash2", 0.3),
             ],
@@ -506,13 +506,15 @@ def combat_content(project, looks, icons):
             ],
         ),
         # monsters
-        ActionTimeline("slime_bite", [hit("slime_bite", 0.25, 0.12), end("slime_bite", 0.6)]),
-        ActionTimeline("eye_shot", [shoot("beam", 0.3, "eye_bolt"), end("eye_shot", 0.6)]),
+        ActionTimeline("slime_bite", [hit("slime_bite", 0.23, 0.12), end("slime_bite", 0.6)]),
+        ActionTimeline(
+            "eye_shot", [anim(0.107), shoot("beam", 0.3, "eye_bolt"), end("eye_shot", 0.6)]
+        ),
         ActionTimeline(
             "skull_slash",
             [
                 move("step", 0.0, 90, 0.15, relative="facing"),
-                hit("skull_slash", 0.2, 0.12, width=24, height=20, offset_x=12),
+                hit("skull_slash", 0.23, 0.12, width=24, height=20, offset_x=12),
                 end("skull_slash", 0.6),
             ],
         ),
@@ -520,35 +522,47 @@ def combat_content(project, looks, icons):
             "cyclops_smash",
             [
                 ActionCue("armor", 0.0, "armor", {"duration": 1.0}),
+                anim(0.445),
                 hit("cyclops_smash", 0.55, 0.15, width=64, height=56, offset_x=10),
                 end("cyclops_smash", 1.0),
             ],
         ),
         ActionTimeline(
             "cyclops_throw",
-            [shoot("throw", 0.35, "rock", count=3, spread=40), end("cyclops_throw", 0.8)],
+            [
+                anim(0.245),
+                shoot("throw", 0.35, "rock", count=3, spread=40),
+                end("cyclops_throw", 0.8),
+            ],
         ),
         ActionTimeline(
             "walker_bump",
             [
                 move("charge", 0.0, 120, 0.25, relative="facing"),
-                hit("walker_bump", 0.1, 0.15),
+                hit("walker_bump", 0.13, 0.15),
                 end("walker_bump", 0.6),
             ],
         ),
-        ActionTimeline("drone_shot", [shoot("zap", 0.3, "drone_bolt"), end("drone_shot", 0.7)]),
+        ActionTimeline(
+            "drone_shot", [anim(0.065), shoot("zap", 0.3, "drone_bolt"), end("drone_shot", 0.7)]
+        ),
         ActionTimeline(
             "golem_slam",
             [
                 ActionCue("armor", 0.0, "armor", {"duration": 1.0}),
                 move("hop", 0.0, 110, 0.3, relative="facing"),
+                anim(0.281),
                 hit("golem_slam", 0.45, 0.15, width=70, height=40, offset_x=8),
                 end("golem_slam", 1.0),
             ],
         ),
         ActionTimeline(
             "golem_volley",
-            [shoot("spray", 0.3, "drone_bolt", count=5, spread=60), end("golem_volley", 0.8)],
+            [
+                anim(0.131),
+                shoot("spray", 0.3, "drone_bolt", count=5, spread=60),
+                end("golem_volley", 0.8),
+            ],
         ),
     )
     for timeline in timelines:

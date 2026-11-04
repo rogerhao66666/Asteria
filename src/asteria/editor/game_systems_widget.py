@@ -13,6 +13,7 @@ import re
 import weakref
 
 from PySide6.QtCore import QSignalBlocker, Qt, QTimer, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -43,7 +44,7 @@ from .authoring_sidebar import authoring_sidebar
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
 from .i18n import translate
 from .project_empty_state import ProjectEmptyState
-from .record_form import Picker
+from .record_form import ColorButton, Picker, basic_first
 from .responsive_form import ResponsiveForm, ResponsiveSplit
 from .ui_fit import fit_combo_to_items
 
@@ -189,7 +190,7 @@ class _PauseOrder(QWidget):
         for entry in pause_order(order, self.engine):
             name, why_not = names[entry]
             item = QListWidgetItem(name)
-            tip = [translate("Internal ID: {0}").format(entry)]
+            tip = []
             if why_not:  # the game has nothing it opens: it is not shown whatever the tick
                 if not self.compact:
                     item.setText(f"{name}    ({translate('not in this game: needs {0}')})")
@@ -291,7 +292,7 @@ class _TableField(QGroupBox):
         for name_key in ("display_name", "name", "label", "title"):  # a rarity: "Common"
             if any(f.key == name_key for f in self.fields) and str(row.get(name_key) or ""):
                 return str(row[name_key])
-        first = self.fields[0]
+        first = next((f for f in self.fields if f.kind != "row_id"), self.fields[0])
         value = row.get(first.key, "")
         if first.kind in ("ref", "optional_ref") and value:
             for choice in self.detail._reference_choices(first):
@@ -349,7 +350,7 @@ class _TableField(QGroupBox):
 
     def add_row(self):
         self._commit()
-        self.rows.append(new_row(self.fields))
+        self.rows.append(_fresh_row(self.fields, self.rows))
         self.list.addItem(self._label(self.rows[-1]))
         self.list.setCurrentRow(len(self.rows) - 1)
         return self.detail
@@ -411,11 +412,79 @@ _SWITCH_KEYS = (
 _VALUE_KEYS = {  # a field offering the values another field uses
     "asset_id": "asset_id",  # a music track's audio
     "rarity": "rarity",  # a gacha prize's rarity: one of the banner's
+    "pity_rarity": "rarity_id",
+    "multi_guarantee": "rarity_id",
     "side": "side",
     "event": "event",
     "default_difficulty": "difficulty_id",
     "default_locale": "locale",
 }
+
+
+def _fresh_row(fields, rows):
+    """A new table row whose own ids (``row_id`` fields) differ from the other rows':
+    "common", "common2"..."""
+    row = new_row(fields)
+    for f in fields:
+        if f.kind == "row_id":
+            taken = {str(r.get(f.key)) for r in rows}
+            base = str(row.get(f.key) or f.key.removesuffix("_id")) or "row"
+            key, n = base, 2
+            while key in taken:
+                key, n = f"{base}{n}", n + 1
+            row[f.key] = key
+    return row
+
+
+class _RgbButton(ColorButton):
+    """A colour kept as "r, g, b" text (``text`` / ``setText``), picked from the colour
+    dialog; the button shows it."""
+
+    def __init__(self):
+        super().__init__("")
+
+    def setText(self, text):  # noqa: N802 - the line edit's API
+        parts = [p for p in str(text or "").replace(";", ",").split(",") if p.strip()]
+        try:
+            r, g, b = (max(0, min(255, int(float(p)))) for p in parts[:3])
+        except ValueError:
+            self.color = ""
+        else:
+            self.color = f"#{r:02x}{g:02x}{b:02x}"
+        self._show()
+
+    def text(self):
+        if not self.color:
+            return ""
+        c = QColor(self.color)
+        return f"{c.red()}, {c.green()}, {c.blue()}"
+
+    def _show(self):
+        """The swatch speaks; the numbers in its tooltip (setText here is the id's API)."""
+        QPushButton.setText(self, "" if self.color else "None")
+        self.setStyleSheet(f"QPushButton {{ background: {self.color}; }}" if self.color else "")
+        self.setToolTip(self.text())
+
+
+class _IdLine(QLabel):
+    """A record's id, read only: "Internal ID: starfall  ⓘ" (why it stays fixed in the tip);
+    ``text`` / ``setText`` are the id's, as the line edit it replaces."""
+
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet("color: #8b8e98; font-size: 11px;")  # record_form._small's look
+        self.setToolTip(
+            "Other records and saves refer to it by this, so it stays fixed. "
+            "The name players see is set in the form."
+        )
+        self._id = ""
+
+    def setText(self, text):  # noqa: N802 - the line edit's API
+        self._id = str(text or "")
+        super().setText(f"Internal ID: {self._id}  ⓘ" if self._id else "")
+
+    def text(self):
+        return self._id
 
 
 class _TextPicker(Picker):
@@ -511,7 +580,18 @@ class _Ticks(QWidget):
         return {key: check.isChecked() for key, check in self.checks.items()}
 
 
-_FLAT_KINDS = ("text", "int", "float", "bool", "choice", "ref", "optional_ref", "optional_int")
+_FLAT_KINDS = (
+    "row_id",
+    "rgb",
+    "text",
+    "int",
+    "float",
+    "bool",
+    "choice",
+    "ref",
+    "optional_ref",
+    "optional_int",
+)
 
 
 def _flat(fields):
@@ -599,7 +679,7 @@ class _InlineTable(QGroupBox):
         return form
 
     def add_row(self):
-        return self._append(new_row(self.fields))
+        return self._append(_fresh_row(self.fields, self.rows))
 
     def remove_row(self):
         if self.forms:
@@ -676,7 +756,8 @@ class _IconPicker(QWidget):
     def _show_name(self):
         from .icon_picker_dialog import icon_name
 
-        self.name.setText(icon_name(self.text()) if self.text() else "None")
+        namer = self.library.name_of if self.library is not None else icon_name
+        self.name.setText(namer(self.text()) if self.text() else "None")
         self.name.setToolTip(self.text())
 
     @staticmethod
@@ -771,9 +852,26 @@ def _header_keys(fields):
     return tuple(keys)
 
 
+class _Card(QFrame):
+    """A form card as tall as its fields need at its width: a list that fills in after the
+    card was first laid out (a record's tags) is never squeezed under the next field."""
+
+    def _needed(self, size):
+        layout = self.layout()
+        if layout is not None and self.width() > 0 and layout.hasHeightForWidth():
+            size.setHeight(max(size.height(), layout.heightForWidth(self.width())))
+        return size
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        return self._needed(super().minimumSizeHint())
+
+    def sizeHint(self):  # noqa: N802 - Qt API
+        return self._needed(super().sizeHint())
+
+
 def _form_card(name, body):
     """``body`` in a card styled as record_form's (FormHeader, FormSection)."""
-    card = QFrame()
+    card = _Card()
     card.setObjectName(name)
     column = QVBoxLayout(card)
     column.setContentsMargins(12, 10, 12, 10)
@@ -815,10 +913,13 @@ class RecordForm(QWidget):
         # in the header card, the other fields in a card below
         self.head_grid = None
         head_keys = _header_keys(self.fields) if cards else ()
-        if head_keys:
-            self.head_grid = ResponsiveForm(self, column_width=self.column_width)
-            outer.addWidget(_form_card("FormHeader", self.head_grid))
-            outer.addSpacing(10)
+        if len(head_keys) < 2:  # no name: no header card (the id is never shown)
+            head_keys = ()
+        if head_keys or cards:
+            if head_keys:
+                self.head_grid = ResponsiveForm(self, column_width=self.column_width)
+                outer.addWidget(_form_card("FormHeader", self.head_grid))
+                outer.addSpacing(10)
             outer.addWidget(_form_card("FormSection", self.grid))
             outer.addStretch(1)
         else:
@@ -839,9 +940,14 @@ class RecordForm(QWidget):
                 continue
             grid = self.head_grid if f.key in head_keys else self.grid
             self._grids[f.key] = grid
-            if f.key in head_keys and f.kind == "text" and f.key in NAME_FIELD_KEYS:
+            is_name = f.key in head_keys and f.kind == "text" and f.key in NAME_FIELD_KEYS
+            if is_name:
                 widget.setObjectName("FormName")  # the record's name, large as in Game Data
-            if f.kind in ("group", "table", "translations"):  # a caption, the box below it
+            if f.kind in ("row_id", "id"):
+                continue  # not in the layout: kept, never shown (the list row's tip has it)
+            elif f.kind in ("group", "table", "translations"):  # a caption, the box below it
+                self._rows[f.key] = grid.add_row(f.label, widget, span=True, help_text=f.help)
+            elif is_name:  # the name across the header, from its left edge (Game Data's)
                 self._rows[f.key] = grid.add_row(f.label, widget, span=True, help_text=f.help)
             else:
                 self._rows[f.key] = grid.add_row(
@@ -850,7 +956,9 @@ class RecordForm(QWidget):
                     help_text=f.help,
                     aside=aside if f.key == "description" else None,
                     # tables and long text (a translation, a description) take a whole row
-                    span=f.kind in ("amounts", "pairs", "ref_list", "multiline", "info", "formula")
+                    span=f.kind
+                    in ("amounts", "pairs", "ref_list", "string_list", "multiline", "info")
+                    or f.kind == "formula"
                     or f.kind == "pause_order"
                     or f.key in ("text", "description", "message", "detail"),
                 )
@@ -896,6 +1004,7 @@ class RecordForm(QWidget):
             "table": "changed",
             "translations": "changed",
             "formula": "edited",
+            "rgb": "edited",
         }
         if f.kind == "optional_int":
             widget.check.toggled.connect(self._edited)
@@ -967,6 +1076,14 @@ class RecordForm(QWidget):
         if key in _VALUE_KEYS:
             values = vocabulary.values_for(_VALUE_KEYS[key])
             return [Choice(v, words(v)) for v in values]
+        audio = ("_sound", "music")
+        if key.endswith(audio):  # a sound or a track: every one the project's fields use
+            vocabulary.values_for(key)  # the project's values, gathered once
+            used = set()
+            for other, found in (vocabulary._values or {}).items():
+                if str(other).endswith(audio) or str(other) == "asset_id" and key == "music":
+                    used.update(found)
+            return [Choice(v, words(v.rsplit("/", 1)[-1])) for v in sorted(used) if v]
         return []
 
     def _reference_choices(self, f):
@@ -989,7 +1106,56 @@ class RecordForm(QWidget):
                 out.append(Choice(str(value), str(label)))
             return out
         kind = map_source(f.key)
-        return list(self._vocabulary().choices(kind)) if kind else []
+        choices = list(self._vocabulary().choices(kind)) if kind else []
+        if f.pools_key or f.with_pools:  # HP, MP and the like are stats on the form
+            special = self._special_resources()
+            pools = basic_first(self._vocabulary().choices("resources"))
+            shown = [c for c in pools if c.value not in special]
+            held = {c.value for c in shown}
+            return [*shown, *(c for c in choices if c.value not in held)]
+        if any(other.pools_key == f.key for other in self.fields):
+            return [c for c in choices if c.value in self._special_resources()]
+        return choices
+
+    def _special_resources(self):
+        """The resources that are a mechanic of their own: those with a Battle Resources rule."""
+        database = getattr(self._vocabulary().project, "rpg_database", None)
+        return set(getattr(database, "battle_resources", ()) or ())
+
+    def _fill_joined(self, stats_field, data):
+        """HP, MP and the like shown among the stats, only the mechanics under Resources."""
+        stats, pools = self.widgets[stats_field.key], self.widgets[stats_field.pools_key]
+        special = self._special_resources()
+        for field, table in ((stats_field, stats), (self._field(stats_field.pools_key), pools)):
+            table.choices = tuple(self._reference_choices(field))
+            table._labels = {c.value: c.label for c in table.choices}
+        held = {str(k): float(v) for k, v in dict(data.get(stats_field.pools_key) or {}).items()}
+        pools.values = {k: v for k, v in held.items() if k in special}
+        stats.values = {**{k: v for k, v in held.items() if k not in special}, **stats.values}
+        stats._build()
+        pools._build()
+
+    def _joined_data(self, stats_field, out):
+        """Each number of the joined tables back where the engine keeps it; one the record held
+        as both a stat and a resource stays both, its stat being the number shown."""
+        key = stats_field.pools_key
+        held_stats = dict(self._original.get(stats_field.key) or {})
+        held_pools = dict(self._original.get(key) or {})
+        pool_ids = {c.value for c in self._vocabulary().choices("resources")}
+        stats, pools = {}, {k: float(v) for k, v in self.widgets[key].values.items()}
+        for name, amount in self.widgets[stats_field.key].values.items():
+            if name in held_stats:
+                stats[name] = float(amount)
+                if name in held_pools and name not in pools:
+                    pools[name] = float(held_pools[name])
+            elif name in held_pools or name in pool_ids:
+                pools[name] = float(amount)
+            else:
+                stats[name] = float(amount)
+        out[stats_field.key], out[key] = stats, pools
+
+    def _field(self, key):
+        return next(f for f in self.fields if f.key == key)
 
     def _build(self, f):
         if f.kind == "info":  # worked out by the controller: read, never edited (D91)
@@ -1001,9 +1167,15 @@ class RecordForm(QWidget):
             widget.setContentsMargins(10, 8, 10, 8)
             widget.setTextInteractionFlags(Qt.TextSelectableByMouse)
             return widget
-        if f.kind == "id":
-            widget = QLineEdit()
-            widget.setReadOnly(True)
+        if f.kind == "id":  # the record's id: kept with the form, not shown
+            widget = _IdLine()
+            widget.hide()
+            return widget
+        if f.kind == "rgb":  # a colour, picked: its swatch on the button
+            return _RgbButton()
+        if f.kind == "row_id":  # a table row's own id: kept, made, not shown
+            widget = _IdLine()
+            widget.hide()
             return widget
         if f.kind == "formula":  # typed or built with buttons, the declared stats only (D94)
             from .formula_field import FormulaField
@@ -1068,6 +1240,12 @@ class RecordForm(QWidget):
             from .record_form import ChipList
             from .record_vocabulary import Choice, is_tag_field, tag_label
 
+            if f.choices:  # a closed set: picked in words, never typed
+                from .record_vocabulary import words as in_words
+
+                pairs = [c if isinstance(c, tuple) else (c, in_words(c)) for c in f.choices]
+                closed = [Choice(value, label) for value, label in pairs]
+                return ChipList((), closed, allow_new=False, noun=self._noun(f))
             vocabulary = self._vocabulary()
             words = vocabulary.tags() if is_tag_field(f.key) else ()
             names = vocabulary.names() if words else {}
@@ -1110,9 +1288,15 @@ class RecordForm(QWidget):
 
     def _fill(self, data):
         self._original = copy.deepcopy(data)
+        self._fill_fields(data)
+        for f in self.fields:
+            if f.pools_key:
+                self._fill_joined(f, data)
+
+    def _fill_fields(self, data):
         for f in self.fields:
             widget, value = self.widgets[f.key], data.get(f.key, f.default)
-            if f.kind in ("id", "text", "icon", "info", "formula"):
+            if f.kind in ("id", "row_id", "rgb", "text", "icon", "info", "formula"):
                 widget.setText("" if value is None else str(value))
             elif f.kind == "multiline":
                 widget.setPlainText(str(value or ""))
@@ -1165,7 +1349,7 @@ class RecordForm(QWidget):
                 if not widget.valid():  # shown under the field; the page says not applied
                     raise GameSystemsAuthoringError(f"{f.label}: {widget.problem()}")
                 out[f.key] = widget.text()
-            elif f.kind in ("id", "text", "icon"):
+            elif f.kind in ("id", "row_id", "rgb", "text", "icon"):
                 out[f.key] = widget.text().strip()
             elif f.kind == "multiline":
                 out[f.key] = widget.toPlainText()
@@ -1194,6 +1378,9 @@ class RecordForm(QWidget):
                 out[f.key] = widget.form.data()
             elif f.kind in ("table", "translations"):
                 out[f.key] = widget.values()
+        for f in self.fields:
+            if f.pools_key:
+                self._joined_data(f, out)
         return out
 
 
@@ -1426,10 +1613,9 @@ class GameSystemsEditorWidget(QWidget):
         from .record_vocabulary import vocabulary_for
 
         names = vocabulary_for(self.controller.document).names()
-        for key in ids:  # the record's name; its id is the row's data and its tooltip
+        for key in ids:  # the record's name; its id is the row's data
             item = QListWidgetItem(self._record_name(key, names))
             item.setData(Qt.UserRole, key)
-            item.setToolTip(f"Internal ID: {key}")
             self.browser.addItem(item)
         self.browser.blockSignals(False)
         self.form.setEnabled(bool(ids))

@@ -97,7 +97,7 @@ class BattleRulesInformationArchitecture:
                     "Source Conditions",
                     "Target Conditions",
                     "Value Resolution",
-                    "Outcome Tags",
+                    "Outcome Properties",
                     "Priority",
                 ),
             ),
@@ -107,7 +107,7 @@ class BattleRulesInformationArchitecture:
                 "outcome_checks",
                 OutcomeCheckDefinition,
                 "check_id",
-                ("Base Chance", "Stat Terms", "Tag Conditions", "Success / Failure"),
+                ("Base Chance", "Stat Terms", "Property Conditions", "Success / Failure"),
             ),
             BattleRuleKind(
                 "targeting",
@@ -115,7 +115,7 @@ class BattleRulesInformationArchitecture:
                 "battle_targeting",
                 BattleTargetingDefinition,
                 "ability_id",
-                ("Relation", "Selection", "Target Count", "Tags", "Metrics", "Adjacency"),
+                ("Relation", "Selection", "Target Count", "Properties", "Metrics", "Adjacency"),
             ),
             BattleRuleKind(
                 "schedulers",
@@ -155,7 +155,7 @@ class BattleRulesInformationArchitecture:
                 "reactions",
                 ReactionDefinition,
                 "reaction_id",
-                ("Trigger", "Reactor / Target Selection", "Ability", "Tags", "Chain Policy"),
+                ("Trigger", "Reactor / Target Selection", "Ability", "Properties", "Chain Policy"),
             ),
             BattleRuleKind(
                 "objectives",

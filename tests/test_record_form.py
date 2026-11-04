@@ -41,7 +41,7 @@ def test_fields_get_friendly_widgets(app):
     _project, _document, family = _family("actors", "hero_01")
     form = family.editor
     stats = [t for t in form.findChildren(AmountTable) if "str" in t.values]
-    assert stats and stats[0].values["str"] == 21  # the base stats, as a table of numbers
+    assert stats and stats[0].values["str"] == 32  # the base stats, as a table of numbers
     chips = [c for c in form.findChildren(ChipList) if "trait.cover" in c.values]
     assert chips  # tags as chips
     pickers = [p for p in form.findChildren(Picker) if p.value() == "brave"]
@@ -59,7 +59,7 @@ def test_an_edit_applies_on_its_own_and_undoes(app):
     family.auto_apply()  # what the timer does a moment after typing stops
     assert project.rpg_database.actors["hero_01"].base_stats["str"] == 20
     document.undo()
-    assert project.rpg_database.actors["hero_01"].base_stats["str"] == 21
+    assert project.rpg_database.actors["hero_01"].base_stats["str"] == 32
 
 
 def test_a_bad_value_is_shown_and_not_applied(app):
@@ -167,6 +167,53 @@ def test_a_help_tooltip_opens_right_beside_its_mark(app):
     family.close()
 
 
+def test_help_says_only_the_help_not_the_data_key(app):
+    from PySide6.QtWidgets import QLabel
+
+    _project, _document, family = _family("actors", "hero_01")
+    tips = [lb.toolTip() for lb in family.findChildren(QLabel) if "ⓘ" in lb.text()]
+    assert not [tip for tip in tips if "data:" in tip or "\n\n" in tip]
+    bare = [lb for lb in family.findChildren(QLabel) if lb.objectName() == "FormFieldLabel"]
+    assert bare and not [lb.text() for lb in bare if lb.toolTip() and "ⓘ" not in lb.text()]
+    family.close()
+
+
+def test_a_card_of_lists_is_called_after_what_is_in_it(app):
+    from PySide6.QtWidgets import QToolButton
+
+    from asteria.editor.record_form import Section, _lists_title
+
+    assert _lists_title(["Properties"]) == "Properties"
+    assert _lists_title(["Properties", "Abilities"]) == "Properties and Abilities"
+    assert _lists_title(["Skills", "Properties", "Blocked Slots"]) == "Lists"
+    _project, _document, family = _family("actors", "hero_01")
+    titles = [section.toggle.text() for section in family.findChildren(Section)]
+    assert "Properties and Abilities" in titles
+    adds = [b.text() for b in family.findChildren(QToolButton) if b.objectName() == "FormAddChip"]
+    assert "+ Add property" in adds
+    family.close()
+
+
+def test_short_help_after_long_help_gets_a_short_box(app):
+    from PySide6.QtWidgets import QLabel
+
+    from asteria.editor.decor import help_box, install, show_help_tip
+
+    install(app)
+    label = QLabel("Basics ⓘ")
+    label.show()
+    label.setToolTip("Short.")
+    show_help_tip(label)
+    short = help_box().height()
+    label.setToolTip("Long help that has to wrap onto further lines of the box. " * 8)
+    show_help_tip(label)
+    assert help_box().height() > short
+    label.setToolTip("Short.")
+    show_help_tip(label)
+    assert help_box().height() == short
+    label.close()
+
+
 def test_long_help_wraps_to_the_room_on_the_right(app):
     from PySide6.QtCore import QEvent, QPoint
     from PySide6.QtGui import QHelpEvent
@@ -242,9 +289,113 @@ def test_tags_are_a_table_and_resources_one_grid(app):
     tags.table.cellWidget(row, 2).click()  # ✕ removes the row
     assert "trait.cover" not in tags.values and tags.table.rowCount() == len(tags.values)
     (matrix,) = form.findChildren(NumberMatrix)
-    assert list(matrix.values)[0] == "vitality" and matrix.columns[:2] == ["current", "maximum"]
-    matrix._set("vitality", "maximum", 4000.0)
-    assert form._data["base_resources"]["vitality"]["maximum"] == 4000.0
+    assert matrix.columns == ["maximum", "current", "minimum"]
+
+
+def test_hp_and_mp_are_stats_and_resources_are_the_special_ones(app):
+    from asteria.editor.growth_curves import StatBar, StatComparison
+    from asteria.editor.record_form import AmountTable, NumberMatrix
+
+    _project, _document, family = _family("actors", "hero_01")
+    form = family.editor
+    (table,) = [t for t in form.findChildren(AmountTable) if "str" in t.values]
+    (special,) = form.findChildren(NumberMatrix)
+    assert table.values["vitality"] == 3200 and table.values["str"] == 32
+    assert list(table._labels)[:2] == ["vitality", "technique"]
+    assert not special.values and "shield" in special.labels
+    assert "shield" not in table._labels  # a mechanic of its own: not among the stats
+
+    table._set("vitality", 4000.0)  # the engine's own places, a full resource stays full
+    pool = form._data["base_resources"]["vitality"]
+    assert pool["maximum"] == 4000.0 and pool["current"] == 4000.0 and pool["minimum"] == 0.0
+    assert "vitality" not in form._data["base_stats"]
+    table._set("str", 30.0)
+    assert form._data["base_stats"]["str"] == 30.0 and "str" not in form._data["base_resources"]
+
+    # one table for a mechanic's amounts; a full one stays full, one that isn't keeps its start
+    special.values["shield"] = special.new_row("shield")
+    special.edited.emit()
+    assert form._data["base_resources"]["shield"]["maximum"] == 1.0  # its rule's maximum
+    special._set("shield", "maximum", 9.0)
+    assert form._data["base_resources"]["shield"]["current"] == 9.0
+    special._set("shield", "current", 2.0)
+    special._set("shield", "maximum", 12.0)
+    assert form._data["base_resources"]["shield"] == {
+        "current": 2.0,
+        "maximum": 12.0,
+        "minimum": 0.0,
+    }
+    table._set("str", 31.0)  # another table's edit leaves it alone
+    assert form._data["base_resources"]["shield"]["current"] == 2.0 and "shield" in special.values
+    assert "shield" not in table.values
+    special._remove("shield")
+    assert "shield" not in form._data["base_resources"]
+
+    # HP added there gets its own start, and is the same number as among the stats
+    special.values["technique"] = special.new_row("technique")
+    special.edited.emit()
+    special._set("technique", "current", 50.0)
+    special._set("technique", "maximum", 500.0)
+    assert table.values["technique"] == 500.0
+    table._set("technique", 600.0)
+    assert special.values["technique"]["maximum"] == 600.0
+    pool = form._data["base_resources"]["technique"]
+    assert pool["maximum"] == 600.0 and pool["current"] == 50.0
+    special._remove("technique")  # taken off: full again, and still among the stats
+    pool = form._data["base_resources"]["technique"]
+    assert pool["current"] == 600.0 == pool["maximum"] and table.values["technique"] == 600.0
+    table._remove("technique")
+    assert "technique" not in form._data["base_resources"]
+    (compared,) = [c for c in form.findChildren(StatComparison) if c.key == "base_stats"]
+    assert compared._numbers(form._data)["vitality"] == 4000.0
+
+    _project, _document, family = _family("enemies", "vaelor")
+    form = family.editor
+    (table,) = [t for t in form.findChildren(AmountTable) if "speed" in t.values]
+    (special,) = [t for t in form.findChildren(AmountTable) if t.noun == "resource"]
+    assert table.values["vitality"] == 36000 and set(special.values) == {"shield"}
+    before = dict(form._data["resources"])
+    table._set("vitality", 100.0)
+    special._set("shield", 3.0)
+    assert form._data["resources"] == {**before, "vitality": 100.0, "shield": 3.0}
+    assert "vitality" not in form._data["stats"]
+    (stats,) = [c for c in form.findChildren(StatComparison) if c.key == "stats"]
+    hp = next(b for b in stats.findChildren(StatBar) if b.value == 36000 or b.value == 100)
+    assert hp is not None
+
+    _project, _document, family = _family("classes", "brave")
+    form = family.editor
+    (table,) = [t for t in form.findChildren(AmountTable) if "str" in t.values]
+    assert "vitality" in table.values
+    table._set("vitality", 77.0)
+    assert form._data["resource_growth"]["vitality"] == 77.0
+    assert "vitality" not in form._data["level_growth"]
+    held = dict(form._data["resource_bonuses"])
+    assert held and not any(t.noun == "resource" and held.keys() & t.values.keys()
+                            for t in form.findChildren(AmountTable))  # fmt: skip
+    bonuses = form._paired[("stat_bonuses", "resource_bonuses")].stats
+    assert held.keys() <= bonuses.values.keys()
+    key = next(iter(held))
+    bonuses._set(key, 5.0)
+    assert form._data["resource_bonuses"][key] == 5.0 and key not in form._data["stat_bonuses"]
+
+
+def test_each_side_is_compared_with_its_own_side_only(app):
+    from asteria.editor.growth_curves import StatBar, StatComparison
+
+    project, _document, family = _family("enemies", "vaelor")
+    enemies = project.rpg_database.enemies
+    speeds = [e.stats["speed"] for e in enemies.values() if "speed" in e.stats]
+    (stats,) = [c for c in family.editor.findChildren(StatComparison) if c.key == "stats"]
+    bar = next(b for b in stats.findChildren(StatBar) if b.title == "SPD")
+    assert bar.average == pytest.approx(sum(speeds) / len(speeds))
+
+    project, _document, family = _family("actors", "hero_01")
+    actors = project.rpg_database.actors
+    strengths = [a.base_stats["str"] for a in actors.values() if "str" in a.base_stats]
+    (stats,) = [c for c in family.editor.findChildren(StatComparison) if c.key == "base_stats"]
+    bar = next(b for b in stats.findChildren(StatBar) if b.title == "STR")
+    assert bar.average == pytest.approx(sum(strengths) / len(strengths))
 
 
 def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
@@ -481,6 +632,29 @@ def test_record_lists_show_names_and_icons_read_as_words(app):
 
     assert icon_name("icon.alchemy_salt") == "Alchemy Salt"
     assert icon_name("asset_library/x/I_Clock.png") == "Clock"
-    chips = ChipList(["fire"], [Choice("fire", "Fire Bolt")], noun="skill")
+    from PySide6.QtGui import QIcon, QPixmap
+
+    pixmap = QPixmap(8, 8)
+    pixmap.fill()
+    chips = ChipList(
+        ["fire"],
+        [Choice("fire", "Fire Bolt", icon="fire")],
+        noun="skill",
+        icons=lambda _name: QIcon(pixmap),
+    )
     assert chips.table.isColumnHidden(1)  # the name only; the id is in the tooltip
     assert chips.table.item(0, 0).toolTip().endswith("fire")
+    box = chips.table.cellWidget(0, 0)
+    assert not box.itemIcon(box.currentIndex()).isNull()  # the drop-down shows the icon
+    assert chips.table.item(0, 0).icon().isNull()  # and no second one is drawn beneath
+
+
+def test_a_needed_node_and_a_beat_cue_are_picked_in_words(app):
+    from asteria.editor.record_form import Picker, RecordForm, _node_pair
+
+    assert _node_pair("prerequisites", ["awaken", 1])
+    assert not _node_pair("tags", ["awaken", 1]) and not _node_pair("prerequisites", ["a"])
+    _project, _document, family = _family("growth", "sunbrand_growth")
+    named = [p.currentText() for p in family.editor.findChildren(Picker) if p.value() == "awaken"]
+    assert "Awaken" in named  # the node another needs, by its name
+    assert RecordForm._STAND_INS["@target"] == "The Target"  # "@target" in words

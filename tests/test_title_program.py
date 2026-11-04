@@ -137,6 +137,15 @@ def test_a_picture_of_words_fills_in_its_variables(monkeypatch):
         game.save.event_context.set_variable("badges", "12")
         two = rt._picture_image(game.pictures.get("info"))
         assert two.get_width() > one.get_width() > 0  # the words were drawn again
+        # the plain face a font falls back on draws the shadow too
+        game.pictures.show("plain", "", 8, 8, text="中", text_color=[0, 0, 0],
+                           shadow_color=[200, 10, 10])  # fmt: skip
+        plain = rt._picture_image(game.pictures.get("plain"))
+        assert (200, 10, 10) in {
+            tuple(plain.get_at((x, y)))[:3]
+            for x in range(plain.get_width())
+            for y in range(plain.get_height())
+        }
         with pytest.raises(ValueError):
             game.pictures.show("nothing", "", 0, 0)
         rt._frame([], 1 / 60)  # drawn among the pictures

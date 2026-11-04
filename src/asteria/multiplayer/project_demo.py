@@ -26,6 +26,7 @@ from asteria.runtime.character_control import (
 )
 from asteria.runtime.combat import CombatantComponent
 from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.entity_actions import action_clip
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.input import InputSnapshot
@@ -234,6 +235,7 @@ class ProjectDemoAdapter:
             "actions": {
                 eid: {
                     "timeline_id": run.timeline.timeline_id,
+                    "clip": action_clip(run),
                     "time": run.time,
                     "end": run.end,
                     "source": run.source,

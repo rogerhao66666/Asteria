@@ -343,7 +343,9 @@ class CodeWorkspaceWidget(QWidget):
         self._refresh_script_list()
 
     def _new_script_clicked(self):
-        name, ok = QInputDialog.getText(self, "New Script", "File name (scripts/…):")
+        name, ok = QInputDialog.getText(
+            self, "New Script", "File name (scripts/…):", text="new_script.py"
+        )
         if ok and name.strip():
             self.new_script(name.strip())
 

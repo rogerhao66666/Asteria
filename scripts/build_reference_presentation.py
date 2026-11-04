@@ -53,8 +53,8 @@ def motion_sequences():
     return (
         offensive("default_action", "battle.fx.slash", 0.24, 0.7, 4),
         offensive("strike", "battle.fx.slash", 0.24, 0.7, 4),
-        offensive("fire_arc", "battle.fx.flame", 0.32, 0.9, 5, flash=40),
-        offensive("meteor", "battle.fx.explosion", 0.45, 1.1, 9, flash=80),
+        offensive("fire_arc", "battle.fx.flame", 0.3, 0.9, 5, flash=40),
+        offensive("meteor", "battle.fx.explosion", 0.3, 1.1, 9, flash=80),
         BattleMotionSequence(
             "heal",
             0.8,

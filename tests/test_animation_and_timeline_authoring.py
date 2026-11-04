@@ -95,7 +95,7 @@ def test_timeline_edits_are_undoable_and_drive_the_battle_choreography(document)
     document.undo()
     document.undo()
     sequence = _resolver(document.project).motion_sequence("fire_arc")
-    assert next(b.at for b in sequence.beats if b.beat_id == "impact") == 0.32
+    assert next(b.at for b in sequence.beats if b.beat_id == "impact") == 0.3
 
 
 def test_battle_use_fields_are_editable_undoable_and_validated(document):

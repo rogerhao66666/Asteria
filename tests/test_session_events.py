@@ -303,4 +303,4 @@ def test_editor_world_argument_text_parses_to_typed_args():
     instruction = EventInstruction(
         "WORLD", {"command": "START_ENCOUNTER", "args": {"encounter_id": "boss_room"}}
     )
-    assert describe_instruction(instruction) == "World  START_ENCOUNTER  (encounter_id=boss_room)"
+    assert describe_instruction(instruction) == "World  Start Encounter  (Encounter: Boss Room)"

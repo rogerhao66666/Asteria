@@ -84,12 +84,11 @@ def sheet_title(project, asset_id):
 
 def fill_sheet_list(listing, ids, project):
     """Fill a list of sprite sheets with their names in words; each row keeps the sheet's
-    asset id as its data (and in its tooltip)."""
+    asset id as its data."""
     listing.clear()
     for asset_id in ids:
         item = QListWidgetItem(sheet_title(project, asset_id))
         item.setData(Qt.UserRole, asset_id)
-        item.setToolTip(f"Sheet id: {asset_id}")
         listing.addItem(item)
 
 
@@ -243,7 +242,7 @@ class AnimationEditorWidget(QWidget):
             lambda item, _old: self._clip_changed(self._id(item))
         )
         add_clip, remove_clip, rename_clip = (
-            QPushButton("New Clip…"),
+            QPushButton("New Clip"),
             QPushButton("Delete"),
             QPushButton("Rename…"),
         )
@@ -454,7 +453,6 @@ class AnimationEditorWidget(QWidget):
         for asset_id in sheets:
             item = QListWidgetItem(sheet_title(project, asset_id))
             item.setData(Qt.UserRole, asset_id)
-            item.setToolTip(f"Sheet id: {asset_id}")
             icon = self._sheet_icon(asset_id)
             if icon is not None:
                 item.setIcon(icon)
@@ -624,9 +622,10 @@ class AnimationEditorWidget(QWidget):
         return ok
 
     def _new_clip_clicked(self):
-        name, ok = QInputDialog.getText(self, "New Clip", "Clip name:")
-        if ok and name.strip():
-            self.new_clip(name.strip())
+        from .authoring_hub_widget import _free_id
+
+        clips = self.api.data(self.sheet)["clips"] if self.sheet else {}
+        self.new_clip(_free_id("", clips, "new_clip"))  # named for it; Rename… changes it
 
     def _rename_clicked(self):
         name, ok = QInputDialog.getText(self, "Rename Clip", "New name:", text=self.clip or "")

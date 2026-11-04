@@ -8,6 +8,7 @@ key conventions (``ability_id``, ``granted_tags``, ``stat_bonuses``...) are the 
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -34,6 +35,7 @@ REFERENCES = {  # field name -> vocabulary source
     "actors": "actors",
     "actor_ids": "actors",
     "members": "actors",
+    "owner_id": "actors",  # a summon's owner: usually "the one using the skill"
     "item_id": "items_and_equipment",
     "items": "items",
     "item_ids": "items",
@@ -206,7 +208,7 @@ LABELS = {
     "class_assignments": "Jobs",
     "base_stats": "Base Stats",
     "base_resources": "Resources",
-    "granted_tags": "Tags",
+    "granted_tags": "Properties",
     "granted_abilities": "Skills",
     "stat_bonuses": "Stat bonuses",
     "resource_bonuses": "Resource bonuses",
@@ -235,16 +237,16 @@ LABELS = {
     "drop_table_id": "Drop table",
     "multiplier": "Multiplier",
     "flat_delta": "Adds",
-    "outcome_tags": "Result Tags",
-    "success_tags": "Success Tags",
-    "failure_tags": "Failure Tags",
-    "source_tags_all": "Attacker: All Tags",
-    "source_tags_any": "Attacker: Any Tag",
-    "target_tags_all": "Target: All Tags",
-    "target_tags_any": "Target: Any Tag",
-    "blocked_source_tags": "Attacker: Blocked Tags",
-    "blocked_target_tags": "Target: Blocked Tags",
-    "required_source_tags": "Attacker: Required Tags",
+    "outcome_tags": "Result Properties",
+    "success_tags": "Success Properties",
+    "failure_tags": "Failure Properties",
+    "source_tags_all": "Attacker: All Properties",
+    "source_tags_any": "Attacker: Any Property",
+    "target_tags_all": "Target: All Properties",
+    "target_tags_any": "Target: Any Property",
+    "blocked_source_tags": "Attacker: Blocked Properties",
+    "blocked_target_tags": "Target: Blocked Properties",
+    "required_source_tags": "Attacker: Required Properties",
     "required_target_tags": "Target needs",
     "base_chance": "Chance",
     "minimum_chance": "Never below",
@@ -253,7 +255,7 @@ LABELS = {
     "target_stat_terms": "Target Stats",
     "multiplier_source_terms": "Attacker Multiplier Stats",
     "multiplier_target_terms": "Target Multiplier Stats",
-    "contributed_tags": "Active Tags",
+    "contributed_tags": "Active Properties",
     "duration": "Lasts",
     "power": "Power ×",
     "periodic": "Every turn",
@@ -275,8 +277,8 @@ LABELS = {
     "progression_track_id": "Rank Track",
     "minimum_rank": "Min Rank",
     "retain_source": "Keep Source Skill",
-    "required_tags": "Required Tags",
-    "blocked_tags": "Blocked Tags",
+    "required_tags": "Required Properties",
+    "blocked_tags": "Blocked Properties",
     # skill trees
     "max_rank": "Most ranks",
     "rank_costs": "Cost per rank",
@@ -296,7 +298,7 @@ LABELS = {
     "item_costs": "Uses up items",
     "currency_costs": "Costs money",
     "gauge_costs": "Gauge Costs",
-    "follow_tags": "Follow Tags",
+    "follow_tags": "Follow Properties",
     "forms": "Forms",
     "battle_resource_gains": "Battle Points",
     "commands": "Commands",
@@ -311,15 +313,15 @@ LABELS = {
     "destroyed_on_removal": "Destroy on Removal",
     "timeline_id": "Timeline",
     # states
-    "immune_target_tags": "Immune Tags",
+    "immune_target_tags": "Immune Properties",
     "duration_multiplier": "Duration ×",
     "prevent_action": "Prevents Action",
-    "blocked_ability_tags": "Blocked Skill Tags",
-    "allowed_ability_tags": "Allowed Skill Tags",
+    "blocked_ability_tags": "Blocked Skill Properties",
+    "allowed_ability_tags": "Allowed Skill Properties",
     "tick_trigger": "Counts down",
     "tick_amount": "Tick Amount",
     "remove_triggers": "Removed when",
-    "interaction_tags": "Tick Tags",
+    "interaction_tags": "Tick Properties",
     "target_override": "Target Override",
     "interval": "Every (turns)",
     "growth": "Grows by",
@@ -363,9 +365,9 @@ LABELS = {
     "recipient": "Recipient",
     "delta": "Changes by",
     "value_scale": "× the damage",
-    "required_outcome_tags_all": "Result: All Tags",
-    "required_outcome_tags_any": "Result: Any Tag",
-    "blocked_outcome_tags": "Result: Blocked Tags",
+    "required_outcome_tags_all": "Result: All Properties",
+    "required_outcome_tags_any": "Result: Any Property",
+    "blocked_outcome_tags": "Result: Blocked Properties",
     # presentation
     "battlefield_visible": "On Battlefield",
     "hud_visible": "In HUD",
@@ -388,8 +390,8 @@ HELP = {
     "required_capabilities": "Needs (capabilities)",
     "any_capabilities": "Needs one of (capabilities)",
     "forbidden_capabilities": "Not with (capabilities)",
-    "success_tags": "Tags when it succeeds",
-    "failure_tags": "Tags when it fails",
+    "success_tags": "Properties when it succeeds",
+    "failure_tags": "Properties when it fails",
     "source_tags_all": "Attacker needs all of",
     "source_tags_any": "Attacker needs one of",
     "target_tags_all": "Target needs all of",
@@ -406,7 +408,7 @@ HELP = {
     "unlocked_passives": "Passives it unlocks",
     "node_positions": "Positions in the graph view",
     "gauge_costs": "Costs party gauge",
-    "follow_tags": "Tags carried into follow-ups",
+    "follow_tags": "Properties carried into follow-ups",
     "commands": "World commands it runs",
     "concoct_station": "Concoction station",
     "cooldown_seconds": "Cooldown (seconds, real-time)",
@@ -418,7 +420,7 @@ HELP = {
     "blocked_ability_tags": "Blocks skills tagged",
     "allowed_ability_tags": "Only skills tagged",
     "tick_amount": "Turns used per count",
-    "interaction_tags": "Damage tags of its ticks",
+    "interaction_tags": "Damage properties of its ticks",
     "selection_count": "How many are picked",
     "adjacent_to_actor": "Only neighbours",
     "active_only": "Only fighters still standing",
@@ -507,8 +509,10 @@ HELP = {
     "An Initiative Expression, when given, decides instead.",
     "penetration_stat": "The attacker's stat (a percent) that ignores that share of the "
     "target's stats in damage formulas. Empty: no penetration.",
-    "base_resources": "HP, MP and other pools at the start.",
-    "tags": "Short labels other rules look for (weak.fire, boss, trait.guard...).",
+    "base_resources": "Special mechanics, like a shield: the resources with a rule on the "
+    "Battle ▸ Battle Resources page, and how each starts. HP, MP and the like stand among the "
+    "Base Stats; add one here only to give it another start.",
+    "tags": "What this one is or has, for rules to look for: Boss, Weak: Fire, Trait: Cover.",
     "abilities": "Skills this one starts with.",
     "granted_abilities": "Skills anyone with this gets.",
     "granted_tags": "Labels anyone with this gets (weapon kinds it may use...).",
@@ -922,10 +926,15 @@ def record_name(owner, store, key):
     return words(key)
 
 
+_ID_DOT = re.compile(r"(?<=[A-Za-z_])\.(?=[A-Za-z_])")
+
+
 def words(text):
-    """An id in words, short forms in capitals: ``bp_gain`` -> "BP Gain"."""
+    """An id in words, short forms in capitals: ``bp_gain`` -> "BP Gain"; its dots read as
+    parts: ``area.bog`` -> "Area · Bog"."""
     out = []
-    for word in str(text).replace("_", " ").split():
+    spaced = _ID_DOT.sub(" · ", str(text)).replace("_", " ")
+    for word in spaced.split():
         out.append(word.upper() if word.lower() in ACRONYMS else word[:1].upper() + word[1:])
     return " ".join(out)
 
@@ -1164,8 +1173,8 @@ OPERATION_KINDS = {
     "resource_delta": "Change a Resource",
     "resource_set": "Set a Resource",
     "stat_delta": "Change a Stat",
-    "tag_add": "Add a Tag",
-    "tag_remove": "Remove a Tag",
+    "tag_add": "Add a Property",
+    "tag_remove": "Remove a Property",
 }
 
 AI_ACTIONS = {"ability": "Skill", "hook": "Custom Code"}
@@ -1283,7 +1292,8 @@ CATEGORY_HELP.update(
     {
         "tracks": "Level-like tracks (job levels...) that count up with points.",
         "evolutions": "A skill turns into a stronger version when the character qualifies - "
-        "usually a rune node in a skill tree gives the tag it needs. Example: Fire Bolt becomes "
+        "usually a rune node in a skill tree gives the property it needs. Example: Fire Bolt"
+        " becomes "
         "Fire Bolt (Echo) once the Echo rune is learned.",
         "growth": "Weapons that grow with use: what each growth node unlocks.",
         "recipes": "Crafting and alchemy: what goes in, what comes out.",

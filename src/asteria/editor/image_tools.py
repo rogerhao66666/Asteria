@@ -269,7 +269,11 @@ def icon_pixmap(document, icon_id, size=32):
     root = project_root(document)
     region = None
     path = Path(icon_id) if Path(icon_id).is_absolute() else root / icon_id
-    if not path.is_file() and project is not None:  # an icon asset (maybe a sheet cell)
+    try:
+        is_file = path.is_file()
+    except OSError:  # not a path at all (too long for one)
+        is_file = False
+    if not is_file and project is not None:  # an icon asset (maybe a sheet cell)
         try:
             source = icon_source(project, icon_id)
         except (KeyError, ValueError):
@@ -383,6 +387,12 @@ class IconLibrary:
     def _build(self):
         return icon_choices(self.document)
 
+    def name_of(self, icon_id):
+        """The picture's name in words."""
+        from .icon_picker_dialog import icon_name
+
+        return icon_name(icon_id)
+
     def choices(self):
         """The list, built again only when the project's icons change (another project, an
         icon asset added or removed, a picture imported) or the picture files may have -
@@ -456,6 +466,51 @@ class SpriteSheetLibrary(IconLibrary):
 
     def import_file(self, path):
         raise NotImplementedError("sprite sheets come in through the picture dialog's Browse")
+
+
+class PictureLibrary(IconLibrary):
+    """The pictures a picture command can show: the project's textures, by name; Browse… makes
+    a picture from anywhere one of them (copied to ``<project>/pictures/``)."""
+
+    FOLDER = "pictures"
+    KIND = "texture"
+    CACHE = "_picture_choices_cache"
+
+    def _records(self):
+        project = getattr(self.document, "project", None)
+        records = () if project is None else project.assets.records()
+        pictures = [a for a in records if a.kind == self.KIND]
+        return sorted(pictures, key=lambda a: (str(a.name), a.id))
+
+    def _build(self):
+        from PySide6.QtGui import QIcon, QPixmap
+
+        from .record_pictures import framed
+        from .scene_render import resolve_texture_source
+
+        choices = []
+        for asset in self._records():
+            path = resolve_texture_source(self.document, asset.id)
+            pixmap = QPixmap(str(path)) if path is not None else QPixmap()
+            icon = QIcon(framed(pixmap, 48)) if not pixmap.isNull() else None
+            choices.append((asset.id, icon))
+        return tuple(choices)
+
+    def name_of(self, icon_id):
+        project = getattr(self.document, "project", None)
+        record = project.assets.get(icon_id) if project is not None else None
+        return str(record.name) if record is not None and record.name else super().name_of(icon_id)
+
+    def import_file(self, path):
+        from asteria.assets.types import AssetRecord
+
+        relative = super().import_file(path)
+        for asset in self._records():
+            if Path(str(asset.source_path)).as_posix() == relative:
+                return asset.id
+        name = Path(relative).stem.replace("_", " ").title()
+        record = AssetRecord.create(kind=self.KIND, source_path=relative, name=name)
+        return self.document.project.assets.add(record).id
 
 
 class PortraitLibrary(IconLibrary):

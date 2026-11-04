@@ -1,8 +1,7 @@
 """Cute companions from Foozle's CC0 Critters packs (same artist as the Lucifer cast): the
 party's pet (a tamed creature fights as "pet") is the Little Bird and the summoned Spirit
 Knight is the Elite, a fox in armour with a sword (the user's pick). Each pack draws one
-facing in fixed-size frames: the player critters face right and are mirrored, the enemy
-packs already face left (the party fights facing left)."""
+facing in fixed-size frames: they face right and are mirrored (the party fights facing left)."""
 
 from __future__ import annotations
 
@@ -57,11 +56,10 @@ CRITTERS = {  # key: (pack folder, strip folder, frame (w, h), role -> strip fil
     ),
 }
 PACKS = {key: pack for key, (pack, *_rest) in CRITTERS.items()}
-FACING_LEFT = {"fox_elite"}  # drawn as foes of the player: already facing left
 
 
 def strips(key, *, mirror=True):
-    """Role -> frames of a critter, facing left when ``mirror`` (the packs face right)."""
+    """Role -> frames of a critter, facing left when ``mirror``."""
     from PIL import Image, ImageOps
 
     pack, folder, (width, height), files = CRITTERS[key]
@@ -78,7 +76,7 @@ def strips(key, *, mirror=True):
 
 
 def character_sheet(key):
-    return sheet_from_strips(strips(key, mirror=key not in FACING_LEFT))
+    return sheet_from_strips(strips(key))
 
 
 def credits_rows():

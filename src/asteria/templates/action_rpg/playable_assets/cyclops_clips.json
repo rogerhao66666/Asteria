@@ -374,40 +374,12 @@
         {
           "duration": 0.03,
           "frame_index": 119
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 120
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 121
         }
       ],
       "loop": false
     },
     "attack_right": {
       "keyframes": [
-        {
-          "duration": 0.03,
-          "frame_index": 160
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 161
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 162
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 163
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 164
-        },
         {
           "duration": 0.03,
           "frame_index": 165
@@ -427,6 +399,18 @@
         {
           "duration": 0.03,
           "frame_index": 169
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 160
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 161
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 162
         }
       ],
       "loop": false
@@ -435,35 +419,15 @@
       "keyframes": [
         {
           "duration": 0.03,
-          "frame_index": 64
+          "frame_index": 73
         },
         {
           "duration": 0.03,
-          "frame_index": 65
+          "frame_index": 73
         },
         {
           "duration": 0.03,
-          "frame_index": 66
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 67
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 68
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 69
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 70
-        },
-        {
-          "duration": 0.03,
-          "frame_index": 71
+          "frame_index": 73
         },
         {
           "duration": 0.03,
@@ -471,7 +435,27 @@
         },
         {
           "duration": 0.03,
-          "frame_index": 73
+          "frame_index": 71
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 70
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 69
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 68
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 67
+        },
+        {
+          "duration": 0.03,
+          "frame_index": 66
         }
       ],
       "loop": false

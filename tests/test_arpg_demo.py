@@ -979,3 +979,101 @@ def test_the_locked_target_frame_shows_status_names_and_time(demo):
     del demo.text
     assert enemy.name in texts and "Burning" in texts and "Chilled" in texts
     assert hud_bottom.draw_target_frame is not None
+
+
+@pytest.mark.parametrize("facing", ("right", "up", "left", "down"))
+def test_the_blow_lands_on_the_frame_the_slash_appears(demo, facing):
+    from asteria.runtime.combat import CombatantComponent
+
+    game, pg = demo.game, demo.pg
+    game.set_classes("", ["warrior"])
+    field = _scene(game.project, "Greenvale")
+    game.transfer_player(field.id, 36 * 16, 28 * 16, facing=facing)
+    _frames(demo, 3)
+    enemy = next(
+        e
+        for e, c in game.scene.query(CombatantComponent)
+        if e is not game.player and c.team != "player" and c.state is not None
+    )
+    hero, foe = game.player.get(Transform), enemy.get(Transform)
+    near = {"right": (20, 0), "left": (-20, 0), "up": (0, -20), "down": (0, 20)}[facing]
+    foe.x, foe.y = hero.x + near[0], hero.y + near[1]
+    _frames(demo, 1)
+    before = game.combat.state(enemy).resources.current("hp")
+    pg.event.post(pg.event.Event(pg.KEYDOWN, key=pg.K_j, mod=0, unicode="", scancode=0))
+    events = pg.event.get()
+    state = demo.tile_view._animated[game.player.id]
+    slash = hurt = None
+    for frame in range(16):
+        foe.x, foe.y = hero.x + near[0], hero.y + near[1]
+        demo._frame(events if frame == 0 else [], 1 / 60)
+        keys = state.clips.clips[f"attack_{facing}"].keyframes
+        lowest = min(key.frame_index for key in keys)
+        if slash is None and state.clip == f"attack_{facing}":
+            if state.frame() == lowest + 2:
+                slash = frame
+        if hurt is None and game.combat.state(enemy).resources.current("hp") < before:
+            hurt = frame
+    assert slash is not None and slash == hurt
+
+
+def _animated():
+    from types import SimpleNamespace
+
+    from asteria.runtime.tile_scene_view import _Animated
+
+    def clip(*frames):
+        keys = [SimpleNamespace(duration=0.1, frame_index=f) for f in frames]
+        return SimpleNamespace(keyframes=keys, loop=False)
+
+    clips = {
+        "idle_right": clip(0),
+        "walk_right": clip(1),
+        "attack_right": clip(10, 11),
+        "attack2_right": clip(20, 21, 22),
+    }
+    return _Animated(SimpleNamespace(clips=clips))
+
+
+def test_a_skill_plays_the_strip_it_asks_for():
+    state = _animated()
+    state.update(0.01, (0, 0), "right", "attack2", action_time=0.01)
+    assert state.clip == "attack2_right"
+    state.update(0.01, (0, 0), "right", True, action_time=0.02)
+    assert state.clip == "attack_right"  # a plain swing
+    state.update(0.01, (0, 0), "right", "nothing_like_it", action_time=0.03)
+    assert state.clip == "attack_right"  # a look without that strip swings what it has
+
+
+def test_the_next_blow_of_a_combo_swings_again():
+    state = _animated()
+    state.update(0.15, (0, 0), "right", "attack", action_time=0.15)
+    assert state.frame() == 11
+    state.update(0.01, (0, 0), "right", "attack", action_time=0.01)  # the next action began
+    assert state.frame() == 10
+
+
+def test_a_short_action_shows_all_of_its_picture_unless_the_figure_walks_off():
+    state = _animated()
+    state.update(0.05, (0, 0), "right", "attack2", action_time=0.05)
+    state.update(0.1, (0, 0), "right", "")  # a shout ends at once
+    assert state.clip == "attack2_right"
+    state.update(0.5, (0, 0), "right", "")
+    assert state.clip == "idle_right"
+    state = _animated()
+    state.update(0.05, (0, 0), "right", "attack2", action_time=0.05)
+    state.update(0.05, (5, 0), "right", "")
+    assert state.clip == "walk_right"
+
+
+def test_an_action_waits_for_its_animation_cue_before_it_swings():
+    from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
+    from asteria.runtime.entity_actions import _Running, action_clip
+
+    timed = ActionTimeline("t", [ActionCue("a", 0.3, "animation", {"clip": "attack2"})])
+    run = _Running(timed)
+    assert action_clip(run) == ""
+    run.clip = "attack2"
+    assert action_clip(run) == "attack2"
+    assert action_clip(_Running(ActionTimeline("plain", []))) == "attack"  # no cue: plain swing
+    assert action_clip(None) == ""

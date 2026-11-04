@@ -4,14 +4,6 @@
       "keyframes": [
         {
           "duration": 0.05714285714285715,
-          "frame_index": 17
-        },
-        {
-          "duration": 0.05714285714285715,
-          "frame_index": 18
-        },
-        {
-          "duration": 0.05714285714285715,
           "frame_index": 19
         },
         {
@@ -35,14 +27,6 @@
     },
     "attack2_left": {
       "keyframes": [
-        {
-          "duration": 0.05714285714285715,
-          "frame_index": 87
-        },
-        {
-          "duration": 0.05714285714285715,
-          "frame_index": 88
-        },
         {
           "duration": 0.05714285714285715,
           "frame_index": 89
@@ -70,14 +54,6 @@
       "keyframes": [
         {
           "duration": 0.05714285714285715,
-          "frame_index": 122
-        },
-        {
-          "duration": 0.05714285714285715,
-          "frame_index": 123
-        },
-        {
-          "duration": 0.05714285714285715,
           "frame_index": 124
         },
         {
@@ -103,14 +79,6 @@
       "keyframes": [
         {
           "duration": 0.05714285714285715,
-          "frame_index": 52
-        },
-        {
-          "duration": 0.05714285714285715,
-          "frame_index": 53
-        },
-        {
-          "duration": 0.05714285714285715,
           "frame_index": 54
         },
         {
@@ -134,10 +102,6 @@
     },
     "attack3_down": {
       "keyframes": [
-        {
-          "duration": 0.07142857142857142,
-          "frame_index": 24
-        },
         {
           "duration": 0.07142857142857142,
           "frame_index": 25
@@ -169,10 +133,6 @@
       "keyframes": [
         {
           "duration": 0.07142857142857142,
-          "frame_index": 94
-        },
-        {
-          "duration": 0.07142857142857142,
           "frame_index": 95
         },
         {
@@ -202,10 +162,6 @@
       "keyframes": [
         {
           "duration": 0.07142857142857142,
-          "frame_index": 129
-        },
-        {
-          "duration": 0.07142857142857142,
           "frame_index": 130
         },
         {
@@ -233,10 +189,6 @@
     },
     "attack3_up": {
       "keyframes": [
-        {
-          "duration": 0.07142857142857142,
-          "frame_index": 59
-        },
         {
           "duration": 0.07142857142857142,
           "frame_index": 60

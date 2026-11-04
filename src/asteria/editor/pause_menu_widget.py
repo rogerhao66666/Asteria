@@ -304,18 +304,22 @@ class PauseMenuEditor(QWidget):
         self.refresh(entry)
         return True
 
-    def _ask_name(self, title, prompt):
-        name, ok = QInputDialog.getText(self, translate(title), translate(prompt))
+    def _ask_name(self, title, prompt, default):
+        name, ok = QInputDialog.getText(self, translate(title), translate(prompt), text=default)
         return name.strip() if ok and name.strip() else None
 
     def _new_page_clicked(self):
-        name = self._ask_name("New Page", "The page's name (players see it in the pause menu):")
+        name = self._ask_name(
+            "New Page", "The page's name (players see it in the pause menu):", translate("Page")
+        )
         if name:
             self.new_page(name)
 
     def _new_entry_clicked(self):
         name = self._ask_name(
-            "New Event Entry", "The entry's name (players see it in the pause menu):"
+            "New Event Entry",
+            "The entry's name (players see it in the pause menu):",
+            translate("Entry"),
         )
         if name:
             self.new_entry(name)

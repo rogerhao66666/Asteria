@@ -8,6 +8,8 @@ from asteria.events import (
     SceneEventBindings,
 )
 
+from .i18n import translate
+
 
 def bindings_for_scene(project, scene):
     return project.scene_event_bindings.setdefault(scene.id, SceneEventBindings())
@@ -49,6 +51,23 @@ class AddEventProgramCommand:
 
     def undo(self):
         self.registry.unregister(self.program_id)
+
+
+@dataclass(slots=True)
+class RemoveEventProgramCommand:
+    registry: object
+    program_id: str
+    program: EventProgram
+
+    @property
+    def label(self):
+        return "Delete Event Program"
+
+    def redo(self):
+        self.registry.unregister(self.program_id)
+
+    def undo(self):
+        self.registry.register(self.program_id, self.program)
 
 
 @dataclass(slots=True)
@@ -142,7 +161,11 @@ def format_world_args(args):
     return ", ".join(f"{k}={v}" for k, v in dict(args or {}).items())
 
 
-def describe_instruction(instruction):
+def describe_instruction(instruction, names=None):
+    """A command in the author's words; ``names(key, value)`` gives a record's name (see
+    ``world_command_form.record_names``)."""
+    from .record_vocabulary import words
+
     op = instruction.opcode
     a = instruction.args
     if op == "DIALOGUE":
@@ -153,46 +176,58 @@ def describe_instruction(instruction):
             name = portrait.rsplit("/", 1)[-1]
             side = ", right" if str(a.get("portrait_side", "")).lower() == "right" else ""
             portrait = f"  [portrait: {name}{side}]"
-        return f'Dialogue  {speaker + ": " if speaker else ""}"{text}"{portrait}'
+        said = f'{speaker + ": " if speaker else ""}"{text}"{portrait}'
+        return f"{translate('Dialogue')}  {said}"
     if op == "CHOICE":
-        return f"Choice  {a.get('prompt', '')}"
+        return f"{translate('Choice')}  {a.get('prompt', '')}"
     if op in {"JUMP_IF", "IF_FALSE_SKIP"}:
-        return "If / Branch"
+        return translate("If / Branch")
     if op == "SET_SWITCH":
-        return f"Set Switch  {a.get('name', '')} = {a.get('value', True)}"
+        state = translate("Turned on" if a.get("value", True) else "Turned off")
+        return f"{translate('Set Switch')}  {words(a.get('name', ''))} = {state}"
     if op == "SET_VARIABLE":
+        head = f"{translate('Set Variable')}  {words(a.get('name', ''))} = "
         if a.get("from_variable"):
-            return f"Set Variable  {a.get('name', '')} = @{a.get('from_variable')}"
-        return f"Set Variable  {a.get('name', '')} = {a.get('value')}"
+            return head + words(a.get("from_variable"))
+        return head + str(a.get("value"))
     if op == "WORLD":
-        details = format_world_args(a.get("args") or {})
-        return f"World  {a.get('command', '')}" + (f"  ({details})" if details else "")
+        from .world_command_form import argument_label, command_words, value_words
+
+        details = ", ".join(
+            f"{translate(argument_label(k))}: {value_words(v, k, names)}"
+            for k, v in (a.get("args") or {}).items()
+        )
+        said = translate(command_words(a.get("command", "")))
+        return f"{translate('World')}  {said}" + (f"  ({details})" if details else "")
     if op == "CALL":
-        return f"Call  {a.get('program_id', '')}"
+        program = a.get("program_id", "")
+        return f"{translate('Call')}  {words(program)}"
     if op == "WAIT":
         until = a.get("until")
         if isinstance(until, dict):
-            return f"Wait Until  {until.get('name', '')} {until.get('operator', '==')} " + str(
-                until.get("value")
-            )
-        return f"Wait  {a.get('seconds', 0)}s"
+            condition = f"{words(until.get('name', ''))} {until.get('operator', '==')} "
+            return f"{translate('Wait Until')}  {condition}" + str(until.get("value"))
+        return f"{translate('Wait')}  {a.get('seconds', 0)}s"
     if op == "END":
-        return "End"
+        return translate("End")
     if op == "SEQUENCE":
-        flags = [f for f in ("cutscene", "skippable") if a.get(f)]
-        names = ", ".join(str(x.get("name", "")) for x in a.get("tracks", []))
-        return f"Sequence  {len(a.get('tracks', []))} parallel tracks ({names})" + (
+        flags = [translate(words(f)) for f in ("cutscene", "skippable") if a.get(f)]
+        names_said = ", ".join(str(x.get("name", "")) for x in a.get("tracks", []))
+        tracks = translate(f"{len(a.get('tracks', []))} parallel tracks")
+        return f"{translate('Sequence')}  {tracks} ({names_said})" + (
             f"  [{', '.join(flags)}]" if flags else ""
         )
     if op == "MOVE":
-        return f"Move  {a.get('entity', '')} → ({a.get('x', 0)}, {a.get('y', 0)})" + (
-            " relative" if a.get("relative") else ""
+        where = f"{a.get('entity', '')} → ({a.get('x', 0)}, {a.get('y', 0)})"
+        return f"{translate('Move')}  {where}" + (
+            f" {translate('relative')}" if a.get("relative") else ""
         )
     if op == "FACE":
-        return f"Face  {a.get('entity', '')} {a.get('facing', '')}"
+        facing = translate(words(a.get("facing", "")))
+        return f"{translate('Turn To')}  {a.get('entity', '')} {facing}"
     if op == "ANIMATE":
-        return f"Animate  {a.get('entity', '')} {a.get('clip', '')}"
-    return op.replace("_", " ").title()
+        return f"{translate('Animate')}  {a.get('entity', '')} {a.get('clip', '')}"
+    return translate(op.replace("_", " ").title())
 
 
 def replace_binding_fields(binding, **changes):

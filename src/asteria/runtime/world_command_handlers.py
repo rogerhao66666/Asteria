@@ -206,6 +206,115 @@ WORLD_COMMAND_ARGUMENTS = {
 }
 
 
+WORLD_COMMAND_REQUIRED = {  # the arguments a command fails without (its editor asks for them)
+    "ADD_COUNTER": ("counter_id",),
+    "ADVANCE_QUEST": (
+        "quest_id",
+        "objective_id",
+    ),
+    "BATTLE_SEQUENCE": (
+        "sequence_id",
+        "actor_id",
+    ),
+    "CHANGE_CURRENCY": ("currency_id",),
+    "CHANGE_RELATIONSHIP": ("subject_id",),
+    "CHANGE_REPUTATION": ("faction_id",),
+    "COMPLETE_QUEST": ("quest_id",),
+    "COPY_ENTITY": ("entity",),
+    "DISASSEMBLE": ("item_id",),
+    "EQUIP_ITEM": (
+        "actor_id",
+        "equipment_id",
+    ),
+    "ERASE_PICTURE": ("picture_id",),
+    "FAIL_QUEST": ("quest_id",),
+    "GIVE_EQUIPMENT": ("equipment_id",),
+    "GIVE_ITEM": ("item_id",),
+    "GIVE_PET": ("species_id",),
+    "GRANT_EXPERIENCE": ("actor_id",),
+    "GRID_ROUTE": ("entity",),
+    "INTERACT": ("interaction_id",),
+    "JOIN_PARTY": ("actor_id",),
+    "LEARN_ABILITY": (
+        "actor_id",
+        "ability_id",
+    ),
+    "LEARN_RECIPE": ("recipe_id",),
+    "LEAVE_PARTY": ("actor_id",),
+    "MORPH_ENTITY": (
+        "entity",
+        "prefab_id",
+    ),
+    "MOVE_NPC": (
+        "npc",
+        "scene_id",
+    ),
+    "MOVE_PICTURE": ("picture_id",),
+    "MOVE_ROUTE": (
+        "entity",
+        "route",
+    ),
+    "NAME_INPUT": ("target",),
+    "OPEN_GACHA": ("banner_id",),
+    "OPEN_QUEST_BOARD": ("board_id",),
+    "OPEN_RECRUIT": ("office_id",),
+    "OPEN_SHOP": ("shop_id",),
+    "PICTURE_CHOICE": ("layout",),
+    "PLAY_ACTION": (
+        "entity",
+        "timeline_id",
+    ),
+    "REFINE_EQUIPMENT": (
+        "actor_id",
+        "instance_id",
+    ),
+    "SET_CLASSES": ("class_ids",),
+    "SET_ENTITY_ICON": ("entity",),
+    "SET_LOCALE": ("locale",),
+    "SET_LOOK": ("entity",),
+    "SET_MOVEMENT": ("entity",),
+    "SET_NPC": (
+        "npc",
+        "key",
+    ),
+    "SET_PICTURE_FRAME": ("picture_id",),
+    "SET_POSITION": ("entity",),
+    "SET_RESPAWN": ("scene_id",),
+    "SET_TILE": ("layer",),
+    "SHOW_BALLOON": ("entity",),
+    "SHOW_ENTITY": ("entity",),
+    "SHOW_PICTURE": ("picture_id",),
+    "SHOW_POPUP": ("text",),
+    "SOCKET_ITEM": (
+        "actor_id",
+        "instance_id",
+        "socket_id",
+        "item_id",
+    ),
+    "SPAWN_ENTITY": ("prefab_id",),
+    "START_ENCOUNTER": ("encounter_id",),
+    "START_QUEST": ("quest_id",),
+    "TAKE_ITEM": ("item_id",),
+    "TIMER_ADD": ("timer_id",),
+    "TIMER_PAUSE": ("timer_id",),
+    "TIMER_RESUME": ("timer_id",),
+    "TIMER_START": ("timer_id",),
+    "TIMER_STOP": ("timer_id",),
+    "TITLE_COMMAND": ("action",),
+    "UNSOCKET_ITEM": (
+        "actor_id",
+        "instance_id",
+        "socket_id",
+    ),
+    "UPGRADE_EQUIPMENT": (
+        "actor_id",
+        "instance_id",
+        "node_id",
+    ),
+    "WALK_TO": ("entity",),
+}
+
+
 class WorldCommandError(RuntimeError):
     pass
 

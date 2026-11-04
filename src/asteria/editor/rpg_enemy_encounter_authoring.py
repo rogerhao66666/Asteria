@@ -54,13 +54,13 @@ class EnemyEncounterInformationArchitecture:
             "enemies",
             "Enemies",
             "list_detail",
-            ("Identity", "Stats & Resources", "Abilities", "Tags", "Behavior", "Rewards"),
+            ("Identity", "Stats & Resources", "Abilities", "Properties", "Behavior", "Rewards"),
         ),
         EnemyEncounterSection(
             "encounters",
             "Encounters",
             "composition_detail",
-            ("Identity", "Members", "Counts & Weights", "Tags"),
+            ("Identity", "Members", "Counts & Weights", "Properties"),
         ),
         EnemyEncounterSection(
             "ai",

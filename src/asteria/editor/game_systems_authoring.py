@@ -143,10 +143,13 @@ class FormField:
     reference list, see :meth:`GameSystemsAuthoringController.references`),
     ``pause_order`` (the pause menu top to bottom with a tick each: the order in ``key``, the
     unticked entries in ``hidden_key``; D97),
+    ``row_id`` (a table row's own id: made for it, unique among its rows, never shown),
+    ``rgb`` (a colour as "r, g, b" text, picked from a colour dialog),
     ``optional_ref`` (may be empty; ``empty_label`` names that choice), ``optional_int`` (None
     allowed). A reference list may hold ``(id, name)`` pairs: the form shows the name and keeps
     the id,
-    ``string_list``, ``amounts`` (``{key: number}``, keys from ``source`` when
+    ``string_list`` (picked from ``choices`` - values or (value, words) pairs - when it has
+    them), ``amounts`` (``{key: number}``, keys from ``source`` when
     given), ``group`` (nested ``fields``), ``table`` (list of nested
     ``fields`` records), ``pairs`` (list of ``[number, text]``), ``translations`` (a locale
     table's key / text rows, listed with every built-in word of the engine).
@@ -165,27 +168,32 @@ class FormField:
     # (key, values): shown only while the record's ``key`` field holds one of ``values`` (D96)
     when: tuple = ()
     hidden_key: str = ""  # a ``pause_order``'s unticked entries (D97)
+    # an ``amounts``' table of stats also lists HP, MP and the like: those it holds are kept in
+    # this other ``amounts`` field, which then lists only the mechanics (a shield)
+    pools_key: str = ""
+    with_pools: bool = False  # an ``amounts`` of stats that offers HP, MP and the like too
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor
     return FormField(key, label, kind, **values)
 
 
+SPECIAL_RESOURCES = "Only the mechanics of their own, such as a shield: HP and MP are stats."
 EDITOR_ONLY_DESCRIPTION = F(
     "description", "Description", "multiline", default="", help=EDITOR_ONLY
 )
 
 
 _ITEM_CATEGORY = (  # a tab of the Items page (D87)
-    F("category_id", "Tab ID", "text", default="all"),
+    F("category_id", "Tab ID", "row_id", default="all"),
     F("display_name", "Tab Name", "text", default=""),
-    F("tags", "Items With Any of These Tags (none: every item)", "string_list", default=()),
+    F("tags", "Items With Any of These Properties (none: every item)", "string_list", default=()),
     F("icon_id", "Icon", "icon", default=""),
 )
 _ITEM_FILTER = (  # what the Items page's F key narrows a tab to (D87)
-    F("filter_id", "Filter ID", "text", default="usable"),
+    F("filter_id", "Filter ID", "row_id", default="usable"),
     F("display_name", "Filter Name", "text", default=""),
-    F("tags", "Items With All of These Tags", "string_list", default=()),
+    F("tags", "Items With All of These Properties", "string_list", default=()),
     F("usable", "Only Items the Menu Can Use", "bool", default=False),
 )
 SET_ON_WORDS = {"actors": "Actors", "classes": "Jobs (growth per level)", "enemies": "Enemies"}
@@ -198,7 +206,7 @@ STAT_COLUMN_WORDS = {
     "gain": "Each + (what one more point adds)",
 }
 _STAT_GROUP = (  # a heading of the Status page's detail table (D89)
-    F("group_id", "Group ID", "text", default="attack"),
+    F("group_id", "Group ID", "row_id", default="attack"),
     F("display_name", "Group Name", "text", default=""),
 )
 _STAT_LINE = (  # a stat of the Status page's detail table (D89)
@@ -313,13 +321,13 @@ _MENU_BLOCK = (  # a block of a menu page: its kind, place and that kind's setti
     ),
 )
 _MODIFIER = (
-    F("modifier_id", "Modifier ID", "text", default="bonus"),
+    F("modifier_id", "Modifier ID", "row_id", default="bonus"),
     F("stat", "Stat", "text", default="power"),
     F("operation", "Operation", "choice", choices=("add", "multiply", "override"), default="add"),
     F("value", "Value", "float", default=0.0),
     F("priority", "Priority", "int", default=0),
-    F("required_tags", "Required Tags", "string_list", default=()),
-    F("blocked_tags", "Blocked Tags", "string_list", default=()),
+    F("required_tags", "Required Properties", "string_list", default=()),
+    F("blocked_tags", "Blocked Properties", "string_list", default=()),
 )
 _LOOT = (
     F("item_id", "Item", "ref", source="items"),
@@ -408,9 +416,17 @@ FORMS = {
             "Level 1 Stats",
             "amounts",
             default={},
-            help="Stats At Level 1 (read in formulas as pet_<stat>)",
+            help="Stats At Level 1, HP and MP too (read in formulas as pet_<stat>)",
+            pools_key="resources",
         ),
-        F("growth", "Stat Growth", "amounts", default={}, help="Stat Growth Per Level"),
+        F(
+            "growth",
+            "Stat Growth",
+            "amounts",
+            default={},
+            help="Stat Growth Per Level",
+            with_pools=True,
+        ),
         F("max_level", "Highest Level", "int", default=50),
         F(
             "exp_base",
@@ -426,7 +442,7 @@ FORMS = {
             default=30.0,
             help="Experience After A Won Battle It Was Sent Out In",
         ),
-        F("tags", "Tags", "string_list", default=()),
+        F("tags", "Properties", "string_list", default=()),
         F("evolutions", "Evolutions", "table", fields=_PET_EVOLUTION, default=()),
         F("learnset", "Learned Abilities", "table", fields=_PET_MOVE, default=()),
         F(
@@ -453,10 +469,10 @@ FORMS = {
         ),
         F(
             "resources",
-            "Battle Resources",
+            "Resources",
             "amounts",
             default={},
-            help="Battle Resources (maximums, e.g. vitality)",
+            help=SPECIAL_RESOURCES,
         ),
         F(
             "exp_curve",
@@ -509,10 +525,10 @@ FORMS = {
         ),
         F(
             "exempt_tags",
-            "Exempt Tags",
+            "Exempt Properties",
             "string_list",
             default=("item.key",),
-            help="Tags That Never Take a Place (key items)",
+            help="Properties That Never Take a Place (key items)",
         ),
         F(
             "overflow",
@@ -583,7 +599,7 @@ FORMS = {
         F("display_name", "Name", "text", default=""),
         F("verb", "Verb", "choice", choices=VERBS, default="talk"),
         F("target_type", "Target Type", "text", default=""),
-        F("actor_tag", "Member Tag", "text", default="", help="Needs Party Member Tag"),
+        F("actor_tag", "Member Property", "text", default="", help="Needs Party Member Property"),
         F(
             "required_item",
             "Required Item",
@@ -681,7 +697,7 @@ FORMS = {
             "table",
             default=(),
             fields=(
-                F("objective_id", "Objective ID", "text", default="objective"),
+                F("objective_id", "Objective ID", "row_id", default="objective"),
                 F("kind", "Kind", "choice", choices=OBJECTIVE_KINDS, default="counter"),
                 F("target", "Target (item / enemy / switch)", "text", default=""),
                 F("required", "Required", "int", default=1),
@@ -821,9 +837,9 @@ FORMS = {
             "table",
             default=(),
             fields=(
-                F("rarity_id", "Rarity ID", "text", default="common"),
+                F("rarity_id", "Rarity ID", "row_id", default="common"),
                 F("display_name", "Name", "text", default=""),
-                F("color", "Colour (r, g, b)", "text", default="235, 235, 245"),
+                F("color", "Colour", "rgb", default="235, 235, 245"),
                 F("chest_image", "Closed Chest", "icon", default=""),
                 F("open_image", "Open Chest", "icon", default=""),
                 F("open_sound", "Opening Sound", "text", default=""),
@@ -947,7 +963,7 @@ FORMS = {
             fields=(
                 F("pieces", "Pieces Equipped", "int", default=2),
                 F("modifiers", "Stat Modifiers", "table", fields=_MODIFIER, default=()),
-                F("tags", "Granted Tags", "string_list", default=()),
+                F("tags", "Granted Properties", "string_list", default=()),
                 F(
                     "granted_abilities",
                     "Granted Abilities",
@@ -1144,7 +1160,7 @@ D26_FORMS = {
             default="",
             help="Resource That Counts as Damage (hp)",
         ),
-        F("taunt_tag", "Taunt Tag", "text", default=""),
+        F("taunt_tag", "Taunt Property", "text", default=""),
         F(
             "lifesteal_stat",
             "Life Steal Stat",
@@ -1192,17 +1208,17 @@ D26_FORMS = {
             "table",
             default=(),
             fields=(
-                F("target_key", "Enemy ID or Tag", "text", default=""),
+                F("target_key", "Enemy ID or Property", "text", default=""),
                 F("once", "Once per Enemy", "bool", default=True),
                 F("entries", "Can Steal", "table", fields=_STEAL_ENTRY, default=()),
             ),
         ),
         F(
             "row_tag_prefix",
-            "Row Tag Prefix",
+            "Row Property Prefix",
             "text",
             default="",
-            help="Row Tag Prefix (blank = off)",
+            help="Row Property Prefix (blank = off)",
         ),
         F(
             "gains",
@@ -1231,13 +1247,20 @@ D26_FORMS = {
     ),
     "enemy_level_rules": (
         F("rules_id", "Rules ID", "id"),
-        F("stat_growth", "Stat Growth", "amounts", default={}, help="Stat Growth per Level"),
+        F(
+            "stat_growth",
+            "Stat Growth",
+            "amounts",
+            default={},
+            help="Stat Growth per Level, HP and MP too",
+            pools_key="resource_growth",
+        ),
         F(
             "resource_growth",
             "Resource Growth",
             "amounts",
             default={},
-            help="Resource Growth per Level",
+            help=SPECIAL_RESOURCES,
         ),
         F("reward_growth", "Reward Growth", "float", default=0.0, help="Reward Growth per Level"),
         F(
@@ -1329,10 +1352,10 @@ D26_FORMS = {
         F("max_level", "Max Refine Level", "int", default=10, help="Maximum Refine Level (+N)"),
         F(
             "equipment_tags",
-            "Equipment Tags",
+            "Equipment Properties",
             "string_list",
             default=(),
-            help="Only Equipment With Any Tag (empty = all)",
+            help="Only Equipment With Any Property (empty = all)",
         ),
         F(
             "bonuses",
@@ -1399,9 +1422,14 @@ D26_FORMS = {
             "table",
             default=(),
             fields=(
-                F("category_id", "Tab ID", "text", default="tab"),
+                F("category_id", "Tab ID", "row_id", default="tab"),
                 F("display_name", "Name", "text", default=""),
-                F("tags", "Recipe Tags (empty = every recipe left)", "string_list", default=()),
+                F(
+                    "tags",
+                    "Recipe Properties (empty = every recipe left)",
+                    "string_list",
+                    default=(),
+                ),
                 F("icon_id", "Icon", "icon", default=""),
             ),
             help="Tabs (recipe categories)",
@@ -1417,10 +1445,10 @@ D26_FORMS = {
         F("disassembly", "Disassembly Tab", "bool", default=False),
         F(
             "disassembly_tags",
-            "Disassembly Tags",
+            "Disassembly Properties",
             "string_list",
             default=(),
-            help="Break Down Only Items With Any Tag (empty = all)",
+            help="Break Down Only Items With Any Property (empty = all)",
         ),
         F("craft_sound", "Success Sound", "text", default=""),
         F("fail_sound", "Failure Sound", "text", default=""),
@@ -1467,7 +1495,7 @@ D26_FORMS = {
         ),
     ),
     "stat_definitions": (  # what each number of the game is (D91)
-        F("stat_id", "Stat ID", "id", help="The name the data uses: str, power, boss_damage."),
+        F("stat_id", "Stat ID", "id", help="The name formulas use: str, power, boss_damage."),
         F("display_name", "Name", "text", default="", help="Strength, Physical Attack..."),
         F(
             "short_name",
@@ -1541,10 +1569,11 @@ D26_FORMS = {
         ),
         F(
             "accepted_tags",
-            "Accepted Tags",
+            "Accepted Properties",
             "string_list",
             default=(),
-            help="Gear made for another slot fits too when it carries one of these tags: a sub"
+            help="Gear made for another slot fits too when it carries one of these properties:"
+            " a sub"
             " weapon slot taking weapon takes every weapon. Empty: only gear made for this slot.",
         ),
         F(
@@ -1552,7 +1581,8 @@ D26_FORMS = {
             "Carried, Not Worn",
             "bool",
             default=False,
-            help="Its pieces give no stats, skills, tags or set bonuses: they wait to be swapped"
+            help="Its pieces give no stats, skills, properties or set bonuses: they wait to be"
+            " swapped"
             " into a worn slot with the battle's Swap command (Inventory Rules ▸ Swap Carried"
             " Weapons in Battle).",
         ),
@@ -1561,7 +1591,8 @@ D26_FORMS = {
             "Required Capabilities",
             "string_list",
             default=(),
-            help="Capabilities (tags) a hero needs to use the slot, from a job's Granted Tags:"
+            help="Capabilities (properties) a hero needs to use the slot, from a job's Granted"
+            " Properties:"
             " capability.carry_weapons lets only that job carry weapons. Empty: everyone.",
         ),
         F(
@@ -1575,10 +1606,11 @@ D26_FORMS = {
     "tag_definitions": (  # what each tag of the game means (D91)
         F(
             "tag_id",
-            "Tag",
+            "Property",
             "id",
-            help="The tag the data uses: weapon.sword, weak.fire, no_escape. End it in * for a"
-            " family: rune.* covers every tag starting with rune.",
+            help="The property rules look for: weapon.sword, weak.fire, no_escape. End it in *"
+            " for a"
+            " family: rune.* covers every property starting with rune.",
         ),
         F("display_name", "Name", "text", default="", help="What players read: Sword, Fire."),
         F("order", "Order", "int", default=0, help="Lower comes first in every list."),
@@ -1587,7 +1619,7 @@ D26_FORMS = {
             "Description",
             "multiline",
             default="",
-            help="The definition, in your words: what carrying the tag does in the game."
+            help="The definition, in your words: what carrying the property does in the game."
             " Players read it under an item's or a piece's description.",
         ),
         F(
@@ -1595,7 +1627,8 @@ D26_FORMS = {
             "Usage",
             "info",
             default="",
-            help="Worked out from the whole project: what the engine itself does with the tag,"
+            help="Worked out from the whole project: what the engine itself does with the"
+            " property,"
             " the records that carry it and the rules that read it.",
         ),
     ),
@@ -1621,7 +1654,7 @@ D26_FORMS = {
             "Used By",
             "choice",
             choices=("actors", "enemies", "all"),
-            default="actors",
+            default="all",  # one set of formulas for both sides
         ),
         F("order", "Order", "int", default=0, help="Order (lower runs first)"),
         EDITOR_ONLY_DESCRIPTION,
@@ -1742,8 +1775,19 @@ D26_FORMS = {
             "limited_sources",
             "Limited Sources",
             "string_list",
+            choices=(  # where an ability can come from (CharacterState's grants)
+                ("learned", "Learned (taught, bought, read)"),
+                ("class", "Jobs"),
+                ("intrinsic", "The character's own"),
+                ("progression", "Level-ups"),
+                ("allocation", "Skill tree"),
+                ("equipment", "Equipment"),
+                ("equipment_growth", "Equipment growth"),
+                ("attachment", "Attachments"),
+                ("passive", "Passives"),
+            ),
             default=("learned",),
-            help="Limited Grant Sources (learned, class, equipment...)",
+            help="Abilities from these places need a slot to be used; the rest always can.",
         ),
         F("always_usable", "Always Usable Abilities", "ref_list", source="abilities", default=()),
     ),
@@ -1812,7 +1856,7 @@ D26_FORMS = {
         F("layer", "Layer", "int", default=0),
         F("depth", "Depth", "float", default=0.0),
         F("snap", "Snap", "float", default=0.0, help="Snap to Grid (0 = free)"),
-        F("tags", "Tags", "string_list", default=()),
+        F("tags", "Properties", "string_list", default=()),
     ),
 }
 FORMS.update(D26_FORMS)
@@ -2190,7 +2234,7 @@ def _templates():
             prizes=[{"prize_id": "potion", "rarity": "common"}],
         ),  # fmt: skip
         "job_point_rules": lambda key, c: JobPointRules(key),
-        "derived_stats": lambda key, c: DerivedStatRule(key),
+        "derived_stats": lambda key, c: DerivedStatRule(key, applies_to="all"),
         "stat_definitions": lambda key, c: StatDefinition(key),
         "tag_definitions": lambda key, c: TagDefinition(key),
         "equipment_slots": lambda key, c: EquipmentSlotDefinition(key),
@@ -2262,7 +2306,7 @@ KINDS = (
     _Kind("gacha_banners", "Gacha Banners", "gacha_banners", "banner_id", GachaBanner),
     _Kind("job_point_rules", "Job Points", "job_point_rules", "rules_id", JobPointRules),
     _Kind("stat_definitions", "Stats", "stat_definitions", "stat_id", StatDefinition),
-    _Kind("tag_definitions", "Tags", "tag_definitions", "tag_id", TagDefinition),
+    _Kind("tag_definitions", "Properties", "tag_definitions", "tag_id", TagDefinition),
     _Kind(
         "equipment_slots", "Equipment Slots", "equipment_slots", "slot_id", EquipmentSlotDefinition
     ),

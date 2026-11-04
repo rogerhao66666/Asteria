@@ -4,10 +4,6 @@
       "keyframes": [
         {
           "duration": 0.06666666666666667,
-          "frame_index": 19
-        },
-        {
-          "duration": 0.06666666666666667,
           "frame_index": 20
         },
         {
@@ -31,10 +27,6 @@
     },
     "attack2_left": {
       "keyframes": [
-        {
-          "duration": 0.06666666666666667,
-          "frame_index": 89
-        },
         {
           "duration": 0.06666666666666667,
           "frame_index": 90
@@ -62,10 +54,6 @@
       "keyframes": [
         {
           "duration": 0.06666666666666667,
-          "frame_index": 124
-        },
-        {
-          "duration": 0.06666666666666667,
           "frame_index": 125
         },
         {
@@ -89,10 +77,6 @@
     },
     "attack2_up": {
       "keyframes": [
-        {
-          "duration": 0.06666666666666667,
-          "frame_index": 54
-        },
         {
           "duration": 0.06666666666666667,
           "frame_index": 55
@@ -120,10 +104,6 @@
       "keyframes": [
         {
           "duration": 0.1,
-          "frame_index": 25
-        },
-        {
-          "duration": 0.1,
           "frame_index": 26
         },
         {
@@ -143,10 +123,6 @@
     },
     "attack3_left": {
       "keyframes": [
-        {
-          "duration": 0.1,
-          "frame_index": 95
-        },
         {
           "duration": 0.1,
           "frame_index": 96
@@ -170,10 +146,6 @@
       "keyframes": [
         {
           "duration": 0.1,
-          "frame_index": 130
-        },
-        {
-          "duration": 0.1,
           "frame_index": 131
         },
         {
@@ -193,10 +165,6 @@
     },
     "attack3_up": {
       "keyframes": [
-        {
-          "duration": 0.1,
-          "frame_index": 60
-        },
         {
           "duration": 0.1,
           "frame_index": 61
@@ -278,15 +246,7 @@
       "keyframes": [
         {
           "duration": 0.049999999999999996,
-          "frame_index": 118
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 119
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 120
+          "frame_index": 122
         },
         {
           "duration": 0.049999999999999996,
@@ -294,7 +254,15 @@
         },
         {
           "duration": 0.049999999999999996,
-          "frame_index": 122
+          "frame_index": 120
+        },
+        {
+          "duration": 0.049999999999999996,
+          "frame_index": 119
+        },
+        {
+          "duration": 0.049999999999999996,
+          "frame_index": 118
         },
         {
           "duration": 0.049999999999999996,
@@ -307,15 +275,7 @@
       "keyframes": [
         {
           "duration": 0.049999999999999996,
-          "frame_index": 48
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 49
-        },
-        {
-          "duration": 0.049999999999999996,
-          "frame_index": 50
+          "frame_index": 52
         },
         {
           "duration": 0.049999999999999996,
@@ -323,7 +283,15 @@
         },
         {
           "duration": 0.049999999999999996,
-          "frame_index": 52
+          "frame_index": 50
+        },
+        {
+          "duration": 0.049999999999999996,
+          "frame_index": 49
+        },
+        {
+          "duration": 0.049999999999999996,
+          "frame_index": 48
         },
         {
           "duration": 0.049999999999999996,

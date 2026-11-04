@@ -8437,7 +8437,7 @@
         "projectile_id": "lightning_bolt",
         "schema": "asteria.projectile",
         "speed": 340.0,
-        "sprite": "AttackDefinition(attack_id='m_frost_bolt', display_name='m_frost_bolt', damage=ValueFormula(terms=(FormulaTerm(source=<ValueSource.SOURCE_STAT: 'source_stat'>, key='magic', coefficient=1.0), FormulaTerm(source=<ValueSource.SOURCE_STAT: 'source_stat'>, key='cold_dmg', coefficient=1.0), FormulaTerm(source=<ValueSource.TARGET_STAT: 'target_stat'>, key='defense', coefficient=-0.2)), multipliers=(), minimum=1.0, maximum=None), damage_formula_id='', damage_resource='', tags=('element.ice',), poise_damage=0.0, hitstun=0.0, knockback=60.0, knockback_direction='away', knockback_angle=0.0, knockback_lift=0.0, hitstop=0.0, hitstop_scope='participants', target_iframes=0.0, max_targets=0, critical_chance=0.0, critical_chance_stat='', critical_multiplier=1.5, on_hit_event='', armor_break=0, knockdown=False, knockdown_time=0.0, apply_states=({'state': 'chilled', 'chance': 1.0},))",
+        "sprite": "f11b2ac9-f610-56e9-b24f-d543647b7c6c",
         "version": 1,
         "wall": "destroy",
         "wall_mask": 4294967295,
@@ -9079,6 +9079,14 @@
             "time": 0.0
           },
           {
+            "cue_id": "anim_attack_0.445",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.445
+          },
+          {
             "cue_id": "cyclops_smash_0.55",
             "kind": "hitbox",
             "payload": {
@@ -9119,6 +9127,14 @@
       {
         "cues": [
           {
+            "cue_id": "anim_attack_0.245",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.245
+          },
+          {
             "cue_id": "throw",
             "kind": "projectile",
             "payload": {
@@ -9145,6 +9161,14 @@
       {
         "cues": [
           {
+            "cue_id": "anim_attack_0.065",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.065
+          },
+          {
             "cue_id": "zap",
             "kind": "projectile",
             "payload": {
@@ -9168,6 +9192,14 @@
       },
       {
         "cues": [
+          {
+            "cue_id": "anim_attack_0.107",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.107
+          },
           {
             "cue_id": "beam",
             "kind": "projectile",
@@ -9213,6 +9245,14 @@
             "time": 0.0
           },
           {
+            "cue_id": "anim_attack_0.281",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.281
+          },
+          {
             "cue_id": "golem_slam_0.45",
             "kind": "hitbox",
             "payload": {
@@ -9252,6 +9292,14 @@
       },
       {
         "cues": [
+          {
+            "cue_id": "anim_attack_0.131",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.131
+          },
           {
             "cue_id": "spray",
             "kind": "projectile",
@@ -9373,7 +9421,7 @@
               "offset_x": 36,
               "width": 92
             },
-            "time": 0.1
+            "time": 0.143
           },
           {
             "cue_id": "vfx_geyser_0",
@@ -9386,7 +9434,7 @@
               "offset_y": 24,
               "scale": 1.4
             },
-            "time": 0.1
+            "time": 0.143
           },
           {
             "cue_id": "m_blizzard_0.30000000000000004",
@@ -9398,7 +9446,7 @@
               "offset_x": 36,
               "width": 92
             },
-            "time": 0.30000000000000004
+            "time": 0.343
           },
           {
             "cue_id": "vfx_geyser_1",
@@ -9411,7 +9459,7 @@
               "offset_y": -24,
               "scale": 1.4
             },
-            "time": 0.30000000000000004
+            "time": 0.343
           },
           {
             "cue_id": "m_blizzard_0.5",
@@ -9423,7 +9471,7 @@
               "offset_x": 36,
               "width": 92
             },
-            "time": 0.5
+            "time": 0.543
           },
           {
             "cue_id": "vfx_geyser_2",
@@ -9436,7 +9484,7 @@
               "offset_y": 24,
               "scale": 1.4
             },
-            "time": 0.5
+            "time": 0.543
           },
           {
             "cue_id": "m_blizzard_0.7000000000000001",
@@ -9448,7 +9496,7 @@
               "offset_x": 36,
               "width": 92
             },
-            "time": 0.7000000000000001
+            "time": 0.743
           },
           {
             "cue_id": "vfx_geyser_3",
@@ -9461,7 +9509,7 @@
               "offset_y": -24,
               "scale": 1.4
             },
-            "time": 0.7000000000000001
+            "time": 0.743
           },
           {
             "cue_id": "m_blizzard_0.9",
@@ -9473,7 +9521,7 @@
               "offset_x": 36,
               "width": 92
             },
-            "time": 0.9
+            "time": 0.943
           },
           {
             "cue_id": "vfx_geyser_4",
@@ -9486,7 +9534,7 @@
               "offset_y": 24,
               "scale": 1.4
             },
-            "time": 0.9
+            "time": 0.943
           },
           {
             "cue_id": "m_blizzard_end",
@@ -9494,7 +9542,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 1.2
+            "time": 1.243
           }
         ],
         "schema": "asteria.action_timeline",
@@ -9519,7 +9567,7 @@
               "offset_x": 6,
               "projectile_id": "fire_bolt"
             },
-            "time": 0.1
+            "time": 0.114
           },
           {
             "cue_id": "m_bolt_end",
@@ -9527,7 +9575,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.3
+            "time": 0.314
           }
         ],
         "schema": "asteria.action_timeline",
@@ -9551,7 +9599,7 @@
               "aim": true,
               "projectile_id": "lightning_bolt"
             },
-            "time": 0.1
+            "time": 0.114
           },
           {
             "cue_id": "m_chain_lightning_end",
@@ -9559,7 +9607,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.35
+            "time": 0.364
           }
         ],
         "schema": "asteria.action_timeline",
@@ -9569,20 +9617,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack2",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack2"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.3
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack2",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack2"
+            },
+            "time": 0.107
           },
           {
             "cue_id": "m_fireball_0.25",
@@ -9609,20 +9657,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.9
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.121
           },
           {
             "cue_id": "m_firestorm_0.3",
@@ -9740,7 +9788,7 @@
               "aim": true,
               "projectile_id": "frost_bolt"
             },
-            "time": 0.1
+            "time": 0.114
           },
           {
             "cue_id": "m_frost_bolt_end",
@@ -9748,7 +9796,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.3
+            "time": 0.314
           }
         ],
         "schema": "asteria.action_timeline",
@@ -9758,20 +9806,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.7
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.121
           },
           {
             "cue_id": "m_frozen_orb_0.3",
@@ -9856,7 +9904,7 @@
               "hit_tag": "m_inferno",
               "width": 78
             },
-            "time": 0.1
+            "time": 0.143
           },
           {
             "cue_id": "vfx_explosion_0",
@@ -9869,7 +9917,7 @@
               "offset_y": 0,
               "scale": 1.8
             },
-            "time": 0.1
+            "time": 0.143
           },
           {
             "cue_id": "m_inferno_0.30000000000000004",
@@ -9880,7 +9928,7 @@
               "hit_tag": "m_inferno",
               "width": 78
             },
-            "time": 0.30000000000000004
+            "time": 0.343
           },
           {
             "cue_id": "vfx_explosion_1",
@@ -9893,7 +9941,7 @@
               "offset_y": 0,
               "scale": 1.8
             },
-            "time": 0.30000000000000004
+            "time": 0.343
           },
           {
             "cue_id": "m_inferno_0.5",
@@ -9904,7 +9952,7 @@
               "hit_tag": "m_inferno",
               "width": 78
             },
-            "time": 0.5
+            "time": 0.543
           },
           {
             "cue_id": "vfx_explosion_2",
@@ -9917,7 +9965,7 @@
               "offset_y": 0,
               "scale": 1.8
             },
-            "time": 0.5
+            "time": 0.543
           },
           {
             "cue_id": "m_inferno_0.7000000000000001",
@@ -9928,7 +9976,7 @@
               "hit_tag": "m_inferno",
               "width": 78
             },
-            "time": 0.7000000000000001
+            "time": 0.743
           },
           {
             "cue_id": "vfx_explosion_3",
@@ -9941,7 +9989,7 @@
               "offset_y": 0,
               "scale": 1.8
             },
-            "time": 0.7000000000000001
+            "time": 0.743
           },
           {
             "cue_id": "m_inferno_end",
@@ -9949,7 +9997,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.95
+            "time": 0.993
           }
         ],
         "schema": "asteria.action_timeline",
@@ -9964,7 +10012,7 @@
             "payload": {
               "clip": "attack2"
             },
-            "time": 0.0
+            "time": 0.157
           },
           {
             "cue_id": "m_lightning_strike_0.3",
@@ -10007,20 +10055,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "focus",
             "kind": "armor",
             "payload": {
               "duration": 0.4
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.171
           },
           {
             "cue_id": "meteor",
@@ -10065,7 +10113,7 @@
               "offset_y": 0,
               "width": 80
             },
-            "time": 0.08
+            "time": 0.114
           },
           {
             "cue_id": "vfx_ice_burst_0",
@@ -10078,7 +10126,7 @@
               "offset_y": 0,
               "scale": 2.2
             },
-            "time": 0.08
+            "time": 0.114
           },
           {
             "cue_id": "m_nova_end",
@@ -10086,7 +10134,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.45
+            "time": 0.484
           }
         ],
         "schema": "asteria.action_timeline",
@@ -10309,13 +10357,13 @@
             "time": 0.0
           },
           {
-            "cue_id": "punch_0.05",
+            "cue_id": "punch_0.1",
             "kind": "hitbox",
             "payload": {
               "duration": 0.1,
               "hit_tag": "punch"
             },
-            "time": 0.05
+            "time": 0.1
           },
           {
             "cue_id": "punch_end",
@@ -10333,20 +10381,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_0.0",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.25
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_0.0",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack"
+            },
+            "time": 0.132
           },
           {
             "cue_id": "r_aimed_0.2",
@@ -10534,20 +10582,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "steady",
             "kind": "armor",
             "payload": {
               "duration": 0.3
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.137
           },
           {
             "cue_id": "pierce",
@@ -10588,20 +10636,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.5
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.087
           },
           {
             "cue_id": "r_plague_0.2",
@@ -10648,7 +10696,7 @@
             "payload": {
               "clip": "attack"
             },
-            "time": 0.0
+            "time": 0.032
           },
           {
             "cue_id": "r_poison_arrow_0.1",
@@ -10675,20 +10723,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.85
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.586
           },
           {
             "cue_id": "r_railshot_0.7",
@@ -10752,7 +10800,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.05
+            "time": 0.091
           },
           {
             "cue_id": "r_rapid_fire_0.15000000000000002",
@@ -10762,7 +10810,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.15000000000000002
+            "time": 0.191
           },
           {
             "cue_id": "r_rapid_fire_0.25",
@@ -10772,7 +10820,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.25
+            "time": 0.291
           },
           {
             "cue_id": "r_rapid_fire_0.35000000000000003",
@@ -10782,7 +10830,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.35000000000000003
+            "time": 0.391
           },
           {
             "cue_id": "r_rapid_fire_0.45",
@@ -10792,7 +10840,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.45
+            "time": 0.491
           },
           {
             "cue_id": "r_rapid_fire_0.55",
@@ -10802,7 +10850,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.55
+            "time": 0.591
           },
           {
             "cue_id": "r_rapid_fire_0.6500000000000001",
@@ -10812,7 +10860,7 @@
               "projectile_id": "rapid_arrow",
               "spread": 14
             },
-            "time": 0.6500000000000001
+            "time": 0.691
           },
           {
             "cue_id": "r_rapid_fire_end",
@@ -10820,7 +10868,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.85
+            "time": 0.891
           }
         ],
         "schema": "asteria.action_timeline",
@@ -10944,20 +10992,20 @@
       {
         "cues": [
           {
-            "cue_id": "anim_attack3",
-            "kind": "animation",
-            "payload": {
-              "clip": "attack3"
-            },
-            "time": 0.0
-          },
-          {
             "cue_id": "armor",
             "kind": "armor",
             "payload": {
               "duration": 0.6
             },
             "time": 0.0
+          },
+          {
+            "cue_id": "anim_attack3",
+            "kind": "animation",
+            "payload": {
+              "clip": "attack3"
+            },
+            "time": 0.437
           },
           {
             "cue_id": "r_snipe_0.55",
@@ -11003,7 +11051,7 @@
             "payload": {
               "clip": "attack2"
             },
-            "time": 0.0
+            "time": 0.109
           },
           {
             "cue_id": "r_toxic_cloud_0.2",
@@ -11169,7 +11217,7 @@
             "payload": {
               "clip": "attack2"
             },
-            "time": 0.0
+            "time": 0.059
           },
           {
             "cue_id": "r_venom_rain_0.15",
@@ -11292,7 +11340,7 @@
             "time": 0.0
           },
           {
-            "cue_id": "skull_slash_0.2",
+            "cue_id": "skull_slash_0.23",
             "kind": "hitbox",
             "payload": {
               "duration": 0.12,
@@ -11301,7 +11349,7 @@
               "offset_x": 12,
               "width": 24
             },
-            "time": 0.2
+            "time": 0.23
           },
           {
             "cue_id": "skull_slash_end",
@@ -11319,13 +11367,13 @@
       {
         "cues": [
           {
-            "cue_id": "slime_bite_0.25",
+            "cue_id": "slime_bite_0.23",
             "kind": "hitbox",
             "payload": {
               "duration": 0.12,
               "hit_tag": "slime_bite"
             },
-            "time": 0.25
+            "time": 0.23
           },
           {
             "cue_id": "slime_bite_end",
@@ -11408,7 +11456,7 @@
               "rotate": true,
               "scale": 1.0
             },
-            "time": 0.08
+            "time": 0.1
           },
           {
             "cue_id": "w_cleave_0.08",
@@ -11420,7 +11468,7 @@
               "offset_x": 14,
               "width": 46
             },
-            "time": 0.08
+            "time": 0.1
           },
           {
             "cue_id": "w_cleave_end",
@@ -11428,7 +11476,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.4
+            "time": 0.42
           }
         ],
         "schema": "asteria.action_timeline",
@@ -11877,7 +11925,7 @@
               "rotate": true,
               "scale": 0.8
             },
-            "time": 0.08
+            "time": 0.1
           },
           {
             "cue_id": "w_rampage_0.08",
@@ -11889,7 +11937,7 @@
               "offset_x": 16,
               "width": 32
             },
-            "time": 0.08
+            "time": 0.1
           },
           {
             "cue_id": "lunge_0.2",
@@ -11915,7 +11963,7 @@
               "rotate": true,
               "scale": 0.8
             },
-            "time": 0.28
+            "time": 0.3
           },
           {
             "cue_id": "w_rampage_0.28",
@@ -11927,7 +11975,7 @@
               "offset_x": 16,
               "width": 32
             },
-            "time": 0.28
+            "time": 0.3
           },
           {
             "cue_id": "lunge_0.4",
@@ -11953,7 +12001,7 @@
               "rotate": true,
               "scale": 0.8
             },
-            "time": 0.48
+            "time": 0.5
           },
           {
             "cue_id": "w_rampage_0.48",
@@ -11965,7 +12013,7 @@
               "offset_x": 18,
               "width": 40
             },
-            "time": 0.48
+            "time": 0.5
           },
           {
             "cue_id": "w_rampage_end",
@@ -11973,7 +12021,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.8
+            "time": 0.82
           }
         ],
         "schema": "asteria.action_timeline",
@@ -12014,10 +12062,10 @@
               "rotate": true,
               "scale": 0.7
             },
-            "time": 0.08
+            "time": 0.1
           },
           {
-            "cue_id": "w_rend_0.08",
+            "cue_id": "w_rend_0.1",
             "kind": "hitbox",
             "payload": {
               "duration": 0.12,
@@ -12026,7 +12074,7 @@
               "offset_x": 14,
               "width": 28
             },
-            "time": 0.08
+            "time": 0.1
           },
           {
             "cue_id": "w_rend_end",
@@ -12225,7 +12273,7 @@
             "time": 0.0
           },
           {
-            "cue_id": "w_cut_0.06",
+            "cue_id": "w_cut_0.1",
             "kind": "hitbox",
             "payload": {
               "duration": 0.1,
@@ -12234,7 +12282,7 @@
               "offset_x": 14,
               "width": 26
             },
-            "time": 0.06
+            "time": 0.1
           },
           {
             "cue_id": "c1",
@@ -12269,7 +12317,7 @@
             "time": 0.0
           },
           {
-            "cue_id": "w_cut_0.06",
+            "cue_id": "w_cut_0.1",
             "kind": "hitbox",
             "payload": {
               "duration": 0.1,
@@ -12278,7 +12326,7 @@
               "offset_x": 14,
               "width": 26
             },
-            "time": 0.06
+            "time": 0.1
           },
           {
             "cue_id": "c2",
@@ -12425,7 +12473,7 @@
               "offset_y": 0,
               "scale": 1.8
             },
-            "time": 0.05
+            "time": 0.1
           },
           {
             "cue_id": "w_whirl_0.05",
@@ -12438,7 +12486,7 @@
               "offset_y": 0,
               "width": 56
             },
-            "time": 0.05
+            "time": 0.1
           },
           {
             "cue_id": "vfx_wind_1",
@@ -12451,7 +12499,7 @@
               "offset_y": 0,
               "scale": 1.8
             },
-            "time": 0.25
+            "time": 0.3
           },
           {
             "cue_id": "w_whirl_0.25",
@@ -12464,7 +12512,7 @@
               "offset_y": 0,
               "width": 56
             },
-            "time": 0.25
+            "time": 0.3
           },
           {
             "cue_id": "w_whirl_end",
@@ -12472,7 +12520,7 @@
             "payload": {
               "name": "end"
             },
-            "time": 0.55
+            "time": 0.6
           }
         ],
         "schema": "asteria.action_timeline",
@@ -12494,13 +12542,13 @@
             "time": 0.0
           },
           {
-            "cue_id": "walker_bump_0.1",
+            "cue_id": "walker_bump_0.13",
             "kind": "hitbox",
             "payload": {
               "duration": 0.15,
               "hit_tag": "walker_bump"
             },
-            "time": 0.1
+            "time": 0.13
           },
           {
             "cue_id": "walker_bump_end",

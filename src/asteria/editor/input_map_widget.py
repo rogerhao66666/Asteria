@@ -276,7 +276,12 @@ class InputMapWidget(QWidget):
         return self._try(lambda: self.api.add_binding(self.action_id, binding))
 
     def _add_action_clicked(self):
-        value, ok = QInputDialog.getText(self, "Add Action", "Action id:")
+        from .authoring_hub_widget import _free_id
+
+        taken = self.api.input_map.actions()
+        value, ok = QInputDialog.getText(
+            self, "Add Action", "Action id:", text=_free_id("", taken, "new_action")
+        )
         if ok and value.strip():
             self._try(lambda: self.api.add_action(value.strip()))
             self.refresh(select=value.strip())

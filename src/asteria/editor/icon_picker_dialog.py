@@ -85,14 +85,12 @@ class IconPickerDialog(QDialog):
     def _fill(self, *_):
         self.listing.clear()
         words = self.filter.text().lower().split()
+        namer = self.library.name_of if self.library is not None else icon_name
         for icon_id, icon in self._choices:
-            if words and not all(w in icon_id.lower() for w in words):
+            name = namer(icon_id)
+            if words and not all(w in f"{icon_id} {name}".lower() for w in words):
                 continue
-            item = (
-                QListWidgetItem(icon, icon_name(icon_id))
-                if icon
-                else QListWidgetItem(icon_name(icon_id))
-            )
+            item = QListWidgetItem(icon, name) if icon else QListWidgetItem(name)
             item.setData(Qt.UserRole, icon_id)
             item.setToolTip(icon_id)
             self.listing.addItem(item)

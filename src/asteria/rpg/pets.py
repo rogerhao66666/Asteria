@@ -356,10 +356,16 @@ class PetSpeciesDefinition:
     def resources_at(self, level, genes=None, formulas=None):
         """Resource maximums when the pet fights as a unit: ``resources[name]``, or the pet stat
         ``max_<name>`` (else a stat called ``<name>``) at ``level`` when the species defines
-        one (so it can grow)."""
+        one (so it can grow). A resource with only a ``growth`` entry grows from its
+        ``resources[name]``."""
         stats = self.stats_at(level, genes, formulas)
         return {
-            name: stats.get(f"max_{name}", stats.get(name, base))
+            name: stats.get(
+                f"max_{name}",
+                stats.get(name, base)
+                if name in self.stats or name not in self.growth
+                else base + self.growth[name] * (level - 1),
+            )
             for name, base in self.resources.items()
         }
 

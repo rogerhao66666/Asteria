@@ -108,7 +108,7 @@ def test_an_undefined_tag_is_a_problem_once_tags_are_defined(demo):
     demo.rpg_database.tag_definitions.pop("weak.*")
     try:
         _tags(demo, found)
-        assert any("tag weak.fire is used but not defined" in p.message for p in found)
+        assert any("property weak.fire is used but not defined" in p.message for p in found)
         assert all(isinstance(p, Problem) for p in found)
     finally:
         demo.rpg_database.add_tag_definition(TagDefinition("weak.*", "Weakness"))
@@ -148,3 +148,34 @@ def test_the_skill_tree_says_what_a_passive_does(demo):
     lines = describe_reward(Reward(), {}, names, game.tr, names.passive)
     assert lines[0].endswith("+2%")  # boss damage is a percent stat
     assert "Arcane Focus (" in lines[1]
+
+
+def test_the_formulas_are_shared_and_written_plainly(demo):
+    from asteria.rpg.derived_stats import apply_derived_stats
+
+    db = demo.rpg_database
+    rules = list(db.derived_stats.values())
+    assert {r.applies_to for r in rules} == {"all"}
+    assert {r.stat_id for r in rules if r.base} == {"bp_power"}  # no stat stands for its 100
+    levels = next(iter(db.enemy_level_rules.values()))
+    growth = dict(levels.stat_growth)
+    before = {  # ATK, DEF and MDEF at level 1 from when the formulas ran on heroes only
+        "crimson_warlord": (108.0, 108.0, 108.0),
+        "goblin_beast": (123.0, 57.2, 28.6),
+        "goblin_slinger": (64.4, 28.8, 17.3),
+        "mender_wisp": (56.0, 36.0, 54.0),
+        "skeleton_ancient": (144.0, 91.0, 136.5),
+        "skeleton_hunter": (98.0, 36.0, 25.2),
+        "vigil_acolyte": (60.0, 39.0, 46.8),
+    }
+    assert set(before) == set(db.enemies)
+    names = ("power", "defense", "magic_defense")
+    for enemy_id, numbers in before.items():
+        for level in (1, 20, 99):
+            for difficulty in (None, *(d.difficulty_id for d in levels.difficulties)):
+                enemy = db.enemies[enemy_id].instantiate()
+                levels.apply(enemy, level, difficulty)
+                apply_derived_stats(enemy.stats, rules, side="enemies")
+                for name, number in zip(names, numbers, strict=True):
+                    scale = levels.stat_multiplier(growth[name], level, difficulty)
+                    assert enemy.stats.get(name) == pytest.approx(number * scale, abs=1e-3)

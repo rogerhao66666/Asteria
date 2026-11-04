@@ -205,7 +205,7 @@ def gear(c):
         )
 
 
-def _growth(set_id, weapon_id, stat):
+def _growth(set_id, weapon_id, weapon_name, stat):
     """An enchanting path for a set weapon: Kindle (a card socket), three Stars, then one of
     two exclusive Paths (an element), and a Masterwork that needs every star."""
     reward = EquipmentGrowthReward
@@ -250,7 +250,7 @@ def _growth(set_id, weapon_id, stat):
             ),
         ),
     )
-    return EquipmentGrowthDefinition(f"{weapon_id}_growth", f"{weapon_id} Enchant", nodes=nodes)
+    return EquipmentGrowthDefinition(f"{weapon_id}_growth", f"{weapon_name} Enchant", nodes=nodes)
 
 
 def sets(c):
@@ -259,7 +259,7 @@ def sets(c):
         for eid, piece_name, kind, stats in pieces:
             if eid.startswith("w_"):
                 stat = next(iter(stats))
-                db.add_equipment_growth(_growth(set_id, eid, stat))
+                db.add_equipment_growth(_growth(set_id, eid, piece_name, stat))
                 definition = EquipmentDefinition(
                     eid,
                     piece_name,

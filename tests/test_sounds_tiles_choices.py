@@ -195,20 +195,21 @@ def test_a_choice_starts_on_its_option_and_answers_the_cancel_key():
 def test_the_choice_editor_writes_options_start_cancel_and_place():
     widgets = pytest.importorskip("PySide6.QtWidgets")
     _app = widgets.QApplication.instance() or widgets.QApplication([])
-    from asteria.editor.choice_command_dialog import ChoiceCommandDialog, parse_options
+    from asteria.editor.choice_command_dialog import ChoiceCommandDialog
 
-    assert parse_options("YES = 1\nNO = 0\nMAYBE") == [
-        {"text": "YES", "value": 1},
-        {"text": "NO", "value": 0},
-        {"text": "MAYBE", "value": 3},
-    ]
     dialog = ChoiceCommandDialog({"prompt": "Go?", "choices": [{"text": "Y", "value": 1}],
                                   "variable_name": "v", "prompt_key": "k"})  # fmt: skip
     try:
-        dialog.options.setPlainText("FOSSIL = 0\nEXIT = 1")
+        dialog.options.item(0, 0).setText("FOSSIL")
+        dialog.options.item(0, 1).setText("0")
+        dialog.add_option()
+        dialog.options.item(1, 0).setText("EXIT")
+        dialog.options.item(1, 1).setText("1")
         dialog.cursor.setValue(2)
-        dialog.cancel.setText("127")
-        dialog.box_at.setText("144, 56")
+        dialog.cancel.setCurrentText("127")
+        dialog.box_tick.setChecked(True)
+        dialog.box_x.setValue(144)
+        dialog.box_y.setValue(56)
         dialog.columns.setValue(3)
         args = dialog.result_args()
     finally:

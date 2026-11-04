@@ -61,22 +61,6 @@
       "keyframes": [
         {
           "duration": 0.03076923076923077,
-          "frame_index": 116
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 117
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 118
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 119
-        },
-        {
-          "duration": 0.03076923076923077,
           "frame_index": 120
         },
         {
@@ -94,44 +78,12 @@
         {
           "duration": 0.03076923076923077,
           "frame_index": 124
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 125
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 126
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 127
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 128
         }
       ],
       "loop": false
     },
     "attack2_right": {
       "keyframes": [
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 163
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 164
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 165
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 166
-        },
         {
           "duration": 0.03076923076923077,
           "frame_index": 167
@@ -151,22 +103,6 @@
         {
           "duration": 0.03076923076923077,
           "frame_index": 171
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 172
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 173
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 174
-        },
-        {
-          "duration": 0.03076923076923077,
-          "frame_index": 175
         }
       ],
       "loop": false

@@ -147,21 +147,21 @@ def test_the_field_draws_a_picture_scrolled_round(monkeypatch):
     assert Host()._picture_motion(image, still) is image
 
 
-def test_the_choice_editor_writes_hover_lines():
+def test_the_choice_editor_adds_hover_commands_by_form():
     widgets = pytest.importorskip("PySide6.QtWidgets")
     _app = widgets.QApplication.instance() or widgets.QApplication([])
-    from asteria.editor.choice_command_dialog import ChoiceCommandDialog, hover_text, parse_hover
+    from asteria.editor.choice_command_dialog import ChoiceCommandDialog
 
-    lines = "2: MOVE_PICTURE picture_id=girl, x=148, duration=0.25"
-    hover = parse_hover(lines, 2)
     girl = {"picture_id": "girl", "x": 148, "duration": 0.25}
-    assert hover == {1: [{"command": "MOVE_PICTURE", "args": girl}]}
     two = [{"text": "A", "value": 0}, {"text": "B", "value": 1}]
     dialog = ChoiceCommandDialog({"prompt": "?", "choices": two})
+    made = {"command": "MOVE_PICTURE", "args": girl}
+    dialog._world_dialog = lambda command="", args=None: made
     try:
-        dialog.hover.setPlainText(lines)
+        dialog.options.selectRow(1)
+        dialog.add_hover()
+        assert dialog.hover.count() == 1 and "Move Picture" in dialog.hover.item(0).text()
         args = dialog.result_args()
     finally:
         dialog.deleteLater()
-    assert args["choices"][1]["hover"] == hover[1] and "hover" not in args["choices"][0]
-    assert hover_text(args["choices"]) == lines
+    assert args["choices"][1]["hover"] == [made] and "hover" not in args["choices"][0]
