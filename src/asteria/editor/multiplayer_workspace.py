@@ -265,6 +265,26 @@ class _NetworkClientWorker(QObject):
         self.inputSent.emit(sequence)
 
 
+# threads that did not stop in time; kept so they are never deleted while still running
+_UNFINISHED_CLIENT_THREADS: list[tuple[QThread, _NetworkClientWorker]] = []
+
+
+def _stop_client_thread(thread, worker):
+    """Close the connection and stop the client thread; safe to call more than once.
+
+    Qt aborts the whole process (``QThread: Destroyed while thread is still running``) when a
+    running QThread is deleted, so the workspace calls this on close and when it is deleted."""
+    worker.close_client(emit_left=False)
+    try:
+        if not thread.isRunning():
+            return
+    except RuntimeError:  # the C++ thread is already gone
+        return
+    thread.quit()
+    if not thread.wait(5000):
+        _UNFINISHED_CLIENT_THREADS.append((thread, worker))
+
+
 class MultiplayerWorkspaceWidget(QWidget):
     """Host a local lobby or join a server without changing game/editor state."""
 
@@ -282,7 +302,9 @@ class MultiplayerWorkspaceWidget(QWidget):
         self._stdout_pending = ""
         self._closing = False
 
-        self._client_thread = QThread(self)
+        # no Qt parent: a child thread is deleted with the widget, and deleting a running
+        # QThread aborts the process. destroyed stops it whether the widget was closed or not
+        self._client_thread = QThread()
         self._client_worker = _NetworkClientWorker()
         self._client_worker.moveToThread(self._client_thread)
         self._joinRequested.connect(self._client_worker.connect_to)
@@ -298,6 +320,8 @@ class MultiplayerWorkspaceWidget(QWidget):
         self._client_worker.commandSent.connect(self._on_command_sent)
         self._client_worker.inputSent.connect(self._on_input_sent)
         self._client_thread.start()
+        thread, worker = self._client_thread, self._client_worker
+        self.destroyed.connect(lambda *_: _stop_client_thread(thread, worker))
 
         self._server_process = QProcess(self)
         self._server_process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
@@ -1056,9 +1080,7 @@ class MultiplayerWorkspaceWidget(QWidget):
         if self._closing:
             return
         self._closing = True
-        self._client_worker.close_client(emit_left=False)
-        self._client_thread.quit()
-        self._client_thread.wait(5000)
+        _stop_client_thread(self._client_thread, self._client_worker)
         if self._server_process.state() != QProcess.ProcessState.NotRunning:
             self._server_process.terminate()
             if not self._server_process.waitForFinished(1500):

@@ -185,3 +185,49 @@ def test_save_profile_icon_is_visible_on_primary_button(app):
     finally:
         widget.shutdown()
         widget.close()
+
+
+_DELETE_WITHOUT_CLOSE = """
+from types import SimpleNamespace
+
+from PySide6.QtCore import QCoreApplication, QEvent
+from PySide6.QtWidgets import QApplication, QWidget
+
+from asteria.editor.multiplayer_workspace import MultiplayerWorkspaceWidget
+
+app = QApplication([])
+window = QWidget()
+workspace = MultiplayerWorkspaceWidget(SimpleNamespace(file_path=None), window)
+thread = workspace._client_thread
+assert thread.isRunning()
+# what the test cleanup does with a window a failed test left open: hide and delete, no close
+window.hide()
+window.deleteLater()
+QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+assert not thread.isRunning()
+del workspace, window, thread
+import gc
+
+gc.collect()
+print("survived")
+"""
+
+
+def test_deleting_the_workspace_without_close_stops_the_client_thread(tmp_path):
+    """Deleting the workspace (not closing it) once aborted the whole process with
+    ``QThread: Destroyed while thread is still running``, so it runs in a child process."""
+    import subprocess
+    import sys
+
+    env = dict(os.environ, QT_QPA_PLATFORM="offscreen", ASTERIA_MUTE="1")
+    result = subprocess.run(
+        [sys.executable, "-c", _DELETE_WITHOUT_CLOSE],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=env,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "survived" in result.stdout
+    assert "Destroyed while thread is still running" not in result.stderr
