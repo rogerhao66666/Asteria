@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from asteria.runtime.battle_visuals import VFX_ALIGNS, VFX_ANCHORS, VFX_BLENDS, vfx_rect
 
+from .i18n import translate
 from .vfx_authoring import PREVIEW_BODY_HEIGHT, VFXAuthoringController, VFXAuthoringError
 
 
@@ -260,7 +261,6 @@ class VFXEditorWidget(QWidget):
         )
         self.usages.addItems([f"{s}.{b}" for s, b in self.api.usages(asset_id)] or [])
         problems = self.api.problems(asset_id)
-        from .i18n import translate
 
         self.problems.addItems(problems or [translate("No problems")])
         self._render()

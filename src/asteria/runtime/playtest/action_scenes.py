@@ -2,16 +2,7 @@
 
 from __future__ import annotations
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
+from asteria.runtime.character_control import CharacterController2DComponent
 
 
 class ActionSceneMixin:
@@ -90,7 +81,6 @@ class ActionSceneMixin:
             self.game.field_step({"interact": 1.0})
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
-        from asteria.runtime.character_control import CharacterController2DComponent
 
         controller = self.game.player.try_get(CharacterController2DComponent)
         moving = controller is not None and bool(controller.intent_x or controller.intent_y)

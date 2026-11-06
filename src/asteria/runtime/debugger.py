@@ -15,6 +15,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from asteria.core import Transform
+from asteria.runtime.profiler import RuntimeProfiler
+
 
 class DebuggerError(ValueError):
     pass
@@ -39,8 +42,6 @@ class RuntimeDebugger:
 
     # -- inspection ------------------------------------------------------------------
     def snapshot(self):
-        from asteria.core import Transform
-
         game = self.game
         state = game.save.rpg_state
         ctx = game.save.event_context
@@ -140,8 +141,6 @@ class RuntimeDebugger:
 
     # -- profiling (EDT-19) ----------------------------------------------------------------------
     def _profiler(self, start=False):
-        from asteria.runtime.profiler import RuntimeProfiler
-
         host = self.host
         if host is None:
             raise DebuggerError("profiling needs the playable runtime")
@@ -161,8 +160,6 @@ class RuntimeDebugger:
         return self._profiler(start=True).report()
 
     def cmd_profile_reset(self):
-        from asteria.runtime.profiler import RuntimeProfiler
-
         old = self._profiler(start=True)
         self.host.enable_profiling(
             RuntimeProfiler(target_fps=old.target_fps, track_python_heap=False)
@@ -267,7 +264,6 @@ class RuntimeDebugger:
             game.battle.summon(member, join_current_round=True)
             return member.member_id
         if prefab_id:
-            from asteria.core import Transform
             from asteria.core.prefab import instantiate
             from asteria.runtime.preview import build_preview_registry
 

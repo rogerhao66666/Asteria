@@ -18,11 +18,11 @@ def _world(command, **args):
 
 
 def _project():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     path = ROOT / "arpg_demo" / "project.asteria.json"
-    return Project.load_json(path, EditorDocument().component_registry)
+    return Project.load_json(path, default_component_registry())
 
 
 def test_title_requests_and_the_control_conditions():

@@ -4,13 +4,7 @@ from dataclasses import dataclass, field
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _number(value, label):
@@ -23,7 +17,7 @@ def _number(value, label):
 def _nonnegative_map(values, label):
     out = {}
     for key, value in dict(values or {}).items():
-        key = _id(key, f"{label} id")
+        key = required_id(key, f"{label} id")
         value = _number(value, label)
         if value < 0:
             raise ValueError(f"{label} must be >= 0")
@@ -40,7 +34,7 @@ class ProgressionNodeRequirement:
         minimum_rank = int(minimum_rank)
         if minimum_rank < 1:
             raise ValueError("minimum_rank must be >= 1")
-        object.__setattr__(self, "node_id", _id(node_id, "node_id"))
+        object.__setattr__(self, "node_id", required_id(node_id, "node_id"))
         object.__setattr__(self, "minimum_rank", minimum_rank)
 
     def to_data(self):
@@ -85,22 +79,22 @@ class ProgressionNodeReward:
         object.__setattr__(
             self,
             "granted_tags",
-            tuple(sorted({_id(x, "tag").lower() for x in granted_tags})),
+            tuple(sorted({required_id(x, "tag").lower() for x in granted_tags})),
         )
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(
             self,
             "unlocked_passives",
-            tuple(dict.fromkeys(_id(x, "passive_id") for x in unlocked_passives)),
+            tuple(dict.fromkeys(required_id(x, "passive_id") for x in unlocked_passives)),
         )
         object.__setattr__(
             self,
             "granted_capabilities",
-            tuple(sorted({_id(x, "capability").lower() for x in granted_capabilities})),
+            tuple(sorted({required_id(x, "capability").lower() for x in granted_capabilities})),
         )
 
     def to_data(self):
@@ -155,7 +149,7 @@ class ProgressionNodeDefinition:
         tags=(),
         icon_id="",
     ):
-        node_id = _id(node_id, "node_id")
+        node_id = required_id(node_id, "node_id")
         max_rank = int(max_rank)
         if max_rank < 1:
             raise ValueError("max_rank must be >= 1")
@@ -190,7 +184,9 @@ class ProgressionNodeDefinition:
                 for x in values
             )
 
-        group = None if exclusive_group is None else _id(exclusive_group, "exclusive_group")
+        group = (
+            None if exclusive_group is None else required_id(exclusive_group, "exclusive_group")
+        )
         object.__setattr__(self, "node_id", node_id)
         object.__setattr__(self, "display_name", str(display_name or node_id))
         object.__setattr__(self, "max_rank", max_rank)
@@ -199,7 +195,9 @@ class ProgressionNodeDefinition:
         object.__setattr__(self, "prerequisites", reqs(prerequisites))
         object.__setattr__(self, "any_prerequisites", reqs(any_prerequisites))
         object.__setattr__(self, "exclusive_group", group)
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
 
     def cost_for_rank(self, rank):
@@ -288,7 +286,7 @@ class ProgressionGraphDefinition:
         editor_view="list",
         node_positions=None,
     ):
-        graph_id = _id(graph_id, "graph_id")
+        graph_id = required_id(graph_id, "graph_id")
         nodes = tuple(nodes)
         if not nodes:
             raise ValueError("progression graph requires nodes")
@@ -333,7 +331,9 @@ class ProgressionGraphDefinition:
         object.__setattr__(self, "graph_id", graph_id)
         object.__setattr__(self, "display_name", str(display_name or graph_id))
         object.__setattr__(self, "nodes", nodes)
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
         view = str(editor_view).lower()
         if view not in {"list", "graph"}:
             raise ValueError("editor_view must be list or graph")
@@ -448,7 +448,7 @@ class ProgressionAllocationRuntime:
         return self.balances.get(str(currency_id), 0.0)
 
     def grant(self, currency_id, amount):
-        currency_id = _id(currency_id, "currency_id")
+        currency_id = required_id(currency_id, "currency_id")
         amount = _number(amount, "allocation grant")
         if amount < 0:
             raise ValueError("allocation grant must be >= 0")
@@ -494,7 +494,7 @@ class ProgressionAllocationRuntime:
         return tuple(missing)
 
     def preview_allocate(self, graph_id, node_id, count=1):
-        graph_id = _id(graph_id, "graph_id")
+        graph_id = required_id(graph_id, "graph_id")
         count = int(count)
         if count < 1:
             raise ValueError("count must be >= 1")
@@ -562,7 +562,7 @@ class ProgressionAllocationRuntime:
         return True
 
     def refund(self, graph_id, node_id, count=1, *, refund_ratio=1.0):
-        graph_id = _id(graph_id, "graph_id")
+        graph_id = required_id(graph_id, "graph_id")
         count = int(count)
         ratio = _number(refund_ratio, "refund_ratio")
         if count < 1:

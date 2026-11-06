@@ -4,14 +4,8 @@ from dataclasses import dataclass
 from heapq import heappop, heappush
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import normalize_tag
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _tags(values):
@@ -63,12 +57,18 @@ class ReactionDefinition:
         reactor_tags=(),
     ):
         object.__setattr__(self, "reactor_tags", _tags(reactor_tags))
-        object.__setattr__(self, "reaction_id", _id(reaction_id, "reaction_id"))
-        object.__setattr__(self, "trigger", _id(trigger, "trigger"))
-        object.__setattr__(self, "reactor_selector", _id(reactor_selector, "reactor_selector"))
-        object.__setattr__(self, "target_selector", _id(target_selector, "target_selector"))
+        object.__setattr__(self, "reaction_id", required_id(reaction_id, "reaction_id"))
+        object.__setattr__(self, "trigger", required_id(trigger, "trigger"))
         object.__setattr__(
-            self, "ability_id", None if ability_id is None else _id(ability_id, "ability_id")
+            self, "reactor_selector", required_id(reactor_selector, "reactor_selector")
+        )
+        object.__setattr__(
+            self, "target_selector", required_id(target_selector, "target_selector")
+        )
+        object.__setattr__(
+            self,
+            "ability_id",
+            None if ability_id is None else required_id(ability_id, "ability_id"),
         )
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(self, "required_tags", _tags(required_tags))
@@ -80,7 +80,7 @@ class ReactionDefinition:
             raise ValueError("max_per_chain must be >= 1")
         object.__setattr__(self, "max_per_chain", count)
         object.__setattr__(
-            self, "action_target_policy", _id(action_target_policy, "action_target_policy")
+            self, "action_target_policy", required_id(action_target_policy, "action_target_policy")
         )
 
     def matches(self, trigger, tags):
@@ -263,8 +263,8 @@ class ReactionRuntime:
         from .battle import BattleAction
 
         event = ReactionEvent(
-            _id(trigger, "trigger"),
-            _id(source_id, "source_id"),
+            required_id(trigger, "trigger"),
+            required_id(source_id, "source_id"),
             tuple(str(x) for x in target_ids),
             _tags(tags),
             0,

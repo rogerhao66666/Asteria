@@ -52,6 +52,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.gameplay import Effect, EffectOperation, PeriodicEffect, StatModifier
 from asteria.rpg.enemy_ai import CONDITION_PARAMS
 
 from .decor import hide_help_tip, show_help_tip
@@ -60,20 +61,31 @@ from .icons import icon as editor_icon
 from .image_tools import picture_field
 from .record_vocabulary import (
     AI_ACTION_HELP,
+    AI_ACTIONS,
+    AI_COMPARISONS,
+    AI_CONDITIONS,
     CATEGORY_HELP,
     HELP,
+    JOB_HELP,
+    JOB_ROLES,
     NOT_REFERENCES,
+    OPERATION_KINDS,
     PHASE_PRIORITY_HELP,
     PHASE_RULES_HELP,
     PHASE_START_HELP,
     REFERENCES,
     TECHNICAL,
     TERM_KEY_SOURCES,
+    TRIGGERS,
+    Choice,
+    engine_enums,
     is_chance_field,
     is_tag_field,
     is_trigger_field,
     label_for,
     map_source,
+    record_title,
+    resource_order,
     tag_label,
     tag_meaning,
     trigger_label,
@@ -81,6 +93,7 @@ from .record_vocabulary import (
     words,
 )
 from .responsive_form import columns_that_fit
+from .ui_fit import layout_widgets
 
 FORMAT_KEYS = ("schema", "version")
 # written by another view of the same record, not typed here: a skill tree's node positions
@@ -112,7 +125,6 @@ _ENUMS["default_transition_easing"] = _EASINGS
 
 def _engine_template(key):
     """A new entry for a list the engine defines (built by its own type, so it decodes)."""
-    from asteria.gameplay import Effect, EffectOperation, PeriodicEffect, StatModifier
 
     def effect(name):
         operation = EffectOperation("resource_delta", "vitality", 0.0)
@@ -649,7 +661,6 @@ class ChipList(QWidget):
         box.setFixedHeight(self.ROW - 2)
         if value is None:
             box.addItem(translate("Choose…"), None)
-        from .record_vocabulary import Choice
 
         taken = set(self.values) - {value}
         offered = [c for c in self.choices if c.value not in taken]
@@ -747,7 +758,7 @@ class ChipList(QWidget):
         line.addWidget(content, 1)
         said = _ElidedLabel(translate(effect))
         said.setObjectName("FormTagEffect")
-        said.setToolTip(translate(effect))
+        said.setToolTip(effect)
         line.addWidget(said, 2)
         self._effects.append(said)
         self.table.setCellWidget(row, base + 1, cell)
@@ -870,7 +881,7 @@ class ChipList(QWidget):
             cancel.setObjectName("FormRowRemove")
             cancel.setText("✕")
             cancel.setAutoRaise(True)
-            cancel.setToolTip(translate("Remove"))
+            cancel.setToolTip("Remove")
             cancel.clicked.connect(self._cancel)
             table.setCellWidget(row, 3 * band + 2, cancel)
         if self.noun != "tag":
@@ -1128,7 +1139,6 @@ class AmountTable(QWidget):
             between = column % 4 == 3 and column < 4 * self.per_row - 1
             self.grid.setColumnMinimumWidth(column, self.GAP if between else 0)
         self.grid.setColumnStretch(4 * self.per_row - 1, 1)
-        from .ui_fit import layout_widgets  # not itemAt: see layout_widgets
 
         for widget in layout_widgets(self.grid):  # new rows count at once, not once shown
             widget.show()
@@ -1272,8 +1282,6 @@ class NumberMatrix(QWidget):
         self.edited.emit()
 
     def _add(self):
-        from .record_vocabulary import Choice
-
         free = [Choice(k, v) for k, v in self.labels.items() if k not in self.values]
         dialog = PickDialog(f"Add {self.noun}", free, allow_new=True, parent=self)
         if dialog.exec():
@@ -2073,8 +2081,6 @@ class RecordForm(QScrollArea):
             names.addWidget(edit)
         id_key = self._id_key(data)
         if id_key is not None and name_key is None:  # no name: a title from its parts
-            from .record_vocabulary import record_title
-
             title = record_title(self.category, data, self.vocabulary, data.get(id_key))
             if title:
                 heading = _WrappedWords(title)  # a long title takes two lines, not the width
@@ -2248,8 +2254,6 @@ class RecordForm(QScrollArea):
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
                 return picker
             if skey == "initial_phase_id" and "phases" in data:  # an AI's starting phase
-                from .record_vocabulary import Choice
-
                 phases = [p.get("phase_id") for p in data["phases"] if isinstance(p, dict)]
                 choices = [Choice(str(p), words(str(p))) for p in phases if p]
                 picker = Picker(choices, value or "", allow_none=True)
@@ -2257,8 +2261,6 @@ class RecordForm(QScrollArea):
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or None))
                 return picker
             if skey == "role" and "class_id" in data:  # a job's role: main or sub job
-                from .record_vocabulary import JOB_ROLES, Choice
-
                 known = dict(JOB_ROLES)
                 for used in [*self.vocabulary.values_for(skey), value or ""]:
                     if used:  # a project's own word stays a choice (the engine keeps it)
@@ -2272,8 +2274,6 @@ class RecordForm(QScrollArea):
             ):  # a motion beat's cue, or who it acts on ("@target"): the ones in use
                 return self._used_words(data, key, value)
             if skey == "step_id":  # a recipe's step (Base, Catalyst...): the ones in use
-                from .record_vocabulary import Choice
-
                 used = [*self.vocabulary.values_for("step_id"), value or ""]
                 choices = [Choice(v, words(v)) for v in dict.fromkeys(used) if v]
                 picker = Picker(choices, value or "", allow_none=False)
@@ -2285,8 +2285,6 @@ class RecordForm(QScrollArea):
                 return self._operation_kind(data, value)  # an effect's step, in words
             if skey == "kind" and set(data) == {"cue_id", "time", "kind", "payload"}:
                 from asteria.gameplay.action_timeline import ActionCueKind
-
-                from .record_vocabulary import Choice
 
                 choices = [Choice(k.value, words(k.value)) for k in ActionCueKind]
                 picker = Picker(choices, value or "", allow_none=False)
@@ -2300,12 +2298,8 @@ class RecordForm(QScrollArea):
                 picker = Picker(self.vocabulary_tags(), value or "", allow_other=True)
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value() or ""))
                 return picker  # the tag a step adds or removes
-            from .record_vocabulary import engine_enums
-
             fixed = _ENUMS.get(skey) or engine_enums().get(skey)
             if is_trigger_field(skey):  # a moment in the battle, in words
-                from .record_vocabulary import TRIGGERS, Choice
-
                 used = self.vocabulary.values_for(skey)
                 known = dict.fromkeys(fixed or (*TRIGGERS, *used))
                 if value:  # the record's own moment is always one of the choices
@@ -2315,8 +2309,6 @@ class RecordForm(QScrollArea):
                 picker.picked.connect(lambda p=picker: self._set(data, key, p.value()))
                 return picker
             if fixed or _closed_set(skey, self.vocabulary.values_for(skey)):
-                from .record_vocabulary import Choice
-
                 options = fixed or self.vocabulary.values_for(skey)
                 choices = [Choice(v, words(v)) for v in options]
                 picker = Picker(choices, value or "", allow_none=True)
@@ -2392,14 +2384,10 @@ class RecordForm(QScrollArea):
         return QLabel(str(value))
 
     def vocabulary_tags(self):
-        from .record_vocabulary import Choice
-
         names = self.vocabulary.names()
         return [Choice(t, tag_label(t, names)) for t in self.vocabulary.tags()]
 
     def _value_choices(self, key):
-        from .record_vocabulary import Choice
-
         # values in words: a stat by its name ("STR", "Critical Rate"), else the id in words
         return [Choice(v, label_for(v)) for v in self.vocabulary.values_for(key)]
 
@@ -2421,8 +2409,6 @@ class RecordForm(QScrollArea):
         return store(key) if store is not None else None  # formation_id, attack_id...
 
     def _choices(self, source, key):
-        from .record_vocabulary import Choice
-
         if key in self.field_choices:
             return [Choice(str(v), str(v)) for v, _icon in self.field_choices[key]()]
         return self.vocabulary.choices(source) if source else ()
@@ -2486,7 +2472,6 @@ class RecordForm(QScrollArea):
     def _used_words(self, data, key, value):
         """A value picked from those the project uses, in words ("battle.fx.slash" reads
         "Slash", "@target" reads "The Target"); any other can be typed."""
-        from .record_vocabulary import Choice
 
         used = [*self.vocabulary.values_for(str(key)), value or ""]
         if str(value or "").startswith("@"):
@@ -2502,7 +2487,6 @@ class RecordForm(QScrollArea):
 
     def _party_slot(self, data, key, value):
         """Where a party member stands: one of the party's formation's places, in words."""
-        from .record_vocabulary import Choice
 
         project = getattr(self.vocabulary, "project", None)
         formations = getattr(getattr(project, "rpg_database", None), "formations", {}) or {}
@@ -2516,7 +2500,6 @@ class RecordForm(QScrollArea):
     def _operation_kind(self, data, value):
         """An effect step's kind picked in words; a new kind gets a target and an amount it
         can use (a tag step has no amount; a stat or resource step starts at 0)."""
-        from .record_vocabulary import OPERATION_KINDS, Choice
 
         choices = [Choice(k, words) for k, words in OPERATION_KINDS.items()]
         picker = Picker(choices, value or "", allow_none=False)
@@ -2567,7 +2550,6 @@ class _SubForm(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.section)
-        from .record_vocabulary import resource_order
 
         # HP above MP (the saved order is alphabetical: technique before vitality)
         for k, v in sorted(data.items(), key=lambda kv: resource_order(kv[0])):
@@ -2726,7 +2708,6 @@ class CardList(QWidget):
 
     def _node_needed(self, index, entry):
         """A node another needs, picked by name from the record's nodes, and its rank."""
-        from .record_vocabulary import Choice
 
         nodes = [n for n in (self.form._data or {}).get("nodes") or () if isinstance(n, dict)]
         choices = [
@@ -2754,7 +2735,6 @@ class CardList(QWidget):
 
     def _ai_action(self, section, extra, index, entry):
         """What an AI rule does, picked: Skill or Custom Code, then which skill (or hook)."""
-        from .record_vocabulary import AI_ACTIONS, Choice
 
         payload = entry["payload"]
         kinds = dict(AI_ACTIONS)
@@ -2779,7 +2759,6 @@ class CardList(QWidget):
     def _ai_condition(self, section, index, entry):
         """A condition as picks: what is checked (in words), which resource / stat / phase,
         how it compares, the amount, and Not."""
-        from .record_vocabulary import AI_COMPARISONS, AI_CONDITIONS, Choice
 
         params = entry["params"]
         kinds = dict(AI_CONDITIONS)
@@ -2825,19 +2804,18 @@ class CardList(QWidget):
                     lambda t=text, k=key: self._ai_param(index, k, t.text().strip())
                 )
                 section.add_row(translate(label_for(key)), text)
-        negate = QCheckBox(translate("Not"))
+        negate = QCheckBox("Not")
         negate.setChecked(bool(entry.get("negate")))
-        negate.setToolTip(translate("Ticked: the rule applies when this is not so."))
+        negate.setToolTip("Ticked: the rule applies when this is not so.")
         negate.toggled.connect(lambda on: self._ai_param(index, None, bool(on)))
         section.add_row("", negate)
 
     def _boss_phase(self, section, extra, index, entry):
         """A phase as plain choices: its name, Starts When (conditions), Priority, the
         rules it uses (picked by name), and the rest folded."""
-        from .record_vocabulary import Choice
 
         name = QLineEdit(words(str(entry["phase_id"])))
-        name.setToolTip(translate("Its name; rules and conditions follow a rename."))
+        name.setToolTip("Its name; rules and conditions follow a rename.")
         name.editingFinished.connect(lambda: self._phase_rename(index, name.text()))
         section.add_row(translate("Phase"), name)
         priority = NumberBox(entry.get("priority", 0), integer=True)
@@ -3061,7 +3039,6 @@ def _positions(entries):
 
 def _help(data, key):
     """A field's help; a job entry's own words for the names other records use too."""
-    from .record_vocabulary import JOB_HELP
 
     if isinstance(data, dict) and "class_id" in data and "assignment_id" in data:
         if str(key) in JOB_HELP:
@@ -3523,8 +3500,6 @@ def _first_line_height(widget):
         widget.ensurePolished()  # its own small font, not the default one
         return widget.fontMetrics().height()
     if isinstance(widget, CardList) and widget.layout() is not None:
-        from .ui_fit import layout_widgets  # not itemAt: see layout_widgets
-
         layout = widget.layout()
         first = next((w for w in layout_widgets(layout) if layout.indexOf(w) == 0), None)
         if isinstance(first, QLabel):
@@ -3632,7 +3607,6 @@ def _ai_condition_defaults(kind, form):
 
 def _ai_condition_words(entry, names):
     """A condition in one line: "HP is at most 50 %", "Round is 1", "Not: Can act"."""
-    from .record_vocabulary import AI_COMPARISONS, AI_CONDITIONS
 
     p, kind = entry["params"], entry["kind"]
     what = AI_CONDITIONS.get(kind) or words(kind)

@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
+from asteria.gameplay.abilities import _formula_context
+
 
 class CostCommitMode(str, Enum):
     RESOLUTION = "resolution"
@@ -105,8 +107,6 @@ class BattleTransactionRuntime:
 
     @staticmethod
     def evaluate_costs(ability_runtime, ability_id, subject, target_subject=None):
-        from asteria.gameplay.abilities import _formula_context
-
         definition = ability_runtime.registry.require(ability_id)
         context = _formula_context(subject, target_subject)
         result = []

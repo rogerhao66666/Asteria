@@ -5,14 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+from asteria.core.values import required_id
 from asteria.rpg.built_in_text import Words
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _prices(raw, label):
@@ -21,7 +15,7 @@ def _prices(raw, label):
         value = float(value)
         if not isfinite(value) or value < 0:
             raise ValueError(f"{label} must be finite and >= 0")
-        out[_id(key, "currency id")] = value
+        out[required_id(key, "currency id")] = value
     return out
 
 
@@ -118,7 +112,7 @@ class ShopEntry:
             stock = int(stock)
             if stock < 0:
                 raise ValueError("stock must be >= 0")
-        object.__setattr__(self, "item_id", _id(item_id, "item_id"))
+        object.__setattr__(self, "item_id", required_id(item_id, "item_id"))
         object.__setattr__(self, "buy_prices", _prices(buy_prices, "buy price"))
         object.__setattr__(self, "sell_prices", _prices(sell_prices, "sell price"))
         object.__setattr__(self, "stock", stock)
@@ -171,7 +165,7 @@ class ShopDefinition:
         ids = [x.item_id for x in entries]
         if len(ids) != len(set(ids)):
             raise ValueError("shop entries must have unique item ids")
-        object.__setattr__(self, "shop_id", _id(shop_id, "shop_id"))
+        object.__setattr__(self, "shop_id", required_id(shop_id, "shop_id"))
         object.__setattr__(self, "display_name", str(display_name or shop_id))
         object.__setattr__(self, "entries", entries)
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())

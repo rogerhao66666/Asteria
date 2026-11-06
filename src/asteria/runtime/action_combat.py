@@ -38,9 +38,11 @@ from asteria.gameplay.formulas import FormulaContext
 from .character_control import (
     CharacterController2DComponent,
     Hurtbox2DComponent,
+    PlayerInput2DComponent,
     facing_from,
     facing_vector,
 )
+from .combat import CombatantComponent
 
 SLOT_PREFIX = "slot:"  # a binding value "slot:2": the actor's second equipped skill
 ITEM_COST = "item:"  # an ability cost resource "item:<id>" spends inventory items
@@ -283,7 +285,6 @@ class ActionCombatSystem(System):
         ``cooldown_seconds``."""
         if ability.cooldown_formula is None:
             return ability.cooldown_seconds
-        from .combat import CombatantComponent
 
         if self.combat is None or not entity.has(CombatantComponent):
             return ability.cooldown_seconds
@@ -299,7 +300,6 @@ class ActionCombatSystem(System):
         be paid."""
         if not ability.costs:
             return []
-        from .combat import CombatantComponent
 
         if self.combat is None or not entity.has(CombatantComponent):
             return f"cost:{ability.costs[0].resource}"
@@ -335,8 +335,6 @@ class ActionCombatSystem(System):
 
     # -- aim and lock-on -------------------------------------------------------------------------
     def _team(self, entity):
-        from .combat import CombatantComponent
-
         for component_type in (CombatantComponent, Hurtbox2DComponent):
             component = entity.try_get(component_type)
             if component is not None and component.team:
@@ -345,7 +343,6 @@ class ActionCombatSystem(System):
 
     def foes(self, entity, scene, reach):
         """Hostile targets (hurtboxes of another team, alive) within ``reach``, nearest first."""
-        from .combat import CombatantComponent
 
         team = self._team(entity)
         x, y = world_position(entity)
@@ -459,7 +456,6 @@ class ActionCombatSystem(System):
     def _check_lock(self, entity, spec, scene):
         if not spec.lock_target_id:
             return
-        from .combat import CombatantComponent
 
         target = scene.get_entity(spec.lock_target_id)
         lost = target is None or not target.enabled or not target.has(Transform)
@@ -518,8 +514,6 @@ class ActionCombatSystem(System):
 
 
 def _player_input_type():
-    from .character_control import PlayerInput2DComponent
-
     return PlayerInput2DComponent
 
 

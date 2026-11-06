@@ -1,17 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
 
+from asteria.core.values import finite
 from asteria.rpg.battle import BattleOutcome
 from asteria.rpg.rewards import RewardApplicationResult
-
-
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,7 +203,7 @@ class BattleResultPresentationRuntime:
         if reward_result is not None:
             currencies = tuple(
                 BattleCurrencyRewardView(
-                    str(k), self.profile.currency_label(k), _finite(v, "currency reward")
+                    str(k), self.profile.currency_label(k), finite(v, "currency reward")
                 )
                 for k, v in sorted(reward_result.currencies.items())
             )
@@ -233,8 +226,8 @@ class BattleResultPresentationRuntime:
                     BattleProgressionRewardView(
                         str(result.track_id),
                         self.profile.progression_label(result.track_id),
-                        _finite(result.old_total, "old_total"),
-                        _finite(result.new_total, "new_total"),
+                        finite(result.old_total, "old_total"),
+                        finite(result.new_total, "new_total"),
                         int(result.old_rank),
                         int(result.new_rank),
                         tuple(int(x.rank) for x in crossed),

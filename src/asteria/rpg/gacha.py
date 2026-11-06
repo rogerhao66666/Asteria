@@ -26,11 +26,9 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
+from asteria.core.values import clean_text
+
 PRIZE_KINDS = ("item", "equipment", "actor", "pet")
-
-
-def _text(value):
-    return str(value or "").strip()
 
 
 def _color(value, default=(235, 235, 245)):
@@ -54,15 +52,15 @@ class GachaRarity:
     def __init__(
         self, rarity_id, display_name="", color=None, chest_image="", open_image="", open_sound=""
     ):
-        rarity_id = _text(rarity_id)
+        rarity_id = clean_text(rarity_id)
         if not rarity_id:
             raise ValueError("a rarity needs an id")
         object.__setattr__(self, "rarity_id", rarity_id)
-        object.__setattr__(self, "display_name", _text(display_name) or rarity_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or rarity_id)
         object.__setattr__(self, "color", _color(color))
-        object.__setattr__(self, "chest_image", _text(chest_image))
-        object.__setattr__(self, "open_image", _text(open_image))
-        object.__setattr__(self, "open_sound", _text(open_sound))
+        object.__setattr__(self, "chest_image", clean_text(chest_image))
+        object.__setattr__(self, "open_image", clean_text(open_image))
+        object.__setattr__(self, "open_sound", clean_text(open_sound))
 
     def to_data(self):
         return {
@@ -110,7 +108,7 @@ class GachaPrize:
         duplicate_item="",
         duplicate_amount=0,
     ):
-        prize_id = _text(prize_id)
+        prize_id = clean_text(prize_id)
         if not prize_id:
             raise ValueError("a prize needs an id")
         if kind not in PRIZE_KINDS:
@@ -120,12 +118,12 @@ class GachaPrize:
             raise ValueError("weights are >= 0, amounts >= 1")
         object.__setattr__(self, "prize_id", prize_id)
         object.__setattr__(self, "kind", kind)
-        object.__setattr__(self, "target_id", _text(target_id) or prize_id)
+        object.__setattr__(self, "target_id", clean_text(target_id) or prize_id)
         object.__setattr__(self, "amount", amount)
         object.__setattr__(self, "weight", weight)
-        object.__setattr__(self, "rarity", _text(rarity))
+        object.__setattr__(self, "rarity", clean_text(rarity))
         object.__setattr__(self, "featured", bool(featured))
-        object.__setattr__(self, "duplicate_item", _text(duplicate_item))
+        object.__setattr__(self, "duplicate_item", clean_text(duplicate_item))
         object.__setattr__(self, "duplicate_amount", int(duplicate_amount))
 
     def to_data(self):
@@ -176,7 +174,7 @@ class GachaBanner:
     layout: str = ""
 
     def __init__(self, banner_id, display_name="", **values):
-        banner_id = _text(banner_id)
+        banner_id = clean_text(banner_id)
         if not banner_id:
             raise ValueError("a banner needs an id")
         rarities = tuple(
@@ -197,7 +195,7 @@ class GachaBanner:
             if ids and prize.rarity not in ids:
                 raise ValueError(f"prize {prize.prize_id} has an unknown rarity {prize.rarity}")
         object.__setattr__(self, "banner_id", banner_id)
-        object.__setattr__(self, "display_name", _text(display_name) or banner_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or banner_id)
         object.__setattr__(self, "rarities", rarities)
         object.__setattr__(self, "prizes", prizes)
         texts = ("description", "banner_image", "currency", "pity_rarity", "multi_guarantee",

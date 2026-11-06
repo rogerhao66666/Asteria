@@ -770,7 +770,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 
 ### 15.1 載入、儲存與執行專案
 
-一個專案是一個 `project.asteria.json`，同一個資料夾放美術、`playable_test_manifest.json` 與 `saves/`。registry 告訴載入器有哪些元件：用 `EditorDocument().component_registry`（編輯器與參考腳本都這樣用）或 `build_preview_registry()`。
+一個專案是一個 `project.asteria.json`，同一個資料夾放美術、`playable_test_manifest.json` 與 `saves/`。registry 告訴載入器有哪些元件：用 `asteria.runtime.component_registry` 的 `default_component_registry()`（編輯器與參考腳本都這樣用）或 `build_preview_registry()`。
 
 | 簽名 | 說明 |
 | --- | --- |

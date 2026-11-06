@@ -10,6 +10,8 @@ runs or machines without an output device.
 
 from __future__ import annotations
 
+import time
+import wave
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -30,7 +32,6 @@ class AudioDevice(Protocol):
 
 def _wav_seconds(path):
     """How long a .wav plays (0 for anything else): the silent device waits as long."""
-    import wave
 
     try:
         with wave.open(str(path), "rb") as data:
@@ -57,8 +58,6 @@ class RecordingAudioDevice:
         self.calls.append(("music_volume", round(volume, 4)))
 
     def play_sound(self, path, *, loops, fade_ms, volume):
-        import time
-
         self._next += 1
         self.calls.append(("play_sound", path, loops, fade_ms, round(volume, 4)))
         self._ends[self._next] = time.monotonic() + (_wav_seconds(path) if loops == 0 else 0.0)
@@ -78,7 +77,6 @@ class RecordingAudioDevice:
 
     def sound_busy(self, handle):
         """A one-shot sound plays as long as its file (silently): waits keep their timing."""
-        import time
 
         return time.monotonic() < self._ends.get(handle, 0.0)
 

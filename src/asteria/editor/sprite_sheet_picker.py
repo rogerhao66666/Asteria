@@ -21,8 +21,8 @@ from PySide6.QtWidgets import (
 
 from .dialogue_command_dialog import _PortraitPicker
 from .image_tools import SpriteSheetLibrary
-from .picture_categories import sheets_by_category
-from .record_pictures import framed, sprite_sheet_pixmap
+from .picture_categories import CATEGORIES, OTHER, sheets_by_category
+from .record_pictures import forget_pictures, framed, sprite_sheet_pixmap
 
 
 class BattleCharacterLibrary(SpriteSheetLibrary):
@@ -85,8 +85,6 @@ class WalkingSheetLibrary(SpriteSheetLibrary):
         return choices
 
     def _build(self):
-        from PySide6.QtGui import QIcon
-
         document = self.document
         views = getattr(document, "asset_views", None)
         if views is None:
@@ -155,8 +153,6 @@ class PicturePickerDialog(QDialog):
         fighter=None,
     ):
         from PySide6.QtWidgets import QHBoxLayout, QPushButton, QTabBar
-
-        from .picture_categories import CATEGORIES, OTHER
 
         super().__init__(parent)
         self.document = document
@@ -448,7 +444,6 @@ def resolve_pictures(document, widget=None):
         from .resource_resolver import resolve_project_resources
 
         resolve_project_resources(document)
-    from .record_pictures import forget_pictures
 
     forget_pictures()
 

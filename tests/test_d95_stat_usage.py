@@ -13,10 +13,10 @@ DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 
 @pytest.fixture(scope="module")
 def project():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    return Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(DEMO / "project.asteria.json", default_component_registry())
 
 
 def test_the_card_names_every_record_and_its_page(project):

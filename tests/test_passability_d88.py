@@ -11,6 +11,7 @@ import pytest
 
 from asteria.editor import EditorDocument
 from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -18,7 +19,7 @@ DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 def _demo():
     from asteria.project import Project
 
-    return Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(DEMO / "project.asteria.json", default_component_registry())
 
 
 def _entity(project, name):

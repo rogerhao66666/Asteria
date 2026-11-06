@@ -194,14 +194,14 @@ def test_boss_event_focuses_the_camera_on_the_boss_then_cuts_back_for_the_battle
     pygame = pytest.importorskip("pygame")
     from pathlib import Path
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_save import GameRuntimeSave
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg"
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     save = GameRuntimeSave.load_json(root / "saves" / "boss_stress.asteria-save.json", project)
     runtime = PlayableTestRuntime(project, save, resource_root, width=960, height=540)
     runtime.open()

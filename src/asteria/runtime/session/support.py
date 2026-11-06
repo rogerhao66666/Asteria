@@ -6,18 +6,13 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 
-from asteria.runtime.collision import CombinedQuery
-
-
-class _EitherBlocks(CombinedQuery):
-    """Two ``collides_world_point`` queries: a point is blocked when either blocks it."""
-
-    def __init__(self, first, second):
-        super().__init__(first, second)
-        self.first, self.second = first, second
-
-    def collides_world_point(self, x, y):
-        return self.first.collides_world_point(x, y) or self.second.collides_world_point(x, y)
+from asteria.gameplay import ResourcePool
+from asteria.gameplay.conditions import (
+    ConditionGroup,
+    NumericCondition,
+    StateCondition,
+    TagCondition,
+)
 
 
 class GameSessionError(RuntimeError):
@@ -72,12 +67,6 @@ class EquipOffer:
 
 def describe_condition(condition, tr=None):
     """Plain words for an ability condition (menus: why it cannot be used)."""
-    from asteria.gameplay.conditions import (
-        ConditionGroup,
-        NumericCondition,
-        StateCondition,
-        TagCondition,
-    )
 
     if tr is None:  # no game: English (``GameSessionRuntime.tr`` words it in the player's)
 
@@ -108,7 +97,6 @@ def _base_relative(battle_pool, base_pool):
     """``base_pool`` with each resource's current value as the battle left it, less what the
     build added on top (the build adds it back): a hero who ended on 900 / 1,000 health whose
     gear gave 400 of it is stored as 500 / 600."""
-    from asteria.gameplay import ResourcePool
 
     pool = ResourcePool.from_data(base_pool.to_data())
     for name in tuple(pool.to_data()["values"]):

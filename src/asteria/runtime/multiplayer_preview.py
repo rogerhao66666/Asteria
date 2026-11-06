@@ -7,17 +7,29 @@ projects and projects without the opt-in flag keep their offline path.
 
 from __future__ import annotations
 
+import inspect
 import json
 import math
 import threading
 import time
 from collections.abc import Mapping
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
+from asteria.core.serialization import deserialize_scene
+from asteria.gameplay import ResourcePool, StatBlock, TagSet
 from asteria.multiplayer.client import MultiplayerClient, MultiplayerClientError
+from asteria.multiplayer.project_snapshot import unpack_scene_data
 from asteria.multiplayer.protocol import clean_guest_id
 from asteria.multiplayer.smoothing import SnapshotInterpolator
+from asteria.runtime.action_combat import ActionCombatComponent
+from asteria.runtime.actor_link import ClassAppearanceComponent
+from asteria.runtime.character_control import CharacterController2DComponent
+from asteria.runtime.combat import CombatantComponent, CombatantState
+from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+from asteria.runtime.game_save import GameRuntimeSave
+from asteria.runtime.preview import build_preview_registry
 
 PROFILE_SCHEMA = "asteria.multiplayer.profile"
 PROFILE_VERSION = 1
@@ -402,19 +414,10 @@ def apply_project_snapshot(runtime, state, player_id):
     """
     if state.get("schema") != "asteria.multiplayer.project_state":
         return False
-    from types import SimpleNamespace
-
-    from asteria.core.serialization import deserialize_scene
-    from asteria.gameplay import ResourcePool, StatBlock, TagSet
-    from asteria.runtime.character_control import CharacterController2DComponent
-    from asteria.runtime.combat import CombatantComponent, CombatantState
-    from asteria.runtime.game_save import GameRuntimeSave
-    from asteria.runtime.preview import build_preview_registry
 
     local = next((p for p in state.get("players", ()) if p.get("player_id") == player_id), None)
     if local is None:
         return False
-    from asteria.multiplayer.project_snapshot import unpack_scene_data
 
     scene_data = unpack_scene_data(state["scene"])
     scene_id = local["game_save"]["scene_id"]
@@ -486,7 +489,6 @@ def apply_project_snapshot(runtime, state, player_id):
                 current.tags,
             )
             current.states.restore(values["states"])
-    from asteria.runtime.action_combat import ActionCombatComponent
 
     systems["action_combat"].cooldowns = {
         (value["entity_id"], value["ability_id"]): float(value["left"])
@@ -505,8 +507,6 @@ def apply_project_snapshot(runtime, state, player_id):
                 if name in values:
                     setattr(controller, name, values[name])
     # Actor ids name shared definitions; each guest's classes are independent saves.
-    from asteria.runtime.actor_link import ClassAppearanceComponent
-    from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
 
     for row in state.get("players", ()):
         entity = scene.get_entity(row.get("entity_id", ""))
@@ -545,7 +545,6 @@ def apply_project_snapshot(runtime, state, player_id):
 
 def install_authoritative_commands(runtime):
     """Route existing screen actions through the server without changing offline screens."""
-    import inspect
 
     game = runtime.game
     if getattr(game, "_network_commands_installed", False):
@@ -622,8 +621,6 @@ def install_authoritative_commands(runtime):
         result = original_build(actor_id, apply_slots=apply_slots)
         if runtime._multiplayer_connected() and game._actor_of(game.player) == str(actor_id):
             from dataclasses import replace
-
-            from asteria.runtime.combat import CombatantComponent
 
             component = game.player.try_get(CombatantComponent)
             if component is not None and component.state is not None:

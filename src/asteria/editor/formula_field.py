@@ -102,7 +102,7 @@ class FormulaField(QWidget):
         self.stats, self.resources, self.strict = stats, resources, strict
         self.edit = QLineEdit()
         self.edit.setObjectName("FormulaText")
-        self.edit.setPlaceholderText(translate("Empty: the other fields are used"))
+        self.edit.setPlaceholderText("Empty: the other fields are used")
         mono = QFont("Menlo")
         mono.setStyleHint(QFont.Monospace)
         self.edit.setFont(mono)
@@ -208,7 +208,7 @@ class FormulaField(QWidget):
             self.status.setStyleSheet(f"color: {ERROR_COLOR};")
             return
         if not self.text():
-            self.status.setText(translate("Empty: the other fields are used"))
+            self.status.setText("Empty: the other fields are used")
             self.status.setStyleSheet("")
             return
         stats, resources = variables(self.text())

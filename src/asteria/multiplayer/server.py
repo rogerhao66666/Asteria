@@ -8,6 +8,7 @@ import importlib
 import inspect
 import json
 import math
+import ssl
 import sys
 import threading
 import time
@@ -247,7 +248,6 @@ class MultiplayerServer(ThreadingTCPServer):
 
     def handle_error(self, request, client_address):
         # A failed TLS handshake or a dropped connection is routine; do not print a traceback.
-        import ssl
 
         exc = sys.exc_info()[1]
         if isinstance(exc, ssl.SSLError | ConnectionError | TimeoutError | OSError):

@@ -19,9 +19,10 @@ def test_the_tag_list_is_named_without_the_usage_cards(monkeypatch):
     from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
     from asteria.editor.game_systems_widget import GameSystemsEditorWidget
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     QApplication.instance() or QApplication([])
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     controller = GameSystemsAuthoringController(EditorDocument(project))
     widget = GameSystemsEditorWidget(controller)
     calls = []

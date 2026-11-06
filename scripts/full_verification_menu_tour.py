@@ -23,9 +23,9 @@ def main(argv=None):
     import pygame
     import run_trial_smoke as smoke
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.bag_screen import BagScreen
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
     from asteria.runtime.skill_tree_screen import SkillTreeScreen
 
@@ -35,9 +35,7 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
     helper = live._helpers()
     pump, key = helper._pump, helper._key
-    project = Project.load_json(
-        live.DEMO / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(live.DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), live.DEMO, width=1280, height=720
     )

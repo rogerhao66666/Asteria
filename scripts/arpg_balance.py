@@ -24,17 +24,17 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 import arpg_builds as builds  # noqa: E402
 
 from asteria.core import Entity, Transform  # noqa: E402
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
 from asteria.runtime.character_control import Hurtbox2DComponent  # noqa: E402
 from asteria.runtime.combat import CombatantComponent  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime  # noqa: E402
 
 DEMO = REPO / "reference_projects" / "arpg_demo"
 
 
 def _runtime():
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=960, height=540
     )

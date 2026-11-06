@@ -15,6 +15,7 @@ from math import cos, hypot, pi, sin
 from asteria.core import System, Transform
 
 from .character_control import AIController2DComponent, CharacterController2DComponent
+from .combat import CombatantComponent
 
 SUCCESS, FAILURE, RUNNING = "success", "failure", "running"
 
@@ -95,8 +96,6 @@ class BehaviorTreeSystem(System):
     # -- real-time combat helpers -----------------------------------------------------------------
     @staticmethod
     def _is_combatant(entity):
-        from .combat import CombatantComponent
-
         return entity.has(CombatantComponent)
 
     def _combat_state(self, ctx):

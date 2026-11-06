@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from enum import Enum
-from math import isfinite
 
+from asteria.core.values import finite, required_id
 from asteria.gameplay.action_timeline import ActionCueKind
 from asteria.rpg.gauge_composition import GaugeCompositionResult
 from asteria.rpg.interactions import (
@@ -15,24 +15,10 @@ from asteria.rpg.interactions import (
 from .battle import BattlePresentationEvent, BattlePresentationEventKind
 
 
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
-
-
 def _positive(value, label):
-    value = _finite(value, label)
+    value = finite(value, label)
     if value <= 0:
         raise ValueError(f"{label} must be > 0")
-    return value
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
     return value
 
 
@@ -71,7 +57,9 @@ class BattleFeedbackProfile:
         def pairs(values, label):
             result = []
             for key, value in dict(values or {}).items():
-                result.append((_id(key, f"{label} key"), _id(value, f"{label} value")))
+                result.append(
+                    (required_id(key, f"{label} key"), required_id(value, f"{label} value"))
+                )
             return tuple(sorted(result))
 
         object.__setattr__(self, "outcome_tag_labels", pairs(outcome_tag_labels, "outcome label"))
@@ -221,11 +209,11 @@ class BattleFeedbackRuntime:
 
     def _apply_resolved_value(self, event):
         payload = event.payload
-        value = _finite(payload["value"], "resolved presentation value")
+        value = finite(payload["value"], "resolved presentation value")
         kind = BattleValueKind(payload.get("value_kind", BattleValueKind.DAMAGE.value))
         tags = tuple(sorted(set(map(str, payload.get("outcome_tags", ())))))
         disposition = str(payload.get("disposition", InteractionDisposition.NORMAL.value))
-        target_id = _id(payload["target_id"], "target_id")
+        target_id = required_id(payload["target_id"], "target_id")
         source_id = str(payload.get("source_id", ""))
         duration = _positive(
             payload.get("duration", self.profile.value_duration), "value duration"
@@ -256,7 +244,7 @@ class BattleFeedbackRuntime:
         self.labels.append(
             BattleFeedbackLabel(
                 event.sequence,
-                _id(payload["member_id"], "member_id"),
+                required_id(payload["member_id"], "member_id"),
                 label,
                 f"threshold:{payload['threshold_id']}",
                 0.0,
@@ -285,7 +273,7 @@ class BattleFeedbackRuntime:
         return tuple(self.apply_event(event) for event in events)
 
     def update(self, dt):
-        dt = _finite(dt, "dt")
+        dt = finite(dt, "dt")
         if dt < 0:
             raise ValueError("dt must be >= 0")
         self.time += dt
@@ -362,18 +350,18 @@ class BattleFeedbackRuntime:
     def restore(self, data):
         if data.get("schema") != "asteria.battle_feedback_runtime" or data.get("version") != 1:
             raise ValueError("unsupported battle feedback runtime snapshot")
-        self.time = _finite(data["time"], "time")
+        self.time = finite(data["time"], "time")
         self.last_sequence = int(data["last_sequence"])
         self.values = [
             BattleFloatingValue(
                 int(x["sequence"]),
                 str(x["target_id"]),
                 str(x.get("source_id", "")),
-                _finite(x["value"], "value"),
+                finite(x["value"], "value"),
                 BattleValueKind(x["kind"]),
                 tuple(x.get("outcome_tags", ())),
                 str(x.get("disposition", "normal")),
-                _finite(x["age"], "age"),
+                finite(x["age"], "age"),
                 _positive(x["duration"], "duration"),
             )
             for x in data.get("values", ())
@@ -384,7 +372,7 @@ class BattleFeedbackRuntime:
                 str(x["target_id"]),
                 str(x["label"]),
                 str(x["reason_id"]),
-                _finite(x["age"], "age"),
+                finite(x["age"], "age"),
                 _positive(x["duration"], "duration"),
             )
             for x in data.get("labels", ())
@@ -395,7 +383,7 @@ class BattleFeedbackRuntime:
                 str(x["cue_id"]),
                 str(x.get("member_id", "")),
                 dict(x.get("payload", {})),
-                _finite(x["age"], "age"),
+                finite(x["age"], "age"),
                 _positive(x["duration"], "duration"),
             )
             for x in data.get("vfx", ())
@@ -424,7 +412,7 @@ def resolved_value_payload(
     else:
         raise TypeError("result must be ValueResolutionResult or OutcomeResolutionResult")
     payload = {
-        "target_id": _id(target_id, "target_id"),
+        "target_id": required_id(target_id, "target_id"),
         "source_id": str(source_id),
         "value": value_result.resolved_value,
         "value_kind": BattleValueKind(value_kind).value,

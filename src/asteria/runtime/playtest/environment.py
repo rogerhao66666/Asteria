@@ -2,25 +2,15 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from stat import S_ISREG
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
+from asteria.runtime.environment2d import resolve_environment
 
 
 class EnvironmentMixin:
     # -- scene environment: lighting, fog, weather, post-processing (VFX-02 / VFX-03) -------------
     def _resolve_environment(self, kind):
-        from asteria.runtime.environment2d import resolve_environment
-
         defaults = self.manifest.get("render", {}).get("environment")
         if kind == "field":
             scale = (
@@ -59,7 +49,7 @@ class EnvironmentMixin:
             return None
         # read once per asset (asked every frame), again only when the file changes
         key = (str(path), info.st_mtime_ns, info.st_size)
-        cache = self.__dict__.setdefault("_shader_sources", {})
+        cache = self._shader_sources
         known = cache.get(str(asset_id))
         if known is None or known[0] != key:
             known = cache[str(asset_id)] = (key, path.read_text(encoding="utf-8"))
@@ -108,7 +98,6 @@ class EnvironmentMixin:
     def drawing_world(self):
         """Context manager: draw into the world layer even after ``world_done`` (e.g. battle
         VFX)."""
-        from contextlib import contextmanager
 
         @contextmanager
         def scope():

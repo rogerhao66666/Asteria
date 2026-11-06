@@ -122,10 +122,10 @@ def test_arpg_project_runtime_joins_the_shared_boss_and_draws_the_map_overlay(
 ):
     pygame = pytest.importorskip("pygame")
     from asteria.core import Transform
-    from asteria.editor import EditorDocument
     from asteria.multiplayer.client import MultiplayerClient
     from asteria.multiplayer.rules import load_rules
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     demo_root = (
@@ -133,9 +133,7 @@ def test_arpg_project_runtime_joins_the_shared_boss_and_draws_the_map_overlay(
     )
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(
-        demo_root / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(demo_root / "project.asteria.json", default_component_registry())
     server = MultiplayerServer(
         ("127.0.0.1", 0),
         store_path=tmp_path / "multiplayer.sqlite3",
@@ -193,18 +191,16 @@ def test_project_snapshot_replaces_scene_and_maps_guest_without_local_simulation
 
     from asteria.core import Transform
     from asteria.core.serialization import serialize_scene
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
     from asteria.runtime.multiplayer_preview import apply_project_snapshot
 
     demo_root = (
         Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     )
-    project = Project.load_json(
-        demo_root / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(demo_root / "project.asteria.json", default_component_registry())
     save = project.game_start.instantiate(project)
     game = GameSessionRuntime(project, save)
     game.prepare_action_player()
@@ -248,17 +244,15 @@ def test_project_snapshot_replaces_scene_and_maps_guest_without_local_simulation
 def test_authoritative_menu_commands_do_not_mutate_projected_save():
     from types import SimpleNamespace
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
     from asteria.runtime.multiplayer_preview import install_authoritative_commands
 
     demo_root = (
         Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     )
-    project = Project.load_json(
-        demo_root / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(demo_root / "project.asteria.json", default_component_registry())
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     calls = []
     runtime = SimpleNamespace(
@@ -302,11 +296,11 @@ def test_runtime_forwards_ability_inputs_and_immediately_releases_them():
 def test_project_server_drives_real_runtime_frames_and_skill_screen(monkeypatch, tmp_path):
     pygame = pytest.importorskip("pygame")
     from asteria.core import Transform
-    from asteria.editor import EditorDocument
     from asteria.multiplayer.client import MultiplayerClient
     from asteria.multiplayer.persistence import SQLiteMultiplayerStore
     from asteria.multiplayer.project_demo import build_project_adapter
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.network_bag_screen import NetworkSkillTreeScreen
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -320,9 +314,7 @@ def test_project_server_drives_real_runtime_frames_and_skill_screen(monkeypatch,
     server = MultiplayerServer(("127.0.0.1", 0), adapter=adapter, store=store)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    project = Project.load_json(
-        demo_root / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(demo_root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), demo_root, width=960, height=540
     )

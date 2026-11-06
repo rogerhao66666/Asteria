@@ -57,9 +57,9 @@ def test_playable_runtime_falls_back_to_pygame_when_gl_fails(resource_root, monk
         _boss_runtime,  # noqa: F401  (fixture helpers)
     )
 
-    from asteria.editor import EditorDocument
     from asteria.platform import gpu_presenter
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_save import GameRuntimeSave
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -69,7 +69,7 @@ def test_playable_runtime_falls_back_to_pygame_when_gl_fails(resource_root, monk
     monkeypatch.setattr(
         gpu_presenter.GpuPresenter, "open_window", classmethod(lambda cls, *a, **k: broken())
     )
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
     runtime = PlayableTestRuntime(project, save, ROOT, backend="moderngl")
     runtime.open()

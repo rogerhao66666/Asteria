@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import importlib
 import os
+import time
 from pathlib import Path
 
+from asteria import kernels
 from asteria.core import Transform
 from asteria.graphics.scaling import ScaledImageCache
+from asteria.platform.pygame_audio import open_audio_device
+from asteria.platform.pygame_input import PygameInputSource
+from asteria.runtime.action_play import missing_action_bindings
 from asteria.runtime.audio_mixer import AudioMixer
 from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+from asteria.runtime.creature_shop import MAP_PHASES
+from asteria.runtime.debug_server import DebugServer
+from asteria.runtime.debugger import RuntimeDebugger
 from asteria.runtime.field_camera import (
     CAMERA_COMMANDS,
     FieldCameraError,
@@ -25,6 +34,7 @@ from asteria.runtime.game_menus import (
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.input_map import InputActionTracker
+from asteria.runtime.input_rebinding import effective_input_map
 from asteria.runtime.playtest.action_scenes import ActionSceneMixin
 from asteria.runtime.playtest.battle_flow import BattleFlowMixin
 from asteria.runtime.playtest.capture import CaptureMixin
@@ -51,6 +61,7 @@ from asteria.runtime.playtest.support import (  # noqa: F401 - re-exported
 from asteria.runtime.playtest.text_draw import TextDrawMixin
 from asteria.runtime.playtest.title_build import TitleBuildMixin
 from asteria.runtime.playtest.workshop import WorkshopMixin
+from asteria.runtime.pointer import PointerLayer
 from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
 from asteria.runtime.skeleton_component import SkeletonSceneRuntime
 
@@ -219,6 +230,15 @@ class PlayableTestRuntime(
     pointer = None  # mouse hotspots (PointerLayer), made by open()
     _dialogue_style = None  # (dialogue_window record, its settings)
     _theme_cjk = None  # (menu theme, the file of its CJK font)
+    _tile_scene = None  # (scene, whether TileSceneView can draw it)
+    _field_echoes = None  # MotionEchoes of the field sprites with a motion trail
+    _field_background = None  # (key, the field's background picture scaled to the window)
+    # set by the editor's menu preview (menu_preview.py) while it draws a screen
+    _menu_boxes = None  # screen id -> {element: rect} drawn (None: not recording)
+    _menu_units = None  # screen id -> screen pixels of one layout unit
+    _menu_preview = False  # drawing for the preview: the battle screen reports its groups
+    _menu_style_cache = None
+    _preview_request = None  # a sample message window the preview draws over the field
 
     def _init_caches(self):
         """The drawing caches - fonts, rendered and measured text, scaled pictures - empty."""
@@ -231,11 +251,22 @@ class PlayableTestRuntime(
         self._scaled_cache = {}  # (picture, size) -> (picture, scaled copy)
         self._bitmap_fonts = {}  # font id -> SheetFont
         self._shades = {}  # (size, rgba) -> a surface of that colour
+        self._shader_sources = {}  # shader file -> its source
+        self._normal_images = {}  # normal-map pictures of the field's lit sprites
+        self._field_compositions = {}  # entity -> its composed character picture
+        self._field_vfx_content_cache = {}  # effect id -> its particle content
+        self._trail_last_xy = {}  # entity id -> where its motion trail last dropped an echo
+        self._movies = {}  # movie id -> the playing MoviePlayer
+        self._text_pictures = {}  # text picture key -> its rendered surface
+        self._text_picture_fonts = {}  # (font, size) -> face of the text pictures
+        self._dialogue_window_cache = {}  # message window frames, portraits and parts
+        self._emote_images = {}  # emote balloon id -> its picture
+        self._area_popup = {"title": None}  # the map-name popup being shown
+        self._overlay_tops = {}  # overlay menu id -> its first row shown (scrolling)
+        self._typed_line = {}  # the message being typed out (dialogue_screen)
 
     def enable_debugger(self, *, port=0, token=None):
         """Start the editor debug channel (EDT-10); returns the DebugServer."""
-        from asteria.runtime.debug_server import DebugServer
-        from asteria.runtime.debugger import RuntimeDebugger
 
         self.debug_server = DebugServer(RuntimeDebugger(self.game, self), port=port, token=token)
         return self.debug_server
@@ -299,10 +330,8 @@ class PlayableTestRuntime(
             self.screen = self.pg.display.set_mode((self.width, self.height))
         self.pg.display.set_caption(title)
         self.clock = self.pg.time.Clock()
-        from asteria.platform.pygame_input import PygameInputSource
 
         self.input_source = PygameInputSource(self.pg)
-        from asteria.runtime.input_rebinding import effective_input_map
 
         # ENG-15: the player's rebinding (settings) over the project's default bindings
         input_map = effective_input_map(self.project.input_map, self.settings.input_overrides)
@@ -316,23 +345,18 @@ class PlayableTestRuntime(
 
             input_map.set_bindings("attack", [InputBinding("key", "f")])
             self._network_legacy_attack_injected = True
-        from asteria.runtime.action_play import missing_action_bindings
 
         for action, bindings in missing_action_bindings(
             input_map
         ).items():  # action-scene controls (not saved)
             input_map.set_bindings(action, bindings)
         self.input = InputActionTracker(input_map)
-        from asteria.runtime.pointer import PointerLayer
 
         self.pointer = PointerLayer(self.pg)  # mouse control: hotspots -> keys (D85)
-        from asteria.platform.pygame_audio import open_audio_device
 
         self.audio = AudioMixer(open_audio_device(self.pg), self._audio_path)
         self.settings.apply(self.audio)
         if self.multiplayer_bridge is not None:
-            from asteria.core import Transform
-
             transform = self.game.player.get(Transform)
             self._network_origin = (float(transform.x), float(transform.y))
             if self.multiplayer_bridge.connect():
@@ -384,9 +408,6 @@ class PlayableTestRuntime(
     def _warm_start(self):
         """Load now what the first field frame would load mid-frame (70-90 ms): the kernel set
         (numpy, the native library), chosen on first use, and the field's modules."""
-        import importlib
-
-        from asteria import kernels
 
         kernels.active()
         for name in self.FIELD_MODULES:
@@ -472,7 +493,6 @@ class PlayableTestRuntime(
         """Wait for the next frame of a steady ``target_fps`` schedule; returns dt in seconds
         (capped at 0.05). Deadlines advance by exactly one period (sleep, then a short spin), so
         frames do not drift the way whole-millisecond waits plus a vsynced present do (A11)."""
-        import time
 
         period = 1.0 / max(1, int(target_fps))
         now = time.perf_counter()
@@ -517,7 +537,6 @@ class PlayableTestRuntime(
     def _creature_shop_frame(self, dt, events):
         """``field.creature_shop``: the screen over the field; on its buy screen the field's
         camera puts the cell the player faces at ``map_front_at`` (the map beside the goods)."""
-        from asteria.runtime.creature_shop import MAP_PHASES
 
         shop = self._creature_shop
         shop.update(dt, events)

@@ -7,17 +7,7 @@ from asteria.runtime.game_menus import (
     CraftingScreen,
 )
 from asteria.runtime.game_session import GameSessionRuntime
-
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
+from asteria.runtime.status_menu import TAB_WORDS, TABS, StatusMenu
 
 
 class MenusInputMixin:
@@ -48,7 +38,6 @@ class MenusInputMixin:
     # -- status menu (UI-01) ----------------------------------------------------------------------
     def open_status_menu(self, back="field", page=None):
         """The status menu: its four tabs, or ``page`` alone (a pause entry of its own, D87)."""
-        from asteria.runtime.status_menu import StatusMenu
 
         self.status_menu = StatusMenu(self.game, page)
         self._status_back = back
@@ -97,8 +86,6 @@ class MenusInputMixin:
                     menu.message = translated(exc, self.game.tr)
 
     def _draw_status_menu(self):
-        from asteria.runtime.status_menu import TAB_WORDS, TABS
-
         menu = self.status_menu
         actor = menu.actor_id or "—"
         record = self.project.rpg_database.actors.get(actor)

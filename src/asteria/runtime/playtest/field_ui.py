@@ -4,22 +4,27 @@ from __future__ import annotations
 
 import zipfile
 
-from asteria.core import Transform
+from asteria.core import Transform, world_position
 from asteria.graphics.scaling import resized
-from asteria.presentation.creature_screens import creature_settings
-from asteria.runtime.collision import box_blocked, feet_box
-from asteria.runtime.movies import Movie, is_movie
-
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
+from asteria.platform.pygame_battle_ui import cjk_size, contains_cjk, font_for_text
+from asteria.presentation.animated_text import (
+    AnimatedTextRuntime,
+    AnimatedTextSpec,
+    TextKey,
+    TextTransform,
 )
+from asteria.presentation.creature_screens import creature_settings
+from asteria.presentation.message_codes import DEFAULT_PALETTE, parse_message
+from asteria.presentation.text_cells import cells
+from asteria.presentation.text_render_integration import AnimatedTextRenderComposer
+from asteria.runtime.action_combat import ActionCombatComponent
+from asteria.runtime.character_control import CharacterController2DComponent
+from asteria.runtime.collision import CombinedQuery, box_blocked, feet_box
+from asteria.runtime.components2d import Interaction2DComponent
+from asteria.runtime.dialogue_screen import draw_message_window
+from asteria.runtime.grid_walk import FACING_STEP, GridWalker
+from asteria.runtime.menu_icons import icon_source
+from asteria.runtime.movies import Movie, is_movie
 
 
 class FieldUiMixin:
@@ -184,7 +189,6 @@ class FieldUiMixin:
     def _picture_image(self, picture):
         """The sub-image of a picture's asset for its sprite-sheet cell (or its words drawn),
         or ``None``."""
-        from asteria.runtime.menu_icons import icon_source
 
         if picture.text:
             return self._text_picture(picture)
@@ -203,7 +207,7 @@ class FieldUiMixin:
     def _movie_image(self, source, picture):
         """The frame a movie picture is at: ``frame_rate`` frames a second since it was shown,
         from ``frame`` on; the last one stays unless it loops."""
-        movies = self.__dict__.setdefault("_movies", {})
+        movies = self._movies
         try:
             movie = movies.get(source) or movies.setdefault(
                 source, Movie(self.pg, self.path(source))
@@ -224,7 +228,7 @@ class FieldUiMixin:
         if settings.get("font"):
             from asteria.graphics.bitmap_font import BitmapFont
 
-            fonts = self.__dict__.setdefault("_text_picture_fonts", {})
+            fonts = self._text_picture_fonts
             if settings["font"] not in fonts:
                 fonts[settings["font"]] = BitmapFont(self.pg, self.path(settings["font"]))
             return fonts[settings["font"]]
@@ -235,7 +239,7 @@ class FieldUiMixin:
         other; kept while they stay the same."""
         text = self.game.expand_message(picture.text, plain=True)
         key = (text, picture.font, picture.text_color, picture.shadow_color)
-        cache = self.__dict__.setdefault("_text_pictures", {})
+        cache = self._text_pictures
         if key in cache:
             return cache[key]
         font = self._text_picture_font(picture.font)
@@ -272,8 +276,6 @@ class FieldUiMixin:
         return self.load_image(self._picture_path(picture)).get_size()
 
     def _picture_path(self, picture):
-        from asteria.runtime.menu_icons import icon_source
-
         return icon_source(self.project, picture.asset_id)[0]
 
     def _draw_pictures(self):
@@ -351,7 +353,6 @@ class FieldUiMixin:
 
     def _draw_entity_icons(self):
         """Icons events keep over entities (``SET_ENTITY_ICON``), above their heads."""
-        from asteria.core import Transform
 
         icons = self.game.entity_icons()
         for entity_id, icon_id in icons.items():
@@ -394,7 +395,6 @@ class FieldUiMixin:
                     )
         if not lines:
             return
-        from asteria.presentation.text_cells import cells
 
         row_h = 22  # a full-width (Chinese) character takes the room of two
         width = min(420, max(160, 14 + 9 * max(cells(text) for text, _ in lines)))
@@ -406,13 +406,6 @@ class FieldUiMixin:
     POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
 
     def _update_popups(self, dt):
-        from asteria.presentation.animated_text import (
-            AnimatedTextRuntime,
-            AnimatedTextSpec,
-            TextKey,
-            TextTransform,
-        )
-
         if getattr(self, "popups", None) is None:
             self.popups, self._popup_serial = AnimatedTextRuntime(), 0
         notices = self.game.drain_notices()
@@ -456,8 +449,6 @@ class FieldUiMixin:
         return x, y - 48 * self.field_camera.zoom  # above the head
 
     def _draw_popups(self):
-        from asteria.presentation.text_render_integration import AnimatedTextRenderComposer
-
         resolved = getattr(self, "popup_frame", ())
         if not resolved:
             return
@@ -468,7 +459,6 @@ class FieldUiMixin:
                 packets.extend(composer.compose((item,)))
             except ValueError:
                 continue  # the anchor left the scene
-        from asteria.platform.pygame_battle_ui import cjk_size, contains_cjk, font_for_text
 
         latin = self.pg.font.Font(None, 30)
         for packet in packets:
@@ -497,7 +487,6 @@ class FieldUiMixin:
         """The picture ``portrait_id`` names (an image asset, a sheet cell or a project path)
         fitted inside ``width`` x ``height`` with its proportions kept, or ``None``. A picture
         made larger keeps sharp pixels (pixel-art faces); one made smaller is smoothed."""
-        from asteria.runtime.menu_icons import icon_source
 
         key = (str(portrait_id or ""), int(width), int(height))
         cache = self._portrait_cache
@@ -596,7 +585,6 @@ class FieldUiMixin:
             if self.dialogue_settings().get("choice_frame"):
                 self._draw_choice_window(request)
                 return
-        from asteria.runtime.dialogue_screen import draw_message_window
 
         draw_message_window(self, request, line)  # through the dialogue layouts (V2)
 
@@ -622,7 +610,7 @@ class FieldUiMixin:
         shows it at once)."""
         settings = self.dialogue_settings()
         self._draw_dialogue_window(None, text=self.game.prompt_of(request))
-        cache = self.__dict__.setdefault("_dialogue_window_cache", {})
+        cache = self._dialogue_window_cache
         if not self._choice_ready():
             return
         frame = cache.get("choice_frame")
@@ -694,7 +682,7 @@ class FieldUiMixin:
         ``arrow_size`` ``[w, h]``) shown at ``arrow_at`` once the line is written out; ``rows``
         lines show at once (2), a longer line scrolls up as it is written."""
         settings = self.dialogue_settings()
-        cache = self.__dict__.setdefault("_dialogue_window_cache", {})
+        cache = self._dialogue_window_cache
         if cache.get("settings") is not settings:  # another window (edited in the editor)
             cache.clear()
             cache["settings"] = settings
@@ -750,8 +738,6 @@ class FieldUiMixin:
             if font is not None and font.covers(part):
                 font.render(surface, part, x0, y0 + row * step, letter, shadow)
             else:
-                from asteria.platform.pygame_battle_ui import font_for_text
-
                 face = font_for_text(
                     self.pg, self.pg.font.Font(None, 16), part, self._cjk_fonts, 12
                 )
@@ -789,7 +775,7 @@ class FieldUiMixin:
             image = self.load_image(pictures[key])
             zoom = view.camera.zoom
             size = (round(image.get_width() * zoom), round(image.get_height() * zoom))
-            cache = self.__dict__.setdefault("_emote_images", {})
+            cache = self._emote_images
             scaled = cache.get((key, size))
             if scaled is None:
                 scaled = cache[(key, size)] = self.pg.transform.scale(image, size)
@@ -836,7 +822,7 @@ class FieldUiMixin:
         if not settings:
             requests.clear()
             return
-        cache = self.__dict__.setdefault("_area_popup", {"title": None})
+        cache = self._area_popup
         if "window" not in cache:
             cache["window"] = self.load_image(settings["window"])
             cache["font"] = None
@@ -871,8 +857,6 @@ class FieldUiMixin:
         if font is not None and font.covers(title):
             font.render(surface, title, tx + (tw - font.width(title)) // 2, ty, letter, shadow)
         else:
-            from asteria.platform.pygame_battle_ui import font_for_text
-
             face = font_for_text(self.pg, self.pg.font.Font(None, 16), title, self._cjk_fonts, 12)
             x = tx + (tw - face.size(title)[0]) // 2
             surface.blit(face.render(title, False, shadow), (x + 1, ty + 1))
@@ -889,7 +873,6 @@ class FieldUiMixin:
         """Draw a message whose data codes are expanded: colour and size spans, icons as boxes,
         ``\\n`` starts a new line. A layout (V2) may give the line ``step``, the plain text's
         ``color``, a ``font`` and ``limit`` (how many letters are typed out so far)."""
-        from asteria.presentation.message_codes import DEFAULT_PALETTE, parse_message
 
         left, top = x, y
         step = step or size + 6
@@ -922,7 +905,7 @@ class FieldUiMixin:
         settings = self.dialogue_settings()
         if not settings.get("window") or not settings.get("choice_after_text", True):
             return True
-        cache = self.__dict__.get("_dialogue_window_cache", {})
+        cache = self._dialogue_window_cache
         return cache.get("written", True)
 
     def _dialogue_input(self, events):
@@ -1047,7 +1030,6 @@ class FieldUiMixin:
             if self.tile_view is not None:
                 # a tile map: its walls block and its edge bounds the walk, the pace is a walk
                 # across a screen in a few seconds
-                from asteria.runtime.collision import CombinedQuery
 
                 walls = self.game._tile_blocking.get(self.game.scene.id)
                 blocked = CombinedQuery(blocked, walls)
@@ -1175,7 +1157,6 @@ class FieldUiMixin:
         game = self.game
         if keys_at is None or game.event_busy or game.mode != "field":
             return
-        from asteria.runtime.grid_walk import FACING_STEP
 
         size = float(self.manifest.get("field", {}).get("grid_size", 16.0))
         transform = game.player.get(Transform)
@@ -1219,7 +1200,6 @@ class FieldUiMixin:
         scene seen from above (a side-view platformer's player jumps instead)."""
         if not self.game.action_scene:
             return True
-        from asteria.runtime.character_control import CharacterController2DComponent
 
         controller = self.game.player.try_get(CharacterController2DComponent)
         return controller is None or controller.mode != "platformer"
@@ -1227,8 +1207,6 @@ class FieldUiMixin:
     def _click_talk_target(self, world_x, world_y):
         """The figure under a click that the player talks to (an ``action`` interaction with
         an event), or None."""
-        from asteria.core import world_position
-        from asteria.runtime.components2d import Interaction2DComponent
 
         best = None
         for entity in self.game.scene.entities():
@@ -1282,8 +1260,6 @@ class FieldUiMixin:
     def _click_talk(self, target, player):
         """At the clicked figure (within its range, less a little): face it and press interact,
         as the key would. True when the walk is over (talked, or the figure is gone)."""
-        from asteria.core import world_position
-        from asteria.runtime.components2d import Interaction2DComponent
 
         interaction = target.try_get(Interaction2DComponent) if target is not None else None
         if interaction is None or not target.enabled:
@@ -1306,8 +1282,6 @@ class FieldUiMixin:
 
     def _grid_field_step(self, dx, dy, dt):
         """``field.movement: "grid"``: a whole cell a step (runtime/grid_walk.py)."""
-        from asteria.runtime.collision import CombinedQuery
-        from asteria.runtime.grid_walk import GridWalker
 
         walker = getattr(self, "_grid_walker", None)
         moves = getattr(self.game, "player_story_moves", 0)  # an event moved / turned the player
@@ -1440,7 +1414,6 @@ class FieldUiMixin:
 
     def _field_abilities(self):
         """The player carries ActionCombat bindings (a field attack in a turn-based game)."""
-        from asteria.runtime.action_combat import ActionCombatComponent
 
         combat = self.game.player.try_get(ActionCombatComponent)
         return combat is not None and combat.enabled and bool(combat.bindings.strip())

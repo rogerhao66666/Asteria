@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(value, name):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{name} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,11 +13,11 @@ class BattleVisualAssetSet:
     icon_asset_id: str | None = None
 
     def __post_init__(self):
-        _id(self.battlefield_asset_id, "battlefield_asset_id")
+        required_id(self.battlefield_asset_id, "battlefield_asset_id")
         for name in ("portrait_asset_id", "small_portrait_asset_id", "icon_asset_id"):
             value = getattr(self, name)
             if value is not None:
-                _id(value, name)
+                required_id(value, name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,9 +46,9 @@ class BattleVisualStateDefinition:
     priority: int = 0
 
     def __post_init__(self):
-        _id(self.state_id, "state_id")
-        _id(self.clip_role, "clip_role")
-        _id(self.fallback_state_id, "fallback_state_id")
+        required_id(self.state_id, "state_id")
+        required_id(self.clip_role, "clip_role")
+        required_id(self.fallback_state_id, "fallback_state_id")
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +61,7 @@ class BattleCombatantVisualProfile:
     hud_visible: bool = True
 
     def __post_init__(self):
-        _id(self.profile_id, "profile_id")
+        required_id(self.profile_id, "profile_id")
         if not isinstance(self.assets, BattleVisualAssetSet):
             raise TypeError("assets must be BattleVisualAssetSet")
         states = tuple(self.states)
@@ -113,7 +108,7 @@ class BattleCombatantVisualRuntime:
         self.revision = 0
 
     def register(self, member_id, profile):
-        member_id = _id(member_id, "member_id")
+        member_id = required_id(member_id, "member_id")
         if not isinstance(profile, BattleCombatantVisualProfile):
             raise TypeError("profile must be BattleCombatantVisualProfile")
         if member_id in self._profiles:
@@ -122,7 +117,7 @@ class BattleCombatantVisualRuntime:
         return self.set_state(member_id, "idle")
 
     def set_state(self, member_id, state_id):
-        member_id = _id(member_id, "member_id")
+        member_id = required_id(member_id, "member_id")
         profile = self._profiles[member_id]
         definition = profile.state(state_id)
         self.revision += 1
@@ -147,7 +142,7 @@ class BattleCombatantVisualRuntime:
         return self._states[str(member_id)]
 
     def set_visibility(self, member_id, *, battlefield_visible=None, hud_visible=None):
-        member_id = _id(member_id, "member_id")
+        member_id = required_id(member_id, "member_id")
         current = self._states[member_id]
         self.revision += 1
         state = BattleCombatantVisualState(
@@ -170,7 +165,7 @@ class BattleCombatantVisualRuntime:
         return state
 
     def replace_profile(self, member_id, profile, *, state_id="idle"):
-        member_id = _id(member_id, "member_id")
+        member_id = required_id(member_id, "member_id")
         if not isinstance(profile, BattleCombatantVisualProfile):
             raise TypeError("profile must be BattleCombatantVisualProfile")
         self._profiles[member_id] = profile

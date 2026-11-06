@@ -35,6 +35,7 @@ from .animation_state_machine_authoring import (
     StateMachineAuthoringError,
 )
 from .flow_layout import FlowLayout
+from .i18n import translate
 from .ui_fit import fit_list_to_width
 
 NODE_W, NODE_H = 120, 44
@@ -353,7 +354,6 @@ class AnimationStateMachineWidget(QWidget):
 
     def _fill_starter(self):
         from .animation_editor_widget import sheet_title
-        from .i18n import translate
 
         sheet = self.sheet
         self.starter_title.setText(

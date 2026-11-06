@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 from asteria.rpg.capture import CaptureRule
 from asteria.rpg.world_interactions import WorldInteraction
+from asteria.runtime.game_session import GameSessionRuntime
 
 ITEMS = (
     "four_character_party",
@@ -67,7 +68,6 @@ def run_jrpg_stress(project, *, seed=7, max_turns=400, game=None, on_step=None):
     window shows
     it); ``on_step(name)`` is called after each step (presentation, screenshots). Returns (report,
     game)."""
-    from asteria.runtime.game_session import GameSessionRuntime
 
     step = on_step or (lambda name: None)
 

@@ -10,7 +10,11 @@ Asset list.
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import time
+import zipfile
+from io import BytesIO
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -26,6 +30,9 @@ from PySide6.QtWidgets import (
 )
 
 from asteria.assets.autofix import ConfirmationRequired, apply_fix, preview_fix, repack_atlas
+from asteria.assets.types import AssetRecord
+
+from .scene_render import resolve_texture_source
 
 # fixes that need no extra numbers: the dialog offers these
 SIMPLE_FIXES = {
@@ -56,8 +63,6 @@ def project_root(document):
 
 
 def _pixmap(image, box=220):
-    from io import BytesIO
-
     data = BytesIO()
     image.save(data, "PNG")
     qimage = QImage.fromData(data.getvalue())
@@ -229,7 +234,6 @@ def _icon_files(
     """Picture files in folders named in ``folders`` (``icons``) under ``root`` (a bounded walk:
     hidden and build folders are skipped, so a project opened from a big folder still lists
     quickly)."""
-    import os
 
     found = []
     base_depth = len(Path(root).parts)
@@ -397,7 +401,6 @@ class IconLibrary:
         """The list, built again only when the project's icons change (another project, an
         icon asset added or removed, a picture imported) or the picture files may have -
         not after every edit, nor for every form that shows a picker."""
-        import time
 
         project = getattr(self.document, "project", None)
         icons = () if project is None else project.assets.query(kind=self.KIND)
@@ -419,7 +422,6 @@ class IconLibrary:
         relative to the project folder)."""
         holder = self.document if self.document is not None else self
         setattr(holder, self.CACHE, None)  # the new picture joins the list
-        import shutil
 
         source = Path(path).resolve()
         root = project_root(self.document).resolve()
@@ -470,9 +472,6 @@ class SpriteSheetLibrary(IconLibrary):
 
 def movie_first_frame(document, asset_id):
     """A movie asset's first frame as a pixmap (null when it is no movie, or unreadable)."""
-    import zipfile
-
-    from PySide6.QtGui import QPixmap
 
     pixmap = QPixmap()
     project = getattr(document, "project", None)
@@ -510,7 +509,6 @@ class PictureLibrary(IconLibrary):
         from PySide6.QtGui import QIcon, QPixmap
 
         from .record_pictures import framed
-        from .scene_render import resolve_texture_source
 
         choices = []
         for asset in self._records():
@@ -530,8 +528,6 @@ class PictureLibrary(IconLibrary):
         return str(record.name) if record is not None and record.name else super().name_of(icon_id)
 
     def import_file(self, path):
-        from asteria.assets.types import AssetRecord
-
         relative = super().import_file(path)
         for asset in self._records():
             if Path(str(asset.source_path)).as_posix() == relative:

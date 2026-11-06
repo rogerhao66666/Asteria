@@ -30,6 +30,17 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from asteria.assets.asset_package import package_assets
+from asteria.assets.monster import MonsterValidator
+from asteria.assets.prop import PropValidator
+from asteria.assets.sprite_kinds import SpriteData, sprite_kind_validators, standard_asset_codecs
+from asteria.assets.store import AssetStore
+from asteria.assets.tileset import TilesetValidator
+from asteria.assets.vfx import VFXValidator
+from asteria.graphics import SpriteClip, SpriteKeyframe
+from asteria.presentation.fidelity import HighFidelityClip
+from asteria.runtime.animation import AnimatorState
+
 GOLDEN_CATEGORIES = (
     "golden_character",
     "golden_npc",
@@ -89,13 +100,6 @@ def image_size_resolver(root):
 
 
 def _store(root):
-    from asteria.assets.monster import MonsterValidator
-    from asteria.assets.prop import PropValidator
-    from asteria.assets.sprite_kinds import sprite_kind_validators, standard_asset_codecs
-    from asteria.assets.store import AssetStore
-    from asteria.assets.tileset import TilesetValidator
-    from asteria.assets.vfx import VFXValidator
-
     validators = dict(sprite_kind_validators(image_size_resolver(root)))
     validators.update(
         tileset=TilesetValidator().validate,
@@ -116,7 +120,6 @@ def _documents(root):
 
 def _grid_clip(name, frames, durations, loop, events=()):
     """Runtime clip from grid indices and per-frame durations (seconds)."""
-    from asteria.graphics import SpriteClip, SpriteKeyframe
 
     event_map = dict(events)
     keyframes = [
@@ -129,7 +132,6 @@ def _grid_clip(name, frames, durations, loop, events=()):
 def _play(clip):
     """Play ``clip`` at 60 Hz for one cycle (two for loops); returns (frame changes, events with
     times)."""
-    from asteria.runtime.animation import AnimatorState
 
     duration = sum(k.duration for k in clip.keyframes)
     animator = AnimatorState(clip)
@@ -149,7 +151,6 @@ def _play(clip):
 
 def _clips_of(asset):
     """``{name: SpriteClip}`` for any golden asset that animates, or ``{}``."""
-    from asteria.presentation.fidelity import HighFidelityClip
 
     sprite = getattr(asset, "sprite", None)
     if sprite is not None:
@@ -208,7 +209,6 @@ def _payload_references(asset):
 
 def run_golden_suite(root):
     """Run the eight AS§34 checks on every golden asset under ``root``."""
-    from asteria.assets.asset_package import package_assets
 
     root = Path(root)
     report = GoldenReport()
@@ -373,8 +373,6 @@ def run_golden_suite(root):
 
 
 def _grid_sheet(asset_id, image_size, frame_size):
-    from asteria.assets.sprite_kinds import SpriteData
-
     return SpriteData("grid.png", tuple(frame_size)).sprite_sheet(asset_id, image_size)
 
 

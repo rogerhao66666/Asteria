@@ -13,6 +13,11 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from asteria.runtime import ActorLinkComponent, Animator2DComponent, SpriteRenderer2D
+
+from .commands import AddComponentCommand, CommandTransaction, SetAttributeCommand
+from .structure import build_rename_command
+
 
 class ActorAppearanceError(ValueError):
     pass
@@ -142,7 +147,6 @@ def linked_entities(document, actor_id):
     """``(entity, renamed)`` for every map entity that looks like the actor: those linked to
     it (named after it too), then the player's entity when it leads the party (its name is
     the scene's own)."""
-    from asteria.runtime import ActorLinkComponent
 
     if document.project is None:
         return []
@@ -159,8 +163,6 @@ def linked_entities(document, actor_id):
 
 
 def _appearance_from_map(document, actor_id):
-    from asteria.runtime import SpriteRenderer2D
-
     for entity, _renamed in linked_entities(document, actor_id):
         sprite = entity.try_get(SpriteRenderer2D)
         if sprite is not None and sprite.sprite_sheet_asset_id:
@@ -183,10 +185,6 @@ def apply_actor_appearance(document, actor_id, sprite_sheet_asset_id, frame_inde
     Actors panel (AdapterFamilyWidget), neither of which should duplicate
     this sync logic.
     """
-    from asteria.runtime import Animator2DComponent, SpriteRenderer2D
-
-    from .commands import AddComponentCommand, CommandTransaction
-    from .structure import build_rename_command
 
     if document.project is None:
         return False
@@ -234,8 +232,6 @@ def apply_actor_appearance(document, actor_id, sprite_sheet_asset_id, frame_inde
 
 
 def _set_fields(tx, target, fields):
-    from .commands import SetAttributeCommand
-
     for field_name, new_value in fields.items():
         old_value = getattr(target, field_name)
         if old_value != new_value:

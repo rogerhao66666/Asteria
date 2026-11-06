@@ -35,8 +35,11 @@ from PySide6.QtWidgets import (
 from asteria.rpg.built_in_text import GROUPS, engine_translations
 
 from . import data_translation
+from .commands import CommandTransaction
+from .event_editing import ReplaceEventProgramCommand
 from .flow_layout import FlowLayout
 from .i18n import translate
+from .icons import icon
 
 OWN_GROUP = "This project's own keys"
 ACTIONS_GROUP = "Controls: input action names"
@@ -140,8 +143,6 @@ class _ShareTree(QTreeWidget):
 
 
 def _icon(name, color=None):
-    from .icons import icon
-
     return icon(name, color)
 
 
@@ -442,8 +443,6 @@ class TranslationTable(QWidget):
         changes = data_translation.keyed_programs(project) if project is not None else []
         if not changes or execute is None:
             return 0
-        from .commands import CommandTransaction
-        from .event_editing import ReplaceEventProgramCommand
 
         tx = CommandTransaction("Give Dialogue Lines Keys")
         for program_id, new, old in changes:

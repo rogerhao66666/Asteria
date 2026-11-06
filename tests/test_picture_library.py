@@ -12,11 +12,11 @@ DEMO = Path(__file__).resolve().parents[1] / "reference_projects/full_verificati
 
 
 def _window(project_file):
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(project_file, EditorDocument().component_registry)
+    project = Project.load_json(project_file, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = project_file
     window._resolve_project_resources()

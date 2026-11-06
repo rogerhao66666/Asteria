@@ -17,8 +17,8 @@ sys.path.insert(0, str(REPO / "scripts"))
 from lucifer_reskin import Reskin  # noqa: E402
 from prune_orphan_assets import prune  # noqa: E402
 
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 HEROES = ("warrior", "sorceress", "cultist", "necromancer")
 ENEMIES = {
@@ -48,7 +48,7 @@ Hunter / Ancient / King, Equipment, Pickups, Exterior / Dungeon / Lava tilesets,
 def dress(folder):
     folder = Path(folder)
     path = folder / "project.asteria.json"
-    project = Project.load_json(path, EditorDocument().component_registry)
+    project = Project.load_json(path, default_component_registry())
     heroes = {f"hero_{i:02d}": HEROES[(i - 1) % 4] for i in range(1, 13)}
     Reskin(project, folder).run(
         heroes=heroes,

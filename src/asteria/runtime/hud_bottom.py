@@ -28,6 +28,9 @@ from __future__ import annotations
 
 from math import cos, pi, sin, sqrt
 
+from .action_combat import ITEM_COST, ActionCombatComponent, parse_bindings
+from .combat import CombatantComponent
+
 KEY_NAMES = {
     "left shift": "SHIFT",
     "right shift": "SHIFT",
@@ -59,7 +62,7 @@ SHIELD_WORDS = ("shield", "barrier", "ward", "guard")
 
 def key_label(rt, action):
     """The key (or button) shown for an input action, from the project's input map."""
-    from .action_play import ARPG_ACTIONS
+    from .action_play import ARPG_ACTIONS  # action_play draws this HUD: imported here
 
     bindings = []
     input_map = getattr(rt.project, "input_map", None)
@@ -288,8 +291,6 @@ class BottomHud:
         )
 
     def _slot(self, rt, c, game, x, y, size, action, value, labels, slot_id="slot"):
-        from .action_combat import ITEM_COST
-
         pg, screen = rt.pg, rt.screen
         rect = pg.Rect(x, y, size, size)
         ability_id = game.action_combat.bound_ability(game.player, value)
@@ -481,8 +482,6 @@ class BottomHud:
     def draw(self, rt, game):
         """The bottom of the HUD; returns its canvas (``hud_action``) for the rest of the HUD,
         which finishes it."""
-        from .action_combat import ActionCombatComponent, parse_bindings
-        from .combat import CombatantComponent
 
         pg, screen = rt.pg, rt.screen
         width, height = rt.width, rt.height
@@ -667,7 +666,6 @@ def draw_target_frame(rt, game, entity, c=None):
     """The locked-on enemy at the top centre: its name, a life bar, and each boon / harm on it
     with its name and the seconds left (the small squares over its head say only which kind).
     ``c``: the HUD's canvas (the ``target`` element moves and reskins it)."""
-    from .combat import CombatantComponent
 
     pg, screen = rt.pg, rt.screen
     c = c if c is not None else rt.menu_canvas("hud_action")

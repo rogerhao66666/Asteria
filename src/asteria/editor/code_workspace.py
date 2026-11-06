@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from asteria.authoring.runner import script_namespace
+
 try:
     from PySide6.QtCore import QStringListModel, Qt, Signal
     from PySide6.QtGui import QFontDatabase, QKeySequence, QShortcut, QTextCursor
@@ -357,8 +359,6 @@ class CodeWorkspaceWidget(QWidget):
 
     # -- completion ---------------------------------------------------------------
     def completion_namespace(self):
-        from asteria.authoring.runner import script_namespace
-
         if self.document.project is None:
             return {}
         sel = self.document.selection

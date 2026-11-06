@@ -122,11 +122,11 @@ def _problems(runtime, rec):
 
 @pytest.mark.parametrize("encounter", ENCOUNTERS)
 def test_nothing_on_the_battle_screen_covers_anything_else(recorder, encounter):
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), ROOT, width=960, height=540
     )

@@ -270,15 +270,15 @@ def test_line_of_sight_needs_a_clear_straight_line_ahead():
 def test_a_trainer_notices_walks_up_and_starts_its_event(monkeypatch):
     from pathlib import Path
 
-    from asteria.editor import EditorDocument
     from asteria.events import EventProgram
     from asteria.events.program import EventInstruction
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.components2d import Interaction2DComponent
     from asteria.runtime.game_session import GameSessionRuntime
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     project.event_programs.register(
         "challenge",
         EventProgram(

@@ -5,12 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +75,7 @@ class CaptureRule:
             or not 0.0 <= base_chance <= 1.0
         ):
             raise ValueError("capture chances are invalid")
-        object.__setattr__(self, "enemy_id", _id(enemy_id, "enemy_id"))
+        object.__setattr__(self, "enemy_id", required_id(enemy_id, "enemy_id"))
         actor_id, pet_item_id = str(actor_id or "").strip(), str(pet_item_id or "").strip()
         pet_species_id = str(pet_species_id or "").strip()
         if not (actor_id or pet_item_id or pet_species_id or self.enemy_id == "*"):
@@ -109,7 +104,7 @@ class CaptureRule:
                 value = float(value)
                 if not isfinite(value) or value < 0:
                     raise ValueError(f"{label} bonus must be >= 0")
-                values[_id(key, f"{label} bonus")] = value
+                values[required_id(key, f"{label} bonus")] = value
             bonuses.append(values)
         object.__setattr__(self, "item_bonuses", bonuses[0])
         object.__setattr__(self, "state_bonuses", bonuses[1])

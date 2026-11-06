@@ -2,26 +2,17 @@
 
 from __future__ import annotations
 
+from asteria.presentation.creature_screens import creature_battle_on
 from asteria.runtime.battle_commands import BattleCommands
 from asteria.runtime.battle_extras import draw_blocks, extras_layout
-
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
+from asteria.runtime.skill_tree_screen import StatNames
+from asteria.runtime.victory_screen import VictoryScreen
 
 
 class BattleFlowMixin:
     def _creature_style(self):
         """The one-on-one creature battle screen: the project's Creature battle settings are
         on, or the manifest's ``battle.style`` is ``creature``."""
-        from asteria.presentation.creature_screens import creature_battle_on
 
         return creature_battle_on(self)
 
@@ -308,9 +299,6 @@ class BattleFlowMixin:
         }
 
     def _make_victory_screen(self, applied, before, gained):
-        from asteria.runtime.skill_tree_screen import StatNames
-        from asteria.runtime.victory_screen import VictoryScreen
-
         db = self.game.project.rpg_database
         aftermath = self.game.build_aftermath(applied, before, gained)
         return VictoryScreen(

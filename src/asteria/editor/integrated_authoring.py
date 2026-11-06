@@ -5,6 +5,9 @@ from dataclasses import dataclass, replace
 
 from asteria.gameplay import AbilityDefinition
 from asteria.gameplay.action_timeline import ActionTimeline
+from asteria.gameplay.attacks import AttackDefinition
+from asteria.gameplay.projectiles import ProjectileDefinition
+from asteria.gameplay.states import StateDefinition
 from asteria.rpg import (
     AbilityEvolutionRule,
     ActorDefinition,
@@ -394,7 +397,6 @@ class IntegratedAuthoringControllers:
             )
         )
         mappings["action_timelines"] = timelines
-        from asteria.gameplay.attacks import AttackDefinition
 
         attacks = self.project.gameplay_library.attacks  # ASTERIA_SPEC §20: what a landed hit does
         categories.append(
@@ -411,7 +413,6 @@ class IntegratedAuthoringControllers:
             )
         )
         mappings["attacks"] = attacks
-        from asteria.gameplay.projectiles import ProjectileDefinition
 
         projectiles = self.project.gameplay_library.projectiles
         categories.append(
@@ -464,7 +465,6 @@ class IntegratedAuthoringControllers:
         """Status definitions (gameplay states: duration, stacking, stat changes, periodic effects
         such as an
         escalating poison). Battle-side rules for them live under Battle > Status Effects."""
-        from asteria.gameplay.states import StateDefinition
 
         states = self.project.gameplay_library.states._definitions
         return AuthoringCategoryAdapter(

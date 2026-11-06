@@ -17,6 +17,7 @@ import time
 from dataclasses import dataclass
 
 from asteria.rpg.built_in_text import translated
+from asteria.rpg.data_text import quality_name
 from asteria.rpg.workstations import WorkstationDefinition
 
 from .bag_screen import BAD, GOOD, MUTED, TITLE
@@ -128,8 +129,6 @@ class CraftingScreen:
         return getattr(item, "icon_id", "") or ""
 
     def quality_name(self, quality):
-        from asteria.rpg.data_text import quality_name
-
         return quality_name(self.game.data_lookup, quality)
 
     def recipes(self):

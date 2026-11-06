@@ -10,9 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,7 +30,7 @@ class AbilityLoadoutRules:
         limited_sources=("learned",),
         always_usable=(),
     ):
-        rules_id = _text(rules_id)
+        rules_id = clean_text(rules_id)
         if not rules_id:
             raise ValueError("rules_id is required")
         capacity = int(capacity)
@@ -48,8 +46,12 @@ class AbilityLoadoutRules:
         s(self, "rules_id", rules_id)
         s(self, "capacity", capacity)
         s(self, "capacity_by_level", tuple(sorted(steps)))
-        s(self, "limited_sources", tuple(dict.fromkeys(_text(x) for x in limited_sources if x)))
-        s(self, "always_usable", tuple(dict.fromkeys(_text(x) for x in always_usable if x)))
+        s(
+            self,
+            "limited_sources",
+            tuple(dict.fromkeys(clean_text(x) for x in limited_sources if x)),
+        )
+        s(self, "always_usable", tuple(dict.fromkeys(clean_text(x) for x in always_usable if x)))
 
     def capacity_at(self, level):
         """Slots at ``level``: the base capacity, or the highest level step reached."""

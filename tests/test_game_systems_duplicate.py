@@ -7,12 +7,13 @@ from asteria.editor import EditorDocument
 from asteria.editor.authoring_hub_widget import _free_id
 from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
 
 def test_every_kind_duplicates_and_undoes():
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     document = EditorDocument(project)
     controller = GameSystemsAuthoringController(document)
     copied = 0

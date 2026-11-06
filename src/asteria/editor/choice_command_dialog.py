@@ -23,8 +23,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.events import EventInstruction
+
+from .event_editing import describe_instruction
 from .i18n import translate
 from .ui_fit import ValueCombo
+from .world_command_form import WorldCommandDialog, record_names
 
 DEFAULT_OPTIONS = ({"text": "Option 1", "value": 1}, {"text": "Option 2", "value": 2})
 
@@ -47,7 +51,7 @@ class ChoiceCommandDialog(QDialog):
         from .event_name_dialog import name_picker
 
         super().__init__(parent)
-        self.setWindowTitle(translate("Choice"))
+        self.setWindowTitle("Choice")
         self.document = document
         self._old = dict(args or {})
         self.choices = [dict(c) for c in self._old.get("choices") or DEFAULT_OPTIONS]
@@ -66,8 +70,8 @@ class ChoiceCommandDialog(QDialog):
         self.options.setFixedHeight(140)
         self.options.itemChanged.connect(self._option_edited)
         self.options.currentCellChanged.connect(lambda *_a: self._show_hover())
-        self.add_option_button = QPushButton(translate("+ Add Option"))
-        self.remove_option_button = QPushButton(translate("Remove Option"))
+        self.add_option_button = QPushButton("+ Add Option")
+        self.remove_option_button = QPushButton("Remove Option")
         self.add_option_button.clicked.connect(self.add_option)
         self.remove_option_button.clicked.connect(self.remove_option)
         option_buttons = QHBoxLayout()
@@ -91,9 +95,9 @@ class ChoiceCommandDialog(QDialog):
         self.hover = QListWidget()
         self.hover.setFixedHeight(76)
         self.hover.itemDoubleClicked.connect(lambda _i: self.edit_hover())
-        add_hover = QPushButton(translate("+ Add Command"))
-        edit_hover = QPushButton(translate("Edit"))
-        remove_hover = QPushButton(translate("Remove"))
+        add_hover = QPushButton("+ Add Command")
+        edit_hover = QPushButton("Edit")
+        remove_hover = QPushButton("Remove")
         add_hover.clicked.connect(lambda: self.add_hover())
         edit_hover.clicked.connect(lambda: self.edit_hover())
         remove_hover.clicked.connect(self.remove_hover)
@@ -102,7 +106,7 @@ class ChoiceCommandDialog(QDialog):
             hover_buttons.addWidget(button)
         hover_buttons.addStretch(1)
         box = self._old.get("box_at")
-        self.box_tick = QCheckBox(translate("Its own place"))
+        self.box_tick = QCheckBox("Its own place")
         self.box_x, self.box_y = QSpinBox(), QSpinBox()
         for spin, value in zip((self.box_x, self.box_y), box or (0, 0), strict=False):
             spin.setRange(-100_000, 100_000)
@@ -189,11 +193,6 @@ class ChoiceCommandDialog(QDialog):
         return self.choices[row] if 0 <= row < len(self.choices) else None
 
     def _show_hover(self):
-        from asteria.events import EventInstruction
-
-        from .event_editing import describe_instruction
-        from .world_command_form import record_names
-
         names = record_names(self.document) if self.document is not None else None
         choice = self._choice()
         self.hover.clear()
@@ -205,7 +204,6 @@ class ChoiceCommandDialog(QDialog):
 
     def _world_dialog(self, command="SHOW_POPUP", args=None):
         """The command picked, or None (tests replace this)."""
-        from .world_command_form import WorldCommandDialog
 
         dialog = WorldCommandDialog(self.document, self, command=command, args=args)
         if dialog.exec() != QDialog.Accepted:

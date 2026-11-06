@@ -72,8 +72,8 @@ class PauseMenuEditor(QWidget):
         layout.addWidget(self.order, 1)
         self.new_page_button = QPushButton("New Page")
         self.new_entry_button = QPushButton("New Event Entry")
-        self.new_page_button.setToolTip(translate("A screen of the menu built from blocks."))
-        self.new_entry_button.setToolTip(translate("An entry that runs an event program."))
+        self.new_page_button.setToolTip("A screen of the menu built from blocks.")
+        self.new_entry_button.setToolTip("An entry that runs an event program.")
         self.new_page_button.clicked.connect(self._new_page_clicked)
         self.new_entry_button.clicked.connect(self._new_entry_clicked)
         layout.addWidget(self.new_page_button)
@@ -173,7 +173,7 @@ class PauseMenuEditor(QWidget):
             kind_words = "Menu page"
         else:
             kind_words = "Event entry"
-        kind_label = QLabel(translate(kind_words))
+        kind_label = QLabel(kind_words)
         kind_label.setObjectName("PauseEntryKind")
         layout.addWidget(kind_label)
         lines = []
@@ -205,7 +205,7 @@ class PauseMenuEditor(QWidget):
         if record is not None and record[1] in self.controller.store(record[0]):
             if entry in BUILT_IN_PAGES:
                 reset = QPushButton("Back to the Engine's Page")
-                reset.setToolTip(translate("Drop the changes: the page the engine draws."))
+                reset.setToolTip("Drop the changes: the page the engine draws.")
                 reset.clicked.connect(lambda: self.delete_record(*record))
                 buttons.addWidget(reset)
             else:

@@ -12,13 +12,10 @@ import random
 from dataclasses import dataclass
 from math import ceil, isfinite
 
+from asteria.core.values import clean_text
 from asteria.gameplay.modifiers import ModifierOperation, StatModifier
 
 ON_FAIL = ("keep", "drop", "break", "destroy")
-
-
-def _text(value):
-    return str(value or "").strip()
 
 
 def _fail(message):
@@ -80,18 +77,24 @@ class RefineRules:
         protect_item="",
     ):
         s = object.__setattr__
-        s(self, "rules_id", _text(rules_id) or _fail("rules_id is required"))
+        s(self, "rules_id", clean_text(rules_id) or _fail("rules_id is required"))
         max_level = int(max_level)
         if max_level < 1:
             raise ValueError("max_level must be >= 1")
         s(self, "max_level", max_level)
-        s(self, "equipment_tags", tuple(sorted({_text(t) for t in equipment_tags if _text(t)})))
-        pairs = [(_text(k), float(v)) for k, v in dict(bonuses or {}).items() if _text(k)]
+        s(
+            self,
+            "equipment_tags",
+            tuple(sorted({clean_text(t) for t in equipment_tags if clean_text(t)})),
+        )
+        pairs = [
+            (clean_text(k), float(v)) for k, v in dict(bonuses or {}).items() if clean_text(k)
+        ]
         if any(not isfinite(v) for _, v in pairs):
             raise ValueError("bonuses must be finite")
         s(self, "bonuses", tuple(sorted(pairs)))
         s(self, "operation", ModifierOperation(operation).value)
-        s(self, "currency", _text(currency))
+        s(self, "currency", clean_text(currency))
         s(self, "base_cost", _non_negative(base_cost, "base_cost"))
         s(self, "cost_growth", _non_negative(cost_growth, "cost_growth"))
         chances = tuple(float(x) for x in success) or (1.0,)
@@ -102,11 +105,13 @@ class RefineRules:
             raise ValueError(f"on_fail must be one of {ON_FAIL}")
         s(self, "on_fail", on_fail)
         s(self, "safe_until", max(0, int(safe_until)))
-        needs = [(_text(k), int(v)) for k, v in dict(materials or {}).items() if _text(k)]
+        needs = [
+            (clean_text(k), int(v)) for k, v in dict(materials or {}).items() if clean_text(k)
+        ]
         if any(v < 1 for _, v in needs):
             raise ValueError("material counts must be >= 1")
         s(self, "materials", tuple(sorted(needs)))
-        s(self, "protect_item", _text(protect_item))
+        s(self, "protect_item", clean_text(protect_item))
 
     def eligible(self, item):
         if not self.equipment_tags:

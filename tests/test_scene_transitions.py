@@ -57,13 +57,13 @@ def test_transition_rejects_negative_durations():
 def test_event_transfer_carries_persistent_entities():
     from pathlib import Path
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_save import GameRuntimeSave
     from asteria.runtime.game_session import GameSessionRuntime
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     start = project.scene(project.startup_scene_id)
     pet = start.add_entity(Entity("Pet"))
     pet.add_component(Transform())

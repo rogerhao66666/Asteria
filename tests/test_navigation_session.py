@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 
 from asteria.core import Entity, Transform
-from asteria.editor import EditorDocument
 from asteria.events.world_commands import WorldCommand
 from asteria.project import Project
 from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionRuntime
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_d
 
 @pytest.fixture
 def game():
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     game.field_bounds = (0.0, 0.0, 320.0, 320.0)
     game.player.get(Transform).x = 8.0

@@ -11,11 +11,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import ceil, isfinite
 
+from asteria.core.values import clean_text
+
 ON_BREAK = ("disable", "destroy")
-
-
-def _text(value):
-    return str(value or "").strip()
 
 
 def _positive(value, label):
@@ -34,8 +32,8 @@ class WearEvent:
     amount: float = 1.0
 
     def __init__(self, event, slots, amount=1.0):
-        event = _text(event)
-        slots = tuple(sorted({_text(x) for x in slots if _text(x)}))
+        event = clean_text(event)
+        slots = tuple(sorted({clean_text(x) for x in slots if clean_text(x)}))
         if not event or not slots:
             raise ValueError("a wear event needs a name and at least one slot")
         object.__setattr__(self, "event", event)
@@ -68,10 +66,10 @@ class DurabilityRules:
         repair_cost_per_point=0.0,
     ):
         s = object.__setattr__
-        s(self, "rules_id", _text(rules_id) or _fail("rules_id is required"))
+        s(self, "rules_id", clean_text(rules_id) or _fail("rules_id is required"))
         values = []
         for equipment_id, points in dict(max_durability or {}).items():
-            values.append((_text(equipment_id), _positive(points, "max_durability")))
+            values.append((clean_text(equipment_id), _positive(points, "max_durability")))
         s(self, "max_durability", tuple(sorted(values)))
         default_max = float(default_max)
         if not isfinite(default_max) or default_max < 0:
@@ -84,7 +82,7 @@ class DurabilityRules:
         if on_break not in ON_BREAK:
             raise ValueError(f"on_break must be one of {ON_BREAK}")
         s(self, "on_break", on_break)
-        s(self, "repair_currency", _text(repair_currency))
+        s(self, "repair_currency", clean_text(repair_currency))
         cost = float(repair_cost_per_point)
         if not isfinite(cost) or cost < 0:
             raise ValueError("repair_cost_per_point must be finite and >= 0")

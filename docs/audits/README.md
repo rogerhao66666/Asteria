@@ -17,4 +17,5 @@
 | [CB15_RETIREMENT_REVIEW.md](CB15_RETIREMENT_REVIEW.md) | CB15 逐項退役審核（**提案，尚未批准，未刪除任何東西**） |
 | [ARPG_DESIGN.md](ARPG_DESIGN.md) | D22 ARPG 設計與 A1–A11 分批計畫（已核准） |
 | [MULTIPLAYER_DESIGN.md](MULTIPLAYER_DESIGN.md) | 通用多人連線原型、adapter API、editor workspace、ARPG 驗證案例及尚待完成的階段 |
+| [CODE_REVIEW_2026-11-06.md](CODE_REVIEW_2026-11-06.md) | 全程式碼審查：量到的效能變化、整理與修掉的錯誤、建議另開 issue 的架構項目 |
 | [proposed/P0-3_mv_semantics_to_asset_boundary.patch](proposed/P0-3_mv_semantics_to_asset_boundary.patch) | CB0 提案 patch（**未套用**） |

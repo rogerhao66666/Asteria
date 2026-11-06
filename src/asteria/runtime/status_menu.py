@@ -19,11 +19,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.presentation.rpg_ability_screen import AbilityScreenRuntime
-from asteria.presentation.rpg_character_screen import CharacterScreenRuntime
+from asteria.presentation.rpg_character_screen import (
+    CharacterScreenProfile,
+    CharacterScreenRuntime,
+)
 from asteria.presentation.rpg_equipment_screen import EquipmentScreenRuntime
 from asteria.presentation.rpg_inventory_screen import InventoryScreenRuntime
 from asteria.rpg.menu_pages import PAGE_ENTRY, menu_pages
-from asteria.rpg.menu_rules import NO_STAT_GRAPH, ItemCategory, ItemFilter, menu_rules
+from asteria.rpg.menu_rules import NO_STAT_GRAPH, ItemCategory, ItemFilter, StatLine, menu_rules
+from asteria.rpg.stat_definitions import ordered
+
+from .bag_screen import _rarity, format_value, stat_totals
+from .menu_icons import record_icon_id
 
 TABS = ("status", "items", "equipment", "skills")
 TAB_WORDS = {tab: f"status.tab.{tab}" for tab in TABS}  # the words drawn for the tabs
@@ -97,8 +104,6 @@ class _Abilities:
 def _status_profile(game):
     """The Status page's names and order (D98): the Stats' (``stat_definitions``) and the
     Equipment Slots' names, the stats in the Stats' order (HP leads the resources)."""
-    from asteria.presentation.rpg_character_screen import CharacterScreenProfile
-    from asteria.rpg.stat_definitions import ordered
 
     db = game.project.rpg_database
     stats = ordered(getattr(db, "stat_definitions", {}))
@@ -280,7 +285,6 @@ class StatusMenu:
         """The detail table as ``[(heading, [DetailLine...])]`` (D89): Menu Pages'
         ``stat_lines`` by their groups, in order of first use; without lines, one group of
         ``detail_rows`` written as numbers."""
-        from asteria.rpg.menu_rules import StatLine
 
         breakdown = self.breakdown()
         lines = self.rules.stat_lines if self.rules is not None else ()
@@ -442,6 +446,11 @@ class StatusMenu:
 
     # -- projection through the canonical screen runtimes -----------------------------------------
     def view(self):
+        """The current tab's projected view (worked out once per drawn frame: the list, the
+        detail and the icons each ask for it)."""
+        return self.game.remembered(("status.view", id(self)), self._view)
+
+    def _view(self):
         game, db, actor_id = self.game, self.game.project.rpg_database, self.actor_id
         state = game.save.rpg_state
         if self.tab == "items":
@@ -496,7 +505,11 @@ class StatusMenu:
         return label
 
     def rows(self):
-        """Selectable rows of the current tab: ``(kind, key, label, detail)``."""
+        """Selectable rows of the current tab: ``(kind, key, label, detail)`` (worked out once
+        per drawn frame, like ``view``)."""
+        return self.game.remembered(("status.rows", id(self)), self._rows)
+
+    def _rows(self):
         view = self.view()
         if view is None:
             return []
@@ -641,8 +654,6 @@ class StatusMenu:
         )
 
     def _piece_detail(self, piece, label):
-        from .bag_screen import _rarity, format_value, stat_totals
-
         game, tr = self.game, self.game.tr
         rarity = game.project.rpg_database.loot_rarities().get(_rarity(piece))
         bits = [game.name_of(rarity) if rarity is not None else tr("bag.common", "Common")]
@@ -669,7 +680,6 @@ class StatusMenu:
     def row_icons(self):
         """The icon id of each row of ``rows()`` (``""`` for none): items, equipment, a bag
         piece's equipment, and a slot's first item."""
-        from .menu_icons import record_icon_id
 
         project = self.game.project
         if self.tab == "equipment":

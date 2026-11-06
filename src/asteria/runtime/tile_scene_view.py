@@ -20,13 +20,14 @@ style.
 
 from __future__ import annotations
 
-from math import floor
+from math import atan2, degrees, floor
 
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
 from asteria.graphics.tilemap import TileChunk, TileLayer, TileMap
 
 from .action_play import walls_cover_characters
+from .actor_link import ClassAppearanceComponent
 from .camera import Camera2D
 from .character_control import CharacterController2DComponent, feet_y
 from .components2d import (
@@ -37,6 +38,7 @@ from .components2d import (
 )
 from .entity_actions import action_clip
 from .grid_actors import GridMover2DComponent
+from .map_rules_field import tile_area_keys
 from .skeleton_component import SkeletonAnimation2DComponent, SkeletonSceneRuntime
 from .tilemap_field import AssetResources, tilemap_binding
 from .tilequery import TileMapQuery
@@ -251,7 +253,6 @@ class TileSceneView:
         self.blocking = MapBlocking(TileMapQuery(self.tilemap), self.bounds)
         self.session.set_tile_blocking(self.blocking)
         # the project's map areas (floor damage, regions, stealth...) read this map's tiles
-        from .map_rules_field import tile_area_keys
 
         sets = self.session.project.rpg_database.map_rule_sets
         layer = sets[sorted(sets)[0]].region_layer if sets else "regions"
@@ -334,7 +335,6 @@ class TileSceneView:
             self.load()
         actions = getattr(self.session, "entity_actions", None)
         running = actions.running if actions is not None else {}
-        from .character_control import CharacterController2DComponent
 
         self._sync_tiles()
         self._apply_class_looks()
@@ -386,7 +386,6 @@ class TileSceneView:
     def _look_ahead(self, dt):
         """Ease the camera toward the way the player faces by ``camera_look_ahead`` world units
         (a CombatScene setting; 0 = centred on the player)."""
-        from .character_control import CharacterController2DComponent
 
         settings = getattr(self.session, "combat_scene", None)
         amount = float(getattr(settings, "camera_look_ahead", 0.0) or 0.0)
@@ -405,7 +404,6 @@ class TileSceneView:
 
     def _apply_class_looks(self):
         """Entities with ``ClassAppearance`` show the look of their actor's active class."""
-        from .actor_link import ClassAppearanceComponent
 
         session = self.session
         for entity, spec in session.scene.query(ClassAppearanceComponent):
@@ -513,7 +511,6 @@ class TileSceneView:
     def projectile_image(self, definition, vx, vy):
         """A projectile's sprite (its ``sprite`` names a sprite sheet: frame 0) at this zoom,
         turned to its velocity when ``align_to_velocity``; None when it cannot be loaded."""
-        from math import atan2, degrees
 
         try:
             image, _, _ = self._sprite(definition.sprite, 0, self.camera.zoom)

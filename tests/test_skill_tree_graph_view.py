@@ -24,6 +24,7 @@ from asteria.editor.authoring_hub_widget import (  # noqa: E402
 )
 from asteria.editor.storage import load_document  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects"
 DEMO = ROOT / "full_verification_demo" / "project.asteria.json"
@@ -70,10 +71,10 @@ def test_a_saved_layout_is_spread_so_cards_never_overlap():
 def test_game_data_follows_a_newly_opened_project_with_the_same_id(app):
     from asteria.editor.shell import AsteriaEditorWindow
 
-    first = Project.load_json(REFERENCE, EditorDocument().component_registry)
+    first = Project.load_json(REFERENCE, default_component_registry())
     window = AsteriaEditorWindow(first)
     window.refresh_all()
-    second = Project.load_json(DEMO, EditorDocument().component_registry)
+    second = Project.load_json(DEMO, default_component_registry())
     second.id = first.id  # a project copied from another keeps its id
     window.set_project(second)
     family = window.rpg_authoring.child  # the Game Data surface shown now

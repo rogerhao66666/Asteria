@@ -3,24 +3,12 @@
 from __future__ import annotations
 
 from asteria.runtime.game_session import GameSessionRuntime
-
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
+from asteria.runtime.save_slots import SaveSlots, SlotMenu
 
 
 class SaveSlotsMixin:
     # -- save slots (ENG-21) ----------------------------------------------------------------------
     def _slot_exists(self, slot):
-        from asteria.runtime.save_slots import SaveSlots
-
         return SaveSlots(self.resource_root / "saves", self.project).path(slot).exists()
 
     def open_slots(self, mode, back="pause"):
@@ -28,7 +16,6 @@ class SaveSlotsMixin:
             self._server_save_command(mode)
             self._ui_mode = "field" if mode == "load" else back
             return
-        from asteria.runtime.save_slots import SaveSlots, SlotMenu
 
         self.slot_menu = SlotMenu(
             SaveSlots(self.resource_root / "saves", self.project, lookup=self.game.data_lookup),

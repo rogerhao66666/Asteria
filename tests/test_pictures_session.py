@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.events.world_commands import WorldCommand
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS, WorldCommandError
 
@@ -15,7 +15,7 @@ IMAGE = "playable_assets/battle_background.png"
 
 
 def _project():
-    return Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(ROOT / "project.asteria.json", default_component_registry())
 
 
 def _session():

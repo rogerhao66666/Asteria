@@ -16,6 +16,7 @@ from asteria.gameplay.attacks import HITSTOP_SCOPES, KNOCKBACK_DIRECTIONS, Attac
 from asteria.gameplay.projectiles import WALL_BEHAVIOURS, ProjectileDefinition
 from asteria.rpg.loot import AffixDefinition, RarityDefinition
 
+from .record_vocabulary import tag_label, vocabulary_for, words
 from .rpg_actor_class_authoring import _DefinitionCommand
 
 
@@ -344,7 +345,6 @@ class CombatAuthoringController:
         project = self.document.project
         if project is None:
             return ()
-        from .record_vocabulary import tag_label, vocabulary_for, words
 
         library = project.gameplay_library
         vocabulary = vocabulary_for(self.document)

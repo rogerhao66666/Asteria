@@ -9,12 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _growth(values, label):
@@ -23,7 +18,7 @@ def _growth(values, label):
         rate = float(rate)
         if not isfinite(rate) or rate < 0:
             raise ValueError(f"{label} rates must be finite and >= 0")
-        result.append((_id(name, label), rate))
+        result.append((required_id(name, label), rate))
     return tuple(sorted(result))
 
 
@@ -40,7 +35,7 @@ class DifficultyLevel:
         for value, label in ((strength, "strength"), (reward, "reward")):
             if not isfinite(float(value)) or float(value) <= 0:
                 raise ValueError(f"{label} must be finite and positive")
-        object.__setattr__(self, "difficulty_id", _id(difficulty_id, "difficulty_id"))
+        object.__setattr__(self, "difficulty_id", required_id(difficulty_id, "difficulty_id"))
         object.__setattr__(self, "strength", float(strength))
         object.__setattr__(self, "reward", float(reward))
         object.__setattr__(self, "level_offset", int(level_offset))
@@ -82,7 +77,7 @@ class EnemyLevelRules:
         default_difficulty="",
     ):
         s = object.__setattr__
-        s(self, "rules_id", _id(rules_id, "rules_id"))
+        s(self, "rules_id", required_id(rules_id, "rules_id"))
         s(self, "stat_growth", _growth(stat_growth, "stat_growth"))
         s(self, "resource_growth", _growth(resource_growth, "resource_growth"))
         reward_growth = float(reward_growth)
@@ -94,7 +89,7 @@ class EnemyLevelRules:
             low, high = int(low), int(high)
             if low < 1 or high < low:
                 raise ValueError("map level ranges need 1 <= lowest <= highest")
-            ranges.append((_id(key, "map id"), low, high))
+            ranges.append((required_id(key, "map id"), low, high))
         s(self, "map_levels", tuple(sorted(ranges)))
         s(self, "party_level_offset", int(party_level_offset))
         if int(max_level) < 1:

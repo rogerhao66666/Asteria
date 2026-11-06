@@ -73,8 +73,8 @@ def test_playable_runtime_writes_a_profile_with_real_measurements(tmp_path, monk
         _image_paths,  # noqa: F401  (fixture helpers)
     )
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
@@ -85,7 +85,7 @@ def test_playable_runtime_writes_a_profile_with_real_measurements(tmp_path, monk
         path = tmp_path / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         Image.new("RGBA", (512, 512), (90, 120, 200, 255)).save(path)
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), tmp_path)
     runtime._ui_mode = "field"
     out = tmp_path / "profile.json"

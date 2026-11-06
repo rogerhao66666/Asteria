@@ -45,11 +45,12 @@ from PySide6.QtWidgets import (
 )
 
 from .attack_preview import AttackPreview, _Preview
+from .authoring_hub_widget import _free_id
 from .combat_authoring import KINDS, CombatAuthoringController, CombatAuthoringError
 from .i18n import translate
 from .icons import icon
 from .record_pictures import sprite_sheet_pixmap
-from .record_vocabulary import words
+from .record_vocabulary import tag_label, vocabulary_for, words
 from .responsive_form import ResponsiveForm
 from .ui_fit import ValueCombo, WordCombo
 
@@ -911,11 +912,9 @@ class CombatWorkspace(QWidget):
         self.preview_toggle.setToolButtonStyle(Qt.ToolButtonTextOnly)  # its words, not a ▶
         self.preview_toggle.setCheckable(True)
         self.preview_toggle.setChecked(True)
-        self.preview_toggle.setText(translate("Hide Preview"))
+        self.preview_toggle.setText("Hide Preview")
         self.preview_toggle.toggled.connect(
-            lambda shown: self.preview_toggle.setText(
-                translate("Hide Preview" if shown else "Show Preview")
-            )
+            lambda shown: self.preview_toggle.setText("Hide Preview" if shown else "Show Preview")
         )
         self.preview_toggle.clicked.connect(self._preview_toggled)
         self._preview_by_hand = False
@@ -1110,8 +1109,6 @@ class CombatWorkspace(QWidget):
 
     # -- the form ---------------------------------------------------------------------------------
     def _tag_words(self, tag):
-        from .record_vocabulary import tag_label, vocabulary_for
-
         return tag_label(tag, vocabulary_for(self.document).names())
 
     def _build_form(self):
@@ -1371,7 +1368,6 @@ class CombatWorkspace(QWidget):
     def _ask_id(self, title, default=""):
         """A free id for a new record (made, not typed): from ``title`` ("New Attack" ->
         new_attack), or ``default`` with _copy, numbered."""
-        from .authoring_hub_widget import _free_id
         from .record_blank import suggest_id
 
         if default:

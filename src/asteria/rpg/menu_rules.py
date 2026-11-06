@@ -39,6 +39,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import clean_text
+from asteria.gameplay.expressions import SubjectView, evaluate
+from asteria.gameplay.stats import StatBlock
+
 # the built-in pause entries (an id the author orders) - project entries (Pause Menu Entries)
 # come after them, before Settings
 PAUSE_ENTRIES = (
@@ -70,14 +74,10 @@ STAT_FORMATS = ("number", "percent", "range", "chance", "share")
 STAT_COLUMNS = ("rank", "total", "base", "points", "gear", "gain")
 
 
-def _text(value):
-    return str(value or "").strip()
-
-
 def _tags(values):
     if isinstance(values, str):
         values = values.split(",")
-    return tuple(dict.fromkeys(t for t in (_text(v) for v in values or ()) if t))
+    return tuple(dict.fromkeys(t for t in (clean_text(v) for v in values or ()) if t))
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,13 +90,13 @@ class ItemCategory:
     icon_id: str = ""
 
     def __init__(self, category_id, display_name="", tags=(), icon_id=""):
-        category_id = _text(category_id)
+        category_id = clean_text(category_id)
         if not category_id:
             raise ValueError("an item category needs an id")
         object.__setattr__(self, "category_id", category_id)
-        object.__setattr__(self, "display_name", _text(display_name) or category_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or category_id)
         object.__setattr__(self, "tags", _tags(tags))
-        object.__setattr__(self, "icon_id", _text(icon_id))
+        object.__setattr__(self, "icon_id", clean_text(icon_id))
 
     def holds(self, tags):
         return not self.tags or bool(set(self.tags) & set(tags))
@@ -130,11 +130,11 @@ class ItemFilter:
     usable: bool = False
 
     def __init__(self, filter_id, display_name="", tags=(), usable=False):
-        filter_id = _text(filter_id)
+        filter_id = clean_text(filter_id)
         if not filter_id:
             raise ValueError("an item filter needs an id")
         object.__setattr__(self, "filter_id", filter_id)
-        object.__setattr__(self, "display_name", _text(display_name) or filter_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or filter_id)
         object.__setattr__(self, "tags", _tags(tags))
         object.__setattr__(self, "usable", bool(usable))
 
@@ -167,11 +167,11 @@ class StatGroup:
     display_name: str = ""
 
     def __init__(self, group_id, display_name=""):
-        group_id = _text(group_id)
+        group_id = clean_text(group_id)
         if not group_id:
             raise ValueError("a stat group needs an id")
         object.__setattr__(self, "group_id", group_id)
-        object.__setattr__(self, "display_name", _text(display_name) or group_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or group_id)
 
     def to_data(self):
         return {"group_id": self.group_id, "display_name": self.display_name}
@@ -195,21 +195,21 @@ class StatLine:
     check: str = ""
 
     def __init__(self, stat_id, group="", format="number", spread=0.0, label="", check=""):
-        stat_id = _text(stat_id)
+        stat_id = clean_text(stat_id)
         if not stat_id:
             raise ValueError("a stat line needs a stat")
-        format = _text(format) or "number"
+        format = clean_text(format) or "number"
         if format not in STAT_FORMATS:
             raise ValueError(f"a stat line's format must be one of {STAT_FORMATS}")
         spread = float(spread or 0.0)
         if not 0.0 <= spread < 100.0:
             raise ValueError("a stat line's spread must be from 0 to below 100 (percent)")
         object.__setattr__(self, "stat_id", stat_id)
-        object.__setattr__(self, "group", _text(group))
+        object.__setattr__(self, "group", clean_text(group))
         object.__setattr__(self, "format", format)
         object.__setattr__(self, "spread", spread)
-        object.__setattr__(self, "label", _text(label))
-        check = _text(check)
+        object.__setattr__(self, "label", clean_text(label))
+        check = clean_text(check)
         if format == "chance" and not check:
             raise ValueError("a chance line needs an outcome check")
         object.__setattr__(self, "check", check)
@@ -249,8 +249,6 @@ class StatLine:
         """The chance through ``check``'s formula: with the stat on the user's side, the chance
         it gives; on the target's side and lowering it, how much it takes off; every other
         stat 0."""
-        from asteria.gameplay.expressions import SubjectView, evaluate
-        from asteria.gameplay.stats import StatBlock
 
         def chance(source=None, target=None):
             names = {
@@ -344,7 +342,7 @@ class MenuRules:
         stat_lines=(),
         stat_columns=(),
     ):
-        rules_id = _text(rules_id)
+        rules_id = clean_text(rules_id)
         if not rules_id:
             raise ValueError("menu rules need an id")
         entries = _tags(pause_entries)
@@ -376,14 +374,14 @@ class MenuRules:
                 raise ValueError(f"two of the {label} ids are the same")
         s = object.__setattr__
         s(self, "rules_id", rules_id)
-        s(self, "display_name", _text(display_name) or rules_id)
+        s(self, "display_name", clean_text(display_name) or rules_id)
         s(self, "pause_entries", entries)
         s(self, "pause_hidden", hidden)
-        s(self, "stat_graph", _text(stat_graph))
+        s(self, "stat_graph", clean_text(stat_graph))
         s(self, "stat_rows", _tags(stat_rows))
         s(self, "item_categories", categories)
         s(self, "item_filters", filters)
-        details = _text(item_details) or "panel"
+        details = clean_text(item_details) or "panel"
         if details not in ITEM_DETAILS:
             raise ValueError(f"item_details must be one of {ITEM_DETAILS}")
         s(self, "item_details", details)

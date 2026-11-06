@@ -15,9 +15,12 @@ past its edges; shake is applied after clamping.
 
 from __future__ import annotations
 
+from math import exp
+
 from asteria.core import Transform
 
 from .camera import CameraDirector, CameraShot, clamp_center_to_bounds
+from .components2d import Camera2DComponent
 
 CAMERA_COMMANDS = ("CAMERA_FOCUS", "CAMERA_RELEASE", "CAMERA_SHAKE")
 
@@ -30,7 +33,6 @@ def scene_camera_follow(scene, view_width):
     """Follow settings from the scene's active Camera2D entity that follows someone, or None.
     ``view_width`` is how many world units the whole map view spans: a camera that wide (at its
     zoom) shows the whole map; a narrower one zooms in on whoever it follows."""
-    from .components2d import Camera2DComponent
 
     for entity in () if scene is None else scene.entities():
         spec = entity.try_get(Camera2DComponent)
@@ -82,8 +84,6 @@ class FieldViewCamera:
         )
 
     def _follow_base(self, dt, target, velocity):
-        from math import exp
-
         cfg = self.follow
         zoom = cfg["zoom"]
         if target is None:

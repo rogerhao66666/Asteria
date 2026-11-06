@@ -1,30 +1,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from math import floor, isfinite
+from math import floor
 
+from asteria.core.values import finite
 from asteria.gameplay.action_timeline import ActionCueKind
 from asteria.runtime import Camera2D
 
 from .battle import BattlePresentationEvent, BattlePresentationEventKind, BattlePresentationScene
 
 
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
-
-
 def _nonnegative(value, label):
-    value = _finite(value, label)
+    value = finite(value, label)
     if value < 0:
         raise ValueError(f"{label} must be >= 0")
     return value
 
 
 def _positive(value, label):
-    value = _finite(value, label)
+    value = finite(value, label)
     if value <= 0:
         raise ValueError(f"{label} must be > 0")
     return value
@@ -106,9 +100,9 @@ class BattleCameraFeedbackRuntime:
             if effect not in {"shake", "impulse", "hit_shake"}:
                 return False
             duration = _positive(payload.get("duration", 0.16), "camera duration")
-            amplitude = _finite(payload.get("amplitude", 0.0), "camera amplitude")
-            ax = _finite(payload.get("amplitude_x", amplitude), "camera amplitude_x")
-            ay = _finite(payload.get("amplitude_y", amplitude), "camera amplitude_y")
+            amplitude = finite(payload.get("amplitude", 0.0), "camera amplitude")
+            ax = finite(payload.get("amplitude_x", amplitude), "camera amplitude_x")
+            ay = finite(payload.get("amplitude_y", amplitude), "camera amplitude_y")
             frequency = _positive(payload.get("frequency", 18.0), "camera frequency")
             self.impulses.append(
                 BattleCameraImpulse(event.sequence, cue_id, ax, ay, frequency, 0.0, duration)
@@ -269,8 +263,8 @@ class BattleCameraFeedbackRuntime:
             BattleCameraImpulse(
                 int(x["sequence"]),
                 str(x["cue_id"]),
-                _finite(x["amplitude_x"], "amplitude_x"),
-                _finite(x["amplitude_y"], "amplitude_y"),
+                finite(x["amplitude_x"], "amplitude_x"),
+                finite(x["amplitude_y"], "amplitude_y"),
                 _positive(x["frequency"], "frequency"),
                 _nonnegative(x["age"], "age"),
                 _positive(x["duration"], "duration"),

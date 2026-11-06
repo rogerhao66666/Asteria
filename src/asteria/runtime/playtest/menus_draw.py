@@ -8,17 +8,12 @@ from asteria.runtime.game_menus import (
     bestiary_rows,
     quest_rows,
 )
-from asteria.runtime.input_map import InputActionTracker
+from asteria.runtime.input_map import InputActionTracker, InputBinding
+from asteria.runtime.input_rebinding import effective_input_map
+from asteria.runtime.menu_icons import record_icon_id
 
-from .support import (  # noqa: F401 - the names the moved methods use
+from .support import (
     BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
 )
 
 # the menus' own colours (a menu theme or a layout element may give others, U2)
@@ -29,8 +24,6 @@ GREY, LACKING, DIM = (130, 135, 150), (200, 130, 130), (120, 125, 140)
 class MenusDrawMixin:
     # -- controls / rebinding (ENG-15) ------------------------------------------------------------
     def _controls_input(self, events):
-        from asteria.runtime.input_map import InputBinding
-
         menu = self.controls_menu
         for event in events:
             if menu.capturing is not None:
@@ -66,8 +59,6 @@ class MenusDrawMixin:
                 self._apply_controls()
 
     def _apply_controls(self):
-        from asteria.runtime.input_rebinding import effective_input_map
-
         self.settings.input_overrides = dict(self.controls_menu.overrides)
         self.input = InputActionTracker(
             effective_input_map(self.project.input_map, self.settings.input_overrides)
@@ -340,7 +331,7 @@ class MenusDrawMixin:
         # the field's hint bar stays visible below the menu: a long menu cut it in half
         bottom = self.height - (100 if self._hint_bar_behind(base, c) else 0)
         fit = max(1, min(len(cursor.options), (bottom - 130) // 34))
-        tops = self.__dict__.setdefault("_overlay_tops", {})
+        tops = self._overlay_tops
         first = min(tops.get(screen_id, 0), cursor.index)
         first = max(first, cursor.index - fit + 1, 0)
         first = tops[screen_id] = min(first, max(0, len(cursor.options) - fit))
@@ -521,7 +512,6 @@ class MenusDrawMixin:
                     lambda tab=tab: screen.tab != tab and screen.switch_tab(),
                     key="",
                 )
-        from asteria.runtime.menu_icons import record_icon_id
 
         at = c.place("rows", (90, 134, self.width - 180, self.height - 130 - 134), 30)
         heads = c.place("columns", (90, 104, 680, 24))

@@ -6,16 +6,16 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.project import Project
 from asteria.rpg.refine import RefineRules
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
 
 def _session():
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     game.join_party("hero_02")
     game.rearm("hero_02", "a_dawn_robe")

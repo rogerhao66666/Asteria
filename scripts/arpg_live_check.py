@@ -13,16 +13,16 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
-from asteria.editor import EditorDocument
 from asteria.project import Project
 from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 from asteria.validation.arpg_playground import build_playground
 
 view = sys.argv[1]
 out = Path(sys.argv[2])
 root = REPO / "reference_projects" / "complex_reference_rpg"
-project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+project = Project.load_json(root / "project.asteria.json", default_component_registry())
 rt = PlayableTestRuntime(
     project, project.game_start.instantiate(project), root, width=1280, height=720
 )

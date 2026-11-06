@@ -40,8 +40,18 @@ Data contract (all canonical project data, no runtime code per project):
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
 from asteria.presentation.battle import BattleCombatantVisual, BattleVisualAnchor
+from asteria.presentation.battle_combatant_visuals import (
+    BattleCombatantVisualProfile,
+    BattleVisualAssetSet,
+    BattleVisualStateDefinition,
+    BattleVisualTransform,
+)
+from asteria.presentation.battle_portrait_party_template import BattlePortraitPartyTemplateRuntime
+from asteria.presentation.battle_sideview_template import BattleSideviewTemplateRuntime
 from asteria.runtime.animation_library import AnimationClipSet
 
 SPRITE_SHEET_KIND = "sprite_sheet"
@@ -177,13 +187,6 @@ class BattleVisualResolver:
         self._clips.pop(str(asset_id), None)
 
     def register_generated_profile(self, member_key, asset_id, scale):
-        from asteria.presentation.battle_combatant_visuals import (
-            BattleCombatantVisualProfile,
-            BattleVisualAssetSet,
-            BattleVisualStateDefinition,
-            BattleVisualTransform,
-        )
-
         states = tuple(
             BattleVisualStateDefinition(role, role)
             for role in ("idle", "attack", "hit", "ko", "weak")
@@ -469,12 +472,6 @@ class BattleVisualResolver:
         (bodies hidden when it says so) and lines the others up in its battlefield zone. Members
         past a zone's cap keep their place but are not drawn. ``ground`` ``(top, bottom)``: the
         band a zone's feet are kept in (None = where the template says)."""
-        from dataclasses import replace
-
-        from asteria.presentation.battle_portrait_party_template import (
-            BattlePortraitPartyTemplateRuntime,
-        )
-        from asteria.presentation.battle_sideview_template import BattleSideviewTemplateRuntime
 
         shown = {v.member_id for v in visuals}
         ordered = {s: [m for m in members if m in shown] for s, members in sides.items()}

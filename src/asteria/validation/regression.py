@@ -13,6 +13,13 @@ import hashlib
 import json
 from pathlib import Path
 
+from asteria.project import Project
+from asteria.runtime.battle_presentation_adapters import entry_semantics
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.game_save import GameRuntimeSave
+from asteria.runtime.game_session import GameSessionRuntime
+from asteria.validation.golden import run_golden_suite
+
 
 def _digest(value):
     return hashlib.sha256(
@@ -21,18 +28,12 @@ def _digest(value):
 
 
 def _project(repo):
-    from asteria.editor import EditorDocument
-    from asteria.project import Project
-
     path = Path(repo) / "reference_projects" / "complex_reference_rpg" / "project.asteria.json"
-    return Project.load_json(path, EditorDocument().component_registry)
+    return Project.load_json(path, default_component_registry())
 
 
 def scripted_boss_battle(repo, *, limit=400):
     """Every hero uses its first ability on the first living enemy; enemies act by their AI."""
-    from asteria.runtime.battle_presentation_adapters import entry_semantics
-    from asteria.runtime.game_save import GameRuntimeSave
-    from asteria.runtime.game_session import GameSessionRuntime
 
     project = _project(repo)
     root = Path(repo) / "reference_projects" / "complex_reference_rpg"
@@ -77,8 +78,6 @@ def scripted_boss_battle(repo, *, limit=400):
 
 
 def save_digests(repo):
-    from asteria.runtime.game_save import GameRuntimeSave
-
     project = _project(repo)
     saves = Path(repo) / "reference_projects" / "complex_reference_rpg" / "saves"
     result = {}
@@ -90,8 +89,6 @@ def save_digests(repo):
 
 
 def regression_snapshot(repo):
-    from asteria.validation.golden import run_golden_suite
-
     repo = Path(repo)
     golden = run_golden_suite(repo / "tests" / "golden" / "assets")
     return {

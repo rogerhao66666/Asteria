@@ -10,6 +10,7 @@ from test_session_events import _project
 from asteria.editor import EditorDocument
 from asteria.editor.game_systems_authoring import FORMS, GameSystemsAuthoringController
 from asteria.rpg.menu_rules import ItemCategory, ItemFilter, MenuRules, menu_rules
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 RULES = MenuRules(
@@ -150,7 +151,7 @@ def host(monkeypatch):
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=960, height=540
     )

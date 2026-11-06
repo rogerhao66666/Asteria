@@ -9,7 +9,14 @@ from typing import Any
 from uuid import UUID, uuid5
 
 from asteria.core import Entity, Scene, Transform
-from asteria.runtime import SpriteRenderer2D, TileMap2DComponent
+from asteria.events import EventInstruction
+from asteria.runtime import (
+    Animator2DComponent,
+    Camera2DComponent,
+    SpriteRenderer2D,
+    TileMap2DComponent,
+)
+from asteria.runtime.character_control import CharacterController2DComponent
 
 from .local_reference import RPGMakerMVProjectLayout
 from .rpg_maker_mv_catalog import RPGMakerMVCatalog
@@ -208,7 +215,6 @@ def convert_event_page(mv_map: RPGMakerMVMap, event: MVMapEvent):
     button -> ``action``; player/event touch -> ``touch``; autorun / parallel -> ``None``
     (not converted). Every other command is listed in ``unsupported`` (never dropped silently).
     """
-    from asteria.events import EventInstruction
 
     page = _first_page(event)
     if page is None:
@@ -283,8 +289,6 @@ def to_asteria_scene(
 
     Without ``baked`` the tile map binding stays empty (never a dangling asset id).
     """
-    from asteria.runtime import Animator2DComponent, Camera2DComponent
-    from asteria.runtime.character_control import CharacterController2DComponent
 
     characters = characters or {}
     scene = Scene(mv_map.display_name or mv_map.name, scene_id=_stable_id("map", mv_map.map_id))

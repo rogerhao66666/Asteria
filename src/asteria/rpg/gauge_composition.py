@@ -5,14 +5,8 @@ from enum import Enum
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import normalize_tag
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _number(value, label):
@@ -73,9 +67,9 @@ class GaugeImpactRule:
         blocked_outcome_tags=(),
         priority=0,
     ):
-        object.__setattr__(self, "impact_id", _id(impact_id, "impact_id"))
-        object.__setattr__(self, "resource_id", _id(resource_id, "resource_id"))
-        object.__setattr__(self, "trigger", _id(trigger, "trigger"))
+        object.__setattr__(self, "impact_id", required_id(impact_id, "impact_id"))
+        object.__setattr__(self, "resource_id", required_id(resource_id, "resource_id"))
+        object.__setattr__(self, "trigger", required_id(trigger, "trigger"))
         object.__setattr__(self, "recipient", GaugeRecipient(recipient))
         object.__setattr__(self, "delta", _number(delta, "delta"))
         object.__setattr__(self, "value_scale", _number(value_scale, "value_scale"))
@@ -173,12 +167,12 @@ class GaugeThresholdRule:
         priority=0,
         reset_to_maximum=False,
     ):
-        object.__setattr__(self, "threshold_id", _id(threshold_id, "threshold_id"))
-        object.__setattr__(self, "resource_id", _id(resource_id, "resource_id"))
+        object.__setattr__(self, "threshold_id", required_id(threshold_id, "threshold_id"))
+        object.__setattr__(self, "resource_id", required_id(resource_id, "resource_id"))
         object.__setattr__(self, "comparison", GaugeThresholdComparison(comparison))
         object.__setattr__(self, "threshold", _number(threshold, "threshold"))
         object.__setattr__(
-            self, "state_id", None if state_id is None else _id(state_id, "state_id")
+            self, "state_id", None if state_id is None else required_id(state_id, "state_id")
         )
         object.__setattr__(self, "timeline_shift", _number(timeline_shift, "timeline_shift"))
         object.__setattr__(
@@ -187,7 +181,7 @@ class GaugeThresholdRule:
         object.__setattr__(
             self,
             "emit_trigger",
-            None if emit_trigger is None else _id(emit_trigger, "emit_trigger"),
+            None if emit_trigger is None else required_id(emit_trigger, "emit_trigger"),
         )
         object.__setattr__(self, "include_cast_in_shift", bool(include_cast_in_shift))
         object.__setattr__(self, "priority", int(priority))
@@ -258,7 +252,7 @@ class GaugeCompositionDefinition:
             raise ValueError("duplicate gauge impact id")
         if len(set(threshold_ids)) != len(threshold_ids):
             raise ValueError("duplicate gauge threshold id")
-        object.__setattr__(self, "composition_id", _id(composition_id, "composition_id"))
+        object.__setattr__(self, "composition_id", required_id(composition_id, "composition_id"))
         object.__setattr__(
             self, "impacts", tuple(sorted(impacts, key=lambda x: (-x.priority, x.impact_id)))
         )
@@ -343,9 +337,9 @@ class BattleGaugeCompositionRuntime:
         rng=None,
     ):
         composition = self.definitions[str(composition_id)]
-        source_id = _id(source_id, "source_id")
-        target_id = _id(target_id, "target_id")
-        trigger = _id(trigger, "trigger")
+        source_id = required_id(source_id, "source_id")
+        target_id = required_id(target_id, "target_id")
+        trigger = required_id(trigger, "trigger")
         value = _number(value, "value")
         outcome_tags = _tags(outcome_tags)
         changes = []

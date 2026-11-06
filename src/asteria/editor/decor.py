@@ -49,6 +49,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .flow_layout import FlowLayout
+from .i18n import english
 from .icons import icon
 from .ui_fit import layout_children, layout_widgets, retire_layout
 
@@ -160,8 +162,6 @@ def button_style(text):
 
 
 def label_icon(text):
-    from .i18n import english
-
     plain = english(text.replace("&", "").strip())  # icons are picked by the English title
     for pattern, name in _LABELS:
         if pattern.search(plain):
@@ -173,7 +173,6 @@ def decorate_button(button):
     if button.property("decorated") == button.text():
         return
     button.setProperty("decorated", button.text())
-    from .i18n import english
 
     name, role = button_style(english(button.text().strip()))  # by the English (Delete: red)
     if re.match(r"^[+\-−–↑↓▲▼]", button.text().strip()):
@@ -296,7 +295,6 @@ def _wrap_form(form):
 
 def flow_button_rows(layout):
     """Rows of two or more buttons wrap onto a second line in narrow panels."""
-    from .flow_layout import FlowLayout
 
     # Rows are found without itemAt (see ui_fit.layout_widgets): this runs on every page shown,
     # and an item wrapper it left behind crashed the editor once Qt deleted that item.

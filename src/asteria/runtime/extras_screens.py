@@ -7,6 +7,8 @@ ends it. They read the session and the project's data and know no game.
 from __future__ import annotations
 
 from asteria.rpg.built_in_text import translated
+from asteria.rpg.data_text import credits_key, text_by_key
+from asteria.runtime.game_session import GameSessionError
 
 MUTED, TITLE, GOOD = (150, 160, 180), (255, 220, 124), (130, 230, 150)
 
@@ -198,7 +200,6 @@ class CreditsScreen(_Screen):
             return
         page = pages[min(self.index, len(pages) - 1)]
         rt.hotspot((0, 0, rt.width, rt.height))  # a click turns the page
-        from asteria.rpg.data_text import credits_key, text_by_key
 
         lookup = self.game.data_lookup
         heading = text_by_key(lookup, credits_key(page.page_id, "title"), page.title) or title
@@ -251,8 +252,6 @@ class AbilitySlotsScreen(_Screen):
         return self.game.slot_candidates(actor_id)
 
     def handle(self, dt=0.0, events=()):
-        from asteria.runtime.game_session import GameSessionError
-
         actor_id = self.actor_id()
         learned = self.learned(actor_id) if actor_id else ()
         self.message_left = max(0.0, self.message_left - dt)

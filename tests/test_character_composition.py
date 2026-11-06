@@ -295,7 +295,7 @@ def test_the_playable_field_draws_the_players_layers_and_attachments(resource_ro
         api.add_layer("field.player", ITEM, component_id="halo", z=-1)
         runtime._ui_mode = "field"
         runtime._frame([], 0.016)
-        plain_counts = (len(runtime.__dict__.get("_field_compositions", {})),)
+        plain_counts = (len(runtime._field_compositions),)
         behind, front = runtime._composition_parts(
             sheet, 1, "idle_down", (fw, fh), (64, 64), (100, 100)
         )

@@ -81,13 +81,13 @@ def test_slot_names_move_to_defined_slots_only():
 
 
 def test_a_project_file_moves_its_names_on_load():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     source = ROOT / "src/asteria/templates/party_rpg/project.asteria.json"
     data = json.loads(source.read_text(encoding="utf-8"))
     data["battle_presentation_library"] = _old_library({"stat_labels": {"luck": "Fortune"}})
-    project = Project.from_data(data, EditorDocument().component_registry)
+    project = Project.from_data(data, default_component_registry())
     assert project.rpg_database.stat_definitions["luck"].display_name == "Fortune"
     assert project.battle_presentation_library.retired == {}
 

@@ -24,8 +24,9 @@ def _family(category, key):
     from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
     from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     document = EditorDocument(project)
     document.file_path = DEMO / "project.asteria.json"
     controllers = IntegratedAuthoringControllers(document)

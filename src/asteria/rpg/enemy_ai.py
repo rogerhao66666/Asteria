@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import finite, required_id
 
 # Built-in vocabulary of EnemyAIRuntime (projects can add more through resolvers/handlers).
 CONDITION_KINDS = (
@@ -33,20 +33,6 @@ TARGET_SELECTOR_PREFIXES = ("lowest_resource_ratio:",)
 ACTION_KINDS = ("ability", "hook")
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
-
-
 @dataclass(frozen=True, slots=True)
 class AICondition:
     """Open condition contract. `kind` and `params` are project vocabulary."""
@@ -56,7 +42,7 @@ class AICondition:
     negate: bool = False
 
     def __init__(self, kind, *, params=None, negate=False):
-        object.__setattr__(self, "kind", _id(kind, "condition kind"))
+        object.__setattr__(self, "kind", required_id(kind, "condition kind"))
         object.__setattr__(self, "params", dict(params or {}))
         object.__setattr__(self, "negate", bool(negate))
 
@@ -97,13 +83,15 @@ class AIDecisionRule:
         conditions = tuple(conditions)
         if any(not isinstance(x, AICondition) for x in conditions):
             raise TypeError("conditions must contain AICondition values")
-        weight = _finite(weight, "weight")
+        weight = finite(weight, "weight")
         if weight < 0:
             raise ValueError("weight must be >= 0")
-        object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
-        object.__setattr__(self, "action_kind", _id(action_kind, "action_kind"))
+        object.__setattr__(self, "rule_id", required_id(rule_id, "rule_id"))
+        object.__setattr__(self, "action_kind", required_id(action_kind, "action_kind"))
         object.__setattr__(self, "payload", dict(payload or {}))
-        object.__setattr__(self, "target_selector", _id(target_selector, "target_selector"))
+        object.__setattr__(
+            self, "target_selector", required_id(target_selector, "target_selector")
+        )
         object.__setattr__(self, "conditions", conditions)
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(self, "weight", weight)
@@ -171,20 +159,22 @@ class BossPhaseDefinition:
         apr = None if actions_per_ready is None else int(actions_per_ready)
         if apr is not None and apr < 1:
             raise ValueError("actions_per_ready must be >= 1")
-        object.__setattr__(self, "phase_id", _id(phase_id, "phase_id"))
+        object.__setattr__(self, "phase_id", required_id(phase_id, "phase_id"))
         object.__setattr__(self, "conditions", conditions)
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(
             self,
             "decision_rule_ids",
-            tuple(dict.fromkeys(_id(x, "decision_rule_id") for x in decision_rule_ids)),
+            tuple(dict.fromkeys(required_id(x, "decision_rule_id") for x in decision_rule_ids)),
         )
         object.__setattr__(self, "actions_per_ready", apr)
         object.__setattr__(
-            self, "enter_hook", None if enter_hook is None else _id(enter_hook, "enter_hook")
+            self,
+            "enter_hook",
+            None if enter_hook is None else required_id(enter_hook, "enter_hook"),
         )
         object.__setattr__(
-            self, "exit_hook", None if exit_hook is None else _id(exit_hook, "exit_hook")
+            self, "exit_hook", None if exit_hook is None else required_id(exit_hook, "exit_hook")
         )
 
     def to_data(self):
@@ -252,13 +242,15 @@ class EnemyAIDefinition:
                 raise ValueError(
                     f"phase {phase.phase_id} references unknown rules: {sorted(unknown)}"
                 )
-        object.__setattr__(self, "ai_id", _id(ai_id, "ai_id"))
+        object.__setattr__(self, "ai_id", required_id(ai_id, "ai_id"))
         object.__setattr__(self, "rules", rules)
         object.__setattr__(self, "phases", phases)
         object.__setattr__(
             self,
             "initial_phase_id",
-            None if initial_phase_id is None else _id(initial_phase_id, "initial_phase_id"),
+            None
+            if initial_phase_id is None
+            else required_id(initial_phase_id, "initial_phase_id"),
         )
         object.__setattr__(self, "actions_per_ready", apr)
 
@@ -332,7 +324,7 @@ class EnemyAIRuntime:
         self.phases = {}
 
     def set_memory(self, actor_id, key, value):
-        self.memory.setdefault(str(actor_id), {})[_id(key, "memory key")] = value
+        self.memory.setdefault(str(actor_id), {})[required_id(key, "memory key")] = value
 
     def get_memory(self, actor_id, key, default=None):
         return self.memory.get(str(actor_id), {}).get(str(key), default)
@@ -597,14 +589,14 @@ class EnemyAIRuntime:
         from .battle import BattleAction
 
         if decision.action_kind == "ability":
-            ability_id = _id(decision.payload.get("ability_id"), "ability_id")
+            ability_id = required_id(decision.payload.get("ability_id"), "ability_id")
             result = battle.execute_with_reactions(
                 BattleAction(decision.actor_id, ability_id, decision.target_ids),
                 rng=rng,
                 tags=decision.tags,
             )
         elif decision.action_kind == "hook":
-            hook_name = _id(decision.payload.get("hook"), "hook")
+            hook_name = required_id(decision.payload.get("hook"), "hook")
             emit_hook(
                 self.hooks,
                 hook_name,

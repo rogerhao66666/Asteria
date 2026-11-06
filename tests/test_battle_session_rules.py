@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.project import Project
 from asteria.rpg import BattleSessionRules, RpgDatabase
 from asteria.rpg.targeting import TargetRelation
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
 REPO = Path(__file__).resolve().parents[1]
@@ -16,7 +16,7 @@ ROOT = REPO / "reference_projects" / "complex_reference_rpg"
 
 
 def _project():
-    return Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(ROOT / "project.asteria.json", default_component_registry())
 
 
 def _battle():

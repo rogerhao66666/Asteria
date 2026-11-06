@@ -417,9 +417,9 @@ class AttackPreview(_Preview):
         self._timer = QTimer(self)
         self._timer.setInterval(TICK_MS)
         self._timer.timeout.connect(self._tick)
-        self.play_button = QPushButton(translate("Pause"))
+        self.play_button = QPushButton("Pause")
         self.play_button.clicked.connect(self._toggle_play)
-        self.slow_check = QCheckBox(translate("Slow Motion"))
+        self.slow_check = QCheckBox("Slow Motion")
         self.playing = True
         self.controls = QWidget(self)
         row = QHBoxLayout(self.controls)
@@ -456,7 +456,7 @@ class AttackPreview(_Preview):
 
     def _toggle_play(self):
         self.playing = not self.playing
-        self.play_button.setText(translate("Pause" if self.playing else "Play"))
+        self.play_button.setText("Pause" if self.playing else "Play")
         if self.playing and self.isVisible():
             self._timer.start()
         else:

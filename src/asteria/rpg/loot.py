@@ -26,14 +26,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+from asteria.core.values import required_id
 from asteria.gameplay.modifiers import ModifierOperation, StatModifier
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from .items import EquippedItem
 
 
 def _num(value, label, *, minimum=None):
@@ -60,7 +56,7 @@ class RarityDefinition:
     max_suffixes: int = -1
 
     def __post_init__(self):
-        object.__setattr__(self, "rarity_id", _id(self.rarity_id, "rarity_id"))
+        object.__setattr__(self, "rarity_id", required_id(self.rarity_id, "rarity_id"))
         object.__setattr__(self, "display_name", str(self.display_name or self.rarity_id))
         color = str(self.color)
         if len(color) != 7 or not color.startswith("#"):
@@ -112,7 +108,7 @@ class AffixModifier:
     per_level: float = 0.0  # added to both ends per item level above 1
 
     def __post_init__(self):
-        object.__setattr__(self, "stat", _id(self.stat, "affix modifier stat"))
+        object.__setattr__(self, "stat", required_id(self.stat, "affix modifier stat"))
         ModifierOperation(self.operation)
         lo, hi = _num(self.minimum, "minimum"), _num(self.maximum, "maximum")
         if hi < lo:
@@ -148,9 +144,9 @@ class AffixDefinition:
     rarities: tuple = ()  # only on items of these rarities (empty = any)
 
     def __post_init__(self):
-        object.__setattr__(self, "affix_id", _id(self.affix_id, "affix_id"))
+        object.__setattr__(self, "affix_id", required_id(self.affix_id, "affix_id"))
         object.__setattr__(self, "display_name", str(self.display_name or self.affix_id))
-        object.__setattr__(self, "position", _id(self.position, "position"))
+        object.__setattr__(self, "position", required_id(self.position, "position"))
         modifiers = tuple(
             m if isinstance(m, AffixModifier) else AffixModifier(**dict(m)) for m in self.modifiers
         )
@@ -291,7 +287,6 @@ def roll_equipment(
     """A new ``EquippedItem`` of ``equipment``: rarity (given, or rolled by weight), item level and
     random affixes. Equipment tagged ``rarity:<id>`` always has that rarity (a unique, a set piece,
     a quest reward): its own modifiers make it special, the rarity sets colour and affix count."""
-    from .items import EquippedItem
 
     rarities = dict(rarities or {r.rarity_id: r for r in DEFAULT_RARITIES})
     if rarity_id is None:

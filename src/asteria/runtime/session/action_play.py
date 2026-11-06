@@ -3,18 +3,9 @@
 from __future__ import annotations
 
 from asteria.core import Transform
+from asteria.gameplay import ResourcePool, StatBlock, TagSet
 from asteria.runtime.character_control import CharacterController2DComponent
 from asteria.runtime.input import InputSnapshot
-
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
-    GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
-)
 
 
 class ActionPlayMixin:
@@ -31,7 +22,6 @@ class ActionPlayMixin:
         """Combat stats, resources and tags of an ActorLink entity: its actor's resolved build
         (classes, level,
         skill tree, equipment and rolled affixes)."""
-        from asteria.gameplay import ResourcePool, StatBlock, TagSet
         from asteria.runtime.combat import CombatantState
 
         actor_id = self._actor_of(entity)

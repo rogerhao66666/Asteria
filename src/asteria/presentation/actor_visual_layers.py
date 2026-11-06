@@ -7,7 +7,7 @@ They intentionally have no weapon, equipment, JRPG, or ARPG semantics.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 from .attachments import Transform2D
 
@@ -58,8 +58,6 @@ class ActorVisualLayerTrack:
         )
 
     def to_dict(self) -> dict:
-        from dataclasses import asdict
-
         return {"version": 1, "layers": [asdict(x) for x in self.layers]}
 
     @classmethod

@@ -5,13 +5,7 @@ from enum import Enum
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _number(value, label):
@@ -40,7 +34,7 @@ class BattleResourceRule:
     amount: float
 
     def __init__(self, trigger, amount):
-        object.__setattr__(self, "trigger", _id(trigger, "trigger"))
+        object.__setattr__(self, "trigger", required_id(trigger, "trigger"))
         object.__setattr__(self, "amount", _number(amount, "amount"))
 
     def to_data(self):
@@ -92,7 +86,7 @@ class BattleResourceDefinition:
         rules=(),
         subject_maximum=False,
     ):
-        resource_id = _id(resource_id, "resource_id")
+        resource_id = required_id(resource_id, "resource_id")
         minimum = None if minimum is None else _number(minimum, "minimum")
         maximum = None if maximum is None else _number(maximum, "maximum")
         if minimum is not None and maximum is not None and maximum < minimum:
@@ -330,8 +324,8 @@ class BattleResourceRuntime:
             )
 
     def get(self, member_id, resource_id):
-        member_id = _id(member_id, "member_id")
-        resource_id = _id(resource_id, "resource_id")
+        member_id = required_id(member_id, "member_id")
+        resource_id = required_id(resource_id, "resource_id")
         try:
             return self.values[member_id][resource_id]
         except KeyError as exc:
@@ -341,8 +335,8 @@ class BattleResourceRuntime:
         return self.get(member_id, resource_id).current
 
     def change(self, member_id, resource_id, delta, *, trigger=None):
-        member_id = _id(member_id, "member_id")
-        resource_id = _id(resource_id, "resource_id")
+        member_id = required_id(member_id, "member_id")
+        resource_id = required_id(resource_id, "resource_id")
         delta = _number(delta, "delta")
         value = self.get(member_id, resource_id)
         before = value.current
@@ -404,7 +398,7 @@ class BattleResourceRuntime:
         return self.change(member_id, resource_id, amount, trigger=trigger)
 
     def apply_trigger(self, trigger, member_ids=None):
-        trigger = _id(trigger, "trigger")
+        trigger = required_id(trigger, "trigger")
         if member_ids is None:
             member_ids = tuple(self.members)
         changes = []

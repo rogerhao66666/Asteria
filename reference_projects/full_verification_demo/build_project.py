@@ -56,8 +56,8 @@ import trial_trees as trees  # noqa: E402
 import trial_world as world_extras  # noqa: E402
 import trial_zh_data as zh_data  # noqa: E402
 
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry  # noqa: E402
 
 
 def main():
@@ -68,7 +68,7 @@ def main():
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(REFERENCE / "playable_assets", target)
-    registry = EditorDocument().component_registry
+    registry = default_component_registry()
     project = Project.load_json(REFERENCE / "project.asteria.json", registry)
     project.name = "Asteria Full Verification Demo"
     # its own id (it starts as a copy of the reference project, which has another one)

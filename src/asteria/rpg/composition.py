@@ -3,12 +3,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
-
-def _id(v, label):
-    v = str(v).strip()
-    if not v:
-        raise ValueError(f"{label} is required")
-    return v
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,8 +12,8 @@ class CompositionSelection:
     item_ids: tuple[str, ...]
 
     def __init__(self, step_id, item_ids=()):
-        object.__setattr__(self, "step_id", _id(step_id, "step_id"))
-        object.__setattr__(self, "item_ids", tuple(_id(x, "item_id") for x in item_ids))
+        object.__setattr__(self, "step_id", required_id(step_id, "step_id"))
+        object.__setattr__(self, "item_ids", tuple(required_id(x, "item_id") for x in item_ids))
 
     def to_data(self):
         return {"step_id": self.step_id, "item_ids": list(self.item_ids)}
@@ -39,7 +34,7 @@ class CompositionOutput:
         amount = int(amount)
         if amount < 1:
             raise ValueError("composition output amount must be >= 1")
-        object.__setattr__(self, "item_id", _id(item_id, "item_id"))
+        object.__setattr__(self, "item_id", required_id(item_id, "item_id"))
         object.__setattr__(self, "amount", amount)
 
     def to_data(self):
@@ -71,7 +66,7 @@ class CompositionQualityTier:
         )
         if not outputs:
             raise ValueError("quality tier requires outputs")
-        object.__setattr__(self, "quality", _id(quality, "quality"))
+        object.__setattr__(self, "quality", required_id(quality, "quality"))
         object.__setattr__(self, "threshold", threshold)
         object.__setattr__(self, "outputs", outputs)
 
@@ -167,15 +162,18 @@ class CompositionRecipeDefinition:
         if len({x.quality for x in quality_tiers}) != len(quality_tiers):
             raise ValueError("quality names must be unique")
         experience = {
-            _id(k, "progression track"): float(v) for k, v in dict(experience or {}).items()
+            required_id(k, "progression track"): float(v)
+            for k, v in dict(experience or {}).items()
         }
         if any(v < 0 for v in experience.values()):
             raise ValueError("experience must be >= 0")
-        object.__setattr__(self, "recipe_id", _id(recipe_id, "recipe_id"))
+        object.__setattr__(self, "recipe_id", required_id(recipe_id, "recipe_id"))
         object.__setattr__(self, "display_name", str(display_name or recipe_id))
         object.__setattr__(self, "selections", selections)
         object.__setattr__(self, "outputs", outputs)
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
         object.__setattr__(self, "station", str(station).strip())
         object.__setattr__(self, "success_chance", success_chance)
         object.__setattr__(self, "failure_outputs", failure_outputs)

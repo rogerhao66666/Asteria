@@ -174,12 +174,12 @@ def check_audio(out):
 
 
 def _runtime(battle_presentation="canonical", backend=None):
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project = Project.load_json(PROJECT_FILE, default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), PROJECT, backend=backend
     )
@@ -329,12 +329,12 @@ def check_field_camera(out):
 def check_editor_playtest(out):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project = Project.load_json(PROJECT_FILE, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = PROJECT_FILE
     window.show()
@@ -367,13 +367,13 @@ def check_editor_tools(out):
     (nothing saved)."""
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project = Project.load_json(PROJECT_FILE, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = PROJECT_FILE
     window.resize(1600, 1000)
@@ -482,14 +482,14 @@ def check_editor_d17(out):
 
     from PySide6.QtWidgets import QApplication, QGraphicsPixmapItem
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
     original = PROJECT_FILE.read_bytes()
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project = Project.load_json(PROJECT_FILE, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = PROJECT_FILE
     window.document.mark_saved()
@@ -627,11 +627,11 @@ def check_runtime_exit_and_recovery(out):
         child.send_signal(signal.SIGKILL)
         child.wait(timeout=10)
         killed = child.returncode != 0
-        from asteria.editor import EditorDocument
         from asteria.project import Project
+        from asteria.runtime.component_registry import default_component_registry
         from asteria.runtime.game_save import GameRuntimeSave
 
-        project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+        project = Project.load_json(PROJECT_FILE, default_component_registry())
         restored = GameRuntimeSave.load_json(save_path, project)
         recovered = line == "SAVED" and killed and tuple(restored.player_position) == (7.0, 3.0)
     finally:
@@ -1730,7 +1730,6 @@ def check_editor_workflows(out):
 
     from asteria.core import Transform
     from asteria.core.prefab import PrefabInstanceComponent
-    from asteria.editor import EditorDocument
     from asteria.editor.commands import SetAttributeCommand
     from asteria.editor.hierarchy import drop_entities
     from asteria.editor.shell import AsteriaEditorWindow
@@ -1738,10 +1737,11 @@ def check_editor_workflows(out):
     from asteria.events import EventInstruction
     from asteria.project import Project
     from asteria.runtime import Interaction2DComponent
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
     original = PROJECT_FILE.read_bytes()
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project = Project.load_json(PROJECT_FILE, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = PROJECT_FILE
     window._resolve_project_resources()
@@ -2422,8 +2422,8 @@ def check_migrated_project_plays(out):
 
     import pygame
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_save import GameRuntimeSave
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -2449,7 +2449,7 @@ def check_migrated_project_plays(out):
             env=dict(os.environ, PYTHONPATH=str(REPO / "src")),
         )
         after = json.loads(path.read_text())
-        project = Project.load_json(path, EditorDocument().component_registry)
+        project = Project.load_json(path, default_component_registry())
         runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root)
         runtime.open()
         driver = pygame.display.get_driver()
@@ -2614,11 +2614,11 @@ def check_editor_characters(out):
     from PIL import Image
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
     from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
     original = PROJECT_FILE.read_bytes()
@@ -2630,7 +2630,7 @@ def check_editor_characters(out):
             PROJECT, root, ignore=shutil.ignore_patterns("saves", "__pycache__", "*.bak")
         )
         path = root / "project.asteria.json"
-        project = Project.load_json(path, EditorDocument().component_registry)
+        project = Project.load_json(path, default_component_registry())
         window = AsteriaEditorWindow(project)
         window.document.file_path = path
         window._resolve_project_resources()
@@ -3015,16 +3015,16 @@ def check_editor_particles(out):
     usage."""
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.workspace import WorkspaceMode
     from asteria.presentation.particles import effect_definition
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
     app = QApplication.instance() or QApplication([])
     original = PROJECT_FILE.read_bytes()
-    project = Project.load_json(PROJECT_FILE, EditorDocument().component_registry)
+    project = Project.load_json(PROJECT_FILE, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = PROJECT_FILE
     window._resolve_project_resources()
@@ -3097,12 +3097,12 @@ def check_party_rpg_demo(out):
     run short."""
     import pygame
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = REPO / "reference_projects" / "party_rpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
     )
@@ -3264,9 +3264,7 @@ def check_party_rpg_demo(out):
     runtime.close()
     # the other enemy kinds: each encounter opens with its art, shields and weaknesses
     for encounter_id in ("slime_pit", "old_crypt", "gazer_nest", "samurai_duel"):
-        fresh = Project.load_json(
-            root / "project.asteria.json", EditorDocument().component_registry
-        )
+        fresh = Project.load_json(root / "project.asteria.json", default_component_registry())
         other = PlayableTestRuntime(
             fresh, fresh.game_start.instantiate(fresh), root, width=960, height=540
         )
@@ -3301,14 +3299,14 @@ def check_cjk_text(out):
     """Render expanded message codes with CJK text into a real Cocoa game window."""
     import pygame
 
-    from asteria.editor import EditorDocument
     from asteria.platform.pygame_battle_ui import font_for_text
     from asteria.presentation.message_codes import MessageContext, expand_message, parse_message
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = REPO / "reference_projects" / "party_rpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
     )
@@ -3356,15 +3354,15 @@ def check_game_extras(out):
     """Open Backlog, Music Room and Credits in a real game window with temporary project data."""
     import pygame
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.rpg.extras import CreditsPage, MusicTrack
     from asteria.rpg.localization import MessageSettings
     from asteria.runtime import extras_screens
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = REPO / "reference_projects" / "party_rpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     database = project.rpg_database
     database.add_message_settings(MessageSettings("native", backlog_limit=20))
     database.add_music_track(MusicTrack("field", "Field Theme", "battle_theme"))
@@ -3415,14 +3413,14 @@ def check_map_rules_real_window(out):
     import pygame
 
     from asteria.core import Transform
-    from asteria.editor import EditorDocument
     from asteria.gameplay import ResourcePool
     from asteria.project import Project
     from asteria.rpg.map_rules import AreaRule, MapRuleSet
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = REPO / "reference_projects" / "party_rpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     project.rpg_database.add_map_rule_set(
         MapRuleSet(
             "native_validation",
@@ -3492,7 +3490,6 @@ def check_editor_d30(out):
     """Drive the new Skeleton and region-rule authoring panels in the Cocoa editor."""
     from PySide6.QtWidgets import QApplication, QDockWidget
 
-    from asteria.editor import EditorDocument
     from asteria.editor.resource_resolver import resolve_project_resources
     from asteria.editor.scene_render import render_source_for_scene
     from asteria.editor.shell import AsteriaEditorWindow
@@ -3500,11 +3497,12 @@ def check_editor_d30(out):
     from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip
     from asteria.project import Project
     from asteria.rpg.map_rules import AreaRule, MapRuleSet
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
     project_file = REPO / "reference_projects" / "arpg_demo" / "project.asteria.json"
     original = project_file.read_bytes()
-    project = Project.load_json(project_file, EditorDocument().component_registry)
+    project = Project.load_json(project_file, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = project_file
     resolve_project_resources(window.document)

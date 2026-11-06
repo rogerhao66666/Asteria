@@ -83,6 +83,70 @@ def test_widgets_show_the_language_and_switch_back_live(chinese):
     root.deleteLater()
 
 
+def test_text_translated_before_it_is_set_does_not_switch_back(chinese):
+    """Why widget text is set in English: the setter remembers what it is given as the
+    source, so a translation handed in stays when the language switches back."""
+    i18n.set_language("test")
+    plain, pre = QPushButton(), QPushButton()
+    plain.setText("Save")
+    pre.setText(i18n.translate("Save"))
+    assert plain.text() == pre.text() == "儲存"
+    i18n.set_language("en")
+    assert plain.text() == "Save"
+    assert pre.text() == "儲存"  # the trap: its source is the Chinese text
+
+
+def test_text_no_table_has_is_matched_against_the_patterns_once(chinese, monkeypatch):
+    """Every widget text set asks translate(): an answer is remembered (misses too) until the
+    language or the project changes."""
+    tried = []
+
+    class Counting:
+        def fullmatch(self, text):
+            tried.append(text)
+            return None
+
+    monkeypatch.setitem(i18n._tables, "test", (TABLE[0], [(Counting(), "{x}")]))
+    i18n.set_language("test")
+    assert i18n.translate("Aldric") == i18n.translate("Aldric") == "Aldric"
+    assert i18n.translate("Save") == "儲存"
+    assert tried == ["Aldric"]
+    i18n.use_project(None)  # another project: its own words may name it now
+    i18n.translate("Aldric")
+    assert tried == ["Aldric", "Aldric"]
+
+
+def test_editor_code_sets_widget_text_in_english():
+    """No editor widget is given ``translate(...)`` whole: its setter (or the polish of a
+    new widget) translates, and only then does it switch language live."""
+    import ast
+    from pathlib import Path
+
+    import asteria.editor
+
+    setters = {"setText", "setToolTip", "setTitle", "setWindowTitle", "setPlaceholderText"}
+    widgets = {"QPushButton", "QLabel", "QCheckBox", "QRadioButton", "QGroupBox", "QToolButton"}
+    found = []
+    for path in Path(asteria.editor.__file__).parent.glob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Call) or not node.args:
+                continue
+            func, first = node.func, node.args[0]
+            named = (isinstance(func, ast.Attribute) and func.attr in setters) or (
+                isinstance(func, ast.Name) and func.id in widgets
+            )
+            receiver = getattr(func, "value", None)
+            if isinstance(receiver, ast.Name) and receiver.id == "item":
+                continue  # list and tree items are not widgets: no setter translates them
+            if (
+                named
+                and isinstance(first, ast.Call)
+                and getattr(first.func, "id", "") == "translate"
+            ):
+                found.append(f"{path.name}:{node.lineno}")
+    assert found == []
+
+
 def test_fixed_choices_are_translated_typed_in_lists_and_data_are_not(chinese):
     i18n.set_language("test")
     choices = QComboBox()
@@ -119,9 +183,9 @@ def test_the_shipped_table_loads_and_the_editor_window_switches_language_live():
 
     from PySide6.QtWidgets import QMenuBar
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
     i18n._tables.pop("zh_TW", None)
@@ -132,7 +196,7 @@ def test_the_shipped_table_loads_and_the_editor_window_switches_language_live():
     assert i18n.translate("Support: inflicts Burn", "zh_TW") == "Support: inflicts Burn"  # data
     i18n.install(app, "en")
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     window = AsteriaEditorWindow(project)
     try:
         bar = window.findChild(QMenuBar)

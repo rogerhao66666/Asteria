@@ -12,6 +12,7 @@ has no Qt dependency.
 from __future__ import annotations
 
 import copy
+import random
 from dataclasses import dataclass, field
 
 from asteria.rpg import (
@@ -34,7 +35,7 @@ from asteria.rpg.drop_tables import RARITIES, DropTable
 from asteria.rpg.durability import ON_BREAK, DurabilityRules
 from asteria.rpg.enemy_levels import EnemyLevelRules
 from asteria.rpg.extras import BattleOptions, CreditsPage, MenuEntry, MusicTrack
-from asteria.rpg.gacha import PRIZE_KINDS, GachaBanner, GachaRuntime
+from asteria.rpg.gacha import PRIZE_KINDS, GachaBanner, GachaRuntime, GachaState
 from asteria.rpg.items import (
     BATTLE_SWAPS,
     EQUIP_OFFERS,
@@ -75,6 +76,8 @@ from asteria.rpg.tag_definitions import TagDefinition
 from asteria.rpg.workstations import WorkstationDefinition
 from asteria.rpg.world_interactions import OPERATORS, VERBS, WorldInteraction
 from asteria.rpg.world_record import ACHIEVEMENT_KINDS
+
+from .i18n import translate
 
 EDITOR_ONLY = (
     "The game does not show this description: it stays in the editor (and in translation"
@@ -2201,6 +2204,18 @@ class _Kind:
     cls: type
     template: object = field(default=None)
 
+    @property
+    def noun(self):
+        """One record of the kind, for undo entries: "Shops" -> "Shop", "Properties" ->
+        "Property", "Weapon Refine (+N)" -> "Weapon Refine"; "Music Room", "Pet Species" and
+        "New Game Plus" stay (cutting the last letter made "Music Roo")."""
+        words = self.label.split(" (")[0]
+        if words.endswith(("ss", "us", "Species")):  # "New Game Plus": already one
+            return words
+        if words.endswith("ies"):
+            return words[:-3] + "y"
+        return words[:-1] if words.endswith("s") else words
+
 
 def _templates():
     return {
@@ -2499,8 +2514,6 @@ class GameSystemsAuthoringController:
         the game lacks for one it cannot show yet (``rpg.menu_pages.PAUSE_NEEDS``)."""
         from asteria.runtime.game_menus import PAUSE_WORDS
 
-        from .i18n import translate
-
         db = self.database
         messages = db.message_settings
         backlog = messages[sorted(messages)[0]].backlog_limit if messages else 0
@@ -2573,9 +2586,6 @@ class GameSystemsAuthoringController:
         banner = self.database.gacha_banners[str(banner_id)]
         runtime = GachaRuntime(banner)
         out = runtime.simulate(pulls, seed)
-        import random
-
-        from asteria.rpg.gacha import GachaState
 
         rng, state, dry, longest, done = random.Random(seed), GachaState(), 0, 0, 0
         top = banner.rank(banner.top_rarity())
@@ -2643,7 +2653,7 @@ class GameSystemsAuthoringController:
             raise GameSystemsAuthoringError(f"duplicate {kind_id}: {key}")
         self._validated(kind_id, key, value)
         self.document.execute(
-            _MapCommand(self.store(kind_id), key, value, None, f"Add {kind.label[:-1]} {key}")
+            _MapCommand(self.store(kind_id), key, value, None, f"Add {kind.noun} {key}")
         )
         return value
 
@@ -2668,9 +2678,7 @@ class GameSystemsAuthoringController:
         if getattr(value, kind.key) != key:
             raise GameSystemsAuthoringError(f"{kind.key} cannot change during edit")
         self._validated(kind_id, key, value)
-        command = _MapCommand(
-            self.store(kind_id), key, value, old, f"Edit {kind.label[:-1]} {key}"
-        )
+        command = _MapCommand(self.store(kind_id), key, value, old, f"Edit {kind.noun} {key}")
         self.document.execute(_StepsCommand((command, *(x for x in extra if x is not None))))
         return value
 
@@ -2693,9 +2701,7 @@ class GameSystemsAuthoringController:
         users = self.where_used(kind_id, key)
         if users:
             raise GameSystemsAuthoringError(f"{key} is used by " + ", ".join(users))
-        command = _MapCommand(
-            self.store(kind_id), key, None, old, f"Delete {kind.label[:-1]} {key}"
-        )
+        command = _MapCommand(self.store(kind_id), key, None, old, f"Delete {kind.noun} {key}")
         from .record_notes import note_command, shown_command
 
         extra = (  # its note and hidden mark go with it (undo: back)

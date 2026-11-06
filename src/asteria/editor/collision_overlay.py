@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 
+from asteria.core import Transform, world_position
 from asteria.graphics import EMPTY_TILE
+from asteria.runtime.character_control import Hitbox2DComponent, Hurtbox2DComponent, facing_box
+from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.tile_draw import _visible_span
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +28,6 @@ def build_collision_cells(
 ):
     """Screen cells of every filled tile on a collision layer; with a viewport size, chunks and
     cells wholly outside it are left out."""
-    from asteria.runtime.tile_draw import _visible_span
 
     cells = []
     width = tilemap.tile_width * camera.zoom
@@ -85,9 +88,6 @@ def build_combat_boxes(scene, camera):
     what hits (hitboxes are shown where they reach with the entity's facing)."""
     if scene is None:
         return ()
-    from asteria.core import Transform, world_position
-    from asteria.runtime.character_control import Hitbox2DComponent, Hurtbox2DComponent, facing_box
-    from asteria.runtime.collision import Collider2DComponent
 
     boxes = []
 

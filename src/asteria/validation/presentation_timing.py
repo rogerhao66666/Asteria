@@ -15,6 +15,11 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from asteria.project import Project
+from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+
 
 @dataclass(frozen=True)
 class TimingSample:
@@ -35,13 +40,9 @@ class TimingSample:
 def measure_action_timing(repo, frame_times, *, ability_id="fire_arc", target="astral_tyrant:1"):
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-    from asteria.editor import EditorDocument
-    from asteria.project import Project
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
-    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = Path(repo) / "reference_projects" / "complex_reference_rpg"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root)
     runtime.open()
     try:

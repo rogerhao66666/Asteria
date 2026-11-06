@@ -1,5 +1,6 @@
 from asteria.assets import TextureResource
 from asteria.graphics.scaling import resized
+from asteria.runtime.input_map import InputActionMap
 
 from .backend import RuntimeBackend, TextureBackend
 
@@ -37,7 +38,6 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             import pygame
         except ImportError as exc:
             raise RuntimeError("Install pygame-ce with: pip install 'asteria[pygame]'") from exc
-        from asteria.runtime.input_map import InputActionMap
 
         self.pg = pygame
         self.screen = None

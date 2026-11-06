@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from asteria.assets import TextureResourceCache
 from asteria.core import Transform
 from asteria.graphics import DirectionalClips
 from asteria.reference_data import (
@@ -33,6 +34,7 @@ from .animation import AnimatorState
 from .camera_factory import build_runtime_camera
 from .character import CharacterController2D
 from .character_animation import CharacterAnimationController
+from .character_control import CharacterController2DComponent
 from .components2d import (
     Animator2DComponent,
     Camera2DComponent,
@@ -40,9 +42,13 @@ from .components2d import (
     TileMap2DComponent,
 )
 from .draw import TextureDraw, sprite_draw
+from .environment2d import resolve_environment
 from .input import InputSnapshot
+from .map_rules_field import tile_area_keys
+from .texture_renderer import TextureRenderer
 from .tile_draw import build_tile_draws
 from .tilequery import TileMapQuery
+from .weather import _KINDS
 
 ABOVE_CHARACTERS = 100
 _LOADERS = {
@@ -121,6 +127,7 @@ def can_play(project, root):
 class TileMapField:
     def __init__(self, session, root):
         self.session = session
+        self._weather = None  # WeatherSystem once the map has weather
         self.resources = AssetResources(session.project, root)
         self.viewport = (816, 624)
         self._scene_id = None
@@ -140,7 +147,6 @@ class TileMapField:
         self.tilemap.validate()
         self.tileset.validate(len(self.tile_sheet.frames))
         self.query = TileMapQuery(self.tilemap)
-        from .map_rules_field import tile_area_keys
 
         sets = self.session.project.rpg_database.map_rule_sets
         layer = sets[sorted(sets)[0]].region_layer if sets else "regions"
@@ -151,7 +157,6 @@ class TileMapField:
         player = self.session.player
         t = player.get(Transform)
         speed, half_w, half_h = 72.0, 5.0, 7.0
-        from .character_control import CharacterController2DComponent
 
         spec = player.try_get(CharacterController2DComponent)
         if spec is not None:
@@ -403,7 +408,6 @@ class TileMapField:
     def environment(self, time=0.0):
         """The current scene's Environment2D / lights / water projected through the field
         camera."""
-        from .environment2d import resolve_environment
 
         def read_shader(asset_id):
             try:
@@ -425,7 +429,7 @@ class TileMapField:
         if env.weather != "none":
             from .weather import WeatherSystem
 
-            weather = self.__dict__.get("_weather")
+            weather = self._weather
             if weather is None or (weather.width, weather.height) != tuple(self.viewport):
                 weather = self._weather = WeatherSystem(
                     *self.viewport, seed=f"{self.session.scene.id}:weather"
@@ -443,10 +447,9 @@ class TileMapField:
         return env
 
     def weather_rects(self):
-        weather = self.__dict__.get("_weather")
+        weather = self._weather
         if weather is None or weather.kind == "none":
             return []
-        from .weather import _KINDS
 
         color = _KINDS[weather.kind][2]
         if weather.kind == "rain":
@@ -478,9 +481,6 @@ def run_tilemap_field(
     field, backend, width, height, target_fps=60, max_frames=None, on_frame=None
 ):
     """Window loop: input -> step -> draw (textures reloaded when a transfer changes the scene)."""
-    from asteria.assets import TextureResourceCache
-
-    from .texture_renderer import TextureRenderer
 
     field.prepare_viewport(width, height)
     cache = TextureResourceCache(backend.load_texture)

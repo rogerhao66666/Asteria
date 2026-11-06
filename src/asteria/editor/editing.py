@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from asteria.core import Transform
 from asteria.core.metadata import get_component_schema
+from asteria.core.transform import set_parent
 
 from .commands import SetAttributeCommand
 
@@ -13,8 +15,6 @@ class ReparentTransformCommand:
     """Set Transform.parent_id while keeping the entity where it is in the scene."""
 
     def __init__(self, transform, new_parent_id):
-        from asteria.core.transform import set_parent
-
         self.transform = transform
         self.attribute = "parent_id"
         self.old_value = transform.parent_id
@@ -88,7 +88,6 @@ def build_set_component_field_command(component, field_name, raw_value):
     except (TypeError, ValueError) as exc:
         raise EditError(str(exc)) from exc
     old = getattr(component, field_name)
-    from asteria.core import Transform
 
     if isinstance(component, Transform) and field_name == "parent_id" and value != old:
         return ReparentTransformCommand(component, value)

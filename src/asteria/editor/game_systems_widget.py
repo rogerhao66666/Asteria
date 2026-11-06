@@ -40,13 +40,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.rpg.menu_rules import pause_order
+
+from .authoring_hub_widget import _free_id
 from .authoring_sidebar import authoring_sidebar
 from .game_systems_authoring import FORMS, KINDS, GameSystemsAuthoringError, new_row
 from .i18n import translate
 from .project_empty_state import ProjectEmptyState
-from .record_form import ColorButton, Picker, basic_first
+from .record_form import ColorButton, Picker, basic_first, load_record_icon
+from .record_vocabulary import Choice, map_source, record_name, vocabulary_for, words
 from .responsive_form import ResponsiveForm, ResponsiveSplit
-from .ui_fit import fit_combo_to_items
+from .ui_fit import fit_combo_to_items, swap_scroll_page
 
 _BIG = 1_000_000_000
 
@@ -162,8 +166,8 @@ class _PauseOrder(QWidget):
         row = QHBoxLayout()  # above the list: in view however long the menu is
         self.show_all = QPushButton("Show All" if compact else "Show Every Entry")
         self.reset = QPushButton("Engine Order" if compact else "Back to the Engine's Order")
-        self.show_all.setToolTip(translate("Tick every entry."))
-        self.reset.setToolTip(translate("Put every entry back in the engine's order."))
+        self.show_all.setToolTip("Tick every entry.")
+        self.reset.setToolTip("Put every entry back in the engine's order.")
         self.show_all.clicked.connect(self._show_every_entry)
         self.reset.clicked.connect(self._engine_order)
         row.addWidget(self.show_all)
@@ -182,8 +186,6 @@ class _PauseOrder(QWidget):
             self.edited.emit()
 
     def set_value(self, order, hidden):
-        from asteria.rpg.menu_rules import pause_order
-
         self._loading = True
         self.list.clear()
         names = {c[0]: c[1:] for c in self.choices}
@@ -355,13 +357,8 @@ class _TableField(QGroupBox):
                 if choice.value == str(value):
                     return choice.label
             if re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", str(value)):
-                from .record_vocabulary import words
-
                 return words(value)
         if first.kind == "choice":  # a kind of thing (a menu block): in words, with its place
-            from .i18n import translate
-            from .record_vocabulary import words
-
             text = translate(_choice_words(value, words))
             second = self.fields[1] if len(self.fields) > 1 else None
             if second is not None and second.kind == "choice" and row.get(second.key):
@@ -555,8 +552,6 @@ class _TextPicker(Picker):
                 self.addItem(name, value)
                 self.setItemData(self.count() - 1, value, Qt.ToolTipRole)
             elif re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", value):  # an id: in words
-                from .record_vocabulary import words
-
                 self.addItem(words(value), value)
                 self.setItemData(self.count() - 1, f"ID: {value}", Qt.ToolTipRole)
             else:
@@ -613,9 +608,9 @@ class _Ticks(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(24)
         for f in fields:
-            check = QCheckBox(translate(f.label))
+            check = QCheckBox(f.label)
             if f.help:
-                check.setToolTip(translate(f.help))
+                check.setToolTip(f.help)
             check.toggled.connect(self.changed)
             self.checks[f.key] = check
             layout.addWidget(check)
@@ -1053,7 +1048,6 @@ class RecordForm(QWidget):
 
     def _record_icon(self, icon_id):
         """The picture of a record on this form's lists, cached."""
-        from .record_form import load_record_icon
 
         cache = self.__dict__.setdefault("_record_icons", {})
         if icon_id not in cache:
@@ -1117,15 +1111,12 @@ class RecordForm(QWidget):
             _wheel_guard(widget)  # scrolling the page leaves values alone
 
     def _vocabulary(self):
-        from .record_vocabulary import vocabulary_for
-
         document = self.document or getattr(self.icons, "document", None)
         return vocabulary_for(document)
 
     def _noun(self, f):
         """What one entry of a list field is, for its "+ Add …" button: from what it refers to
         (an item, a stat, a quest), else from the field's own name."""
-        from .record_vocabulary import map_source
 
         if "price" in f.key or "currenc" in f.key:
             return "currency"
@@ -1153,7 +1144,6 @@ class RecordForm(QWidget):
     def _text_choices(self, key):
         """A text field that names something in the project (a currency, a stat, an enemy, a
         switch...) offers those names; anything else can still be typed."""
-        from .record_vocabulary import Choice, words
 
         vocabulary = self._vocabulary()
         if vocabulary.project is None:
@@ -1183,8 +1173,6 @@ class RecordForm(QWidget):
         return []
 
     def _reference_choices(self, f):
-        from .record_vocabulary import Choice, map_source, record_name
-
         vocabulary = self._vocabulary()
         known = ("items", "actors", "enemies", "equipment", "classes", "abilities", "states",
                  "attachments", "passives", "encounters")  # fmt: skip
@@ -1296,8 +1284,6 @@ class RecordForm(QWidget):
         if f.kind == "bool":
             return QCheckBox()
         if f.kind == "choice":
-            from .record_vocabulary import words
-
             widget = QComboBox()
             for choice in f.choices:  # in words; the value written is the item's data
                 widget.addItem(_choice_words(choice, words), choice)
@@ -1348,17 +1334,15 @@ class RecordForm(QWidget):
             from .record_vocabulary import Choice, is_tag_field, tag_label
 
             if f.choices:  # a closed set: picked in words, never typed
-                from .record_vocabulary import words as in_words
-
-                pairs = [c if isinstance(c, tuple) else (c, in_words(c)) for c in f.choices]
+                pairs = [c if isinstance(c, tuple) else (c, words(c)) for c in f.choices]
                 closed = [Choice(value, label) for value, label in pairs]
                 return ChipList((), closed, allow_new=False, noun=self._noun(f))
             vocabulary = self._vocabulary()
-            words = vocabulary.tags() if is_tag_field(f.key) else ()
-            names = vocabulary.names() if words else {}
-            namer = (lambda t, n=names: tag_label(t, n)) if words else None
-            choices = [Choice(t, tag_label(t, names)) for t in words]
-            return ChipList((), choices, noun="tag" if words else self._noun(f), namer=namer)
+            tags = vocabulary.tags() if is_tag_field(f.key) else ()
+            names = vocabulary.names() if tags else {}
+            namer = (lambda t, n=names: tag_label(t, n)) if tags else None
+            choices = [Choice(t, tag_label(t, names)) for t in tags]
+            return ChipList((), choices, noun="tag" if tags else self._noun(f), namer=namer)
         if f.kind == "amounts":
             from .record_form import AmountTable
 
@@ -1650,7 +1634,6 @@ class GameSystemsEditorWidget(QWidget):
     def _record_name(self, key, names):
         """A record as the list shows it: its name, else what it is about (a capture rule by
         its enemy), else its id in words."""
-        from .record_vocabulary import words
 
         try:
             data = self.controller.form_data(self.kind_id, key, info=False)
@@ -1693,8 +1676,6 @@ class GameSystemsEditorWidget(QWidget):
         current = select or self.selected_id
         if self.controller.document.project is None:
             self.browser.clear()
-            from .ui_fit import swap_scroll_page
-
             swap_scroll_page(
                 self.scroll, ProjectEmptyState("Open a project to edit game systems and settings.")
             )
@@ -1728,13 +1709,11 @@ class GameSystemsEditorWidget(QWidget):
             cards=True,
         )
         self.form.changed.connect(self._apply_timer.start)
-        from .ui_fit import swap_scroll_page
 
         swap_scroll_page(self.scroll, self.form)
         self.browser.blockSignals(True)
         self.browser.clear()
         ids = self.controller.ids(self.kind_id)
-        from .record_vocabulary import vocabulary_for
 
         names = vocabulary_for(self.controller.document).names()
         for key in ids:  # the record's name; its id is the row's data
@@ -1841,7 +1820,6 @@ class GameSystemsEditorWidget(QWidget):
     def _new_clicked(self):
         """A new record at once: its id made for it (the name is set in the form); a capture
         rule belongs to an enemy, picked by name."""
-        from .authoring_hub_widget import _free_id
 
         kind = self.kind_id
         if kind == "capture_rules":
@@ -1853,7 +1831,6 @@ class GameSystemsEditorWidget(QWidget):
 
     def _pick_enemy(self, title):
         """An enemy without a capture rule, chosen by its name (None: cancelled or none)."""
-        from .record_vocabulary import record_name
 
         taken = set(self.controller.ids("capture_rules"))
         ids = [x for x in self.controller.references("enemies") if x not in taken]
@@ -1868,7 +1845,6 @@ class GameSystemsEditorWidget(QWidget):
         picked by name)."""
         if self.selected_id is None:
             return
-        from .authoring_hub_widget import _free_id
 
         if self.kind_id == "capture_rules":
             key = self._pick_enemy("Copy to Enemy")

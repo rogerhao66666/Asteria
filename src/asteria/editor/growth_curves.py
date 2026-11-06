@@ -17,7 +17,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.rpg.actors import ActorDefinition, ClassAssignment, ClassDefinition, RpgActorRuntime
+
 from .i18n import translate
+from .record_vocabulary import label_for
 
 COLOURS = (  # one per chart, in order (RPG Maker's warm-to-cool row)
     "#d9805a",
@@ -44,12 +47,6 @@ def colour(index):
 def growth_curves(actor_data, class_datas, max_level):
     """``[(kind, key, [value at level 1 … max_level])]`` for every stat and resource maximum of
     the actor (``actor_data``, as saved) with ``class_datas`` as its jobs."""
-    from asteria.rpg.actors import (
-        ActorDefinition,
-        ClassAssignment,
-        ClassDefinition,
-        RpgActorRuntime,
-    )
 
     data = dict(actor_data)
     classes = {}
@@ -232,7 +229,6 @@ class GrowthCurves(QWidget):
 
     def _inputs(self):
         """``(an empty actor, [the job])``: the job's own share, level by level."""
-        from asteria.rpg.actors import ActorDefinition
 
         return ActorDefinition("preview").to_data(), [self.form._data]
 
@@ -269,7 +265,7 @@ class GrowthCurves(QWidget):
         curves = [c for c in curves if c[0] == "resource" or self._charted(c[1])]
         curves = [c for c in curves if c[2] and max(c[2]) - min(c[2]) > 1e-9]  # flat: hidden
         if not curves:
-            self.note.setText(translate("Nothing grows with level in this job."))
+            self.note.setText("Nothing grows with level in this job.")
             self.note.show()
             return
         vocabulary = getattr(self.form, "vocabulary", None)
@@ -277,7 +273,6 @@ class GrowthCurves(QWidget):
         if vocabulary is not None:
             for kind in ("stats", "resources"):
                 names.update({c.value: c.label for c in vocabulary.choices(kind)})
-        from .record_vocabulary import label_for
 
         rank = {"vitality": 0, "technique": 1}  # HP, MP first, as RPG Maker lists them
         if vocabulary is not None:  # stats in the game's own order (STR, DEX, INT…)
@@ -305,7 +300,7 @@ class StatBar(QWidget):
         self.top = max([*values, 0.0]) or 1.0
         self.average = sum(values) / len(values)
         self.setMinimumHeight(22)
-        self.setToolTip(translate(f"Average {self.average:g} · strongest {self.top:g}"))
+        self.setToolTip(f"Average {self.average:g} · strongest {self.top:g}")
 
     def sizeHint(self):  # noqa: N802 - Qt API
         return QSize(260, 22)
@@ -395,7 +390,6 @@ class StatComparison(QWidget):
                 for choice in vocabulary.choices(kind):
                     names.setdefault(choice.value, choice.label)
                     rank.setdefault(choice.value, len(rank))
-        from .record_vocabulary import label_for
 
         keys = sorted(own, key=lambda k: (rank.get(k, 1e9), k))
         for index, stat in enumerate(keys):

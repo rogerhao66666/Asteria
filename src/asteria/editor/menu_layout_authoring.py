@@ -8,8 +8,12 @@ steps back one edit at a time. A screen with no layout draws as the engine alway
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, replace
+from pathlib import Path
 
+from asteria.presentation.creature_screens import SCREENS, from_manifest
+from asteria.presentation.dialogue_window import DialogueWindowStyle
 from asteria.presentation.menu_layout import (
     EXTRA,
     SCREEN_IDS,
@@ -254,11 +258,8 @@ class MenuLayoutAuthoringController:
         """The game folder manifest's ``dialogue`` window turned into project data: its font
         becomes a bitmap font, its settings the picture window. Returns the window, or None
         when the manifest has none."""
-        import json
-        from pathlib import Path
 
         from asteria.graphics.bitmap_font import spec_from_legacy
-        from asteria.presentation.dialogue_window import DialogueWindowStyle
 
         path = Path(root) / "playable_test_manifest.json"
         if not path.is_file():
@@ -289,7 +290,6 @@ class MenuLayoutAuthoringController:
 
     def set_creature_screen(self, screen_id, settings):
         """A creature screen's settings (None: removed; the manifest's are drawn again)."""
-        from asteria.presentation.creature_screens import SCREENS
 
         old = self.creature_screen(screen_id)
         if settings == old:
@@ -304,10 +304,6 @@ class MenuLayoutAuthoringController:
     def read_creature_manifest(root):
         """The creature screens the game folder's manifest sets up, as project data
         ``{screen_id: CreatureScreenSettings}`` (nothing is changed yet)."""
-        import json
-        from pathlib import Path
-
-        from asteria.presentation.creature_screens import from_manifest
 
         path = Path(root) / "playable_test_manifest.json"
         if not path.is_file():

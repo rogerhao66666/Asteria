@@ -155,6 +155,7 @@ def test_playable_test_runtime_draws_skeleton_component_without_tile_scene(tmp_p
         zoom = 1.0
 
     runtime = object.__new__(PlayableTestRuntime)
+    runtime._init_caches()
     runtime.project = project
     runtime.game = SimpleNamespace(scene=scene, project=project)
     runtime.resource_root = Path(tmp_path)

@@ -18,9 +18,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.events.world_commands import WorldCommand  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry  # noqa: E402
 from asteria.runtime.game_session import GameSessionRuntime  # noqa: E402
 
 HERO = "hero_01"
@@ -39,7 +39,7 @@ SW = "w_sunbrand:hero_01"
 
 
 def load():
-    project = Project.load_json(HERE / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(HERE / "project.asteria.json", default_component_registry())
     return project, GameSessionRuntime(project, project.game_start.instantiate(project))
 
 

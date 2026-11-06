@@ -1,7 +1,9 @@
 import os
 from math import floor
 
+from asteria.assets.scene_placement import character_cell_position
 from asteria.core import Transform, world_position
+from asteria.graphics import EMPTY_TILE
 from asteria.runtime import (
     Camera2DComponent,
     SkeletonAnimation2DComponent,
@@ -250,7 +252,6 @@ class SceneViewportWidget(QWidget):
 
     def _paint_placement_ghost(self, painter):
         """The character waiting to be placed, standing on the cell under the mouse."""
-        from asteria.assets.scene_placement import character_cell_position
 
         cell, ghost = self._placement_cell, self._placement_ghost
         if cell is None or ghost is None or ghost.isNull():
@@ -324,7 +325,6 @@ class SceneViewportWidget(QWidget):
     def _pick_tiles(self, start, end):
         """The eyedropper: the tiles of the active layer (else the topmost one that has a tile)
         between two cells become the brush."""
-        from asteria.graphics import EMPTY_TILE
 
         from .tile_edit import tile_at
 

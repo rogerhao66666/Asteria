@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,8 +28,8 @@ class BattleWorkflowOption:
         tags=(),
         payload=None,
     ):
-        option_id = _id(option_id, "option_id")
-        label = option_id if label is None else _id(label, "label")
+        option_id = required_id(option_id, "option_id")
+        label = option_id if label is None else required_id(label, "label")
         object.__setattr__(self, "option_id", option_id)
         object.__setattr__(self, "label", label)
         object.__setattr__(self, "enabled", bool(enabled))
@@ -43,7 +38,7 @@ class BattleWorkflowOption:
         object.__setattr__(
             self,
             "icon_asset_id",
-            None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"),
+            None if icon_asset_id is None else required_id(icon_asset_id, "icon_asset_id"),
         )
         object.__setattr__(
             self, "tags", tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip()))
@@ -84,7 +79,7 @@ class BattleWorkflowStep:
     options: tuple = ()
 
     def __post_init__(self):
-        _id(self.step_id, "step_id")
+        required_id(self.step_id, "step_id")
         options = tuple(
             x if isinstance(x, BattleWorkflowOption) else BattleWorkflowOption.from_data(x)
             for x in self.options
@@ -92,7 +87,7 @@ class BattleWorkflowStep:
         if len({x.option_id for x in options}) != len(options):
             raise ValueError("duplicate workflow option_id")
         object.__setattr__(self, "options", options)
-        _id(self.label, "label")
+        required_id(self.label, "label")
         if self.selection_mode not in {"single", "multiple"}:
             raise ValueError("unsupported workflow selection_mode")
         if self.minimum_selections < 0:
@@ -130,8 +125,8 @@ class BattleActionWorkflowDefinition:
     VERSION = 1
 
     def __init__(self, workflow_id, label=None, steps=(), *, confirmation_label="Confirm"):
-        workflow_id = _id(workflow_id, "workflow_id")
-        label = workflow_id if label is None else _id(label, "label")
+        workflow_id = required_id(workflow_id, "workflow_id")
+        label = workflow_id if label is None else required_id(label, "label")
         steps = tuple(
             x if isinstance(x, BattleWorkflowStep) else BattleWorkflowStep.from_data(x)
             for x in steps
@@ -144,7 +139,7 @@ class BattleActionWorkflowDefinition:
         object.__setattr__(self, "label", label)
         object.__setattr__(self, "steps", steps)
         object.__setattr__(
-            self, "confirmation_label", _id(confirmation_label, "confirmation_label")
+            self, "confirmation_label", required_id(confirmation_label, "confirmation_label")
         )
 
     def to_data(self):
@@ -281,7 +276,7 @@ class BattleActionWorkflowRuntime:
     def select(self, option_id):
         if self.definition is None or self.step_index >= len(self.definition.steps):
             raise RuntimeError("workflow is not awaiting a selection")
-        option_id = _id(option_id, "option_id")
+        option_id = required_id(option_id, "option_id")
         option = next((x for x in self._options if x.option_id == option_id), None)
         if option is None:
             raise KeyError(option_id)

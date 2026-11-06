@@ -4,20 +4,16 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from asteria.gameplay import ResourcePool, StatBlock, TagSet
 from asteria.rpg import (
     EquipmentGrowthRuntime,
     EquippedItem,
     RpgActorSnapshot,
 )
+from asteria.rpg.items import use_inventory_item
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -26,9 +22,6 @@ class InventoryUseMixin:
     def use_item(self, actor_id, item_id):
         """Use a consumable on a party member outside battle (the canonical
         ``use_inventory_item``)."""
-
-        from asteria.gameplay import ResourcePool, StatBlock, TagSet
-        from asteria.rpg.items import use_inventory_item
 
         actor_id, item_id = str(actor_id), str(item_id)
         item = self.project.rpg_database.items.get(item_id)

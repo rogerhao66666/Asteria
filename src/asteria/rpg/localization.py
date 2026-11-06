@@ -11,9 +11,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from dataclasses import dataclass
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,12 +20,12 @@ class LocaleTable:
     entries: tuple[tuple[str, str], ...] = ()
 
     def __init__(self, locale, entries=None):
-        locale = _text(locale)
+        locale = clean_text(locale)
         if not locale:
             raise ValueError("locale is required")
         pairs = []
         for key, value in dict(entries or {}).items():
-            key = _text(key)
+            key = clean_text(key)
             if not key:
                 raise ValueError("translation keys are required")
             pairs.append((key, str(value)))
@@ -54,8 +52,8 @@ class LocaleTable:
 class Localizer:
     def __init__(self, tables=(), *, default_locale="", locale=""):
         self.tables = {t.locale: dict(t.entries) for t in tables}
-        self.default_locale = _text(default_locale)
-        self.locale = _text(locale) or self.default_locale
+        self.default_locale = clean_text(default_locale)
+        self.locale = clean_text(locale) or self.default_locale
         self._known_chain = None  # ((locale, default locale), tables to look in)
 
     def locales(self):
@@ -130,12 +128,12 @@ class MessageSettings:
         portrait_style="face",
         portrait_size=0,
     ):
-        settings_id = _text(settings_id)
+        settings_id = clean_text(settings_id)
         if not settings_id:
             raise ValueError("settings_id is required")
         if int(backlog_limit) < 0:
             raise ValueError("backlog_limit must be >= 0")
-        portrait_style = _text(portrait_style) or "face"
+        portrait_style = clean_text(portrait_style) or "face"
         if portrait_style not in PORTRAIT_STYLES:
             raise ValueError(f"portrait_style must be one of {PORTRAIT_STYLES}")
         if int(portrait_size) < 0:
@@ -146,16 +144,16 @@ class MessageSettings:
         object.__setattr__(
             self,
             "macros",
-            tuple(sorted((_text(k), str(v)) for k, v in dict(macros or {}).items())),
+            tuple(sorted((clean_text(k), str(v)) for k, v in dict(macros or {}).items())),
         )
-        object.__setattr__(self, "currency_id", _text(currency_id) or "gold")
-        object.__setattr__(self, "currency_label", _text(currency_label))
+        object.__setattr__(self, "currency_id", clean_text(currency_id) or "gold")
+        object.__setattr__(self, "currency_label", clean_text(currency_label))
         object.__setattr__(self, "backlog_limit", int(backlog_limit))
-        object.__setattr__(self, "default_locale", _text(default_locale))
+        object.__setattr__(self, "default_locale", clean_text(default_locale))
         object.__setattr__(
             self,
             "icons",
-            tuple(sorted((str(k), _text(v)) for k, v in dict(icons or {}).items())),
+            tuple(sorted((str(k), clean_text(v)) for k, v in dict(icons or {}).items())),
         )
 
     def to_data(self):

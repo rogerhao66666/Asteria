@@ -20,13 +20,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 def _tags(values):
-    return tuple(sorted({_text(v).lower() for v in values or () if _text(v)}))
+    return tuple(sorted({clean_text(v).lower() for v in values or () if clean_text(v)}))
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,13 +38,13 @@ class WorkstationCategory:
     icon_id: str = ""
 
     def __init__(self, category_id, display_name="", tags=(), icon_id=""):
-        category_id = _text(category_id)
+        category_id = clean_text(category_id)
         if not category_id:
             raise ValueError("a workstation category needs an id")
         object.__setattr__(self, "category_id", category_id)
-        object.__setattr__(self, "display_name", _text(display_name) or category_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or category_id)
         object.__setattr__(self, "tags", _tags(tags))
-        object.__setattr__(self, "icon_id", _text(icon_id))
+        object.__setattr__(self, "icon_id", clean_text(icon_id))
 
     def to_data(self):
         return {
@@ -103,7 +101,7 @@ class WorkstationDefinition:
         music="",
         layout="",
     ):
-        station_id = _text(station_id)
+        station_id = clean_text(station_id)
         if not station_id:
             raise ValueError("a workstation needs a station_id")
         categories = tuple(
@@ -120,20 +118,20 @@ class WorkstationDefinition:
         if success_seconds < 0:
             raise ValueError("success_seconds must be >= 0")
         object.__setattr__(self, "station_id", station_id)
-        object.__setattr__(self, "display_name", _text(display_name) or station_id)
-        object.__setattr__(self, "icon_id", _text(icon_id))
+        object.__setattr__(self, "display_name", clean_text(display_name) or station_id)
+        object.__setattr__(self, "icon_id", clean_text(icon_id))
         object.__setattr__(self, "description", str(description or ""))
         object.__setattr__(self, "categories", categories)
         object.__setattr__(self, "show_undiscovered", bool(show_undiscovered))
         object.__setattr__(self, "max_quantity", max_quantity)
         object.__setattr__(self, "disassembly", bool(disassembly))
         object.__setattr__(self, "disassembly_tags", _tags(disassembly_tags))
-        object.__setattr__(self, "craft_sound", _text(craft_sound))
-        object.__setattr__(self, "fail_sound", _text(fail_sound))
-        object.__setattr__(self, "success_image", _text(success_image))
+        object.__setattr__(self, "craft_sound", clean_text(craft_sound))
+        object.__setattr__(self, "fail_sound", clean_text(fail_sound))
+        object.__setattr__(self, "success_image", clean_text(success_image))
         object.__setattr__(self, "success_seconds", success_seconds)
-        object.__setattr__(self, "music", _text(music))
-        object.__setattr__(self, "layout", _text(layout))
+        object.__setattr__(self, "music", clean_text(music))
+        object.__setattr__(self, "layout", clean_text(layout))
 
     def category_of(self, recipe):
         """The id of the first category holding ``recipe`` (by its tags), else the first

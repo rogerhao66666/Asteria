@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from asteria.core import Entity, Scene, Transform
-from asteria.editor import EditorDocument
 from asteria.events import (
     EventBinding,
     EventCondition,
@@ -17,6 +16,7 @@ from asteria.events import (
     WorldCommand,
 )
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.world_command_handlers import STANDARD_WORLD_COMMANDS, WorldCommandError
@@ -26,7 +26,7 @@ BOSS_PROGRAM = "boss_interaction_event"
 
 
 def _project():
-    return Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(ROOT / "project.asteria.json", default_component_registry())
 
 
 def _session(project=None):

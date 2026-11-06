@@ -1,3 +1,5 @@
+from asteria.core.transform import Transform, can_parent
+
 from .commands import MoveEntityToSceneCommand, ReorderEntityCommand
 
 
@@ -38,7 +40,6 @@ def drop_entities(document, entities, target_kind, target, position="on"):
     "above" / "below" puts them next to it (same parent, scene order).
     ``target_kind`` "scene": moves them to that scene's top level (unparented).
     """
-    from asteria.core.transform import Transform, can_parent
 
     from .editing import ReparentTransformCommand
 

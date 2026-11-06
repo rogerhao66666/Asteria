@@ -1,14 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
 
-
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
+from asteria.core.values import finite
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +60,7 @@ class BattleTurnTimelineRuntime:
         return self._view
 
     def sync(self, scheduler, timing=None, *, current_member_id=None):
-        current_time = _finite(scheduler.current_time, "current_time")
+        current_time = finite(scheduler.current_time, "current_time")
         current_member_id = None if current_member_id is None else str(current_member_id)
 
         turns = []
@@ -75,8 +69,8 @@ class BattleTurnTimelineRuntime:
                 BattleTurnEntry(
                     str(item.member_id),
                     str(item.side),
-                    _finite(item.ready_time, "ready_time"),
-                    _finite(item.speed, "speed"),
+                    finite(item.ready_time, "ready_time"),
+                    finite(item.speed, "speed"),
                     int(item.sequence),
                     current_member_id is not None and str(item.member_id) == current_member_id,
                 )
@@ -85,8 +79,8 @@ class BattleTurnTimelineRuntime:
         casts = []
         pending = () if timing is None else timing.pending()
         for item in pending:
-            started = _finite(item.started_at, "started_at")
-            resolve = _finite(item.resolve_at, "resolve_at")
+            started = finite(item.started_at, "started_at")
+            resolve = finite(item.resolve_at, "resolve_at")
             duration = max(0.0, resolve - started)
             remaining = max(0.0, resolve - current_time)
             if duration <= 0.0:

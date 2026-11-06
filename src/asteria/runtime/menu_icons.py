@@ -13,6 +13,8 @@ Nothing is required: a record without an icon shows its name only.
 
 from __future__ import annotations
 
+from asteria.graphics.forged_icons import DRAWINGS, forge, forge_monogram
+
 FORGED_PREFIX = "forged:"  # the built-in, code-drawn icons: ``forged:fire``, ``forged:mono:Ab``
 
 
@@ -33,7 +35,6 @@ def forged_surface(icon_id, size):
     spec = forged_spec(icon_id)
     if spec is None:
         return None
-    from asteria.graphics.forged_icons import DRAWINGS, forge, forge_monogram
 
     if spec[0] == "mono":
         return forge_monogram(spec[1] or "?", size)

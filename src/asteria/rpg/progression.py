@@ -4,13 +4,7 @@ from dataclasses import dataclass, field
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _number(value, label):
@@ -45,19 +39,19 @@ class ProgressionMilestone:
             raise ValueError("required_total must be >= 0")
         bonuses = {}
         for k, v in dict(stat_bonuses or {}).items():
-            bonuses[_id(k, "stat")] = _number(v, "stat bonus")
+            bonuses[required_id(k, "stat")] = _number(v, "stat bonus")
         object.__setattr__(self, "rank", rank)
         object.__setattr__(self, "required_total", required_total)
         object.__setattr__(self, "stat_bonuses", bonuses)
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(
             self,
             "granted_tags",
-            tuple(sorted({_id(x, "tag").lower() for x in granted_tags})),
+            tuple(sorted({required_id(x, "tag").lower() for x in granted_tags})),
         )
 
     def to_data(self):
@@ -81,7 +75,7 @@ class ProgressionTrackDefinition:
     milestones: tuple[ProgressionMilestone, ...]
 
     def __init__(self, track_id, display_name=None, *, milestones):
-        track_id = _id(track_id, "track_id")
+        track_id = required_id(track_id, "track_id")
         milestones = tuple(milestones)
         if not milestones:
             raise ValueError("progression track requires milestones")

@@ -5,15 +5,15 @@ from __future__ import annotations
 
 import dataclasses
 
+from asteria.events import WorldCommand
 from asteria.gameplay.conditions import GameplayConditionContext
+from asteria.gameplay.effects import apply_effect
+from asteria.gameplay.formulas import FormulaContext
+from asteria.rpg import CompositionRuntime
 from asteria.rpg.targeting import TargetRelation
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
     _merge_casts,
     describe_condition,
 )
@@ -341,7 +341,6 @@ class AbilityUseMixin:
         """An ability's battle extras once it landed: battle resource gains (e.g. giving boost
         points to an
         ally) and world commands (e.g. SUMMON a companion)."""
-        from asteria.events import WorldCommand
 
         if definition is None:
             return
@@ -540,7 +539,6 @@ class AbilityUseMixin:
         [item ids]}``)
         consumes them and its product - an item with a ``battle_ability`` - acts at once on the
         targets."""
-        from asteria.rpg import CompositionRuntime
 
         definition = self.battle.ability_runtime.registry.require(ability_id)
         if not definition.concoct_station:
@@ -579,7 +577,6 @@ class AbilityUseMixin:
         interaction rules, gauges,
         VFX); the item is consumed. Items without one apply their use effects to the target
         member."""
-        from asteria.gameplay.effects import apply_effect
 
         item = self.project.rpg_database.items.get(str(item_id))
         if item is None:
@@ -642,7 +639,6 @@ def cure_states(subject, item):
 def self_context(subject):
     """A formula context where the subject is both the one acting and the one affected (an
     item used on it)."""
-    from asteria.gameplay.formulas import FormulaContext
 
     return FormulaContext(
         subject.stats, subject.resources, subject.tags,

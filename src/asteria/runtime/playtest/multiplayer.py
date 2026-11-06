@@ -7,17 +7,6 @@ import math
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
-
 
 class MultiplayerMixin:
     def _multiplayer_connected(self):

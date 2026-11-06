@@ -20,11 +20,12 @@ from asteria.editor.game_systems_authoring import (  # noqa: E402
 )
 from asteria.editor.integrated_authoring import IntegratedAuthoringControllers  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 
 @pytest.fixture(scope="module")
 def opened():
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     document = EditorDocument(project)
     return document, IntegratedAuthoringControllers(document)
 
@@ -99,7 +100,7 @@ def test_the_editors_templates_for_new_skill_fields_make_valid_records():
     from asteria.editor.authoring_hub_widget import StructuredRecordEditor
     from asteria.gameplay import AbilityDefinition
 
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     base = project.gameplay_library.abilities.get("cleave")
     template = dict(StructuredRecordEditor.LIST_TEMPLATES["forms"])
     shaped = dataclasses.replace(base, forms=(template,))

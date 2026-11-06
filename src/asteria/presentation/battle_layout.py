@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from .battle_ui import BattleUiPanel, BattleUiText
 from .menu_layout import resolve_rect
 from .ui_skin import NinePatch
 
@@ -212,7 +213,6 @@ class BattleScreenLayout:
 
     def _extras(self, out):
         """The author's own pictures, panels and words, under (layer < 0) or over the rest."""
-        from .battle_ui import BattleUiPanel, BattleUiText
 
         under, over, words = [], [], []
         for element in sorted(self.layout.elements, key=lambda e: e.layer):

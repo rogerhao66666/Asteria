@@ -21,6 +21,9 @@ from asteria.rpg.menu_pages import (
     pause_menu,
     usable_pause_entries,
 )
+from asteria.rpg.menu_rules import STAT_COLUMNS
+from asteria.runtime.crafting_screen import wrap
+from asteria.runtime.game_menus import PAUSE_WORDS, text_keys
 
 
 def _number(value):
@@ -83,7 +86,6 @@ def menu_page_boxes(blocks, rect):
 class MenuPagesMixin:
     def _pause_options(self):
         """``(options, icons, keys)`` of the pause menu's ``MenuCursor``."""
-        from asteria.runtime.game_menus import PAUSE_WORDS, text_keys
 
         db = self.project.rpg_database
         settings = self.game.message_settings
@@ -204,7 +206,6 @@ class MenuPagesMixin:
             self.text(amount, bar[0] + bar[2] // 2, bar_y + 2, size=16, anchor="midtop")
             bar_y += 28
         # what each of its jobs is (Database ▸ Classes / Jobs ▸ Description), as room allows
-        from asteria.runtime.crafting_screen import wrap
 
         line_y = bar_y + 2
         for class_id in getattr(state, "active_class_ids", ()):
@@ -227,7 +228,6 @@ class MenuPagesMixin:
     def _stat_columns(cls, menu):
         """``[(column, right edge)]`` of the stat table: Menu Pages' ``stat_columns`` (D89),
         packed from the right so a hidden column leaves no gap."""
-        from asteria.rpg.menu_rules import STAT_COLUMNS
 
         columns = menu.rules.columns() if menu.rules is not None else STAT_COLUMNS
         return list(zip(columns, reversed(cls.STAT_EDGES[: len(columns)]), strict=True))
@@ -283,8 +283,6 @@ class MenuPagesMixin:
         about_h = 44 if any(abouts) else 0
         row_h = min(36, max(28, (ah - 26 - about_h) // max(1, len(rows))))
         if about_h and 0 <= menu.row < len(rows) and abouts[menu.row]:
-            from asteria.runtime.crafting_screen import wrap
-
             about_y = ay + ah - about_h + 6
             for line in wrap(self, abouts[menu.row], 16, aw)[:2]:
                 self.text(line, ax, about_y, size=16, color=muted)
@@ -455,7 +453,6 @@ class MenuPagesMixin:
     def _draw_item_detail(self, c, menu, rect):
         """The chosen row's :class:`~asteria.runtime.status_menu.ItemDetail` in ``rect``: its
         icon big, its name in its rarity's colour, what it is, its description and facts."""
-        from asteria.runtime.crafting_screen import wrap
 
         detail = menu.detail()
         tr = self.game.tr

@@ -13,10 +13,10 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
 
 
 def _project():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    return Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(ROOT / "project.asteria.json", default_component_registry())
 
 
 @pytest.fixture
@@ -751,6 +751,7 @@ def test_the_demo_map_can_be_edited_undone_saved_and_the_walls_change_in_play(
     from asteria.editor.resource_resolver import resolve_project_resources
     from asteria.editor.storage import load_document, save_document
     from asteria.editor.tile_edit import build_paint_command, tile_at
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.tilemap_field import tilemap_binding
 
     root = tmp_path / "game"
@@ -783,7 +784,7 @@ def test_the_demo_map_can_be_edited_undone_saved_and_the_walls_change_in_play(
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(project_path, EditorDocument().component_registry)
+    project = Project.load_json(project_path, default_component_registry())
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
     )
@@ -858,7 +859,7 @@ def test_states_and_abilities_carry_a_name_and_an_icon(demo):
 
 
 def test_enemies_show_their_statuses_as_pips_over_the_bar(demo):
-    from asteria.runtime import hud_bottom
+    from asteria.runtime import action_play, hud_bottom
     from asteria.runtime.combat import CombatantComponent
 
     game = demo.game
@@ -879,11 +880,11 @@ def test_enemies_show_their_statuses_as_pips_over_the_bar(demo):
         rows.append([e["id"] for e in entries])
         return real(rt, x, y, entries, **kw)
 
-    hud_bottom.draw_status_pips = spy
+    action_play.draw_status_pips = spy  # where the HUD looks it up
     try:
         _frames(demo, 3)
     finally:
-        hud_bottom.draw_status_pips = real
+        action_play.draw_status_pips = real
     assert ["burning"] in rows
 
 

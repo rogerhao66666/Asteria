@@ -26,6 +26,7 @@ returns
 from __future__ import annotations
 
 from asteria.presentation.battle_action_menu import BattleActionEntry
+from asteria.rpg import CompositionRuntime
 from asteria.rpg.built_in_text import translated
 from asteria.rpg.targeting import TargetRelation
 
@@ -693,8 +694,6 @@ class BattleCommands:
         return key
 
     def _concoct_product_ability(self):
-        from asteria.rpg import CompositionRuntime
-
         station = self._definition(self.pending[1]).concoct_station
         recipes = [
             r

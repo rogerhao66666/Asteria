@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import argparse
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from asteria.gameplay import AbilityDefinition
@@ -15,6 +17,7 @@ from .local_reference import RPGMakerMVProjectLayout
 from .rpg_maker_mv_catalog import RPGMakerMVCatalog
 from .rpg_maker_mv_database import MVReferenceIssue, RPGMakerMVDatabase
 from .rpg_maker_mv_map import RPGMakerMVMap, discover_mv_maps, to_asteria_scene
+from .rpg_maker_mv_map_bake import bake_character
 
 
 def _thaw(value: Any) -> Any:
@@ -237,7 +240,6 @@ class RPGMakerMVProjectImporter:
         def character(key):
             if output_root is None or key in characters:
                 return
-            from .rpg_maker_mv_map_bake import bake_character
 
             baked_character = bake_character(catalog, key[0], key[1], output_root)
             characters[key] = baked_character
@@ -354,9 +356,6 @@ def import_mv_project(source, output, *, map_ids=None, name=None):
 
     Returns ``(project_path, RPGMakerMVProjectImport)``.
     """
-    from pathlib import Path
-
-    from .local_reference import RPGMakerMVProjectLayout
 
     source, output = Path(source).expanduser().resolve(), Path(output).expanduser().resolve()
     if not (source / "data" / "System.json").is_file():
@@ -372,8 +371,6 @@ def import_mv_project(source, output, *, map_ids=None, name=None):
 
 
 def import_mv_main(argv=None):
-    import argparse
-
     parser = argparse.ArgumentParser(
         description="Import an RPG Maker MV project as a new Asteria project"
     )

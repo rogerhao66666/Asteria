@@ -8,8 +8,8 @@ import pytest
 pygame = pytest.importorskip("pygame")
 
 
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
@@ -62,7 +62,7 @@ def test_field_interaction_shows_dialogue_then_enters_battle(resource_root, monk
     from asteria.runtime.game_save import GameRuntimeSave
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
     runtime = PlayableTestRuntime(project, save, resource_root, width=960, height=540)
     runtime.open()
@@ -92,7 +92,7 @@ from asteria.runtime.game_save import GameRuntimeSave  # noqa: E402
 
 
 def _boss_runtime(resource_root):
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     save = GameRuntimeSave.load_json(ROOT / "saves" / "boss_stress.asteria-save.json", project)
     import real_window
 

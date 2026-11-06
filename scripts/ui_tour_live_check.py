@@ -44,8 +44,8 @@ def main(argv=None):
     import pygame
     import trial_ui_tour
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     argv = list(sys.argv[1:] if argv is None else argv)
@@ -58,7 +58,7 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
     only = tuple(argv[1].split(",")) if len(argv) > 1 else ()
     pump = _helpers()._pump
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=size[0], height=size[1]
     )

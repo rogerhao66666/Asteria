@@ -81,10 +81,10 @@ def test_one_shots_end_emitting_and_local_particles_follow_the_emitter():
 
 
 def test_an_effect_is_a_project_asset_that_survives_save_and_load(tmp_path):
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    registry = EditorDocument().component_registry
+    registry = default_component_registry()
     from asteria.core import Scene
 
     project = Project("Particles")

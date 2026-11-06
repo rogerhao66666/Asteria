@@ -26,18 +26,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import required_id
+from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
+from asteria.runtime.animation_library import AnimationClipSet
+
+from .builtin_codecs import install_simple_typed_codecs
 from .canonical import CanonicalAsset, ValidationIssue, ValidationReport
-from .codecs import AssetCodec
+from .codecs import AssetCodec, AssetCodecRegistry, install_common_passthrough_codecs
+from .complex_codecs import install_complex_typed_codecs
 
 SPRITE_KINDS = ("character", "npc", "projectile", "skill", "ui", "scene")
 NPC_BEHAVIOURS = ("idle", "patrol", "wander")
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _size(value, label):
@@ -59,7 +58,7 @@ class SpriteClipData:
     events: tuple[tuple[int, tuple[str, ...]], ...] = ()
 
     def __post_init__(self):
-        _id(self.name, "clip name")
+        required_id(self.name, "clip name")
         if not self.frames or any(int(f) < 0 for f in self.frames):
             raise ValueError(f"clip {self.name} needs non-negative frames")
         if float(self.frame_duration) <= 0:
@@ -106,7 +105,7 @@ class SpriteData:
     clips: tuple[SpriteClipData, ...] = ()
 
     def __post_init__(self):
-        _id(self.image, "sprite image")
+        required_id(self.image, "sprite image")
         _size(self.frame_size, "frame_size")
         names = [c.name for c in self.clips]
         if len(names) != len(set(names)):
@@ -140,8 +139,6 @@ class SpriteData:
 
     # -- runtime -------------------------------------------------------------------
     def sprite_sheet(self, asset_id, image_size):
-        from asteria.graphics import SpriteFrame, SpriteSheet
-
         fw, fh = self.frame_size
         columns, rows = self.grid(image_size)
 
@@ -161,9 +158,6 @@ class SpriteData:
         return sheet
 
     def clip_set(self):
-        from asteria.graphics import SpriteClip, SpriteKeyframe
-        from asteria.runtime.animation_library import AnimationClipSet
-
         clips = {}
         for c in self.clips:
             events = dict(c.events)
@@ -223,7 +217,7 @@ class NpcAsset:
     patrol_path: tuple[tuple[float, float], ...] = ()
 
     def __post_init__(self):
-        _id(self.character_id, "character_id")
+        required_id(self.character_id, "character_id")
         if self.behaviour not in NPC_BEHAVIOURS:
             raise ValueError(f"behaviour must be one of {NPC_BEHAVIOURS}")
         if self.behaviour == "patrol" and len(self.patrol_path) < 2:
@@ -268,7 +262,7 @@ class SkillAsset:
     beats: tuple[SkillBeat, ...]
 
     def __post_init__(self):
-        _id(self.ability_id, "ability_id")
+        required_id(self.ability_id, "ability_id")
         if self.duration <= 0:
             raise ValueError("duration must be > 0")
         if any(b.at > self.duration for b in self.beats):
@@ -532,9 +526,6 @@ def sprite_kind_validators(image_size):
 def standard_asset_codecs():
     """Every typed codec the engine ships (Phase-1 kinds, extended kinds, passthrough
     fallbacks)."""
-    from .builtin_codecs import install_simple_typed_codecs
-    from .codecs import AssetCodecRegistry, install_common_passthrough_codecs
-    from .complex_codecs import install_complex_typed_codecs
 
     registry = AssetCodecRegistry()
     install_common_passthrough_codecs(registry)

@@ -4,7 +4,6 @@ unchanged: every composed frame equals what a composer with nothing kept would b
 from dataclasses import replace
 from pathlib import Path
 
-from asteria.editor import EditorDocument
 from asteria.presentation import (
     BattleActionEntry,
     BattleCombatantVisual,
@@ -19,6 +18,7 @@ from asteria.presentation import (
 from asteria.presentation.battle_action_menu import BattleActionMenuView
 from asteria.project import Project
 from asteria.runtime import Camera2D
+from asteria.runtime.component_registry import default_component_registry
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -70,7 +70,7 @@ def test_a_recorded_battle_composes_the_same_frames_as_an_uncached_composer(monk
         return frame
 
     monkeypatch.setattr(BattleUiComposer, "compose", checked)
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), ROOT, width=960, height=540
     )

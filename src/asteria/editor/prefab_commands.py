@@ -7,6 +7,7 @@ from asteria.core.metadata import get_component_schema
 from asteria.core.prefab import (
     PrefabDefinition,
     PrefabInstanceComponent,
+    PrefabLibrary,
     instances,
     instantiate,
     prefab_from_entity,
@@ -83,8 +84,6 @@ class ReplacePrefabsCommand:
         return snapshots
 
     def _restore_library(self):
-        from asteria.core.prefab import PrefabLibrary
-
         restored = PrefabLibrary.from_data(self._old_library)
         self.project.prefabs._prefabs.clear()
         self.project.prefabs._prefabs.update(restored._prefabs)

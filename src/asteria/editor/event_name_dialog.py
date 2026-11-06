@@ -43,7 +43,7 @@ def name_picker(document, source, name=""):
 class _NameDialog(QDialog):
     def __init__(self, title, parent):
         super().__init__(parent)
-        self.setWindowTitle(translate(title))
+        self.setWindowTitle(title)
         self.setMinimumWidth(340)
         self.form = QFormLayout()
         self.form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
@@ -109,7 +109,7 @@ class VariableDialog(_NameDialog):
         self.random.setRange(1.0, 1_000_000.0)
         self.random.setDecimals(0)
         self.random.setValue(2.0)
-        self.random.setToolTip(translate("From 0 up to one less than this"))
+        self.random.setToolTip("From 0 up to one less than this")
         for widget in (self.number, self.text, self.flag, self.source, self.random):
             self.values.addWidget(widget)
         self.kind.currentIndexChanged.connect(self.values.setCurrentIndex)

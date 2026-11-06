@@ -5,18 +5,12 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
+from asteria.core.values import required_id
 from asteria.gameplay import GameplaySubject
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
 def _tag_values(values):
-    return tuple(sorted({_id(x, "tag") for x in values}))
+    return tuple(sorted({required_id(x, "tag") for x in values}))
 
 
 class TargetRelation(str, Enum):
@@ -46,14 +40,14 @@ class FormationSlotDefinition:
         y = float(y)
         if not isfinite(x) or not isfinite(y):
             raise ValueError("slot coordinates must be finite")
-        object.__setattr__(self, "slot_id", _id(slot_id, "slot_id"))
+        object.__setattr__(self, "slot_id", required_id(slot_id, "slot_id"))
         object.__setattr__(self, "x", x)
         object.__setattr__(self, "y", y)
         object.__setattr__(self, "tags", _tag_values(tags))
         object.__setattr__(
             self,
             "adjacent_to",
-            tuple(sorted({_id(x, "adjacent slot_id") for x in adjacent_to})),
+            tuple(sorted({required_id(x, "adjacent slot_id") for x in adjacent_to})),
         )
 
     def to_data(self):
@@ -95,7 +89,7 @@ class FormationDefinition:
                 )
             if slot.slot_id in slot.adjacent_to:
                 raise ValueError("formation slot cannot be adjacent to itself")
-        object.__setattr__(self, "formation_id", _id(formation_id, "formation_id"))
+        object.__setattr__(self, "formation_id", required_id(formation_id, "formation_id"))
         object.__setattr__(self, "slots", slots)
 
     def slot(self, slot_id):
@@ -131,8 +125,8 @@ class BattlePlacement:
     slot_id: str
 
     def __init__(self, member_id, slot_id):
-        object.__setattr__(self, "member_id", _id(member_id, "member_id"))
-        object.__setattr__(self, "slot_id", _id(slot_id, "slot_id"))
+        object.__setattr__(self, "member_id", required_id(member_id, "member_id"))
+        object.__setattr__(self, "slot_id", required_id(slot_id, "slot_id"))
 
 
 class BattleFormationRuntime:
@@ -152,8 +146,8 @@ class BattleFormationRuntime:
             self.place(placement.member_id, placement.slot_id)
 
     def place(self, member_id, slot_id):
-        member_id = _id(member_id, "member_id")
-        slot_id = _id(slot_id, "slot_id")
+        member_id = required_id(member_id, "member_id")
+        slot_id = required_id(slot_id, "slot_id")
         self.definition.slot(slot_id)
         prior_member = self._slot_to_member.get(slot_id)
         if prior_member is not None and prior_member != member_id:
@@ -231,7 +225,7 @@ class TargetMetricCondition:
     value: float
 
     def __init__(self, kind, key, operator, value):
-        kind = _id(kind, "kind")
+        kind = required_id(kind, "kind")
         if kind not in {"stat", "resource", "resource_fraction"}:
             raise ValueError("target metric kind must be stat, resource, or resource_fraction")
         operator = str(operator).strip()
@@ -241,7 +235,7 @@ class TargetMetricCondition:
         if not isfinite(value):
             raise ValueError("target metric value must be finite")
         object.__setattr__(self, "kind", kind)
-        object.__setattr__(self, "key", _id(key, "key"))
+        object.__setattr__(self, "key", required_id(key, "key"))
         object.__setattr__(self, "operator", operator)
         object.__setattr__(self, "value", value)
 
@@ -325,7 +319,7 @@ class BattleTargetingDefinition:
         metric_conditions = tuple(metric_conditions)
         if any(not isinstance(x, TargetMetricCondition) for x in metric_conditions):
             raise TypeError("metric_conditions must be TargetMetricCondition values")
-        object.__setattr__(self, "ability_id", _id(ability_id, "ability_id"))
+        object.__setattr__(self, "ability_id", required_id(ability_id, "ability_id"))
         object.__setattr__(self, "relation", relation)
         object.__setattr__(self, "selection_mode", selection_mode)
         object.__setattr__(self, "minimum_targets", minimum_targets)

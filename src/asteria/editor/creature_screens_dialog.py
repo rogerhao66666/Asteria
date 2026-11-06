@@ -15,6 +15,8 @@ game's ``playable_test_manifest.json`` screens into these settings in one step.
 from __future__ import annotations
 
 import copy
+import importlib
+import re
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
@@ -101,8 +103,6 @@ def help_for(screen_id, path):
     """What the screen's own description says about the setting at ``path`` (the sentence
     naming it as ``key``, the nearest named key upwards for a row) in the editor's language,
     or ""."""
-    import importlib
-    import re
 
     module = MODULES.get(screen_id)
     if module is None:

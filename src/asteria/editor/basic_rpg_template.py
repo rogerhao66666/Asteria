@@ -6,6 +6,8 @@ import copy
 import json
 from pathlib import Path
 
+from asteria.rpg.save_state import RpgRuntimeState
+
 
 def simplify_basic_rpg(folder):
     """Remove advanced systems and replace the demo with a one-hero starter game."""
@@ -152,7 +154,6 @@ def simplify_basic_rpg(folder):
     party["formation_id"] = db["formations"][0]["formation_id"]
 
     start = data["game_start"]
-    from asteria.rpg.save_state import RpgRuntimeState
 
     start["rpg_state"] = RpgRuntimeState(
         party_actor_ids=[hero["actor_id"]],

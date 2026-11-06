@@ -39,9 +39,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from asteria.events.world_commands import WorldCommand
 from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.creature_battle import CreatureBattleScreen, H, W, _owned_item_ids
 from asteria.runtime.pointer import hand_over
+from asteria.runtime.save_slots import SaveSlots
+from asteria.runtime.session.ability_use import cured_states
+from asteria.runtime.session.pets import taught_ability as taught
 
 OVERLAY_PHASES = ("start", "save")  # drawn over the field
 PLAY_SECONDS = "play.seconds"  # the world counter of the time played (the card, the save)
@@ -74,14 +78,10 @@ CARD_PLACES = {  # the trainer card's words (pokeemerald's Hoenn card)
 
 
 def taught_ability(item):
-    from asteria.runtime.session.pets import taught_ability as taught
-
     return taught(item)
 
 
 def _me(asset_id):
-    from asteria.events.world_commands import WorldCommand
-
     return WorldCommand("PLAY_ME", {"asset_id": str(asset_id)})
 
 
@@ -487,8 +487,6 @@ class CreatureMenuScreen(CreatureBattleScreen):
 
     @staticmethod
     def _usable_on_pets(item):
-        from asteria.runtime.session.ability_use import cured_states
-
         return bool(item.use_effects or cured_states(item))
 
     def _input_bag_target(self):
@@ -844,8 +842,6 @@ class CreatureMenuScreen(CreatureBattleScreen):
             self.save_step = ["saving", 0.0]
 
     def _write_save(self):
-        from asteria.runtime.save_slots import SaveSlots
-
         slot = int((self.menu.get("save") or {}).get("save_slot", 1))
         self.game.sync_world_state()
         SaveSlots(Path(self.rt.resource_root) / "saves", self.game.project).save(slot, self.game)

@@ -8,6 +8,12 @@ Player in the editor moves the start. Running it twice changes nothing.
 
 from __future__ import annotations
 
+import uuid
+
+from asteria.core import Entity, Transform
+from asteria.core.serialization import serialize_entity
+from asteria.runtime.components2d import Camera2DComponent
+
 
 def _transform(entity):
     for component in entity.get("components", ()):
@@ -39,11 +45,6 @@ def _arrivals(data):
 def add_missing_cameras(data, *, width=320, height=180):
     """Give every scene without a Camera2D entity one (named "Camera"), active, at the default
     size; ``center`` then aims it at the player. Returns how many were added."""
-    import uuid
-
-    from asteria.core import Entity, Transform
-    from asteria.core.serialization import serialize_entity
-    from asteria.runtime.components2d import Camera2DComponent
 
     added = 0
     for scene in data.get("scenes", ()):

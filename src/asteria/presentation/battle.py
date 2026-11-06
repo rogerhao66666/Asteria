@@ -6,14 +6,8 @@ from enum import Enum
 from math import isfinite
 
 from asteria.core.lifecycle import LifecycleEvent, LifecycleHookBus
+from asteria.core.values import required_id
 from asteria.gameplay.action_timeline import PresentationCue
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _number(value, label):
@@ -48,7 +42,7 @@ class BattleVisualAnchor:
     depth: float = 0.0
 
     def __init__(self, x, y, facing="right", depth=0.0):
-        facing = _id(facing, "facing")
+        facing = required_id(facing, "facing")
         object.__setattr__(self, "x", _number(x, "x"))
         object.__setattr__(self, "y", _number(y, "y"))
         object.__setattr__(self, "facing", facing)
@@ -94,19 +88,24 @@ class BattleCombatantVisual:
             animation_roles or {"idle": "idle", "attack": "attack", "hit": "hit", "ko": "ko"}
         )
         normalized = tuple(
-            sorted((_id(k, "animation role"), _id(v, "animation clip")) for k, v in roles.items())
+            sorted(
+                (required_id(k, "animation role"), required_id(v, "animation clip"))
+                for k, v in roles.items()
+            )
         )
-        object.__setattr__(self, "member_id", _id(member_id, "member_id"))
+        object.__setattr__(self, "member_id", required_id(member_id, "member_id"))
         object.__setattr__(
-            self, "sprite_sheet_asset_id", _id(sprite_sheet_asset_id, "sprite_sheet_asset_id")
+            self,
+            "sprite_sheet_asset_id",
+            required_id(sprite_sheet_asset_id, "sprite_sheet_asset_id"),
         )
-        object.__setattr__(self, "clip_set_id", _id(clip_set_id, "clip_set_id"))
+        object.__setattr__(self, "clip_set_id", required_id(clip_set_id, "clip_set_id"))
         object.__setattr__(self, "anchor", anchor)
         object.__setattr__(self, "animation_roles", normalized)
         aura_asset_id = (
             None
             if aura_sprite_sheet_asset_id is None or not str(aura_sprite_sheet_asset_id).strip()
-            else _id(aura_sprite_sheet_asset_id, "aura_sprite_sheet_asset_id")
+            else required_id(aura_sprite_sheet_asset_id, "aura_sprite_sheet_asset_id")
         )
         object.__setattr__(self, "aura_sprite_sheet_asset_id", aura_asset_id)
         source_ratio = float(source_pixels_per_logical_pixel)
@@ -170,12 +169,14 @@ class BattlePresentationScene:
         ids = [x.member_id for x in combatants]
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate combatant visual member_id")
-        object.__setattr__(self, "scene_id", _id(scene_id, "scene_id"))
+        object.__setattr__(self, "scene_id", required_id(scene_id, "scene_id"))
         object.__setattr__(
-            self, "background_asset_id", _id(background_asset_id, "background_asset_id")
+            self, "background_asset_id", required_id(background_asset_id, "background_asset_id")
         )
         object.__setattr__(self, "combatants", combatants)
-        object.__setattr__(self, "camera_preset_id", _id(camera_preset_id, "camera_preset_id"))
+        object.__setattr__(
+            self, "camera_preset_id", required_id(camera_preset_id, "camera_preset_id")
+        )
 
     def visual_for(self, member_id):
         member_id = str(member_id)
@@ -341,11 +342,13 @@ class BattlePresentationCoordinator:
         This intentionally performs no target validation or Battle Core lookup.
         The caller owns canonical selection/legality; presentation only mirrors it.
         """
-        targets = tuple(_id(x, "target_id") for x in target_ids)
+        targets = tuple(required_id(x, "target_id") for x in target_ids)
         if len(targets) != len(set(targets)):
             raise ValueError("duplicate target_ids")
         primary = (
-            None if primary_target_id is None else _id(primary_target_id, "primary_target_id")
+            None
+            if primary_target_id is None
+            else required_id(primary_target_id, "primary_target_id")
         )
         if primary is not None and primary not in targets:
             raise ValueError("primary_target_id must be present in target_ids")
@@ -359,7 +362,7 @@ class BattlePresentationCoordinator:
         return self._emit(
             BattlePresentationEventKind.CUSTOM,
             source_id,
-            {"event_id": _id(event_id, "event_id"), **dict(payload or {})},
+            {"event_id": required_id(event_id, "event_id"), **dict(payload or {})},
         )
 
     def drain(self):

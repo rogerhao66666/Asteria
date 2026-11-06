@@ -12,6 +12,7 @@ from asteria.editor.animation_authoring import (
     AnimationAuthoringError,
 )
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 SHEET = "battle.combatant.hero_01"
@@ -19,7 +20,7 @@ SHEET = "battle.combatant.hero_01"
 
 @pytest.fixture
 def document():
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     return EditorDocument(project, file_path=ROOT / "project.asteria.json")
 
 

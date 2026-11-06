@@ -522,13 +522,13 @@ def battle(monkeypatch, tmp_path):
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from PIL import Image
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     def start(portraits=True, **layout):
         project = Project.load_json(
-            PARTY_RPG / "project.asteria.json", EditorDocument().component_registry
+            PARTY_RPG / "project.asteria.json", default_component_registry()
         )
         library = project.battle_presentation_library
         if portraits:

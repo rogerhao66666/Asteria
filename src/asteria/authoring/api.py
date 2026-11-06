@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 from asteria.core import Entity, Transform
 from asteria.core.ids import new_id
@@ -208,8 +209,6 @@ class AuthoringSession:
     # -- common and battle events (EVT-03) --------------------------------------------------------
     @property
     def _event_flow(self):
-        from types import SimpleNamespace
-
         from asteria.editor.event_flow_authoring import EventFlowAuthoring
 
         return EventFlowAuthoring(SimpleNamespace(project=self._project, execute=self._run))
