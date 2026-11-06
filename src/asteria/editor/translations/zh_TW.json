@@ -3015,6 +3015,7 @@
   "cost": "花費",
   "costs": "花費",
   "creatures come out of a ball (ball: square frames under each other - closed, opening, open) and grow from it, go back into it when called back, and their info boxes slide in from their edges.": "生物從球裡出來（ball：方形影格上下排列——關閉、打開中、打開）並從球中變大，收回時回到球裡，資訊框從各自的邊緣滑入。",
+  "ball_spin: the turns a thrown ball makes in flight (0: it does not spin).": "ball_spin：丟出的球在飛行中轉幾圈（0：不轉）。",
   "cue": "提示",
   "currencies": "貨幣",
   "currency": "貨幣",

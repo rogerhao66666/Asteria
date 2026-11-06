@@ -332,3 +332,27 @@ def test_every_setting_help_sentence_has_chinese():
         assert "開始選單" in help_for("field.creature_menu", ("entries",))
     finally:
         i18n.CURRENT["language"] = shown
+
+
+def test_a_thrown_ball_spins_in_flight_by_the_screens_ball_spin():
+    pygame = pytest.importorskip("pygame")
+    from asteria.editor.creature_screens_dialog import engine_defaults, help_for
+    from asteria.runtime.creature_battle import BALL_SPIN, CreatureBattleScreen
+
+    screen = object.__new__(CreatureBattleScreen)  # only its ball, no battle around it
+    screen.pg, screen.settings = pygame, {}
+    assert screen.ball_turns() == BALL_SPIN > 0  # it spins unless the author says not to
+    assert screen.ball_angle(0.0) == 0.0
+    assert screen.ball_angle(1.0) == -360.0 * BALL_SPIN  # clockwise thrown to the right
+    assert screen.ball_angle(0.5, rightwards=False) == 180.0 * BALL_SPIN  # the foe's way
+    screen.settings = {"ball_spin": 2}
+    assert screen.ball_angle(0.25) == -180.0
+    piece = pygame.Surface((12, 12), pygame.SRCALPHA)
+    pygame.draw.rect(piece, (232, 64, 56), (0, 0, 12, 6))  # red on top
+    turned = screen._spun(piece, 0.25)  # half a turn: red at the bottom
+    assert turned.get_at((6, 9))[:3] == (232, 64, 56)
+    screen.settings = {"ball_spin": 0}
+    assert screen.ball_angle(0.7) == 0.0 and screen._spun(piece, 0.7) is piece
+    # the editor lists it by name with its help
+    assert engine_defaults("battle.creature_screen")["ball_spin"] == BALL_SPIN
+    assert "turns a thrown ball" in help_for("battle.creature_screen", ("ball_spin",))

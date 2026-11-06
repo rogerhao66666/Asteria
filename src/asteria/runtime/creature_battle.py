@@ -45,7 +45,8 @@ The opening: the foe (or its trainer) slides in from the left while the player's
 (``player_back``: frames of ``player_back_size`` under each other - standing, then throwing)
 slides in from the right; creatures come out of a ball (``ball``: square frames under each
 other - closed, opening, open) and grow from it, go back into it when called back, and their
-info boxes slide in from their edges. A switch's lines follow the foe's health as the
+info boxes slide in from their edges. ``ball_spin``: the turns a thrown ball makes in flight (0:
+it does not spin). A switch's lines follow the foe's health as the
 handheld games do ("Go!" / "Do it!" / "Go for it" / "Your foe's weak!", "that's enough" /
 "come back" / "OK!" / "good!"); before a trainer's next creature the player is asked whether
 to change theirs, and after a faint in the wild whether to send the next one (no: run). The
@@ -143,6 +144,7 @@ BOX_SLIDE = 0.25  # an info box sliding in
 THROW_SECONDS = 0.55  # the player winding up and throwing (the back picture's frames)
 BALL_SECONDS = 0.45  # a ball flying out to the spot
 GROW_SECONDS = 0.3  # a creature coming out of (or going back into) its ball
+BALL_SPIN = 1.5  # turns a ball makes in flight (the handheld game's spinning throw)
 
 
 class _Step:
@@ -1761,17 +1763,57 @@ class CreatureBattleScreen:
         k = min(1.0, t)
         x = x0 + (x1 - x0) * k
         y = y0 + (y1 - y0) * k - 34 * 4 * k * (1 - k)
+        if t > 1.0 + GROW_SECONDS / BALL_SECONDS:
+            return
         image = self._art("ball")
         if image is None:
-            self.pg.draw.circle(self.surface, (232, 64, 56), (round(x), round(y)), 5)
+            self._drawn_ball((round(x), round(y)))
             return
         size = image.get_width()
         frames = max(1, image.get_height() // size)
         frame = 0 if t < 1.0 else min(frames - 1, 1 + int((t - 1.0) * 6))
-        if t > 1.0 + GROW_SECONDS / BALL_SECONDS:
-            return
         piece = image.subsurface((0, frame * size, size, size))
+        if t < 1.0:  # spinning while it flies, the way it is thrown; still once it lands
+            piece = self._spun(piece, k, rightwards=x1 > x0)
         self.surface.blit(piece, piece.get_rect(center=(round(x), round(y))))
+
+    def ball_turns(self):
+        """``ball_spin``: the turns a ball makes in flight (0: it does not spin)."""
+        try:
+            return max(0.0, float(self.settings.get("ball_spin", BALL_SPIN)))
+        except (TypeError, ValueError):
+            return BALL_SPIN
+
+    def ball_angle(self, progress, rightwards=True):
+        """The ball's turn in degrees ``progress`` (0 to 1) of the way through its flight:
+        clockwise when thrown to the right, the other way to the left."""
+        angle = 360.0 * self.ball_turns() * max(0.0, min(1.0, progress))
+        return -angle if rightwards else angle
+
+    def _spun(self, piece, progress, rightwards=True):
+        angle = self.ball_angle(progress, rightwards) % 360.0
+        if angle == 0.0:
+            return piece
+        return self.pg.transform.rotate(piece, angle)
+
+    def _drawn_ball(self, centre, angle=0.0):
+        """A ball drawn without a picture (red over white, the band turned by ``angle``)."""
+        import math
+
+        pg, s = self.pg, self.surface
+        pg.draw.circle(s, WHITE, centre, 5)
+        a = math.radians(angle)
+        dx, dy = math.cos(a), -math.sin(a)  # along the band; the red half lies "up" of it
+        top = [
+            (centre[0] + 5 * math.cos(a + step), centre[1] - 5 * math.sin(a + step))
+            for step in (math.pi * i / 8 for i in range(9))
+        ]
+        pg.draw.polygon(s, (232, 64, 56), top)
+        pg.draw.circle(s, (32, 32, 32), centre, 5, 1)
+        ends = ((centre[0] - 5 * dx, centre[1] - 5 * dy), (centre[0] + 5 * dx, centre[1] + 5 * dy))
+        pg.draw.line(s, (32, 32, 32), *ends)
+        pg.draw.circle(s, WHITE, centre, 2)
+        pg.draw.circle(s, (32, 32, 32), centre, 2, 1)
 
     def _blit_creature(self, member_id, side, centre):
         image = self._creature_picture(member_id, side)
@@ -1810,7 +1852,7 @@ class CreatureBattleScreen:
         return t > 0.6 and (throw["caught"] or t < self._throw_length() - 0.15)
 
     def _draw_throw(self):
-        pg, s = self.pg, self.surface
+        s = self.surface
         throw = self.throw
         t = self.time - throw["start"]
         if t < 0.6:  # the arc from the player towards the foe
@@ -1827,12 +1869,16 @@ class CreatureBattleScreen:
             phase = (t - 0.9) % 0.55
             shake = -3 if phase < 0.14 else 3 if phase < 0.28 else 0
         centre = (int(x) + shake, int(y))
-        pg.draw.circle(s, (232, 64, 56), centre, 5)
-        pg.draw.rect(s, WHITE, (centre[0] - 5, centre[1], 11, 5))
-        pg.draw.circle(s, (32, 32, 32), centre, 5, 1)
-        pg.draw.line(s, (32, 32, 32), (centre[0] - 5, centre[1]), (centre[0] + 5, centre[1]))
-        pg.draw.circle(s, WHITE, centre, 2)
-        pg.draw.circle(s, (32, 32, 32), centre, 2, 1)
+        flying = min(1.0, t / 0.6)  # spinning on the way, still once it lands
+        image = self._art("ball")
+        if image is None:
+            self._drawn_ball(centre, self.ball_angle(flying) if t < 0.6 else 0.0)
+            return
+        size = image.get_width()
+        piece = image.subsurface((0, 0, size, size))  # closed (the project's ``ball``)
+        if t < 0.6:
+            piece = self._spun(piece, flying)
+        s.blit(piece, piece.get_rect(center=centre))
 
     def _bar(self, x, y, member_id, width=48):
         """The health bar: the project's label and tiles when it has them, else drawn."""

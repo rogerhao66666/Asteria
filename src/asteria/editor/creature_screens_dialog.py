@@ -58,11 +58,12 @@ def engine_defaults(screen_id):
     can change them by name (the battle's places and text colours, the start menu's summary
     and trainer card places, the shop's windows, the name screen's letter pages)."""
     if screen_id == "battle.creature_screen":
-        from asteria.runtime.creature_battle import COLOURS, LAYOUT
+        from asteria.runtime.creature_battle import BALL_SPIN, COLOURS, LAYOUT
 
         return {
             "layout": {k: list(v) for k, v in LAYOUT.items()},
             "colours": {k: [list(a), list(b)] for k, (a, b) in COLOURS.items()},
+            "ball_spin": BALL_SPIN,
         }
     if screen_id == "field.creature_menu":
         from asteria.runtime.creature_menu import CARD_PLACES, SUMMARY_PLACES
