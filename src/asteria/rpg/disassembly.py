@@ -10,9 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,7 +27,7 @@ class DisassemblyYield:
         chance = float(chance)
         if not isfinite(chance) or not 0.0 <= chance <= 1.0:
             raise ValueError("chance must be between 0 and 1")
-        object.__setattr__(self, "item_id", _text(item_id) or _fail("item_id is required"))
+        object.__setattr__(self, "item_id", clean_text(item_id) or _fail("item_id is required"))
         object.__setattr__(self, "minimum", int(minimum))
         object.__setattr__(self, "maximum", int(maximum))
         object.__setattr__(self, "chance", chance)
@@ -49,9 +47,9 @@ class DisassemblyRecipe:
         fee = float(fee)
         if not isfinite(fee) or fee < 0:
             raise ValueError("fee must be finite and >= 0")
-        object.__setattr__(self, "item_id", _text(item_id) or _fail("item_id is required"))
+        object.__setattr__(self, "item_id", clean_text(item_id) or _fail("item_id is required"))
         object.__setattr__(self, "yields", yields)
-        object.__setattr__(self, "fee_currency", _text(fee_currency))
+        object.__setattr__(self, "fee_currency", clean_text(fee_currency))
         object.__setattr__(self, "fee", fee)
 
     def roll(self, rng):

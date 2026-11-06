@@ -2,27 +2,13 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from math import isfinite
 
+from asteria.core.values import finite, required_id
 from asteria.gameplay import ResourcePool, StatBlock, TagSet
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
-
-
 def _tags(values):
-    return tuple(sorted({_id(x, "tag").lower() for x in values}))
+    return tuple(sorted({required_id(x, "tag").lower() for x in values}))
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,15 +30,15 @@ class LootEntry:
     def __init__(
         self, item_id, *, chance=1.0, minimum=1, maximum=1, required_switch="", luck_bonus=0.0
     ):
-        chance = _finite(chance, "chance")
+        chance = finite(chance, "chance")
         minimum = int(minimum)
         maximum = int(maximum)
-        luck_bonus = _finite(luck_bonus, "luck_bonus")
+        luck_bonus = finite(luck_bonus, "luck_bonus")
         if not 0.0 <= chance <= 1.0:
             raise ValueError("chance must be between 0 and 1")
         if minimum < 0 or maximum < minimum:
             raise ValueError("invalid loot quantity")
-        object.__setattr__(self, "item_id", _id(item_id, "item_id"))
+        object.__setattr__(self, "item_id", required_id(item_id, "item_id"))
         object.__setattr__(self, "chance", chance)
         object.__setattr__(self, "minimum", minimum)
         object.__setattr__(self, "maximum", maximum)
@@ -93,8 +79,8 @@ class RewardDefinition:
         def vals(raw, label):
             out = {}
             for k, v in dict(raw or {}).items():
-                k = _id(k, label)
-                v = _finite(v, label)
+                k = required_id(k, label)
+                v = finite(v, label)
                 if v < 0:
                     raise ValueError(f"{label} reward must be >= 0")
                 out[k] = v
@@ -152,13 +138,13 @@ class EnemyDefinition:
         reward=None,
         description="",
     ):
-        enemy_id = _id(enemy_id, "enemy_id")
+        enemy_id = required_id(enemy_id, "enemy_id")
 
         def vals(raw, label):
             out = {}
             for k, v in dict(raw or {}).items():
-                k = _id(k, label)
-                v = _finite(v, label)
+                k = required_id(k, label)
+                v = finite(v, label)
                 if label == "resource" and v < 0:
                     raise ValueError("resource maximum must be >= 0")
                 out[k] = v
@@ -176,7 +162,7 @@ class EnemyDefinition:
         object.__setattr__(
             self,
             "abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in abilities)),
         )
         object.__setattr__(self, "reward", reward)
         object.__setattr__(self, "description", str(description or ""))
@@ -270,7 +256,7 @@ class EncounterMember:
         genes=None,
     ):
         count = int(count)
-        weight = _finite(weight, "weight")
+        weight = finite(weight, "weight")
         if count < 1:
             raise ValueError("count must be >= 1")
         if weight <= 0:
@@ -289,7 +275,7 @@ class EncounterMember:
         object.__setattr__(self, "level_max", max(level, level_max) if level_max else 0)
         object.__setattr__(self, "reserve", bool(reserve))
         object.__setattr__(self, "moves", tuple(dict.fromkeys(str(x) for x in moves if x)))
-        genes = {str(k): _finite(v, "gene") for k, v in dict(genes or {}).items() if str(k)}
+        genes = {str(k): finite(v, "gene") for k, v in dict(genes or {}).items() if str(k)}
         object.__setattr__(self, "genes", genes)
 
     @property
@@ -329,7 +315,7 @@ class EncounterDefinition:
             raise ValueError("encounter requires at least one member")
         if any(not isinstance(x, EncounterMember) for x in members):
             raise TypeError("members must be EncounterMember values")
-        object.__setattr__(self, "encounter_id", _id(encounter_id, "encounter_id"))
+        object.__setattr__(self, "encounter_id", required_id(encounter_id, "encounter_id"))
         object.__setattr__(self, "members", members)
         object.__setattr__(self, "tags", _tags(tags))
 

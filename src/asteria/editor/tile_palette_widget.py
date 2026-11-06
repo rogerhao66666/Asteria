@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from asteria.graphics import EMPTY_TILE
+
 try:
     from PySide6.QtCore import QEvent, QPoint, Qt, QTimer, Signal
     from PySide6.QtWidgets import (
@@ -50,10 +54,10 @@ class TileGrid(QWidget):
         self._zoom = 1
         self._selection = None  # (c0, r0, c1, r1), tileset cells
         self._drag = None
+        self._picture = None  # (file, mtime, size) -> (QImage, its alpha channel) of the last
         self.setMinimumHeight(60)
 
     def set_source(self, tileset, sprite_sheet=None, texture_path=None):
-        from PySide6.QtGui import QImage
 
         self._cells, self._frames, self._selection = {}, {}, None
         self._image = None
@@ -78,11 +82,47 @@ class TileGrid(QWidget):
                 cell = (len(self._cells) % 8, len(self._cells) // 8)
             self._cells.setdefault(cell, item.tile_id)
         if texture_path is not None:
-            image = QImage(str(texture_path))
-            self._image = None if image.isNull() else image
+            self._image = self._load_picture(texture_path)
         self._compact()
         self._fit()
         self.update()
+
+    def _load_picture(self, path):
+        """The tileset picture, read again only when its file changed: every refresh of the
+        editor passes the tileset in again, and decoding it each time was most of a refresh."""
+        from PySide6.QtGui import QImage
+
+        try:
+            stat = Path(path).stat()
+        except OSError:
+            stat = None
+        key = (str(path), stat.st_mtime_ns, stat.st_size) if stat is not None else None
+        if key is not None and self._picture is not None and self._picture[0] == key:
+            return self._picture[1][0]
+        image = QImage(str(path))
+        image = None if image.isNull() else image
+        self._picture = (key, (image, None)) if key is not None else None
+        return image
+
+    def _alpha(self):
+        """The picture's alpha channel as a (height, width) array, worked out once a picture."""
+        import numpy as np
+        from PySide6.QtGui import QImage
+
+        known = self._picture
+        if known is not None and known[1][0] is self._image and known[1][1] is not None:
+            return known[1][1]
+        image = self._image.convertToFormat(QImage.Format_ARGB32)
+        width, height = image.width(), image.height()
+        data = np.frombuffer(image.constBits(), dtype=np.uint8)
+        alpha = (
+            data.reshape(height, image.bytesPerLine())[:, : width * 4]
+            .reshape(height, width, 4)[:, :, 3]
+            .copy()  # the bits belong to the converted image
+        )
+        if known is not None and known[1][0] is self._image:
+            self._picture = (known[0], (self._image, alpha))
+        return alpha
 
     def _compact(self):
         """Drop the atlas's empty rows, and read its empty columns as the gaps between the
@@ -112,16 +152,9 @@ class TileGrid(QWidget):
         if self._image is None or not self._frames:
             return ()
         try:
-            import numpy as np
-            from PySide6.QtGui import QImage
-        except ImportError:
+            alpha = self._alpha()
+        except ImportError:  # no numpy: every listed cell stays
             return ()
-        image = self._image.convertToFormat(QImage.Format_ARGB32)
-        width, height = image.width(), image.height()
-        data = np.frombuffer(image.constBits(), dtype=np.uint8)
-        alpha = data.reshape(height, image.bytesPerLine())[:, : width * 4].reshape(
-            height, width, 4
-        )[:, :, 3]
         tw, th = self._tile_size
         columns = {c for c, _ in self._cells}
         rows = {r for _, r in self._cells}
@@ -266,7 +299,6 @@ class TileGrid(QWidget):
         c0, c1 = sorted((c0, c1))
         r0, r1 = sorted((r0, r1))
         self._selection = (c0, r0, c1, r1)
-        from asteria.graphics import EMPTY_TILE
 
         rows = tuple(
             tuple(self._cells.get((c, r), EMPTY_TILE) for c in range(c0, c1 + 1))

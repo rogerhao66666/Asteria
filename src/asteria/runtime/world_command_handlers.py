@@ -10,6 +10,7 @@ depends on an audio or render backend.
 from __future__ import annotations
 
 from asteria.core import Transform
+from asteria.rpg.quests import QuestError
 from asteria.runtime.pictures import MOTION as PICTURE_MOTION
 
 STANDARD_WORLD_COMMANDS = (
@@ -405,8 +406,6 @@ def register_standard_world_commands(router, session):
 
     def quest_command(method, *, objective=False):
         def handler(command):
-            from asteria.rpg.quests import QuestError
-
             quest_id = str(_required(command, "quest_id"))
             args = (
                 (

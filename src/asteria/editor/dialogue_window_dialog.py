@@ -71,7 +71,10 @@ class OptionalNumber(QWidget):
 
 
 class DialogueWindowDialog(QDialog):
-    """The picture message window's settings; ``style()`` is the result (None: none)."""
+    """The picture message window's settings; ``chosen_style()`` is the result (None: none).
+
+    Its fields are not called ``window`` / ``font`` and its result not ``style()``: those
+    are QWidget's own methods (``style().polish(w)`` broke on this dialog)."""
 
     def __init__(self, document, style, fonts=(), parent=None, *, convert=None):
         super().__init__(parent)
@@ -82,13 +85,13 @@ class DialogueWindowDialog(QDialog):
         from .menu_layout_widget import AssetField, ColorField
 
         self.enabled = QCheckBox("Use the picture window (off: the ordinary window)")
-        self.window = AssetField(document, "image")
+        self.window_field = AssetField(document, "image")
         self.text_area = [_spin(-512, 2048) for _ in range(4)]
         self.line_height = _spin(1, 256, 16)
-        self.font = QComboBox()
-        self.font.addItem("none (a small system face)", "")
+        self.font_box = QComboBox()
+        self.font_box.addItem("none (a small system face)", "")
         for font_id in fonts:
-            self.font.addItem(font_id, font_id)
+            self.font_box.addItem(font_id, font_id)
         self.letter, self.shadow = ColorField(), ColorField()
         self.speed = QDoubleSpinBox()
         self.speed.setRange(0.0, 2000.0)
@@ -108,12 +111,12 @@ class DialogueWindowDialog(QDialog):
         self.sound = AssetField(document, "sound")
         form = QFormLayout()
         form.addRow(self.enabled)
-        form.addRow("Window picture", self.window)
+        form.addRow("Window picture", self.window_field)
         x, y, w, h = self.text_area
         form.addRow("Text area", _row(("x", x), ("y", y)))
         form.addRow("", _row(("w", w), ("h", h)))
         form.addRow("Line height", self.line_height)
-        form.addRow("Bitmap font", self.font)
+        form.addRow("Bitmap font", self.font_box)
         form.addRow("Letter colour", self.letter)
         form.addRow("Shadow colour", self.shadow)
         form.addRow("Letters a second", self.speed)
@@ -161,13 +164,13 @@ class DialogueWindowDialog(QDialog):
 
     def load(self, style):
         self.enabled.setChecked(style.enabled)
-        self.window.setText(style.window)
+        self.window_field.setText(style.window)
         for box, value in zip(self.text_area, style.text_area, strict=True):
             box.setValue(value)
         self.line_height.setValue(style.line_height)
-        if style.font and self.font.findData(style.font) < 0:
-            self.font.addItem(style.font, style.font)
-        self.font.setCurrentIndex(max(0, self.font.findData(style.font)))
+        if style.font and self.font_box.findData(style.font) < 0:
+            self.font_box.addItem(style.font, style.font)
+        self.font_box.setCurrentIndex(max(0, self.font_box.findData(style.font)))
         self.letter.setColor(style.letter_color)
         self.shadow.setColor(style.shadow_color)
         self.speed.setValue(style.speed)
@@ -186,9 +189,9 @@ class DialogueWindowDialog(QDialog):
         self.cancel_last.setChecked(style.cancel_picks_last)
         self.sound.setText(style.confirm_sound)
 
-    def style(self):
+    def chosen_style(self):
         """The window as the fields say (None when removed or it has no picture)."""
-        if self._removed or not self.window.text():
+        if self._removed or not self.window_field.text():
             return None
         speeds = []
         for part in self.speeds.text().replace(";", ",").split(","):
@@ -197,11 +200,11 @@ class DialogueWindowDialog(QDialog):
             except ValueError:
                 continue
         return DialogueWindowStyle(
-            window=self.window.text(),
+            window=self.window_field.text(),
             enabled=self.enabled.isChecked(),
             text_area=tuple(b.value() for b in self.text_area),
             line_height=self.line_height.value(),
-            font=self.font.currentData() or "",
+            font=self.font_box.currentData() or "",
             letter_color=self.letter.color() or (98, 98, 98),
             shadow_color=self.shadow.color() or (213, 213, 205),
             speed=self.speed.value(),
@@ -224,15 +227,15 @@ class DialogueWindowDialog(QDialog):
         if style is None:
             self.status.setText("The game folder's manifest has no dialogue window.")
             return
-        if style.font and self.font.findData(style.font) < 0:
-            self.font.addItem(style.font, style.font)
+        if style.font and self.font_box.findData(style.font) < 0:
+            self.font_box.addItem(style.font, style.font)
         self._removed = False
         self.load(style)
         self.status.setText("Read from the manifest (its font is now a bitmap font).")
 
     def _remove(self):
         self._removed = True
-        self.window.setText("")
+        self.window_field.setText("")
         self.status.setText("OK removes the picture window: the ordinary window is drawn.")
 
 

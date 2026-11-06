@@ -14,6 +14,7 @@ event's whole tile blocks), made for free-standing pictures of any size.
 
 from __future__ import annotations
 
+from asteria.graphics.character_placement import picture_box as measure
 from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.components2d import SpriteRenderer2D
 
@@ -41,7 +42,6 @@ def picture_box(project, root, entity):
     of its sprite sheet, flipped like the sprite), or None when it has no picture."""
     from PIL import Image
 
-    from asteria.graphics.character_placement import picture_box as measure
     from asteria.runtime.tilemap_field import AssetResources, TileMapFieldError
 
     sprite = entity.try_get(SpriteRenderer2D)

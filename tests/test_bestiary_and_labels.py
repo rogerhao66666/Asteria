@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_menus import bestiary_rows
 from asteria.runtime.game_session import GameSessionRuntime
 
@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 
 
 def _session():
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     return GameSessionRuntime(project, project.game_start.instantiate(project))
 
 
@@ -59,7 +59,7 @@ def test_overhead_names_never_cover_a_combatant_or_each_other(monkeypatch):
     from asteria.runtime.camera import Camera2D
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), ROOT, width=960, height=540
     )

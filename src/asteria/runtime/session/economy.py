@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import random
 
+from asteria.events.conditions import EventCondition
 from asteria.rpg import (
+    CompositionRuntime,
     RewardRuntime,
     roll_reward,
 )
@@ -13,14 +15,8 @@ from asteria.rpg.economy import ShopRuntime
 from asteria.rpg.enemies import RewardDefinition
 from asteria.rpg.quests import QuestLog
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -49,7 +45,6 @@ class EconomyMixin:
 
     def _conditions_hold(self, conditions):
         """Switch / variable conditions (``{"source", "name", "operator", "value"}``) all hold."""
-        from asteria.events.conditions import EventCondition
 
         ctx = self.save.event_context
         return all(
@@ -98,7 +93,6 @@ class EconomyMixin:
 
         Crafting the exact materials of an undiscovered recipe discovers it.
         """
-        from asteria.rpg import CompositionRuntime
 
         runtime = CompositionRuntime(self.project.rpg_database.composition_recipes.values())
         state = self.save.rpg_state

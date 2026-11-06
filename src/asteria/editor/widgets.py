@@ -1,4 +1,8 @@
+import re
 import weakref
+
+from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.components2d import SpriteRenderer2D
 
 try:
     from PySide6.QtCore import Qt
@@ -313,10 +317,9 @@ class InspectorWidget(QWidget):
 
     def _show_kind(self, entity):
         from .entity_kinds import kind_of
-        from .i18n import translate
 
         shape = kind_of(entity)
-        self.kind_badge.setText(translate(shape.label))
+        self.kind_badge.setText(shape.label)
         self.kind_badge.setProperty("entityKind", shape.kind)
         self.kind_badge.style().unpolish(self.kind_badge)
         self.kind_badge.style().polish(self.kind_badge)
@@ -406,8 +409,6 @@ class InspectorWidget(QWidget):
     def _passability_section(self, entity):
         """Passable, blocks at its feet, or blocks its whole picture (D88), with a picture of
         what blocks; None for an entity without a picture or a collider."""
-        from asteria.runtime.collision import Collider2DComponent
-        from asteria.runtime.components2d import SpriteRenderer2D
 
         from .image_tools import project_root
         from .passability import MODE_LABELS, MODES, passability, passability_preview
@@ -535,7 +536,6 @@ class InspectorWidget(QWidget):
 
 def _pretty_type(name):
     """``SpriteRenderer2D`` -> "Sprite Renderer 2D", ``ActorLinkComponent`` -> "Actor Link"."""
-    import re
 
     name = re.sub(r"Component$", "", str(name))
     words = re.findall(r"[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z]+|[A-Z]+|\d+[A-Z]?", name)

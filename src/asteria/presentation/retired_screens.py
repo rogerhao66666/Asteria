@@ -19,6 +19,10 @@ equipment, ability and passive names), and is dropped.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
+from asteria.rpg.stat_definitions import SET_ON, StatDefinition
+
 RETIRED_CATEGORIES = (
     "rpg_character_screen",
     "rpg_equipment_screen",
@@ -42,9 +46,6 @@ def _pairs(raw):
 def move_retired(retired, database):
     """Move what the game read of ``retired`` (``{category: {id: data}}``) into ``database``
     (an ``RpgDatabase``); returns the ids of the stats and slots it changed."""
-    from dataclasses import replace
-
-    from asteria.rpg.stat_definitions import SET_ON, StatDefinition
 
     character = _first(retired, "rpg_character_screen")
     equipment = _first(retired, "rpg_equipment_screen")

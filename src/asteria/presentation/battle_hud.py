@@ -1,14 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import finite, required_id
 
 
 def _color(value):
@@ -20,13 +14,6 @@ def _color(value):
     if len(digits) not in (6, 8) or any(c not in "0123456789abcdef" for c in digits):
         raise ValueError(f"color must be #rrggbb, got {value!r}")
     return "#" + digits
-
-
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,21 +72,21 @@ class BattleHudResourceStyle:
         compact=False,
         color="",
     ):
-        resource_id = _id(resource_id, "resource_id")
-        presentation = _id(presentation, "presentation").lower()
+        resource_id = required_id(resource_id, "resource_id")
+        presentation = required_id(presentation, "presentation").lower()
         segments = int(segments)
         if segments < 0:
             raise ValueError("segments must be >= 0")
-        group = _id(group, "group")
+        group = required_id(group, "group")
         object.__setattr__(self, "resource_id", resource_id)
         object.__setattr__(
-            self, "label", resource_id.upper() if label is None else _id(label, "label")
+            self, "label", resource_id.upper() if label is None else required_id(label, "label")
         )
         object.__setattr__(self, "order", int(order))
         object.__setattr__(
             self,
             "icon_asset_id",
-            None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"),
+            None if icon_asset_id is None else required_id(icon_asset_id, "icon_asset_id"),
         )
         object.__setattr__(self, "visible", bool(visible) and presentation != "hidden")
         object.__setattr__(self, "presentation", presentation)
@@ -141,10 +128,12 @@ class BattleHudStatusStyle:
     order: int = 0
 
     def __init__(self, state_id, icon_asset_id, *, label=None, order=0):
-        state_id = _id(state_id, "state_id")
+        state_id = required_id(state_id, "state_id")
         object.__setattr__(self, "state_id", state_id)
-        object.__setattr__(self, "icon_asset_id", _id(icon_asset_id, "icon_asset_id"))
-        object.__setattr__(self, "label", state_id if label is None else _id(label, "label"))
+        object.__setattr__(self, "icon_asset_id", required_id(icon_asset_id, "icon_asset_id"))
+        object.__setattr__(
+            self, "label", state_id if label is None else required_id(label, "label")
+        )
         object.__setattr__(self, "order", int(order))
 
     def to_data(self):
@@ -328,11 +317,11 @@ class BattleHudRuntime:
         return BattleHudGauge(
             str(resource_id),
             style.label,
-            _finite(value.current, "current"),
-            _finite(value.minimum, "minimum"),
-            _finite(value.maximum, "maximum"),
-            _finite(value.overflow, "overflow"),
-            _finite(value.normalized, "normalized"),
+            finite(value.current, "current"),
+            finite(value.minimum, "minimum"),
+            finite(value.maximum, "maximum"),
+            finite(value.overflow, "overflow"),
+            finite(value.normalized, "normalized"),
             bool(value.full),
             style.icon_asset_id,
             style.order,
@@ -360,14 +349,14 @@ class BattleHudRuntime:
             label,
             style.icon_asset_id,
             int(active.stacks),
-            _finite(active.remaining, "remaining"),
+            finite(active.remaining, "remaining"),
             None if active.source_id is None else str(active.source_id),
             style.order,
         )
 
     def sync_member(self, member_id, battle_resources, subject):
         """Mirror one canonical member without mutating either source runtime."""
-        member_id = _id(member_id, "member_id")
+        member_id = required_id(member_id, "member_id")
         values = battle_resources.values.get(member_id, {})
         gauges = [self._gauge(resource_id, values[resource_id]) for resource_id in sorted(values)]
         # Gameplay resources (HP, SP, ...) appear only when the profile maps them explicitly.
@@ -466,7 +455,7 @@ class BattleHudRuntime:
             raise ValueError("invalid battle HUD revision")
         members = {}
         for raw in data.get("members", ()):
-            member_id = _id(raw["member_id"], "member_id")
+            member_id = required_id(raw["member_id"], "member_id")
             if member_id in members:
                 raise ValueError("duplicate battle HUD member")
             gauges = tuple(BattleHudGauge(**x) for x in raw.get("gauges", ()))

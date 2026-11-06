@@ -430,7 +430,7 @@ class ParticleEffectWidget(QWidget):
         (D98: seventeen timelines wrapped over the form's fields)."""
         used = list(used)
         if not used:
-            self.usage.setText(translate("Not used yet"))
+            self.usage.setText("Not used yet")
             self.usage.setToolTip("")
             return
         shown = ", ".join(used[:3])

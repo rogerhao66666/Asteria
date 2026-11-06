@@ -13,6 +13,8 @@ pet species and the save; nothing here knows a game.
 
 from __future__ import annotations
 
+from asteria.rpg.built_in_text import translated
+
 MUTED, TITLE, GOOD = (150, 160, 180), (255, 220, 124), (130, 230, 150)
 HEALTH, HEALTH_BG = (90, 203, 130), (48, 53, 66)
 
@@ -90,7 +92,6 @@ class PetsScreen:
 
     def _move(self, pet):
         """Enter in the two-column screen: the pet crosses to the other column."""
-        from asteria.rpg.built_in_text import translated
 
         game = self.game
         name = game.pet_display(pet)

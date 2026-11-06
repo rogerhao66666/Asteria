@@ -99,8 +99,8 @@ def test_a_hit_check_chance_may_be_an_expression():
 
 
 def test_an_escape_rule_may_follow_a_speed_formula_and_counts_the_attempts():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
 
     rule = BattleEscapeRule(
@@ -109,7 +109,7 @@ def test_an_escape_rule_may_follow_a_speed_formula_and_counts_the_attempts():
         chance_expression="min(1, 0.1 + 0.3 * attempts)",
     )
     assert BattleEscapeRule.from_data(rule.to_data()) == rule
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     project.rpg_database.escape_rules.clear()
     project.rpg_database.add_escape_rule(rule)
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
@@ -125,8 +125,8 @@ def test_an_escape_rule_may_follow_a_speed_formula_and_counts_the_attempts():
 
 
 def test_battle_counters_turn_order_final_damage_and_dice():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
 
     rules = BattleSessionRules(
@@ -140,7 +140,7 @@ def test_battle_counters_turn_order_final_damage_and_dice():
     assert BattleSessionRules.from_data(rules.to_data()) == rules
     with pytest.raises(ValueError):
         BattleSessionRules("r", battle_counters={"x": [1, 0, 0]})
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     db = project.rpg_database
     db.battle_session_rules.clear()
     db.add_battle_session_rules(rules)

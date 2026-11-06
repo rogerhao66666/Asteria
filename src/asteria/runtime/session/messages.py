@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 from asteria.presentation.message_codes import MessageContext, expand_message, plain_message
+from asteria.rpg import data_text
+from asteria.rpg.effect_text import amount, modifier_lines
+from asteria.rpg.tag_definitions import definition_for
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -53,25 +50,22 @@ class MessagesMixin:
 
     def name_of(self, record, fallback=None):
         """A project record's name in the player's language (``rpg/data_text.py``, D60)."""
-        from asteria.rpg.data_text import name_of
 
-        return name_of(self.data_lookup, record, fallback)
+        return data_text.name_of(self.data_lookup, record, fallback)
 
     def stat_name(self, stat_id, *, short=False):
         """A stat's (or resource's) name in the player's language: the locale table's
         ``data.stat.<id>.name``, else its stat definition's (D91), else the id in words.
         ``short``: the short name (STR) where one is given."""
-        from asteria.rpg.data_text import stat_name, stat_short_name
 
         db = getattr(self.project, "rpg_database", None)
         definition = getattr(db, "stat_definitions", {}).get(str(stat_id))
-        find = stat_short_name if short else stat_name
+        find = data_text.stat_short_name if short else data_text.stat_name
         return find(self.data_lookup, stat_id, {}, definition)
 
     def slot_name(self, slot_id):
         """An equipment slot's name (``data.slot.<id>.name``, else the slot definition's name,
         else the engine's word for it)."""
-        from asteria.rpg.data_text import slot_name
 
         labels = {}
         db = getattr(self.project, "rpg_database", None)
@@ -79,12 +73,11 @@ class MessagesMixin:
         own = self.name_of(definition, "") if definition is not None else ""
         if own:
             labels[str(slot_id)] = own
-        return slot_name(self.data_lookup, slot_id, labels)
+        return data_text.slot_name(self.data_lookup, slot_id, labels)
 
     def socket_name(self, equipment, socket_id):
         """A socket's name: ``data.socket.<equipment id>.<socket id>`` in the locale table,
         else the socket's own label, else "Socket <n>" by its place on the equipment (U1)."""
-        from asteria.rpg.data_text import PREFIX
 
         sockets = tuple(getattr(equipment, "sockets", ()) or ())
         index = next((i for i, s in enumerate(sockets) if s.socket_id == socket_id), None)
@@ -92,7 +85,7 @@ class MessagesMixin:
         equipment_id = getattr(equipment, "equipment_id", "")
         found = None
         if lookup is not None and equipment_id:
-            found = lookup(f"{PREFIX}socket.{equipment_id}.{socket_id}.name")
+            found = lookup(f"{data_text.PREFIX}socket.{equipment_id}.{socket_id}.name")
         if found:
             return found
         if index is not None and sockets[index].label:
@@ -103,19 +96,19 @@ class MessagesMixin:
     def tag_name(self, tag):
         """A tag's name (a socket accepts "gem", "card"...): ``data.tag.<tag>.name``, else its
         definition's name (Game Systems ▸ Tags, D91), else the tag in words (U3)."""
-        from asteria.rpg.data_text import key, words
 
         record = getattr(self.project.rpg_database, "tag_definitions", {}).get(str(tag).lower())
         named = self.name_of(record, "") if record is not None else ""
         if named:
             return named
         lookup = self.data_lookup
-        return (lookup(key("tag", tag)) if lookup is not None else None) or words(tag)
+        return (
+            lookup(data_text.key("tag", tag)) if lookup is not None else None
+        ) or data_text.words(tag)
 
     def tag_meanings(self, tags):
         """``"Sword: what it does"`` for each of ``tags`` whose definition (Game Systems ▸ Tags)
         has a meaning players may read, in the player's language."""
-        from asteria.rpg.tag_definitions import definition_for
 
         definitions = getattr(self.project.rpg_database, "tag_definitions", {})
         lines = []
@@ -132,16 +125,15 @@ class MessagesMixin:
     def points_name(self, currency):
         """A skill-tree point's short name: ``data.points.<id>.name``, else the built-in
         words (AP, SP, stat points, "<class> JP" for ``jp.<class>``), else the id."""
-        from asteria.rpg.data_text import key, words
 
         currency = str(currency)
         lookup = self.data_lookup
-        found = lookup(key("points", currency)) if lookup is not None else None
+        found = lookup(data_text.key("points", currency)) if lookup is not None else None
         if found:
             return found
         if currency.startswith("jp."):
             job = currency[3:]
-            name = self.name_of(self.project.rpg_database.classes.get(job), words(job))
+            name = self.name_of(self.project.rpg_database.classes.get(job), data_text.words(job))
             return self.tr("points.jp", "{name} JP", name=name)
         if currency == "ap":
             return self.tr("points.ap", "AP")
@@ -149,12 +141,13 @@ class MessagesMixin:
             return self.tr("points.skill_points", "SP")
         if currency == "stat_points":
             return self.tr("points.stat_points", "Stat points")
-        return words(currency).upper() if len(currency) <= 3 else words(currency)
+        return (
+            data_text.words(currency).upper() if len(currency) <= 3 else data_text.words(currency)
+        )
 
     def stat_amount(self, stat_id, value, operation="add"):
         """``value`` of a stat written its way (Game Systems ▸ Stats): ``+12``, ``+3%``,
         ``x1.6`` (D91)."""
-        from asteria.rpg.effect_text import amount
 
         definition = getattr(self.project.rpg_database, "stat_definitions", {}).get(stat_id)
         return amount(value, operation, definition)
@@ -162,7 +155,6 @@ class MessagesMixin:
     def effect_lines(self, modifiers):
         """What ``modifiers`` (a passive's, a state's, gear's) do, a line per stat, in the
         player's language: ``MAG +18``, ``Crit Rate +3% (when Sword)`` (D91)."""
-        from asteria.rpg.effect_text import modifier_lines
 
         return modifier_lines(
             modifiers,
@@ -174,26 +166,23 @@ class MessagesMixin:
 
     def description_of(self, record, fallback=""):
         """A project record's description in the player's language (D60)."""
-        from asteria.rpg.data_text import description_of, kind_of
 
-        known = kind_of(record) if record is not None else None
+        known = data_text.kind_of(record) if record is not None else None
         db = getattr(self.project, "rpg_database", None)
         if known is not None and db is not None and db.description_hidden(*known):
             return fallback  # Players See It unticked: the makers' words only
-        return description_of(self.data_lookup, record, fallback)
+        return data_text.description_of(self.data_lookup, record, fallback)
 
     def line_text(self, line):
         """A dialogue line's (or choice's) text in the player's language: the locale table's
         text under its ``text_key``, else the text as written (D60)."""
-        from asteria.rpg.data_text import text_by_key
 
-        return text_by_key(self.data_lookup, getattr(line, "text_key", ""), line.text)
+        return data_text.text_by_key(self.data_lookup, getattr(line, "text_key", ""), line.text)
 
     def speaker_of(self, line):
         """Who speaks ``line``, in the player's language (``data.speaker.<name>.name``)."""
-        from asteria.rpg.data_text import speaker_name
 
-        return speaker_name(self.data_lookup, line.speaker)
+        return data_text.speaker_name(self.data_lookup, line.speaker)
 
     TITLE_ACTIONS = ("new_game", "continue", "load", "screen", "quit")
 
@@ -283,22 +272,21 @@ class MessagesMixin:
 
     def prompt_of(self, request):
         """A choice's prompt in the player's language (its ``prompt_key``), else as written."""
-        from asteria.rpg.data_text import text_by_key
 
-        return text_by_key(self.data_lookup, getattr(request, "prompt_key", ""), request.prompt)
+        return data_text.text_by_key(
+            self.data_lookup, getattr(request, "prompt_key", ""), request.prompt
+        )
 
     def speaker_name(self, name):
         """A person's name as written in the events or on an entity, in the player's language
         (``data.speaker.<name>.name``): NPCs carry their speaking name."""
-        from asteria.rpg.data_text import speaker_name
 
-        return speaker_name(self.data_lookup, name)
+        return data_text.speaker_name(self.data_lookup, name)
 
     def map_name(self, scene_id, own):
         """A map's name in the player's language (``data.map.<scene id>.name``, D60)."""
-        from asteria.rpg.data_text import map_name
 
-        return map_name(self.data_lookup, scene_id, own)
+        return data_text.map_name(self.data_lookup, scene_id, own)
 
     def set_locale(self, locale):
         if str(locale) not in self.localizer.locales():

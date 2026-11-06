@@ -4,19 +4,19 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.gameplay.modifiers import StatModifier
 from asteria.project import Project
 from asteria.rpg.effect_text import amount, modifier_lines
 from asteria.rpg.stat_definitions import StatDefinition
 from asteria.rpg.tag_definitions import TagDefinition, built_in, definition_for
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).parents[1] / "reference_projects/full_verification_demo"
 
 
 @pytest.fixture(scope="module")
 def demo():
-    return Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(DEMO / "project.asteria.json", default_component_registry())
 
 
 def test_a_tag_or_a_family_is_defined_and_the_closest_wins():

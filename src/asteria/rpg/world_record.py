@@ -10,12 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,8 +42,8 @@ class FactionDefinition:
             raise ValueError("faction range is invalid")
         if not minimum <= initial <= maximum:
             raise ValueError("initial reputation must be inside the range")
-        ranks = tuple(sorted((float(t), _id(n, "rank name")) for t, n in ranks))
-        object.__setattr__(self, "faction_id", _id(faction_id, "faction_id"))
+        ranks = tuple(sorted((float(t), required_id(n, "rank name")) for t, n in ranks))
+        object.__setattr__(self, "faction_id", required_id(faction_id, "faction_id"))
         object.__setattr__(self, "display_name", str(display_name or faction_id))
         object.__setattr__(self, "minimum", minimum)
         object.__setattr__(self, "maximum", maximum)
@@ -131,11 +126,11 @@ class AchievementDefinition:
         value = float(value)
         if not isfinite(value):
             raise ValueError("achievement value must be finite")
-        object.__setattr__(self, "achievement_id", _id(achievement_id, "achievement_id"))
+        object.__setattr__(self, "achievement_id", required_id(achievement_id, "achievement_id"))
         object.__setattr__(self, "display_name", str(display_name or achievement_id))
         object.__setattr__(self, "description", str(description))
         object.__setattr__(self, "kind", kind)
-        object.__setattr__(self, "target", _id(target, "achievement target"))
+        object.__setattr__(self, "target", required_id(target, "achievement target"))
         object.__setattr__(self, "value", value)
         object.__setattr__(self, "hidden", bool(hidden))
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
@@ -195,7 +190,7 @@ class WorldRecord:
     def npc(self, npc_id):
         """The saved state of ``npc_id`` (created with defaults on first use)."""
         return self.npcs.setdefault(
-            _id(npc_id, "npc id"),
+            required_id(npc_id, "npc id"),
             {
                 "scene_id": None,
                 "position": None,
@@ -227,18 +222,18 @@ class WorldRecord:
         return self.reputation.get(faction.faction_id, faction.initial)
 
     def change_relationship(self, subject_id, amount):
-        subject_id = _id(subject_id, "relationship subject")
+        subject_id = required_id(subject_id, "relationship subject")
         self.relationships[subject_id] = self.relationships.get(subject_id, 0.0) + float(amount)
         return self.relationships[subject_id]
 
     def add_counter(self, counter_id, amount=1):
-        counter_id = _id(counter_id, "counter id")
+        counter_id = required_id(counter_id, "counter id")
         self.counters[counter_id] = self.counters.get(counter_id, 0.0) + float(amount)
         return self.counters[counter_id]
 
     def note_enemy(self, enemy_id, key, amount=1):
         entry = self.bestiary.setdefault(
-            _id(enemy_id, "enemy id"), {"seen": 0, "defeated": 0, "captured": 0}
+            required_id(enemy_id, "enemy id"), {"seen": 0, "defeated": 0, "captured": 0}
         )
         entry[key] = entry.get(key, 0) + int(amount)
         return entry

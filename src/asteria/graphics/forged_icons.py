@@ -9,6 +9,7 @@ already has an icon unless asked to ``replace``).
 
 from __future__ import annotations
 
+import colorsys
 import json
 import math
 import re
@@ -608,7 +609,6 @@ def _monogram_letters(record_id):
 
 def _monogram_color(record_id):
     """A steady, pleasant colour from the id (hue from a checksum, fixed saturation / value)."""
-    import colorsys
 
     hue = (sum(ord(ch) * (i + 3) for i, ch in enumerate(str(record_id))) % 360) / 360.0
     r, g, b = colorsys.hsv_to_rgb(hue, 0.55, 0.9)

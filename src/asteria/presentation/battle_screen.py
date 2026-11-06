@@ -128,7 +128,6 @@ class BattleScreenRuntime:
 
     def add_combatant(self, visual):
         """Show a combatant that joined the battle after it started (summon, reinforcement)."""
-        from .battle import BattlePresentationScene
 
         old = self.scene
         scene = BattlePresentationScene(

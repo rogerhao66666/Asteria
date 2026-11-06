@@ -14,6 +14,7 @@ from math import hypot
 from asteria.core import Transform
 from asteria.events.world_commands import WorldCommand
 from asteria.graphics import EMPTY_TILE
+from asteria.runtime.field_ai import FieldAIComponent
 from asteria.runtime.tilequery import TileMapQuery
 
 CROUCH_SWITCH = "stealth.crouch"
@@ -175,8 +176,6 @@ class FieldMapRules:
         return encounter.members[0].level < lead.level
 
     def _scale_enemy_sight(self, transform, moving):
-        from asteria.runtime.field_ai import FieldAIComponent
-
         crouching = bool(self.session.save.event_context.get_switch(CROUCH_SWITCH))
         scale = self.runtime.visibility(
             transform.x, transform.y, crouching=crouching, moving=moving

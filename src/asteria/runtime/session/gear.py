@@ -8,14 +8,9 @@ from asteria.rpg import (
 )
 from asteria.rpg.built_in_text import Words
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
+from .support import (
     EquipOffer,
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 

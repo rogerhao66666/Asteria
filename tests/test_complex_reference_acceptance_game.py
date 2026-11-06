@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from asteria.editor import EditorDocument
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 
@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_ref
 
 
 def load_project():
-    return Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(ROOT / "project.asteria.json", default_component_registry())
 
 
 def test_new_game_is_full_acceptance_start_not_midgame_save():

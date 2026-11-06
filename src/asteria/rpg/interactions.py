@@ -6,14 +6,8 @@ from enum import Enum
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import GameplaySubject, normalize_tag
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _number(value, label):
@@ -30,7 +24,7 @@ def _tags(values):
 def _coefficients(values, label):
     result = {}
     for key, coefficient in dict(values or {}).items():
-        result[_id(key, label)] = _number(coefficient, label)
+        result[required_id(key, label)] = _number(coefficient, label)
     return dict(sorted(result.items()))
 
 
@@ -99,7 +93,7 @@ class InteractionRule:
         multiplier = _number(multiplier, "multiplier")
         if multiplier < 0:
             raise ValueError("multiplier must be >= 0")
-        object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
+        object.__setattr__(self, "rule_id", required_id(rule_id, "rule_id"))
         object.__setattr__(self, "source_tags_all", _tags(source_tags_all))
         object.__setattr__(self, "source_tags_any", _tags(source_tags_any))
         object.__setattr__(self, "target_tags_all", _tags(target_tags_all))
@@ -249,7 +243,7 @@ class OutcomeCheckDefinition:
 
             check_expression(chance_expression, ("source", "target"))
         object.__setattr__(self, "chance_expression", chance_expression)
-        object.__setattr__(self, "check_id", _id(check_id, "check_id"))
+        object.__setattr__(self, "check_id", required_id(check_id, "check_id"))
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
         object.__setattr__(
             self, "source_stat_terms", _coefficients(source_stat_terms, "source stat")
@@ -450,7 +444,7 @@ class InteractionResolver:
         action_tags=(),
         rng=None,
     ):
-        definition = self.checks[_id(check_id, "check_id")]
+        definition = self.checks[required_id(check_id, "check_id")]
         source_tags = set(source.tags.values()) | set(_tags(action_tags))
         target_tags = set(target.tags.values())
         applicable = (

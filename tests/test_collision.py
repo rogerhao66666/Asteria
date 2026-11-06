@@ -130,8 +130,8 @@ def test_playable_field_movement_stops_at_a_solid_collider(monkeypatch, tmp_path
     import pytest
 
     pytest.importorskip("pygame")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.input_map import RawInputState
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -139,7 +139,7 @@ def test_playable_field_movement_stops_at_a_solid_collider(monkeypatch, tmp_path
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
     shutil.copy(root / "playable_test_manifest.json", tmp_path / "playable_test_manifest.json")
     shutil.copytree(root / "playable_assets", tmp_path / "playable_assets")
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), tmp_path)
     runtime.open()
     try:

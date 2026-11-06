@@ -20,6 +20,7 @@ the bag. Drawn at the game's own resolution (240 x 160) like the start menu
 from __future__ import annotations
 
 from asteria.presentation.creature_screens import creature_settings
+from asteria.rpg.economy import ShopError
 from asteria.runtime.creature_battle import H, W
 from asteria.runtime.creature_menu import CreatureMenuScreen
 from asteria.runtime.pointer import hand_over
@@ -196,7 +197,6 @@ class CreatureShopScreen(CreatureMenuScreen):
         if not self._pressed("confirm"):
             return
         item_id, _name, _price = self.goods()[self.buy_cursor]
-        from asteria.rpg.economy import ShopError
 
         try:
             self.game.buy(item_id, self.count)

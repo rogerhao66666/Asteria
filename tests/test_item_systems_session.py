@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.project import Project
 from asteria.rpg import BattleAction
 from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
@@ -12,6 +11,7 @@ from asteria.rpg.durability import DurabilityRules, WearEvent
 from asteria.rpg.job_points import JobPointRules
 from asteria.rpg.new_game_plus import NewGamePlusRules
 from asteria.rpg.progression_graph import ProgressionAllocationRuntime
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
@@ -20,7 +20,7 @@ SWORD = "w_sword:hero_01"
 
 
 def _session(**database):
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     for add, value in database.items():
         getattr(project.rpg_database, add)(value)
     return GameSessionRuntime(project, project.game_start.instantiate(project))
@@ -150,7 +150,7 @@ def test_a_stat_giving_item_that_breaks_mid_battle_takes_its_bonus_off():
     from asteria.gameplay import ModifierOperation, StatModifier
     from asteria.rpg.items import EquipmentDefinition
 
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     project.rpg_database.add_equipment(
         EquipmentDefinition(
             "w_power",

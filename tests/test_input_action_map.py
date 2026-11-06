@@ -5,8 +5,8 @@ from types import SimpleNamespace
 import pytest
 
 from asteria.core import Scene
-from asteria.editor import EditorDocument
 from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.input_map import (
     InputActionMap,
     InputActionTracker,
@@ -45,7 +45,7 @@ def test_input_map_persists_with_the_project_and_old_projects_get_the_default():
     project = Project("Game")
     project.add_scene(Scene("Map"))
     project.input_map.rebind("interact", None, InputBinding("key", "f"))
-    registry = EditorDocument().component_registry
+    registry = default_component_registry()
     data = project.to_data()
     assert data["version"] == 11
     restored = Project.from_data(data, registry)
@@ -109,7 +109,7 @@ def test_gamepad_stick_moves_the_player_in_the_playable_runtime(monkeypatch, tmp
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
     shutil.copy(root / "playable_test_manifest.json", tmp_path / "playable_test_manifest.json")
     shutil.copytree(root / "playable_assets", tmp_path / "playable_assets")
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), tmp_path)
     runtime.open()
     try:

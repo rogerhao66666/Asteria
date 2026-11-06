@@ -84,8 +84,8 @@ def runtime(resource_root, monkeypatch, request):
     pytest.importorskip("pygame")
     import real_window
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     if real_window.enabled():  # real-window replay (D19): a real playable window, no dummy driver
@@ -95,7 +95,7 @@ def runtime(resource_root, monkeypatch, request):
         monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
         monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     project = Project.load_json(
-        REFERENCE_PROJECT / "project.asteria.json", EditorDocument().component_registry
+        REFERENCE_PROJECT / "project.asteria.json", default_component_registry()
     )
     value = PlayableTestRuntime(
         project, project.game_start.instantiate(project), resource_root, width=960, height=540

@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import copy
 
+from asteria.rpg.items import EquippedItem
+from asteria.rpg.progression import ProgressionRuntime
+from asteria.rpg.save_state import RpgRuntimeState
 from asteria.runtime.game_start import GameStartDefinition
 
 from .game_systems_authoring import F, FormField
@@ -163,9 +166,6 @@ class GameStartAuthoringController:
     def _build(self, old, data):
         state = copy.deepcopy(old.rpg_state_data) if old.rpg_state_data is not None else None
         if state is None:
-            from asteria.rpg.progression import ProgressionRuntime
-            from asteria.rpg.save_state import RpgRuntimeState
-
             db = self.project.rpg_database
             state = RpgRuntimeState(
                 progression=ProgressionRuntime(db.progression_tracks.values())
@@ -217,9 +217,6 @@ class GameStartAuthoringController:
         it holds already is kept as it is (its growth, its sockets), a new one is made as the
         game makes found gear. An older state gains only the keys the bag's version needs;
         everything else stays as written."""
-        from asteria.rpg.items import EquippedItem
-        from asteria.rpg.progression import ProgressionRuntime
-        from asteria.rpg.save_state import RpgRuntimeState
 
         db = self.project.rpg_database
         state = copy.deepcopy(state)

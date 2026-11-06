@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from copy import deepcopy
+from math import atan2, cos, sin
 
 try:
     from PySide6.QtCore import Qt, QTimer, Signal
@@ -886,7 +887,6 @@ class SkillTreeGraphView(QGraphicsView):
 
     def _draw_edges(self):
         """Arrows from each prerequisite's right edge to the node's left edge (behind cards)."""
-        from math import atan2, cos, sin
 
         from PySide6.QtCore import QPointF
         from PySide6.QtGui import QBrush, QColor, QPainterPath, QPen, QPolygonF

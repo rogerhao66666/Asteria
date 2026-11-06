@@ -6,15 +6,13 @@ from __future__ import annotations
 import random
 
 from asteria.core.lifecycle import LifecycleHookBus
+from asteria.events import LifecycleEventBridge
+from asteria.events.scheduler import EventScheduleMode, ScheduledEventSpec
+from asteria.rpg.disassembly import disassemble
+from asteria.rpg.new_game_plus import carry_over
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -23,7 +21,6 @@ class BattleEventsMixin:
     def _battle_hook_bus(self):
         """A fresh hook bus per battle; project lifecycle bindings on ``rpg.battle.*`` hooks run as
         battle events."""
-        from asteria.events import LifecycleEventBridge
 
         bus = LifecycleHookBus()
         bus.subscribe(
@@ -207,7 +204,6 @@ class BattleEventsMixin:
 
     def disassemble(self, item_id):
         """Break one ``item_id`` down by the project's disassembly recipe."""
-        from asteria.rpg.disassembly import disassemble
 
         recipe = self.project.rpg_database.disassembly_recipes.get(str(item_id))
         if recipe is None:
@@ -248,7 +244,6 @@ class BattleEventsMixin:
     def new_game_plus(self, rules_id=None):
         """A fresh save from the project's game start that keeps what the New Game Plus rules
         carry over from this game (the running game is left as it is)."""
-        from asteria.rpg.new_game_plus import carry_over
 
         rules = self.project.rpg_database.new_game_plus_rules
         if not rules:
@@ -362,8 +357,6 @@ class BattleEventsMixin:
         raise KeyError(f"unknown battle value {name}")
 
     def _refresh_common_events(self):
-        from asteria.events.scheduler import EventScheduleMode, ScheduledEventSpec
-
         desired = {}
         for common in self.project.common_events:
             if common.active(self.save.event_context):

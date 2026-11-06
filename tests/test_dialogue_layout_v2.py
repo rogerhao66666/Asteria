@@ -71,7 +71,7 @@ LINE = DialogueRequest(DialogueLine("Hello there", "Hana"))
 
 def test_without_a_layout_the_window_is_the_engines(runtime):
     plain = _draw(runtime, LINE)
-    canvas_boxes = runtime.__dict__.setdefault("_menu_boxes", {})
+    canvas_boxes = runtime._menu_boxes = {}  # record what the canvases draw
     assert _draw(runtime, LINE) == plain
     assert {"window", "speaker", "text", "continue"} <= set(canvas_boxes["dialogue"])
     # 960 x 540: the window is (60, 310, 840, 130), drawn in the engine's panel
@@ -180,7 +180,7 @@ def test_the_converted_picture_window_draws_the_manifests_pixels(runtime, docume
     line = DialogueRequest(DialogueLine("AB BA", "Hana"))
 
     def picture():
-        runtime.__dict__.pop("_dialogue_window_cache", None)
+        runtime._dialogue_window_cache.clear()
         runtime.screen.fill((0, 0, 0))
         runtime._draw_dialogue_window(line.line)
         return runtime.pg.image.tobytes(runtime.screen, "RGB")
@@ -216,7 +216,7 @@ def document_for():
 def test_the_choice_window_grows_to_hold_every_row(runtime):
     request = ChoiceRequest("Which?", tuple(DialogueChoice(w, n) for n, w in
                                             enumerate(("One", "Two", "Three"))))  # fmt: skip
-    boxes = runtime.__dict__.setdefault("_menu_boxes", {})
+    boxes = runtime._menu_boxes = {}  # record what the canvases draw
     _draw(runtime, request)
     assert boxes["dialogue_choice"]["box"] == (60, 310, 840, 130)  # the engine's: as before
     _layout(runtime, "dialogue_choice", MenuElement("choices", "list", columns=1, row_height=50))

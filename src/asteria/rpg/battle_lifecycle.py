@@ -5,13 +5,7 @@ from dataclasses import dataclass
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _number(value, label):
@@ -76,18 +70,18 @@ class CombatantLifecycleRuntime:
         summon_generation=0,
         reason="",
     ):
-        member_id = _id(member_id, "member_id")
+        member_id = required_id(member_id, "member_id")
         if member_id in self._states:
             raise ValueError(f"duplicate combatant lifecycle member: {member_id}")
         state = CombatantLifecycleState(
             member_id,
-            _id(state_id, "state_id"),
+            required_id(state_id, "state_id"),
             bool(present),
             bool(can_act),
             bool(targetable),
             bool(defeated),
-            None if form_id is None else _id(form_id, "form_id"),
-            None if summon_owner_id is None else _id(summon_owner_id, "summon_owner_id"),
+            None if form_id is None else required_id(form_id, "form_id"),
+            None if summon_owner_id is None else required_id(summon_owner_id, "summon_owner_id"),
             int(summon_generation),
             str(reason),
         )
@@ -100,7 +94,7 @@ class CombatantLifecycleRuntime:
         return state
 
     def state(self, member_id):
-        return self._states[_id(member_id, "member_id")]
+        return self._states[required_id(member_id, "member_id")]
 
     def states(self):
         return tuple(self._states[k] for k in sorted(self._states))
@@ -147,7 +141,7 @@ class CombatantLifecycleRuntime:
     def incapacitate(self, member_id, *, state_id="incapacitated", targetable=True, reason=""):
         state = self._replace(
             member_id,
-            state_id=_id(state_id, "state_id"),
+            state_id=required_id(state_id, "state_id"),
             present=True,
             can_act=False,
             targetable=bool(targetable),
@@ -165,7 +159,7 @@ class CombatantLifecycleRuntime:
     def revive(self, member_id, *, state_id="active", targetable=True, reason=""):
         state = self._replace(
             member_id,
-            state_id=_id(state_id, "state_id"),
+            state_id=required_id(state_id, "state_id"),
             present=True,
             can_act=True,
             targetable=bool(targetable),
@@ -183,7 +177,7 @@ class CombatantLifecycleRuntime:
     def remove(self, member_id, *, state_id="removed", reason=""):
         state = self._replace(
             member_id,
-            state_id=_id(state_id, "state_id"),
+            state_id=required_id(state_id, "state_id"),
             present=False,
             can_act=False,
             targetable=False,
@@ -199,7 +193,9 @@ class CombatantLifecycleRuntime:
         return state
 
     def set_form(self, member_id, form_id, *, reason=""):
-        state = self._replace(member_id, form_id=_id(form_id, "form_id"), reason=str(reason))
+        state = self._replace(
+            member_id, form_id=required_id(form_id, "form_id"), reason=str(reason)
+        )
         emit_hook(
             self.hooks,
             "rpg.battle.combatant_transformed",
@@ -264,7 +260,7 @@ class BattleObjectiveCondition:
     value: float | bool
 
     def __init__(self, kind, subject_id, operator="==", value=True):
-        kind = _id(kind, "kind")
+        kind = required_id(kind, "kind")
         if kind not in {"side_active_count", "member_active", "round_index", "flag"}:
             raise ValueError("unsupported battle objective condition kind")
         operator = str(operator).strip()
@@ -275,7 +271,7 @@ class BattleObjectiveCondition:
         else:
             value = bool(value)
         object.__setattr__(self, "kind", kind)
-        object.__setattr__(self, "subject_id", _id(subject_id, "subject_id"))
+        object.__setattr__(self, "subject_id", required_id(subject_id, "subject_id"))
         object.__setattr__(self, "operator", operator)
         object.__setattr__(self, "value", value)
 
@@ -361,13 +357,17 @@ class BattleObjectiveDefinition:
         failure_mode = str(failure_mode).strip().lower()
         if success_mode not in {"all", "any"} or failure_mode not in {"all", "any"}:
             raise ValueError("objective mode must be all or any")
-        success_winners = tuple(dict.fromkeys(_id(x, "winning_side") for x in winning_sides))
-        success_defeated = tuple(dict.fromkeys(_id(x, "defeated_side") for x in defeated_sides))
+        success_winners = tuple(
+            dict.fromkeys(required_id(x, "winning_side") for x in winning_sides)
+        )
+        success_defeated = tuple(
+            dict.fromkeys(required_id(x, "defeated_side") for x in defeated_sides)
+        )
         if failure_winning_sides is None:
             failure_winning_sides = success_defeated
         if failure_defeated_sides is None:
             failure_defeated_sides = success_winners
-        object.__setattr__(self, "objective_id", _id(objective_id, "objective_id"))
+        object.__setattr__(self, "objective_id", required_id(objective_id, "objective_id"))
         object.__setattr__(self, "success_conditions", success_conditions)
         object.__setattr__(self, "failure_conditions", failure_conditions)
         object.__setattr__(self, "success_mode", success_mode)
@@ -377,12 +377,20 @@ class BattleObjectiveDefinition:
         object.__setattr__(
             self,
             "failure_winning_sides",
-            tuple(dict.fromkeys(_id(x, "failure_winning_side") for x in failure_winning_sides)),
+            tuple(
+                dict.fromkeys(
+                    required_id(x, "failure_winning_side") for x in failure_winning_sides
+                )
+            ),
         )
         object.__setattr__(
             self,
             "failure_defeated_sides",
-            tuple(dict.fromkeys(_id(x, "failure_defeated_side") for x in failure_defeated_sides)),
+            tuple(
+                dict.fromkeys(
+                    required_id(x, "failure_defeated_side") for x in failure_defeated_sides
+                )
+            ),
         )
         object.__setattr__(self, "priority", int(priority))
 
@@ -477,17 +485,19 @@ class BattleEscapeRule:
         maximum_chance = _number(maximum_chance, "maximum_chance")
         if not 0 <= minimum_chance <= maximum_chance <= 1:
             raise ValueError("escape chance bounds must satisfy 0 <= min <= max <= 1")
-        object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
-        object.__setattr__(self, "side", _id(side, "side"))
+        object.__setattr__(self, "rule_id", required_id(rule_id, "rule_id"))
+        object.__setattr__(self, "side", required_id(side, "side"))
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
         object.__setattr__(
-            self, "source_stat", None if source_stat is None else _id(source_stat, "source_stat")
+            self,
+            "source_stat",
+            None if source_stat is None else required_id(source_stat, "source_stat"),
         )
         object.__setattr__(self, "source_scale", _number(source_scale, "source_scale"))
         object.__setattr__(
             self,
             "opponent_stat",
-            None if opponent_stat is None else _id(opponent_stat, "opponent_stat"),
+            None if opponent_stat is None else required_id(opponent_stat, "opponent_stat"),
         )
         object.__setattr__(self, "opponent_scale", _number(opponent_scale, "opponent_scale"))
         object.__setattr__(self, "minimum_chance", minimum_chance)
@@ -555,7 +565,7 @@ class BattleObjectiveRuntime:
             self.definitions[definition.objective_id] = definition
 
     def set_flag(self, flag_id, value=True):
-        flag_id = _id(flag_id, "flag_id")
+        flag_id = required_id(flag_id, "flag_id")
         self.flags[flag_id] = bool(value)
         emit_hook(
             self.hooks,

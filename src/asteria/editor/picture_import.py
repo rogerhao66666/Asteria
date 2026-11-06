@@ -19,7 +19,10 @@ import re
 import shutil
 from pathlib import Path, PurePosixPath
 
-from .picture_categories import category, folder_category
+from asteria.assets.canonical import AssetSource, CanonicalAsset
+from asteria.assets.types import AssetRecord
+
+from .picture_categories import category, folder_category, paired_clip_set_id
 
 CHARACTER_FOLDER = "playable_assets/characters"
 WALK_COLUMNS, WALK_ROWS = 3, 4
@@ -108,7 +111,6 @@ def import_walking_picture(document, path, name=None):
     """Make the 3x4 walking sheet at ``path`` a sprite sheet of the project (with its walking
     animations); returns the sprite sheet's asset id. The caller resolves the project's
     resources again so the editor draws it."""
-    from asteria.assets.types import AssetRecord
 
     project = document.project
     source = Path(path) if Path(path).is_absolute() else _project_dir(document) / path
@@ -176,7 +178,6 @@ def import_walking_picture(document, path, name=None):
 def import_battle_picture(document, path, name=None):
     """Make the image at ``path`` a one-frame battle sprite (``battle.combatant.<name>``);
     returns its asset id."""
-    from asteria.assets.canonical import AssetSource, CanonicalAsset
 
     project = document.project
     absolute, relative = _into_project(document, path, "battle")
@@ -213,7 +214,6 @@ def battle_sheet_for(document, sheet_id):
     sheet itself when it is a battle sprite already, else one made of the same picture, frame
     size and frames - its idle and move clips from the sheet's own (made once, then reused).
     Returns the battle asset id."""
-    from asteria.assets.canonical import AssetSource, CanonicalAsset
 
     project = document.project
     known = {asset.asset_id: asset for asset in project.assets.snapshot()}
@@ -240,7 +240,6 @@ def battle_sheet_for(document, sheet_id):
     )
     clips = {}
     record = project.assets.get(sheet_id)
-    from .picture_categories import paired_clip_set_id
 
     clip_set_id = paired_clip_set_id(project, record) if record is not None else None
     clip_set = views.clip_set(clip_set_id) if clip_set_id else None

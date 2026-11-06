@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from .animation_authoring import AnimationAuthoringController, AnimationAuthoringError
+from .authoring_hub_widget import _free_id
 from .ui_fit import fit_list_to_width
 
 _CLIP_WORDS = {  # a clip name's first word, in plain words
@@ -622,8 +623,6 @@ class AnimationEditorWidget(QWidget):
         return ok
 
     def _new_clip_clicked(self):
-        from .authoring_hub_widget import _free_id
-
         clips = self.api.data(self.sheet)["clips"] if self.sheet else {}
         self.new_clip(_free_id("", clips, "new_clip"))  # named for it; Rename… changes it
 

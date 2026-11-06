@@ -258,8 +258,8 @@ def test_opening_the_game_window_loads_the_kernels_before_the_first_frame(
     resource_root, monkeypatch
 ):
     pytest.importorskip("pygame")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
@@ -267,7 +267,7 @@ def test_opening_the_game_window_loads_the_kernels_before_the_first_frame(
     reference = Path(__file__).resolve().parents[1] / "reference_projects"
     project = Project.load_json(
         reference / "complex_reference_rpg" / "project.asteria.json",
-        EditorDocument().component_registry,
+        default_component_registry(),
     )
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), resource_root)
     monkeypatch.setattr(kernels, "_active", None)  # nothing chosen yet, as in a fresh game

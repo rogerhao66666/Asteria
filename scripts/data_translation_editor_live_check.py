@@ -60,7 +60,6 @@ def _data_count(text):
 def main(argv=None):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor import data_translation as dt
     from asteria.editor.i18n import install, set_language
     from asteria.editor.shell import AsteriaEditorWindow
@@ -68,6 +67,7 @@ def main(argv=None):
     from asteria.editor.translation_table import TranslationTable
     from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     argv = list(sys.argv[1:] if argv is None else argv)
     out = Path(argv[0] if argv else REPO / "docs/audits/evidence/data_translation")
@@ -77,7 +77,7 @@ def main(argv=None):
     )
     apply_asteria_theme(app, None)
     install(app, "en")
-    project = Project.load_json(DEMO, EditorDocument().component_registry)
+    project = Project.load_json(DEMO, default_component_registry())
     _untranslated(project)  # the demo before its own Chinese (T3): the page as a new project
     window = AsteriaEditorWindow(project)
     window.document.file_path = DEMO

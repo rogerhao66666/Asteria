@@ -20,8 +20,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .authoring_hub_widget import AdapterFamilyWidget, FamilyHostWidget
 from .enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
 from .i18n import translate
+from .integrated_authoring import IntegratedAuthoringControllers
+from .record_vocabulary import vocabulary_for, words
 from .responsive_form import FlowForm
 
 
@@ -32,7 +35,6 @@ class EnemyAIEditorWidget(QWidget):
         super().__init__(parent)
         self.api = EnemyAIEditor(document)
         self.last_error = None
-        from .authoring_hub_widget import FamilyHostWidget
 
         # -- left and centre: the AI records, the same form as Game Data's -----------------
         self.host = FamilyHostWidget("Enemy AI", _AIRecords(document).categories)
@@ -43,13 +45,13 @@ class EnemyAIEditorWidget(QWidget):
         self.used_by = QLabel("")
         self.used_by.setWordWrap(True)
         self.enemy = QComboBox()  # enemies by name
-        bind = QPushButton(translate("Use for Enemy"))
-        bind.setToolTip(translate("The picked enemy fights with this AI."))
+        bind = QPushButton("Use for Enemy")
+        bind.setToolTip("The picked enemy fights with this AI.")
         bind.clicked.connect(lambda: self.bind_enemy(self.enemy.currentData()))
         bind_row = QHBoxLayout()
         bind_row.addWidget(self.enemy, 1)
         bind_row.addWidget(bind)
-        users = QGroupBox(translate("Used By"))
+        users = QGroupBox("Used By")
         uv = QVBoxLayout(users)
         uv.addWidget(self.used_by)
         uv.addLayout(bind_row)
@@ -57,7 +59,7 @@ class EnemyAIEditorWidget(QWidget):
         self.round_index = QSpinBox()
         self.round_index.setRange(1, 999)
         self.round_index.valueChanged.connect(lambda _v: self.run_preview())
-        self.can_act = QCheckBox(translate("Can act"))
+        self.can_act = QCheckBox("Can act")
         self.can_act.setChecked(True)
         self.can_act.toggled.connect(lambda _v: self.run_preview())
         self.resource_form = FlowForm(column_width=130)  # HP, MP, Shield side by side
@@ -71,10 +73,8 @@ class EnemyAIEditorWidget(QWidget):
         self.problem_list = QListWidget()
         self.status = QLabel("")
         self.status.setWordWrap(True)
-        preview = QGroupBox(translate("Decision Preview"))
-        preview.setToolTip(
-            translate("Set a moment of the battle: the boss's phase and pick follow.")
-        )
+        preview = QGroupBox("Decision Preview")
+        preview.setToolTip("Set a moment of the battle: the boss's phase and pick follow.")
         pv = QVBoxLayout(preview)
         top = FlowForm(column_width=110)  # the round and "can act" on one line
         top.addRow(translate("Round"), self.round_index)
@@ -82,11 +82,11 @@ class EnemyAIEditorWidget(QWidget):
         pv.addWidget(top)
         pv.addWidget(self.resource_form)
         pv.addWidget(self.phase_label)
-        pv.addWidget(QLabel(translate("Would pick")))
+        pv.addWidget(QLabel("Would pick"))
         pv.addWidget(self.decision)
-        pv.addWidget(QLabel(translate("Phase by HP")))
+        pv.addWidget(QLabel("Phase by HP"))
         pv.addWidget(self.curve)
-        checks = QGroupBox(translate("Checks"))
+        checks = QGroupBox("Checks")
         cv = QVBoxLayout(checks)
         cv.addWidget(self.problem_list)
         cv.addWidget(self.status)
@@ -117,7 +117,6 @@ class EnemyAIEditorWidget(QWidget):
     @property
     def family(self):
         """The AI records' list and form (Game Data's own), or None with no project open."""
-        from .authoring_hub_widget import AdapterFamilyWidget
 
         child = self.host.child
         return child if isinstance(child, AdapterFamilyWidget) else None
@@ -128,7 +127,6 @@ class EnemyAIEditorWidget(QWidget):
 
     def _names(self):
         from .record_form import _title_names
-        from .record_vocabulary import vocabulary_for
 
         return _title_names(vocabulary_for(self.api.document))
 
@@ -257,7 +255,6 @@ class EnemyAIEditorWidget(QWidget):
     def run_preview(self):
         """What the AI would do at the moment set above: its phase, then each rule it could
         pick with its chance, all in words; and where its phases start as HP falls."""
-        from .record_vocabulary import words
 
         self.decision.clear()
         if self.ai_id is None:
@@ -308,7 +305,5 @@ class _AIRecords:
         return self.document.project
 
     def categories(self):
-        from .integrated_authoring import IntegratedAuthoringControllers
-
         adapters = IntegratedAuthoringControllers(self.document).rpg_categories()
         return [a for a in adapters if a.category_id == "ai"]

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (  # noqa: E402
     QWidget,
 )
 
-from asteria.editor import EditorDocument, i18n  # noqa: E402
+from asteria.editor import i18n  # noqa: E402
 from asteria.editor.authoring_hub_widget import AdapterFamilyWidget  # noqa: E402
 from asteria.editor.record_form import (  # noqa: E402
     ChipList,
@@ -36,6 +36,7 @@ from asteria.editor.shell import AsteriaEditorWindow  # noqa: E402
 from asteria.editor.theme import apply_asteria_theme  # noqa: E402
 from asteria.editor.workspace import WorkspaceMode  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -115,7 +116,7 @@ def _settled_problems(app, root):
 
 
 def test_every_page_fits_a_narrow_window(themed_app):
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     window = AsteriaEditorWindow(project)
     try:
         window.setMinimumSize(0, 0)  # the forms themselves must cope: the window's floor is 1000

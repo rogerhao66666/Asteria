@@ -4,7 +4,6 @@ from math import hypot
 
 from asteria.core import Entity, Scene, Transform
 from asteria.core.prefab import PrefabDefinition, PrefabLibrary
-from asteria.editor import EditorDocument
 from asteria.runtime import (
     FieldAIComponent,
     FieldAISystem,
@@ -12,6 +11,7 @@ from asteria.runtime import (
     SpawnZoneComponent,
     VisibleEncounterComponent,
 )
+from asteria.runtime.component_registry import default_component_registry
 
 
 def _entity(scene, name, x=0.0, y=0.0):
@@ -83,7 +83,7 @@ def test_flee_patrol_wander_and_blocking():
 
 
 def _spawning(waves="", **values):
-    registry = EditorDocument().component_registry
+    registry = default_component_registry()
     prefabs = PrefabLibrary()
     prefabs.add(
         PrefabDefinition(

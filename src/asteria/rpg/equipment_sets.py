@@ -4,14 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import required_id
 from asteria.gameplay import StatModifier
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,11 +26,11 @@ class EquipmentSetBonus:
             raise TypeError("modifiers must be StatModifier values")
         object.__setattr__(self, "pieces", pieces)
         object.__setattr__(self, "modifiers", modifiers)
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag") for x in tags})))
+        object.__setattr__(self, "tags", tuple(sorted({required_id(x, "tag") for x in tags})))
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability id") for x in granted_abilities)),
         )
 
     def to_data(self):
@@ -67,7 +61,7 @@ class EquipmentSetDefinition:
     icon_id: str = ""  # a project icon shown in menus; written only when set
 
     def __init__(self, set_id, display_name=None, *, equipment_ids=(), bonuses=(), icon_id=""):
-        equipment_ids = tuple(dict.fromkeys(_id(x, "equipment id") for x in equipment_ids))
+        equipment_ids = tuple(dict.fromkeys(required_id(x, "equipment id") for x in equipment_ids))
         bonuses = tuple(sorted(bonuses, key=lambda x: x.pieces))
         if any(not isinstance(x, EquipmentSetBonus) for x in bonuses):
             raise TypeError("bonuses must be EquipmentSetBonus values")
@@ -75,7 +69,7 @@ class EquipmentSetDefinition:
             raise ValueError("set bonuses must have distinct piece counts")
         if bonuses and bonuses[-1].pieces > len(equipment_ids):
             raise ValueError("a set bonus needs more pieces than the set has")
-        object.__setattr__(self, "set_id", _id(set_id, "set_id"))
+        object.__setattr__(self, "set_id", required_id(set_id, "set_id"))
         object.__setattr__(self, "display_name", str(display_name or set_id))
         object.__setattr__(self, "equipment_ids", equipment_ids)
         object.__setattr__(self, "bonuses", bonuses)

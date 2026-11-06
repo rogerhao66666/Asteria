@@ -407,7 +407,7 @@ class _Route(QWidget):
             button.clicked.connect(lambda _c=False, d=direction: self.add(d))
             row.addWidget(button)
             self.buttons[direction] = button
-        self.undo = QPushButton(translate("Undo Step"))
+        self.undo = QPushButton("Undo Step")
         self.undo.clicked.connect(self.remove_last)
         row.addWidget(self.undo)
         self.shown = QLabel()
@@ -497,9 +497,9 @@ class WorldCommandForm(QWidget):
         self.body_layout.setContentsMargins(0, 0, 0, 0)
         self.grid = None
         self.other = QLineEdit()
-        self.other.setToolTip(translate("Arguments this form has no field for: key=value, ..."))
+        self.other.setToolTip("Arguments this form has no field for: key=value, ...")
         self.other.textChanged.connect(lambda _t: self.changed.emit())
-        self.other_label = QLabel(translate("Other Details"))
+        self.other_label = QLabel("Other Details")
         self.scroll = scroll = QScrollArea()
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setWidgetResizable(True)
@@ -670,11 +670,11 @@ class WorldCommandDialog(QDialog):
         self, document=None, parent=None, *, command="TRANSFER", args=None, pictures_later=False
     ):
         super().__init__(parent)
-        self.setWindowTitle(translate("World Command"))
+        self.setWindowTitle("World Command")
         self.pictures_later = pictures_later
         self.form = WorldCommandForm(document, self, command=command, args=args)
         self.form.changed.connect(self._show_kind)
-        self.note = QLabel(translate("Press OK to set up the picture."))
+        self.note = QLabel("Press OK to set up the picture.")
         self.error = QLabel("")
         self.error.setObjectName("ErrorLabel")
         self.error.setWordWrap(True)

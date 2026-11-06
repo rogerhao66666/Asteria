@@ -4,17 +4,7 @@ from __future__ import annotations
 
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
-
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
+from asteria.runtime.save_slots import SaveSlots
 
 
 class TitleBuildMixin:
@@ -65,7 +55,6 @@ class TitleBuildMixin:
         words = tr("title.load_game", "L   Load Game")
         rect = self.text(words, left + 50 + dx, 330 + dy, size=size, color=text)
         self.hotspot(rect.inflate(16, 10), key="l")
-        from asteria.runtime.save_slots import SaveSlots
 
         used = sum(
             1
@@ -92,8 +81,6 @@ class TitleBuildMixin:
         return str(settings.get("program") or "") if isinstance(settings, dict) else ""
 
     def _title_slots(self):
-        from asteria.runtime.save_slots import SaveSlots
-
         return SaveSlots(self.resource_root / "saves", self.project)
 
     def _latest_slot(self):

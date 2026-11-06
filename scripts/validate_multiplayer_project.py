@@ -26,12 +26,12 @@ def wait(predicate, timeout=60):
 
 
 if len(sys.argv) == 4:
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     folder, pid, port = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=960, height=540
     )

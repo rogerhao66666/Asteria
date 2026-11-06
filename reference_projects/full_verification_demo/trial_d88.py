@@ -54,11 +54,11 @@ def _components(node):
 
 def boxes():
     """Entity id -> picture box of every object, measured from the project as it stands."""
-    from asteria.editor import EditorDocument
     from asteria.editor.passability import picture_box
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(HERE / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(HERE / "project.asteria.json", default_component_registry())
     found = {}
     for scene in project.scenes():
         for entity in scene.entities():

@@ -15,12 +15,10 @@ REFERENCE = Path(__file__).resolve().parents[1] / "reference_projects" / "comple
 
 
 def _reference():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    return Project.load_json(
-        REFERENCE / "project.asteria.json", EditorDocument().component_registry
-    )
+    return Project.load_json(REFERENCE / "project.asteria.json", default_component_registry())
 
 
 def test_icon_id_is_optional_data_and_round_trips():

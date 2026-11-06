@@ -7,7 +7,10 @@ from pathlib import Path
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
 from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
-from asteria.runtime.battle_visuals import vfx_rect
+from asteria.reference_data import load_sprite_sheet
+from asteria.runtime.battle_visuals import vfx_content_center, vfx_rect
+from asteria.runtime.environment2d import MotionTrail2DComponent
+from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
 from asteria.runtime.field_camera import (
     FieldViewCamera,
     scene_camera_follow,
@@ -15,13 +18,10 @@ from asteria.runtime.field_camera import (
 from asteria.runtime.field_presentation import (
     FieldEffects,
 )
+from asteria.runtime.tile_scene_view import TileSceneView
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
+from .support import (
     FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
     field_player_render_size,
     walking_pattern_index,
     walking_row_index,
@@ -38,7 +38,6 @@ class FieldViewMixin:
         if camera is None:
             scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
             follow = self.manifest["field"].get("camera", {}).get("follow")
-            from asteria.runtime.tile_scene_view import TileSceneView
 
             scene = self.game.scene
             if not follow and not TileSceneView.available(scene):
@@ -60,9 +59,8 @@ class FieldViewMixin:
 
     def _field_vfx_content(self, asset_id, sheet, frames, fw, fh, columns):
         """Where a field VFX clip's picture sits inside its frames (source pixels), once."""
-        from asteria.runtime.battle_visuals import vfx_content_center
 
-        cache = self.__dict__.setdefault("_field_vfx_content_cache", {})
+        cache = self._field_vfx_content_cache
         if asset_id not in cache:
             boxes = []
             for index in frames:
@@ -153,11 +151,10 @@ class FieldViewMixin:
     def tile_view(self):
         """The tile-map scene view (D22 A10) when the current scene is bound to a TileMap2D,
         else None."""
-        from asteria.runtime.tile_scene_view import TileSceneView
 
         scene = self.game.scene
         # whether a scene is a tile scene is looked up once per scene, not per entity per frame
-        known = self.__dict__.get("_tile_scene")
+        known = self._tile_scene
         if known is None or known[0] is not scene:
             known = self._tile_scene = (scene, TileSceneView.available(scene))
         if not known[1]:
@@ -192,7 +189,7 @@ class FieldViewMixin:
         return view
 
     def _field_screen_xy(self, world_x, world_y):
-        known = self.__dict__.get("_tile_scene")
+        known = self._tile_scene
         if known is not None and known[0] is self.game.scene and not known[1]:
             # a picture field (no tile view): skip the tile_view lookup, made per entity
             return self.field_camera.world_to_screen(world_x, world_y)
@@ -231,8 +228,6 @@ class FieldViewMixin:
         return path if path.is_absolute() else self.resource_root / path
 
     def _skeleton_sheet(self, asset_id):
-        from asteria.reference_data import load_sprite_sheet
-
         if asset_id not in self._skeleton_sheet_cache:
             path = self._asset_source_path(asset_id, "sprite_sheet")
             if path is None:
@@ -297,7 +292,7 @@ class FieldViewMixin:
     def _normal_image(self, image_path):
         """The normal map for an image, from its canonical asset's ``material.normal_asset_id`` (or
         None)."""
-        cache = self.__dict__.setdefault("_normal_images", {})
+        cache = self._normal_images
         if image_path not in cache:
             normal = None
             for asset in self.project.assets.snapshot():
@@ -340,11 +335,12 @@ class FieldViewMixin:
     def _blit_with_trail(self, entity, image, position):
         """Blit a field sprite; with MotionTrail2D, fading echoes of earlier positions go behind it
         (VFX-03)."""
-        from asteria.runtime.environment2d import MotionTrail2DComponent
 
         trail = entity.try_get(MotionTrail2DComponent)
         if trail is not None and trail.enabled:
-            echoes = self.__dict__.setdefault("_field_echoes", MotionEchoes())
+            echoes = self._field_echoes
+            if echoes is None:
+                echoes = self._field_echoes = MotionEchoes()
             settings = EchoSettings.of(
                 trail.kind,
                 interval=trail.interval,
@@ -354,7 +350,7 @@ class FieldViewMixin:
             )
             echo = echoes.get(entity.id, settings)
             t = entity.get(Transform)
-            last = self.__dict__.setdefault("_trail_last_xy", {}).get(entity.id)
+            last = self._trail_last_xy.get(entity.id)
             moving = last is not None and (abs(t.x - last[0]) + abs(t.y - last[1])) > 1e-3
             self._trail_last_xy[entity.id] = (t.x, t.y)
             for ghost_image, ghost_position, opacity in (
@@ -373,7 +369,7 @@ class FieldViewMixin:
     def _field_composition(self, image_path):
         """CharacterComposition of the canonical sprite-sheet asset whose image is ``image_path``
         (CMP-01)."""
-        cache = self.__dict__.setdefault("_field_compositions", {})
+        cache = self._field_compositions
         if image_path not in cache:
             from asteria.presentation.character_composition import CharacterComposition
 
@@ -434,7 +430,7 @@ class FieldViewMixin:
         return behind, front
 
     def _prune_field_echoes(self):
-        echoes = self.__dict__.get("_field_echoes")
+        echoes = self._field_echoes
         if echoes is None:
             return
         alive = {e.id for e in self.game.scene.entities() if e.enabled}
@@ -462,13 +458,12 @@ class FieldViewMixin:
             # rescaled only when the size (the camera zoom) or the picture changes, not each
             # frame; one slot, as the sprite cache's budget would be spent on a screen-sized image
             key = (bg, round(bw), round(bh))
-            cached = self.__dict__.get("_field_background")
+            cached = self._field_background
             if cached is None or cached[0] != key:
                 cached = self._field_background = (key, self.pg.transform.smoothscale(bg, key[1:]))
             self.screen.blit(cached[1], (round(bx), round(by)))
 
         sprites = self.manifest["field"].get("entity_sprites", {})
-        from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
 
         scene = self.game.scene
         if sprites:

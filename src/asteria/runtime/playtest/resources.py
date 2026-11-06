@@ -7,17 +7,6 @@ from pathlib import Path
 from asteria.runtime.menu_icons import forged_surface, icon_source
 from asteria.runtime.particle_draw import ParticleDrawer
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
-)
-
 
 class ResourceMixin:
     def path(self, rel):

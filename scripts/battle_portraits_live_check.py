@@ -85,12 +85,10 @@ def _helpers():
 def _project(demo, layout):
     """The demo's project with portraits on hero_01..hero_04 and ``layout`` set on its battle
     UI layout records (in memory only)."""
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(
-        DEMOS[demo] / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(DEMOS[demo] / "project.asteria.json", default_component_registry())
     library = project.battle_presentation_library
     for number, name in enumerate(STAND_INS, start=1):
         key = f"hero_{number:02d}"

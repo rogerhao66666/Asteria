@@ -30,13 +30,13 @@ def test_the_status_screen_shows_hp_above_mp(monkeypatch):
     pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
     from asteria.runtime.status_menu import StatusMenu
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root)
     runtime.open()
     try:

@@ -10,16 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+from asteria.core.values import required_id
 from asteria.gameplay.effects import EffectOperationKind
 
 OPENINGS = ("normal", "preemptive", "surprise")
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _fraction(value, label):
@@ -43,7 +37,7 @@ class StealEntry:
     amount: int = 1
 
     def __init__(self, item_id, chance=1.0, amount=1):
-        object.__setattr__(self, "item_id", _id(item_id, "item_id"))
+        object.__setattr__(self, "item_id", required_id(item_id, "item_id"))
         object.__setattr__(self, "chance", _fraction(chance, "chance"))
         amount = int(amount)
         if amount < 1:
@@ -62,7 +56,7 @@ class StealTable:
     once: bool = True
 
     def __init__(self, target_key, entries=(), once=True):
-        object.__setattr__(self, "target_key", _id(target_key, "target_key"))
+        object.__setattr__(self, "target_key", required_id(target_key, "target_key"))
         entries = tuple(entries)
         if any(not isinstance(x, StealEntry) for x in entries):
             raise TypeError("entries must be StealEntry values")
@@ -108,7 +102,7 @@ class ResourceGain:
             raise ValueError(f"event must be one of {GAIN_EVENTS}")
         s = object.__setattr__
         s(self, "event", event)
-        s(self, "resource", _id(resource, "resource"))
+        s(self, "resource", required_id(resource, "resource"))
         for name, value in (
             ("flat", flat),
             ("per_damage", per_damage),
@@ -214,7 +208,7 @@ class BattleExtensionRules:
         shared_gauges=None,
     ):
         s = object.__setattr__
-        s(self, "rules_id", _id(rules_id, "rules_id"))
+        s(self, "rules_id", required_id(rules_id, "rules_id"))
         s(self, "damage_resource", str(damage_resource or "").strip())
         s(self, "taunt_tag", str(taunt_tag or "").strip())
         s(self, "lifesteal_stat", str(lifesteal_stat or "").strip())
@@ -224,14 +218,14 @@ class BattleExtensionRules:
         for ability_id, uses in dict(use_limits or {}).items():
             if int(uses) < 1:
                 raise ValueError("use limits must be >= 1")
-            limits.append((_id(ability_id, "ability_id"), int(uses)))
+            limits.append((required_id(ability_id, "ability_id"), int(uses)))
         s(self, "use_limits", tuple(sorted(limits)))
         levels = []
         for ability_id, thresholds in dict(mastery or {}).items():
             values = tuple(int(x) for x in thresholds)
             if not values or any(x < 1 for x in values) or list(values) != sorted(set(values)):
                 raise ValueError("mastery thresholds must be increasing positive use counts")
-            levels.append((_id(ability_id, "ability_id"), values))
+            levels.append((required_id(ability_id, "ability_id"), values))
         s(self, "mastery", tuple(sorted(levels)))
         s(self, "preemptive_chance", _fraction(preemptive_chance, "preemptive_chance"))
         s(self, "surprise_chance", _fraction(surprise_chance, "surprise_chance"))
@@ -251,7 +245,7 @@ class BattleExtensionRules:
             maximum = float(maximum)
             if not isfinite(maximum) or maximum <= 0:
                 raise ValueError("a shared gauge maximum must be finite and > 0")
-            gauges.append((_id(gauge_id, "gauge id"), maximum))
+            gauges.append((required_id(gauge_id, "gauge id"), maximum))
         s(self, "shared_gauges", tuple(sorted(gauges)))
 
     def to_data(self):

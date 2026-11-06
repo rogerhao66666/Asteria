@@ -19,6 +19,7 @@ from asteria.graphics import SpriteFrame, SpriteSheet
 from asteria.project import Project
 from asteria.reference_data import load_sprite_sheet
 from asteria.runtime.battle_presentation_adapters import PygameTextureDrawer
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.tile_scene_view import TileSceneView
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
@@ -111,7 +112,7 @@ def test_the_field_view_resizes_a_smooth_sheet_with_blended_pixels():
 def test_the_editor_sets_the_choice_and_the_runtime_resolver_reads_it():
     from asteria.runtime.battle_visuals import BattleVisualResolver
 
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     document = EditorDocument(project, file_path=ROOT / "project.asteria.json")
     api = AnimationAuthoringController(document)
     resolver = lambda: BattleVisualResolver(  # noqa: E731

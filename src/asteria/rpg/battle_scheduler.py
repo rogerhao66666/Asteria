@@ -5,12 +5,7 @@ from enum import Enum
 from heapq import heapify, heappop, heappush
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _positive(value, label):
@@ -41,7 +36,7 @@ class BattleSchedulerDefinition:
         timeline_scale=100.0,
         minimum_speed=1.0,
     ):
-        object.__setattr__(self, "scheduler_id", _id(scheduler_id, "scheduler_id"))
+        object.__setattr__(self, "scheduler_id", required_id(scheduler_id, "scheduler_id"))
         object.__setattr__(self, "mode", BattleSchedulerMode(mode))
         object.__setattr__(self, "timeline_scale", _positive(timeline_scale, "timeline_scale"))
         object.__setattr__(self, "minimum_speed", _positive(minimum_speed, "minimum_speed"))

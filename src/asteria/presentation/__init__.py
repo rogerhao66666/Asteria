@@ -1,499 +1,372 @@
-from .battle import (
-    BattleCombatantVisual,
-    BattlePresentationCoordinator,
-    BattlePresentationEvent,
-    BattlePresentationEventKind,
-    BattlePresentationScene,
-    BattleVisualAnchor,
-)
-from .battle_runtime import (
-    BattleAnimationRole,
-    BattleCombatantAnimator,
-    BattlePresentationFrame,
-    CombatantOverlay,
-    BattlePresentationRuntime,
-)
+# The package's names are imported when first used (PEP 562): importing one module of it
+# no longer imports every other one (and what they import), which made a cycle with
+# asteria.assets and slowed every import. Generated from the eager imports it replaces.
 
-__all__ = [
-    "BattleAnimationRole",
-    "BattleCombatantAnimator",
-    "BattleCombatantVisual",
-    "BattlePresentationCoordinator",
-    "BattlePresentationEvent",
-    "BattlePresentationEventKind",
-    "BattlePresentationFrame",
-    "BattlePresentationRuntime",
-    "BattlePresentationScene",
-    "BattleVisualAnchor",
-    "CombatantOverlay",
-]
+from importlib import import_module
 
-from .battle_feedback import (
-    BattleAudioCue,
-    BattleFeedbackLabel,
-    BattleFeedbackProfile,
-    BattleFeedbackRuntime,
-    BattleFloatingValue,
-    BattleValueKind,
-    BattleVfxCue,
-    gauge_threshold_payloads,
-    resolved_value_payload,
-)
-
-from .battle_camera_feedback import (
-    BattleCameraFeedbackFrame,
-    BattleCameraFeedbackRuntime,
-    BattleCameraImpulse,
-    BattleScreenFxCue,
-    BattleTargetIndicator,
-)
-
-__all__.extend(
-    [
-        "BattleCameraFeedbackFrame",
-        "BattleCameraFeedbackRuntime",
-        "BattleCameraImpulse",
-        "BattleScreenFxCue",
-        "BattleTargetIndicator",
-    ]
-)
-
-from .battle_hud import (
-    BattleHudGauge,
-    BattleHudMember,
-    BattleHudProfile,
-    BattleHudResourceStyle,
-    BattleHudRuntime,
-    BattleHudStatusIcon,
-    BattleHudStatusStyle,
-)
-
-__all__.extend(
-    [
-        "BattleHudGauge",
-        "BattleHudMember",
-        "BattleHudProfile",
-        "BattleHudResourceStyle",
-        "BattleHudRuntime",
-        "BattleHudStatusIcon",
-        "BattleHudStatusStyle",
-    ]
-)
-
-from .battle_turn_timeline import (
-    BattleCastEntry,
-    BattleTurnEntry,
-    BattleTurnTimelineRuntime,
-    BattleTurnTimelineView,
-)
-
-__all__.extend(
-    [
-        "BattleCastEntry",
-        "BattleTurnEntry",
-        "BattleTurnTimelineRuntime",
-        "BattleTurnTimelineView",
-    ]
-)
-
-from .battle_result import (
-    BattleCurrencyRewardView,
-    BattleItemRewardView,
-    BattleProgressionRewardView,
-    BattleResultPresentationRuntime,
-    BattleResultProfile,
-    BattleResultView,
-)
-
-__all__.extend(
-    [
-        "BattleCurrencyRewardView",
-        "BattleItemRewardView",
-        "BattleProgressionRewardView",
-        "BattleResultPresentationRuntime",
-        "BattleResultProfile",
-        "BattleResultView",
-    ]
-)
-
-from .battle_ui import (
-    BattleUiComposer,
-    BattleUiFrame,
-    BattleUiGaugeBar,
-    BattleUiIcon,
-    BattleUiLayoutProfile,
-    BattleUiMarker,
-    BattleUiPanel,
-    BattleUiPortrait,
-    BattleUiText,
-)
-
-__all__.extend(
-    [
-        "BattleUiComposer",
-        "BattleUiFrame",
-        "BattleUiGaugeBar",
-        "BattleUiIcon",
-        "BattleUiLayoutProfile",
-        "BattleUiMarker",
-        "BattleUiPanel",
-        "BattleUiPortrait",
-        "BattleUiText",
-    ]
-)
-
-from .battle_ui_renderer import (
-    BattleUiRenderer,
-    BattleUiTheme,
-    HeadlessBattleUiBackend,
-)
-
-__all__.extend(
-    [
-        "BattleUiRenderer",
-        "BattleUiTheme",
-        "HeadlessBattleUiBackend",
-    ]
-)
-
-from .battle_screen import BattleScreenRenderResult, BattleScreenRuntime
-
-__all__.extend(
-    [
-        "BattleScreenRenderResult",
-        "BattleScreenRuntime",
-    ]
-)
-
-from .battle_party_layout import (
-    BattlePartyLayoutPolicy,
-    BattlePartyLayoutResult,
-    BattlePartyPlacement,
-    BattlePartyZoneLayout,
-)
-
-__all__.extend(
-    [
-        "BattlePartyLayoutPolicy",
-        "BattlePartyLayoutResult",
-        "BattlePartyPlacement",
-        "BattlePartyZoneLayout",
-    ]
-)
-
-from .battle_action_menu import (
-    BattleActionEntry,
-    BattleActionMenuPolicy,
-    BattleActionMenuRuntime,
-    BattleActionMenuView,
-)
-
-__all__.extend(
-    [
-        "BattleActionEntry",
-        "BattleActionMenuPolicy",
-        "BattleActionMenuRuntime",
-        "BattleActionMenuView",
-    ]
-)
-
-from .battle_action_workflow import (
-    BattleActionWorkflowDefinition,
-    BattleActionWorkflowRuntime,
-    BattleActionWorkflowView,
-    BattleWorkflowOption,
-    BattleWorkflowSelection,
-    BattleWorkflowStep,
-)
-
-__all__.extend(
-    [
+_EXPORTS = {  # name -> (module, attribute; None: the module itself)
+    "AbilityCollectionEntry": (".rpg_ability_screen", "AbilityCollectionEntry"),
+    "AbilityCollectionGroup": (".rpg_ability_screen", "AbilityCollectionGroup"),
+    "AbilityScreenProfile": (".rpg_ability_screen", "AbilityScreenProfile"),
+    "AbilityScreenRuntime": (".rpg_ability_screen", "AbilityScreenRuntime"),
+    "AbilityScreenView": (".rpg_ability_screen", "AbilityScreenView"),
+    "BattleActionEntry": (".battle_action_menu", "BattleActionEntry"),
+    "BattleActionMenuPolicy": (".battle_action_menu", "BattleActionMenuPolicy"),
+    "BattleActionMenuRuntime": (".battle_action_menu", "BattleActionMenuRuntime"),
+    "BattleActionMenuView": (".battle_action_menu", "BattleActionMenuView"),
+    "BattleActionWorkflowDefinition": (
+        ".battle_action_workflow",
         "BattleActionWorkflowDefinition",
-        "BattleActionWorkflowRuntime",
-        "BattleActionWorkflowView",
-        "BattleWorkflowOption",
-        "BattleWorkflowSelection",
-        "BattleWorkflowStep",
-    ]
-)
-
-from .battle_presentation_director import (
-    BattleDirectedEvent,
-    BattlePresentationDirection,
-    BattlePresentationDirector,
-    BattlePresentationDirectorAdvance,
-    BattlePresentationDirectorProfile,
-    BattlePresentationDirectorRule,
-)
-
-__all__.extend(
-    [
-        "BattleDirectedEvent",
-        "BattlePresentationDirection",
-        "BattlePresentationDirector",
-        "BattlePresentationDirectorAdvance",
-        "BattlePresentationDirectorProfile",
-        "BattlePresentationDirectorRule",
-    ]
-)
-
-from .battle_animation_timing import (
-    BattleAnimationTimingProfile,
-    BattleAnimationTimingRule,
-    BattleHitRhythm,
-    easing_value,
-)
-
-__all__.extend(
-    [
-        "BattleAnimationTimingProfile",
-        "BattleAnimationTimingRule",
-        "BattleHitRhythm",
-        "easing_value",
-    ]
-)
-
-from .battle_presentation_layering import (
-    BattlePresentationChannelPolicy,
-    BattlePresentationLayerContext,
-    BattlePresentationLayeringProfile,
-    BattlePresentationLayeringRuntime,
-)
-
-__all__.extend(
-    [
+    ),
+    "BattleActionWorkflowRuntime": (".battle_action_workflow", "BattleActionWorkflowRuntime"),
+    "BattleActionWorkflowView": (".battle_action_workflow", "BattleActionWorkflowView"),
+    "BattleAnimationRole": (".battle_runtime", "BattleAnimationRole"),
+    "BattleAnimationTimingProfile": (".battle_animation_timing", "BattleAnimationTimingProfile"),
+    "BattleAnimationTimingRule": (".battle_animation_timing", "BattleAnimationTimingRule"),
+    "BattleAssetPreloadRegistry": (".battle_render_performance", "BattleAssetPreloadRegistry"),
+    "BattleAudioCue": (".battle_feedback", "BattleAudioCue"),
+    "BattleCameraFeedbackFrame": (".battle_camera_feedback", "BattleCameraFeedbackFrame"),
+    "BattleCameraFeedbackRuntime": (".battle_camera_feedback", "BattleCameraFeedbackRuntime"),
+    "BattleCameraImpulse": (".battle_camera_feedback", "BattleCameraImpulse"),
+    "BattleCastEntry": (".battle_turn_timeline", "BattleCastEntry"),
+    "BattleCombatantAnimator": (".battle_runtime", "BattleCombatantAnimator"),
+    "BattleCombatantVisual": (".battle", "BattleCombatantVisual"),
+    "BattleCombatantVisualProfile": (".battle_combatant_visuals", "BattleCombatantVisualProfile"),
+    "BattleCombatantVisualRuntime": (".battle_combatant_visuals", "BattleCombatantVisualRuntime"),
+    "BattleCombatantVisualState": (".battle_combatant_visuals", "BattleCombatantVisualState"),
+    "BattleCurrencyRewardView": (".battle_result", "BattleCurrencyRewardView"),
+    "BattleDirectedEvent": (".battle_presentation_director", "BattleDirectedEvent"),
+    "BattleFeedbackLabel": (".battle_feedback", "BattleFeedbackLabel"),
+    "BattleFeedbackProfile": (".battle_feedback", "BattleFeedbackProfile"),
+    "BattleFeedbackRuntime": (".battle_feedback", "BattleFeedbackRuntime"),
+    "BattleFloatingValue": (".battle_feedback", "BattleFloatingValue"),
+    "BattleFrameBudgetMetrics": (".battle_render_performance", "BattleFrameBudgetMetrics"),
+    "BattleFrameBudgetTracker": (".battle_render_performance", "BattleFrameBudgetTracker"),
+    "BattleHitRhythm": (".battle_animation_timing", "BattleHitRhythm"),
+    "BattleHudGauge": (".battle_hud", "BattleHudGauge"),
+    "BattleHudMember": (".battle_hud", "BattleHudMember"),
+    "BattleHudProfile": (".battle_hud", "BattleHudProfile"),
+    "BattleHudResourceStyle": (".battle_hud", "BattleHudResourceStyle"),
+    "BattleHudRuntime": (".battle_hud", "BattleHudRuntime"),
+    "BattleHudStatusIcon": (".battle_hud", "BattleHudStatusIcon"),
+    "BattleHudStatusStyle": (".battle_hud", "BattleHudStatusStyle"),
+    "BattleInformationItem": (".battle_information", "BattleInformationItem"),
+    "BattleInformationPolicy": (".battle_information", "BattleInformationPolicy"),
+    "BattleInformationRule": (".battle_information", "BattleInformationRule"),
+    "BattleInformationRuntime": (".battle_information", "BattleInformationRuntime"),
+    "BattleInformationView": (".battle_information", "BattleInformationView"),
+    "BattleInteractionContext": (".battle_interaction", "BattleInteractionContext"),
+    "BattleInteractionLayer": (".battle_interaction", "BattleInteractionLayer"),
+    "BattleInteractionProfile": (".battle_interaction", "BattleInteractionProfile"),
+    "BattleInteractionRuntime": (".battle_interaction", "BattleInteractionRuntime"),
+    "BattleInteractionView": (".battle_interaction", "BattleInteractionView"),
+    "BattleItemRewardView": (".battle_result", "BattleItemRewardView"),
+    "BattleMotionBeat": (".battle_motion_sequence", "BattleMotionBeat"),
+    "BattleMotionFrame": (".battle_motion_sequence", "BattleMotionFrame"),
+    "BattleMotionMetrics": (".battle_motion_sequence", "BattleMotionMetrics"),
+    "BattleMotionRuntime": (".battle_motion_sequence", "BattleMotionRuntime"),
+    "BattleMotionSequence": (".battle_motion_sequence", "BattleMotionSequence"),
+    "BattlePartyLayoutPolicy": (".battle_party_layout", "BattlePartyLayoutPolicy"),
+    "BattlePartyLayoutResult": (".battle_party_layout", "BattlePartyLayoutResult"),
+    "BattlePartyPlacement": (".battle_party_layout", "BattlePartyPlacement"),
+    "BattlePartyZoneLayout": (".battle_party_layout", "BattlePartyZoneLayout"),
+    "BattlePortraitPartyPlacement": (
+        ".battle_portrait_party_template",
+        "BattlePortraitPartyPlacement",
+    ),
+    "BattlePortraitPartyTemplateProfile": (
+        ".battle_portrait_party_template",
+        "BattlePortraitPartyTemplateProfile",
+    ),
+    "BattlePortraitPartyTemplateResult": (
+        ".battle_portrait_party_template",
+        "BattlePortraitPartyTemplateResult",
+    ),
+    "BattlePortraitPartyTemplateRuntime": (
+        ".battle_portrait_party_template",
+        "BattlePortraitPartyTemplateRuntime",
+    ),
+    "BattlePortraitPartyZone": (".battle_portrait_party_template", "BattlePortraitPartyZone"),
+    "BattlePresentationChannelPolicy": (
+        ".battle_presentation_layering",
         "BattlePresentationChannelPolicy",
+    ),
+    "BattlePresentationCoordinator": (".battle", "BattlePresentationCoordinator"),
+    "BattlePresentationDirection": (
+        ".battle_presentation_director",
+        "BattlePresentationDirection",
+    ),
+    "BattlePresentationDirector": (".battle_presentation_director", "BattlePresentationDirector"),
+    "BattlePresentationDirectorAdvance": (
+        ".battle_presentation_director",
+        "BattlePresentationDirectorAdvance",
+    ),
+    "BattlePresentationDirectorProfile": (
+        ".battle_presentation_director",
+        "BattlePresentationDirectorProfile",
+    ),
+    "BattlePresentationDirectorRule": (
+        ".battle_presentation_director",
+        "BattlePresentationDirectorRule",
+    ),
+    "BattlePresentationEvent": (".battle", "BattlePresentationEvent"),
+    "BattlePresentationEventKind": (".battle", "BattlePresentationEventKind"),
+    "BattlePresentationFrame": (".battle_runtime", "BattlePresentationFrame"),
+    "BattlePresentationLayerContext": (
+        ".battle_presentation_layering",
         "BattlePresentationLayerContext",
+    ),
+    "BattlePresentationLayeringProfile": (
+        ".battle_presentation_layering",
         "BattlePresentationLayeringProfile",
+    ),
+    "BattlePresentationLayeringRuntime": (
+        ".battle_presentation_layering",
         "BattlePresentationLayeringRuntime",
-    ]
-)
-
-from .battle_ui_polish import BattleUiPolishProfile
-
-__all__.append("BattleUiPolishProfile")
-
-from .rpg_character_screen import (
-    CharacterScreenAbilityView,
-    CharacterScreenEquipmentItemView,
-    CharacterScreenEquipmentSlotView,
-    CharacterScreenProfile,
-    CharacterScreenProgressionView,
-    CharacterScreenResourceView,
-    CharacterScreenRuntime,
-    CharacterScreenSection,
-    CharacterScreenStatView,
-    CharacterScreenView,
-)
-
-__all__.extend(
-    [
-        "CharacterScreenAbilityView",
+    ),
+    "BattlePresentationLibrary": (".library", "BattlePresentationLibrary"),
+    "BattlePresentationProfileRef": (".library", "BattlePresentationProfileRef"),
+    "BattlePresentationRuntime": (".battle_runtime", "BattlePresentationRuntime"),
+    "BattlePresentationScene": (".battle", "BattlePresentationScene"),
+    "BattleProgressionRewardView": (".battle_result", "BattleProgressionRewardView"),
+    "BattleRenderBatch": (".battle_render_performance", "BattleRenderBatch"),
+    "BattleRenderBatcher": (".battle_render_performance", "BattleRenderBatcher"),
+    "BattleRenderCullResult": (".battle_render_performance", "BattleRenderCullResult"),
+    "BattleRenderDraw": (".battle_render_performance", "BattleRenderDraw"),
+    "BattleRenderVisibilityCuller": (".battle_render_performance", "BattleRenderVisibilityCuller"),
+    "BattleResultPresentationRuntime": (".battle_result", "BattleResultPresentationRuntime"),
+    "BattleResultProfile": (".battle_result", "BattleResultProfile"),
+    "BattleResultView": (".battle_result", "BattleResultView"),
+    "BattleRosterDensityPolicy": (".battle_information", "BattleRosterDensityPolicy"),
+    "BattleRosterSummary": (".battle_information", "BattleRosterSummary"),
+    "BattleScreenFxCue": (".battle_camera_feedback", "BattleScreenFxCue"),
+    "BattleScreenRenderResult": (".battle_screen", "BattleScreenRenderResult"),
+    "BattleScreenRuntime": (".battle_screen", "BattleScreenRuntime"),
+    "BattleSideviewPlacement": (".battle_sideview_template", "BattleSideviewPlacement"),
+    "BattleSideviewTemplateProfile": (
+        ".battle_sideview_template",
+        "BattleSideviewTemplateProfile",
+    ),
+    "BattleSideviewTemplateResult": (".battle_sideview_template", "BattleSideviewTemplateResult"),
+    "BattleSideviewTemplateRuntime": (
+        ".battle_sideview_template",
+        "BattleSideviewTemplateRuntime",
+    ),
+    "BattleSideviewZone": (".battle_sideview_template", "BattleSideviewZone"),
+    "BattleTargetIndicator": (".battle_camera_feedback", "BattleTargetIndicator"),
+    "BattleTransientObject": (".battle_render_performance", "BattleTransientObject"),
+    "BattleTransientPool": (".battle_render_performance", "BattleTransientPool"),
+    "BattleTurnEntry": (".battle_turn_timeline", "BattleTurnEntry"),
+    "BattleTurnTimelineRuntime": (".battle_turn_timeline", "BattleTurnTimelineRuntime"),
+    "BattleTurnTimelineView": (".battle_turn_timeline", "BattleTurnTimelineView"),
+    "BattleUiActionSurface": (".battle_ui_assembly", "BattleUiActionSurface"),
+    "BattleUiAssemblyFrame": (".battle_ui_assembly", "BattleUiAssemblyFrame"),
+    "BattleUiAssemblyRuntime": (".battle_ui_assembly", "BattleUiAssemblyRuntime"),
+    "BattleUiBattlefieldVisual": (".battle_ui_assembly", "BattleUiBattlefieldVisual"),
+    "BattleUiComposer": (".battle_ui", "BattleUiComposer"),
+    "BattleUiFrame": (".battle_ui", "BattleUiFrame"),
+    "BattleUiGaugeBar": (".battle_ui", "BattleUiGaugeBar"),
+    "BattleUiIcon": (".battle_ui", "BattleUiIcon"),
+    "BattleUiLayoutProfile": (".battle_ui", "BattleUiLayoutProfile"),
+    "BattleUiMarker": (".battle_ui", "BattleUiMarker"),
+    "BattleUiMemberCard": (".battle_ui_assembly", "BattleUiMemberCard"),
+    "BattleUiPanel": (".battle_ui", "BattleUiPanel"),
+    "BattleUiPolishProfile": (".battle_ui_polish", "BattleUiPolishProfile"),
+    "BattleUiPortrait": (".battle_ui", "BattleUiPortrait"),
+    "BattleUiRenderer": (".battle_ui_renderer", "BattleUiRenderer"),
+    "BattleUiText": (".battle_ui", "BattleUiText"),
+    "BattleUiTheme": (".battle_ui_renderer", "BattleUiTheme"),
+    "BattleValueKind": (".battle_feedback", "BattleValueKind"),
+    "BattleVfxCue": (".battle_feedback", "BattleVfxCue"),
+    "BattleVisualAnchor": (".battle", "BattleVisualAnchor"),
+    "BattleVisualAssetSet": (".battle_combatant_visuals", "BattleVisualAssetSet"),
+    "BattleVisualStateDefinition": (".battle_combatant_visuals", "BattleVisualStateDefinition"),
+    "BattleVisualTransform": (".battle_combatant_visuals", "BattleVisualTransform"),
+    "BattleWorkflowOption": (".battle_action_workflow", "BattleWorkflowOption"),
+    "BattleWorkflowSelection": (".battle_action_workflow", "BattleWorkflowSelection"),
+    "BattleWorkflowStep": (".battle_action_workflow", "BattleWorkflowStep"),
+    "CAPABILITIES": (".fidelity", "CAPABILITIES"),
+    "CharacterScreenAbilityView": (".rpg_character_screen", "CharacterScreenAbilityView"),
+    "CharacterScreenEquipmentItemView": (
+        ".rpg_character_screen",
         "CharacterScreenEquipmentItemView",
+    ),
+    "CharacterScreenEquipmentSlotView": (
+        ".rpg_character_screen",
         "CharacterScreenEquipmentSlotView",
-        "CharacterScreenProfile",
-        "CharacterScreenProgressionView",
-        "CharacterScreenResourceView",
-        "CharacterScreenRuntime",
-        "CharacterScreenSection",
-        "CharacterScreenStatView",
-        "CharacterScreenView",
-    ]
-)
+    ),
+    "CharacterScreenProfile": (".rpg_character_screen", "CharacterScreenProfile"),
+    "CharacterScreenProgressionView": (".rpg_character_screen", "CharacterScreenProgressionView"),
+    "CharacterScreenResourceView": (".rpg_character_screen", "CharacterScreenResourceView"),
+    "CharacterScreenRuntime": (".rpg_character_screen", "CharacterScreenRuntime"),
+    "CharacterScreenSection": (".rpg_character_screen", "CharacterScreenSection"),
+    "CharacterScreenStatView": (".rpg_character_screen", "CharacterScreenStatView"),
+    "CharacterScreenView": (".rpg_character_screen", "CharacterScreenView"),
+    "Choreography": (".composition", "Choreography"),
+    "ChoreographyFrame": (".choreography", "ChoreographyFrame"),
+    "ChoreographyTimeline": (".choreography", "ChoreographyTimeline"),
+    "ClipSampler": (".composition", "ClipSampler"),
+    "CombatantOverlay": (".battle_runtime", "CombatantOverlay"),
+    "Command": (".workspace", "Command"),
+    "CompositionFrame": (".composition", "CompositionFrame"),
+    "Context": (".runtime", "Context"),
+    "EquipmentCandidateView": (".rpg_equipment_screen", "EquipmentCandidateView"),
+    "EquipmentGrowthView": (".rpg_equipment_screen", "EquipmentGrowthView"),
+    "EquipmentScreenProfile": (".rpg_equipment_screen", "EquipmentScreenProfile"),
+    "EquipmentScreenRuntime": (".rpg_equipment_screen", "EquipmentScreenRuntime"),
+    "EquipmentScreenView": (".rpg_equipment_screen", "EquipmentScreenView"),
+    "EquipmentSlotView": (".rpg_equipment_screen", "EquipmentSlotView"),
+    "EquipmentSocketView": (".rpg_equipment_screen", "EquipmentSocketView"),
+    "EquippedItemView": (".rpg_equipment_screen", "EquippedItemView"),
+    "Executor": (".bridge", "Executor"),
+    "ExecutorRegistry": (".bridge", "ExecutorRegistry"),
+    "ExecutorSignal": (".bridge", "ExecutorSignal"),
+    "Expression": (".canonical", "Expression"),
+    "FidelityCapability": (".fidelity", "FidelityCapability"),
+    "FidelityEditorViewState": (".fidelity_editor", "FidelityEditorViewState"),
+    "Frame": (".runtime", "Frame"),
+    "FrameBudget": (".fidelity_editor", "FrameBudget"),
+    "FrameDiagnostics": (".performance", "FrameDiagnostics"),
+    "FrameTiming": (".fidelity_editor", "FrameTiming"),
+    "HeadlessBattleUiBackend": (".battle_ui_renderer", "HeadlessBattleUiBackend"),
+    "HighFidelityClip": (".fidelity_editor", "HighFidelityClip"),
+    "HighFidelityEditorModel": (".fidelity_editor", "HighFidelityEditorModel"),
+    "ImmediateExecutor": (".bridge", "ImmediateExecutor"),
+    "InspectorField": (".workspace", "InspectorField"),
+    "InventoryGroupView": (".rpg_inventory_screen", "InventoryGroupView"),
+    "InventoryItemView": (".rpg_inventory_screen", "InventoryItemView"),
+    "InventoryScreenProfile": (".rpg_inventory_screen", "InventoryScreenProfile"),
+    "InventoryScreenRuntime": (".rpg_inventory_screen", "InventoryScreenRuntime"),
+    "InventoryScreenView": (".rpg_inventory_screen", "InventoryScreenView"),
+    "Kind": (".visual_authoring", "Kind"),
+    "LayerSample": (".composition", "LayerSample"),
+    "LayoutState": (".visual_authoring", "LayoutState"),
+    "Library": (".runtime", "Library"),
+    "Node": (".visual_editing", "Node"),
+    "PaletteItem": (".workspace", "PaletteItem"),
+    "PartyFormationSlotView": (".rpg_party_screen", "PartyFormationSlotView"),
+    "PartyGroupView": (".rpg_party_screen", "PartyGroupView"),
+    "PartyMemberPresentation": (".rpg_party_screen", "PartyMemberPresentation"),
+    "PartyScreenProfile": (".rpg_party_screen", "PartyScreenProfile"),
+    "PartyScreenRuntime": (".rpg_party_screen", "PartyScreenRuntime"),
+    "PartyScreenView": (".rpg_party_screen", "PartyScreenView"),
+    "PassiveCollectionEntry": (".rpg_ability_screen", "PassiveCollectionEntry"),
+    "PresentationEditorModel": (".visual_editing", "PresentationEditorModel"),
+    "PresentationRunner": (".bridge", "PresentationRunner"),
+    "PresentationVisualEditor": (".visual_editing", "PresentationVisualEditor"),
+    "PresentationVisualProjection": (".visual_authoring", "PresentationVisualProjection"),
+    "PresentationWorkspaceModel": (".workspace", "PresentationWorkspaceModel"),
+    "ProgressionGraphView": (".rpg_progression_screen", "ProgressionGraphView"),
+    "ProgressionNodeView": (".rpg_progression_screen", "ProgressionNodeView"),
+    "ProgressionRequirementView": (".rpg_progression_screen", "ProgressionRequirementView"),
+    "ProgressionScreenProfile": (".rpg_progression_screen", "ProgressionScreenProfile"),
+    "ProgressionScreenRuntime": (".rpg_progression_screen", "ProgressionScreenRuntime"),
+    "ProgressionScreenView": (".rpg_progression_screen", "ProgressionScreenView"),
+    "Runtime": (".bridge", "Runtime"),
+    "RuntimeEvent": (".bridge", "RuntimeEvent"),
+    "RuntimeLimits": (".runtime", "RuntimeLimits"),
+    "RuntimeSafetyError": (".runtime", "RuntimeSafetyError"),
+    "Sequence": (".editor_model", "Sequence"),
+    "SyncCue": (".composition", "SyncCue"),
+    "TimeSegment": (".choreography", "TimeSegment"),
+    "TimedExecutor": (".bridge", "TimedExecutor"),
+    "TimelineBlock": (".visual_authoring", "TimelineBlock"),
+    "TrackEvent": (".choreography", "TrackEvent"),
+    "VisualEdge": (".visual_authoring", "VisualEdge"),
+    "VisualEditState": (".visual_editing", "VisualEditState"),
+    "VisualLayer": (".fidelity", "VisualLayer"),
+    "VisualNode": (".visual_authoring", "VisualNode"),
+    "WorkspaceState": (".workspace", "WorkspaceState"),
+    "battle": (".battle", None),
+    "battle_action_menu": (".battle_action_menu", None),
+    "battle_action_workflow": (".battle_action_workflow", None),
+    "battle_animation_timing": (".battle_animation_timing", None),
+    "battle_camera_feedback": (".battle_camera_feedback", None),
+    "battle_combatant_visuals": (".battle_combatant_visuals", None),
+    "battle_feedback": (".battle_feedback", None),
+    "battle_hud": (".battle_hud", None),
+    "battle_information": (".battle_information", None),
+    "battle_interaction": (".battle_interaction", None),
+    "battle_motion_sequence": (".battle_motion_sequence", None),
+    "battle_party_layout": (".battle_party_layout", None),
+    "battle_portrait_party_template": (".battle_portrait_party_template", None),
+    "battle_presentation_director": (".battle_presentation_director", None),
+    "battle_presentation_layering": (".battle_presentation_layering", None),
+    "battle_render_performance": (".battle_render_performance", None),
+    "battle_result": (".battle_result", None),
+    "battle_runtime": (".battle_runtime", None),
+    "battle_screen": (".battle_screen", None),
+    "battle_sideview_template": (".battle_sideview_template", None),
+    "battle_turn_timeline": (".battle_turn_timeline", None),
+    "battle_ui": (".battle_ui", None),
+    "battle_ui_assembly": (".battle_ui_assembly", None),
+    "battle_ui_polish": (".battle_ui_polish", None),
+    "battle_ui_renderer": (".battle_ui_renderer", None),
+    "bind": (".runtime", "bind"),
+    "bridge": (".bridge", None),
+    "canonical": (".canonical", None),
+    "choreography": (".choreography", None),
+    "composition": (".composition", None),
+    "creature_screens": (".creature_screens", None),
+    "default_dungeon_portrait_party_profile": (
+        ".battle_portrait_party_template",
+        "default_dungeon_portrait_party_profile",
+    ),
+    "default_jrpg_visual_states": (".battle_combatant_visuals", "default_jrpg_visual_states"),
+    "default_sideview_jrpg_profile": (
+        ".battle_sideview_template",
+        "default_sideview_jrpg_profile",
+    ),
+    "diagnose": (".fidelity_editor", "diagnose"),
+    "dialogue_window": (".dialogue_window", None),
+    "easing_value": (".battle_animation_timing", "easing_value"),
+    "editor_model": (".editor_model", None),
+    "event": (".choreography", "event"),
+    "fidelity": (".fidelity", None),
+    "fidelity_editor": (".fidelity_editor", None),
+    "fidelity_warnings": (".fidelity", "fidelity_warnings"),
+    "gauge_threshold_payloads": (".battle_feedback", "gauge_threshold_payloads"),
+    "hold": (".choreography", "hold"),
+    "library": (".library", None),
+    "make_reference_smooth_attack_sequence": (
+        ".battle_motion_sequence",
+        "make_reference_smooth_attack_sequence",
+    ),
+    "menu_layout": (".menu_layout", None),
+    "message_codes": (".message_codes", None),
+    "performance": (".performance", None),
+    "presentation_cues": (".composition", "presentation_cues"),
+    "resolved_value_payload": (".battle_feedback", "resolved_value_payload"),
+    "retired_screens": (".retired_screens", None),
+    "rpg_ability_screen": (".rpg_ability_screen", None),
+    "rpg_character_screen": (".rpg_character_screen", None),
+    "rpg_equipment_screen": (".rpg_equipment_screen", None),
+    "rpg_inventory_screen": (".rpg_inventory_screen", None),
+    "rpg_party_screen": (".rpg_party_screen", None),
+    "rpg_progression_screen": (".rpg_progression_screen", None),
+    "runtime": (".runtime", None),
+    "text_cells": (".text_cells", None),
+    "time_scale": (".choreography", "time_scale"),
+    "ui_skin": (".ui_skin", None),
+    "visual_authoring": (".visual_authoring", None),
+    "visual_editing": (".visual_editing", None),
+    "workspace": (".workspace", None),
+}
 
-from .rpg_party_screen import (
-    PartyFormationSlotView,
-    PartyGroupView,
-    PartyMemberPresentation,
-    PartyScreenProfile,
-    PartyScreenRuntime,
-    PartyScreenView,
-)
+__all__ = sorted(_EXPORTS)
 
-__all__.extend(
-    [
-        "PartyFormationSlotView",
-        "PartyGroupView",
-        "PartyMemberPresentation",
-        "PartyScreenProfile",
-        "PartyScreenRuntime",
-        "PartyScreenView",
-    ]
-)
 
-from .rpg_equipment_screen import (
-    EquipmentCandidateView,
-    EquipmentGrowthView,
-    EquipmentScreenProfile,
-    EquipmentScreenRuntime,
-    EquipmentScreenView,
-    EquipmentSlotView,
-    EquipmentSocketView,
-    EquippedItemView,
-)
+def __getattr__(name):
+    try:
+        module, attribute = _EXPORTS[name]
+    except KeyError:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
+    value = import_module(module, __name__)
+    if attribute is not None:
+        value = getattr(value, attribute)
+    globals()[name] = value
+    return value
 
-__all__.extend(
-    [
-        "EquipmentCandidateView",
-        "EquipmentGrowthView",
-        "EquipmentScreenProfile",
-        "EquipmentScreenRuntime",
-        "EquipmentScreenView",
-        "EquipmentSlotView",
-        "EquipmentSocketView",
-        "EquippedItemView",
-    ]
-)
 
-from .rpg_ability_screen import (
-    AbilityCollectionEntry,
-    AbilityCollectionGroup,
-    AbilityScreenProfile,
-    AbilityScreenRuntime,
-    AbilityScreenView,
-    PassiveCollectionEntry,
-)
-
-__all__.extend(
-    [
-        "AbilityCollectionEntry",
-        "AbilityCollectionGroup",
-        "AbilityScreenProfile",
-        "AbilityScreenRuntime",
-        "AbilityScreenView",
-        "PassiveCollectionEntry",
-    ]
-)
-
-from .rpg_progression_screen import (
-    ProgressionGraphView,
-    ProgressionNodeView,
-    ProgressionRequirementView,
-    ProgressionScreenProfile,
-    ProgressionScreenRuntime,
-    ProgressionScreenView,
-)
-
-__all__.extend(
-    [
-        "ProgressionGraphView",
-        "ProgressionNodeView",
-        "ProgressionRequirementView",
-        "ProgressionScreenProfile",
-        "ProgressionScreenRuntime",
-        "ProgressionScreenView",
-    ]
-)
-
-from .rpg_inventory_screen import (
-    InventoryGroupView,
-    InventoryItemView,
-    InventoryScreenProfile,
-    InventoryScreenRuntime,
-    InventoryScreenView,
-)
-
-__all__.extend(
-    [
-        "InventoryGroupView",
-        "InventoryItemView",
-        "InventoryScreenProfile",
-        "InventoryScreenRuntime",
-        "InventoryScreenView",
-    ]
-)
-
-from .battle_interaction import (
-    BattleInteractionContext,
-    BattleInteractionLayer,
-    BattleInteractionProfile,
-    BattleInteractionRuntime,
-    BattleInteractionView,
-)
-
-from .battle_information import (
-    BattleInformationItem,
-    BattleInformationPolicy,
-    BattleInformationRule,
-    BattleInformationRuntime,
-    BattleInformationView,
-    BattleRosterDensityPolicy,
-    BattleRosterSummary,
-)
-
-from .battle_combatant_visuals import (
-    BattleCombatantVisualProfile,
-    BattleCombatantVisualRuntime,
-    BattleCombatantVisualState,
-    BattleVisualAssetSet,
-    BattleVisualStateDefinition,
-    BattleVisualTransform,
-    default_jrpg_visual_states,
-)
-
-from .battle_ui_assembly import (
-    BattleUiActionSurface,
-    BattleUiAssemblyFrame,
-    BattleUiAssemblyRuntime,
-    BattleUiBattlefieldVisual,
-    BattleUiMemberCard,
-)
-
-from .battle_motion_sequence import (
-    BattleMotionBeat,
-    BattleMotionFrame,
-    BattleMotionMetrics,
-    BattleMotionRuntime,
-    BattleMotionSequence,
-    make_reference_smooth_attack_sequence,
-)
-
-from .battle_sideview_template import (
-    BattleSideviewPlacement,
-    BattleSideviewTemplateProfile,
-    BattleSideviewTemplateResult,
-    BattleSideviewTemplateRuntime,
-    BattleSideviewZone,
-    default_sideview_jrpg_profile,
-)
-
-from .battle_portrait_party_template import (
-    BattlePortraitPartyPlacement,
-    BattlePortraitPartyTemplateProfile,
-    BattlePortraitPartyTemplateResult,
-    BattlePortraitPartyTemplateRuntime,
-    BattlePortraitPartyZone,
-    default_dungeon_portrait_party_profile,
-)
-
-from .battle_render_performance import (
-    BattleAssetPreloadRegistry,
-    BattleFrameBudgetMetrics,
-    BattleFrameBudgetTracker,
-    BattleRenderBatch,
-    BattleRenderBatcher,
-    BattleRenderCullResult,
-    BattleRenderDraw,
-    BattleRenderVisibilityCuller,
-    BattleTransientObject,
-    BattleTransientPool,
-)
-
-from .library import BattlePresentationLibrary, BattlePresentationProfileRef
-
-# Generic composable presentation extensions (Asset/Presentation branch)
-from .canonical import *
-from .runtime import *
-from .bridge import *
-from .editor_model import *
-from .workspace import *
-from .visual_authoring import *
-from .visual_editing import *
-from .fidelity import *
-from .composition import *
-from .choreography import *
-from .performance import *
-from .fidelity_editor import *
-
-# Export both legacy battle-presentation and generic composable-presentation APIs.
-__all__ = sorted(set(__all__) | {name for name in globals() if not name.startswith("_")})  # noqa: PLE0605 - sorted() returns a list
+def __dir__():
+    return sorted({*globals(), *_EXPORTS})

@@ -15,8 +15,12 @@ from asteria.runtime.character_control import (
     CharacterController2DComponent,
     CharacterControllerSystem,
 )
-from asteria.runtime.collision import ALL_LAYERS, Collider2DComponent, CollisionWorld
-from asteria.runtime.game_session import _EitherBlocks
+from asteria.runtime.collision import (
+    ALL_LAYERS,
+    Collider2DComponent,
+    CollisionWorld,
+    CombinedQuery,
+)
 
 DT = 1.0 / 60.0
 
@@ -101,7 +105,7 @@ def _run(batched, monkeypatch, frames=150):
         )
         index = int(entity.name[1:])
         if index % 3 == 0:
-            return _EitherBlocks(query, _Tiles())
+            return CombinedQuery(query, _Tiles())
         return None if index % 17 == 5 else query
 
     system = FieldAISystem(blocking, rng=random.Random(9), default_target_id=player.id)

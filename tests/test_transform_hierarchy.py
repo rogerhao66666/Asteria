@@ -50,13 +50,13 @@ def test_reparenting_keeps_scene_position_and_refuses_cycles():
 
 
 def test_parent_id_round_trips_and_old_scenes_without_it_still_load():
-    from asteria.editor import EditorDocument
+    from asteria.runtime.component_registry import default_component_registry
 
     scene = Scene("S")
     a = _entity(scene, "A")
     b = _entity(scene, "B", 5, 5)
     set_parent(b, a, keep_world=False)
-    registry = EditorDocument().component_registry
+    registry = default_component_registry()
     data = serialize_scene(scene)
     restored = deserialize_scene(data, registry)
     assert restored.get_entity(b.id).get(Transform).parent_id == a.id

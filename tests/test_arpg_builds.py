@@ -232,6 +232,7 @@ def test_a_long_tree_is_spread_instead_of_overlapping():
 
     screen = SkillTreeScreen.__new__(SkillTreeScreen)
     screen.rt, screen.zoom, screen.origin, screen._spread = Stub(), 1.0, [0.0, 0.0], {}
+    screen._layouts = {}
     screen._view_for = None
     assert screen.spread(graph) >= 12  # 5 graph units -> at least a node height apart
     assert _overlaps(screen, graph) == []
@@ -255,6 +256,7 @@ def test_the_tree_is_laid_out_once_not_per_node_and_frame(monkeypatch):
 
     screen = tree.SkillTreeScreen.__new__(tree.SkillTreeScreen)
     screen.rt, screen.zoom, screen.origin, screen._spread = Stub(), 1.0, [0.0, 0.0], {}
+    screen._layouts = {}
     for _frame in range(5):
         for node in graph.nodes:
             screen.node_point(graph, node.node_id)

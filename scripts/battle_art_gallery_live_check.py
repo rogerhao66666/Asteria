@@ -35,7 +35,6 @@ def main(argv=None):
     import pygame
     from PIL import Image
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.runtime.battle_presentation_adapters import PygameTextureDrawer
     from asteria.runtime.battle_visuals import (
@@ -44,10 +43,9 @@ def main(argv=None):
         vfx_placement,
         vfx_rect,
     )
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(
-        project_dir / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(project_dir / "project.asteria.json", default_component_registry())
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Battle art gallery")

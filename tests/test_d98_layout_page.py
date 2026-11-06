@@ -98,13 +98,13 @@ def test_a_pause_menu_page_links_to_its_layout(monkeypatch):
     monkeypatch.setenv("ASTERIA_MUTE", "1")
     from PySide6.QtWidgets import QApplication, QPushButton
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     QApplication.instance() or QApplication([])
     path = DEMO / "project.asteria.json"
-    window = AsteriaEditorWindow(Project.load_json(path, EditorDocument().component_registry))
+    window = AsteriaEditorWindow(Project.load_json(path, default_component_registry()))
     try:
         window.document.file_path = path.resolve()
         window.open_pause_menu("status")

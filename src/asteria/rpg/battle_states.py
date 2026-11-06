@@ -5,15 +5,9 @@ from dataclasses import dataclass
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import Effect, EffectOperation, GameplaySubject, normalize_tag
 from asteria.gameplay.formulas import ValueFormula
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _number(value, label):
@@ -30,7 +24,7 @@ def _tags(values):
 def _coeffs(values):
     result = {}
     for key, value in dict(values or {}).items():
-        key = _id(key, "stat name")
+        key = required_id(key, "stat name")
         result[key] = _number(value, "stat coefficient")
     return result
 
@@ -149,9 +143,11 @@ class BattleStatePolicy:
         if tick_amount <= 0:
             raise ValueError("tick_amount must be > 0")
         if tick_trigger is not None:
-            tick_trigger = _id(tick_trigger, "tick_trigger")
-        remove_triggers = tuple(sorted({_id(x, "remove_trigger") for x in remove_triggers}))
-        object.__setattr__(self, "state_id", _id(state_id, "state_id"))
+            tick_trigger = required_id(tick_trigger, "tick_trigger")
+        remove_triggers = tuple(
+            sorted({required_id(x, "remove_trigger") for x in remove_triggers})
+        )
+        object.__setattr__(self, "state_id", required_id(state_id, "state_id"))
         object.__setattr__(self, "base_chance", _number(base_chance, "base_chance"))
         object.__setattr__(self, "source_stat_terms", _coeffs(source_stat_terms))
         object.__setattr__(self, "target_stat_terms", _coeffs(target_stat_terms))

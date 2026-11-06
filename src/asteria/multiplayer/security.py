@@ -9,6 +9,7 @@ can no longer be claimed by someone who merely knows it.
 
 from __future__ import annotations
 
+import argparse
 import base64
 import hashlib
 import hmac
@@ -127,7 +128,6 @@ def check_exposure(host, *, tls, auth, allow_insecure=False):
 def main(argv=None):
     """``python -m asteria.multiplayer.security issue --secret-file F --player ID [--hours N]``
     prints a token the player puts in their connection profile."""
-    import argparse
 
     parser = argparse.ArgumentParser(description="Issue a multiplayer player token")
     parser.add_argument("command", choices=("issue",))

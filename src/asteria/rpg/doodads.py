@@ -10,9 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +44,7 @@ class DoodadDefinition:
         snap=0.0,
         tags=(),
     ):
-        doodad_id, sheet = _text(doodad_id), _text(sprite_sheet_asset_id)
+        doodad_id, sheet = clean_text(doodad_id), clean_text(sprite_sheet_asset_id)
         if not doodad_id or not sheet:
             raise ValueError("a doodad needs an id and a sprite sheet")
         if int(frame) < 0:
@@ -68,7 +66,7 @@ class DoodadDefinition:
         s(self, "layer", int(layer))
         s(self, "depth", float(depth))
         s(self, "snap", float(snap))
-        s(self, "tags", tuple(sorted({_text(t) for t in tags if _text(t)})))
+        s(self, "tags", tuple(sorted({clean_text(t) for t in tags if clean_text(t)})))
 
     @property
     def solid(self):

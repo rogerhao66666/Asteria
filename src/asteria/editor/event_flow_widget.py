@@ -28,14 +28,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.events import EventInstruction
 from asteria.events.common import COMMON_TRIGGERS
 from asteria.events.conditions import EventCondition
 
+from .authoring_hub_widget import _free_id
 from .event_editing import describe_instruction
 from .event_flow_authoring import BATTLE_HOOKS, EventFlowAuthoring, EventFlowError
 from .i18n import translate
 from .record_vocabulary import AI_COMPARISONS, trigger_label, vocabulary_for, words
+from .responsive_form import ResponsiveColumns
 from .ui_fit import ValueCombo, WordCombo
+from .world_command_form import record_names
 
 COMPARATORS = ("<=", "<", "==", "!=", ">", ">=")
 
@@ -200,7 +204,6 @@ class EventFlowWidget(QWidget):
         top.addWidget(self.program_pick)
         top.addWidget(new_program)
         top.addWidget(self.delete_program_button)
-        from .responsive_form import ResponsiveColumns
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
@@ -399,7 +402,7 @@ class EventFlowWidget(QWidget):
         source = self.cond_source.currentText()
         name = self.cond_name.currentText().strip()
         if not name:
-            self.status.setText(translate("Choose what the condition reads first."))
+            self.status.setText("Choose what the condition reads first.")
             return False
         if name.startswith("alive:") or source == "switch":
             operator, value = "==", self.cond_flag.currentText() == "true"
@@ -458,8 +461,6 @@ class EventFlowWidget(QWidget):
         )
 
     def _new_program_clicked(self):
-        from .authoring_hub_widget import _free_id
-
         value = _free_id("", self.api.project.event_programs.ids(), "new_program")
         self._try(lambda: self.api.new_program(value), f"Created {words(value)}")
         self.program_pick.setCurrentText(value)  # ready to use, or to delete again
@@ -670,9 +671,6 @@ class SequenceEditorDialog(QDialog):
         track = self.current_track
         if track is None:
             return
-        from asteria.events import EventInstruction
-
-        from .world_command_form import record_names
 
         names = record_names(self.document) if self.document is not None else None
         self.steps.addItems(

@@ -3,18 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
+from asteria.core.values import required_id
+
 
 def _nonnegative(value, name):
     value = float(value)
     if not isfinite(value) or value < 0:
         raise ValueError(f"{name} must be finite and >= 0")
-    return value
-
-
-def _id(value, name):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{name} is required")
     return value
 
 
@@ -43,15 +38,15 @@ class BattleMotionBeat:
         easing="linear",
         payload=None,
     ):
-        object.__setattr__(self, "beat_id", _id(beat_id, "beat_id"))
+        object.__setattr__(self, "beat_id", required_id(beat_id, "beat_id"))
         object.__setattr__(self, "at", _nonnegative(at, "at"))
-        object.__setattr__(self, "channel", _id(channel, "channel"))
-        object.__setattr__(self, "cue", _id(cue, "cue"))
+        object.__setattr__(self, "channel", required_id(channel, "channel"))
+        object.__setattr__(self, "cue", required_id(cue, "cue"))
         object.__setattr__(
-            self, "member_id", None if member_id is None else _id(member_id, "member_id")
+            self, "member_id", None if member_id is None else required_id(member_id, "member_id")
         )
         object.__setattr__(
-            self, "target_id", None if target_id is None else _id(target_id, "target_id")
+            self, "target_id", None if target_id is None else required_id(target_id, "target_id")
         )
         object.__setattr__(self, "duration", _nonnegative(duration, "duration"))
         object.__setattr__(self, "easing", str(easing).strip() or "linear")
@@ -81,7 +76,7 @@ class BattleMotionSequence:
         recovery = None if recovery_at is None else _nonnegative(recovery_at, "recovery_at")
         if recovery is not None and recovery > duration:
             raise ValueError("recovery_at exceeds sequence duration")
-        object.__setattr__(self, "sequence_id", _id(sequence_id, "sequence_id"))
+        object.__setattr__(self, "sequence_id", required_id(sequence_id, "sequence_id"))
         object.__setattr__(self, "duration", duration)
         object.__setattr__(self, "beats", tuple(sorted(beats, key=lambda x: (x.at, x.beat_id))))
         object.__setattr__(self, "recovery_at", recovery)

@@ -57,15 +57,15 @@ def test_a_workstation_goes_to_data_and_back_and_sorts_recipes_into_tabs():
 def host(monkeypatch):
     import real_window
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     if not real_window.enabled():
         monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
         monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     monkeypatch.setenv("ASTERIA_MUTE", "1")
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=1280, height=720
     )

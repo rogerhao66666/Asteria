@@ -32,14 +32,14 @@ def test_demo_manifest_opens_the_victory_aftermath_screen():
 def demo(monkeypatch):
     import real_window
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     if not real_window.enabled():
         monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
         monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), ROOT, width=960, height=540
     )
@@ -279,8 +279,8 @@ def test_the_demo_battle_is_won_with_the_keyboard(demo):
 def encounter(monkeypatch):
     import real_window
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     if not real_window.enabled():
@@ -289,9 +289,7 @@ def encounter(monkeypatch):
     opened = []
 
     def start(encounter_id):
-        project = Project.load_json(
-            ROOT / "project.asteria.json", EditorDocument().component_registry
-        )
+        project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
         runtime = PlayableTestRuntime(
             project, project.game_start.instantiate(project), ROOT, width=960, height=540
         )

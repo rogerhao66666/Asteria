@@ -1,10 +1,15 @@
+import hashlib
+import json
 import os
 import shutil
 import sys
+from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
 
 from asteria.assets.character_visual import CharacterVisualSet
+from asteria.core import Transform
+from asteria.core.prefab import PrefabError, PrefabInstanceComponent
 
 from .authoring_hub_widget import FamilyHostWidget
 from .clipboard import build_duplicate_entity_command, build_paste_entity_command
@@ -36,7 +41,6 @@ from .model import EditorDocument
 from .panel_switch import PANELS, PanelSwitch
 from .place_character import DefaultAppearance, build_place_character_command
 from .playmode import PlayModeError, create_play_session
-from .playtest_profiles import PlaytestProfileLibrary
 from .project_workspace import ProjectWorkspaceController
 from .runtime_launcher import RuntimeLaunchError, launch_play_session
 from .scenes import (
@@ -208,7 +212,6 @@ class AsteriaEditorWindow(QMainWindow):
 
         self.authoring_controllers = IntegratedAuthoringControllers(self.document)
         self.project_workspace_controller = ProjectWorkspaceController(self.document)
-        self.playtest_profile_library = None
 
         self.rpg_authoring = FamilyHostWidget(
             "Game Data", self.authoring_controllers.rpg_categories, self
@@ -538,7 +541,6 @@ class AsteriaEditorWindow(QMainWindow):
 
         self._build_actions()
         QApplication.instance().focusChanged.connect(self._focus_changed)
-        self._load_playtest_profiles()
         left.raise_()
         self._workspace_mode_changed(self.workspace.mode.value)
         self.refresh_all()
@@ -745,8 +747,6 @@ class AsteriaEditorWindow(QMainWindow):
         return None
 
     def _run_prefab_command(self, command, message):
-        from asteria.core.prefab import PrefabError
-
         try:
             self.document.execute(command)
         except (PrefabError, ValueError, KeyError) as exc:
@@ -799,8 +799,6 @@ class AsteriaEditorWindow(QMainWindow):
         return result
 
     def apply_instance_to_prefab(self):
-        from asteria.core.prefab import PrefabInstanceComponent
-
         from .prefab_commands import apply_instance_to_prefab_command
 
         entity = self._selected_entity()
@@ -815,8 +813,6 @@ class AsteriaEditorWindow(QMainWindow):
         )
 
     def revert_instance_to_prefab(self):
-        from asteria.core.prefab import PrefabInstanceComponent
-
         from .prefab_commands import RevertInstanceCommand
 
         entity = self._selected_entity()
@@ -991,8 +987,6 @@ class AsteriaEditorWindow(QMainWindow):
         self.statusBar().showMessage(f"Saved script {path}", 3000)
 
     def _run_authoring_script(self, source, filename):
-        from .commands import CommandTransaction
-
         tx = CommandTransaction("Run Authoring Script")
 
         def apply(command):
@@ -1494,9 +1488,9 @@ class AsteriaEditorWindow(QMainWindow):
         if scene is None:
             return ()
         bindings = bindings_for_scene(project, scene)
-        return tuple(
-            (entity, len(list(bindings.for_entity(entity.id)))) for entity in scene.entities()
-        )
+        # one pass over the bindings (asking each entity for its own scanned them all per entity)
+        counts = Counter(str(b.entity_id) for b in bindings.bindings.values())
+        return tuple((entity, counts[str(entity.id)]) for entity in scene.entities())
 
     def _event_entity_picked(self, entity):
         self.document.select_entity(entity)
@@ -1541,7 +1535,6 @@ class AsteriaEditorWindow(QMainWindow):
         program = EventProgram([], name=name.strip() or "Interaction")
         binding = EventBinding(binding_id, entity.id, program_id, trigger=EventTriggerKind.ACTION)
         bindings = bindings_for_scene(project, scene)
-        from .commands import CommandTransaction
 
         tx = CommandTransaction("Add Event")
         tx.add(AddEventProgramCommand(project.event_programs, program_id, program))
@@ -1984,23 +1977,41 @@ class AsteriaEditorWindow(QMainWindow):
         QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def set_project(self, project, file_path=None):
-        if self.play_session is not None and self.play_session.active:
-            self.stop_play()
         self.document.set_project(project, file_path=file_path)
-        self.play_session = None
-        self.runtime_process = None
         if file_path is not None:
             self._resolve_project_resources()
         else:
             self.document.asset_views.clear()
             self.set_tilemap_render_source(None)
+        self._show_new_project()
+
+    def _show_new_project(self):
+        """After the document took another project (set, opened, made from a template or
+        imported): the old project's play-test stops (it was left running), the code page
+        reads the new project's script and every workspace is rebuilt now - none may keep the
+        old one's records, even before it is opened."""
+        if self.play_session is not None and self.play_session.active:
+            self.stop_play()
+        self.play_session = None
+        self.runtime_process = None
         self.code_workspace.load_default_script()
         self.refresh_all()
-        # another project: every workspace is rebuilt now (none may keep the old one's records,
-        # even before it is opened)
         for mode in WorkspaceMode:
             self._ensure_workspace_fresh(mode, every_tab=True)
         QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
+
+    def _confirm_discard(self, question):
+        """True when there is nothing unsaved, or the author answers Yes to ``question``."""
+        if not self.document.dirty:
+            return True
+        answer = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            f"This project has unsaved changes. {question}",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        return answer == QMessageBox.Yes
 
     def refresh_asset_list(self):
         from .asset_thumbnails import ImageCache, asset_thumbnail, canonical_asset_thumbnail
@@ -2361,7 +2372,6 @@ class AsteriaEditorWindow(QMainWindow):
 
     def navigate_to_problem(self, problem):
         """Open the editor that owns ``problem.target`` and select the offending item (EDT-15)."""
-        from pathlib import Path
 
         target = tuple(problem.target)
         if not target or self.document.project is None:
@@ -2723,16 +2733,8 @@ class AsteriaEditorWindow(QMainWindow):
         return result
 
     def open_project(self):
-        if self.document.dirty:
-            answer = QMessageBox.question(
-                self,
-                "Unsaved Changes",
-                "This project has unsaved changes. Open another project anyway?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
-            )
-            if answer != QMessageBox.Yes:
-                return False
+        if not self._confirm_discard("Open another project anyway?"):
+            return False
         path, _ = QFileDialog.getOpenFileName(
             self, "Open Asteria Project", "", "Asteria Project (*.asteria.json *.json)"
         )
@@ -2744,10 +2746,7 @@ class AsteriaEditorWindow(QMainWindow):
         except (EditorStorageError, EditorResourceError) as exc:
             QMessageBox.critical(self, "Open Project", str(exc))
             return False
-        self.play_session = None
-        self._load_playtest_profiles()
-        self.refresh_all()
-        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
+        self._show_new_project()
         return True
 
     def new_from_template(self, template_id, name, folder):
@@ -2757,10 +2756,7 @@ class AsteriaEditorWindow(QMainWindow):
         path = create_from_template(template_id, name, folder)
         load_document(self.document, path)
         self._resolve_project_resources()
-        self.play_session = None
-        self._load_playtest_profiles()
-        self.refresh_all()
-        QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
+        self._show_new_project()
         guide = Path(path).parent / "START_HERE.md"
         if guide.is_file():  # where every rule lives in this project
             self.console.setText(f"New project from a template.\n\n{guide.read_text()}")
@@ -2777,16 +2773,8 @@ class AsteriaEditorWindow(QMainWindow):
                 self, "New from Template", "No project templates are installed."
             )
             return None
-        if self.document.dirty:
-            answer = QMessageBox.question(
-                self,
-                "Unsaved Changes",
-                "This project has unsaved changes. Start a new project anyway?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
-            )
-            if answer != QMessageBox.Yes:
-                return None
+        if not self._confirm_discard("Start a new project anyway?"):
+            return None
         titles = [f"{t.title} - {t.description}" for t in templates]
         choice, ok = QInputDialog.getItem(self, "New from Template", "Template:", titles, 0, False)
         if not ok:
@@ -2814,9 +2802,7 @@ class AsteriaEditorWindow(QMainWindow):
         project_path, result = import_mv_project(source, output)
         load_document(self.document, project_path)
         self._resolve_project_resources()
-        self.play_session = None
-        self._load_playtest_profiles()
-        self.refresh_all()
+        self._show_new_project()
         lines = [f"{issue.code}: {issue.message}" for issue in result.issues]
         self.console.setText(
             f"Imported {len(result.project.scenes())} maps from {source}\n"
@@ -2825,16 +2811,8 @@ class AsteriaEditorWindow(QMainWindow):
         return project_path, result
 
     def import_mv_project_dialog(self):
-        if self.document.dirty:
-            answer = QMessageBox.question(
-                self,
-                "Unsaved Changes",
-                "This project has unsaved changes. Import into a new project anyway?",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
-            )
-            if answer != QMessageBox.Yes:
-                return None
+        if not self._confirm_discard("Import into a new project anyway?"):
+            return None
         source = QFileDialog.getExistingDirectory(
             self, "RPG Maker MV Project Folder (contains data/)"
         )
@@ -2856,33 +2834,6 @@ class AsteriaEditorWindow(QMainWindow):
             f"Console.",
         )
         return project_path
-
-    def _load_playtest_profiles(self):
-        if not hasattr(self, "playtest_profile_combo"):
-            return
-        self.playtest_profile_combo.clear()
-        self.playtest_profile_library = None
-        if self.document.project is None or self.document.file_path is None:
-            self.playtest_profile_combo.addItem("Default", "")
-            return
-        library = PlaytestProfileLibrary(self.document.file_path.resolve().parent)
-        self.playtest_profile_library = library
-        profiles = library.profiles()
-        if not profiles:
-            self.playtest_profile_combo.addItem("Default", "")
-            return
-        default_index = 0
-        for index, profile in enumerate(profiles):
-            self.playtest_profile_combo.addItem(profile.display_name, profile.profile_id)
-            if profile.default:
-                default_index = index
-        self.playtest_profile_combo.setCurrentIndex(default_index)
-
-    def selected_playtest_profile_id(self):
-        if not hasattr(self, "playtest_profile_combo"):
-            return None
-        value = self.playtest_profile_combo.currentData()
-        return str(value) if value else None
 
     def _start_play(self, *, from_start, spawn=None, title="Run Project"):
         """Launch the play-test with the debug channel and log capture (EDT-10, EDT-11)."""
@@ -2946,7 +2897,6 @@ class AsteriaEditorWindow(QMainWindow):
 
     def play_from_selection(self):
         """Play the current scene with the player starting at the selected entity's position."""
-        from asteria.core import Transform
 
         entity = self._selected_entity()
         if entity is None or not entity.has(Transform):
@@ -3216,7 +3166,6 @@ class AsteriaEditorWindow(QMainWindow):
 
     def set_theme(self, name):
         """Switch the editor palette live and remember it."""
-        from .theme import apply_asteria_theme
 
         apply_asteria_theme(QApplication.instance(), name)
         if name in getattr(self, "theme_actions", {}):
@@ -3265,7 +3214,6 @@ class AsteriaEditorWindow(QMainWindow):
 def starter_fingerprint(template_id="basic_rpg"):
     """A short hash of what the starter is made from: when it changes, a starter made earlier
     is out of date."""
-    import hashlib
 
     from . import basic_rpg_map, basic_rpg_template, project_templates
 
@@ -3292,9 +3240,6 @@ def ensure_starter_project(folder, template_id="basic_rpg", name="Basic RPG"):
     """The starter project's file in ``folder``, made if missing. A starter made from an older
     template is replaced: untouched, it is rebuilt in place; edited (or of unknown age), it is
     moved aside to ``<name> (previous)`` first, so nothing the user did is lost."""
-    import hashlib
-    import json
-    import shutil
 
     from .project_templates import create_from_template
 
@@ -3333,8 +3278,6 @@ def ensure_starter_project(folder, template_id="basic_rpg", name="Basic RPG"):
 
 
 def launch_editor(project=None):
-    import sys
-
     from PySide6.QtCore import QSettings, QStandardPaths
 
     from .theme import palette_name

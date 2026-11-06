@@ -29,8 +29,8 @@ def test_a_template_is_copied_renamed_and_opens(template, tmp_path):
         path = create_from_template("empty", "My Game", tmp_path / "game")
         assert json.loads(path.read_text())["name"] == "My Game"
         return
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     source = next(t for t in TEMPLATES if t.template_id == template).source
     before = (source / "project.asteria.json").read_text()
@@ -39,7 +39,7 @@ def test_a_template_is_copied_renamed_and_opens(template, tmp_path):
     assert json.loads(path.read_text())["name"] == "My Game"
     assert (tmp_path / "game" / "playable_assets").is_dir()  # the art comes along
     assert not (tmp_path / "game" / "build_project.py").exists()  # build scripts stay home
-    project = Project.load_json(path, EditorDocument().component_registry)
+    project = Project.load_json(path, default_component_registry())
     project.validate()
     assert project.name == "My Game" and project.scenes()
     assert (source / "project.asteria.json").read_text() == before  # the template is untouched
@@ -71,6 +71,41 @@ def test_the_editor_opens_a_new_project_from_a_template(tmp_path):
         assert window.document.project.name == "Mine"
         assert any(s.name.startswith("Hollowbrook") for s in window.document.project.scenes())
         assert window.new_template_action.text() == "New Project…"
+    finally:
+        window.document.mark_saved()
+        window.close()
+        app.processEvents()
+
+
+def test_a_new_project_stops_the_old_ones_play_test(tmp_path):
+    """Opening, importing or making a project from a template goes the way set_project does:
+    a play-test of the old project running was dropped still running (an orphan game)."""
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.shell import AsteriaEditorWindow
+    from asteria.project import Project
+
+    class Running:
+        active = True
+        stopped = False
+
+        def stop(self):
+            self.stopped, self.active = True, False
+
+        def read_log(self):  # what the stopped game printed (the console keeps it)
+            return ""
+
+    app = QApplication.instance() or QApplication([])
+    window = AsteriaEditorWindow(Project("Empty"))
+    try:
+        game, process = Running(), Running()
+        window.play_session, window.runtime_process = game, process
+        window.new_from_template("action_rpg", "Mine", tmp_path / "mine")
+        assert game.stopped and process.stopped
+        assert window.play_session is None and window.runtime_process is None
+        script = window.code_workspace.default_script_path()
+        assert script is None or script.is_relative_to(tmp_path / "mine")  # the new project's
     finally:
         window.document.mark_saved()
         window.close()

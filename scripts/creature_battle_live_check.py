@@ -235,14 +235,14 @@ def _rename_for_emerald(project):
 def _project(art):
     import trial_creatures
 
-    from asteria.editor import EditorDocument
     from asteria.gameplay.abilities import AbilityDefinition
     from asteria.project import Project
     from asteria.rpg import InteractionRule
     from asteria.rpg.enemies import EncounterDefinition, EncounterMember
     from asteria.rpg.pets import PetExpCurve, PetMove, PetSpeciesDefinition
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     trial_creatures.install(project, max_moves=4, party_size=6)
     db = project.rpg_database
     library = project.gameplay_library.abilities

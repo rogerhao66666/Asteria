@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,15 +20,15 @@ class MusicTrack:
     icon_id: str = ""
 
     def __init__(self, track_id, name, asset_id, *, unlock_switch="", note="", icon_id=""):
-        track_id, asset_id = _text(track_id), _text(asset_id)
+        track_id, asset_id = clean_text(track_id), clean_text(asset_id)
         if not track_id or not asset_id:
             raise ValueError("a track needs an id and an audio asset")
         object.__setattr__(self, "track_id", track_id)
-        object.__setattr__(self, "name", _text(name) or track_id)
+        object.__setattr__(self, "name", clean_text(name) or track_id)
         object.__setattr__(self, "asset_id", asset_id)
-        object.__setattr__(self, "unlock_switch", _text(unlock_switch))
-        object.__setattr__(self, "note", _text(note))
-        object.__setattr__(self, "icon_id", _text(icon_id))
+        object.__setattr__(self, "unlock_switch", clean_text(unlock_switch))
+        object.__setattr__(self, "note", clean_text(note))
+        object.__setattr__(self, "icon_id", clean_text(icon_id))
 
     def to_data(self):
         data = {"track_id": self.track_id, "name": self.name, "asset_id": self.asset_id}
@@ -56,11 +54,11 @@ class CreditsPage:
     order: int = 0
 
     def __init__(self, page_id, title="", lines=(), *, order=0):
-        page_id = _text(page_id)
+        page_id = clean_text(page_id)
         if not page_id:
             raise ValueError("page_id is required")
         object.__setattr__(self, "page_id", page_id)
-        object.__setattr__(self, "title", _text(title))
+        object.__setattr__(self, "title", clean_text(title))
         object.__setattr__(self, "lines", tuple(str(x) for x in lines))
         object.__setattr__(self, "order", int(order))
 
@@ -107,20 +105,20 @@ class MenuEntry:
         order=0,
         icon_id="",
     ):
-        entry_id = _text(entry_id)
+        entry_id = clean_text(entry_id)
         if not entry_id:
             raise ValueError("entry_id is required")
-        program = _text(event_program_id)
+        program = clean_text(event_program_id)
         if not program:
             raise ValueError("event_program_id is required")
         s = object.__setattr__
         s(self, "entry_id", entry_id)
-        s(self, "label", _text(label) or entry_id)
+        s(self, "label", clean_text(label) or entry_id)
         s(self, "event_program_id", program)
-        s(self, "visible_switch", _text(visible_switch))
-        s(self, "enabled_switch", _text(enabled_switch))
+        s(self, "visible_switch", clean_text(visible_switch))
+        s(self, "enabled_switch", clean_text(enabled_switch))
         s(self, "order", int(order))
-        s(self, "icon_id", _text(icon_id))
+        s(self, "icon_id", clean_text(icon_id))
 
     def to_data(self):
         return {
@@ -158,7 +156,7 @@ class BattleOptions:
     weak_below: float = 0.0
 
     def __init__(self, options_id, *, auto_key=False, weak_below=0.0):
-        options_id = _text(options_id)
+        options_id = clean_text(options_id)
         if not options_id:
             raise ValueError("options_id is required")
         weak_below = float(weak_below)

@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from asteria.rpg.behavior_tree import COMPOSITES, DECORATORS
 
+from .authoring_hub_widget import _free_id
 from .authoring_sidebar import authoring_sidebar
 from .behavior_tree_authoring import (
     ABSENT_AT_ZERO,
@@ -63,7 +64,7 @@ from .map_places_dialog import MapPlacesDialog
 from .record_form import NumberBox, Picker, _help_tip, _wheel_guard
 from .record_vocabulary import vocabulary_for
 from .record_vocabulary import words as _words
-from .ui_fit import ValueCombo
+from .ui_fit import ValueCombo, fill_named, named_id
 
 _GROUP_LINE = "#46b896"  # a group's line in the kind lists: not one of the choices
 _NODES_LEAST_WIDTH = 240  # the rows are sentences: the list never folds away
@@ -296,8 +297,6 @@ class BehaviorTreeEditorWidget(QWidget):
     # -- state -----------------------------------------------------------------------------------
     @property
     def tree_id(self):
-        from .ui_fit import named_id
-
         return named_id(self.tree_list.currentItem())
 
     @property
@@ -315,7 +314,6 @@ class BehaviorTreeEditorWidget(QWidget):
         node_path = self.path if current == self.tree_id else None  # an edit keeps its node
         ids = self.api.ids()
         self.tree_list.blockSignals(True)
-        from .ui_fit import fill_named
 
         fill_named(self.tree_list, ids, _words)
         self.tree_list.blockSignals(False)
@@ -554,6 +552,4 @@ class BehaviorTreeEditorWidget(QWidget):
         return result
 
     def _new_clicked(self):
-        from .authoring_hub_widget import _free_id
-
         self.create_tree(_free_id("", self.api.ids(), "new_tree"))  # its id made for it

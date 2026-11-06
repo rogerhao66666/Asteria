@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import required_id
+
 from .battle_action_menu import (
     BattleActionEntry,
     BattleActionMenuPolicy,
@@ -10,13 +12,6 @@ from .battle_action_menu import (
 from .battle_action_workflow import (
     BattleActionWorkflowRuntime,
 )
-
-
-def _id(value, name):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{name} is required")
-    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,9 +26,11 @@ class BattleInteractionLayer:
     def __init__(
         self, layer_id, label=None, *, role="action", contextual=False, visible=True, order=0
     ):
-        object.__setattr__(self, "layer_id", _id(layer_id, "layer_id"))
-        object.__setattr__(self, "label", _id(label if label is not None else layer_id, "label"))
-        object.__setattr__(self, "role", _id(role, "role"))
+        object.__setattr__(self, "layer_id", required_id(layer_id, "layer_id"))
+        object.__setattr__(
+            self, "label", required_id(label if label is not None else layer_id, "label")
+        )
+        object.__setattr__(self, "role", required_id(role, "role"))
         object.__setattr__(self, "contextual", bool(contextual))
         object.__setattr__(self, "visible", bool(visible))
         object.__setattr__(self, "order", int(order))
@@ -132,7 +129,7 @@ class BattleInteractionRuntime:
         return self.view
 
     def open_layer(self, layer_id):
-        layer_id = _id(layer_id, "layer_id")
+        layer_id = required_id(layer_id, "layer_id")
         layer = next((x for x in self.profile.layers if x.layer_id == layer_id), None)
         if layer is None or not layer.visible:
             raise KeyError(layer_id)
@@ -144,7 +141,7 @@ class BattleInteractionRuntime:
 
     def choose_action(self, action_id=None):
         action_id = action_id or self.menu.selected_action_id()
-        action_id = _id(action_id, "action_id")
+        action_id = required_id(action_id, "action_id")
         entry = next((x for x in self._entries if x.action_id == action_id), None)
         if entry is None:
             raise KeyError(action_id)
@@ -179,7 +176,7 @@ class BattleInteractionRuntime:
         return self.view
 
     def choose_modifier(self, modifier_id):
-        modifier_id = _id(modifier_id, "modifier_id")
+        modifier_id = required_id(modifier_id, "modifier_id")
         entry = next((x for x in self._contextual if x.action_id == modifier_id), None)
         if entry is None:
             raise KeyError(modifier_id)
@@ -205,7 +202,7 @@ class BattleInteractionRuntime:
             raise RuntimeError("choose an action before targeting")
         self.context = BattleInteractionContext(
             self.context.action_id,
-            None if actor_id is None else _id(actor_id, "actor_id"),
+            None if actor_id is None else required_id(actor_id, "actor_id"),
             (),
             self.context.modifier_ids,
             self._workflow_payload(),
@@ -217,7 +214,7 @@ class BattleInteractionRuntime:
     def set_targets(self, target_ids):
         if self.stage != "target":
             raise RuntimeError("interaction is not targeting")
-        targets = tuple(_id(x, "target_id") for x in target_ids)
+        targets = tuple(required_id(x, "target_id") for x in target_ids)
         self.context = BattleInteractionContext(
             self.context.action_id,
             self.context.actor_id,

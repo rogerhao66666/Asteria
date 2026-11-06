@@ -124,7 +124,7 @@ def editor_main(argv=None):
     if argv and argv[0] in tools:
         module, function = tools[argv[0]].split(":")
         return getattr(__import__(module, fromlist=[function]), function)(argv[1:])
-    from asteria.editor.shell import launch_editor
+    from asteria.editor.shell import launch_editor  # a player-only build has no editor
 
     sys.argv = [sys.argv[0], *argv]
     return launch_editor()
@@ -212,6 +212,6 @@ def player_main(argv=None, executable=None):
     if (engine / "asteria").is_dir() and str(engine) not in sys.path:
         sys.path.insert(0, str(engine))
     root = writable_game_folder(game)
-    from asteria.runtime.preview import main as run
+    from asteria.runtime.preview import main as run  # after the engine folder is on the path
 
     return run([str(project), "--resource-root", str(root), *argv])

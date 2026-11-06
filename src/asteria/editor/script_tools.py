@@ -12,6 +12,8 @@ from __future__ import annotations
 import builtins
 import keyword
 import re
+import sys
+import typing
 
 SCRIPT_GLOBALS = ("project", "selected", "scene", "entity")
 
@@ -32,8 +34,6 @@ class _Type:
 def _annotation_type(callable_obj):
     """Class named by a callable's return annotation (string annotations resolved in its
     module)."""
-    import sys
-    import typing
 
     func = getattr(callable_obj, "__func__", callable_obj)
     if isinstance(func, property):

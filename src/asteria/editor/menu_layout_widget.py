@@ -17,6 +17,7 @@ packs. Every change is one undo step (Ctrl+Z).
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
@@ -55,6 +56,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from asteria.presentation.creature_screens import SCREENS
 from asteria.presentation.menu_layout import (
     ALIGNS,
     ANCHORS,
@@ -67,8 +69,13 @@ from asteria.presentation.menu_layout import (
     anchored_rect,
     screen_spec,
 )
+from asteria.presentation.menu_layout import screen_spec as spec_of
+from asteria.presentation.ui_skin import NinePatch
 
+from .flow_layout import FlowLayout
+from .i18n import translate
 from .menu_layout_authoring import MenuLayoutAuthoringController
+from .record_vocabulary import words
 
 ADDABLE = (("image", "Picture"), ("panel", "Panel"), ("text", "Text"), ("gauge", "Gauge"),
            ("portrait", "Portrait"))  # fmt: skip
@@ -294,7 +301,6 @@ class PatchField(QWidget):
         asset = self.asset.text()
         if not asset:
             return None
-        from asteria.presentation.ui_skin import NinePatch
 
         values = [box.value() for box in self.insets]
         return NinePatch(asset, *values, self.scale.value())
@@ -793,7 +799,6 @@ class ElementInspector(QWidget):
         when it is still at the engine's place)."""
         self._loading = True
         self.element = element
-        from .i18n import translate
 
         kind, words = translate(element.kind), translate(description)
         self.title.setText(f"<b>{element.element_id}</b> · {kind}<br>{words}")
@@ -1055,7 +1060,6 @@ class MenuLayoutWorkspace(QWidget):
         bar.addWidget(self.element_combo, 1)
         bar.addWidget(add)
         bar.addWidget(self.remove_button)
-        from .flow_layout import FlowLayout
 
         # the screen, the shared settings, the preview: wraps onto a second line when the
         # page is narrow, so the element's column on the right always has its room
@@ -1138,7 +1142,6 @@ class MenuLayoutWorkspace(QWidget):
         if project is None:
             self.screen_list.blockSignals(False)
             return
-        from asteria.presentation.menu_layout import screen_spec as spec_of
 
         group = "menu"
         for screen_id, title, custom in self.controller.screens():
@@ -1189,7 +1192,7 @@ class MenuLayoutWorkspace(QWidget):
     def _fill_chooser(self):
         self.chooser_list.clear()
         names = {**self.canvas.names, **self._element_names()}
-        repeated = {n for n in names.values() if list(names.values()).count(n) > 1}
+        repeated = {n for n, uses in Counter(names.values()).items() if uses > 1}
         for element_id, name in names.items():
             # two elements of one name (two key hints): the id tells them apart
             item = QListWidgetItem(f"{name}  ({element_id})" if name in repeated else name)
@@ -1255,7 +1258,6 @@ class MenuLayoutWorkspace(QWidget):
     def _label_screens(self, custom=None):
         """Each screen's title in the editor's language, marked when it has a layout
         (``custom``: the ids that do; None keeps the marks shown)."""
-        from .i18n import translate
 
         for row in range(self.screen_list.count()):
             item = self.screen_list.item(row)
@@ -1296,8 +1298,6 @@ class MenuLayoutWorkspace(QWidget):
         self.unit = unit = getattr(preview, "unit", 1.0) or 1.0
         self.inspector.size = (round(width / unit), round(height / unit))
         self.boxes = {k: tuple(round(v / unit) for v in r) for k, r in boxes.items()}
-        from .i18n import translate
-        from .record_vocabulary import words
 
         names = self._element_names()  # a box the screen draws on its own: its id in words
         self.canvas.names = {k: names.get(k) or translate(words(k)) for k in self.boxes}
@@ -1312,7 +1312,6 @@ class MenuLayoutWorkspace(QWidget):
     def _element_names(self):
         """Each element's name as its outline and the element list show it: what it is, in
         the editor's language (its id for an element of the author's own)."""
-        from .i18n import translate
 
         described = {i: d for i, _k, d in screen_spec(self.screen_id).elements}
         return {
@@ -1503,15 +1502,13 @@ class MenuLayoutWorkspace(QWidget):
         )
         if dialog.exec() != QDialog.Accepted:
             return
-        style = dialog.style()
+        style = dialog.chosen_style()
         if style != self.controller.dialogue_window():
             self.controller.set_dialogue_window(style)
         self.inspector.set_fonts([k for k, _f in self.controller.fonts()])
         self._after_change()
 
     def _creature_screens(self):
-        from asteria.presentation.creature_screens import SCREENS
-
         from .creature_screens_dialog import CreatureScreensDialog
 
         root = _project_root(self.document)

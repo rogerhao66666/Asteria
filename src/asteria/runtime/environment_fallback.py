@@ -9,6 +9,8 @@ never affected.
 
 from __future__ import annotations
 
+import math
+
 GPU_ONLY = ("bloom", "grade", "vignette", "screen_shader")
 
 
@@ -81,7 +83,6 @@ class PygameEnvironmentRenderer:
     def _water(self, world, rect, amplitude, wavelength, speed, tint, strength):
         """Ripple by shifting 2-pixel rows sideways, then tint (cheap CPU approximation of the GPU
         pass)."""
-        import math
 
         pg = self.pg
         x0, y0, x1, y1 = (int(v) for v in rect)

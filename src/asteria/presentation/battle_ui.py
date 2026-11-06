@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, fields
-from math import isfinite
 
+from asteria.core.values import finite
 from asteria.runtime import Camera2D
 
 from .battle import BattlePresentationScene
@@ -34,13 +34,6 @@ def _value_text(value):
     """A floating number: whole from 10 up (a share of health is not 604.444, a million is
     not 1e+06), as written below that (a 0.5 gauge step)."""
     return str(round(value)) if abs(value) >= 10 else f"{value:g}"
-
-
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,7 +139,7 @@ class BattleUiLayoutProfile:
         if not 0.0 <= float(self.stage_front) <= 0.5:
             raise ValueError("stage_front must be in [0, 0.5]")
         if self.column_spacing_right is not None:
-            if _finite(self.column_spacing_right, "column_spacing_right") < 0:
+            if finite(self.column_spacing_right, "column_spacing_right") < 0:
                 raise ValueError("column_spacing_right must be >= 0")
         for name in (
             "column_spacing",
@@ -157,7 +150,7 @@ class BattleUiLayoutProfile:
             "result_panel_height",
             "hud_portrait_size",
         ):
-            if _finite(getattr(self, name), name) < 0:
+            if finite(getattr(self, name), name) < 0:
                 raise ValueError(f"{name} must be >= 0")
 
 

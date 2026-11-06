@@ -20,9 +20,11 @@ import math
 from array import array
 
 from asteria.assets import TextureResource
+from asteria.runtime.input_map import InputActionMap
 
 from .backend import RuntimeBackend, TextureBackend
 from .moderngl_shaders import SPRITE_FRAGMENT_SHADER, SPRITE_VERTEX_SHADER
+from .pygame_input import PygameInputSource
 
 _VERTEX_LAYOUT = "2f 2f 4f"
 _VERTEX_ATTRS = ("in_position", "in_uv", "in_tint")
@@ -42,8 +44,6 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
     """Sprite-batch runtime backend over a moderngl GL context."""
 
     def __init__(self, input_map=None):
-        from asteria.runtime.input_map import InputActionMap
-
         self.input_map = input_map or InputActionMap.default()
         self.input_source = None
         try:
@@ -99,7 +99,6 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         self.clock = self.pg.time.Clock()
         self._close = False
         self._reset_batch()
-        from .pygame_input import PygameInputSource
 
         self.input_source = PygameInputSource(self.pg)
 

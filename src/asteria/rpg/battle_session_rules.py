@@ -5,13 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
+from asteria.core.values import required_id
 
 ACTION_TIMING_MODES = ("immediate", "timeline")
 BOOST_MODES = ("repeat", "power")
@@ -127,9 +121,9 @@ class BattleSessionRules:
         max_level = int(boost_max_level)
         if max_level < 0:
             raise ValueError("boost_max_level must be >= 0")
-        object.__setattr__(self, "rules_id", _id(rules_id, "rules_id"))
+        object.__setattr__(self, "rules_id", required_id(rules_id, "rules_id"))
         object.__setattr__(self, "knockout_resource_id", str(knockout_resource_id).strip())
-        object.__setattr__(self, "hit_trigger", _id(hit_trigger, "hit_trigger"))
+        object.__setattr__(self, "hit_trigger", required_id(hit_trigger, "hit_trigger"))
         object.__setattr__(self, "boost_resource_id", str(boost_resource_id).strip())
         object.__setattr__(self, "boost_cost_per_level", cost)
         object.__setattr__(self, "boost_max_level", max_level)
@@ -146,7 +140,7 @@ class BattleSessionRules:
             low, high, start = (float(x) for x in values)
             if not (isfinite(low) and isfinite(high) and low <= start <= high):
                 raise ValueError(f"battle counter {name} needs minimum <= start <= maximum")
-            counters[_id(name, "battle counter")] = [low, high, start]
+            counters[required_id(name, "battle counter")] = [low, high, start]
         object.__setattr__(self, "battle_counters", dict(sorted(counters.items())))
         initiative_expression = str(initiative_expression or "").strip()
         if initiative_expression:

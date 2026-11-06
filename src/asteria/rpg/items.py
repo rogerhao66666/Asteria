@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import (
     Effect,
     GameplayTrigger,
@@ -12,15 +13,8 @@ from asteria.gameplay import (
 )
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
 def _tags(values):
-    return tuple(sorted({_id(x, "tag").lower() for x in values}))
+    return tuple(sorted({required_id(x, "tag").lower() for x in values}))
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,7 +25,7 @@ class SocketDefinition:
     label: str = ""  # the name screens show ("Gem socket"); empty: "Socket <n>" (U1)
 
     def __init__(self, socket_id, *, accepted_tags=(), locked=False, label=""):
-        object.__setattr__(self, "socket_id", _id(socket_id, "socket_id"))
+        object.__setattr__(self, "socket_id", required_id(socket_id, "socket_id"))
         object.__setattr__(self, "accepted_tags", _tags(accepted_tags))
         object.__setattr__(self, "locked", bool(locked))
         object.__setattr__(self, "label", str(label or "").strip())
@@ -97,7 +91,7 @@ class AttachmentDefinition:
         icon_id="",
         description="",
     ):
-        attachment_id = _id(attachment_id, "attachment_id")
+        attachment_id = required_id(attachment_id, "attachment_id")
         modifiers = tuple(modifiers)
         triggers = tuple(triggers)
         if any(not isinstance(x, StatModifier) for x in modifiers):
@@ -111,11 +105,11 @@ class AttachmentDefinition:
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "triggers", triggers)
         object.__setattr__(
-            self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
+            self, "growth_id", None if growth_id is None else required_id(growth_id, "growth_id")
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
         object.__setattr__(self, "description", str(description or ""))
@@ -204,7 +198,7 @@ class EquipmentDefinition:
         description="",
         blocks_slots=(),
     ):
-        equipment_id = _id(equipment_id, "equipment_id")
+        equipment_id = required_id(equipment_id, "equipment_id")
         modifiers = tuple(modifiers)
         triggers = tuple(triggers)
         sockets = tuple(sockets)
@@ -218,13 +212,13 @@ class EquipmentDefinition:
             raise ValueError("duplicate socket_id")
         object.__setattr__(self, "equipment_id", equipment_id)
         object.__setattr__(self, "display_name", str(display_name or equipment_id))
-        object.__setattr__(self, "slot", _id(slot, "slot"))
+        object.__setattr__(self, "slot", required_id(slot, "slot"))
         object.__setattr__(self, "tags", _tags(tags))
         object.__setattr__(self, "modifiers", modifiers)
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "triggers", triggers)
         object.__setattr__(self, "sockets", sockets)
@@ -232,12 +226,12 @@ class EquipmentDefinition:
         object.__setattr__(self, "any_capabilities", _tags(any_capabilities))
         object.__setattr__(self, "forbidden_capabilities", _tags(forbidden_capabilities))
         object.__setattr__(
-            self, "growth_id", None if growth_id is None else _id(growth_id, "growth_id")
+            self, "growth_id", None if growth_id is None else required_id(growth_id, "growth_id")
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
         object.__setattr__(self, "rarity", str(rarity or "").strip())
         object.__setattr__(self, "description", str(description or ""))
-        blocks = tuple(dict.fromkeys(_id(x, "slot") for x in blocks_slots))
+        blocks = tuple(dict.fromkeys(required_id(x, "slot") for x in blocks_slots))
         object.__setattr__(self, "blocks_slots", blocks)
 
     def to_data(self):
@@ -341,7 +335,7 @@ class ItemDefinition:
         destroyed_on_removal=False,
         description="",
     ):
-        item_id = _id(item_id, "item_id")
+        item_id = required_id(item_id, "item_id")
         stack_limit = int(stack_limit)
         use_effects = tuple(use_effects)
         if stack_limit < 1:
@@ -455,7 +449,7 @@ class InventoryRules:
                 raise ValueError("max_kinds must be >= 1 or None")
         if overflow not in INVENTORY_OVERFLOW:
             raise ValueError(f"overflow must be one of {INVENTORY_OVERFLOW}")
-        object.__setattr__(self, "rules_id", _id(rules_id, "rules_id"))
+        object.__setattr__(self, "rules_id", required_id(rules_id, "rules_id"))
         object.__setattr__(self, "display_name", str(display_name or ""))
         object.__setattr__(self, "stack_limits", bool(stack_limits))
         object.__setattr__(self, "max_kinds", max_kinds)
@@ -548,7 +542,7 @@ class Inventory:
         return bool(self.rules is not None and tags & set(self.rules.exempt_tags))
 
     def add(self, item_id, amount=1):
-        item_id = _id(item_id, "item_id")
+        item_id = required_id(item_id, "item_id")
         amount = int(amount)
         if amount < 1:
             raise ValueError("amount must be >= 1")
@@ -563,7 +557,7 @@ class Inventory:
         return self._counts[item_id]
 
     def remove(self, item_id, amount=1):
-        item_id = _id(item_id, "item_id")
+        item_id = required_id(item_id, "item_id")
         amount = int(amount)
         if amount < 1:
             raise ValueError("amount must be >= 1")
@@ -589,7 +583,7 @@ class Inventory:
             raise ValueError("unsupported inventory")
         result = cls()
         for key, value in data["counts"].items():
-            result._counts[_id(key, "item_id")] = int(value)
+            result._counts[required_id(key, "item_id")] = int(value)
         return result
 
     def replace_from(self, other):
@@ -634,7 +628,9 @@ class EquippedItem:
     def __post_init__(self):
         from .equipment_growth import EquipmentGrowthRuntime
 
-        self.instance_id = _id(self.instance_id or self.equipment.equipment_id, "instance_id")
+        self.instance_id = required_id(
+            self.instance_id or self.equipment.equipment_id, "instance_id"
+        )
         if self.growth is not None:
             if not isinstance(self.growth, EquipmentGrowthRuntime):
                 raise TypeError("growth must be EquipmentGrowthRuntime")
@@ -855,7 +851,7 @@ class EquipmentSlotDefinition:
         order=0,
         description="",
     ):
-        object.__setattr__(self, "slot_id", _id(slot_id, "slot_id"))
+        object.__setattr__(self, "slot_id", required_id(slot_id, "slot_id"))
         object.__setattr__(self, "accepted_tags", _tags(accepted_tags))
         if capacity is not None:
             capacity = int(capacity)

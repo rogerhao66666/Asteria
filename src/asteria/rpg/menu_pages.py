@@ -24,6 +24,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import clean_text
+
 from .menu_rules import (
     ITEM_DETAILS,
     PAUSE_ENTRIES,
@@ -64,14 +66,10 @@ PAUSE_NEEDS = {
 BUILT_IN_PAGES = ("status", "items")
 
 
-def _text(value):
-    return str(value or "").strip()
-
-
 def _ids(values):
     if isinstance(values, str):
         values = values.split(",")
-    return tuple(dict.fromkeys(t for t in (_text(v) for v in values or ()) if t))
+    return tuple(dict.fromkeys(t for t in (clean_text(v) for v in values or ()) if t))
 
 
 def _records(values, cls):
@@ -107,10 +105,10 @@ class MenuBlock:
         item_filters=(),
         item_details="panel",
     ):
-        kind = _text(kind)
+        kind = clean_text(kind)
         if kind not in BLOCK_KINDS:
             raise ValueError(f"a menu block's kind must be one of {', '.join(BLOCK_KINDS)}")
-        place = _text(place) or "full"
+        place = clean_text(place) or "full"
         if place not in BLOCK_PLACES:
             raise ValueError(f"a menu block's place must be one of {', '.join(BLOCK_PLACES)}")
         height = int(height or 0)
@@ -120,7 +118,7 @@ class MenuBlock:
         unknown = [c for c in columns if c not in STAT_COLUMNS]
         if unknown:
             raise ValueError(f"unknown stat table columns: {', '.join(unknown)}")
-        details = _text(item_details) or "panel"
+        details = clean_text(item_details) or "panel"
         if details not in ITEM_DETAILS:
             raise ValueError(f"item_details must be one of {ITEM_DETAILS}")
         s = object.__setattr__
@@ -128,7 +126,7 @@ class MenuBlock:
         s(self, "place", place)
         s(self, "height", height)
         own = BLOCK_SETTINGS[kind]  # another kind's settings are not kept
-        s(self, "stat_graph", _text(stat_graph) if "stat_graph" in own else "")
+        s(self, "stat_graph", clean_text(stat_graph) if "stat_graph" in own else "")
         s(self, "stat_columns", columns if "stat_columns" in own else ())
         s(self, "stat_rows", _ids(stat_rows) if "stat_rows" in own else ())
         groups = _records(stat_groups, StatGroup) if "stat_groups" in own else ()
@@ -183,13 +181,13 @@ class MenuPage:
     VERSION = 1
 
     def __init__(self, page_id, display_name="", icon_id="", blocks=()):
-        page_id = _text(page_id)
+        page_id = clean_text(page_id)
         if not page_id:
             raise ValueError("a menu page needs an id")
         s = object.__setattr__
         s(self, "page_id", page_id)
-        s(self, "display_name", _text(display_name) or page_id)
-        s(self, "icon_id", _text(icon_id))
+        s(self, "display_name", clean_text(display_name) or page_id)
+        s(self, "icon_id", clean_text(icon_id))
         s(self, "blocks", _records(blocks, MenuBlock))
 
     def block(self, kind):

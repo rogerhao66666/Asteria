@@ -6,8 +6,8 @@ import pytest
 
 pytest.importorskip("PySide6")
 
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 
@@ -19,7 +19,7 @@ def window():
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     value = AsteriaEditorWindow(project)
     value.document.file_path = ROOT / "project.asteria.json"
     value.animation_editor.api._resource_root = ROOT

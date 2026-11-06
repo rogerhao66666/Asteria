@@ -27,6 +27,9 @@ from .action_timeline_authoring import (
     ActionTimelineController,
     ActionTimelineError,
 )
+from .authoring_hub_widget import _free_id
+from .record_vocabulary import vocabulary_for, words
+from .ui_fit import fill_named, named_id, pick_choice
 
 CHANNEL_WORDS = {  # each lane of the timeline in words
     "animation": "Pose",
@@ -253,7 +256,6 @@ class ActionTimelineWidget(QWidget):
 
     def _sequence_name(self, sequence_id):
         """A timeline by its skill's name ("Fire Bolt"), else its id in words."""
-        from .record_vocabulary import vocabulary_for, words
 
         if getattr(self, "_names", None) is None:
             self._names = vocabulary_for(self.api.document).names()
@@ -262,8 +264,6 @@ class ActionTimelineWidget(QWidget):
 
     @property
     def sequence_id(self):
-        from .ui_fit import named_id
-
         return named_id(self.sequence_list.currentItem())
 
     def refresh(self, select=None):
@@ -273,7 +273,6 @@ class ActionTimelineWidget(QWidget):
         self.sequence_list.blockSignals(True)
         ids = self.api.sequences()
         self._names = None  # names read again: skills may have been renamed
-        from .ui_fit import fill_named
 
         fill_named(self.sequence_list, ids, self._sequence_name)
         self.sequence_list.blockSignals(False)
@@ -416,8 +415,6 @@ class ActionTimelineWidget(QWidget):
 
     def _skill_without_timeline(self, title):
         """A skill that has no timeline yet, chosen by its name (a timeline is a skill's)."""
-        from .record_vocabulary import vocabulary_for
-        from .ui_fit import pick_choice
 
         taken = set(self.api.sequences())
         skills = vocabulary_for(self.api.document).choices("abilities")
@@ -436,7 +433,6 @@ class ActionTimelineWidget(QWidget):
 
     def _add_clicked(self):
         """A beat at the playhead, its id made for it."""
-        from .authoring_hub_widget import _free_id
 
         sid = self.sequence_id
         if not sid:

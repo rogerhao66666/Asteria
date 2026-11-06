@@ -73,6 +73,7 @@ def use_project(project):
     language (an item's name, D60). They are read again when next needed, so a record renamed
     since shows its new name. The editor's own words come first."""
     _project.update(source=project, words=None)
+    _shown.clear()
 
 
 def _project_words():
@@ -100,6 +101,12 @@ def _table(language):
     return table
 
 
+# (language, table, text) -> what translate() showed: every setText of the editor asks, and
+# text no table has went through every pattern each time. Forgotten when the language or the
+# project changes (the project's own words are part of the answer).
+_shown = {}
+
+
 def translate(text, language=None):
     """``text`` in ``language`` (the current one by default); unknown text comes back as is."""
     if not isinstance(text, str) or not text:
@@ -109,7 +116,18 @@ def translate(text, language=None):
     language = language or CURRENT["language"]
     if language == DEFAULT:
         return text
-    exact, patterns = _table(language)
+    table = _table(language)
+    key = (language, id(table), text)
+    shown = _shown.get(key)
+    if shown is None:
+        if len(_shown) > 50_000:
+            _shown.clear()
+        shown = _shown[key] = _translate(text, language, table)
+    return shown
+
+
+def _translate(text, language, table):
+    exact, patterns = table
     found = exact.get(text)
     if found is None and text[:1].islower():  # "stat changes" inside "No stat changes yet."
         found = exact.get(text[:1].upper() + text[1:])
@@ -488,6 +506,7 @@ def set_language(language):
         return
     CURRENT["language"] = language
     _project["words"] = None
+    _shown.clear()
     app = QApplication.instance()
     if app is None:
         return

@@ -4,19 +4,19 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.events.dialogue import DialogueLine
 from asteria.project import Project
 from asteria.rpg.extras import CreditsPage, MusicTrack
 from asteria.rpg.localization import LocaleTable, Localizer, MessageSettings
 from asteria.runtime.backlog import MessageBacklog
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
 
 def _session(**database):
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     for add, value in database.items():
         for item in value if isinstance(value, list) else [value]:
             getattr(project.rpg_database, add)(item)
@@ -108,7 +108,7 @@ def _runtime(monkeypatch, **database):
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     for add, value in database.items():
         for item in value if isinstance(value, list) else [value]:
             getattr(project.rpg_database, add)(item)

@@ -38,11 +38,13 @@ SECTIONS = [
         "zh": "載入、儲存與執行專案",
         "intro_en": "A project is one `project.asteria.json`; its folder holds the art, the "
         "`playable_test_manifest.json` and `saves/`. The registry tells the loader which "
-        "components exist: use `EditorDocument().component_registry` (as the editor and the "
-        "reference scripts do) or `build_preview_registry()`.",
+        "components exist: use `default_component_registry()` from "
+        "`asteria.runtime.component_registry` (the editor and the reference scripts use it) or "
+        "`build_preview_registry()`.",
         "intro_zh": "一個專案是一個 `project.asteria.json`，同一個資料夾放美術、"
         "`playable_test_manifest.json` 與 `saves/`。registry 告訴載入器有哪些元件："
-        "用 `EditorDocument().component_registry`（編輯器與參考腳本都這樣用）或 "
+        "用 `asteria.runtime.component_registry` 的 `default_component_registry()`"
+        "（編輯器與參考腳本都這樣用）或 "
         "`build_preview_registry()`。",
         "prefix": "",
         "items": [

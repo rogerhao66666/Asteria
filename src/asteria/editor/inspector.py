@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from asteria.core import Transform, can_parent
 from asteria.core.metadata import get_component_schema
 
 
@@ -39,7 +40,6 @@ def build_inspector_fields(component):
 
 def build_follow_entity_choices(component):
     """Return display labels mapped to canonical entity IDs for Camera2D."""
-    from asteria.core import Transform
 
     try:
         owner = component.entity
@@ -129,7 +129,6 @@ def words_for(name):
 
 def build_parent_choices(component):
     """Transform parent dropdown: entities in the same scene that would not form a cycle."""
-    from asteria.core import can_parent
 
     try:
         owner = component.entity

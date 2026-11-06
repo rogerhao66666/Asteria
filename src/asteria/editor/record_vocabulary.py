@@ -8,6 +8,9 @@ key conventions (``ability_id``, ``granted_tags``, ``stat_bonuses``...) are the 
 
 from __future__ import annotations
 
+import enum
+import importlib
+import pkgutil
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -1043,10 +1046,6 @@ def engine_enums():
     global _ENGINE_ENUMS
     if _ENGINE_ENUMS is not None:
         return _ENGINE_ENUMS
-    import enum
-    import importlib
-    import pkgutil
-    import re
 
     found = {}  # field -> {frozenset of allowed values, ...}
     literal = {}  # the same from sets written in a check: for fields not found otherwise

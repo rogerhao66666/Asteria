@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from asteria.presentation.menu_layout import EMPTY_CELL, MenuBitmapFont
+
 LETTER, SHADOW = (255, 255, 255), (128, 128, 128)
 
 
@@ -171,7 +173,6 @@ class SheetFont:
 def spec_from_legacy(data, image, font_id):
     """A ``MenuBitmapFont`` from an old font JSON (``chars`` and ``widths`` by cell index):
     how the editor turns a manifest's font into one it can edit."""
-    from asteria.presentation.menu_layout import EMPTY_CELL, MenuBitmapFont
 
     cell, columns = int(data.get("cell", 16)), int(data.get("columns", 16))
     by_index = {}

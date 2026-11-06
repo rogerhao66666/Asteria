@@ -16,7 +16,11 @@ from asteria.events.common import COMMON_TRIGGERS, CommonEvent
 from asteria.events.conditions import EventCondition
 from asteria.events.sequencer import SequenceError, validate_sequence_args
 
-from .event_editing import AddEventProgramCommand, ReplaceEventProgramCommand
+from .event_editing import (
+    AddEventProgramCommand,
+    RemoveEventProgramCommand,
+    ReplaceEventProgramCommand,
+)
 
 # Battle hooks an author can attach events to (the battle runtime emits these).
 BATTLE_HOOKS = (
@@ -139,7 +143,6 @@ class EventFlowAuthoring:
     def delete_program(self, program_id):
         """Delete an event program nothing runs any more (one undo step); a program still in
         use (a common event, a menu entry, a map event...) is refused with what uses it."""
-        from .event_editing import RemoveEventProgramCommand
 
         program_id = str(program_id)
         self._check_program(program_id)

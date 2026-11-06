@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 
 from asteria.core import Entity, Transform
-from asteria.editor import EditorDocument
 from asteria.project import Project
 from asteria.rpg.map_rules import AreaRule, MapRuleSet
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.field_ai import FieldAIComponent
 from asteria.runtime.game_session import GameSessionRuntime
 
@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_d
 
 
 def _session(rules, **options):
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     project.rpg_database.add_map_rule_set(MapRuleSet("m", rules, **options))
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     return game
@@ -26,7 +26,7 @@ def _everywhere(*keys):
 
 
 def test_without_a_rule_set_nothing_binds():
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     assert game.bind_map_rules(_everywhere("region:1")) is None and game.map_rules is None
     game.field_update(0.1)  # runs fine without rules

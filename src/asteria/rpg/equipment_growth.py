@@ -3,24 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import GameplayTrigger, StatModifier
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
 def _tags(values):
-    return tuple(sorted({_id(x, "tag").lower() for x in values}))
+    return tuple(sorted({required_id(x, "tag").lower() for x in values}))
 
 
 def _nonnegative_map(values, label):
     result = {}
     for key, value in dict(values or {}).items():
-        key = _id(key, label)
+        key = required_id(key, label)
         value = float(value)
         if value < 0:
             raise ValueError(f"{label} values must be >= 0")
@@ -59,7 +53,7 @@ class EquipmentGrowthReward:
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "granted_tags", _tags(granted_tags))
         object.__setattr__(self, "granted_capabilities", _tags(granted_capabilities))
@@ -67,14 +61,14 @@ class EquipmentGrowthReward:
         object.__setattr__(
             self,
             "unlocked_sockets",
-            tuple(dict.fromkeys(_id(x, "socket_id") for x in unlocked_sockets)),
+            tuple(dict.fromkeys(required_id(x, "socket_id") for x in unlocked_sockets)),
         )
         object.__setattr__(
             self,
             "evolution_equipment_id",
             None
             if evolution_equipment_id is None
-            else _id(evolution_equipment_id, "evolution_equipment_id"),
+            else required_id(evolution_equipment_id, "evolution_equipment_id"),
         )
 
     def to_data(self):
@@ -137,7 +131,7 @@ class EquipmentGrowthNodeDefinition:
         auto_unlock=True,
         tags=(),
     ):
-        node_id = _id(node_id, "node_id")
+        node_id = required_id(node_id, "node_id")
         max_rank = int(max_rank)
         if max_rank < 1:
             raise ValueError("max_rank must be >= 1")
@@ -165,13 +159,13 @@ class EquipmentGrowthNodeDefinition:
         parsed_prereqs = []
         for entry in prerequisites:
             if isinstance(entry, str):
-                parsed_prereqs.append((_id(entry, "prerequisite node"), 1))
+                parsed_prereqs.append((required_id(entry, "prerequisite node"), 1))
             else:
                 node, rank = entry
                 rank = int(rank)
                 if rank < 1:
                     raise ValueError("prerequisite rank must be >= 1")
-                parsed_prereqs.append((_id(node, "prerequisite node"), rank))
+                parsed_prereqs.append((required_id(node, "prerequisite node"), rank))
         object.__setattr__(self, "node_id", node_id)
         object.__setattr__(self, "display_name", str(display_name or node_id))
         object.__setattr__(self, "max_rank", max_rank)
@@ -181,7 +175,7 @@ class EquipmentGrowthNodeDefinition:
         object.__setattr__(
             self,
             "exclusive_group",
-            None if exclusive_group is None else _id(exclusive_group, "exclusive_group"),
+            None if exclusive_group is None else required_id(exclusive_group, "exclusive_group"),
         )
         object.__setattr__(self, "auto_unlock", bool(auto_unlock))
         object.__setattr__(self, "tags", _tags(tags))
@@ -255,7 +249,7 @@ class EquipmentGrowthDefinition:
     tags: tuple[str, ...] = ()
 
     def __init__(self, growth_id, display_name=None, *, nodes, tags=()):
-        growth_id = _id(growth_id, "growth_id")
+        growth_id = required_id(growth_id, "growth_id")
         nodes = tuple(nodes)
         if not nodes:
             raise ValueError("equipment growth definition requires nodes")
@@ -405,7 +399,7 @@ class EquipmentGrowthRuntime:
         return self.counters.get(str(counter_id), 0.0)
 
     def add_progress(self, counter_id, amount=1):
-        counter_id = _id(counter_id, "growth counter")
+        counter_id = required_id(counter_id, "growth counter")
         amount = float(amount)
         if amount < 0:
             raise ValueError("growth progress amount must be >= 0")
@@ -426,7 +420,7 @@ class EquipmentGrowthRuntime:
         return tuple(unlocked)
 
     def set_progress(self, counter_id, value):
-        counter_id = _id(counter_id, "growth counter")
+        counter_id = required_id(counter_id, "growth counter")
         value = float(value)
         if value < 0:
             raise ValueError("growth progress value must be >= 0")

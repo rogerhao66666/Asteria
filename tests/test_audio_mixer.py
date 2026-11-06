@@ -116,8 +116,8 @@ def test_a_new_track_waits_behind_a_fade_out_instead_of_freezing_the_game():
 
 def test_playable_runtime_plays_field_battle_and_victory_audio(monkeypatch, tmp_path):
     pygame = pytest.importorskip("pygame")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_save import GameRuntimeSave
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -125,7 +125,7 @@ def test_playable_runtime_plays_field_battle_and_victory_audio(monkeypatch, tmp_
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     shutil.copy(REF / "playable_test_manifest.json", tmp_path / "playable_test_manifest.json")
     shutil.copytree(REF / "playable_assets", tmp_path / "playable_assets")
-    project = Project.load_json(REF / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(REF / "project.asteria.json", default_component_registry())
     save = GameRuntimeSave.load_json(REF / "saves" / "boss_stress.asteria-save.json", project)
     runtime = PlayableTestRuntime(project, save, tmp_path)
     runtime.open()

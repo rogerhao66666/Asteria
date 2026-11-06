@@ -12,7 +12,7 @@ pytest.importorskip("PySide6")
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel  # noqa: E402
 
-from asteria.editor import EditorDocument, i18n  # noqa: E402
+from asteria.editor import i18n  # noqa: E402
 from asteria.editor.data_translation import data_groups  # noqa: E402
 from asteria.editor.record_form import ChipList  # noqa: E402
 from asteria.editor.record_vocabulary import (  # noqa: E402
@@ -24,6 +24,7 @@ from asteria.editor.record_vocabulary import (  # noqa: E402
 from asteria.project import Project  # noqa: E402
 from asteria.rpg.data_text import key  # noqa: E402
 from asteria.rpg.tag_definitions import BUILT_IN  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 # English words left in a translation; codes an author types (``scheduler:<id>``) stay as they are
@@ -38,7 +39,7 @@ def _english_left(text):
 @pytest.fixture
 def chinese():
     app = QApplication.instance() or QApplication([])
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     i18n.use_project(project)
     i18n.install(app, "zh_TW")
     try:
@@ -113,7 +114,7 @@ def test_the_first_page_of_an_editor_opened_on_the_demo_says_it_in_chinese():
     from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     i18n.install(app, "zh_TW")
     try:
         window = AsteriaEditorWindow(project)  # the project given at once: its page built first

@@ -22,6 +22,7 @@ from dataclasses import asdict, dataclass, fields
 from typing import NamedTuple
 
 from asteria import kernels
+from asteria.assets.canonical import AssetSource, CanonicalAsset
 
 PARTICLE_KIND = "particle_effect"
 EMITTER_SHAPES = ("point", "circle", "ring", "rect", "line")
@@ -366,7 +367,6 @@ def effect_definition(assets, asset_id):
 def particle_effect_asset(definition, *, tags=("vfx", "particles")):
     """A canonical asset holding ``definition`` (``source.uri`` is the image of image particles,
     else "")."""
-    from asteria.assets.canonical import AssetSource, CanonicalAsset
 
     emitter = definition.to_data()
     emitter.pop("effect_id")

@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,10 +44,10 @@ class BattleActionEntry:
         tags=(),
         search_terms=(),
     ):
-        action_id = _id(action_id, "action_id")
-        label = action_id if label is None else _id(label, "label")
-        category = _id(category, "category")
-        kind = _id(kind, "kind")
+        action_id = required_id(action_id, "action_id")
+        label = action_id if label is None else required_id(label, "label")
+        category = required_id(category, "category")
+        kind = required_id(kind, "kind")
         if tags:  # most rows have none; the menu builds rows on every frame
             tags = tuple(dict.fromkeys(str(x).strip() for x in tags if str(x).strip()))
         else:
@@ -70,7 +65,7 @@ class BattleActionEntry:
         object.__setattr__(
             self,
             "icon_asset_id",
-            None if icon_asset_id is None else _id(icon_asset_id, "icon_asset_id"),
+            None if icon_asset_id is None else required_id(icon_asset_id, "icon_asset_id"),
         )
         object.__setattr__(self, "detail", str(detail))
         object.__setattr__(self, "cost_text", str(cost_text))
@@ -134,7 +129,7 @@ class BattleActionMenuPolicy:
     def __post_init__(self):
         if int(self.page_size) < 1:
             raise ValueError("page_size must be >= 1")
-        _id(self.all_category_id, "all_category_id")
+        required_id(self.all_category_id, "all_category_id")
         if self.sort_mode not in {"order", "priority", "label"}:
             raise ValueError("unsupported action menu sort_mode")
 
@@ -274,7 +269,7 @@ class BattleActionMenuRuntime:
         return self._refresh()
 
     def set_category(self, category):
-        self.active_category = _id(category, "category")
+        self.active_category = required_id(category, "category")
         self.page = 0
         self.cursor = 0
         return self._refresh()
@@ -290,7 +285,7 @@ class BattleActionMenuRuntime:
         page) at once:
         for a controller that keeps its own cursor."""
         self._source = tuple(entries)
-        self.active_category = _id(category, "category")
+        self.active_category = required_id(category, "category")
         self.query = ""
         index = max(0, int(index))
         self.page = index // self.policy.page_size

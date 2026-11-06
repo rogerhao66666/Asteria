@@ -13,9 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import hypot, isfinite
 
-
-def _text(value):
-    return str(value or "").strip()
+from asteria.core.values import clean_text
 
 
 def _non_negative(value, label):
@@ -87,38 +85,38 @@ class AreaRule:
         encounter_first_step=1.0,
         autorun=(),
     ):
-        key = _text(key)
+        key = clean_text(key)
         if not key.startswith(("region:", "tag:")) or key.endswith(":"):
             raise ValueError("an area key is 'region:<id>' or 'tag:<name>'")
         s = object.__setattr__
         s(self, "key", key)
-        s(self, "damage_resource", _text(damage_resource))
+        s(self, "damage_resource", clean_text(damage_resource))
         s(self, "damage_per_second", _non_negative(damage_per_second, "damage_per_second"))
         s(self, "can_kill", bool(can_kill))
         s(self, "slippery", bool(slippery))
         s(self, "slip_seconds", _non_negative(slip_seconds, "slip_seconds"))
-        s(self, "footstep_cue", _text(footstep_cue))
+        s(self, "footstep_cue", clean_text(footstep_cue))
         distance = float(step_distance)
         if not isfinite(distance) or distance <= 0:
             raise ValueError("step_distance must be finite and > 0")
         s(self, "step_distance", distance)
-        s(self, "blocks", tuple(sorted({_text(x) for x in blocks if _text(x)})))
+        s(self, "blocks", tuple(sorted({clean_text(x) for x in blocks if clean_text(x)})))
         visibility = _non_negative(visibility, "visibility")
         s(self, "visibility", visibility)
-        s(self, "on_enter", _text(on_enter))
-        s(self, "on_leave", _text(on_leave))
-        s(self, "on_step", _text(on_step))
-        s(self, "switch", _text(switch))
-        s(self, "battle_background", _text(battle_background))
-        s(self, "music", _text(music))
-        s(self, "weather", _text(weather))
+        s(self, "on_enter", clean_text(on_enter))
+        s(self, "on_leave", clean_text(on_leave))
+        s(self, "on_step", clean_text(on_step))
+        s(self, "switch", clean_text(switch))
+        s(self, "battle_background", clean_text(battle_background))
+        s(self, "music", clean_text(music))
+        s(self, "weather", clean_text(weather))
         s(self, "title", str(title or ""))
         pairs = encounters.items() if isinstance(encounters, dict) else encounters
         table = []
         for encounter_id, weight in pairs:
             weight = _non_negative(weight, "encounter weight")
-            if _text(encounter_id) and weight > 0:
-                table.append((_text(encounter_id), weight))
+            if clean_text(encounter_id) and weight > 0:
+                table.append((clean_text(encounter_id), weight))
         s(self, "encounters", tuple(table))
         chance = _non_negative(encounter_chance, "encounter_chance")
         if chance > 1:
@@ -131,9 +129,9 @@ class AreaRule:
         entries = []
         for entry in autorun:
             entry = dict(entry)
-            if not _text(entry.get("program")):
+            if not clean_text(entry.get("program")):
                 raise ValueError("an autorun entry needs a program")
-            if bool(_text(entry.get("switch"))) == bool(_text(entry.get("variable"))):
+            if bool(clean_text(entry.get("switch"))) == bool(clean_text(entry.get("variable"))):
                 raise ValueError("an autorun entry tests one switch or one variable")
             if entry.get("when", "always") not in AUTORUN_WHEN:
                 raise ValueError("an autorun entry runs 'always' or on 'enter'")
@@ -232,14 +230,14 @@ class MapRuleSet:
         still_visibility=1.0,
     ):
         s = object.__setattr__
-        s(self, "rules_id", _text(rules_id) or _raise("rules_id is required"))
+        s(self, "rules_id", clean_text(rules_id) or _raise("rules_id is required"))
         rules = tuple(rules)
         if any(not isinstance(x, AreaRule) for x in rules):
             raise TypeError("rules must be AreaRule values")
         if len({x.key for x in rules}) != len(rules):
             raise ValueError("duplicate area rule key")
         s(self, "rules", rules)
-        s(self, "region_layer", _text(region_layer) or "regions")
+        s(self, "region_layer", clean_text(region_layer) or "regions")
         s(self, "crouch_visibility", _non_negative(crouch_visibility, "crouch_visibility"))
         s(self, "still_visibility", _non_negative(still_visibility, "still_visibility"))
 

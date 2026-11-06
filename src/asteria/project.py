@@ -10,6 +10,7 @@ from asteria.core.ids import new_id, validate_id
 from asteria.core.prefab import PrefabLibrary
 from asteria.core.serialization import deserialize_scene, serialize_scene
 from asteria.events import EventProgram, EventProgramRegistry, SceneEventBindings
+from asteria.events.common import CommonEvent
 from asteria.events.lifecycle_bridge import LifecycleEventBinding
 from asteria.gameplay import GameplayLibrary
 from asteria.presentation.library import BattlePresentationLibrary
@@ -69,7 +70,6 @@ class Project:
             raise TypeError("prefabs must be PrefabLibrary")
         self.prefabs = prefabs or PrefabLibrary()
         self.lifecycle_event_bindings = list(lifecycle_event_bindings or ())
-        from asteria.events.common import CommonEvent
 
         self.common_events = list(common_events or ())
         if any(not isinstance(x, CommonEvent) for x in self.common_events):
@@ -233,8 +233,6 @@ class Project:
 
     @classmethod
     def from_data(cls, data, registry):
-        from asteria.events.common import CommonEvent
-
         version = data.get("version")
         if data.get("schema") != cls.SCHEMA or version not in {2, 3, 4, 5, 6, 7, 8, 9, 10, 11}:
             raise ValueError("unsupported project")

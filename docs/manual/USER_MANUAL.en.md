@@ -833,7 +833,7 @@ signatures are the real ones (type hints left out). Run the script after an engi
 
 ### 15.1 Loading, saving and running a project
 
-A project is one `project.asteria.json`; its folder holds the art, the `playable_test_manifest.json` and `saves/`. The registry tells the loader which components exist: use `EditorDocument().component_registry` (as the editor and the reference scripts do) or `build_preview_registry()`.
+A project is one `project.asteria.json`; its folder holds the art, the `playable_test_manifest.json` and `saves/`. The registry tells the loader which components exist: use `default_component_registry()` from `asteria.runtime.component_registry` (the editor and the reference scripts use it) or `build_preview_registry()`.
 
 | Signature | Description |
 | --- | --- |

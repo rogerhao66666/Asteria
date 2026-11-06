@@ -3,22 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from math import isfinite
 
+from asteria.core.values import required_id
 from asteria.gameplay import ModifierSet, ResourcePool, StatBlock, TagSet
 
 from .ability_build import AbilityGrant, AbilityResolution, ActorAbilityState
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
 def _numbers(values, label):
     result = {}
     for key, value in dict(values).items():
-        key = _id(key, label)
+        key = required_id(key, label)
         value = float(value)
         if not isfinite(value):
             raise ValueError(f"{label} values must be finite")
@@ -29,7 +23,7 @@ def _numbers(values, label):
 def _resources(values):
     result = {}
     for key, raw in dict(values).items():
-        key = _id(key, "resource")
+        key = required_id(key, "resource")
         if isinstance(raw, (int, float)):
             maximum = float(raw)
             minimum = 0.0
@@ -96,14 +90,14 @@ class ClassDefinition:
         resource_growth=None,
         description="",
     ):
-        class_id = _id(class_id, "class_id")
+        class_id = required_id(class_id, "class_id")
         if int(unlock_level) < 0:
             raise ValueError("unlock_level must be >= 0")
         object.__setattr__(self, "unlock_level", int(unlock_level))
         object.__setattr__(
             self,
             "unlock_classes",
-            tuple(dict.fromkeys(_id(x, "class_id") for x in unlock_classes)),
+            tuple(dict.fromkeys(required_id(x, "class_id") for x in unlock_classes)),
         )
         object.__setattr__(self, "class_id", class_id)
         object.__setattr__(self, "display_name", str(display_name or class_id))
@@ -112,12 +106,12 @@ class ClassDefinition:
         object.__setattr__(
             self,
             "granted_tags",
-            tuple(sorted({_id(x, "tag").lower() for x in granted_tags})),
+            tuple(sorted({required_id(x, "tag").lower() for x in granted_tags})),
         )
         object.__setattr__(
             self,
             "granted_abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in granted_abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in granted_abilities)),
         )
         object.__setattr__(self, "icon_id", str(icon_id or "").strip())
         object.__setattr__(self, "level_growth", _numbers(level_growth or {}, "stat"))
@@ -199,9 +193,9 @@ class ClassAssignment:
         progression_track_ids=(),
         tags=(),
     ):
-        class_id = _id(class_id, "class_id")
-        assignment_id = _id(assignment_id or class_id, "assignment_id")
-        role = _id(role, "class role")
+        class_id = required_id(class_id, "class_id")
+        assignment_id = required_id(assignment_id or class_id, "assignment_id")
+        role = required_id(role, "class role")
         object.__setattr__(self, "class_id", class_id)
         object.__setattr__(self, "assignment_id", assignment_id)
         object.__setattr__(self, "role", role)
@@ -210,12 +204,16 @@ class ClassAssignment:
         object.__setattr__(
             self,
             "progression_track_ids",
-            tuple(dict.fromkeys(_id(x, "progression track id") for x in progression_track_ids)),
+            tuple(
+                dict.fromkeys(
+                    required_id(x, "progression track id") for x in progression_track_ids
+                )
+            ),
         )
         object.__setattr__(
             self,
             "tags",
-            tuple(sorted({_id(x, "tag").lower() for x in tags})),
+            tuple(sorted({required_id(x, "tag").lower() for x in tags})),
         )
 
     def to_data(self):
@@ -286,7 +284,7 @@ class ActorDefinition:
         abilities=(),
         description="",
     ):
-        actor_id = _id(actor_id, "actor_id")
+        actor_id = required_id(actor_id, "actor_id")
         if class_assignments is not None and class_id is not None:
             raise ValueError("use class_id or class_assignments, not both")
         if class_assignments is None:
@@ -304,11 +302,13 @@ class ActorDefinition:
         object.__setattr__(self, "class_assignments", assignments)
         object.__setattr__(self, "base_stats", _numbers(base_stats or {}, "stat"))
         object.__setattr__(self, "base_resources", _resources(base_resources or {}))
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
         object.__setattr__(
             self,
             "abilities",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in abilities)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in abilities)),
         )
         object.__setattr__(self, "description", str(description or ""))
 
@@ -470,7 +470,7 @@ class RpgActorSnapshot:
         if set(data) != expected:
             raise ValueError("unsupported actor runtime snapshot")
         return cls(
-            _id(data["actor_id"], "actor_id"),
+            required_id(data["actor_id"], "actor_id"),
             data["stats"],
             data["resources"],
             data["tags"],

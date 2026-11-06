@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 
+from asteria.presentation import CombatantOverlay
+
 MV_WEAPON_TYPE_TAG = "mv-weapon-type:"
 
 
@@ -57,7 +59,6 @@ def weapon_overlay_for_loadout(
     loadout, system_data: dict, asset_id_for_sheet: Callable[[str], str]
 ):
     """Translate an equipped MV weapon into a generic attack overlay (armor stays inert)."""
-    from asteria.presentation import CombatantOverlay
 
     visual = weapon_visual_for_type(weapon_type_for_loadout(loadout, system_data), system_data)
     if not visual.frames or not visual.sheet_name:

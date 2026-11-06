@@ -5,16 +5,15 @@ from __future__ import annotations
 
 import random
 
+from asteria.gameplay import ResourcePool, StatBlock, TagSet
+from asteria.gameplay.effects import apply_effect
+from asteria.rpg import PartyMember
 from asteria.rpg.built_in_text import Words
+from asteria.rpg.enemies import RewardDefinition
+from asteria.rpg.pets import PetRecord
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 PET_MEMBER_PREFIX = "pet:"
@@ -36,8 +35,6 @@ class SpeciesFoe:
     __slots__ = ("abilities", "display_name", "reward", "species", "tags")
 
     def __init__(self, species):
-        from asteria.rpg.enemies import RewardDefinition
-
         self.species = species
         self.display_name = species.display_name
         self.tags = tuple(species.tags)
@@ -174,7 +171,6 @@ class PetsMixin:
         """Own a new creature of ``species_id`` (or adopt ``record``, a caught foe's state):
         it joins the party while there is room, else storage (rules), and rolls its genes and
         takes its moves as the rules say."""
-        from asteria.rpg.pets import PetRecord
 
         db = self.project.rpg_database
         species_id = record.species_id if record is not None else str(species_id)
@@ -242,7 +238,6 @@ class PetsMixin:
         """Use an item on a creature outside battle: its use effects (health...) and the
         states it cures (``cures:<state>`` tags). A fallen creature takes only an item tagged
         ``revives``. Consumed only when it changed something; returns whether it did."""
-        from asteria.gameplay.effects import apply_effect
 
         from .ability_use import cure_states, self_context
 
@@ -581,8 +576,6 @@ class PetsMixin:
         return self.pet_of_member(member_id) or self.foe_record(member_id)
 
     def _creature_subject(self, record, species):
-        from asteria.gameplay import ResourcePool, StatBlock, TagSet
-
         values = dict(self.pet_stats_at(record))
         values.setdefault("level", float(record.level))  # formulas may read it (damage...)
         stats = StatBlock(values)
@@ -598,8 +591,6 @@ class PetsMixin:
         return subject
 
     def _creature_unit(self, member_id, side, record, species):
-        from asteria.rpg import PartyMember
-
         subject = self._creature_subject(record, species)
         return PartyMember(
             member_id,
@@ -619,7 +610,6 @@ class PetsMixin:
 
     def _species_foe_unit(self, member, serial, rng):
         """A wild creature or a trainer's team member built from an encounter member."""
-        from asteria.rpg.pets import PetRecord
 
         species = self.project.rpg_database.pet_species[member.pet_species_id]
         level = member.level

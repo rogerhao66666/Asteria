@@ -14,7 +14,8 @@ import copy
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from asteria.graphics import SCALINGS
+from asteria.graphics import SCALINGS, SpriteClip, SpriteKeyframe
+from asteria.runtime.animation import AnimatorState
 
 SHEET_KIND = "sprite_sheet"
 
@@ -282,8 +283,6 @@ class AnimationAuthoringController:
 
     # -- preview (runtime animation path) -----------------------------------------
     def _clip(self, asset_id, name):
-        from asteria.graphics import SpriteClip, SpriteKeyframe
-
         clip = self.data(asset_id)["clips"].get(name)
         if clip is None:
             raise AnimationAuthoringError(f"unknown clip {name}")
@@ -296,7 +295,6 @@ class AnimationAuthoringController:
 
     def preview_frame(self, asset_id, name, time):
         """Sheet frame index the runtime shows ``time`` seconds into the clip."""
-        from asteria.runtime.animation import AnimatorState
 
         animator = AnimatorState(self._clip(asset_id, name))
         animator.update(max(0.0, float(time)))

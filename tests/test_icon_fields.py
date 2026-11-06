@@ -144,15 +144,15 @@ def test_every_game_systems_kind_has_an_icon():
 
 
 def test_the_pause_menu_and_quest_log_draw_icons(monkeypatch):
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.rpg import QuestDefinition, QuestObjective
     from asteria.rpg.extras import MenuEntry
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     db = project.rpg_database
     db.add_menu_entry(MenuEntry("tips", "Tips", "p", icon_id="forged:star"))
     db.add_quest(

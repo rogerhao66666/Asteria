@@ -18,11 +18,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import clean_text
+
 CARD_STYLES = ("grid", "row")
-
-
-def _text(value):
-    return str(value or "").strip()
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,10 +50,10 @@ class QuestBoardDefinition:
         music="",
         layout="",
     ):
-        board_id = _text(board_id)
+        board_id = clean_text(board_id)
         if not board_id:
             raise ValueError("a quest board needs an id")
-        quest_ids = tuple(_text(q) for q in quest_ids if _text(q))
+        quest_ids = tuple(clean_text(q) for q in quest_ids if clean_text(q))
         if len(quest_ids) != len(set(quest_ids)):
             raise ValueError(f"a quest is listed twice on board {board_id}")
         if card_style not in CARD_STYLES:
@@ -63,15 +61,15 @@ class QuestBoardDefinition:
         if int(max_active) < 0 or float(refresh_minutes) < 0:
             raise ValueError("max_active and refresh_minutes are >= 0")
         object.__setattr__(self, "board_id", board_id)
-        object.__setattr__(self, "display_name", _text(display_name) or board_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or board_id)
         object.__setattr__(self, "description", str(description or ""))
         object.__setattr__(self, "quest_ids", quest_ids)
-        object.__setattr__(self, "open_switch", _text(open_switch))
+        object.__setattr__(self, "open_switch", clean_text(open_switch))
         object.__setattr__(self, "max_active", int(max_active))
         object.__setattr__(self, "refresh_minutes", float(refresh_minutes))
         object.__setattr__(self, "card_style", card_style)
-        object.__setattr__(self, "music", _text(music))
-        object.__setattr__(self, "layout", _text(layout))
+        object.__setattr__(self, "music", clean_text(music))
+        object.__setattr__(self, "layout", clean_text(layout))
 
     def to_data(self):
         return {
@@ -117,7 +115,7 @@ class RecruitCandidate:
         self, actor_id, currency="gold", cost=0.0, require_switch="", level_min=0, level_max=0,
         note="", portrait="",
     ):  # fmt: skip
-        actor_id = _text(actor_id)
+        actor_id = clean_text(actor_id)
         if not actor_id:
             raise ValueError("a candidate needs a character")
         cost, level_min, level_max = float(cost), int(level_min), int(level_max)
@@ -126,13 +124,13 @@ class RecruitCandidate:
         if level_max and level_max < level_min:
             raise ValueError("level_max is below level_min")
         object.__setattr__(self, "actor_id", actor_id)
-        object.__setattr__(self, "currency", _text(currency) or "gold")
+        object.__setattr__(self, "currency", clean_text(currency) or "gold")
         object.__setattr__(self, "cost", cost)
-        object.__setattr__(self, "require_switch", _text(require_switch))
+        object.__setattr__(self, "require_switch", clean_text(require_switch))
         object.__setattr__(self, "level_min", level_min)
         object.__setattr__(self, "level_max", level_max or level_min)
         object.__setattr__(self, "note", str(note or ""))
-        object.__setattr__(self, "portrait", _text(portrait))
+        object.__setattr__(self, "portrait", clean_text(portrait))
 
     def to_data(self):
         return {
@@ -180,7 +178,7 @@ class RecruitOfficeDefinition:
         music="",
         layout="",
     ):
-        office_id = _text(office_id)
+        office_id = clean_text(office_id)
         if not office_id:
             raise ValueError("a recruiting office needs an id")
         candidates = tuple(
@@ -194,7 +192,7 @@ class RecruitOfficeDefinition:
         if not 0.0 <= refund <= 1.0 or int(party_limit) < 0:
             raise ValueError("dismiss_refund is 0-1, party_limit >= 0")
         object.__setattr__(self, "office_id", office_id)
-        object.__setattr__(self, "display_name", _text(display_name) or office_id)
+        object.__setattr__(self, "display_name", clean_text(display_name) or office_id)
         object.__setattr__(self, "description", str(description or ""))
         object.__setattr__(self, "candidates", candidates)
         object.__setattr__(self, "party_limit", int(party_limit))
@@ -203,8 +201,8 @@ class RecruitOfficeDefinition:
         if float(experience_per_level) <= 0:
             raise ValueError("experience_per_level must be > 0")
         object.__setattr__(self, "experience_per_level", float(experience_per_level))
-        object.__setattr__(self, "music", _text(music))
-        object.__setattr__(self, "layout", _text(layout))
+        object.__setattr__(self, "music", clean_text(music))
+        object.__setattr__(self, "layout", clean_text(layout))
 
     def candidate(self, actor_id):
         return next((c for c in self.candidates if c.actor_id == actor_id), None)

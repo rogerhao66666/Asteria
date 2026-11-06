@@ -382,14 +382,14 @@ def test_states_with_a_tint_colour_the_battler(demo):  # noqa: F811
 def test_the_skill_slots_screen_equips_and_removes_abilities():
     from pathlib import Path
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.rpg.ability_loadout import AbilityLoadoutRules
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.extras_screens import AbilitySlotsScreen
     from asteria.runtime.game_session import GameSessionRuntime
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     game = GameSessionRuntime(project, project.game_start.instantiate(project))
     project.rpg_database.add_ability_loadout_rules(AbilityLoadoutRules("slots", 1))
     hero = game.save.rpg_state.party_actor_ids[0]

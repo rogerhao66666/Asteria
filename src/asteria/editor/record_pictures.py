@@ -13,6 +13,8 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QPixmapCache
 
+from .scene_render import resolve_texture_source
+
 
 def _profile(document, record_id):
     project = getattr(document, "project", None)
@@ -57,7 +59,6 @@ def _portrait(document, asset_id):
 def _first_frame(document, asset_id):
     """The first frame of a sprite sheet asset: a sheet the editor has loaded, or a battle
     sheet described by its canonical asset's ``frame_size`` and clips (the idle pose)."""
-    from .scene_render import resolve_texture_source
 
     views = getattr(document, "asset_views", None)
     sheet = views.sprite_sheet(asset_id) if views is not None else None
@@ -115,7 +116,6 @@ def _texture(path):
 
 def sprite_sheet_frame(document, asset_id, frame_index):
     """One frame of a sprite sheet the editor has loaded, as a QPixmap, or None."""
-    from .scene_render import resolve_texture_source
 
     views = getattr(document, "asset_views", None)
     sheet = views.sprite_sheet(asset_id) if views is not None and asset_id else None

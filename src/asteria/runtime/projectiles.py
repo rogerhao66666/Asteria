@@ -34,6 +34,7 @@ from .character_control import (
     box_rows,
     turn_with_facing,
 )
+from .combat import CombatantComponent
 
 
 @dataclass(slots=True)
@@ -71,7 +72,6 @@ def _team_of(entity):
         component = entity.try_get(component_type)
         if component is not None and component.team:
             return component.team
-    from .combat import CombatantComponent
 
     combatant = entity.try_get(CombatantComponent)
     return combatant.team if combatant is not None else ""
@@ -177,8 +177,6 @@ class ProjectileSystem(System):
         x, y = world_position(entity)
         count = int(payload.get("count", 1))
         if payload.get("count_stat") and self.combat is not None:  # e.g. a skill rank adding shots
-            from .combat import CombatantComponent
-
             if entity.has(CombatantComponent):
                 stats = self.combat.effective_stats(self.combat.state(entity))
                 count += int(stats.get(str(payload["count_stat"])))

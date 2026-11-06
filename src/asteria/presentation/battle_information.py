@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(value, name):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{name} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,9 +17,9 @@ class BattleInformationRule:
     VISIBILITY = ("persistent", "contextual", "focused", "compact", "hidden")
 
     def __post_init__(self):
-        _id(self.info_id, "info_id")
-        _id(self.role, "role")
-        _id(self.group, "group")
+        required_id(self.info_id, "info_id")
+        required_id(self.role, "role")
+        required_id(self.group, "group")
         if self.visibility not in self.VISIBILITY:
             raise ValueError("unsupported information visibility")
 
@@ -43,9 +38,9 @@ class BattleInformationItem:
     contextual: bool = False
 
     def __post_init__(self):
-        _id(self.info_id, "info_id")
-        _id(self.role, "role")
-        _id(self.label, "label")
+        required_id(self.info_id, "info_id")
+        required_id(self.role, "role")
+        required_id(self.label, "label")
 
 
 @dataclass(frozen=True, slots=True)

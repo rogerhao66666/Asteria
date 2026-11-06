@@ -332,10 +332,10 @@ def main(argv=None):
 
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.editor.theme import apply_asteria_theme
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     # macOS asks "reopen windows?" after an app quit unexpectedly; this run never waits for it
     app = QApplication.instance() or QApplication(
@@ -343,7 +343,7 @@ def main(argv=None):
     )
     apply_asteria_theme(app, args.theme)
     project_file = Path(args.project) if args.project else PROJECT_FILE
-    project = Project.load_json(project_file, EditorDocument().component_registry)
+    project = Project.load_json(project_file, default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = (
         project_file  # as File > Open does: asset paths resolve next to the project

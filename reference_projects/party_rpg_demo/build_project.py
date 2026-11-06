@@ -37,7 +37,6 @@ sys.path.insert(0, str(REPO / "reference_projects" / "full_verification_demo"))
 
 import trial_lucifer as lucifer  # noqa: E402
 
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.gameplay import (  # noqa: E402
     AbilityDefinition,
     Effect,
@@ -65,6 +64,7 @@ from asteria.rpg.gauge_composition import (  # noqa: E402
 )
 from asteria.rpg.interactions import InteractionRule  # noqa: E402
 from asteria.rpg.items import ItemDefinition  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry  # noqa: E402
 
 HP, SP, BP, SHIELD = "vitality", "technique", "bp", "shield"
 WEAPONS = ("sword", "spear", "dagger", "axe", "bow", "staff")
@@ -115,7 +115,7 @@ def main():
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(REFERENCE / "playable_assets", target)
-    registry = EditorDocument().component_registry
+    registry = default_component_registry()
     project = Project.load_json(REFERENCE / "project.asteria.json", registry)
     project.name = "Asteria Party RPG Battle Demo"
     db, library = project.rpg_database, project.gameplay_library

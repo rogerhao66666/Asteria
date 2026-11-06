@@ -19,11 +19,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from .record_vocabulary import words
+
 
 def icon_name(icon_id):
     """A picture's name in words: ``icon.alchemy_salt`` → "Alchemy Salt", ``…/I_Clock.png``
     → "Clock" (the pack's one-letter prefix dropped); the tooltip keeps the whole id."""
-    from .record_vocabulary import words
 
     name = icon_id.rsplit("/", 1)[-1].removeprefix("icon.")
     name = name.rsplit(".", 1)[0] if name.lower().endswith(".png") else name

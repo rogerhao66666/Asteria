@@ -3,12 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _nonnegative(value, label):
@@ -46,11 +41,11 @@ class ActionSequenceStep:
             raise ValueError("participant_index must be >= 0")
         if int(repeat) < 1:
             raise ValueError("repeat must be >= 1")
-        object.__setattr__(self, "ability_id", _id(ability_id, "ability_id"))
+        object.__setattr__(self, "ability_id", required_id(ability_id, "ability_id"))
         object.__setattr__(self, "participant_index", int(participant_index))
         object.__setattr__(self, "repeat", int(repeat))
         object.__setattr__(self, "delay", _nonnegative(delay, "delay"))
-        object.__setattr__(self, "target_policy", _id(target_policy, "target_policy"))
+        object.__setattr__(self, "target_policy", required_id(target_policy, "target_policy"))
         object.__setattr__(
             self,
             "required_previous_tags",
@@ -116,15 +111,15 @@ class ActionSequenceDefinition:
             raise TypeError("steps must be ActionSequenceStep values")
         if hi is not None and any(x.participant_index >= hi for x in steps):
             raise ValueError("step participant_index exceeds max_participants")
-        object.__setattr__(self, "sequence_id", _id(sequence_id, "sequence_id"))
+        object.__setattr__(self, "sequence_id", required_id(sequence_id, "sequence_id"))
         object.__setattr__(self, "steps", steps)
         object.__setattr__(self, "min_participants", lo)
         object.__setattr__(self, "max_participants", hi)
         object.__setattr__(
-            self, "participant_policy", _id(participant_policy, "participant_policy")
+            self, "participant_policy", required_id(participant_policy, "participant_policy")
         )
         object.__setattr__(
-            self, "interruption_policy", _id(interruption_policy, "interruption_policy")
+            self, "interruption_policy", required_id(interruption_policy, "interruption_policy")
         )
         object.__setattr__(self, "tags", tuple(dict.fromkeys(str(x) for x in tags)))
 
@@ -196,7 +191,7 @@ class ActionSequenceRuntime:
 
     def plan(self, sequence_id, participant_ids, target_ids=()):
         definition = self.definitions[str(sequence_id)]
-        participants = tuple(_id(x, "participant_id") for x in participant_ids)
+        participants = tuple(required_id(x, "participant_id") for x in participant_ids)
         if len(set(participants)) != len(participants):
             raise ValueError("duplicate action sequence participant")
         if len(participants) < definition.min_participants:
@@ -206,7 +201,7 @@ class ActionSequenceRuntime:
             and len(participants) > definition.max_participants
         ):
             raise ValueError("too many action sequence participants")
-        targets = tuple(_id(x, "target_id") for x in target_ids)
+        targets = tuple(required_id(x, "target_id") for x in target_ids)
         emitted = set()
         offset = 0.0
         planned = []

@@ -11,6 +11,8 @@ window draws exactly as before (``tests/test_dialogue_portraits.py``).
 
 from __future__ import annotations
 
+from asteria.presentation.menu_layout import resolve_rect
+
 LINE_FIELDS = ("speaker", "text")
 
 
@@ -37,7 +39,7 @@ def _typed(rt, line, speed):
     """How many letters of ``line`` are shown (``speed`` letters a second; 0: all)."""
     if speed <= 0:
         return None
-    state = rt.__dict__.setdefault("_typed_line", {})
+    state = rt._typed_line
     if state.get("line") is not line:
         state["line"], state["start"] = line, rt.pg.time.get_ticks()
     return int((rt.pg.time.get_ticks() - state["start"]) / 1000 * speed)
@@ -159,7 +161,6 @@ def _grown(c, box, place, rows, row):
     """The window behind a choice made tall enough for the prompt and every row of options
     (the engine's own sizes fit as they are: 12 pixels above the prompt, 6 under the last
     row). A box the author placed keeps its size."""
-    from asteria.presentation.menu_layout import resolve_rect
 
     height = c.rt.height
     prompt = c.element("prompt")

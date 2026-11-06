@@ -39,7 +39,7 @@ from .character_composition_authoring import (
     CompositionAuthoringError,
 )
 from .i18n import translate
-from .responsive_form import FlowForm
+from .responsive_form import FlowForm, ResponsiveColumns
 from .ui_fit import fit_combo_boxes, fit_list_to_width
 
 PREVIEW_SCALE = 3.0
@@ -241,7 +241,6 @@ class CharacterCompositionWidget(QWidget):
         for pane in (left, middle):
             top.addWidget(pane)
         top.setSizes([180, 520])
-        from .responsive_form import ResponsiveColumns
 
         boxes = ResponsiveColumns((sockets_box, attachments_box, layers_box), column_width=250)
         splitter = QSplitter(Qt.Vertical)

@@ -5,14 +5,10 @@ from __future__ import annotations
 
 import random
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from asteria.events.conditions import EventCondition
+
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -27,8 +23,6 @@ class InteractionsMixin:
         also stored in the event variable ``interaction.<id>`` so the calling event can branch on
         it.
         """
-
-        from asteria.events.conditions import EventCondition
 
         db = self.project.rpg_database
         interaction = db.world_interactions.get(str(interaction_id))

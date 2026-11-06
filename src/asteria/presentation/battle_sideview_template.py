@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(value, name):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{name} is required")
-    return value
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,8 +18,8 @@ class BattleSideviewZone:
     x_step: float = 0.0
 
     def __post_init__(self):
-        _id(self.zone_id, "zone_id")
-        _id(self.facing, "facing")
+        required_id(self.zone_id, "zone_id")
+        required_id(self.facing, "facing")
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,7 +44,7 @@ class BattleSideviewTemplateProfile:
     max_visible_per_zone: int | None = None
 
     def __post_init__(self):
-        _id(self.template_id, "template_id")
+        required_id(self.template_id, "template_id")
         if not isinstance(self.left_zone, BattleSideviewZone) or not isinstance(
             self.right_zone, BattleSideviewZone
         ):

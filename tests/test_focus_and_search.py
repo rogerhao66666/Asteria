@@ -15,12 +15,12 @@ def window(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     value = AsteriaEditorWindow(project)
     value.document.file_path = DEMO / "project.asteria.json"
     value._resolve_project_resources()

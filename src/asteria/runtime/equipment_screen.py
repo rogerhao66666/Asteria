@@ -18,8 +18,11 @@ change member, Esc goes back. Slots, rarities, stats and sets all come from the 
 from __future__ import annotations
 
 from asteria.rpg.built_in_text import translated
+from asteria.rpg.loot import item_display_name
+from asteria.runtime.status_menu import StatusMenu
 
-from .bag_screen import BAD, GOOD, MUTED, TITLE, _rarity, compare, format_value
+from .bag_screen import BAD, GOOD, MUTED, TITLE, BagScreen, _rarity, compare, format_value
+from .crafting_screen import wrap
 
 TEXT = (236, 238, 245)
 DOLL = (48, 112, 420, 470)
@@ -117,22 +120,18 @@ class EquipmentScreen:
         return worn, None, True
 
     def name(self, piece):
-        from asteria.rpg.loot import item_display_name
-
         affixes = self.game.project.rpg_database.affixes
         text = item_display_name(piece, affixes, brief=True, name_of=self.game.name_of)
         return f"{text} +{piece.refine_level}" if piece.refine_level else text
 
     def set_info(self, piece):
         """``(set, pieces the member wears, [(pieces, words)])`` (the bag screen's words)."""
-        from .bag_screen import BagScreen
 
         return BagScreen.set_info(_Member(self.rt, self.actor_id), piece)
 
     def stat_rows(self):
         """``[(stat_id, name, now, with the highlighted piece or None)]`` in the project's
         character-screen order."""
-        from asteria.runtime.status_menu import StatusMenu
 
         game, actor_id = self.game, self.actor_id
         if actor_id is None:
@@ -426,7 +425,6 @@ class EquipmentScreen:
         # what the slot is for (Game Systems ▸ Equipment Slots), under its name
         slots = getattr(game.project.rpg_database, "equipment_slots", {})
         about = game.description_of(slots.get(slot_id or ""), "")
-        from .crafting_screen import wrap
 
         lines = wrap(rt, about, 15, w - 32)[:2] if about else []
         for n, line in enumerate(lines):

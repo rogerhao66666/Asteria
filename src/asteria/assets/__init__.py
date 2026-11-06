@@ -1,65 +1,273 @@
-from .cache import ImportArtifact, ImportCache, artifact_key
-from .fingerprint import SourceFingerprint, fingerprint_file
-from .importers import AssetImporter, ImportRequest, TextureImporter
-from .pipeline import ImportPipeline
-from .registry import AssetRegistry, AssetEvent
-from .resources import *
-from .serialization import deserialize_asset_registry, serialize_asset_registry
-from .types import VALID_KINDS, AssetRecord, AssetRef, normalize_asset_path
+# The package's names are imported when first used (PEP 562): importing one module of it
+# no longer imports every other one (and what they import), which made a cycle with
+# asteria.assets and slowed every import. Generated from the eager imports it replaces.
 
-# New canonical asset system. Keep legacy AssetRef above as package-level compatibility API;
-# canonical modules use asteria.assets.canonical.AssetRef internally.
-from .canonical import CanonicalAsset, AssetSource, ValidationIssue, ValidationReport
-from .monster import *
-from .tileset import *
-from .prop import *
-from .icon import *
-from .portrait import *
-from .vfx import *
-from .package import *
-from .codecs import *
-from .builtin_codecs import *
-from .complex_codecs import *
-from .store import *
-from .browser import *
-from .browser_workspace import *
-from .scene_placement import *
-from .scene_binding import *
-from .project_load import *
-from .runtime_scene import *
-from .runtime_resources import *
-from .runtime_adapters import *
-from .runtime_adapter_registry import *
-from .backend_capabilities import *
-from .backend_preflight import *
-from .preflight_materialization import *
-from .package_installer import *
-from .import_transaction import *
-from .reconciliation import *
-from .editor_import_service import *
-from .quality_gate import *
+from importlib import import_module
 
-# RPG Maker MV adapters stay at the asset boundary (AST-13): they are imported only when one of
-# their names is asked for, so the runtime never loads MV code.
-_LAZY_MODULES = (
-    "rpg_maker_mv_database",
-    "rpg_maker_mv_catalog",
-    "rpg_maker_mv_weapon",
-)
+_EXPORTS = {  # name -> (module, attribute; None: the module itself)
+    "AssetBrowserItem": (".browser", "AssetBrowserItem"),
+    "AssetBrowserModel": (".browser_workspace", "AssetBrowserModel"),
+    "AssetBrowserQuery": (".browser_workspace", "AssetBrowserQuery"),
+    "AssetBrowserState": (".browser_workspace", "AssetBrowserState"),
+    "AssetBrowserWorkspace": (".browser_workspace", "AssetBrowserWorkspace"),
+    "AssetChange": (".reconciliation", "AssetChange"),
+    "AssetCodec": (".complex_codecs", "AssetCodec"),
+    "AssetCodecRegistry": (".store", "AssetCodecRegistry"),
+    "AssetDocument": (".codecs", "AssetDocument"),
+    "AssetDragPayload": (".scene_placement", "AssetDragPayload"),
+    "AssetEvent": (".registry", "AssetEvent"),
+    "AssetImporter": (".importers", "AssetImporter"),
+    "AssetInspector": (".browser_workspace", "AssetInspector"),
+    "AssetIntake": (".package", "AssetIntake"),
+    "AssetManifest": (".store", "AssetManifest"),
+    "AssetPackageInstaller": (".import_transaction", "AssetPackageInstaller"),
+    "AssetPreview": (".browser_workspace", "AssetPreview"),
+    "AssetRecord": (".types", "AssetRecord"),
+    "AssetRef": (".types", "AssetRef"),
+    "AssetRegistry": (".reconciliation", "AssetRegistry"),
+    "AssetSource": (".package", "AssetSource"),
+    "AssetStore": (".project_load", "AssetStore"),
+    "AssetStoreIssue": (".store", "AssetStoreIssue"),
+    "AssetStoreReport": (".reconciliation", "AssetStoreReport"),
+    "AtlasRegion": (".builtin_codecs", "AtlasRegion"),
+    "AudioAsset": (".builtin_codecs", "AudioAsset"),
+    "AudioRequest": (".runtime_adapters", "AudioRequest"),
+    "BackendCapabilities": (".backend_preflight", "BackendCapabilities"),
+    "BackendPreflight": (".backend_preflight", "BackendPreflight"),
+    "BackendPreflightReport": (".preflight_materialization", "BackendPreflightReport"),
+    "CanonicalAsset": (".reconciliation", "CanonicalAsset"),
+    "CapabilityError": (".backend_capabilities", "CapabilityError"),
+    "CapabilityIssue": (".backend_preflight", "CapabilityIssue"),
+    "CapabilityResult": (".backend_capabilities", "CapabilityResult"),
+    "CapabilityValidatorRegistry": (".backend_preflight", "CapabilityValidatorRegistry"),
+    "ClipRequest": (".runtime_adapters", "ClipRequest"),
+    "CollisionShape": (".builtin_codecs", "CollisionShape"),
+    "EditorAssetImportResult": (".editor_import_service", "EditorAssetImportResult"),
+    "EditorAssetImportService": (".editor_import_service", "EditorAssetImportService"),
+    "EditorImportIssue": (".editor_import_service", "EditorImportIssue"),
+    "FontAsset": (".builtin_codecs", "FontAsset"),
+    "FontRequest": (".runtime_adapters", "FontRequest"),
+    "FrameTiming": (".complex_codecs", "FrameTiming"),
+    "GateStatus": (".quality_gate", "GateStatus"),
+    "HighFidelityClip": (".complex_codecs", "HighFidelityClip"),
+    "IconAsset": (".builtin_codecs", "IconAsset"),
+    "IconValidator": (".icon", "IconValidator"),
+    "IconVariant": (".builtin_codecs", "IconVariant"),
+    "ImageRequest": (".runtime_adapters", "ImageRequest"),
+    "ImportArtifact": (".cache", "ImportArtifact"),
+    "ImportCache": (".cache", "ImportCache"),
+    "ImportPipeline": (".pipeline", "ImportPipeline"),
+    "ImportRequest": (".importers", "ImportRequest"),
+    "ImportTransactionIssue": (".import_transaction", "ImportTransactionIssue"),
+    "ImportTransactionReport": (".import_transaction", "ImportTransactionReport"),
+    "InstallIssue": (".package_installer", "InstallIssue"),
+    "InstallReport": (".package_installer", "InstallReport"),
+    "IntakeResult": (".package", "IntakeResult"),
+    "InteractionPoint": (".builtin_codecs", "InteractionPoint"),
+    "LiveAssetReconciler": (".reconciliation", "LiveAssetReconciler"),
+    "LoadedAsset": (".store", "LoadedAsset"),
+    "MaterialAsset": (".builtin_codecs", "MaterialAsset"),
+    "MaterialRequest": (".runtime_adapters", "MaterialRequest"),
+    "MonsterAnimation": (".complex_codecs", "MonsterAnimation"),
+    "MonsterAsset": (".complex_codecs", "MonsterAsset"),
+    "MonsterValidator": (".monster", "MonsterValidator"),
+    "NormalizedRect": (".builtin_codecs", "NormalizedRect"),
+    "PackQualityGate": (".quality_gate", "PackQualityGate"),
+    "PackQualityReport": (".quality_gate", "PackQualityReport"),
+    "PlaceAssetCommand": (".scene_placement", "PlaceAssetCommand"),
+    "PlacementHandlerRegistry": (".scene_placement", "PlacementHandlerRegistry"),
+    "PlacementRequest": (".scene_placement", "PlacementRequest"),
+    "PlacementResult": (".scene_placement", "PlacementResult"),
+    "PortraitAsset": (".builtin_codecs", "PortraitAsset"),
+    "PortraitValidator": (".portrait", "PortraitValidator"),
+    "PortraitVariant": (".builtin_codecs", "PortraitVariant"),
+    "PreflightEntry": (".backend_preflight", "PreflightEntry"),
+    "PreflightIssue": (".backend_preflight", "PreflightIssue"),
+    "PreflightMaterializationReport": (
+        ".preflight_materialization",
+        "PreflightMaterializationReport",
+    ),
+    "PreflightMaterializer": (".preflight_materialization", "PreflightMaterializer"),
+    "PreviewProviderRegistry": (".browser_workspace", "PreviewProviderRegistry"),
+    "ProjectLoadIssue": (".project_load", "ProjectLoadIssue"),
+    "ProjectLoadReport": (".runtime_resources", "ProjectLoadReport"),
+    "ProjectLoader": (".project_load", "ProjectLoader"),
+    "PropAsset": (".builtin_codecs", "PropAsset"),
+    "PropValidator": (".prop", "PropValidator"),
+    "PropVisual": (".builtin_codecs", "PropVisual"),
+    "QualityEvidence": (".quality_gate", "QualityEvidence"),
+    "QualityIssue": (".quality_gate", "QualityIssue"),
+    "ReconciliationReport": (".reconciliation", "ReconciliationReport"),
+    "RecordingRuntimeScene": (".runtime_scene", "RecordingRuntimeScene"),
+    "RecordingScene": (".scene_placement", "RecordingScene"),
+    "ResolvedSceneAsset": (".backend_preflight", "ResolvedSceneAsset"),
+    "ResourceAwareMaterializer": (".runtime_resources", "ResourceAwareMaterializer"),
+    "ResourceMaterializationReport": (".runtime_resources", "ResourceMaterializationReport"),
+    "ResourceValidator": (".resources", "ResourceValidator"),
+    "RuntimeAdapterRegistry": (".backend_preflight", "RuntimeAdapterRegistry"),
+    "RuntimeBindingRegistry": (".runtime_resources", "RuntimeBindingRegistry"),
+    "RuntimeMaterializationIssue": (".preflight_materialization", "RuntimeMaterializationIssue"),
+    "RuntimeMaterializationReport": (".runtime_scene", "RuntimeMaterializationReport"),
+    "RuntimeResource": (".preflight_materialization", "RuntimeResource"),
+    "RuntimeSceneMaterializer": (".runtime_scene", "RuntimeSceneMaterializer"),
+    "RuntimeSceneTarget": (".preflight_materialization", "RuntimeSceneTarget"),
+    "SceneAssetBinding": (".project_load", "SceneAssetBinding"),
+    "SceneAssetRef": (".scene_binding", "SceneAssetRef"),
+    "SceneAssetResolver": (".project_load", "SceneAssetResolver"),
+    "ScenePlacementTarget": (".scene_placement", "ScenePlacementTarget"),
+    "SemanticAssetImporter": (".import_transaction", "SemanticAssetImporter"),
+    "SourceFingerprint": (".fingerprint", "SourceFingerprint"),
+    "StagedRuntimeObject": (".preflight_materialization", "StagedRuntimeObject"),
+    "TextureImporter": (".importers", "TextureImporter"),
+    "TextureResource": (".resources", "TextureResource"),
+    "TextureResourceCache": (".resources", "TextureResourceCache"),
+    "TileCollision": (".complex_codecs", "TileCollision"),
+    "TileDef": (".complex_codecs", "TileDef"),
+    "TilesetAsset": (".complex_codecs", "TilesetAsset"),
+    "TilesetValidator": (".tileset", "TilesetValidator"),
+    "VALID_KINDS": (".types", "VALID_KINDS"),
+    "VFXAnchor": (".complex_codecs", "VFXAnchor"),
+    "VFXAsset": (".complex_codecs", "VFXAsset"),
+    "VFXRequest": (".runtime_adapters", "VFXRequest"),
+    "VFXValidator": (".vfx", "VFXValidator"),
+    "VFXVariant": (".complex_codecs", "VFXVariant"),
+    "ValidationIssue": (".package", "ValidationIssue"),
+    "ValidationReport": (".package", "ValidationReport"),
+    "VisualLayer": (".complex_codecs", "VisualLayer"),
+    "artifact_key": (".cache", "artifact_key"),
+    "asset_ref_from_dict": (".scene_binding", "asset_ref_from_dict"),
+    "asset_ref_to_dict": (".scene_binding", "asset_ref_to_dict"),
+    "audio_asset": (".resources", "audio_asset"),
+    "audio_codec": (".builtin_codecs", "audio_codec"),
+    "audio_request": (".runtime_adapter_registry", "audio_request"),
+    "audio_validator": (".backend_capabilities", "audio_validator"),
+    "backend_capabilities": (".backend_capabilities", None),
+    "backend_preflight": (".backend_preflight", None),
+    "binding_from_dict": (".project_load", "binding_from_dict"),
+    "binding_to_dict": (".scene_binding", "binding_to_dict"),
+    "browser": (".browser", None),
+    "browser_workspace": (".browser_workspace", None),
+    "builtin_codecs": (".builtin_codecs", None),
+    "cache": (".cache", None),
+    "canonical": (".canonical", None),
+    "capability_checked_factory": (".backend_capabilities", "capability_checked_factory"),
+    "change_detection": (".change_detection", None),
+    "character_cell_position": (".scene_placement", "character_cell_position"),
+    "clip_request": (".runtime_adapters", "clip_request"),
+    "clip_validator": (".backend_capabilities", "clip_validator"),
+    "codecs": (".codecs", None),
+    "complex_codecs": (".complex_codecs", None),
+    "deserialize_asset_registry": (".serialization", "deserialize_asset_registry"),
+    "discover_asset_manifests": (".package", "discover_asset_manifests"),
+    "editor_import_service": (".editor_import_service", None),
+    "evidence_from_dict": (".quality_gate", "evidence_from_dict"),
+    "fingerprint": (".fingerprint", None),
+    "fingerprint_file": (".fingerprint", "fingerprint_file"),
+    "font_asset": (".resources", "font_asset"),
+    "font_codec": (".builtin_codecs", "font_codec"),
+    "font_request": (".runtime_adapter_registry", "font_request"),
+    "generic_asset_handler": (".scene_placement", "generic_asset_handler"),
+    "generic_runtime_binder": (".scene_binding", "generic_runtime_binder"),
+    "icon": (".icon", None),
+    "icon_asset": (".icon", "icon_asset"),
+    "icon_codec": (".builtin_codecs", "icon_codec"),
+    "icon_request": (".runtime_adapter_registry", "icon_request"),
+    "image_validator": (".backend_capabilities", "image_validator"),
+    "import_transaction": (".import_transaction", None),
+    "importers": (".importers", None),
+    "install_builtin_capability_validators": (
+        ".backend_capabilities",
+        "install_builtin_capability_validators",
+    ),
+    "install_builtin_runtime_adapters": (
+        ".runtime_adapter_registry",
+        "install_builtin_runtime_adapters",
+    ),
+    "install_common_passthrough_codecs": (".codecs", "install_common_passthrough_codecs"),
+    "install_complex_typed_codecs": (".complex_codecs", "install_complex_typed_codecs"),
+    "install_simple_typed_codecs": (".builtin_codecs", "install_simple_typed_codecs"),
+    "make_resource_aware_binder": (".runtime_adapter_registry", "make_resource_aware_binder"),
+    "manifest_from_dict": (".store", "manifest_from_dict"),
+    "material_asset": (".resources", "material_asset"),
+    "material_codec": (".builtin_codecs", "material_codec"),
+    "material_request": (".runtime_adapter_registry", "material_request"),
+    "material_validator": (".backend_capabilities", "material_validator"),
+    "monster": (".monster", None),
+    "monster_asset": (".monster", "monster_asset"),
+    "monster_clip_request": (".runtime_adapter_registry", "monster_clip_request"),
+    "monster_codec": (".complex_codecs", "monster_codec"),
+    "normalize_asset_path": (".types", "normalize_asset_path"),
+    "package": (".package", None),
+    "package_installer": (".package_installer", None),
+    "passthrough_codec": (".codecs", "passthrough_codec"),
+    "pipeline": (".pipeline", None),
+    "portrait": (".portrait", None),
+    "portrait_asset": (".portrait", "portrait_asset"),
+    "portrait_codec": (".builtin_codecs", "portrait_codec"),
+    "portrait_request": (".runtime_adapter_registry", "portrait_request"),
+    "preflight_materialization": (".preflight_materialization", None),
+    "project_load": (".project_load", None),
+    "prop": (".prop", None),
+    "prop_asset": (".prop", "prop_asset"),
+    "prop_codec": (".builtin_codecs", "prop_codec"),
+    "quality_gate": (".quality_gate", None),
+    "reconciliation": (".reconciliation", None),
+    "registry": (".registry", None),
+    "resources": (".resources", None),
+    "runtime_adapter_registry": (".runtime_adapter_registry", None),
+    "runtime_adapters": (".runtime_adapters", None),
+    "runtime_resources": (".runtime_resources", None),
+    "runtime_scene": (".runtime_scene", None),
+    "scene_binding": (".scene_binding", None),
+    "scene_placement": (".scene_placement", None),
+    "serialization": (".serialization", None),
+    "serialize_asset_registry": (".serialization", "serialize_asset_registry"),
+    "staged": (".preflight_materialization", "staged"),
+    "standing_point_for_cell": (".scene_placement", "standing_point_for_cell"),
+    "store": (".store", None),
+    "tileset": (".tileset", None),
+    "tileset_asset": (".tileset", "tileset_asset"),
+    "tileset_codec": (".complex_codecs", "tileset_codec"),
+    "types": (".types", None),
+    "vfx": (".vfx", None),
+    "vfx_asset": (".vfx", "vfx_asset"),
+    "vfx_codec": (".complex_codecs", "vfx_codec"),
+    "vfx_request": (".runtime_adapter_registry", "vfx_request"),
+    "vfx_validator": (".backend_capabilities", "vfx_validator"),
+    # RPG Maker MV adapters stay at the asset boundary (AST-13): imported only when one of
+    # their names is asked for, so the runtime never loads MV code
+    "MVActorRecord": (".rpg_maker_mv_database", "MVActorRecord"),
+    "MVAudioReference": (".rpg_maker_mv_catalog", "MVAudioReference"),
+    "MVEquipmentRecord": (".rpg_maker_mv_database", "MVEquipmentRecord"),
+    "MVIconReference": (".rpg_maker_mv_catalog", "MVIconReference"),
+    "MVItemRecord": (".rpg_maker_mv_database", "MVItemRecord"),
+    "MVRecord": (".rpg_maker_mv_database", "MVRecord"),
+    "MVReferenceIssue": (".rpg_maker_mv_database", "MVReferenceIssue"),
+    "MVSkillRecord": (".rpg_maker_mv_database", "MVSkillRecord"),
+    "MVSystemRecord": (".rpg_maker_mv_database", "MVSystemRecord"),
+    "RPGMakerMVCatalog": (".rpg_maker_mv_catalog", "RPGMakerMVCatalog"),
+    "RPGMakerMVDatabase": (".rpg_maker_mv_database", "RPGMakerMVDatabase"),
+    "WeaponVisual": (".rpg_maker_mv_weapon", "WeaponVisual"),
+    "apply_weapon_overlays": (".rpg_maker_mv_weapon", "apply_weapon_overlays"),
+    "weapon_overlay_for_loadout": (".rpg_maker_mv_weapon", "weapon_overlay_for_loadout"),
+    "weapon_type_for_loadout": (".rpg_maker_mv_weapon", "weapon_type_for_loadout"),
+    "weapon_visual_for_type": (".rpg_maker_mv_weapon", "weapon_visual_for_type"),
+}
+
+__all__ = sorted(_EXPORTS)
 
 
 def __getattr__(name):
-    if name.startswith("__"):
-        raise AttributeError(name)
-    import importlib
+    try:
+        module, attribute = _EXPORTS[name]
+    except KeyError:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
+    value = import_module(module, __name__)
+    if attribute is not None:
+        value = getattr(value, attribute)
+    globals()[name] = value
+    return value
 
-    for module_name in _LAZY_MODULES:
-        module = importlib.import_module(f".{module_name}", __name__)
-        public = getattr(module, "__all__", None) or [
-            n for n in vars(module) if not n.startswith("_")
-        ]
-        if name in public:
-            value = getattr(module, name)
-            globals()[name] = value
-            return value
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+def __dir__():
+    return sorted({*globals(), *_EXPORTS})

@@ -15,6 +15,9 @@ swizzle reorders the channels on the GPU.
 from __future__ import annotations
 
 import time
+from array import array
+
+from .gpu_effects import EffectChain
 
 QUAD_VERTEX = """
 #version 330
@@ -69,7 +72,7 @@ class GpuPresenter:
         self.texture = ctx.texture(self.size, 4)
         self.texture.filter = (moderngl.NEAREST, moderngl.NEAREST)  # pixel art stays sharp
         self._swizzle = None
-        from array import array
+        self._layers = {}  # layer name -> its texture (UI with alpha, normals)
 
         # full-screen triangle strip; the surface's first row is the top of the window
         quad = array("f", [-1, 1, 0, 0, 1, 1, 1, 0, -1, -1, 0, 1, 1, -1, 1, 1])
@@ -149,7 +152,7 @@ class GpuPresenter:
     def _layer_texture(self, name, surface, pg, *, alpha):
         """Upload an extra layer (UI with alpha, normals) into a cached texture of the presenter's
         size."""
-        textures = self.__dict__.setdefault("_layers", {})
+        textures = self._layers
         texture = textures.get(name)
         if texture is None:
             import moderngl
@@ -171,7 +174,6 @@ class GpuPresenter:
 
     def present_layers(self, world, ui, pg, *, environment=None, normals=None, time=0.0):
         """World (lit, fogged, post-processed by ``environment``) with the UI layer on top."""
-        from .gpu_effects import EffectChain
 
         if environment is None or not environment.active:
             if self.post is not None:

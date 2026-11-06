@@ -21,13 +21,13 @@ def main(argv=None):
     parser.add_argument("--frames", type=int, default=None)
     parser.add_argument("--screenshot", default=None)
     args = parser.parse_args(argv)
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
     from asteria.validation.arpg_playground import build_playground
 
     root = REPO / "reference_projects" / "complex_reference_rpg"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=1280, height=720
     )

@@ -1,20 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
+
+from asteria.core.values import finite
 
 from .battle import BattlePresentationEvent, BattlePresentationEventKind
 
 
-def _finite(value, label):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{label} must be finite")
-    return value
-
-
 def _positive(value, label):
-    value = _finite(value, label)
+    value = finite(value, label)
     if value <= 0:
         raise ValueError(f"{label} must be > 0")
     return value
@@ -163,15 +157,15 @@ class BattlePresentationLayeringRuntime:
             if channel == "camera":
                 if "amplitude" in payload:
                     payload["amplitude"] = (
-                        _finite(payload["amplitude"], "camera amplitude") * intensity * gain
+                        finite(payload["amplitude"], "camera amplitude") * intensity * gain
                     )
                 if "amplitude_x" in payload:
                     payload["amplitude_x"] = (
-                        _finite(payload["amplitude_x"], "camera amplitude_x") * intensity * gain
+                        finite(payload["amplitude_x"], "camera amplitude_x") * intensity * gain
                     )
                 if "amplitude_y" in payload:
                     payload["amplitude_y"] = (
-                        _finite(payload["amplitude_y"], "camera amplitude_y") * intensity * gain
+                        finite(payload["amplitude_y"], "camera amplitude_y") * intensity * gain
                     )
             elif channel == "audio":
                 payload["gain"] = gain * intensity

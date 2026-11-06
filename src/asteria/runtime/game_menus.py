@@ -8,9 +8,13 @@ without a window.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 
+from asteria.rpg import ShopError
 from asteria.rpg.built_in_text import translated
+from asteria.rpg.data_text import words
 
 # the English of every built-in pause entry (``rpg.menu_rules.PAUSE_ENTRIES``); a game shows
 # those it can use, in the engine's order or the one Game Systems ▸ Menu Pages sets (D87)
@@ -161,8 +165,6 @@ class ShopScreen:
             self.index = (self.index + int(delta)) % len(rows)
 
     def confirm(self):
-        from asteria.rpg import ShopError
-
         rows = self.rows()
         if not rows:
             return None
@@ -194,7 +196,6 @@ class QuestRow:
 def objective_words(game, objective):
     """What an objective without a description asks, made from its kind and target:
     "Defeat Acolyte", "Collect Iron Ore", else its id in words (U1)."""
-    from asteria.rpg.data_text import words
 
     db = game.project.rpg_database
     if objective.kind == "defeat_enemy" and objective.target in db.enemies:
@@ -372,9 +373,6 @@ class GameSettings:
         )
 
     def save(self, path):
-        import json
-        from pathlib import Path
-
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.to_data(), indent=2), encoding="utf-8")
@@ -382,9 +380,6 @@ class GameSettings:
 
     @classmethod
     def load(cls, path):
-        import json
-        from pathlib import Path
-
         try:
             return cls.from_data(json.loads(Path(path).read_text(encoding="utf-8")))
         except (OSError, ValueError, KeyError):

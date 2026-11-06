@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import EditorDocument
 from asteria.project import Project
 from asteria.rpg import BattleExtensionRules, StealEntry, StealTable
 from asteria.rpg.enemy_levels import DifficultyLevel, EnemyLevelRules
+from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
@@ -15,7 +15,7 @@ HP = "vitality"
 
 
 def _session(extension=None, levels=None):
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     if extension is not None:
         project.rpg_database.add_battle_extension_rules(extension)
     if levels is not None:

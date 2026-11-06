@@ -14,7 +14,9 @@ both
 dark and light surfaces.
 """
 
+import tempfile
 from dataclasses import dataclass, fields
+from pathlib import Path
 from string import Template
 
 
@@ -857,8 +859,6 @@ def qt_palette(palette):
 def _branch_rules(palette):
     """Tree expand arrows in the palette's colour (the native ones are drawn for one fixed
     background)."""
-    import tempfile
-    from pathlib import Path
 
     from PySide6.QtCore import QPointF, Qt
     from PySide6.QtGui import QColor, QPainter, QPen, QPixmap

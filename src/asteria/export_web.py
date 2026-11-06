@@ -27,10 +27,13 @@ import mimetypes
 import shutil
 import subprocess
 import sys
+import threading
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
+import asteria
 from asteria import project_tools
 
 WEB_DIR = Path("build") / "web"
@@ -168,7 +171,6 @@ class WebExportError(RuntimeError):
 
 def _copy_engine(target):
     """The ``asteria`` package without the parts a browser cannot run."""
-    import asteria
 
     source = Path(asteria.__file__).resolve().parent
     shutil.rmtree(target, ignore_errors=True)
@@ -336,7 +338,6 @@ class _WebHandler(http.server.SimpleHTTPRequestHandler):
         """``POST /shot?name=X`` with a PNG body saves ``shots/X.png`` beside the build: how a
         page's picture reaches the disk (from the browser console:
         ``canvas.toBlob(b => fetch('/shot?name=title', {method: 'POST', body: b}))``)."""
-        from urllib.parse import parse_qs, urlsplit
 
         parts = urlsplit(self.path)
         name = parse_qs(parts.query).get("name", ["shot"])[0]
@@ -361,7 +362,6 @@ def serve_web(web, port=DEFAULT_PORT, *, bind="127.0.0.1", ready=None):
     its own development server and then looks for the Python packages at ``localhost:8000``.
     ``ready(server)`` runs on its own thread once the server listens (tests talk to the server
     and stop it from there)."""
-    import threading
 
     mimetypes.add_type("application/wasm", ".wasm")
     web = Path(web)

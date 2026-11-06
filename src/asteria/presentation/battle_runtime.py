@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from math import isfinite
 
@@ -521,8 +521,6 @@ class BattlePresentationRuntime:
         self._moves[member_id] = (self.time, max(0.0, float(duration)), origin, goal, easing)
 
     def build_frame(self, camera):
-        from dataclasses import replace
-
         draws = []
         for visual in self.scene.combatants:
             state = self._combatants[visual.member_id]

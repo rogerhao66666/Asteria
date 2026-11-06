@@ -49,11 +49,11 @@ def _helpers():
 def _project():
     import trial_creatures
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
     from asteria.rpg.enemies import EncounterDefinition, EncounterMember
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     trial_creatures.install(project)
     db = project.rpg_database
     db.add_encounter(  # foes that only shoot, so a weak creature of ours is sure to fall

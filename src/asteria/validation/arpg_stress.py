@@ -20,6 +20,25 @@ import random
 from math import cos, pi, sin
 from pathlib import Path
 
+from asteria import kernels
+from asteria.core import Entity, Transform
+from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
+from asteria.gameplay.attacks import AttackDefinition
+from asteria.gameplay.formulas import ValueFormula
+from asteria.gameplay.projectiles import ProjectileDefinition
+from asteria.project import Project
+from asteria.runtime import Collider2DComponent, FieldAIComponent
+from asteria.runtime.character_control import (
+    AIController2DComponent,
+    CharacterController2DComponent,
+    Hitbox2DComponent,
+    Hurtbox2DComponent,
+)
+from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+from asteria.runtime.profiler import RuntimeProfiler
+
 DT = 1.0 / 60.0
 
 
@@ -30,20 +49,6 @@ def _set(component, **fields):
 
 
 def _populate(game, enemies, rng):
-    from asteria.core import Entity, Transform
-    from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
-    from asteria.gameplay.attacks import AttackDefinition
-    from asteria.gameplay.formulas import ValueFormula
-    from asteria.gameplay.projectiles import ProjectileDefinition
-    from asteria.runtime import Collider2DComponent, FieldAIComponent
-    from asteria.runtime.character_control import (
-        AIController2DComponent,
-        CharacterController2DComponent,
-        Hitbox2DComponent,
-        Hurtbox2DComponent,
-    )
-    from asteria.runtime.combat import CombatantComponent
-
     library = game.project.gameplay_library
     library.attacks.setdefault(
         "stress_bolt",
@@ -122,16 +127,11 @@ def run_arpg_stress(
 ):
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-    from asteria import kernels
-    from asteria.editor import EditorDocument
-    from asteria.project import Project
-    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-    from asteria.runtime.profiler import RuntimeProfiler
 
     previous = kernels.active().NAME
     kernels.use(kernel or "auto")
     root = Path(repo) / "reference_projects" / "complex_reference_rpg"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root)
     runtime.open()
     try:
@@ -171,7 +171,6 @@ def run_arpg_stress(
             profiler.count("projectiles", len(shots))
         report = profiler.report()
         profiler.close()
-        from asteria.core import Transform
 
         state = sorted(
             (e.name, t.x, t.y)

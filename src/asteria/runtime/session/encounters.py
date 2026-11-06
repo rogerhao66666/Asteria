@@ -4,6 +4,7 @@ notices and the battle rules."""
 from __future__ import annotations
 
 import random
+import zlib
 
 from asteria.gameplay import AbilityRegistry, AbilityRuntime
 from asteria.rpg import (
@@ -12,15 +13,10 @@ from asteria.rpg import (
     Party,
     PartyMember,
 )
+from asteria.rpg.derived_stats import apply_derived_stats
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -111,7 +107,6 @@ class EncountersMixin:
         runtime = definition.instantiate()
         subject = self._battle_subject(runtime.stats, runtime.resources, runtime.tags)
         level = self._scale_enemy(subject, f"{enemy_id}:{index}")
-        from asteria.rpg.derived_stats import apply_derived_stats
 
         derived = self.project.rpg_database.derived_stats.values()
         apply_derived_stats(subject.stats, derived, side="enemies")  # after its level
@@ -247,7 +242,6 @@ class EncountersMixin:
         save rolls its own (from how many battles the save has started)."""
         if not self.rules.vary_seed:
             return 157
-        import zlib
 
         counters = self.world.counters
         count = int(counters.get(self.BATTLES_COUNTER, 0)) + 1

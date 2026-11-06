@@ -14,6 +14,12 @@ Nothing here is saved: the preview plays on its own copy of the save.
 from __future__ import annotations
 
 import os
+from pathlib import Path
+
+from asteria.events.dialogue import ChoiceRequest, DialogueChoice, DialogueLine, DialogueRequest
+from asteria.presentation.creature_screens import creature_battle_on, creature_settings
+from asteria.presentation.menu_layout import base_screen
+from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
 
 class MenuPreview:
@@ -21,7 +27,6 @@ class MenuPreview:
         os.environ.setdefault("ASTERIA_MUTE", "1")
         os.environ["SDL_VIDEODRIVER"] = "dummy"
         os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
-        from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
         self.project = project
         save = project.game_start.instantiate(project) if project.game_start else None
@@ -109,18 +114,17 @@ class MenuPreview:
         open_menu_screen(rt, screen_id)
         for _ in range(2):
             rt._frame([], 0.0)
-        request = rt.__dict__.pop("_preview_request", None)
+        request, rt._preview_request = rt._preview_request, None
         if request is not None:  # a message window: drawn over the field with a sample
             from asteria.runtime.dialogue_screen import draw_message_window
 
             draw_message_window(rt, request, getattr(request, "line", None))
-        from asteria.presentation.menu_layout import base_screen
 
         # a station without its own layout yet draws through the shared one
         found = rt._menu_boxes.get(screen_id) or rt._menu_boxes.get(base_screen(screen_id), {})
         boxes = dict(found)
         # screen pixels a layout unit takes (the battle's own coordinates are smaller)
-        self.unit = float(rt.__dict__.get("_menu_units", {}).get(base_screen(screen_id), 1.0))
+        self.unit = float((rt._menu_units or {}).get(base_screen(screen_id), 1.0))
         surface = rt.capture()
         self._reset()
         return surface, boxes
@@ -174,8 +178,6 @@ class MenuPreview:
         return out
 
     def _creature_screen(self, screen_id):
-        from asteria.presentation.creature_screens import creature_battle_on, creature_settings
-
         rt = self.runtime
         game = rt.game
         self._reset()
@@ -352,12 +354,6 @@ def open_menu_screen(rt, screen_id):
 def sample_dialogue(game, screen_id, root=None):
     """A line (with the first picture of the game's ``portraits`` folder as its face) or a
     choice to show a message window with."""
-    from asteria.events.dialogue import (
-        ChoiceRequest,
-        DialogueChoice,
-        DialogueLine,
-        DialogueRequest,
-    )
 
     tr = game.tr
     if screen_id == "dialogue_choice":
@@ -368,7 +364,6 @@ def sample_dialogue(game, screen_id, root=None):
         ]
         choices = tuple(DialogueChoice(w, n) for n, w in enumerate(words))
         return ChoiceRequest(tr("dialogue.choose", "Choose"), choices)
-    from pathlib import Path
 
     portrait = ""
     for folder in ("portraits", "playable_assets/portraits"):

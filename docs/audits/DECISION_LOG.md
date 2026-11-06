@@ -4442,3 +4442,16 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **使用者回報的截圖：** 玩家站在 `(310,60)` 的山壁角落那張是檢查程式傳送造成的；原作和復刻版這格都是牆，走路到不了。檢查程式已改成只傳送到可站的格子。
 
+## D103 — 程式碼審查與整理（2026-11-06）
+
+**問題：** 選單畫面一幀 30–70 ms（目標 16.7 ms）；套件 `__init__` 全部立即匯入，匯入一個模組就載入大半個引擎，還有一個匯入循環（先匯入 `asteria.reference_data` 會失敗）；寫法上有大量 `__dict__.setdefault` 造屬性、函式內 import、複製貼上的驗證函式。
+
+**決定：**
+- 畫選單時存檔只讀：`GameSessionRuntime.reading_builds()` 範圍內，每個角色的 build、能力值來源、畫面列表一幀只算一次；`menu_fit()` 就在這個範圍裡畫。範圍外不記任何東西。
+- 套件 `__init__`（presentation、runtime、rpg、assets、editor）用到才匯入（PEP 562），對外名字不變。
+- 只提升在匯入圖上證明安全的函式內 import；可選依賴、web 匯出不帶的套件、要等 `sys.path` 的留在函式裡。
+- 不刪功能：只有測試在用的模組、疑似死碼都列在 `CODE_REVIEW_2026-11-06.md` 第 4 節，另行決定。
+
+**沒有選的路：** 選單背後的地圖做成快照（每幀省 3–4 ms，但動態圖塊和彈出字會停住，是看得到的行為改變）；一次把 runtime／editor／rpg 搬成子套件（檔案太多、牽動文件與測試路徑，應分批並留轉接模組）。
+
+**證據：** `CODE_REVIEW_2026-11-06.md`（量測表）；測試 `tests/test_reading_builds.py`、`tests/test_game_systems_undo_labels.py`、`tests/test_qt_texture_renderer.py`、`tests/test_dialogue_window_dialog.py` 和既有檔案裡新增的案例。

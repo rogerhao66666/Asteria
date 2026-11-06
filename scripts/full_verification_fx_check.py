@@ -48,8 +48,8 @@ SKILLS = (
 def main(argv=None):
     import pygame
 
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     argv = list(sys.argv[1:] if argv is None else argv)
@@ -60,9 +60,7 @@ def main(argv=None):
     pump, key = helper._pump, helper._key
     import run_trial_smoke as smoke
 
-    project = Project.load_json(
-        live.DEMO / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(live.DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), live.DEMO, width=1280, height=720
     )

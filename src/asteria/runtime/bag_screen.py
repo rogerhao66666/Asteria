@@ -12,6 +12,7 @@ slots, rarities, affixes and sets all come from the project's data.
 from __future__ import annotations
 
 from asteria.rpg.built_in_text import translated
+from asteria.rpg.loot import item_display_name
 
 COLUMNS = 8
 CELL = 54
@@ -175,8 +176,6 @@ class BagScreen:
             self._say(game.tr("bag.cannot_equip", "Cannot equip: {reason}", reason=reason))
 
     def _name(self, item):
-        from asteria.rpg.loot import item_display_name
-
         affixes = self.game.project.rpg_database.affixes
         return item_display_name(item, affixes, brief=True, name_of=self.game.name_of)
 

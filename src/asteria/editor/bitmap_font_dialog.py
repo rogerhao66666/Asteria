@@ -14,6 +14,7 @@ The dialog edits copies; OK applies each changed font as one undo step.
 
 from __future__ import annotations
 
+import os
 from dataclasses import replace
 
 from PySide6.QtCore import Qt
@@ -41,6 +42,8 @@ from PySide6.QtWidgets import (
 
 from asteria.presentation.menu_layout import EMPTY_CELL, MenuBitmapFont
 
+from .authoring_hub_widget import _free_id
+
 COLOUR_MODES = (
     ("tint", "Text colour (glyphs drawn in white)"),
     ("keep", "The picture's own colours"),
@@ -58,7 +61,6 @@ def _spin(low, high, value=0):
 
 def sheet_font(document, spec):
     """A ``SheetFont`` for the editor's preview (None without its picture)."""
-    import os
 
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
@@ -246,8 +248,6 @@ class BitmapFontDialog(QDialog):
             self.status.setText("Add a font, choose its picture and type its characters.")
 
     def _add(self):
-        from .authoring_hub_widget import _free_id
-
         name = _free_id("", self.work, "font")  # its id made for it
         self.work[name] = MenuBitmapFont(name)
         self.names[name] = None

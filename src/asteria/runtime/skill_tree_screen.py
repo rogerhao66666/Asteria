@@ -133,6 +133,7 @@ class SkillTreeScreen:
 
     def __init__(self, runtime):
         self.rt = runtime
+        self._layouts = {}  # graph id -> (graph, its laid-out node positions)
         self.graph_index = 0
         self.node_id = None
         self.closed = False
@@ -186,7 +187,7 @@ class SkillTreeScreen:
     def positions(self, graph):
         """The graph's node positions, laid out once per graph (``layout`` walks every
         prerequisite: done per node and per line each frame it made a long tree stutter)."""
-        layouts = self.__dict__.setdefault("_layouts", {})
+        layouts = self._layouts
         cached = layouts.get(graph.graph_id)
         if cached is None or cached[0] is not graph:  # an edited graph is a new object
             cached = (graph, layout(graph))

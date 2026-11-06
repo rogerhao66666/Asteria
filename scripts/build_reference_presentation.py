@@ -19,13 +19,13 @@ sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
-from asteria.editor import EditorDocument  # noqa: E402
 from asteria.presentation.battle_hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
 from asteria.presentation.battle_motion_sequence import (  # noqa: E402
     BattleMotionBeat,
     BattleMotionSequence,
 )
 from asteria.project import Project  # noqa: E402
+from asteria.runtime.component_registry import default_component_registry
 
 FX = ("slash", "flame", "explosion")  # the strips themselves come with the reskin
 SOURCE = (("license", "CC0 1.0"), ("source", "Foozle Pixel Magic Effects"))
@@ -70,7 +70,7 @@ def motion_sequences():
 def build(folder):
     folder = Path(folder)
     path = folder / "project.asteria.json"
-    project = Project.load_json(path, EditorDocument().component_registry)
+    project = Project.load_json(path, default_component_registry())
     library = project.battle_presentation_library
     for key in FX:  # placeholders: the reskin draws them (same ids, so skills keep their effect)
         project.assets.register(

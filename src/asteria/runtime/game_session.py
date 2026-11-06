@@ -31,7 +31,6 @@ from asteria.runtime.session.support import (  # noqa: F401 - re-exported
     EquipOffer,
     GameSessionError,
     _base_relative,
-    _EitherBlocks,
     _merge_casts,
     describe_condition,
 )

@@ -8,16 +8,14 @@ from asteria.rpg import (
     BattleAction,
     RpgActorSnapshot,
 )
+from asteria.rpg.battle_lifecycle import resolve_escape_chance
+from asteria.rpg.move_choice import choose_move, move_rules_of
 from asteria.rpg.targeting import TargetRelation
 
-from .support import (  # noqa: F401 - the names the moved methods use
+from .support import (
     BattleLogEntry,
-    EquipOffer,
     GameSessionError,
     _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -107,8 +105,6 @@ class TurnsMixin:
                     states.remove(active.state_id)
 
     def escape_chance(self):
-        from asteria.rpg.battle_lifecycle import resolve_escape_chance
-
         rule = self._escape_rule()
         return None if rule is None else resolve_escape_chance(rule, self.battle)
 
@@ -219,7 +215,6 @@ class TurnsMixin:
         ]
         if not usable:
             return None
-        from asteria.rpg.move_choice import choose_move, move_rules_of
 
         rules = move_rules_of(self._encounter_tags())
         if not rules:

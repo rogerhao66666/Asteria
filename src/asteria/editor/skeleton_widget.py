@@ -1,7 +1,11 @@
 """A small dock that plays an imported 2D skeleton so a rig can be checked before use."""
 
+import json
 import weakref
 from pathlib import Path
+
+from asteria.graphics.skeleton import Skeleton, SkeletonClip
+from asteria.graphics.skeleton_data import skeleton_from_data, skeleton_to_data
 
 try:
     from PySide6.QtCore import QEvent, Qt, QTimer, Signal
@@ -54,7 +58,6 @@ except ImportError:
 
 def humanoid_rig(skeleton_id="humanoid"):
     """A starting figure: hips, spine, head, two arms, two legs, and an empty idle clip."""
-    from asteria.graphics.skeleton import Skeleton, SkeletonClip
 
     bones = (
         Bone("hips"),
@@ -70,7 +73,6 @@ def humanoid_rig(skeleton_id="humanoid"):
 
 def empty_rig(skeleton_id="rig"):
     """One root bone and an empty idle clip, to build any shape from."""
-    from asteria.graphics.skeleton import Skeleton, SkeletonClip
 
     root = Bone("root", length=30)
     return Skeleton(skeleton_id, (root,), (), {"idle": SkeletonClip("idle", 1.0)})
@@ -432,9 +434,6 @@ class SkeletonViewerWidget(QWidget):
         source = item.data(Qt.UserRole)
         if isinstance(source, Path):
             return self.open_rig(source)
-        import json
-
-        from asteria.graphics.skeleton_data import skeleton_from_data
 
         component = source.try_get(SkeletonAnimation2DComponent)
         try:
@@ -470,9 +469,6 @@ class SkeletonViewerWidget(QWidget):
         if entity is None:
             self.status.setText("Select an entity before attaching this rig")
             return False
-        import json
-
-        from asteria.graphics.skeleton_data import skeleton_to_data
 
         rig_json = json.dumps(skeleton_to_data(self.skeleton), ensure_ascii=False)
         existing = entity.try_get(SkeletonAnimation2DComponent)

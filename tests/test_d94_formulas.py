@@ -64,10 +64,10 @@ def test_an_undeclared_stat_is_an_error_only_where_stats_are_defined():
 # -- the Full Verification demo -----------------------------------------------------------------
 @pytest.fixture(scope="module")
 def project():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    return Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(DEMO / "project.asteria.json", default_component_registry())
 
 
 def test_the_demo_formulas_give_the_numbers_the_fields_gave(project):

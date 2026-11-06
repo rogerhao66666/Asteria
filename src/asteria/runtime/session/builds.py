@@ -5,22 +5,15 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import replace
 
-from asteria.gameplay import GameplaySubject
+from asteria.gameplay import GameplaySubject, StateRuntime
 from asteria.rpg import (
-    ActorAbilityState,
     ClassAssignment,
     RpgActorRuntime,
     resolve_actor_build,
 )
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -40,6 +33,17 @@ class BuildsMixin:
             yield
         finally:
             self._build_memo = None
+
+    def remembered(self, key, make):
+        """``make()``, worked out once per ``reading_builds()`` scope for ``key`` (rows a menu
+        draws in several panels a frame); outside one, made on every call."""
+        memo = self._build_memo
+        if memo is None:
+            return make()
+        key = ("remembered", key)
+        if key not in memo:
+            memo[key] = make()
+        return memo[key]
 
     def resolve_actor_build(self, actor_id, *, apply_slots=True):
         actor_id = str(actor_id)
@@ -68,7 +72,7 @@ class BuildsMixin:
         )
         rules = self.ability_loadout_rules
         if rules is not None and apply_slots:  # only equipped slot-limited abilities stay usable
-            equipped = set(self._ability_state_of(actor_id).equipped_abilities)
+            equipped = set(self._ability_state(actor_id).equipped_abilities)
             usable = rules.filter(build.abilities, build.ability_grants, equipped)
             build = replace(build, abilities=usable)
         return build
@@ -170,12 +174,6 @@ class BuildsMixin:
         values = self.project.rpg_database.ability_loadout_rules
         return values[sorted(values)[0]] if values else None
 
-    def _ability_state_of(self, actor_id):
-        snapshot = self.save.rpg_state.actor_snapshots.get(str(actor_id))
-        if snapshot is None or snapshot.ability_state is None:
-            return ActorAbilityState()
-        return ActorAbilityState.from_data(snapshot.ability_state)
-
     def ability_slots(self, actor_id):
         """``(equipped ability ids, capacity)`` of an actor under the slot rules."""
         rules = self.ability_loadout_rules
@@ -184,7 +182,7 @@ class BuildsMixin:
         if progress is not None:
             level = int(progress.level)
         capacity = rules.capacity_at(level) if rules is not None else 0
-        return self._ability_state_of(actor_id).equipped_abilities, capacity
+        return self._ability_state(actor_id).equipped_abilities, capacity
 
     def slot_candidates(self, actor_id):
         """The abilities an actor may put in a skill slot: those granted by the rules' limited
@@ -228,7 +226,6 @@ class BuildsMixin:
     def _battle_subject(self, stats, resources, tags):
         """A combatant subject that can hold battle states (break, buffs...) from the project's
         state registry."""
-        from asteria.gameplay import StateRuntime
 
         for name, (low, high, start) in (self.rules.battle_counters or {}).items():
             if not resources.contains(name):  # the rules' per-battle counters (stat stages...)

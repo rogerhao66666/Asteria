@@ -18,7 +18,10 @@ from __future__ import annotations
 import heapq
 from typing import Protocol
 
+from asteria import kernels
 from asteria.gameplay import ActionCue, ActionCueKind, PresentationCue
+from asteria.graphics.scaling import resized
+from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
 from asteria.presentation import (
     BattlePresentationEventKind,
     BattlePresentationScene,
@@ -26,9 +29,12 @@ from asteria.presentation import (
     BattleUiRenderer,
 )
 from asteria.presentation.battle_action_menu import BattleActionEntry
+from asteria.presentation.battle_runtime import _mirrored
+from asteria.presentation.battle_ui import BattleUiLayoutProfile
 from asteria.presentation.character_composition import CharacterComposition
 from asteria.presentation.particles import ParticleSystem, effect_definition
 from asteria.rpg import BattleOutcome
+from asteria.rpg.data_text import key as data_key
 from asteria.runtime.battle_commands import COMMAND_WORDS
 from asteria.runtime.battle_visuals import (
     SPRITE_SHEET_KIND,
@@ -40,7 +46,8 @@ from asteria.runtime.battle_visuals import (
     vfx_placement,
     vfx_rect,
 )
-from asteria.runtime.camera import Camera2D
+from asteria.runtime.camera import Camera2D, CameraDirector, CameraShot, clamp_center_to_bounds
+from asteria.runtime.field_ai import VisibleEncounterComponent
 
 CHANNEL_KINDS = {
     "animation": ActionCueKind.ANIMATION,
@@ -139,7 +146,6 @@ class PygameTextureDrawer:
 
     def resized(self, asset_id, image, size):
         """``image`` at ``size`` the way its sheet asks (see ``smooth``)."""
-        from asteria.graphics.scaling import resized
 
         return resized(self.host.pg, image, size, smooth=self.smooth(asset_id))
 
@@ -288,6 +294,8 @@ class CanonicalBattleAdapter:
 
     def __init__(self, host, *, profile_ids=None, placement_by_side=None):
         self.host = host
+        self._extent_cache = {}  # sprite sheet -> the extent of its drawn pixels
+        self._vfx_content_cache = {}  # effect id -> its particle content
         self.trace = []
         self.profile_ids = dict(profile_ids or {})
         self.placement_by_side = dict(placement_by_side or self.DEFAULT_PLACEMENT)
@@ -341,8 +349,6 @@ class CanonicalBattleAdapter:
         return chosen or options.get(name)
 
     def begin(self):
-        from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
-
         self._background_image = None
 
         self.trace.clear()
@@ -353,7 +359,6 @@ class CanonicalBattleAdapter:
             for name, category in PRESENTATION_PROFILE_CATEGORIES.items()
         }
         kwargs = {name: value for name, value in kwargs.items() if value is not None}
-        from asteria.presentation.battle_ui import BattleUiLayoutProfile
 
         layout = self._layout = kwargs.get("layout") or BattleUiLayoutProfile()
         self.resolver = BattleVisualResolver(
@@ -455,7 +460,6 @@ class CanonicalBattleAdapter:
     def _warm_textures(self, combatants):
         """Load every picture the fight can show now, not in the middle of an animation: the
         combatants' sheets (long strips take a few frames to decode) and the effect sheets."""
-        from asteria import kernels
 
         kernels.active()  # the particle kernels import on first use (about 60 ms)
         uris = set()
@@ -479,7 +483,6 @@ class CanonicalBattleAdapter:
         """Pictures the next fight is likely to show, most likely first (the host loads them
         ahead in the field): the party's battle sheets, the battle background, the sheets of the
         foes on this map, the effect sheets, then every other combatant's sheet."""
-        from asteria.runtime.field_ai import VisibleEncounterComponent
 
         game = self.host.game
         project = game.project
@@ -526,7 +529,6 @@ class CanonicalBattleAdapter:
     def _start_boss_intro(self, game, layout):
         """Encounters tagged "boss" open with the camera on the boss, then ease back to the whole
         field."""
-        from asteria.runtime.camera import CameraDirector, CameraShot
 
         self.camera_director = CameraDirector()
         self._camera_center = (layout.virtual_width / 2, layout.virtual_height / 2)
@@ -564,7 +566,6 @@ class CanonicalBattleAdapter:
     def _clamped_view(self, director, view):
         """Keep a zoomed battle camera inside the battlefield so the background always covers the
         screen."""
-        from asteria.runtime.camera import clamp_center_to_bounds
 
         layout = self.screen.composer.layout
         width, height = layout.virtual_width, layout.virtual_height
@@ -582,9 +583,8 @@ class CanonicalBattleAdapter:
         lookup = game.data_lookup
         if lookup is None:
             return None
-        from asteria.rpg.data_text import key
 
-        return lambda state_id, label: lookup(key("state", state_id)) or label
+        return lambda state_id, label: lookup(data_key("state", state_id)) or label
 
     @staticmethod
     def _display_names(game):
@@ -685,7 +685,6 @@ class CanonicalBattleAdapter:
         frame of the idle clip), in logical units round its feet (the anchor): what a name or
         caption must keep clear of. Names are hidden while a figure acts (see ``update``), so
         attack poses need no room. ``None`` when the picture cannot be read."""
-        from asteria.presentation.battle_runtime import _mirrored
 
         try:
             sheet = self.resolver.sprite_sheet(visual.sprite_sheet_asset_id)
@@ -696,7 +695,7 @@ class CanonicalBattleAdapter:
                 image = self.host.load_image(self.resolver.source_uri(asset_id))
         except Exception:  # noqa: BLE001 - no picture: the estimate from the height is used
             return None
-        cache = self.__dict__.setdefault("_extent_cache", {})
+        cache = self._extent_cache
         mirrored = _mirrored(visual)
         ratio = float(visual.source_pixels_per_logical_pixel) or 1.0
         key = (asset_id, mirrored, ratio, id(image))
@@ -1663,7 +1662,7 @@ class CanonicalBattleAdapter:
     def _vfx_content(self, asset_id, sheet, clip):
         """Where the clip's picture sits inside its frames (``vfx_content_center``), measured
         once per sheet from the drawn pixels."""
-        cache = self.__dict__.setdefault("_vfx_content_cache", {})
+        cache = self._vfx_content_cache
         if asset_id not in cache:
             boxes = []
             try:

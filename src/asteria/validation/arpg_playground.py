@@ -16,6 +16,28 @@ engine code.
 
 from __future__ import annotations
 
+from asteria.core import Entity, Transform
+from asteria.gameplay.abilities import AbilityCost, AbilityDefinition
+from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
+from asteria.gameplay.attacks import AttackDefinition
+from asteria.gameplay.formulas import FormulaTerm, ValueFormula
+from asteria.gameplay.projectiles import ProjectileDefinition
+from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
+from asteria.rpg.drop_tables import DropEntry, DropTable
+from asteria.rpg.items import EquipmentDefinition
+from asteria.rpg.loot import AffixDefinition, AffixModifier
+from asteria.runtime.action_combat import ActionCombatComponent
+from asteria.runtime.action_play import CombatSceneComponent
+from asteria.runtime.character_control import (
+    AIController2DComponent,
+    CharacterController2DComponent,
+    Hitbox2DComponent,
+    Hurtbox2DComponent,
+)
+from asteria.runtime.collision import Collider2DComponent
+from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.field_ai import VisibleEncounterComponent
+
 
 def _set(component, **fields):
     for k, v in fields.items():
@@ -24,16 +46,6 @@ def _set(component, **fields):
 
 
 def _content(game):
-    from asteria.gameplay.abilities import AbilityCost, AbilityDefinition
-    from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
-    from asteria.gameplay.attacks import AttackDefinition
-    from asteria.gameplay.formulas import FormulaTerm, ValueFormula
-    from asteria.gameplay.projectiles import ProjectileDefinition
-    from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
-    from asteria.rpg.drop_tables import DropEntry, DropTable
-    from asteria.rpg.items import EquipmentDefinition
-    from asteria.rpg.loot import AffixDefinition, AffixModifier
-
     library, db = game.project.gameplay_library, game.project.rpg_database
     if "pg_cut" in library.attacks:
         return
@@ -266,15 +278,6 @@ def _content(game):
 
 
 def _enemy(game, name, x, y, tree, *, hp, team="foe", **combatant):
-    from asteria.core import Entity, Transform
-    from asteria.runtime.character_control import (
-        AIController2DComponent,
-        CharacterController2DComponent,
-        Hitbox2DComponent,
-        Hurtbox2DComponent,
-    )
-    from asteria.runtime.combat import CombatantComponent
-
     view = game.combat_scene.view
     entity = game.scene.add_entity(Entity(name))
     entity.add_component(Transform(x, y))
@@ -300,9 +303,6 @@ def _enemy(game, name, x, y, tree, *, hp, team="foe", **combatant):
 
 
 def _side_course(game):
-    from asteria.core import Entity, Transform
-    from asteria.runtime.collision import Collider2DComponent
-
     def solid(x, y, w, h, **fields):
         e = game.scene.add_entity(Entity("Course"))
         e.add_component(Transform(x, y))
@@ -317,10 +317,6 @@ def _side_course(game):
 
 
 def build_playground(runtime, view="topdown"):
-    from asteria.core import Entity
-    from asteria.runtime.action_combat import ActionCombatComponent
-    from asteria.runtime.action_play import CombatSceneComponent
-
     game = runtime.game
     runtime._ui_mode = "field"
     settings = game.combat_scene
@@ -332,7 +328,6 @@ def build_playground(runtime, view="topdown"):
     settings.background_color = "#283048" if view == "side" else ""
     settings.player_life_resource = "vitality"  # this project's heroes live on vitality
     _content(game)
-    from asteria.runtime.field_ai import VisibleEncounterComponent
 
     sprites = runtime.manifest["field"].get("entity_sprites", {})
     for entity in list(
@@ -347,7 +342,6 @@ def build_playground(runtime, view="topdown"):
         "nearest",
         60.0,
     )  # keyboard play: swing at the nearest foe in reach
-    from asteria.runtime.combat import CombatantComponent
 
     game.player.get(
         CombatantComponent

@@ -123,11 +123,11 @@ def battle():
     for name, value in (("SDL_VIDEODRIVER", "dummy"), ("SDL_AUDIODRIVER", "dummy"),
                         ("ASTERIA_MUTE", "1")):  # fmt: skip
         mp.setenv(name, value)
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), ROOT, width=960, height=540
     )
@@ -210,11 +210,11 @@ def test_the_layout_moves_restyles_and_hides_the_battles_groups(battle):
 
 def test_the_editor_preview_opens_a_battle_and_measures_it_in_battle_units():
     pytest.importorskip("pygame")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.menu_preview import MenuPreview
 
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     preview = MenuPreview(project, ROOT, size=(960, 540))
     try:
         surface, boxes = preview.render("battle", "en")

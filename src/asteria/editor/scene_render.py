@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from asteria.runtime import build_tile_draws
+from asteria.runtime import TileMap2DComponent, build_tile_draws
 
 
 @dataclass(slots=True)
@@ -53,7 +53,6 @@ def render_source_for_scene(document, scene):
     """Resolve the first visible TileMap2D binding in scene order."""
     if scene is None:
         return None
-    from asteria.runtime import TileMap2DComponent
 
     for entity in scene.entities():
         binding = entity.try_get(TileMap2DComponent)

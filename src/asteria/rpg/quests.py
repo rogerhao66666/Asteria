@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asteria.core.values import required_id
+
 from .enemies import RewardDefinition
 
 OBJECTIVE_KINDS = ("counter", "item", "defeat_enemy", "switch")
@@ -11,15 +13,8 @@ QUEST_STATUSES = ("active", "completed", "failed")
 CARD_FIELDS = ("card_image", "rank", "category", "repeatable", "time_limit")
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
 def _ids(values, label):
-    out = tuple(_id(x, label) for x in values)
+    out = tuple(required_id(x, label) for x in values)
     if len(out) != len(set(out)):
         raise ValueError(f"duplicate {label}")
     return out
@@ -53,7 +48,7 @@ class QuestObjective:
         target = str(target).strip()
         if kind != "counter" and not target:
             raise ValueError(f"{kind} objective needs a target")
-        object.__setattr__(self, "objective_id", _id(objective_id, "objective_id"))
+        object.__setattr__(self, "objective_id", required_id(objective_id, "objective_id"))
         object.__setattr__(self, "kind", kind)
         object.__setattr__(self, "target", target)
         object.__setattr__(self, "required", required)
@@ -123,7 +118,7 @@ class QuestDefinition:
         reward = reward or RewardDefinition()
         if not isinstance(reward, RewardDefinition):
             raise TypeError("reward must be RewardDefinition")
-        quest_id = _id(quest_id, "quest_id")
+        quest_id = required_id(quest_id, "quest_id")
         prerequisites = _ids(prerequisites, "prerequisite quest id")
         next_quest_ids = _ids(next_quest_ids, "next quest id")
         if quest_id in prerequisites or quest_id in next_quest_ids:

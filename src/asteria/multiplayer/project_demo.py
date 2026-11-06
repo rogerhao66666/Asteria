@@ -19,6 +19,7 @@ from pathlib import Path
 from asteria.core import Transform
 from asteria.core.serialization import deserialize_entity, serialize_entity, serialize_scene
 from asteria.project import Project
+from asteria.rpg import RpgActorRuntime
 from asteria.runtime.action_combat import ActionCombatComponent
 from asteria.runtime.character_control import (
     AIController2DComponent,
@@ -33,6 +34,7 @@ from asteria.runtime.input import InputSnapshot
 from asteria.runtime.loot import LootComponent, LooterComponent
 
 from .adapter import AdapterUpdate
+from .project_snapshot import pack_scene_data
 from .rules import default_rules, validate_rules
 
 
@@ -174,8 +176,6 @@ class ProjectDemoAdapter:
         }
 
     def initial_state(self):
-        from .project_snapshot import pack_scene_data
-
         scene = next((s.scene for s in self.players.values()), self._template_scene)
         combatants = {}
         for active in self.project.scenes():
@@ -304,7 +304,6 @@ class ProjectDemoAdapter:
             save = GameStartDefinition.from_data(start).instantiate(self.project)
         session = GameSessionRuntime(self.project, save)
         session.prepare_action_player()
-        from asteria.rpg import RpgActorRuntime
 
         for actor_id in session.save.rpg_state.party_actor_ids:
             if actor_id not in session.save.rpg_state.actor_snapshots:

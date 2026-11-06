@@ -31,6 +31,12 @@ import zipapp
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import asteria
+from asteria.frozen import PLAYER_NAME, player_executable
+from asteria.kernels import build_native
+from asteria.project import Project
+from asteria.runtime.component_registry import default_component_registry
+
 PROJECT_FILE = "project.asteria.json"
 RESOURCE_SUFFIXES = {
     ".png",
@@ -123,14 +129,10 @@ exec "${{ASTERIA_PYTHON:-python3}}" "$HERE/../Resources/{archive}" "$@"
 
 
 def _registry():
-    from asteria.runtime.component_registry import default_component_registry
-
     return default_component_registry()
 
 
 def load_project(path):
-    from asteria.project import Project
-
     return Project.load_json(Path(path), _registry())
 
 
@@ -234,7 +236,6 @@ def export_game(project_path, output, *, allow_missing=False, bundle_engine=True
 def _native_library(report):
     """The native kernel library to ship (built now when missing or out of date), or ``None``.
     A problem becomes a report warning: the kernels are a speed-up, never a reason to fail."""
-    from asteria.kernels import build_native
 
     try:
         usable, reason = build_native.ensure()
@@ -256,7 +257,6 @@ def _native_library(report):
 def _copy_engine(target, library=None):
     """The ``asteria`` package (sources only) so the export runs without an installed engine,
     plus ``library`` (the checked native kernel library) in its place."""
-    import asteria
 
     source = Path(asteria.__file__).resolve().parent
     shutil.rmtree(target / "asteria", ignore_errors=True)
@@ -335,7 +335,6 @@ def build_player_game(game_folder, output_dir, *, name, player, identifier=None)
     """A game that needs no Python: a copy of the frozen ``player`` (``AsteriaPlayer.app`` or
     the ``AsteriaPlayer`` folder) named after the game, with the exported folder as its
     ``game`` (macOS: ``Name.app/Contents/Resources/game``; elsewhere: ``Name/game``)."""
-    from asteria.frozen import PLAYER_NAME, player_executable
 
     player = Path(player)
     slug = _slug(name)

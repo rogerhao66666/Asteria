@@ -7,7 +7,11 @@ from enum import Enum
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
+from asteria.core.values import required_id
 from asteria.gameplay import AbilityRuntime, AbilityTarget, GameplaySubject
+from asteria.gameplay.abilities import _clone_subject
+from asteria.gameplay.effects import EffectOperationKind
+from asteria.gameplay.expressions import SubjectView, evaluate
 
 from .action_sequences import ActionSequenceRuntime
 from .battle_extensions import BattleExtensionRules, BattleExtensionRuntime
@@ -28,13 +32,6 @@ from .gauge_composition import BattleGaugeCompositionRuntime
 from .interactions import InteractionResolver
 from .reactions import ReactionRuntime
 from .targeting import BattleFormationRuntime, BattleTargetingRuntime
-
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
 
 
 def _number(value, label):
@@ -67,13 +64,13 @@ class PartyMember:
     ):
         if not isinstance(subject, GameplaySubject):
             raise TypeError("subject must be GameplaySubject")
-        object.__setattr__(self, "member_id", _id(member_id, "member_id"))
-        object.__setattr__(self, "side", _id(side, "side"))
+        object.__setattr__(self, "member_id", required_id(member_id, "member_id"))
+        object.__setattr__(self, "side", required_id(side, "side"))
         object.__setattr__(self, "subject", subject)
         object.__setattr__(
             self,
             "ability_ids",
-            tuple(dict.fromkeys(_id(x, "ability_id") for x in ability_ids)),
+            tuple(dict.fromkeys(required_id(x, "ability_id") for x in ability_ids)),
         )
         object.__setattr__(self, "initiative", _number(initiative, "initiative"))
         object.__setattr__(self, "initiative_stat", str(initiative_stat or ""))
@@ -86,8 +83,6 @@ class PartyMember:
         haste, slow - move later turns), else the fixed ``initiative``; an
         ``initiative_expression`` (of ``self``) wins over both."""
         if self.initiative_expression:
-            from asteria.gameplay.expressions import SubjectView, evaluate
-
             return evaluate(self.initiative_expression, {"self": SubjectView(self.subject)})
         stats = self.subject.stats
         if self.initiative_stat and stats.contains(self.initiative_stat):
@@ -106,7 +101,7 @@ class Party:
     hooks: object = None
 
     def __init__(self, side, members=(), *, hooks=None):
-        self.side = _id(side, "side")
+        self.side = required_id(side, "side")
         self.members = []
         self.hooks = hooks
         for member in members:
@@ -260,9 +255,11 @@ class BattleAction:
 
     def __init__(self, actor_id, ability_id, target_ids, forced=False):
         object.__setattr__(self, "forced", bool(forced))
-        object.__setattr__(self, "actor_id", _id(actor_id, "actor_id"))
-        object.__setattr__(self, "ability_id", _id(ability_id, "ability_id"))
-        object.__setattr__(self, "target_ids", tuple(_id(x, "target_id") for x in target_ids))
+        object.__setattr__(self, "actor_id", required_id(actor_id, "actor_id"))
+        object.__setattr__(self, "ability_id", required_id(ability_id, "ability_id"))
+        object.__setattr__(
+            self, "target_ids", tuple(required_id(x, "target_id") for x in target_ids)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -830,7 +827,6 @@ class BattleRuntime:
         drops it, ABSORB turns it into healing, REFLECT sends it to the actor.
         Other operations pass through unchanged.
         """
-        from asteria.gameplay.effects import EffectOperationKind
 
         from .interactions import InteractionDisposition
 
@@ -841,7 +837,6 @@ class BattleRuntime:
             """The damage after the rules, through the battle's final expression."""
             if not final or magnitude <= 0:
                 return magnitude
-            from asteria.gameplay.expressions import SubjectView, evaluate
 
             names = {
                 "value": float(magnitude),
@@ -892,7 +887,6 @@ class BattleRuntime:
         multiplier of the attack that applied the state is never reapplied.
         The state's source (or the afflicted member itself) is the source subject.
         """
-        from asteria.gameplay.effects import EffectOperationKind
 
         from .interactions import InteractionDisposition
 
@@ -922,7 +916,6 @@ class BattleRuntime:
 
     def preview_action(self, action, *, rng=None):
         """Predict ``action`` without mutating the battle (same pipeline as :meth:`execute`)."""
-        from asteria.gameplay.abilities import _clone_subject
 
         probe = random.Random()
         probe.setstate((self.rng if rng is None else rng).getstate())

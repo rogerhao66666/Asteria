@@ -10,6 +10,7 @@ every rule lives in the editor.
 
 from __future__ import annotations
 
+import json
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -116,7 +117,6 @@ def create_from_template(template_id, name, folder):
         ignore=shutil.ignore_patterns(*skip),
     )
     project_file = target / "project.asteria.json"
-    import json
 
     data = json.loads(project_file.read_text())
     data["name"] = name

@@ -84,13 +84,11 @@ class Campaign:
         GameSessionRuntime._campaign_watch = True
 
     def __init__(self, rt=None, seed=5, log=print):
-        from asteria.editor import EditorDocument
         from asteria.project import Project
+        from asteria.runtime.component_registry import default_component_registry
         from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-        project = Project.load_json(
-            HERE / "project.asteria.json", EditorDocument().component_registry
-        )
+        project = Project.load_json(HERE / "project.asteria.json", default_component_registry())
         self.rt = rt or PlayableTestRuntime(
             project, project.game_start.instantiate(project), HERE, width=960, height=540
         )

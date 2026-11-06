@@ -3,12 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
+from asteria.core.values import required_id
 
 
 def _nonnegative(value, label):
@@ -47,7 +42,7 @@ class ActionTimingDefinition:
         interruptible=True,
         interrupt_threshold=0.0,
     ):
-        object.__setattr__(self, "ability_id", _id(ability_id, "ability_id"))
+        object.__setattr__(self, "ability_id", required_id(ability_id, "ability_id"))
         object.__setattr__(self, "startup", _nonnegative(startup, "startup"))
         object.__setattr__(self, "cast_time", _nonnegative(cast_time, "cast_time"))
         object.__setattr__(self, "recovery", _nonnegative(recovery, "recovery"))

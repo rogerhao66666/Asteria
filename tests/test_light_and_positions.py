@@ -17,12 +17,12 @@ def _world(command, **args):
 
 
 def _game(*programs):
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
 
     path = ROOT / "party_rpg_demo" / "project.asteria.json"
-    project = Project.load_json(path, EditorDocument().component_registry)
+    project = Project.load_json(path, default_component_registry())
     for program_id, instructions in programs:
         project.event_programs.register(
             program_id, EventProgram(tuple(instructions), name=program_id)
@@ -74,12 +74,12 @@ def test_the_field_view_draws_the_dark_round_the_player(monkeypatch):
     pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = ROOT / "arpg_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     rt = PlayableTestRuntime(
         project, project.game_start.instantiate(project), root, width=960, height=540
     )

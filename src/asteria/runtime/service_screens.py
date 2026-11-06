@@ -28,6 +28,7 @@ from asteria.rpg.data_text import words as id_words
 from .bag_screen import BAD, GOOD, MUTED, TITLE
 from .boards_play import Gacha, QuestBoard, RecruitOffice, play_seconds
 from .crafting_screen import wrap
+from .game_menus import objective_words
 
 TEXT = (236, 238, 245)
 GREY = (130, 134, 150)
@@ -424,7 +425,6 @@ class QuestBoardScreen(ServiceScreen):
 
     def objective_rows(self, quest, state):
         """``[(words, done so far or None when not taken, required)]``."""
-        from .game_menus import objective_words
 
         game = self.game
         log = game.quest_log

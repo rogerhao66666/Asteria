@@ -12,13 +12,11 @@ PROJECT = Path(__file__).resolve().parents[1] / "reference_projects/complex_refe
 
 
 def _window(app):
-    from asteria.editor import EditorDocument
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    project = Project.load_json(
-        PROJECT / "project.asteria.json", EditorDocument().component_registry
-    )
+    project = Project.load_json(PROJECT / "project.asteria.json", default_component_registry())
     window = AsteriaEditorWindow(project)
     window.document.file_path = PROJECT / "project.asteria.json"
     window._resolve_project_resources()
@@ -127,6 +125,44 @@ def test_the_tile_palette_keeps_the_atlas_pages_whole(monkeypatch):
     grid.resize(4 * 16, 200)  # narrower than a page: the page is cut into pieces of 4
     grid._fit()  # (a hidden widget gets no resize event; the window's palette does)
     assert grid.strips() == 2 + 2 + 1 and grid.rect_of(4, 0)[:2] == (0, grid._strip_height())
+
+
+def test_the_tile_palette_reads_its_picture_again_only_when_the_file_changes(
+    monkeypatch, tmp_path
+):
+    """Every editor refresh hands the palette its tileset again: the picture is decoded (and
+    its see-through lanes found) once per file version, not on each refresh."""
+    import os
+
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtGui import QColor, QImage
+    from PySide6.QtWidgets import QApplication
+
+    from asteria.editor.tile_palette_widget import TileGrid
+
+    QApplication.instance() or QApplication([])
+    picture = QImage(48, 16, QImage.Format_ARGB32)
+    picture.fill(QColor(0, 0, 0, 0))
+    for x in (*range(0, 16), *range(32, 48)):  # tiles 0 and 2 drawn, 1 left see-through
+        for y in range(16):
+            picture.setPixelColor(x, y, QColor(200, 50, 50, 255))
+    path = tmp_path / "tiles.png"
+    picture.save(str(path))
+    frames = [SimpleNamespace(x=c * 16, y=0, width=16, height=16) for c in range(3)]
+    tiles = {
+        i: SimpleNamespace(frame_index=i, collision=False, terrain=None, tags=()) for i in range(3)
+    }
+    tileset = SimpleNamespace(tile_width=16, tile_height=16, tiles=tiles)
+    grid = TileGrid()
+    grid.set_source(tileset, SimpleNamespace(frames=frames), path)
+    first = grid._image
+    assert first is not None and grid._pages == [(0, 0), (2, 2)]  # the empty lane dropped
+    grid.set_source(tileset, SimpleNamespace(frames=frames), path)
+    assert grid._image is first and grid._pages == [(0, 0), (2, 2)]  # not decoded again
+    later = path.stat().st_mtime_ns + 5_000_000_000
+    os.utime(path, ns=(later, later))  # the artist saved the picture again
+    grid.set_source(tileset, SimpleNamespace(frames=frames), path)
+    assert grid._image is not first
 
 
 def test_a_fighter_picks_its_battlefield_sheet_and_icon_from_lists(monkeypatch):

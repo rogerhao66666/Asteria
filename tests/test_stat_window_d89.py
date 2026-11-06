@@ -15,6 +15,7 @@ from asteria.gameplay.stats import ResourcePool, StatBlock
 from asteria.gameplay.tags import TagSet
 from asteria.rpg.interactions import OutcomeCheckDefinition
 from asteria.rpg.menu_rules import MenuRules, StatGroup, StatLine
+from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 RULES = MenuRules(
@@ -140,7 +141,7 @@ def host(monkeypatch):
     from asteria.project import Project
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
-    project = Project.load_json(DEMO / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=960, height=540
     )

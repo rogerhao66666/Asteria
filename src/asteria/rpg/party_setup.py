@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(v, label):
-    v = str(v).strip()
-    if not v:
-        raise ValueError(f"{label} is required")
-    return v
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,8 +11,8 @@ class PartyPlacementDefinition:
     slot_id: str
 
     def __init__(self, actor_id, slot_id):
-        object.__setattr__(self, "actor_id", _id(actor_id, "actor_id"))
-        object.__setattr__(self, "slot_id", _id(slot_id, "slot_id"))
+        object.__setattr__(self, "actor_id", required_id(actor_id, "actor_id"))
+        object.__setattr__(self, "slot_id", required_id(slot_id, "slot_id"))
 
     def to_data(self):
         return {"actor_id": self.actor_id, "slot_id": self.slot_id}
@@ -58,8 +53,8 @@ class PartySetupDefinition:
         allow_reorder=True,
         tags=(),
     ):
-        roster = tuple(dict.fromkeys(_id(x, "actor_id") for x in roster_actor_ids))
-        active = tuple(_id(x, "actor_id") for x in active_actor_ids)
+        roster = tuple(dict.fromkeys(required_id(x, "actor_id") for x in roster_actor_ids))
+        active = tuple(required_id(x, "actor_id") for x in active_actor_ids)
         if len(active) != len(set(active)):
             raise ValueError("active actor ids must be unique")
         unknown = set(active) - set(roster)
@@ -82,7 +77,7 @@ class PartySetupDefinition:
             raise ValueError("only active actors can have formation placements")
         if placements and formation_id is None:
             raise ValueError("placements require formation_id")
-        object.__setattr__(self, "party_id", _id(party_id, "party_id"))
+        object.__setattr__(self, "party_id", required_id(party_id, "party_id"))
         object.__setattr__(self, "display_name", str(display_name or party_id))
         object.__setattr__(self, "roster_actor_ids", roster)
         object.__setattr__(self, "active_actor_ids", active)
@@ -90,13 +85,15 @@ class PartySetupDefinition:
         object.__setattr__(
             self,
             "formation_id",
-            None if formation_id is None else _id(formation_id, "formation_id"),
+            None if formation_id is None else required_id(formation_id, "formation_id"),
         )
         object.__setattr__(self, "placements", placements)
         object.__setattr__(self, "allow_reserve", bool(allow_reserve))
         object.__setattr__(self, "allow_swap", bool(allow_swap))
         object.__setattr__(self, "allow_reorder", bool(allow_reorder))
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
 
     @property
     def reserve_actor_ids(self):
@@ -158,7 +155,7 @@ class PartyPresentationPolicyDefinition:
         slot_labels=None,
         visible_limits=None,
     ):
-        order = tuple(dict.fromkeys(_id(x, "group_id") for x in group_order))
+        order = tuple(dict.fromkeys(required_id(x, "group_id") for x in group_order))
         if not order:
             raise ValueError("party presentation requires a group")
         limits = []
@@ -166,8 +163,8 @@ class PartyPresentationPolicyDefinition:
             v = int(v)
             if v < 1:
                 raise ValueError("visible limit must be >= 1")
-            limits.append((_id(k, "group_id"), v))
-        object.__setattr__(self, "profile_id", _id(profile_id, "profile_id"))
+            limits.append((required_id(k, "group_id"), v))
+        object.__setattr__(self, "profile_id", required_id(profile_id, "profile_id"))
         object.__setattr__(self, "group_order", order)
         object.__setattr__(
             self,

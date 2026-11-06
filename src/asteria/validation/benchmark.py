@@ -13,12 +13,17 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from asteria.core import Entity, Transform
+from asteria.core.prefab import prefab_from_entity
+from asteria.project import Project
+from asteria.runtime import Collider2DComponent, FieldAIComponent, SpawnZoneComponent
+from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+from asteria.runtime.profiler import RuntimeProfiler
+
 
 def _install_enemies(game, count):
-    from asteria.core import Entity, Transform
-    from asteria.core.prefab import prefab_from_entity
-    from asteria.runtime import Collider2DComponent, FieldAIComponent, SpawnZoneComponent
-
     template = Entity("Benchmark Slime")
     template.add_component(Transform())
     ai = template.add_component(FieldAIComponent())
@@ -45,14 +50,9 @@ def run_benchmark(
     if not real_window:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
         os.environ["SDL_AUDIODRIVER"] = "dummy"
-    from asteria.editor import EditorDocument
-    from asteria.project import Project
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
-    from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-    from asteria.runtime.profiler import RuntimeProfiler
 
     root = Path(repo) / "reference_projects" / "complex_reference_rpg"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(project, project.game_start.instantiate(project), root)
     runtime.open()
     pg = runtime.pg

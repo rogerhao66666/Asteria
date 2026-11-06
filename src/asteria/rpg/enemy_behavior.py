@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
-def _id(v, label):
-    v = str(v).strip()
-    if not v:
-        raise ValueError(f"{label} is required")
-    return v
+from asteria.core.values import required_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,9 +12,11 @@ class EnemyBehaviorBinding:
     tags: tuple[str, ...] = ()
 
     def __init__(self, enemy_id, ai_id, *, tags=()):
-        object.__setattr__(self, "enemy_id", _id(enemy_id, "enemy_id"))
-        object.__setattr__(self, "ai_id", _id(ai_id, "ai_id"))
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(self, "enemy_id", required_id(enemy_id, "enemy_id"))
+        object.__setattr__(self, "ai_id", required_id(ai_id, "ai_id"))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
 
     def to_data(self):
         return {

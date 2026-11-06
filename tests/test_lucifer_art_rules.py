@@ -10,10 +10,10 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 
 
 def _project():
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
-    return Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    return Project.load_json(ROOT / "project.asteria.json", default_component_registry())
 
 
 def test_the_party_uses_left_strips_and_the_foes_right_ones():

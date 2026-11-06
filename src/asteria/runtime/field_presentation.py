@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from asteria.core import Transform, world_position
 from asteria.presentation.particles import ParticleSystem, effect_definition
 from asteria.runtime.battle_visuals import vfx_keyframe, vfx_placement
+from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
 FIELD_EFFECT_COMMANDS = ("SCREEN_FADE", "PLAY_VFX")
 
@@ -80,7 +81,6 @@ class FieldEffects:
         """Start, follow, pause or drop the emitters of the scene's ``ParticleEmitter2D``
         components (their
         effects from the project ``assets``), and move one-shots that follow an entity."""
-        from asteria.runtime.environment2d import ParticleEmitter2DComponent
 
         seen = set()
         found = scene.query(ParticleEmitter2DComponent, Transform) if scene is not None else ()

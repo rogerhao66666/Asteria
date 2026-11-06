@@ -21,6 +21,14 @@ from math import atan2, degrees
 
 from asteria.core import Component, Field, Transform, component_schema, world_position
 
+from .action_combat import ActionCombatComponent
+from .character_control import CharacterController2DComponent, facing_vector
+from .collision import Collider2DComponent
+from .combat import CombatantComponent
+from .components2d import SpriteRenderer2D
+from .hud_bottom import BottomHud, active_statuses, draw_status_pips
+from .input_map import InputBinding
+
 COMBAT_MODES = ("encounter", "action")
 VIEWS = ("topdown", "side")
 WALLS_COVER = ("auto", "always", "never")
@@ -137,7 +145,6 @@ def walls_cover_characters(settings):
 def missing_action_bindings(input_map):
     """``{action: (InputBinding, ...)}`` for ARPG actions the project's input map does not
     define."""
-    from .input_map import InputBinding
 
     known = set(input_map.actions())
     return {
@@ -169,9 +176,8 @@ class ActionHud:
     """Draws the real-time combat layer for a ``PlayableTestRuntime`` (pygame)."""
 
     def __init__(self):
-        from .hud_bottom import BottomHud
-
         self.bottom = BottomHud()
+        self._labels = {}  # (text, size, colour) -> rendered HUD label
         self.floats: list[_Float] = []
         self.flash: dict[str, float] = {}
         self.banner = ("", 0.0)
@@ -246,7 +252,6 @@ class ActionHud:
         """Start the ``vfx`` cues of this frame's actions (payload: ``effect`` sprite sheet id,
         ``offset_x`` / ``offset_y`` in world units from the user - along the aim with ``aim``,
         else along its facing - ``scale``, ``frame_duration``, ``rotate``, ``follow``)."""
-        from .character_control import CharacterController2DComponent, facing_vector
 
         actions = getattr(game.action_combat, "actions", None)
         for event in getattr(actions, "events", ()):
@@ -344,8 +349,6 @@ class ActionHud:
         settings = combat_scene(game.scene)
         if settings is not None and settings.draw_colliders:
             self._draw_colliders(rt, zoom)
-        from .combat import CombatantComponent
-        from .hud_bottom import active_statuses, draw_status_pips
 
         placed = []
         for _entity, label_x, label_y, text, color in game.loot.labels(game.scene):
@@ -415,7 +418,7 @@ class ActionHud:
 
     def _label(self, rt, text, size, color):
         """A rendered label (cached: loot names and damage numbers repeat every frame)."""
-        cache = self.__dict__.setdefault("_labels", {})
+        cache = self._labels
         key = (text, size, tuple(color))
         image = cache.get(key)
         if image is None:
@@ -426,14 +429,10 @@ class ActionHud:
 
     @staticmethod
     def _lock_id(game):
-        from .action_combat import ActionCombatComponent
-
         spec = game.player.try_get(ActionCombatComponent)
         return spec.lock_target_id if spec is not None else ""
 
     def _draw_colliders(self, rt, zoom):
-        from .collision import Collider2DComponent
-
         pg, screen = rt.pg, rt.screen
         for entity, collider in rt.game.scene.query(Collider2DComponent):
             if (
@@ -515,15 +514,11 @@ class ActionHud:
 
 
 def _has_sprite(entity):
-    from .components2d import SpriteRenderer2D
-
     sprite = entity.try_get(SpriteRenderer2D)
     return sprite is not None and bool(sprite.sprite_sheet_asset_id)
 
 
 def _combatant_type():
-    from .combat import CombatantComponent
-
     return CombatantComponent
 
 

@@ -129,9 +129,10 @@ def test_the_editor_keeps_skin_fields_when_a_theme_is_edited():
     from asteria.editor import EditorDocument
     from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
-    project = Project.load_json(root / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(root / "project.asteria.json", default_component_registry())
     library = project.battle_presentation_library
     key = library.ids("ui_theme")[0]
     theme = library.require("ui_theme", key)

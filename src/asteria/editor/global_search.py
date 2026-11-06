@@ -10,6 +10,9 @@ from dataclasses import dataclass
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout
 
+from .i18n import translate
+from .workspace import WorkspaceMode
+
 MAX_SHOWN = 200
 
 
@@ -59,8 +62,6 @@ def _records(window, family, label, builder):
 
 
 def _pages(window):
-    from .workspace import WorkspaceMode
-
     entries = []
     for mode, tabs in (
         (WorkspaceMode.RPG, getattr(window, "rpg_workspace", None)),
@@ -126,7 +127,6 @@ def search_entries(window):
 
 def shown_detail(detail):
     """``detail`` in the editor's language, part by part ("Game Data ▸ Actors · hero_01")."""
-    from .i18n import translate
 
     return " ▸ ".join(
         " · ".join(translate(part) for part in side.split(" · ")) for side in detail.split(" ▸ ")

@@ -5,24 +5,23 @@ from __future__ import annotations
 
 import random
 from dataclasses import replace
+from math import hypot
 
-from asteria.core import Transform
+from asteria.core import Entity, Transform, world_position
+from asteria.core.prefab import instantiate
+from asteria.core.serialization import deserialize_component, serialize_component
 from asteria.events.world_commands import WorldCommand
+from asteria.gameplay import ResourcePool
 from asteria.rpg import (
     RpgActorSnapshot,
 )
+from asteria.rpg.map_rules import MapRulesRuntime
 from asteria.runtime.character_control import CharacterController2DComponent
 from asteria.runtime.collision import CombinedQuery
 from asteria.runtime.input import InputSnapshot
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BattleLogEntry,
-    EquipOffer,
+from .support import (
     GameSessionError,
-    _base_relative,
-    _EitherBlocks,
-    _merge_casts,
-    describe_condition,
 )
 
 
@@ -98,7 +97,7 @@ class FieldPlayMixin:
                         world = self._frame_collision_world = CollisionWorld.from_scene(scene)
                 query = world.blocking_query(exclude={entity.id, self.player.id})
                 tiles = self._tile_blocking.get(scene.id)
-                return query if tiles is None else _EitherBlocks(query, tiles)
+                return query if tiles is None else CombinedQuery(query, tiles)
 
             systems = (
                 SpawnSystem(
@@ -162,7 +161,6 @@ class FieldPlayMixin:
                 hitboxes=hits, paused=combat.paused, armor=combat, projectiles=projectiles
             )
             combat.actions = actions
-            from asteria.core.prefab import instantiate
             from asteria.runtime.action_combat import ActionCombatSystem
 
             def summon(prefab_id, x, y):
@@ -334,7 +332,6 @@ class FieldPlayMixin:
     def spawn_prefab(self, prefab_id, x, y, *, name=None):
         """Create an entity from a project prefab at ``(x, y)`` in the present scene (an event
         spawner); returns the new entity's id."""
-        from asteria.core.prefab import instantiate
         from asteria.runtime.preview import build_preview_registry
 
         if str(prefab_id) not in self.project.prefabs.ids():
@@ -351,8 +348,6 @@ class FieldPlayMixin:
 
     def copy_entity(self, entity_key, x, y, *, name=None):
         """A copy of a scene entity (every serialisable component) placed at ``(x, y)``."""
-        from asteria.core import Entity
-        from asteria.core.serialization import deserialize_component, serialize_component
         from asteria.runtime.preview import build_preview_registry
 
         source = self._sequence_entity(entity_key)
@@ -380,9 +375,7 @@ class FieldPlayMixin:
         """A mouse click in the field: the nearest entity whose interaction is ``click``-triggered
         and whose ``range`` reaches the point starts its event program. Returns the trigger or
         ``None``."""
-        from math import hypot
 
-        from asteria.core import world_position
         from asteria.runtime.components2d import Interaction2DComponent
         from asteria.runtime.interaction import InteractionTrigger
 
@@ -1001,7 +994,7 @@ class FieldPlayMixin:
         system = self.grid_movers()
         solid = self.frame_collision_world().blocking_query(exclude={self.player.id, *movers})
         tiles = self._tile_blocking.get(self.scene.id)
-        walls = solid if tiles is None else _EitherBlocks(solid, tiles)
+        walls = solid if tiles is None else CombinedQuery(solid, tiles)
         t = self.player.get(Transform)
         size = 16.0
         for _, spec in self.scene.query(GridMover2DComponent):
@@ -1018,7 +1011,6 @@ class FieldPlayMixin:
         Returns the ``FieldMapRules`` (``None`` when the project defines no rule set).
         """
         self.tile_keys_at = keys_at
-        from asteria.rpg.map_rules import MapRulesRuntime
         from asteria.runtime.map_rules_field import FieldMapRules
 
         sets = self.project.rpg_database.map_rule_sets
@@ -1037,7 +1029,6 @@ class FieldPlayMixin:
         """Battle background of the area under the player ("" when none names one)."""
         if self.map_rules is None:
             return ""
-        from asteria.core import Transform
 
         transform = self.player.get(Transform)
         return self.map_rules.runtime.battle_background(transform.x, transform.y)
@@ -1045,8 +1036,6 @@ class FieldPlayMixin:
     def damage_party(self, resource_id, amount, *, can_kill=False):
         """Floor-style damage to every active hero's saved resource; without ``can_kill`` a
         hero is left on the last point."""
-
-        from asteria.gameplay import ResourcePool
 
         state = self.save.rpg_state
         for actor_id in state.party_active_actor_ids:

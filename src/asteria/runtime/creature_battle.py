@@ -65,11 +65,16 @@ is said by the trainer, back on the screen, after the win.
 
 from __future__ import annotations
 
+import math
 import random
 from pathlib import Path
 
+from asteria.graphics.bitmap_font import BitmapFont
+from asteria.platform.pygame_battle_ui import font_for_text, renderable_text
 from asteria.presentation.creature_screens import creature_settings
+from asteria.rpg.items import Inventory
 from asteria.runtime.pointer import hand_over
+from asteria.runtime.session.ability_use import cured_states
 
 W, H = 240, 160
 BOX_TOP = 112  # the message window takes the bottom 48 rows
@@ -316,7 +321,6 @@ class CreatureBattleScreen:
         value = str(value)
         if self.font is not None and self.font.covers(value):
             return self.font.width(value)
-        from asteria.platform.pygame_battle_ui import font_for_text
 
         base = self._font(16)
         return font_for_text(self.pg, base, value, self._cjk, 12).size(value)[0]
@@ -1507,7 +1511,6 @@ class CreatureBattleScreen:
     def _bag_items(self):
         """``[(item_id, count)]`` of the open pocket: 0 = items usable in battle, 1 = capture
         items (any capture rule's)."""
-        from asteria.runtime.session.ability_use import cured_states
 
         game = self.game
         db = game.project.rpg_database
@@ -1545,7 +1548,6 @@ class CreatureBattleScreen:
             setattr(rect, anchor, (int(x), int(y)))
             self.font.render(self.surface, value, rect.x, rect.y, colour, shadow)
             return rect
-        from asteria.platform.pygame_battle_ui import font_for_text, renderable_text
 
         base = self._font(size)
         font = font_for_text(self.pg, base, value, self._cjk, max(9, size - 4))
@@ -1587,7 +1589,6 @@ class CreatureBattleScreen:
     def _load_font(self, name):
         if not self.settings.get(name):
             return None
-        from asteria.graphics.bitmap_font import BitmapFont
 
         try:
             return BitmapFont(self.pg, self._path(self.settings[name]))
@@ -1878,7 +1879,6 @@ class CreatureBattleScreen:
 
     def _drawn_ball(self, centre, angle=0.0):
         """A ball drawn without a picture (red over white, the band turned by ``angle``)."""
-        import math
 
         pg, s = self.pg, self.surface
         pg.draw.circle(s, WHITE, centre, 5)
@@ -2537,7 +2537,6 @@ def _owned_item_ids(inventory, records):
     """The ids of ``records`` to list for ``inventory``, sorted: a plain ``Inventory`` names the
     ids it holds, so only those are visited (record ids are plain strings, as are its keys);
     any other inventory gets every record id. Callers still skip counts of 0 or less."""
-    from asteria.rpg.items import Inventory
 
     if type(inventory) is not Inventory:
         return sorted(records)

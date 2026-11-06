@@ -13,13 +13,13 @@ ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
 
 def _open(monkeypatch, save=None):
     pytest.importorskip("pygame")
-    from asteria.editor import EditorDocument
     from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    project = Project.load_json(ROOT / "project.asteria.json", EditorDocument().component_registry)
+    project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     state = save or project.game_start.instantiate(project)
     rt = PlayableTestRuntime(project, state, ROOT, width=960, height=540)
     rt.open()

@@ -21,7 +21,11 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .record_vocabulary import words
+from asteria.runtime.actor_link import ActorLinkComponent
+from asteria.runtime.components2d import Interaction2DComponent
+
+from .event_editing import bindings_for_scene
+from .record_vocabulary import ProjectVocabulary, words
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,10 +147,6 @@ def _references(project, found):
 
 
 def _field(project, found):
-    from asteria.runtime.components2d import Interaction2DComponent
-
-    from .event_editing import bindings_for_scene
-
     for scene in project.scenes():
         bindings = bindings_for_scene(project, scene)
         for binding in bindings.bindings.values():
@@ -353,8 +353,6 @@ def _combat(project, found):
 
 
 def _linked(entity):
-    from asteria.runtime.actor_link import ActorLinkComponent
-
     link = entity.try_get(ActorLinkComponent)
     return link is not None and bool(link.actor_id)
 
@@ -522,7 +520,6 @@ def _formulas(project, found, data=None):
     """Every formula parses and reads only declared variables: a project that defines its stats
     (Game Systems ▸ Stats) may only read those stats, and resources it has (D94)."""
     from .formula_field import declared, formula_problem
-    from .record_vocabulary import ProjectVocabulary
 
     vocabulary = ProjectVocabulary(project)
     if data is not None:

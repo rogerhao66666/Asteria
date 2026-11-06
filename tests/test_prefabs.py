@@ -12,7 +12,6 @@ from asteria.core.prefab import (
     instantiate,
     prefab_from_entity,
 )
-from asteria.editor import EditorDocument
 from asteria.editor.prefab_commands import (
     InstantiatePrefabCommand,
     ReplacePrefabsCommand,
@@ -21,8 +20,9 @@ from asteria.editor.prefab_commands import (
 )
 from asteria.project import Project
 from asteria.runtime import Interaction2DComponent, SpriteRenderer2D
+from asteria.runtime.component_registry import default_component_registry
 
-REGISTRY = EditorDocument().component_registry
+REGISTRY = default_component_registry()
 
 
 def _chest_entity():

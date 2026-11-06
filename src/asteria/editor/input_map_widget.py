@@ -26,10 +26,12 @@ from PySide6.QtWidgets import (
 from asteria.runtime.input_map import DEVICES, InputActionMap, InputBinding
 from asteria.runtime.input_rebinding import describe_binding
 
+from .authoring_hub_widget import _free_id
 from .authoring_sidebar import authoring_sidebar
 from .record_form import _help_tip
 from .record_vocabulary import words as _words
-from .ui_fit import WordCombo
+from .responsive_form import FlowForm
+from .ui_fit import WordCombo, fill_named, named_id
 
 
 @dataclass(slots=True)
@@ -175,7 +177,6 @@ class InputMapWidget(QWidget):
         mouse_row.addWidget(self.click_move)
         mouse_row.addWidget(_help_tip(move_help))
         mouse_row.addStretch(1)
-        from .responsive_form import FlowForm
 
         form = FlowForm(column_width=180)  # the device, code and direction on one line
         form.addRow("Device", self.device)
@@ -211,8 +212,6 @@ class InputMapWidget(QWidget):
 
     @property
     def action_id(self):
-        from .ui_fit import named_id
-
         return named_id(self.actions.currentItem())
 
     def refresh(self, select=None):
@@ -228,7 +227,6 @@ class InputMapWidget(QWidget):
         self.click_move.blockSignals(False)
         ids = list(self.api.input_map.actions())
         self.actions.blockSignals(True)
-        from .ui_fit import fill_named
 
         fill_named(self.actions, ids, _words)
         self.actions.blockSignals(False)
@@ -276,8 +274,6 @@ class InputMapWidget(QWidget):
         return self._try(lambda: self.api.add_binding(self.action_id, binding))
 
     def _add_action_clicked(self):
-        from .authoring_hub_widget import _free_id
-
         taken = self.api.input_map.actions()
         value, ok = QInputDialog.getText(
             self, "Add Action", "Action id:", text=_free_id("", taken, "new_action")

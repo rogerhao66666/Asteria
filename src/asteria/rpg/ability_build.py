@@ -2,18 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from asteria.core.values import required_id
 from asteria.gameplay import GameplayTrigger, StatModifier
 
 
-def _id(value, label):
-    value = str(value).strip()
-    if not value:
-        raise ValueError(f"{label} is required")
-    return value
-
-
 def _ids(values, label):
-    return tuple(dict.fromkeys(_id(x, label) for x in values))
+    return tuple(dict.fromkeys(required_id(x, label) for x in values))
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,7 +35,7 @@ class PassiveDefinition:
         icon_id="",
         description="",
     ):
-        passive_id = _id(passive_id, "passive_id")
+        passive_id = required_id(passive_id, "passive_id")
         modifiers = tuple(modifiers)
         triggers = tuple(triggers)
         if any(not isinstance(x, StatModifier) for x in modifiers):
@@ -50,7 +44,9 @@ class PassiveDefinition:
             raise TypeError("triggers must be GameplayTrigger values")
         object.__setattr__(self, "passive_id", passive_id)
         object.__setattr__(self, "display_name", str(display_name or passive_id))
-        object.__setattr__(self, "tags", tuple(sorted({_id(x, "tag").lower() for x in tags})))
+        object.__setattr__(
+            self, "tags", tuple(sorted({required_id(x, "tag").lower() for x in tags}))
+        )
         object.__setattr__(self, "modifiers", modifiers)
         object.__setattr__(self, "granted_abilities", _ids(granted_abilities, "ability_id"))
         object.__setattr__(self, "triggers", triggers)
@@ -112,15 +108,19 @@ class AbilityEvolutionRule:
         retain_source=False,
         required_tags=(),
     ):
-        object.__setattr__(self, "rule_id", _id(rule_id, "rule_id"))
-        object.__setattr__(self, "source_ability_id", _id(source_ability_id, "source_ability_id"))
-        object.__setattr__(self, "result_ability_id", _id(result_ability_id, "result_ability_id"))
+        object.__setattr__(self, "rule_id", required_id(rule_id, "rule_id"))
+        object.__setattr__(
+            self, "source_ability_id", required_id(source_ability_id, "source_ability_id")
+        )
+        object.__setattr__(
+            self, "result_ability_id", required_id(result_ability_id, "result_ability_id")
+        )
         object.__setattr__(
             self,
             "progression_track_id",
             None
             if progression_track_id is None
-            else _id(progression_track_id, "progression_track_id"),
+            else required_id(progression_track_id, "progression_track_id"),
         )
         minimum_rank = int(minimum_rank)
         if minimum_rank < 1:
@@ -191,11 +191,13 @@ class ActorAbilityState:
         self.active_passives = _ids(active_passives, "passive_id")
         selected = {}
         for source, rule in dict(selected_evolutions or {}).items():
-            selected[_id(source, "source_ability_id")] = _id(rule, "evolution rule_id")
+            selected[required_id(source, "source_ability_id")] = required_id(
+                rule, "evolution rule_id"
+            )
         self.selected_evolutions = selected
 
     def learn(self, ability_id):
-        ability_id = _id(ability_id, "ability_id")
+        ability_id = required_id(ability_id, "ability_id")
         if ability_id not in self.learned_abilities:
             self.learned_abilities = self.learned_abilities + (ability_id,)
         return ability_id
@@ -206,7 +208,7 @@ class ActorAbilityState:
         self.equipped_abilities = tuple(x for x in self.equipped_abilities if x != ability_id)
 
     def equip_ability(self, ability_id, *, capacity=None):
-        ability_id = _id(ability_id, "ability_id")
+        ability_id = required_id(ability_id, "ability_id")
         if ability_id in self.equipped_abilities:
             return ability_id
         if capacity is not None and len(self.equipped_abilities) >= int(capacity):
@@ -219,7 +221,7 @@ class ActorAbilityState:
         self.equipped_abilities = tuple(x for x in self.equipped_abilities if x != ability_id)
 
     def equip_passive(self, passive_id, *, capacity=None):
-        passive_id = _id(passive_id, "passive_id")
+        passive_id = required_id(passive_id, "passive_id")
         if passive_id in self.active_passives:
             return passive_id
         if capacity is not None and len(self.active_passives) >= int(capacity):
@@ -232,8 +234,8 @@ class ActorAbilityState:
         self.active_passives = tuple(x for x in self.active_passives if x != passive_id)
 
     def select_evolution(self, source_ability_id, rule_id):
-        self.selected_evolutions[_id(source_ability_id, "source_ability_id")] = _id(
-            rule_id, "rule_id"
+        self.selected_evolutions[required_id(source_ability_id, "source_ability_id")] = (
+            required_id(rule_id, "rule_id")
         )
 
     def to_data(self):
