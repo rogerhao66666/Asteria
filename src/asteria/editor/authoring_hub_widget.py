@@ -988,6 +988,7 @@ class AdapterFamilyWidget(QWidget):
         # edited (_encodings_stamp)
         self._encodings = {}
         self._encodings_stamp = None
+        self._form_stamp = None  # what the form was last built under
         self._applied = 0  # edits applied from the form (they change what is encoded)
 
         header = QHBoxLayout()
@@ -1189,12 +1190,16 @@ class AdapterFamilyWidget(QWidget):
                 self.browser.item(row).setSelected(True)
                 first = row if first is None else first
         if first is not None:
+            before = self.browser.currentRow()
             self.browser.setCurrentRow(first, self.browser.selectionModel().SelectionFlag.NoUpdate)
-            self._selection_changed(first)
+            if first == before:  # another row has told _selection_changed already
+                self._selection_changed(first)
 
     def refresh(self, *_args, keep=None, same_data=False):
         """Rebuild the list; ``same_data``: only the filter or the sort changed, so records
         encoded for the last list are reused unless anything was edited since."""
+        from .i18n import CURRENT
+
         self.flush_edits()
         adapter = self.adapter
         stamp = (
@@ -1209,7 +1214,12 @@ class AdapterFamilyWidget(QWidget):
         self.browser.blockSignals(True)
         self.browser.clear()
         self.browser.blockSignals(False)
-        self.editor.clear()
+        # nothing changed since the form was built (a refresh with no edit, the second of an
+        # edit's two): it stays, if the same record comes back; a big record takes a second
+        form_stamp = (*stamp, CURRENT["language"])
+        if form_stamp != self._form_stamp or adapter is None:
+            self.editor.clear()
+        self._form_stamp = form_stamp
         self._ids = []
         if adapter is None:
             return
@@ -1244,6 +1254,8 @@ class AdapterFamilyWidget(QWidget):
             self.select_ids(kept)
         elif self._ids:
             self.browser.setCurrentRow(0)
+        else:
+            self.editor.clear()
 
     def _selection_changed(self, row):
         self.flush_edits()
@@ -1606,14 +1618,18 @@ class FamilyHostWidget(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.rebuild()
 
-    def rebuild(self):
+    def rebuild(self, keep=None):
+        """Show the project's records; ``keep``: the ids to select in a list that stays, by
+        default the ones selected now (a refresh never moves the author to the first record)."""
         project = getattr(getattr(self.builder, "__self__", None), "project", None)
         # the project object itself: two files can share an id (a project copied from another)
         pid = (id(project), getattr(project, "id", None))
         if self.child is not None and pid == self.project_id and project is self._project:
             refresh = getattr(self.child, "refresh", None)
             if callable(refresh):
-                refresh()
+                if keep is None:
+                    keep = getattr(self.child, "selected_ids", None)
+                refresh(keep=keep) if keep else refresh()
             return
         if self.child is not None:
             self.child.hide()

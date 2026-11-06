@@ -8,6 +8,7 @@ untranslated game still shows something readable.
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from dataclasses import dataclass
 
 
@@ -34,7 +35,13 @@ class LocaleTable:
         object.__setattr__(self, "entries", tuple(sorted(pairs)))
 
     def get(self, key):
-        return dict(self.entries).get(key)
+        """The text of ``key``, or ``None``. Entries are sorted: a table of thousands is asked
+        thousands of times whenever the editor reads the project's names in Chinese."""
+        if not isinstance(key, str):
+            return None
+        at = bisect_left(self.entries, (key,))
+        found = self.entries[at] if at < len(self.entries) else None
+        return found[1] if found is not None and found[0] == key else None
 
     def to_data(self):
         return {"locale": self.locale, "entries": dict(self.entries)}

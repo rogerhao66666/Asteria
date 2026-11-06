@@ -333,6 +333,10 @@ class AsteriaEditorWindow(QMainWindow):
             self,
         )
         self.workspace.modeChanged.connect(self._workspace_mode_changed)
+        for mode, tabs in self._WORKSPACE_TABS.items():
+            getattr(self, tabs).currentChanged.connect(
+                lambda _index, mode=mode: self._workspace_tab_opened(mode)
+            )
         self.setCentralWidget(self.workspace)
 
         self.project_tree = ProjectTreeWidget(self.document)
@@ -532,7 +536,7 @@ class AsteriaEditorWindow(QMainWindow):
     def _warm_next_workspace(self):
         if not getattr(self, "_warm", None) or self.document.project is None:
             return
-        self._ensure_workspace_fresh(self._warm.pop(0))
+        self._ensure_workspace_fresh(self._warm.pop(0), every_tab=True)
         if self._warm:
             QTimer.singleShot(150, self, self._warm_next_workspace)
 
@@ -886,10 +890,17 @@ class AsteriaEditorWindow(QMainWindow):
         # forth between Game Data and Battle no longer rebuilds every page each time
         self._ensure_workspace_fresh(current)
 
-    # each workspace's pages, rebuilt on their own (refresh_all rebuilds only the one shown;
-    # the others wait until they are opened)
-    _WORKSPACE_EDITORS = {
+    # the workspaces with tabs: the tab widget, and the pages rebuilt from the project (the other
+    # tabs read it themselves when shown). Only the tab on screen is rebuilt; the others wait
+    # until they are opened.
+    _WORKSPACE_TABS = {
+        WorkspaceMode.RPG: "rpg_workspace",
+        WorkspaceMode.UI: "ui_workspace",
+        WorkspaceMode.EVENT: "events_workspace",
+    }
+    _WORKSPACE_PAGES = {
         WorkspaceMode.RPG: (
+            "rpg_authoring",
             "game_systems_editor",
             "game_start_editor",
             "input_map_editor",
@@ -897,40 +908,40 @@ class AsteriaEditorWindow(QMainWindow):
             "behavior_tree_editor",
         ),
         WorkspaceMode.UI: (
+            "presentation_authoring",
+            "menu_layout_editor",
             "animation_editor",
             "state_machine_editor",
             "composition_editor",
             "action_timeline_editor",
             "vfx_editor",
         ),
-        WorkspaceMode.EVENT: ("event_flow_editor",),
+        WorkspaceMode.EVENT: ("game_flow_overview", "event_flow_editor"),
     }
+    _PAGES_WITHOUT_PROJECT = ("rpg_authoring", "presentation_authoring", "menu_layout_editor")
 
     def _rebuild_workspace(self, mode):
+        """A workspace of one page."""
         if mode == WorkspaceMode.CODE:
             self.code_workspace.refresh_project_context()
-        elif mode == WorkspaceMode.RPG:
-            self.rpg_authoring.rebuild()
+            self._polish_presentation_pages(mode)
         elif mode == WorkspaceMode.BATTLE:
             self.battle_authoring.rebuild()
-        elif mode == WorkspaceMode.UI:
-            self.presentation_authoring.rebuild()
-            self.menu_layout_editor.rebuild()
-        elif mode == WorkspaceMode.EVENT:
-            self.game_flow_overview.refresh()
         elif mode == WorkspaceMode.MULTIPLAYER:
             self.multiplayer_workspace.refresh_profile()
-        if self.document.project is not None:
-            for name in self._WORKSPACE_EDITORS.get(mode, ()):
-                editor = getattr(self, name, None)
-                if editor is not None:
-                    editor.refresh()
-        if mode in (WorkspaceMode.UI, WorkspaceMode.EVENT, WorkspaceMode.CODE):
-            self._polish_presentation_pages(mode)
 
-    def _ensure_workspace_fresh(self, mode, *, force=False):
-        """Rebuild ``mode``'s pages if the project changed (an edit, an undo, a refresh) since
-        they were last built for it."""
+    def _rebuild_page(self, name):
+        page = getattr(self, name, None)
+        if name in self._PAGES_WITHOUT_PROJECT:  # with no project: they say to open one
+            page.rebuild()
+        elif name == "game_flow_overview" or self.document.project is not None:
+            if page is not None:
+                page.refresh()
+
+    def _ensure_workspace_fresh(self, mode, *, force=False, every_tab=False):
+        """Rebuild what ``mode`` shows if the project changed (an edit, an undo, a refresh) since
+        it was last built: of a workspace with tabs the tab on screen, or all of them
+        (``every_tab``: none may wait, another project was opened)."""
         mode = WorkspaceMode(mode)
         stamp = (
             id(self.document.project),
@@ -938,9 +949,28 @@ class AsteriaEditorWindow(QMainWindow):
             getattr(self, "_refresh_epoch", 0),
         )
         fresh = self.__dict__.setdefault("_workspace_stamps", {})
-        if force or fresh.get(mode) != stamp:
-            self._rebuild_workspace(mode)
-            fresh[mode] = stamp
+        tabs = getattr(self, self._WORKSPACE_TABS.get(mode, ""), None)
+        if tabs is None:
+            if force or fresh.get(mode) != stamp:
+                self._rebuild_workspace(mode)
+                fresh[mode] = stamp
+            return
+        shown = tabs.currentWidget()
+        rebuilt = False
+        for name in self._WORKSPACE_PAGES[mode]:
+            if not every_tab and getattr(self, name, None) is not shown:
+                continue
+            if force or fresh.get(name) != stamp:
+                self._rebuild_page(name)
+                fresh[name] = stamp
+                rebuilt = True
+        if rebuilt and mode != WorkspaceMode.RPG:
+            self._polish_presentation_pages(mode)
+
+    def _workspace_tab_opened(self, mode):
+        """A tab came to the front. In a workspace not on screen it waits until that one opens."""
+        if self.workspace.mode == mode:
+            self._ensure_workspace_fresh(mode)
 
     def _code_script_saved(self, path):
         self.statusBar().showMessage(f"Saved script {path}", 3000)
@@ -1912,7 +1942,7 @@ class AsteriaEditorWindow(QMainWindow):
         self.refresh_inspector()
         self._sync_scene_authoring_context()
         self._sync_event_context()
-        # the workspace on screen is rebuilt now; the others when they are next opened
+        # the page on screen is rebuilt now; the others when they are next opened
         self._refresh_epoch = getattr(self, "_refresh_epoch", 0) + 1
         workspace = getattr(self, "workspace", None)
         if workspace is not None:
@@ -1952,7 +1982,7 @@ class AsteriaEditorWindow(QMainWindow):
         # another project: every workspace is rebuilt now (none may keep the old one's records,
         # even before it is opened)
         for mode in WorkspaceMode:
-            self._ensure_workspace_fresh(mode)
+            self._ensure_workspace_fresh(mode, every_tab=True)
         QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def refresh_asset_list(self):

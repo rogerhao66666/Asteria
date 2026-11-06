@@ -144,7 +144,8 @@ class EnemyAIEditorWidget(QWidget):
 
     def refresh(self, select=None):
         select = select or self.ai_id  # the rebuilt list keeps the record being edited
-        self.host.rebuild()  # a project opened (or another one): its records
+        # a project opened (or another one): its records. The form is built once, for this one.
+        self.host.rebuild(keep=[select] if select else None)
         family = self.family
         if family is None:
             return
@@ -152,8 +153,7 @@ class EnemyAIEditorWidget(QWidget):
             self._wired = family
             family.category.hide()  # one kind of record here
             family.browser.currentRowChanged.connect(lambda _row: self._load())
-        if select:
-            family.refresh(keep=[select])
+        if select in family._ids and family.selected_id != select:  # a new list starts at its top
             family.select_ids([select])
         names = self._names()
         self.enemy.clear()
