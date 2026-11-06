@@ -501,9 +501,7 @@ class ActionHud:
         down = getattr(game, "player_down", 0.0)
         if down > 0:
             if not c.picture("fell", (0, 0, rt.width, rt.height)):
-                shade = rt.pg.Surface((rt.width, rt.height), rt.pg.SRCALPHA)
-                shade.fill((20, 0, 0, 120))
-                rt.screen.blit(shade, (0, 0))
+                rt.dim_screen((20, 0, 0, 120))
             c.text(
                 "fell_text",
                 game.tr("action.fell", "You fell — back in {seconds}s", seconds=f"{down:.1f}"),

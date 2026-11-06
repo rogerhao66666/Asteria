@@ -584,21 +584,30 @@ class RpgActorRuntime:
                 bonuses[resource_id] = bonuses.get(resource_id, 0.0) + rate * gained
         return bonuses
 
+    def build_layers(self, progression=None, allocations=None):
+        """What progression tracks and allocated graph ranks add: ``(progression, allocation)``
+        - ``_progression_contributions`` and ``allocations.contribution()`` (None without
+        allocations). Worked out once and handed to the ``_effective_*`` steps of a build."""
+        allotted = None if allocations is None else allocations.contribution()
+        return self._progression_contributions(progression), allotted
+
     def effective_stats(
         self, *, progression=None, allocations=None, loadout=None, passives=None, level=1
     ):
+        layers = self.build_layers(progression, allocations)
+        tags = self._effective_tags(layers, loadout, passives)
+        return self._effective_stats(layers, loadout, passives, level, tags)
+
+    def _effective_stats(self, layers, loadout, passives, level, tags):
+        (bonuses, _, _), allotted = layers
         values = StatBlock.from_data(self.stats.to_data())
-        bonuses, _, _ = self._progression_contributions(progression)
         for stat, value in bonuses.items():
             values.add(stat, value)
         for stat, value in self.level_growth_bonuses(level).items():
             values.add(stat, value)
-        if allocations is not None:
-            for stat, value in allocations.contribution().stat_bonuses.items():
+        if allotted is not None:
+            for stat, value in allotted.stat_bonuses.items():
                 values.add(stat, value)
-        tags = self.effective_tags(
-            progression=progression, allocations=allocations, loadout=loadout, passives=passives
-        )
         if loadout is not None:
             values = loadout.modifier_set().evaluate_block(values, tags=tags)
         if passives is not None:
@@ -606,12 +615,14 @@ class RpgActorRuntime:
         return values
 
     def effective_tags(self, *, progression=None, allocations=None, loadout=None, passives=None):
+        return self._effective_tags(self.build_layers(progression, allocations), loadout, passives)
+
+    def _effective_tags(self, layers, loadout, passives):
+        (_, progression_tags, _), contribution = layers
         result = TagSet(self.tags.values())
-        _, progression_tags, _ = self._progression_contributions(progression)
         for tag in progression_tags:
             result.add(tag)
-        if allocations is not None:
-            contribution = allocations.contribution()
+        if contribution is not None:
             for tag in contribution.granted_tags:
                 result.add(tag)
             for capability in contribution.granted_capabilities:
@@ -678,6 +689,14 @@ class RpgActorRuntime:
         evolution_rules=(),
         tags=None,
     ):
+        layers = self.build_layers(progression, allocations)
+        return self._resolve_abilities(
+            layers, progression, loadout, passives, evolution_rules, tags
+        )
+
+    def _resolve_abilities(self, layers, progression, loadout, passives, evolution_rules, tags):
+        """``resolve_abilities`` from ``build_layers``; ``progression`` picks evolutions."""
+        (_, _, progression_abilities), allotted = layers
         grants = []
 
         def add(ability_id, source_kind, source_id):
@@ -689,11 +708,10 @@ class RpgActorRuntime:
             definition = self.class_definitions[assignment.class_id]
             for ability_id in definition.granted_abilities:
                 add(ability_id, "class", assignment.assignment_id)
-        _, _, progression_abilities = self._progression_contributions(progression)
         for ability_id in progression_abilities:
             add(ability_id, "progression", "progression")
-        if allocations is not None:
-            for ability_id, source_id in allocations.contribution().ability_grants:
+        if allotted is not None:
+            for ability_id, source_id in allotted.ability_grants:
                 add(ability_id, "allocation", source_id)
         for ability_id in self.ability_state.learned_abilities:
             add(ability_id, "learned", self.definition.actor_id)
@@ -717,10 +735,7 @@ class RpgActorRuntime:
             for ability_id in passive.granted_abilities:
                 add(ability_id, "passive", passive_id)
 
-        ordered = []
-        for grant in grants:
-            if grant.ability_id not in ordered:
-                ordered.append(grant.ability_id)
+        ordered = list(dict.fromkeys(grant.ability_id for grant in grants))
 
         rules = tuple(evolution_rules)
         by_source = {}
@@ -762,8 +777,9 @@ class RpgActorRuntime:
 
     def effective_passive_modifiers(self, passives):
         result = ModifierSet()
+        passives = dict(passives or {})
         for passive_id in self.ability_state.active_passives:
-            passive = dict(passives or {}).get(passive_id)
+            passive = passives.get(passive_id)
             if passive is not None:
                 for modifier in passive.modifiers:
                     result.add(modifier)
@@ -771,8 +787,9 @@ class RpgActorRuntime:
 
     def effective_passive_tags(self, passives):
         result = set()
+        passives = dict(passives or {})
         for passive_id in self.ability_state.active_passives:
-            passive = dict(passives or {}).get(passive_id)
+            passive = passives.get(passive_id)
             if passive is not None:
                 result.update(passive.tags)
         return tuple(sorted(result))

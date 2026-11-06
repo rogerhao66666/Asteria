@@ -180,9 +180,7 @@ class PlayableTestRuntime(
         self._menu_actor_index = 0
         self._turn_actor = None
         self._victory_summary = []
-        self._fonts = {}
-        self._glyphs = {}  # (font, char) -> the font can draw it
-        self._cjk_fonts = {}
+        self._init_caches()
         self._battle_presentation = create_battle_presentation_adapter(self)
         self.profiler = NullProfiler()
         self._drawing = False
@@ -214,6 +212,25 @@ class PlayableTestRuntime(
         self._settings_menu = MenuCursor(
             settings_options, keys=text_keys("settings", settings_options)
         )
+
+    # State that ``open`` or the first use sets; class defaults let a runtime built without
+    # ``__init__`` (tests drawing one primitive) read it.
+    project = None
+    pointer = None  # mouse hotspots (PointerLayer), made by open()
+    _dialogue_style = None  # (dialogue_window record, its settings)
+    _theme_cjk = None  # (menu theme, the file of its CJK font)
+
+    def _init_caches(self):
+        """The drawing caches - fonts, rendered and measured text, scaled pictures - empty."""
+        self._fonts = {}  # size -> the built-in face
+        self._glyphs = {}  # (font, char) -> the font can draw it
+        self._cjk_fonts = {}  # (CJK face file, size) -> the system CJK face
+        self._asset_fonts = {}  # (font asset or file, size, ...) -> a loaded face
+        self._text_cache = {}  # (text, size, colour, face, ...) -> (surface, placement)
+        self._text_sizes = {}  # (text, size, face, CJK file) -> (width, height)
+        self._scaled_cache = {}  # (picture, size) -> (picture, scaled copy)
+        self._bitmap_fonts = {}  # font id -> SheetFont
+        self._shades = {}  # (size, rgba) -> a surface of that colour
 
     def enable_debugger(self, *, port=0, token=None):
         """Start the editor debug channel (EDT-10); returns the DebugServer."""

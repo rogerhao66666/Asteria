@@ -112,7 +112,7 @@ def test_field_menu_cursors_sit_level_with_their_row(monkeypatch):
     pygame.init()
     runtime = PlayableTestRuntime.__new__(PlayableTestRuntime)
     runtime.pg = pygame
-    runtime._fonts, runtime._cjk_fonts, runtime._glyphs = {}, {}, {}
+    runtime._init_caches()
     for size in (21, 24, 30):
         runtime.screen = pygame.Surface((400, 120))
         runtime.menu_row("HUGE", 20, 30, selected=True, size=size, color=(255, 0, 0))

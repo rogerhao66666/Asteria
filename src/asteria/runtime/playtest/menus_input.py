@@ -104,14 +104,9 @@ class MenusInputMixin:
         record = self.project.rpg_database.actors.get(actor)
         name = self.game.name_of(record, actor)
         c = self.menu_canvas("status", self._member_fields(actor))
-        layout = c.layout
-        if layout is None or (layout.background_color is None and not layout.background_image):
-            self._draw_field(False)
-            dim = 215 if layout is None or layout.dim < 0 else layout.dim
-            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-            shade.fill((6, 9, 18, dim))
-            self.screen.blit(shade, (0, 0))
-        c.begin()
+        # the map at the window's size behind it, as every menu draws it (it was shrunk into
+        # a fitted menu's canvas)
+        self._draw_backdrop(canvas=c, dim=215, shade=(6, 9, 18))
         tr = self.game.tr
         c.panel("frame", (24, 22, self.width - 48, self.height - 44), fill=(11, 15, 25, 242))
         tabs = c.place("tabs", (44, 36, 150 * len(TABS), 30), 150)

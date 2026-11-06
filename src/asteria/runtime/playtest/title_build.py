@@ -31,9 +31,7 @@ class TitleBuildMixin:
             else:
                 self.screen.fill((12, 14, 20))
             dim = 150 if layout is None or layout.dim < 0 else layout.dim
-            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-            shade.fill((5, 8, 16, dim))
-            self.screen.blit(shade, (0, 0))
+            self.dim_screen((5, 8, 16, dim))
         c.begin()
         tr = self.game.tr
         name = tr("title.name", "ASTERIA")
@@ -136,9 +134,7 @@ class TitleBuildMixin:
         self._draw_dialogue()
         alpha = self.field_effects.fade_alpha
         if alpha > 0 and self.field_effects.fade_over != "everything":  # (drawn with the window)
-            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-            shade.fill((*self.field_effects.fade_color, int(alpha * 255)))
-            self.screen.blit(shade, (0, 0))
+            self.dim_screen((*self.field_effects.fade_color, int(alpha * 255)))
         request, game.title_request = getattr(game, "title_request", None), None
         if request is not None:
             self._title_action(request)
@@ -220,9 +216,7 @@ class TitleBuildMixin:
 
     def _draw_build_menu(self):
         self._draw_field(False)
-        overlay = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-        overlay.fill((6, 9, 18, 210))
-        self.screen.blit(overlay, (0, 0))
+        self.dim_screen((6, 9, 18, 210))
         actor_id = self._menu_actor()
         if actor_id is None:
             return

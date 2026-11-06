@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from asteria.runtime.menu_icons import forged_surface, icon_source
 from asteria.runtime.particle_draw import ParticleDrawer
 
 from .support import (  # noqa: F401 - the names the moved methods use
@@ -35,27 +36,29 @@ class ResourceMixin:
         return self._loaded[rel]
 
     def skin_image(self, asset_id):
-        """A skin picture (nine-patch source) at its own size, or ``None`` when it is missing."""
-        from asteria.runtime.menu_icons import icon_source
+        """A skin picture (nine-patch source) at its own size, or ``None`` when it is missing.
 
+        Kept with the icons (dropped with them when pictures are released): a new subsurface
+        each call would also miss ``draw_nine_patch``'s cache of whole panels."""
+        key = ("skin", str(asset_id or ""))
+        cache = self._icon_cache
+        if key in cache:
+            return cache[key]
         source = icon_source(self.project, asset_id)
-        if source is None:
-            return None
-        uri, region = source
-        try:
-            image = self.load_image(uri)
-            if region is not None:
-                image = image.subsurface(self.pg.Rect(region).clip(image.get_rect()))
-        except Exception as exc:  # noqa: BLE001 - pygame.error / a missing file: plain colours
-            if type(exc).__name__ not in ("error", "FileNotFoundError"):
-                raise
-            return None
+        image = None
+        if source is not None:
+            uri, region = source
+            try:
+                image = self.load_image(uri)
+                if region is not None:
+                    image = image.subsurface(self.pg.Rect(region).clip(image.get_rect()))
+            except (FileNotFoundError, self.pg.error):  # a missing picture: plain colours
+                image = None
+        cache[key] = image
         return image
 
     def skin_font(self, asset_id):
         """The file path of the skin's font asset, or ``None`` (the built-in font)."""
-        from asteria.runtime.menu_icons import icon_source
-
         if not asset_id:
             return None
         source = icon_source(self.project, asset_id) or (
@@ -72,8 +75,6 @@ class ResourceMixin:
     def icon_image(self, icon_id, size=24):
         """The menu icon ``icon_id`` (see ``menu_icons``) scaled to fit ``size`` pixels, or
         None."""
-        from asteria.runtime.menu_icons import forged_surface, icon_source
-
         cache = self._icon_cache
         key = (str(icon_id or ""), int(size))
         if key in cache:
@@ -112,8 +113,6 @@ class ResourceMixin:
     def particle_image(self, image_id):
         """The image of image particles (VFX-01): any id ``menu_icons`` resolves (icon cell, image,
         path)."""
-        from asteria.runtime.menu_icons import icon_source
-
         source = icon_source(self.project, image_id)
         if source is None:
             return None

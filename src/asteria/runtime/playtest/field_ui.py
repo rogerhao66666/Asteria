@@ -569,9 +569,7 @@ class FieldUiMixin:
         self._draw_dialogue_request()
         effects = self.field_effects
         if effects.fade_alpha > 0 and effects.fade_over == "everything":
-            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-            shade.fill((*effects.fade_color, int(effects.fade_alpha * 255)))
-            self.screen.blit(shade, (0, 0))
+            self.dim_screen((*effects.fade_color, int(effects.fade_alpha * 255)))
 
     def _draw_dialogue_request(self):
         request = (

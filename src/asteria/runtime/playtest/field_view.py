@@ -135,9 +135,7 @@ class FieldViewMixin:
         self.world_done("field")
         alpha = self.field_effects.fade_alpha
         if alpha > 0 and self.field_effects.fade_over != "everything":
-            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-            shade.fill((*self.field_effects.fade_color, int(alpha * 255)))
-            self.screen.blit(shade, (0, 0))
+            self.dim_screen((*self.field_effects.fade_color, int(alpha * 255)))
         if self.game.cutscene_active:  # letterbox while a cutscene runs
             bar = int(self.height * 0.09)
             self.pg.draw.rect(self.screen, (0, 0, 0), (0, 0, self.width, bar))
