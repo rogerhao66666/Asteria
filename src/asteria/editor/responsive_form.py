@@ -95,7 +95,9 @@ def _field_cell(label, widget, help_text="", aside=None):
     # a whole row's caption has the row to itself: no wrapping, and its own height only - a
     # field below that wraps (chips, words) makes the cell taller, never the caption (D91)
     caption.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-    if aside is None:
+    if not label:  # a card's own title names it: no empty line above the field
+        caption.hide()
+    elif aside is None:
         box.addWidget(caption)
     else:
         line = QHBoxLayout()

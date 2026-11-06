@@ -145,6 +145,8 @@ class FormField:
     unticked entries in ``hidden_key``; D97),
     ``row_id`` (a table row's own id: made for it, unique among its rows, never shown),
     ``rgb`` (a colour as "r, g, b" text, picked from a colour dialog),
+    ``optional_point`` (``[x, y]`` or None: one switch, ``toggle_label``), ``row_pick`` (a row of
+    the table field ``source``, numbered from 1, picked by its name),
     ``optional_ref`` (may be empty; ``empty_label`` names that choice), ``optional_int`` (None
     allowed). A reference list may hold ``(id, name)`` pairs: the form shows the name and keeps
     the id,

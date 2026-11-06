@@ -65,6 +65,23 @@ _SPECIAL = "_i18n_special"  # a spin box's words for its lowest value ("engine's
 _ITEM_SOURCE = Qt.UserRole + 731  # the English of a fixed-choice list item
 _tables = {}
 _collected = None  # a set while collecting the English shown (see collect())
+_project = {"source": None, "words": None}  # the open project; its own words, read when needed
+
+
+def use_project(project):
+    """Show the names in ``project``'s data the way its own locale table has them in the editor's
+    language (an item's name, D60). They are read again when next needed, so a record renamed
+    since shows its new name. The editor's own words come first."""
+    _project.update(source=project, words=None)
+
+
+def _project_words():
+    if _project["words"] is None:
+        from .data_translation import project_words
+
+        source = _project["source"]
+        _project["words"] = {} if source is None else project_words(source, CURRENT["language"])
+    return _project["words"]
 
 
 def language_name(settings):
@@ -98,6 +115,10 @@ def translate(text, language=None):
         found = exact.get(text[:1].upper() + text[1:])
     if found is not None:
         return found
+    if language == CURRENT["language"]:
+        found = _project_words().get(text)
+        if found is not None:
+            return found
     stripped = text.strip()
     if stripped != text and stripped in exact:  # " Save " keeps its spaces
         return text.replace(stripped, exact[stripped])
@@ -466,6 +487,7 @@ def set_language(language):
     if language == CURRENT["language"] and language == DEFAULT:
         return
     CURRENT["language"] = language
+    _project["words"] = None
     app = QApplication.instance()
     if app is None:
         return

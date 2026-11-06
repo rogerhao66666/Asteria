@@ -1,4 +1,5 @@
-"""The attack preview: a swordsman hits a monster, and this attack's own numbers play out.
+"""The attack preview: a swordsman hits a monster, and this attack's own numbers play out. An
+attack a projectile carries is thrown from afar instead, the way that projectile flies.
 
 ``plan_for`` turns an attack into times and speeds the way the engine reads them (hit-stop, then a
 push that fades, a lift that falls back, stun or a knock-down, i-frames), and ``target_state`` /
@@ -54,6 +55,15 @@ ATTACKER_RIGHT = 36  # the swordsman's back in the frame
 TARGET_LEFT, TARGET_RIGHT = 10, 39  # the monster in its frame, falling included
 TARGET_CHEST = 25  # where in its frame the monster is struck
 FOOT_MIDDLE = 25
+CHEST_HEIGHT = 22  # how far above the ground the monster is struck
+
+# a throw: the swing's frames with the hand up and no slash in the way
+THROW_ORDER = (0, 1, 5)
+THROW_STEP = 0.08
+THROW_WINDUP = 2 * THROW_STEP
+HAND = 15  # where in the swordsman's frame the shot leaves, at the height of the monster's chest
+THROW_DISTANCE = 72  # as far as a shot starts from, when it flies that far
+BODY_REACH = 18  # how far from chest height a falling or rising shot still meets the monster
 
 WARRIOR = "Foozle_2DC0009_Lucifer_Warrior_Pixel_Art"
 SKELETON = "Foozle_2DC0018_Lucifer_Skeleton_Grunt_Pixel_Art"
@@ -68,6 +78,53 @@ LYING_FRAME = 5  # flat on the ground
 
 
 @dataclass(frozen=True)
+class ShotPath:
+    """A projectile on its way to the monster: how far it starts from and how it moves."""
+
+    distance: float
+    flight: float
+    speed: float
+    gravity: float
+    width: float
+    height: float
+    sprite: str = ""
+    turns: bool = True  # it points where it flies
+
+    def rise(self, since):
+        """The height above the ground, ``since`` seconds after it left the hand."""
+        return CHEST_HEIGHT - 0.5 * self.gravity * since * since
+
+
+def shot_path(projectile):
+    """The farthest a shot can start from and still arrive: it flies at its real speed, so it is
+    never further than its speed and lifetime carry it, nor than its gravity lets it meet the
+    monster."""
+    speed = max(0.0, projectile.speed)
+    distance = min(THROW_DISTANCE, speed * max(0.0, projectile.lifetime))
+    if projectile.gravity:
+        distance = min(distance, speed * math.sqrt(2 * BODY_REACH / abs(projectile.gravity)))
+    return ShotPath(
+        distance,
+        distance / speed if speed else 0.0,
+        speed,
+        projectile.gravity,
+        projectile.width,
+        projectile.height,
+        projectile.sprite,
+        projectile.align_to_velocity,
+    )
+
+
+def carriers_of(attack, projectiles):
+    """The projectiles that apply this attack, by id: the first is the one the preview throws."""
+    return [
+        projectiles[key]
+        for key in sorted(projectiles)
+        if projectiles[key].attack_id == attack.attack_id
+    ]
+
+
+@dataclass(frozen=True)
 class HitPlan:
     hit_at: float
     freeze: float
@@ -77,6 +134,21 @@ class HitPlan:
     iframes: float
     push: float  # sideways speed; + is away from the swordsman
     lift: float  # upward speed
+    shot: ShotPath | None = None  # thrown, not swung
+
+    @property
+    def released_at(self):
+        """The shot leaves the hand."""
+        return self.hit_at - self.shot.flight
+
+    @property
+    def spacing(self):
+        """From the monster's frame to the attacker's."""
+        return REACH if self.shot is None else self.shot.distance + TARGET_CHEST - HAND
+
+    @property
+    def hit_height(self):
+        return CHEST_HEIGHT if self.shot is None else self.shot.rise(self.shot.flight)
 
     @property
     def moves_at(self):
@@ -104,15 +176,17 @@ class HitPlan:
         )
 
 
-def plan_for(attack):
+def plan_for(attack, projectile=None):
     """The numbers of a swordsman left of the monster, facing it: "away", "attacker_facing" and
     "fixed" all start from the right there and turn by the angle. The stage shows that scene turned
-    round, because the art swings from the top down when it faces left."""
+    round, because the art swings from the top down when it faces left. With a ``projectile`` the
+    blow lands when the shot arrives."""
+    shot = None if projectile is None else shot_path(projectile)
     angle = math.radians(attack.knockback_angle)
     down = (attack.knockdown_time or DOWN_TIME) if attack.knockdown else 0.0
     upward = attack.knockback_lift - math.sin(angle) * attack.knockback
     return HitPlan(
-        hit_at=LEAD + WINDUP,
+        hit_at=LEAD + (WINDUP if shot is None else THROW_WINDUP + shot.flight),
         freeze=max(0.0, attack.hitstop),
         stun=0.0 if down else max(0.0, attack.hitstun),  # a knock-down replaces the stun
         down=down,
@@ -120,6 +194,7 @@ def plan_for(attack):
         iframes=max(0.0, attack.target_iframes),
         push=math.cos(angle) * attack.knockback,
         lift=max(0.0, upward),
+        shot=shot,
     )
 
 
@@ -149,7 +224,19 @@ def _lunge(plan, t):
     return LUNGE * min(1.0, (end - t) / back)
 
 
+def _thrower_state(plan, t):
+    """Stands where it is: the hand goes up, the shot leaves, and a hit freezes it like anyone."""
+    if t >= plan.hit_at:
+        t = max(plan.hit_at, t - plan.freeze)
+    step = int((t - LEAD) / THROW_STEP)
+    if t < LEAD or step >= len(THROW_ORDER):
+        return Figure("idle", _idle_frame(t, 5))
+    return Figure("swing", THROW_ORDER[step])
+
+
 def attacker_state(plan, t):
+    if plan.shot is not None:
+        return _thrower_state(plan, t)
     x = _lunge(plan, t)
     if t < LEAD or t >= plan.moves_at + FOLLOW:
         return Figure("idle", _idle_frame(t, 5), x)
@@ -159,6 +246,17 @@ def attacker_state(plan, t):
         return Figure("swing", SWING_HIT_FRAME, x)  # held through the freeze
     step = int((t - plan.moves_at) / SWING_STEP)  # the slash still shows without a freeze
     return Figure("swing", SWING_ORDER[min(len(SWING_ORDER) - 1, SWING_HIT_STEP + step)], x)
+
+
+def shot_state(plan, t):
+    """(how far it has flown, its height, its angle in degrees as the stage draws it), or None
+    when no shot is in the air."""
+    if plan.shot is None or not plan.released_at <= t < plan.hit_at:
+        return None
+    since = t - plan.released_at
+    shot = plan.shot
+    angle = math.degrees(math.atan2(shot.gravity * since, -shot.speed)) if shot.turns else 0.0
+    return since * shot.speed, shot.rise(since), angle
 
 
 def target_state(plan, t):
@@ -311,6 +409,10 @@ class AttackPreview(_Preview):
         self.setMinimumHeight(320)
         self.formulas = {}
         self.names = {}  # what the chips call a stat or a resource
+        self.state_names = {}  # what the chips call a state
+        self.projectiles = {}  # the project's: an attack one of them carries is thrown
+        self.shot_picture = lambda _sprite: None  # a projectile's sprite, its first frame
+        self._shot_pictures = {}
         self.time = 0.0
         self._timer = QTimer(self)
         self._timer.setInterval(TICK_MS)
@@ -325,6 +427,10 @@ class AttackPreview(_Preview):
         row.addWidget(self.play_button)
         row.addWidget(self.slow_check)
         row.addStretch(1)
+
+    def _plan(self, attack):
+        carriers = carriers_of(attack, self.projectiles)
+        return plan_for(attack, carriers[0] if carriers else None)
 
     # -- playing ----------------------------------------------------------------------------------
     def show_record(self, record):
@@ -346,7 +452,7 @@ class AttackPreview(_Preview):
         if self.record is None:
             return
         speed = SLOW if self.slow_check.isChecked() else 1.0
-        self.seek((self.time + TICK_MS / 1000 * speed) % plan_for(self.record).total)
+        self.seek((self.time + TICK_MS / 1000 * speed) % self._plan(self.record).total)
 
     def _toggle_play(self):
         self.playing = not self.playing
@@ -382,11 +488,19 @@ class AttackPreview(_Preview):
 
     def _chips(self, attack, damage, reads_stats):
         chips = []
+        carriers = carriers_of(attack, self.projectiles)
+        if carriers:
+            names = ", ".join(shot.display_name or shot.projectile_id for shot in carriers)
+            chips.append((f"{translate('Projectile')}: {names}", QColor(255, 230, 150)))
         if reads_stats:
             chips.append((translate("Sample: every stat is 100"), QColor(170, 178, 196)))
-        plan = plan_for(attack)
-        if not damage and not self._nothing_happens(attack, plan, damage):
+        if not damage and not self._nothing_happens(attack, self._plan(attack), damage):
             chips.append((translate("No damage"), QColor(170, 178, 196)))
+        return chips + self._effect_chips(attack)
+
+    def _effect_chips(self, attack):
+        """A chip for each thing this hit does beyond what the stage plays."""
+        chips = []
         if attack.damage_resource:
             words = f"{translate('Lowers')} {self._name_of(attack.damage_resource)}"
             chips.append((words, QColor(255, 150, 150)))
@@ -408,6 +522,8 @@ class AttackPreview(_Preview):
         if attack.armor_break:
             words = f"{translate('Breaks armor')} ≤ {attack.armor_break}"
             chips.append((words, QColor(200, 140, 255)))
+        for entry in attack.apply_states:
+            chips.append((self._state_words(entry), QColor(235, 150, 220)))
         if attack.poise_damage:
             words = f"{translate('Poise')} −{attack.poise_damage:g}"
             chips.append((words, QColor(120, 200, 255)))
@@ -418,6 +534,15 @@ class AttackPreview(_Preview):
             words = ", ".join(tag_label(tag, self.names) for tag in attack.tags)
             chips.append((words, QColor(140, 220, 160)))
         return chips
+
+    def _state_words(self, entry):
+        """The state, its chance, and its time when the attack sets one (else the state's own)."""
+        name = self.state_names.get(entry["state"]) or entry["state"]
+        words = f"{name} {entry.get('chance', 1.0) * 100:g}%"
+        duration = entry.get("duration")
+        if duration is None:
+            return words
+        return f"{words} {translate('{0}s').format(f'{duration:g}')}"
 
     def _critical_words(self, attack):
         words = f"{translate('Crit')} {attack.critical_chance * 100:g}%"
@@ -478,13 +603,13 @@ class AttackPreview(_Preview):
     def _layout(self, attack):
         """Name, chips, stage, Pause, time line, one under the other. The figures scale by whole
         pixels; what's left of a tall panel stays below it all, not between."""
-        plan = plan_for(attack)
+        plan = self._plan(attack)
         damage, reads_stats = sample_damage(attack, self.formulas)
         placed, top = self._chip_rects(self._chips(attack, damage, reads_stats))
         controls = self.controls.sizeHint().height()
         below = 10 + controls + 10 + self._under_stage(attack, plan, damage) + 12
         left = TARGET_LEFT - max(0.0, plan.push_distance)
-        right = max(REACH + ATTACKER_RIGHT, TARGET_RIGHT - plan.push_distance)
+        right = max(plan.spacing + ATTACKER_RIGHT, TARGET_RIGHT - plan.push_distance)
         across = (self.width() - 24) / (right - left)
         up = (self.height() - top - below - 8) / (FEET + plan.peak)
         scale = max(1, min(4, math.floor(min(across, up))))
@@ -555,7 +680,7 @@ class AttackPreview(_Preview):
         if since < 0:
             return
         at = x + TARGET_CHEST * scale
-        high = ground - 22 * scale
+        high = ground - plan.hit_height * scale
         if since < max(plan.freeze, FLASH):
             grown = min(1.0, 0.4 + since / 0.06)
             painter.setPen(QPen(QColor(255, 240, 170), max(2.0, scale)))
@@ -577,6 +702,36 @@ class AttackPreview(_Preview):
             self._caption(painter, at + 1, y + 1, words, QColor(0, 0, 0), 15, True)
             self._caption(painter, at, y, words, QColor(255, 226, 120), 15, True)
             painter.setOpacity(1.0)
+
+    def _draw_shot(self, painter, plan, hand, ground, scale):
+        """The shot on its way: its sprite as it flies, else a small box of its size."""
+        state = shot_state(plan, self.time)
+        if state is None:
+            return
+        flown, height, angle = state
+        shot = plan.shot
+        painter.save()
+        painter.translate(hand - flown * scale, ground - height * scale)
+        painter.rotate(angle)
+        picture = self._shot_picture(shot.sprite)
+        if picture is None:
+            width, tall = max(2.0, shot.width * scale), max(2.0, shot.height * scale)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(255, 230, 150))
+            painter.drawRect(QRectF(-width / 2, -tall / 2, width, tall))
+        else:
+            width, tall = picture.width() * scale, picture.height() * scale
+            painter.drawPixmap(QRectF(-width / 2, -tall / 2, width, tall), picture, picture.rect())
+        painter.restore()
+
+    def _shot_picture(self, sprite):
+        if not sprite:
+            return None
+        if sprite not in self._shot_pictures:
+            picture = self.shot_picture(sprite)
+            usable = picture is not None and not picture.isNull()
+            self._shot_pictures[sprite] = picture if usable else None
+        return self._shot_pictures[sprite]
 
     def _draw_bars(self, painter, plan, top):
         rows = self._bar_rows(plan)
@@ -605,14 +760,9 @@ class AttackPreview(_Preview):
         painter.drawLine(QPointF(head, top - 4), QPointF(head, top + len(rows) * self.BAR_ROW - 4))
 
     def _nothing_happens(self, attack, plan, damage):
-        return not (plan.freeze or plan.stun or plan.down or plan.iframes or damage) and not (
-            attack.knockback or attack.knockback_lift
-        )
-
-    def _no_effect_words(self, damage):
-        if damage:
-            return "No push, stun or freeze: this hit only deals its damage."
-        return "No damage, push, stun or freeze: this hit does nothing yet."
+        """Nothing plays and no chip says what it does, so the words can't contradict the chips."""
+        moves = plan.freeze or plan.stun or plan.down or plan.iframes
+        return not (moves or damage or self._effect_chips(attack))
 
     def paintEvent(self, _event):  # noqa: N802 - Qt API
         painter = self._start()
@@ -620,7 +770,7 @@ class AttackPreview(_Preview):
         if attack is None:
             painter.end()
             return
-        plan = plan_for(attack)
+        plan = self._plan(attack)
         damage, _reads_stats = sample_damage(attack, self.formulas)
         layout = self._layout(attack)
         width = self.width()
@@ -633,10 +783,12 @@ class AttackPreview(_Preview):
         painter.setClipRect(QRectF(0, layout.top, width, ground + scale - layout.top))
         attacker = attacker_state(plan, self.time)
         target = target_state(plan, self.time)
-        self._draw_figure(painter, "attacker", attacker, origin + REACH * scale, ground, scale)
+        attacker_x = origin + plan.spacing * scale
+        self._draw_figure(painter, "attacker", attacker, attacker_x, ground, scale)
         self._draw_figure(
             painter, "target", target, origin, ground, scale, target_fade(plan, self.time)
         )
+        self._draw_shot(painter, plan, attacker_x + HAND * scale, ground, scale)
         self._draw_hit(painter, plan, origin - target.x * scale, ground, scale, damage)
         painter.setClipping(False)
         if self._nothing_happens(attack, plan, damage):
@@ -644,7 +796,7 @@ class AttackPreview(_Preview):
             painter.drawText(
                 QRectF(12, layout.bars, width - 24, self.WORDS_HEIGHT),
                 Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop,
-                translate(self._no_effect_words(damage)),
+                translate("No damage, push, stun or freeze: this hit does nothing yet."),
             )
         else:
             self._draw_bars(painter, plan, layout.bars)

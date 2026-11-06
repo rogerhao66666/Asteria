@@ -32,26 +32,36 @@ GAME_START_FORM: tuple[FormField, ...] = (
     ),
     F("player_facing", "Player Facing", "choice", choices=FACINGS, default="down"),
     F(
-        "position_x",
-        "Start X (unticked: the scene's spawn point)",
-        "optional_int",
+        "position",
+        "Start Position",
+        "optional_point",
         default=None,
         toggle_label="Set position",
-    ),
-    F(
-        "position_y",
-        "Start Y (unticked: the scene's spawn point)",
-        "optional_int",
-        default=None,
-        toggle_label="Set position",
+        help="Off: the player starts on the scene's spawn point.",
     ),
     F("party_actor_ids", "Party", "ref_list", source="actors", default=()),
     F("items", "Starting Items", "amounts", source="items", default={}),
     # D98: spare pieces in the equipment bag (worn gear is each hero's loadout)
-    F("gear", "Starting Gear (spare, in the bag)", "amounts", source="equipment", default={}),
+    F(
+        "gear",
+        "Starting Gear",
+        "amounts",
+        source="equipment",
+        default={},
+        help="Spare pieces in the bag. What a hero wears is set on that hero.",
+    ),
     F("currencies", "Starting Currencies", "amounts", default={}),
     F("pets", "Starting Pets", "table", fields=_PET, default=()),
-    F("active_pet", "Pet Sent Out First (1-based; 0: first pet)", "int", default=0),
+    F("active_pet", "Pet Sent Out First", "row_pick", source="pets", default=0),
+)
+# the page's cards: (title, icon, the fields in it); a card of one field is named after it
+GAME_START_CARDS = (
+    ("Starting Place", "flag", ("scene_id", "player_facing", "position")),
+    ("Party", "actor", ("party_actor_ids",)),
+    ("Starting Currencies", "chest", ("currencies",)),
+    ("Starting Items", "item", ("items",)),
+    ("Starting Gear", "armor", ("gear",)),
+    ("Starting Pets", "paw", ("pets", "active_pet")),
 )
 
 
@@ -124,11 +134,11 @@ class GameStartAuthoringController:
         active = state.get("active_pet_id", "")
         order = [p["instance_id"] for p in state.get("pets", ())]
         position = start.player_position
+        place = None if position is None else [position[0], position[1]]
         return {
             "scene_id": start.scene_id or "",
             "player_facing": start.player_facing,
-            "position_x": None if position is None else int(position[0]),
-            "position_y": None if position is None else int(position[1]),
+            "position": place,
             "party_actor_ids": list(state.get("party_actor_ids", ())),
             "items": items,
             "gear": _gear_counts(state.get("equipment_bag", ())),
@@ -191,8 +201,8 @@ class GameStartAuthoringController:
             index = int(data.get("active_pet", 0) or 0)
             chosen = pets[index - 1] if 1 <= index <= len(pets) else pets[0]
             state["active_pet_id"] = chosen["instance_id"]
-        x, y = data.get("position_x"), data.get("position_y")
-        position = None if x is None or y is None else (float(x), float(y))
+        place = data.get("position")
+        position = None if place is None else (float(place[0]), float(place[1]))
         return GameStartDefinition(
             str(data.get("scene_id", "")).strip() or None,
             old.player_entity_id,

@@ -170,14 +170,15 @@ def test_the_party_list_shows_names_and_the_position_toggle_says_what_it_does():
 
     QApplication.instance() or QApplication([])
     refs = {"actors": (("hero_01", "Aldric (hero_01)"), ("hero_02", "Mira (hero_02)"))}
-    fields = [f for f in GAME_START_FORM if f.key in ("party_actor_ids", "position_x")]
+    fields = [f for f in GAME_START_FORM if f.key in ("party_actor_ids", "position")]
     form = RecordForm(tuple(fields), lambda source: refs.get(source, ()))
-    form.set_data({"party_actor_ids": ["hero_02"], "position_x": 5})
+    form.set_data({"party_actor_ids": ["hero_02"], "position": [5, 7]})
     party = form.widgets["party_actor_ids"]  # chips: the names, picked from the actors
     assert party.values == ["hero_02"]
     assert party._labels["hero_02"].label == "Mira (hero_02)"
     assert form.data()["party_actor_ids"] == ["hero_02"]
-    assert form.widgets["position_x"].check.text() == "Set position"
+    assert form.widgets["position"].check.text() == "Set position"
+    assert form.data()["position"] == [5, 7]
 
 
 def test_cameras_follow_the_player_and_the_players_place_is_the_start():
@@ -253,3 +254,24 @@ def test_every_party_demo_scene_has_a_camera_on_the_hero():
                 folder,
                 scene["name"],
             )
+
+
+def test_the_tool_bar_s_overflow_button_does_not_use_a_system_symbol():
+    """Painting Qt's own (``chevron.forward.2``) took the editor down on macOS 27 as soon as the
+    window was too narrow for the tool bar."""
+    from PySide6.QtWidgets import QApplication, QToolBar, QToolButton
+
+    from asteria.editor.shell import AsteriaEditorWindow
+
+    app = QApplication.instance() or QApplication([])
+    window = AsteriaEditorWindow(None)
+    window.resize(600, 500)
+    window.show()
+    app.processEvents()
+    bar = window.findChild(QToolBar, "AsteriaRunToolbar")
+    button = bar.findChild(QToolButton, "qt_toolbar_ext_button")
+    assert not button.icon().isNull()
+    assert button.icon().name() == ""  # a name here is a system symbol
+    window.grab()
+    assert button.icon().name() == ""
+    window.close()

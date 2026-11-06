@@ -14,7 +14,19 @@ REPO = Path(__file__).resolve().parents[1]
 EXT = (".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp")
 # names that suggest a picture; the kinds below are not a path (sizes, styles, groups)
 LOOKS_LIKE = re.compile(r"image|icon|portrait|picture|sprite|background|banner|cursor|sheet")
-NOT_A_PATH = {"id", "int", "float", "bool", "choice", "group", "table", "optional_int", "amounts"}
+NOT_A_PATH = {
+    "optional_point",
+    "row_pick",
+    "id",
+    "int",
+    "float",
+    "bool",
+    "choice",
+    "group",
+    "table",
+    "optional_int",
+    "amounts",
+}
 # keys that hold pictures but are edited elsewhere, each with its own chooser
 ELSEWHERE = {
     "uri": "an imported asset's file (Assets panel ▸ Import)",

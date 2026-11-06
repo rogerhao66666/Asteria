@@ -1119,7 +1119,9 @@ class AdapterFamilyWidget(QWidget):
                     data = None
                 name = record_title(self.category_id, data, self.editor.vocabulary, key)
             if name:  # the name only; the internal id is in the filter
-                item.setText(name)
+                from .i18n import translate
+
+                item.setText(translate(name))  # a list item is drawn as given
             item.setData(Qt.UserRole, key)
             icon_id = getattr(record, "icon_id", "")
             icon = icon_for(icon_id) if icon_for and icon_id else None
@@ -1156,6 +1158,13 @@ class AdapterFamilyWidget(QWidget):
         if isinstance(found, _EncodeFailed):
             raise found.error
         return found
+
+    def _name_has(self, key, needle):
+        """Whether the filter finds ``needle`` in the record's name, as written or as shown."""
+        from .i18n import translate
+
+        name = self._display_name(key)
+        return needle in name.lower() or needle in translate(name).lower()
 
     def _display_name(self, key):
         try:
@@ -1228,7 +1237,7 @@ class AdapterFamilyWidget(QWidget):
             [
                 key
                 for key in adapter.ids()
-                if not needle or needle in key.lower() or needle in self._display_name(key).lower()
+                if not needle or needle in key.lower() or self._name_has(key, needle)
             ]
         )
         self.browser.addItems(self._ids)

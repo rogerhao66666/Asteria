@@ -216,6 +216,27 @@ def menu_tags(project):
     return sorted(found)
 
 
+def project_words(project, language):
+    """``{english: text}`` of the project's data in the editor ``language`` (``zh_TW``), from the
+    locale table of that language (``zh-TW``); empty when it has none."""
+    tables = getattr(getattr(project, "rpg_database", None), "locale_tables", None) or {}
+    wanted = str(language).replace("_", "-").lower()
+    table = next((t for name, t in tables.items() if str(name).lower() == wanted), None)
+    if table is None:
+        return {}
+    found = {}
+    for title, rows in data_groups(project):
+        if title.startswith("Data:"):
+            for row_key, english in rows:
+                text = table.get(row_key)
+                if text and english:
+                    found.setdefault(str(english), str(text))
+                    if row_key.startswith("data.currency."):  # its id: shown in words
+                        found.setdefault(words(str(english)), str(text))
+                        found.setdefault(str(english).replace("_", " ").title(), str(text))
+    return found
+
+
 def data_groups(project):
     """``[(title, [(key, english)])]`` of the project's own data, groups without rows left
     out."""

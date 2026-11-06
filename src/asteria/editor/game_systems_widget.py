@@ -229,6 +229,56 @@ class _PauseOrder(QWidget):
             item.setCheckState(Qt.Checked)
 
 
+# what stands beside a record with no picture of its own, in a list that has pictures
+_NO_PICTURE = {"items": "item", "equipment": "armor"}
+
+
+class _OptionalPoint(QWidget):
+    """A place, or none: one switch, then its X and its Y side by side."""
+
+    def __init__(self, toggle_label):
+        super().__init__()
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(12)
+        self.check = QCheckBox(toggle_label)
+        self.check.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        row.addWidget(self.check)
+        self._written = None
+        self.x, self.y = QSpinBox(), QSpinBox()
+        for spin, prefix in ((self.x, "X  "), (self.y, "Y  ")):
+            spin.setRange(-_BIG, _BIG)
+            spin.setPrefix(prefix)
+            spin.setFixedWidth(120)
+            spin.setEnabled(False)
+            self.check.toggled.connect(spin.setEnabled)
+            row.addWidget(spin)
+        row.addStretch(1)
+
+    def set_value(self, value):
+        self.check.setChecked(value is not None)
+        x, y = value if value is not None else (0, 0)
+        self.x.setValue(int(x))
+        self.y.setValue(int(y))
+        self._written = None if value is None else (x, y)
+
+    def show_unset(self, place):
+        """While the switch is off the boxes show ``place``, and it is where they start from."""
+        for spin, number in zip((self.x, self.y), place or (0, 0), strict=True):
+            spin.blockSignals(True)
+            spin.setValue(int(number))
+            spin.blockSignals(False)
+
+    def value(self):
+        if not self.check.isChecked():
+            return None
+        x, y = self.x.value(), self.y.value()
+        written = self._written  # 64.5 stays 64.5 until the boxes change
+        if written is not None and (int(written[0]), int(written[1])) == (x, y):
+            return list(written)
+        return [x, y]
+
+
 class _TableField(QGroupBox):
     """Master–detail editor for a list of nested records."""
 
@@ -957,7 +1007,15 @@ class RecordForm(QWidget):
                     aside=aside if f.key == "description" else None,
                     # tables and long text (a translation, a description) take a whole row
                     span=f.kind
-                    in ("amounts", "pairs", "ref_list", "string_list", "multiline", "info")
+                    in (
+                        "amounts",
+                        "pairs",
+                        "ref_list",
+                        "string_list",
+                        "multiline",
+                        "info",
+                        "optional_point",
+                    )
                     or f.kind == "formula"
                     or f.kind == "pause_order"
                     or f.key in ("text", "description", "message", "detail"),
@@ -968,6 +1026,39 @@ class RecordForm(QWidget):
             if isinstance(control, QComboBox):
                 control.currentIndexChanged.connect(self._show_when)
         self._show_when()
+        for f in self.fields:
+            if f.kind == "row_pick":
+                table = self.widgets[f.source]
+                table.changed.connect(lambda field=f: self._fill_row_pick(field))
+                self._fill_row_pick(f)
+
+    def _fill_row_pick(self, f):
+        """The rows of the table ``f.source`` as a drop-down, kept on the row it was on; with one
+        row or none there is nothing to choose, and it takes no room."""
+        box = self.widgets[f.key]
+        table_field = next(x for x in self.fields if x.key == f.source)
+        first = table_field.fields[0]
+        names = {c.value: c.label for c in self._reference_choices(first)}
+        rows = self.widgets[f.source].values()
+        current = box.currentData() or 0
+        with QSignalBlocker(box):
+            box.clear()
+            for number, row in enumerate(rows, 1):
+                value = str(row.get(first.key, ""))
+                name = str(row.get("nickname") or "") or names.get(value, value)
+                box.addItem(f"{number}. {name}", number)
+            at = box.findData(current)
+            box.setCurrentIndex(at if at >= 0 else 0)
+        self._grids[f.key].set_shown(self._rows[f.key], len(rows) > 1)
+
+    def _record_icon(self, icon_id):
+        """The picture of a record on this form's lists, cached."""
+        from .record_form import load_record_icon
+
+        cache = self.__dict__.setdefault("_record_icons", {})
+        if icon_id not in cache:
+            cache[icon_id] = load_record_icon(self.document, icon_id)
+        return cache[icon_id]
 
     def _show_when(self, *_args):
         """Show only the fields whose ``when`` the record's values meet (D96: a menu block
@@ -1005,10 +1096,15 @@ class RecordForm(QWidget):
             "translations": "changed",
             "formula": "edited",
             "rgb": "edited",
+            "row_pick": "currentIndexChanged",
         }
         if f.kind == "optional_int":
             widget.check.toggled.connect(self._edited)
             widget.spin.valueChanged.connect(self._edited)
+        elif f.kind == "optional_point":
+            widget.check.toggled.connect(self._edited)
+            widget.x.valueChanged.connect(self._edited)
+            widget.y.valueChanged.connect(self._edited)
         elif f.kind == "pairs":
             widget.table.itemChanged.connect(self._edited)
         elif f.kind == "group":
@@ -1230,12 +1326,23 @@ class RecordForm(QWidget):
             row.addWidget(box.check)
             row.addWidget(box.spin, 1)
             return box
+        if f.kind == "optional_point":
+            return _OptionalPoint(f.toggle_label)
+        if f.kind == "row_pick":
+            return QComboBox()
         if f.kind == "pause_order":
             return _PauseOrder(self.references(f.source))
         if f.kind == "ref_list":
             from .record_form import ChipList
 
-            return ChipList((), self._reference_choices(f), allow_new=False, noun=self._noun(f))
+            pictures = self._record_icon if self.document is not None else None
+            return ChipList(
+                (),
+                self._reference_choices(f),
+                icons=pictures,
+                allow_new=False,
+                noun=self._noun(f),
+            )
         if f.kind == "string_list":
             from .record_form import ChipList
             from .record_vocabulary import Choice, is_tag_field, tag_label
@@ -1255,7 +1362,14 @@ class RecordForm(QWidget):
         if f.kind == "amounts":
             from .record_form import AmountTable
 
-            return AmountTable({}, self._reference_choices(f), noun=self._noun(f))
+            pictures = self._record_icon if self.document is not None else None
+            return AmountTable(
+                {},
+                self._reference_choices(f),
+                noun=self._noun(f),
+                icons=pictures,
+                no_picture=_NO_PICTURE.get(f.source, ""),
+            )
         if f.kind == "pairs":
             return _KeyValueTable(("Threshold", "Name"))
         if f.kind == "group" and all(g.kind == "bool" for g in f.fields):
@@ -1316,6 +1430,12 @@ class RecordForm(QWidget):
                 if widget.findData(text) < 0:  # a reference that no longer exists stays visible
                     widget.addItem(f"{text} (missing)", text)
                 widget.setCurrentIndex(widget.findData(text))
+            elif f.kind == "optional_point":
+                widget.set_value(value)
+            elif f.kind == "row_pick":
+                self._fill_row_pick(f)
+                at = widget.findData(int(value or 0))
+                widget.setCurrentIndex(at if at >= 0 else 0)
             elif f.kind == "optional_int":
                 widget.check.setChecked(value is not None)
                 widget.spin.setEnabled(value is not None)
@@ -1365,6 +1485,10 @@ class RecordForm(QWidget):
                 out[f.key] = widget.currentText() if value is None else str(value)
             elif f.kind == "optional_int":
                 out[f.key] = widget.spin.value() if widget.check.isChecked() else None
+            elif f.kind == "optional_point":
+                out[f.key] = widget.value()
+            elif f.kind == "row_pick":
+                out[f.key] = int(widget.currentData() or 0)
             elif f.kind in ("ref_list", "string_list"):
                 out[f.key] = list(widget.values)
             elif f.kind == "pause_order":
@@ -1614,7 +1738,7 @@ class GameSystemsEditorWidget(QWidget):
 
         names = vocabulary_for(self.controller.document).names()
         for key in ids:  # the record's name; its id is the row's data
-            item = QListWidgetItem(self._record_name(key, names))
+            item = QListWidgetItem(translate(self._record_name(key, names)))
             item.setData(Qt.UserRole, key)
             self.browser.addItem(item)
         self.browser.blockSignals(False)

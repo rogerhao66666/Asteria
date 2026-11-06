@@ -13,6 +13,7 @@ affix count, an affix's value range across item levels. Apply records the edit a
 from __future__ import annotations
 
 import math
+from functools import partial
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPainterPath, QPen
@@ -47,6 +48,7 @@ from .attack_preview import AttackPreview, _Preview
 from .combat_authoring import KINDS, CombatAuthoringController, CombatAuthoringError
 from .i18n import translate
 from .icons import icon
+from .record_pictures import sprite_sheet_pixmap
 from .record_vocabulary import words
 from .responsive_form import ResponsiveForm
 from .ui_fit import ValueCombo, WordCombo
@@ -1336,8 +1338,12 @@ class CombatWorkspace(QWidget):
         self.status.style().unpolish(self.status)
         self.status.style().polish(self.status)
         if isinstance(self.preview, AttackPreview) and self.document.project:
-            self.preview.formulas = self.document.project.gameplay_library.formulas
+            library = self.document.project.gameplay_library
+            self.preview.formulas = library.formulas
+            self.preview.projectiles = library.projectiles
+            self.preview.shot_picture = partial(sprite_sheet_pixmap, self.document)
             self.preview.names = dict(self.api.pairs("stats")) | dict(self.api.pairs("resources"))
+            self.preview.state_names = dict(self.api.pairs("states"))
         if isinstance(self.preview, ProjectilePreview):
             self.preview.attack_names = dict(self.api.pairs("attack"))
         if isinstance(self.preview, RarityPreview):

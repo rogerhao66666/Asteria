@@ -503,4 +503,10 @@ def test_pause_sits_right_under_the_stage_with_room_around_it():
             assert (
                 layout.bars + len(preview._bar_rows(plan_for(attack))) * preview.BAR_ROW <= height
             )
+    # a throw needs a wider stage, and its controls follow as soon as the record is shown again
+    swung = preview._layout(_hit()).scale
+    preview.projectiles = {"s": ProjectileDefinition("s", attack_id="hit", speed=220.0)}
+    assert preview._layout(_hit()).scale < swung
+    preview.show_record(_hit())
+    assert preview.controls.geometry().top() == round(preview._layout(_hit()).ground + 10)
     preview.close()

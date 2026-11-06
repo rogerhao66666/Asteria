@@ -636,6 +636,11 @@ def _dialogue(p, c):
     p.drawPath(path)
 
 
+def _overflow(p, _c):  # more of a tool bar than fits: two chevrons
+    for x in (6, 12):
+        p.drawPolyline([QPointF(x, 6), QPointF(x + 6, 12), QPointF(x, 18)])
+
+
 def _flag(p, c):  # game start: a flag on a pole
     p.drawLine(QPointF(6, 3.5), QPointF(6, 21))
     path = QPainterPath(QPointF(6, 4.5))
@@ -806,6 +811,7 @@ def _hand_icon(p, c):  # an open hand (interactions)
 
 DRAWINGS = {
     "flag": _flag,
+    "overflow": _overflow,
     "paw": _paw,
     "gauge": _gauge,
     "scene": _scene,

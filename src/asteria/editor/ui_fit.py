@@ -82,9 +82,11 @@ class _ViewWidthDelegate(QStyledItemDelegate):
 def fill_named(listing, ids, namer):
     """Fill a record list with names in words (``namer(id)``); each row keeps its id as its
     data, so the list reads like the game while the editor works on ids."""
+    from .i18n import translate
+
     listing.clear()
     for key in ids:
-        item = QListWidgetItem(namer(key) or str(key))
+        item = QListWidgetItem(translate(namer(key) or str(key)))  # drawn as given
         item.setData(Qt.UserRole, key)
         listing.addItem(item)
 

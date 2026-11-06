@@ -54,6 +54,7 @@ from asteria.rpg.enemy_ai import CONDITION_PARAMS
 
 from .decor import hide_help_tip, show_help_tip
 from .i18n import english, translate
+from .icons import icon as editor_icon
 from .image_tools import picture_field
 from .record_vocabulary import (
     AI_ACTION_HELP,
@@ -135,9 +136,10 @@ RECORD_LISTS = set(_LIST_TEMPLATES) | {
 def _choice_text(choice, repeated=()):
     """A choice as players read it: its name only; a name two
     choices share carries the id too, so they can be told apart."""
+    shown = translate(choice.label)  # a list item is drawn as given
     if choice.label in repeated and choice.label != choice.value:
-        return f"{choice.label}  ({choice.value})"
-    return choice.label
+        return f"{shown}  ({choice.value})"
+    return shown
 
 
 def _repeated(choices):
@@ -789,20 +791,50 @@ class ChipList(QWidget):
         self.edited.emit()
 
 
+def load_record_icon(document, icon_id):
+    """A QIcon for an icon id (a project picture or ``forged:<kind>``); None if it can't load."""
+    try:
+        if icon_id.startswith("forged:"):
+            from .image_tools import forged_qicon
+
+            return forged_qicon(icon_id)
+        from .image_tools import project_root
+
+        path = Path(icon_id)
+        if not path.is_absolute() and document is not None:
+            path = project_root(document) / path
+        pixmap = QPixmap(str(path))
+        if not pixmap.isNull():
+            return QIcon(pixmap.scaled(24, 24, Qt.KeepAspectRatio, Qt.FastTransformation))
+    except Exception:  # noqa: BLE001 - a missing picture shows no icon
+        pass
+    return None
+
+
 class AmountTable(QWidget):
-    """``{name: number}``: one row per name (picked from a list) with its number."""
+    """``{name: number}``: one row per name (picked from a list) with its number. The pairs stand
+    in even columns, as many as hold the longest name whole."""
 
     edited = Signal()
+    NUMBER_WIDTH = 84
+    REMOVE_WIDTH = 24
+    PICTURE = 20
+    SPACING = 8
+    GAP = 20  # between one pair and the next
+    LEAST_WRAPPED_NAME = 110  # narrower than this, two pairs a row are worse than one
+    FIND_FROM = 13  # a list this long can be searched
 
-    def __init__(self, values, choices, *, percent=False, noun="stat"):
+    def __init__(self, values, choices, *, percent=False, noun="stat", icons=None, no_picture=""):
         super().__init__()
         self.values = dict(values)
         self.choices = tuple(choices)
         self.percent = percent
         self.noun = noun
+        self.icons = icons
+        self.no_picture = no_picture  # the name of an editor icon
         self.grid = QGridLayout()
         self.grid.setContentsMargins(0, 0, 0, 0)
-        self.grid.setHorizontalSpacing(8)
+        self.grid.setHorizontalSpacing(self.SPACING)
         self.grid.setVerticalSpacing(4)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -810,22 +842,107 @@ class AmountTable(QWidget):
         add = QPushButton(f"+ Add {noun}")
         add.setObjectName("FormAddButton")
         add.clicked.connect(self._add)
+        self.find = QLineEdit()
+        self.find.setPlaceholderText("Find…")
+        self.find.setClearButtonEnabled(True)
+        self.find.setFixedWidth(180)
+        self.find.textChanged.connect(lambda _text: self._build())
         row = QHBoxLayout()
         row.addWidget(add)
+        row.addWidget(self.find)
         row.addStretch(1)
         layout.addLayout(row)
         self._labels = {c.value: c.label for c in self.choices}
+        self._pictures = {c.value: c.icon for c in self.choices}
         self.per_row = 2  # name / number pairs on a row: as many as the width holds
+        self.name_width = self.least_name_width = 72  # a page may line up several tables
+        self._probe = QLabel(self)
+        self._probe.hide()
         self._build()
 
-    PAIR_MIN = 230  # a pair's width at the least: its name, its number, ✕ and the gap
+    def _pair_rest(self):
+        """A pair's width but for its name: its number, ✕, the gap and the spaces between."""
+        return self.NUMBER_WIDTH + self.REMOVE_WIDTH + self.GAP + 4 * self.SPACING
+
+    def _arrange(self, width):
+        """``(pairs a row, name width)`` at ``width``: every name whole on one line and as many
+        pairs as that leaves room for (a wide page: 3, 4… not half of it empty). A narrow one
+        wraps its names to keep two pairs a row, while the longest word still fits; failing
+        that one pair a row, and a name longer than the row wraps too."""
+        whole = max(self.least_name_width, self.wanted_name_width())
+        per_row = max(1, min(6, (width + self.GAP) // (whole + self._pair_rest())))
+        if per_row > 1:
+            return per_row, whole
+        wrapped = (width + self.GAP) // 2 - self._pair_rest()
+        if wrapped >= max(self.LEAST_WRAPPED_NAME, self._widest_word()):
+            return 2, wrapped  # a list of one too: its column lines up with the other lists'
+        return 1, max(72, min(whole, width - self._pair_rest() + self.GAP))
 
     def resizeEvent(self, event):  # noqa: N802 - Qt API
         super().resizeEvent(event)
-        per_row = max(2, min(6, event.size().width() // self.PAIR_MIN))
-        if per_row != self.per_row and len(self.values) > 2:
-            self.per_row = per_row  # a wide page: 3, 4… pairs a row, not half of it empty
+        if self._arrange(event.size().width()) != (self.per_row, self.name_width):
             self._build()
+
+    def wanted_name_width(self):
+        """How wide this table's longest name is, whatever the others ask of it."""
+        return max([72, *(self._wanted(key) for key in self.values)])
+
+    def _name(self, key):
+        return self._labels.get(key) or label_for(key)
+
+    def _wanted(self, key):
+        """How wide a row's name is as shown, with room for a picture (measured with the labels'
+        own themed font). A language switch builds the page again."""
+        self._probe.ensurePolished()
+        width = self._probe.fontMetrics().horizontalAdvance(translate(self._name(key)))
+        return width + 4 + self._picture_room()
+
+    def _picture_room(self):
+        return self.PICTURE + 6 if self._any_picture() else 0
+
+    def _widest_word(self):
+        """The room a wrapped name needs at least (a line breaks between words, or anywhere in
+        Chinese): English words only."""
+        self._probe.ensurePolished()
+        metrics = self._probe.fontMetrics()
+        words = (word for key in self.values for word in translate(self._name(key)).split())
+        return max(
+            (metrics.horizontalAdvance(word) for word in words if word.isascii()), default=0
+        ) + 4 + self._picture_room()  # fmt: skip
+
+    def _any_picture(self):
+        return any(self._picture(key) is not None for key in self.values)
+
+    def _picture(self, key):
+        """The QIcon of what this row names, or None."""
+        path = self._pictures.get(key)
+        return self.icons(path) if self.icons and path else None
+
+    def _name_cell(self, key):
+        """The row's name; when the list has pictures, its own beside it (or, for a record with
+        none, the picture of its kind, so the names of a column start level)."""
+        name = QLabel(self._name(key))
+        if self._wanted(key) > self.name_width:
+            name.setWordWrap(True)
+            name.ensurePolished()
+            room = self.name_width - self._picture_room()
+            name.setMinimumHeight(name.heightForWidth(room))  # every line of it, in any layout
+        if not self._any_picture():
+            return name
+        cell = QWidget()
+        row = QHBoxLayout(cell)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)
+        mark = QLabel()
+        mark.setFixedSize(self.PICTURE, self.PICTURE)
+        picture = self._picture(key)
+        if picture is None and self.no_picture:
+            picture = editor_icon(self.no_picture, "#6c7080")
+        if picture is not None:
+            mark.setPixmap(picture.pixmap(self.PICTURE, self.PICTURE))
+        row.addWidget(mark)
+        row.addWidget(name, 1)
+        return cell
 
     def _build(self):
         while self.grid.count():
@@ -837,22 +954,28 @@ class AmountTable(QWidget):
             self.grid.addWidget(_small(f"No {_plural(self.noun)} yet."), 0, 0)
         order = {c.value: i for i, c in enumerate(self.choices)}
         ordered = sorted(self.values.items(), key=lambda kv: (order.get(kv[0], 1e9), kv[0]))
+        # one width for every name: the columns line up, and no name is ever cut
+        self.name_width = max(self.least_name_width, self.wanted_name_width())
+        if self.testAttribute(Qt.WA_Resized):  # a longer name may need fewer pairs a row
+            self.per_row, self.name_width = self._arrange(self.width())
+        self.find.setVisible(len(self.values) >= self.FIND_FROM)
+        sought = self.find.text().strip().casefold() if self.find.isVisibleTo(self) else ""
+        if sought:
+            ordered = [kv for kv in ordered if self._is_sought(kv[0], sought)]
         for index, (key, value) in enumerate(ordered):
             row, column = divmod(index, self.per_row)
             column *= 4
-            name = QLabel(self._labels.get(key) or label_for(key))
-            name.setToolTip(key)
-            text_width = name.fontMetrics().horizontalAdvance(name.text()) + 10
-            name.setMinimumWidth(min(220, max(72, text_width)))  # long names are not cut
+            name = self._name_cell(key)
+            name.setFixedWidth(self.name_width)
             box = NumberBox(value, integer=isinstance(value, int), percent=self.percent)
-            box.setMaximumWidth(100)
+            box.setFixedWidth(self.NUMBER_WIDTH)
             box.valueChanged.connect(lambda _v, k=key, b=box: self._set(k, b.number()))
             remove = QToolButton()
             remove.setText("✕")
             box.ensurePolished()  # the themed height, not the system one
             # as tall as the box: a taller ✕ made the row a pixel taller than the box, its
             # name then stood half a pixel below the box's number
-            remove.setFixedHeight(box.sizeHint().height())
+            remove.setFixedSize(self.REMOVE_WIDTH, box.sizeHint().height())
             remove.setToolTip(f"Remove {self._labels.get(key, key)}")
             remove.clicked.connect(lambda _c=False, k=key: self._remove(k))
             self.grid.addWidget(name, row, column)
@@ -860,7 +983,8 @@ class AmountTable(QWidget):
             self.grid.addWidget(remove, row, column + 2)
         for column in range(4 * 6):
             self.grid.setColumnStretch(column, 0)
-            self.grid.setColumnMinimumWidth(column, 32 if column % 4 == 3 else 0)
+            between = column % 4 == 3 and column < 4 * self.per_row - 1
+            self.grid.setColumnMinimumWidth(column, self.GAP if between else 0)
         self.grid.setColumnStretch(4 * self.per_row - 1, 1)
         from .ui_fit import layout_widgets  # not itemAt: see layout_widgets
 
@@ -870,6 +994,10 @@ class AmountTable(QWidget):
         self.grid.invalidate()
         self.layout().invalidate()
         self.setMinimumHeight(self.layout().sizeHint().height())
+
+    def _is_sought(self, key, sought):
+        name = self._name(key)
+        return sought in name.casefold() or sought in translate(name).casefold()
 
     def _set(self, key, value):
         self.values[key] = value
@@ -2134,27 +2262,9 @@ class RecordForm(QScrollArea):
         """A QIcon for an icon id (a project picture or ``forged:<kind>``), cached."""
         if not icon_id:
             return None
-        if icon_id in self._icons:
-            return self._icons[icon_id]
-        icon = None
-        try:
-            if icon_id.startswith("forged:"):
-                from .image_tools import forged_qicon
-
-                icon = forged_qicon(icon_id)
-            else:
-                from .image_tools import project_root
-
-                path = Path(icon_id)
-                if not path.is_absolute() and self.document is not None:
-                    path = project_root(self.document) / path
-                pixmap = QPixmap(str(path))
-                if not pixmap.isNull():
-                    icon = QIcon(pixmap.scaled(24, 24, Qt.KeepAspectRatio, Qt.FastTransformation))
-        except Exception:  # noqa: BLE001 - a missing picture shows no icon
-            icon = None
-        self._icons[icon_id] = icon
-        return icon
+        if icon_id not in self._icons:
+            self._icons[icon_id] = load_record_icon(self.document, icon_id)
+        return self._icons[icon_id]
 
     _STAND_INS = {"@source": "The User", "@target": "The Target", "@actor": "The User"}
 

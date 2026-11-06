@@ -27,7 +27,7 @@ from .event_editing import (
 from .event_editor_widget import EventEditorWidget
 from .game_flow_overview_widget import GameFlowOverviewWidget
 from .hierarchy import build_reorder_entity_command
-from .i18n import english
+from .i18n import english, use_project
 from .icons import icon as workspace_icon
 from .icons import switch_icon
 from .inspector import build_inspector_fields
@@ -170,12 +170,27 @@ _WORKSPACE_ICON = {
 }
 
 
+def draw_overflow_buttons(*bars):
+    """Give a bar's "more than fits" button a picture of ours. Qt's own is a system symbol that
+    takes the whole editor down on macOS 27 when it is first painted, the moment the window is
+    too narrow for the tool bar."""
+    from PySide6.QtWidgets import QToolButton
+
+    from .icons import icon
+
+    for bar in bars:
+        for button in bar.findChildren(QToolButton):
+            if button.objectName() in ("qt_toolbar_ext_button", "qt_menubar_ext_button"):
+                button.setIcon(icon("overflow", "#c8cbd6"))
+
+
 class AsteriaEditorWindow(QMainWindow):
     def __init__(self, project=None, component_registry=None):
         if QApplication is None:
             raise RuntimeError("PySide6 is required for Asteria Editor")
         super().__init__()
         self.document = EditorDocument(project, component_registry=component_registry)
+        use_project(self.document.project)  # its own words, before the first page is built
         self.play_session = None
         self.runtime_process = None
         self.runtime_monitor = QTimer(self)
@@ -1297,6 +1312,7 @@ class AsteriaEditorWindow(QMainWindow):
             button.setObjectName(name)
             button.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.addToolBar(Qt.TopToolBarArea, toolbar)
+        draw_overflow_buttons(toolbar, self.menuBar())
         self._refresh_actions()
 
     def show_controls(self):
@@ -1932,6 +1948,7 @@ class AsteriaEditorWindow(QMainWindow):
 
     def refresh_all(self):
         project = getattr(self.document, "project", None)
+        use_project(project)  # a renamed record, a new translation: read when next shown
         database = getattr(project, "rpg_database", None)
         if database is not None and set(database.doodads) != set(self.tile_palette._doodads):
             self.tile_palette.set_doodads(database.doodads)
