@@ -179,6 +179,85 @@ def test_battle_only_states_are_not_kept_on_the_creature(monkeypatch):
     assert game.pet_of_member(me).states == ["sore"]
 
 
+def test_a_state_can_make_the_member_hit_itself_and_hold_it_on_the_stage(monkeypatch):
+    from asteria.gameplay import StateDefinition
+
+    policy = BattleStatePolicy(
+        "dazed",
+        tick_trigger="rpg.battle.turn_ready",
+        prevent_chance=1.0,
+        prevent_resource="vitality",
+        prevent_amount="-3",
+        battle_only=True,
+    )
+    assert BattleStatePolicy.from_data(policy.to_data()) == policy
+    game = _creature_battle(monkeypatch)
+    db, library = game.project.rpg_database, game.project.gameplay_library
+    library.add_state(StateDefinition("dazed", 99.0))
+    library.add_state(StateDefinition("held", 99.0))
+    db.add_battle_state_policy(policy)
+    db.add_battle_state_policy(BattleStatePolicy("held", blocks_leaving=True, battle_only=True))
+    battle = game.start_encounter("wild_cubs")
+    me, foe = game.stage_ids("heroes")[0], game.stage_ids("enemies")[0]
+    subject = battle.member(me).subject
+    subject.states.apply("dazed")
+    before = subject.resources.current("vitality")
+    battle.battle_states.apply_trigger("rpg.battle.turn_ready", (battle.member(me),))
+    assert subject.resources.current("vitality") == before - 3
+    assert not battle.battle_states.ability_availability(subject, ()).allowed
+    assert "state_turn" in [entry.kind for entry in game.drain_battle_log()]
+
+    subject.states.apply("held", source_id=foe)
+    assert game.held_on_stage(me) == ("held",)
+    assert game.escape_unavailable()
+    battle.member(foe).subject.resources.set_current("vitality", 0.0)
+    battle.incapacitate(foe)
+    assert game.held_on_stage(me) == ()  # whoever held it is down
+
+
+def test_weather_counts_down_hurts_and_fails_when_it_is_on_already(monkeypatch):
+    game = _creature_battle(monkeypatch)
+    battle = game.start_encounter("wild_cubs")
+    me = game.stage_ids("heroes")[0]
+    subject = battle.member(me).subject
+    game.drain_battle_log()
+    game.set_battle_weather("sand", turns=2)
+    assert subject.tags.contains("weather.sand")
+    game.set_battle_weather("sand", turns=5)
+    kinds = [entry.kind for entry in game.drain_battle_log()]
+    assert kinds == ["weather_set", "weather_failed"]
+    rules = {"sand": {"hurt_share": 16}}
+    before = subject.resources.current("vitality")
+    game.weather_round(rules)
+    hurt = max(1, subject.resources.maximum("vitality") // 16)
+    assert subject.resources.current("vitality") == before - hurt
+    assert game.battle_weather()[0] == "sand"
+    game.weather_round(rules)
+    assert game.battle_weather() is None and not subject.tags.contains("weather.sand")
+    log = game.drain_battle_log()
+    assert log[-1].kind == "weather_line" and log[-1].data["moment"] == "ended"
+
+
+def test_trained_foes_score_their_moves(monkeypatch):
+    from asteria.rpg.move_choice import choose_move, move_rules_of, score_moves
+
+    assert move_rules_of(("no_capture", "move_ai.finish", "move_ai.avoid_useless")) == (
+        "avoid_useless",
+        "finish",
+    )
+    assert move_rules_of(("no_capture",)) == ()
+    game = _creature_battle(monkeypatch)
+    battle = game.start_encounter("wild_cubs")
+    me, foe = game.stage_ids("heroes")[0], game.stage_ids("enemies")[0]
+    usable = ("pet_shot", "quick_shot")
+    battle.set_member_abilities(foe, usable)
+    target = battle.member(me).subject
+    target.resources.set_current("vitality", 1.0)
+    scores = score_moves(game, foe, usable, me, ("finish",))
+    assert scores == {"pet_shot": 104, "quick_shot": 106}  # a knock-out; with priority, more
+    assert choose_move(game, foe, usable, me, ("finish",)) == "quick_shot"
+
+
 def test_line_of_sight_needs_a_clear_straight_line_ahead():
     clear = lambda cell: False  # noqa: E731
     assert line_of_sight(3, "down", (5, 5), (5, 8), clear) == [(5, 6), (5, 7)]

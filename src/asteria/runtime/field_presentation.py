@@ -2,7 +2,9 @@
 
 Presentation world commands handled by the playable field:
 
-* ``SCREEN_FADE`` ``to`` (0 = clear .. 1 = full colour), ``duration`` seconds, ``color`` [r, g, b]
+* ``SCREEN_FADE`` ``to`` (0 = clear .. 1 = full colour), ``duration`` seconds, ``color`` [r, g, b],
+  ``over``: ``world`` (the map only: pictures and the message window stay bright),
+  ``message_window`` (that window fades too) or ``everything`` (pictures and the window as well)
 * ``PLAY_VFX``    ``asset_id`` (a battle VFX sprite sheet), ``entity`` (name / id / player) or
   ``x``/``y``,
   optional ``duration`` and the VFX placement overrides (``scale``, ``anchor``, ``offset``,
@@ -62,6 +64,7 @@ class FieldEffects:
     def __init__(self):
         self.fade_alpha = 0.0
         self.fade_color = (0, 0, 0)
+        self.fade_over = "world"  # what the fade covers: world / message_window / everything
         self._fade_from = 0.0
         self._fade_to = 0.0
         self._fade_time = 0.0
@@ -128,6 +131,7 @@ class FieldEffects:
             self._fade_time = 0.0
             color = args.get("color", (0, 0, 0))
             self.fade_color = tuple(int(c) for c in color)[:3]
+            self.fade_over = str(args.get("over") or "world")
             if self._fade_duration == 0:
                 self.fade_alpha = self._fade_to
         elif command.name == "PLAY_VFX":

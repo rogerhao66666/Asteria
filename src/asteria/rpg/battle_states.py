@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from math import isfinite
 
 from asteria.core.lifecycle import emit_hook
-from asteria.gameplay import GameplaySubject, normalize_tag
+from asteria.gameplay import Effect, EffectOperation, GameplaySubject, normalize_tag
+from asteria.gameplay.formulas import ValueFormula
 
 
 def _id(value, label):
@@ -82,9 +83,18 @@ class BattleStatePolicy:
     exclusive_group: str = ""
     # the state ends with the battle (a flinch, a stance...): not kept on a creature after it
     battle_only: bool = False
+    # when ``prevent_chance`` stops the member, this resource of the member changes by this
+    # expression (confusion: it hits itself); "" = nothing but the lost turn
+    prevent_resource: str = ""
+    prevent_amount: str = ""
+    # the member cannot run or be switched out while it has this state (Wrap, Mean Look)
+    blocks_leaving: bool = False
     # shown in the editor even when empty (left out of the saved data while empty)
     OPTIONAL_DATA = {
         "battle_only": False,
+        "prevent_resource": "",
+        "prevent_amount": "",
+        "blocks_leaving": False,
         "interaction_tags": [],
         "allowed_ability_tags": [],
         "target_override": "",
@@ -122,6 +132,9 @@ class BattleStatePolicy:
         duration_range=(),
         exclusive_group="",
         battle_only=False,
+        prevent_resource="",
+        prevent_amount="",
+        blocks_leaving=False,
     ):
         if target_override not in TARGET_OVERRIDES:
             raise ValueError(f"target_override must be one of {TARGET_OVERRIDES}")
@@ -168,6 +181,9 @@ class BattleStatePolicy:
         object.__setattr__(self, "duration_range", duration_range)
         object.__setattr__(self, "exclusive_group", str(exclusive_group or "").strip())
         object.__setattr__(self, "battle_only", bool(battle_only))
+        object.__setattr__(self, "prevent_resource", str(prevent_resource or "").strip())
+        object.__setattr__(self, "prevent_amount", str(prevent_amount or "").strip())
+        object.__setattr__(self, "blocks_leaving", bool(blocks_leaving))
 
     def to_data(self):
         return {
@@ -199,6 +215,9 @@ class BattleStatePolicy:
             **({"duration_range": list(self.duration_range)} if self.duration_range else {}),
             **({"exclusive_group": self.exclusive_group} if self.exclusive_group else {}),
             **({"battle_only": True} if self.battle_only else {}),
+            **({"prevent_resource": self.prevent_resource} if self.prevent_resource else {}),
+            **({"prevent_amount": self.prevent_amount} if self.prevent_amount else {}),
+            **({"blocks_leaving": True} if self.blocks_leaving else {}),
         }
 
     @classmethod
@@ -228,6 +247,9 @@ class BattleStatePolicy:
             duration_range=data.get("duration_range", ()),
             exclusive_group=data.get("exclusive_group", ""),
             battle_only=data.get("battle_only", False),
+            prevent_resource=data.get("prevent_resource", ""),
+            prevent_amount=data.get("prevent_amount", ""),
+            blocks_leaving=data.get("blocks_leaving", False),
         )
 
 
@@ -384,6 +406,26 @@ class BattleStateRuntime:
         blocked = tuple(sorted(blocked))
         return AbilityAvailability(not blocked, blocked, "blocked_by_state" if blocked else "")
 
+    @staticmethod
+    def _hurt_instead(member, policy):
+        """What a lost turn costs (confusion: the blow it gives itself)."""
+        if not (policy.prevent_resource and policy.prevent_amount):
+            return
+        amount = ValueFormula(expression=policy.prevent_amount)
+        change = EffectOperation("resource_delta", policy.prevent_resource, amount)
+        member.subject.states._apply(Effect(f"{policy.state_id}.instead", [change]))
+
+    def leaving_blocked_by(self, subject):
+        """The states that keep ``subject`` from running or being switched out."""
+        if subject.states is None:
+            return ()
+        policies = self.policies
+        return tuple(
+            active.state_id
+            for active in subject.states.active_states()
+            if active.state_id in policies and policies[active.state_id].blocks_leaving
+        )
+
     def apply_trigger(self, trigger, members):
         trigger = str(trigger)
         expired = []
@@ -439,10 +481,16 @@ class BattleStateRuntime:
                         source=member.member_id,
                         data={"state_id": active.state_id, "changes": changes},
                     )
-                if (
-                    not ended and policy.prevent_chance and dice.random() < policy.prevent_chance
-                ):  # it cannot act this turn (fully paralysed)
-                    self._held.setdefault(id(member.subject), set()).add(active.state_id)
+                if not ended and policy.prevent_chance:
+                    emit_hook(  # it is still on: "... is confused!", whatever the dice say
+                        self.hooks,
+                        "rpg.battle.state_turn",
+                        source=member.member_id,
+                        data={"state_id": active.state_id},
+                    )
+                    if dice.random() < policy.prevent_chance:  # no turn (fully paralysed)
+                        self._held.setdefault(id(member.subject), set()).add(active.state_id)
+                        self._hurt_instead(member, policy)
                 if ended:
                     expired.append((member.member_id, active.state_id))
                     emit_hook(

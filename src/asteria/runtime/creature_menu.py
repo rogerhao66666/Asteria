@@ -106,6 +106,9 @@ class CreatureMenuScreen(CreatureBattleScreen):
         self.note = ""  # a line in the message window of the menu screens
         self.save_step = None  # (step, seconds) of the save: ask / saving / saved
         self.dex_scroll = 0
+        self.dex_filter, self.dex_choice = {}, {}  # the search's values, kept and being chosen
+        self.region_cell, self.region_back = [0, 0], "start"
+        self.fly_mode = False  # the region map is choosing where to fly
         self.bag_scroll = 0
         self.option_cursor = 0
         self._dex = None
@@ -153,6 +156,11 @@ class CreatureMenuScreen(CreatureBattleScreen):
             self.phase, self.list_cursor, self.dex_scroll = "dex", 0, 0
         elif screen == "card":
             self.phase = "card"
+        elif screen == "pokenav":
+            self.phase, self.list_cursor = "pokenav", 0
+        elif screen == "region":
+            self.region_back, self.phase = self.phase, "region"
+            self.region_cell = self._player_region_cell()
 
     def update(self, dt, events=()):
         self.time += dt
@@ -185,9 +193,28 @@ class CreatureMenuScreen(CreatureBattleScreen):
         self.phase = "start"
 
     # -- the party --------------------------------------------------------------------------
+    def field_moves(self):
+        """``party.field_moves``: rows the chosen creature gets for moves it knows and switches
+        that are on: ``{move, label, switch, program}``, or ``screen: "fly"`` for the map."""
+        pets = self._party()
+        if self.list_cursor >= len(pets):
+            return ()
+        known = self.game.pet_moves(pets[self.list_cursor])
+        rows = []
+        context = self.game.save.event_context
+        for row in (self.menu.get("party") or {}).get("field_moves") or ():
+            needs = row.get("switch")
+            if row.get("move") in known and (not needs or context.get_switch(needs)):
+                rows.append(row)
+        return rows
+
     def actions(self):
+        moves = [
+            (f"field:{n}", str(row.get("label", ""))) for n, row in enumerate(self.field_moves())
+        ]
         return (
             ("summary", self.tr("creature.menu.summary", "SUMMARY")),
+            *moves,
             ("switch", self.tr("creature.menu.switch", "SWITCH")),
             ("cancel", self.tr("creature.cancel", "CANCEL")),
         )
@@ -235,6 +262,16 @@ class CreatureMenuScreen(CreatureBattleScreen):
         elif self._pressed("confirm"):
             choice = rows[self.action_cursor][0]
         if choice is None:
+            return
+        if choice.startswith("field:"):
+            row = self.field_moves()[int(choice.split(":", 1)[1])]
+            if row.get("screen") == "fly":
+                self.fly_mode = True
+                self.open("region")
+                self.region_back = "party"
+            elif row.get("program"):
+                self.done = True
+                self.game.events.start(str(row["program"]))
             return
         self.phase = "party"
         if choice == "summary":
@@ -367,6 +404,11 @@ class CreatureMenuScreen(CreatureBattleScreen):
         items = self.pocket_items()
         item_id = items[self.list_cursor][0] if self.list_cursor < len(items) else ""
         item = self.game.project.rpg_database.items.get(item_id) if item_id else None
+        program = dict((self.menu.get("bag") or {}).get("use_programs") or {}).get(item_id)
+        if choice == "use" and program:  # the field does what it does (REPEL, a bike...)
+            self.done = True
+            self.game.events.start(str(program))
+            return
         if choice == "use" and item is not None and taught_ability(item):
             # party_menu.c: "Booted up a TM." / "It contained ..." / "Teach ... ?" YES / NO
             move = self._move_name(taught_ability(item))
@@ -569,7 +611,7 @@ class CreatureMenuScreen(CreatureBattleScreen):
         entries = self.dex_entries()
         last = max((n for n, e in enumerate(entries) if self.dex_status(e["species"])[0]),
                    default=-1)  # fmt: skip
-        return entries[: last + 1]
+        return self._dex_kept(entries[: last + 1])
 
     def _input_dex(self):
         rows = self.dex_rows()
@@ -588,10 +630,206 @@ class CreatureMenuScreen(CreatureBattleScreen):
         elif self._pressed("confirm") and rows:
             if self.dex_status(rows[self.list_cursor]["species"])[0]:
                 self.phase = "dex_entry"
+        elif self._pressed("menu") and (self.menu.get("dex") or {}).get("search"):
+            self.phase, self.action_cursor = "dex_search", 0
 
     def _input_dex_entry(self):
         if self._pressed("cancel") or self._pressed("confirm"):
             self.phase = "dex"
+        elif self._pressed("move_right") and (self.menu.get("region_map") or {}):
+            self.phase = "dex_area"
+
+    def _input_dex_area(self):
+        if self._pressed("cancel") or self._pressed("move_left"):
+            self.phase = "dex_entry"
+
+    # -- the search of the POKéDEX: rows of words, what they keep ---------------------------
+    def dex_search_rows(self):
+        """``(id, label, [values])``: the letter a name begins with, a type, the order."""
+        settings = (self.menu.get("dex") or {}).get("search") or {}
+        return [
+            (row["id"], str(row.get("label", row["id"])), list(row.get("values", ())))
+            for row in settings.get("rows", ())
+        ]
+
+    def _input_dex_search(self):
+        rows = self.dex_search_rows()
+        if self._pressed("cancel"):
+            self.phase = "dex"
+            return
+        if self._pressed("confirm"):
+            self.dex_filter = dict(self.dex_choice)
+            self.phase, self.list_cursor, self.dex_scroll = "dex", 0, 0
+            return
+        if not rows:
+            return
+        if self._pressed("move_up"):
+            self.action_cursor = (self.action_cursor - 1) % len(rows)
+        if self._pressed("move_down"):
+            self.action_cursor = (self.action_cursor + 1) % len(rows)
+        row_id, _label, values = rows[min(self.action_cursor, len(rows) - 1)]
+        turn = int(self._pressed("move_right")) - int(self._pressed("move_left"))
+        if turn and values:
+            now = self.dex_choice.get(row_id, values[0])
+            at = values.index(now) if now in values else 0
+            self.dex_choice[row_id] = values[(at + turn) % len(values)]
+
+    def _dex_kept(self, entries):
+        """The entries the search keeps, in the order it asks for. A value equal to the row's
+        first value keeps everything; ``letters`` keeps names starting with one of its letters;
+        any other row keeps entries whose field of that name holds the value."""
+        kept = list(entries)
+        for row_id, _label, values in self.dex_search_rows():
+            value = self.dex_filter.get(row_id)
+            if not value or not values or value == values[0]:
+                continue
+            if row_id == "order":
+                continue
+            if row_id == "letters":
+                kept = [e for e in kept if str(e.get("name", ""))[:1].upper() in value]
+            else:
+                kept = [e for e in kept if value in (e.get(row_id) or ())]
+        order = self.dex_filter.get("order", "")
+        keys = dict((self.menu.get("dex") or {}).get("search", {}).get("orders") or {})
+        key = keys.get(order)
+        if key:
+            field, _, way = str(key).partition(":")
+            kept.sort(key=lambda e: e.get(field, 0), reverse=way == "down")
+        return kept
+
+    # -- POKéNAV and the region map ---------------------------------------------------------
+    def pokenav_rows(self):
+        return list((self.menu.get("pokenav") or {}).get("rows") or ())
+
+    def _input_pokenav(self):
+        rows = self.pokenav_rows()
+        if self._pressed("cancel"):
+            self._back()
+            return
+        if not rows:
+            return
+        if self._pressed("move_up"):
+            self.list_cursor = (self.list_cursor - 1) % len(rows)
+        if self._pressed("move_down"):
+            self.list_cursor = (self.list_cursor + 1) % len(rows)
+        if self._pressed("confirm"):
+            screen = rows[self.list_cursor].get("screen", "")
+            if screen:
+                self.open(screen)
+
+    def _player_region_cell(self):
+        """Where the player is on the region map: the area's name, else the map's middle."""
+        settings = self.menu.get("region_map") or {}
+        place = str(getattr(self.game, "area_title_shown", "") or "")
+        names = dict(settings.get("names") or {})
+        for key, name in names.items():
+            if name == place:
+                x, _, y = key.partition(",")
+                return [int(x), int(y)]
+        columns, rows = settings.get("size", (28, 15))
+        return [columns // 2, rows // 2]
+
+    def _input_region(self):
+        settings = self.menu.get("region_map") or {}
+        columns, rows = settings.get("size", (28, 15))
+        x, y = self.region_cell
+        x += int(self._pressed("move_right")) - int(self._pressed("move_left"))
+        y += int(self._pressed("move_down")) - int(self._pressed("move_up"))
+        self.region_cell = [max(0, min(columns - 1, x)), max(0, min(rows - 1, y))]
+        if self._pressed("cancel"):
+            self.phase = getattr(self, "region_back", "start")
+            self.fly_mode = False
+        elif self.fly_mode and self._pressed("confirm"):
+            self._fly_to(self.region_cell)
+
+    def _fly_target(self, cell):
+        """``region_map.fly``: ``{"x,y": {scene, x, y, switch}}``, where a switch that is on
+        lets the player go; None when this cell cannot be flown to now."""
+        target = dict((self.menu.get("region_map") or {}).get("fly") or {}).get(
+            f"{cell[0]},{cell[1]}"
+        )
+        if target is None:
+            return None
+        needs = target.get("switch")
+        if needs and not self.game.save.event_context.get_switch(needs):
+            return None
+        return target
+
+    def _fly_to(self, cell):
+        target = self._fly_target(cell)
+        if target is None:
+            return
+        self.done, self.fly_mode = True, False
+        self.game.transfer_player(int(target["scene"]) if str(target["scene"]).isdigit()
+                                  else target["scene"], float(target["x"]), float(target["y"]),
+                                  facing="down")  # fmt: skip
+
+    def _draw_region_base(self):
+        settings = self.menu.get("region_map") or {}
+        picture = self._menu_picture(settings.get("background"))
+        if picture is not None:
+            self.surface.blit(picture, (0, 0))
+        else:
+            self.surface.fill((96, 152, 200))
+        return settings
+
+    def _draw_region(self):
+        settings = self._draw_region_base()
+        ox, oy = settings.get("origin", (8, 16))
+        cell = int(settings.get("cell", 8))
+        x, y = self.region_cell
+        cursor = self._menu_picture(settings.get("cursor"))
+        if cursor is not None:
+            self.surface.blit(cursor, (ox + x * cell - 4, oy + y * cell - 4))
+        name = dict(settings.get("names") or {}).get(f"{x},{y}", "")
+        letter, shadow = self._menu_colours()
+        at = settings.get("name_at", (16, 2))
+        self._text(name, at[0], at[1], letter, shadow)
+
+    def _draw_dex_area(self):
+        settings = self._draw_region_base()
+        ox, oy = settings.get("origin", (8, 16))
+        cell = int(settings.get("cell", 8))
+        entry = self.dex_rows()[self.list_cursor]
+        glow = 90 + int(70 * abs(((self.time * 1.2) % 2) - 1))
+        mark = self.pg.Surface((cell, cell), self.pg.SRCALPHA)
+        mark.fill((*settings.get("area_colour", (64, 224, 96)), glow))
+        for key in entry.get("area") or ():
+            x, _, y = str(key).partition(",")
+            self.surface.blit(mark, (ox + int(x) * cell, oy + int(y) * cell))
+        letter, shadow = self._menu_colours()
+        at = settings.get("name_at", (16, 2))
+        self._text(f"{entry['name']}", at[0], at[1], letter, shadow)
+        if not entry.get("area"):
+            self._message_window(self.tr("creature.dex.area_unknown", "AREA UNKNOWN"))
+
+    def _draw_pokenav(self):
+        settings = self.menu.get("pokenav") or {}
+        picture = self._menu_picture(settings.get("background"))
+        if picture is not None:
+            self.surface.blit(picture, (0, 0))
+        else:
+            self.surface.fill((48, 96, 144))
+        rows = [str(row.get("label", "")) for row in self.pokenav_rows()]
+        self._list_window(rows, self.list_cursor, 176, 112)
+
+    def _draw_dex_search(self):
+        s = self.surface
+        settings = (self.menu.get("dex") or {}).get("search") or {}
+        picture = self._menu_picture(settings.get("background"))
+        if picture is not None:
+            s.blit(picture, (0, 0))
+        else:
+            s.fill((232, 232, 216))
+        ink, ink_shadow = (72, 72, 72), (208, 208, 200)
+        x, y = settings.get("rows_at", (24, 32))
+        step = int(settings.get("row_height", 20))
+        for n, (row_id, label, values) in enumerate(self.dex_search_rows()):
+            value = self.dex_choice.get(row_id, values[0] if values else "")
+            self._text(label, x, y + n * step, ink, ink_shadow)
+            self._text(str(value), x + 72, y + n * step, ink, ink_shadow)
+            if n == self.action_cursor:
+                self.font_cursor(x - 12, y + n * step)
 
     # -- saving --------------------------------------------------------------------------------
     def _input_save(self):

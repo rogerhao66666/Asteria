@@ -83,7 +83,8 @@ class VariableDialog(_NameDialog):
     def __init__(self, document, parent=None, *, args=None):
         super().__init__("Set Variable", parent)
         args = dict(args or {})
-        self._rest = {k: v for k, v in args.items() if k not in ("name", "value", "from_variable")}
+        own = ("name", "value", "from_variable", "random")
+        self._rest = {k: v for k, v in args.items() if k not in own}
         self._kept = None
         self.picker = name_picker(document, "variable", str(args.get("name", "")))
         self.kind = ValueCombo()
@@ -93,6 +94,7 @@ class VariableDialog(_NameDialog):
                 ("text", "Words"),
                 ("flag", "Yes or no"),
                 ("copy", "Another variable's value"),
+                ("random", "A random number"),
             )
         )
         self.number = PlainNumber()
@@ -103,7 +105,12 @@ class VariableDialog(_NameDialog):
         self.flag.set_choices((("yes", "Yes"), ("no", "No")))
         self.source = name_picker(document, "variable", str(args.get("from_variable", "")))
         self.values = QStackedWidget()
-        for widget in (self.number, self.text, self.flag, self.source):
+        self.random = PlainNumber()
+        self.random.setRange(1.0, 1_000_000.0)
+        self.random.setDecimals(0)
+        self.random.setValue(2.0)
+        self.random.setToolTip(translate("From 0 up to one less than this"))
+        for widget in (self.number, self.text, self.flag, self.source, self.random):
             self.values.addWidget(widget)
         self.kind.currentIndexChanged.connect(self.values.setCurrentIndex)
         self.form.addRow(translate("Variable"), self.picker)
@@ -115,6 +122,9 @@ class VariableDialog(_NameDialog):
         value = args.get("value", 0)
         if "from_variable" in args:
             self.kind.setCurrentText("copy")
+        elif "random" in args:
+            self.kind.setCurrentText("random")
+            self.random.setValue(float(args["random"]))
         elif isinstance(value, bool):
             self.kind.setCurrentText("flag")
             self.flag.setCurrentText("yes" if value else "no")
@@ -131,6 +141,8 @@ class VariableDialog(_NameDialog):
         kind = self.kind.currentText()
         if kind == "copy":
             args["from_variable"] = self.source.currentText().strip()
+        elif kind == "random":
+            args["random"] = int(self.random.value())
         elif self._kept is not None:
             args["value"] = self._kept
         elif kind == "text":

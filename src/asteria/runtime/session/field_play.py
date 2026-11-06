@@ -64,6 +64,14 @@ class FieldPlayMixin:
         if trigger is None:
             return None
         source = self.scene.get_entity(trigger.source_entity_id)
+        if source is not None and self._out_of_reach(source):
+            return None  # on the bridge, or under it: out of reach of each other
+        if source is not None:  # talked to while hidden: it shows itself
+            from asteria.runtime.grid_actors import SightTrigger2DComponent
+
+            sight = source.try_get(SightTrigger2DComponent)
+            if sight is not None and sight.reveal_variable:
+                self.save.event_context.set_variable(sight.reveal_variable, 2)
         if source is not None and self._grid_movers.get(self.scene.id) is not None:
             t = self.player.get(Transform)
             self._grid_movers[self.scene.id].face_toward(source, t.x, t.y)
@@ -641,6 +649,7 @@ class FieldPlayMixin:
             GridMover2DComponent,
             LookByVariable2DComponent,
             SwitchVisibility2DComponent,
+            look_key,
             looks_of,
         )
 
@@ -676,7 +685,18 @@ class FieldPlayMixin:
                     return entity.get(Transform) if entity is not None else None
 
                 @staticmethod
+                def facing(entity_id):
+                    if entity_id == session.player.id:
+                        return session.facing
+                    entity = session.scene.get_entity(entity_id)
+                    mover = entity.try_get(GridMover2DComponent) if entity is not None else None
+                    if mover is not None:
+                        return mover.facing
+                    return session.entity_facing.get(entity_id, "down")
+
+                @staticmethod
                 def set_facing(entity_id, facing):
+                    session.route_home_facing.setdefault(entity_id, Host.facing(entity_id))
                     if entity_id == session.player.id:
                         session.set_player_facing(facing)
                         return
@@ -689,6 +709,25 @@ class FieldPlayMixin:
                 def set_lift(entity_id, height):
                     if entity_id == session.player.id:
                         session.player_lift = height
+
+                @staticmethod
+                def face_original(entity_id):
+                    home = session.route_home_facing.pop(entity_id, None)
+                    if home is not None:
+                        Host.set_facing(entity_id, home)
+                        session.route_home_facing.pop(entity_id, None)
+
+                @staticmethod
+                def has_tag(x, y, tag):
+                    keys_at = session.tile_keys_at
+                    return keys_at is not None and f"tag:{tag}" in keys_at(x, y)
+
+                @staticmethod
+                def play_clip(entity_id, name):
+                    if name:
+                        session.route_clips[entity_id] = name
+                    else:
+                        session.route_clips.pop(entity_id, None)
 
                 @staticmethod
                 def set_hidden(entity_id, hidden):
@@ -756,7 +795,7 @@ class FieldPlayMixin:
         self.player.enabled = self.player.id not in self.route_hidden
         get = self.save.event_context.get_variable
         for entity, spec in self.scene.query(LookByVariable2DComponent):
-            look = looks_of(spec.looks).get(str(get(spec.variable, "")))
+            look = looks_of(spec.looks).get(look_key(spec.variable, get))
             if look is None:
                 continue
             from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
@@ -783,6 +822,7 @@ class FieldPlayMixin:
         ahead of it notices them: its mark shows, its music plays, it walks up and then its
         interaction event starts. Returns the entity id, or None."""
         from asteria.runtime.grid_actors import (
+            STEP,
             GridMover2DComponent,
             SightTrigger2DComponent,
             line_of_sight,
@@ -810,6 +850,7 @@ class FieldPlayMixin:
             own = (int(transform.x // size), int(transform.y // size))
             target = (int(player.x // size), int(player.y // size))
             facing = mover.facing if mover is not None else "down"
+            ways = tuple(STEP) if sight.every_way else (facing,)
 
             def blocked(cell, own=own, size=size):
                 if cell in held and cell != own:
@@ -817,8 +858,14 @@ class FieldPlayMixin:
                 centre = (cell[0] * size + size / 2, cell[1] * size + size / 2)
                 return tiles is not None and tiles.collides_world_point(*centre)
 
-            if line_of_sight(sight.range, facing, own, target, blocked) is None:
+            for facing in ways:
+                between = line_of_sight(sight.range, facing, own, target, blocked)
+                if between is not None:
+                    break
+            if between is None or self._sight_over_heights(entity, own, [*between, target]):
                 continue
+            if mover is not None:
+                mover.facing = facing
             self.sighting = {"entity": entity.id, "phase": "emote", "time": 0.0}
             self.emotes[entity.id] = (sight.emote or "exclamation", self.SIGHT_EMOTE_SECONDS)
             if sight.music:
@@ -845,8 +892,16 @@ class FieldPlayMixin:
         if state["phase"] == "emote":
             if state["time"] < self.SIGHT_EMOTE_SECONDS:
                 return
-            state["phase"] = "approach"
+            state["phase"], state["time"] = "reveal", 0.0
         sight = entity.get(SightTrigger2DComponent)
+        if state["phase"] == "reveal":  # hidden until found: it shows itself, then comes
+            context = self.save.event_context
+            if sight.reveal_variable:
+                if state["time"] < sight.reveal_seconds:
+                    context.set_variable(sight.reveal_variable, 1)
+                    return
+                context.set_variable(sight.reveal_variable, 2)
+            state["phase"] = "approach"
         mover_spec = entity.try_get(GridMover2DComponent)
         transform = entity.get(Transform)
         player = self.player.get(Transform)
@@ -884,6 +939,47 @@ class FieldPlayMixin:
             )
             self.update_events(0.0)
 
+    def _sight_over_heights(self, entity, own, cells):
+        """Whether a change of height or a one-way edge stops a look along ``cells``."""
+        heights = self.grid_heights()
+        system = self._grid_movers.get(self.scene.id)
+        mover = system.state.get(entity.id) if system is not None else None
+        if heights is None or mover is None:
+            return False
+        last = own
+        for cell in cells:
+            if heights.stopped(last, cell, mover.height):
+                return True
+            last = cell
+        return False
+
+    def _out_of_reach(self, entity):
+        from asteria.runtime.grid_heights import compatible
+
+        system = self._grid_movers.get(self.scene.id)
+        mover = system.state.get(entity.id) if system is not None else None
+        return mover is not None and not compatible(mover.height, self.player_height)
+
+    def grid_heights(self):
+        """The current map's ``GridHeights`` (None while no tile map is bound)."""
+        from asteria.runtime.grid_heights import GridHeights
+
+        keys_at = getattr(self, "tile_keys_at", None)
+        if keys_at is None:
+            return None
+        known = getattr(self, "_grid_heights", None)
+        if known is None or known.keys_at is not keys_at:
+            known = self._grid_heights = GridHeights(keys_at, over=self.height_over)
+        return known
+
+    def sprites_over_above(self):
+        """Ids of the entities drawn over the map's layers above people."""
+        system = self._grid_movers.get(self.scene.id)
+        over = set(system.over) if system is not None else set()
+        if self.player_drawn_height in self.height_over:
+            over.add(self.player.id)
+        return over
+
     def grid_movers(self):
         """The current scene's ``GridMoverSystem`` (created on first use)."""
         system = self._grid_movers.get(self.scene.id)
@@ -912,6 +1008,7 @@ class FieldPlayMixin:
             size = spec.grid_size
             break
         reserved = {(int(t.x // size), int(t.y // size)), *self.grid_reserved}
+        system.heights = self.grid_heights()
         system.update(self.scene, dt, walls.collides_world_point, reserved)
 
     def bind_map_rules(self, keys_at):
@@ -920,6 +1017,7 @@ class FieldPlayMixin:
         ``keys_at(x, y)`` gives the area keys at a point (see ``runtime.map_rules_field``).
         Returns the ``FieldMapRules`` (``None`` when the project defines no rule set).
         """
+        self.tile_keys_at = keys_at
         from asteria.rpg.map_rules import MapRulesRuntime
         from asteria.runtime.map_rules_field import FieldMapRules
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 
 from .conditions import EventCondition
@@ -133,6 +134,8 @@ class EventVM:
             source = instruction.args.get("from_variable")
             if source:  # a copy of another variable's value (0 when it has none)
                 self.context.set_variable(name, self.context.get_variable(str(source), 0))
+            elif instruction.args.get("random") is not None:  # 0 up to (not including) random
+                self.context.set_variable(name, random.randrange(int(instruction.args["random"])))
             elif instruction.args.get("add") is not None:  # added to (a number; 0 when unset)
                 current = self.context.get_variable(name, 0)
                 current = current if isinstance(current, (int, float)) else 0

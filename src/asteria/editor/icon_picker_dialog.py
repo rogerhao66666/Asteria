@@ -119,9 +119,8 @@ class IconPickerDialog(QDialog):
     def browse(self):
         from PySide6.QtWidgets import QFileDialog
 
-        path, _ = QFileDialog.getOpenFileName(
-            self, self.windowTitle(), "", "Images (*.png *.jpg *.jpeg *.webp)"
-        )
+        files = getattr(self.library, "FILE_FILTER", "Images (*.png *.jpg *.jpeg *.webp)")
+        path, _ = QFileDialog.getOpenFileName(self, self.windowTitle(), "", files)
         if path and self.library is not None:
             self.chosen = self.library.import_file(path)
             super().accept()

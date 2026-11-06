@@ -4396,3 +4396,49 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 - 人工在 Finder 雙擊 app、第一次右鍵打開的流程還沒有人實際做過。
 
 **狀態：** 已提交（`9b8353ca`）。
+
+## D101 — 開場動畫當圖片播放、畫面淡出能蓋到訊息窗、騎乘與地形動作、戰鬥的混亂／束縛／天氣／招式評分、野外道具（2026-11-05）
+
+**問題：** 翡翠復刻（私人專案）的下一批內容需要引擎還沒有的東西：一段預先算好的影片要接在標題前面、劇情的黑幕要蓋住訊息窗、衝浪和瀑布、戰鬥裡會打到自己的狀態、讓角色不能逃跑的狀態、會自己結束的天氣、會評估招式的訓練家，還有從背包用道具。這些都不是翡翠專屬，所以做成一般功能。
+
+**決定：**
+- **影片是圖片的一種：** 資產種類 `movie`（一個裝 PNG 影格的 zip，`runtime/movies.py`）。`SHOW_PICTURE` 的 `frame_rate`／`frame_loop` 就是播放，圖片選單裡直接選得到。
+- **`SCREEN_FADE over`：** `world`（預設，圖片和對話在上面）、`message_window`（只暗訊息窗）、`everything`（全部）。
+- **`DIALOGUE wait:false`：** 句子留在窗上、事件繼續；之後空字串的同一指令關窗。編輯器是「不等按鍵就繼續」。
+- **`SET_VARIABLE random=N`：** 0 到 N-1 的亂數，變數對話框有「亂數」。
+- **`SET_WEATHER`、區域的 `weather`：** 故事或區域指定野外天氣；新增 ash、sand、fog、sun（sun 沒有粒子，給戰鬥讀標籤）。
+- **`field.rides`：** 變數等於某值就算騎著：`tag`（只能走有這標籤的格，牆也可以）、`leave_program`、`speed`、`music`、`scenes`（離開就下車）。
+- **`field.tile_actions`：** 面對有標籤的格子按確認就執行事件。**`field.push`：** 開關打開後，走向指定名字的角色會推它一格。**`field.repel`：** 步數變數和耗盡事件，期間比隊首弱的野生不出現。
+- **路線步驟：** `clip:<名稱>:<秒>`、`until_off:<標籤>:<步>`、`jump_ahead`、`face_original`、`lock_facing`／`unlock_facing`；`LookByVariable` 可以看多個變數（`a,b`）。
+- **事件條件：** `rpg` 的 `party_move:<招式>`、`scene`、`battle_outcome`；文字代碼 `party_move.<招式>`、`party_move_species.<招式>`、`party.lead_species_name`；變數裡的代碼會再展開一次。
+- **戰鬥狀態：** `BattleStatePolicy` 新增 `prevent_resource`＋`prevent_amount`（失去回合時扣資源，混亂打到自己）和 `blocks_leaving`（不能逃也不能換；抓住它的對手離場或倒下就解除）。`prevent_chance` 的狀態每回合發 `rpg.battle.state_turn`，訊息時機 `turn` 可以說「混亂中」。寵物收回時 `battle_only` 狀態全部結束。
+- **戰鬥天氣：** `SET_BATTLE_WEATHER` 多 `turns`（幾回合後自己結束；同樣的天氣再放一次失敗）。生物戰畫面的 `weather` 設定：`started`／`continues`／`ended`／`hurt` 句子、`hurt_share`、`immune_tags`、`from_field`（地圖天氣帶進戰鬥）。倍率是一般的 `InteractionRule`，看 `weather.<種類>` 標籤。
+- **招式評分：** `rpg/move_choice.py`。遭遇的特徵 `move_ai.avoid_useless`、`move_ai.finish`、`move_ai.weigh` 決定野生／訓練家怎麼選招；沒有特徵就維持亂選。
+- **回合順序的修正：** 生物戰畫面只有第一個行動者可以開新回合（`current_turn_actor(new_round=False)`）。之前回合結束時會提早結算下一回合第一位的狀態，台詞跑到玩家選招之前。
+- **戰鬥音效：** 生物戰畫面的 `sounds`：`cry`（`{species}`）、`hit`、`super`、`weak`、`faint`、`flee`、`ball_throw`、`ball_open`。
+- **選單：** `bag.use_programs`（道具 → 事件）、`party.field_moves`（隊伍選單的野外招式）、`pokenav.rows`、`region_map`（地圖、游標、格子名稱、`fly`）、圖鑑的 AREA 頁（條目的 `area`）和搜尋（`dex.search`，SELECT／選單鍵開啟）。
+
+**沒有選的路：** 影片不做成新的播放指令（圖片已經有影格和速率）；天氣不做成新的資料表（用變數加畫面設定，作者從設定樹就能改）；招式評分不做成腳本語言（三條規則能涵蓋翡翠常用的旗標，再多再加）。
+
+**編輯器：** 新欄位都進了現有表單（狀態規則的 Optional 欄位、事件指令欄位、特徵）；manifest 的設定從設定樹改。新字串都有 `zh_TW` 項目，遊戲內的字走 `built_in_text`。
+
+**測試：** `tests/test_movies.py`、`tests/test_moves_and_sight.py`（自傷與束縛、天氣倒數、招式評分）。實機：私人專案的 `intro_live_check`、`title_live_check`、`field_moves_live_check`、`battle_rules_live_check`、`field_items_live_check`（Cocoa、靜音）。
+
+## D102 — 格子高度與單向邊、躲起來的角色（2026-11-06）
+
+**問題：** 使用者回報人物站在山壁上。查證後有兩個來源：翡翠的忍者少年（`MOVEMENT_TYPE_MOUNTAIN_DISGUISE`、`TREE_DISGUISE`、`BURIED`）本來被岩壁或樹蓋住、或埋在灰裡，復刻版把他們直接畫出來；`MOVEMENT_TYPE_INVISIBLE` 的人物也被畫出來。另外遊戲的格子高度（elevation）和單向牆（`MB_IMPASSABLE_*`）完全沒做，人物能跨過高度不同的相鄰格。
+
+**決定：**
+- **`runtime/grid_heights.py`：** 格子用特徵（tag）說明。`height_<n>` 是高度，`height_0` 誰都能上下（樓梯）；沒有高度特徵的格子是「過渡格」，進去的人保留原高度（橋頭）。`block_down`／`block_up`／`block_left`／`block_right`：不能從這格往那邊走，也不能越過這條邊走進來。沒有這些特徵的地圖完全不受影響。
+- **誰遵守：** 玩家、會走動的角色、訓練家的視線。高度不同的人不會互撞，也不能交談（一個在橋上、一個在橋下）。路線（`GRID_ROUTE`）照舊不檢查，和原作腳本移動一樣。騎在 `tag` 限定的騎乘上（衝浪）時不檢查高度。
+- **manifest `field.height_over`：** 站在這些高度的人畫在「人物上方」圖層之上（走在橋上）。翡翠用 `sElevationToPriority` 的 4、6、8、10、12、13、14。
+- **`GridMover2D.height`：** 角色所在格沒有高度時的起始高度。
+- **`SightTrigger2D`：** 新增 `reveal_variable`（躲著的角色，發現或被搭話時這個變數變成 1 再變成 2，配合 `LookByVariable2D` 換圖）、`reveal_seconds`、`every_way`（四面都看得到，埋在灰裡的訓練家）。編輯器元件欄位可改，新增繁中標籤。
+- **私人專案：** `Heights` 隱藏圖層、躲藏的外觀、`INVISIBLE` 不畫、`WALK_*`／`ROTATE_*` 用既有的走動與張望近似、`tileset_anims.c` 全部圖塊動畫（蒸氣、岩漿、電閘、瀑布、旗子、氣球、花）。
+
+**實機證據（Cocoa、靜音）：** `hiding_live_check`、`gyms_live_check`、`tile_anim_live_check`，單元測試 `tests/test_grid_heights.py`。
+
+**差異：** 被打敗的躲藏訓練家會一直現身，原作要重新載入地圖才躲回去。
+
+**使用者回報的截圖：** 玩家站在 `(310,60)` 的山壁角落那張是檢查程式傳送造成的；原作和復刻版這格都是牆，走路到不了。檢查程式已改成只傳送到可站的格子。
+

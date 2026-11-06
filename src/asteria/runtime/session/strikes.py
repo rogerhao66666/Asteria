@@ -247,7 +247,7 @@ class StrikesMixin:
             self._run_reactions(actor_id, ability_id, targets)
         return targets
 
-    def current_turn_actor(self):
+    def current_turn_actor(self, *, new_round=True):
         """Member whose turn it is under the battle's scheduler; starts new rounds as needed."""
         if self.mode != "battle":
             raise GameSessionError("no active battle")
@@ -262,7 +262,7 @@ class StrikesMixin:
         # a round where everyone left is stunned, asleep or broken passes (their states tick
         # down as they are skipped); try further rounds instead of stalling the battle
         for _ in range(self.MAX_IDLE_ROUNDS):
-            if actor is not None:
+            if actor is not None or not new_round:  # (not yet: the round's turns are told first)
                 break
             self.battle.start_next_round()
             actor = self.battle.next_actor()

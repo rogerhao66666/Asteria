@@ -1,8 +1,9 @@
 """Screen pictures (YEP PictureCommonEvents / PictureSpritesheets): images events put on screen.
 
-A picture is an image asset at a screen position with scale, opacity, a layer and optionally a
-sprite-sheet cell (``columns`` x ``rows``, ``frame`` picks the cell) and a ``click_event``: an
-event program that starts when the player clicks it. State lives in the ``EventContext`` variables
+A picture is an image asset (or a movie: a zip of PNG frames, played at ``frame_rate``) at a screen
+position with scale, opacity, a layer and optionally a sprite-sheet cell (``columns`` x ``rows``,
+``frame`` picks the cell) and a ``click_event``: an event program that starts when the player
+clicks it. State lives in the ``EventContext`` variables
 (``picture.<id>.*``) so pictures are saved with the game; tweens (``move``) run in memory and the
 target is stored at once, so a save during a tween loads at the end of it.
 """
@@ -296,7 +297,8 @@ class PictureManager:
                 values[field] = default
         age = self._clock - self._shown_at.setdefault(picture_id, self._clock)
         rate = float(values["frame_rate"] or 0.0)
-        if rate > 0:  # a cycling sheet: on from its frame, a cell every 1 / rate seconds
+        # a cycling sheet: on from its frame, a cell every 1 / rate seconds
+        if rate > 0 and int(values["columns"]) * int(values["rows"]) > 1:
             cells = max(1, int(values["columns"]) * int(values["rows"]))
             step = int(values["frame"]) + int(age * rate + 1e-9)
             values["frame"] = step % cells if values["frame_loop"] else min(step, cells - 1)

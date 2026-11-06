@@ -222,6 +222,9 @@ class CreatureBattleScreen:
         # counters the battle moves (stat stages) -> their names; ailment lines by state id
         self.counter_names = dict(self.settings.get("counters") or {})
         self.state_messages = dict(self.settings.get("state_messages") or {})
+        self.sounds = dict(self.settings.get("sounds") or {})
+        self.weather_rules = dict(self.settings.get("weather") or {})
+        self.low_beep_at = 0.0
         self.counter_seen = {}  # (member id, counter) -> the value last told
         self.order = []  # the battle's party order (instance ids): the creature out comes first
         self.foe_hp_mark = None  # the foe's health when someone was last sent in
@@ -386,6 +389,10 @@ class CreatureBattleScreen:
         foe = self._stage("enemies")
         mine = self._stage("heroes")
         self._lead(mine)
+        field = self.game.field_weather
+        if dict(self.weather_rules.get(field) or {}).get("from_field"):
+            self.game.set_battle_weather(field)  # the map's weather: it stays for the battle
+            self.game.drain_battle_log()
         self.back_shown = bool(self.settings.get("player_back"))
         self.slides["intro"] = (self.time, SLIDE_SECONDS)  # from the very first frame
         if self.trainer:
@@ -420,6 +427,7 @@ class CreatureBattleScreen:
                 )
             else:
                 line = self.tr("creature.appeared", "Wild {name} appeared!", name=self.name(foe))
+            self._cry(foe)
             self.say(line)
         self.act("box", side="enemies")
         if mine is not None:
@@ -427,6 +435,9 @@ class CreatureBattleScreen:
             self.act("send_out", side="heroes", member=mine)
             self.act("box", side="heroes")
         self.act("mark")
+        weather = self.game.battle_weather()
+        if weather is not None:
+            self._weather_line(weather[0], "started")
         if self.game.battle is not None:
             self.act("command")
 
@@ -522,12 +533,24 @@ class CreatureBattleScreen:
                 return
             result = game.attempt_escape(actor)
             if result.succeeded:
+                game.last_battle_outcome = "ran"
+                self._sound("flee")
                 self.say(self.tr("creature.got_away", "Got away safely!"))
                 self.act("end")
                 return
             self.say(self.tr("creature.cant_escape", "Can't escape!"))
             self.choice = ("done",)
         elif kind == "switch":
+            if game.held_on_stage(actor):
+                self.say(
+                    self.tr(
+                        "creature.cant_switch",
+                        "{name} can't be\nswitched out!",
+                        name=self.name(actor),
+                    )
+                )
+                self.act("command")
+                return
             self._switch_in(actor, choice[1])
             self.choice = ("done",)
         elif kind == "ball":
@@ -574,7 +597,8 @@ class CreatureBattleScreen:
             guard += 1
             if not game.active_enemy_ids() or not game.active_hero_ids():
                 break
-            actor = game.current_turn_actor()  # may begin a new round: then that round is it
+            # only the first turn may begin a new round: then that round is it
+            actor = game.current_turn_actor(new_round=start is None)
             if actor is None:
                 break
             if start is None:
@@ -622,7 +646,23 @@ class CreatureBattleScreen:
         self.act("box", side="heroes")
         self.act("mark")
 
-    def _state_line(self, state_id, moment, member_id, fallback=None):
+    def _sound(self, moment):
+        """A sound of the battle (``sounds``: {moment: sound}), in its place in the story."""
+        if self.sounds.get(moment):
+            self.act("sound", asset=str(self.sounds[moment]))
+
+    def _cry(self, member_id):
+        pattern = str(self.sounds.get("cry", ""))
+        if pattern and member_id is not None:
+            self.act("sound", asset=pattern.replace("{species}", self._species_key(member_id)))
+
+    def _weather_line(self, kind, moment, member_id=None):
+        line = dict(self.weather_rules.get(kind) or {}).get(moment)
+        if line:
+            name = self.name(member_id, owner=True) if member_id else ""
+            self.say(str(line).replace("{name}", name))
+
+    def _state_line(self, state_id, moment, member_id, fallback=None, source=None):
         """The project's line for an ailment ``moment`` (``applied``, ``already``, ``tick``,
         ``prevented``, ``expired``, ``cured``) from ``state_messages``, with ``{name}``."""
         lines = dict(self.state_messages.get(state_id) or {})
@@ -631,7 +671,8 @@ class CreatureBattleScreen:
             return ""
         if not template:
             return fallback
-        return str(template).replace("{name}", self.name(member_id, owner=True))
+        line = str(template).replace("{name}", self.name(member_id, owner=True))
+        return line.replace("{source}", self.name(source, owner=True) if source else "")
 
     def _tell(self, entries):
         """Battle log entries as the story: who used what, a miss, bars, critical blows,
@@ -662,8 +703,27 @@ class CreatureBattleScreen:
                 for state_id in data.get("states", ()):
                     line = self._state_line(state_id, "prevented", entry.member_id)
                     if line:
-                        self.say(line)
+                        self.say(line, wait=False)
                         break
+                if data.get("hp") is not None:  # it lost its turn to a blow of its own
+                    self.act("hp", values={entry.member_id: data["hp"]}, hit=(entry.member_id,))
+                self._faint_if_down(entry.member_id)
+            elif kind == "state_turn":
+                line = self._state_line(data.get("state", ""), "turn", entry.member_id)
+                if line:
+                    self.say(line)
+            elif kind == "weather_set":
+                self._weather_line(data.get("kind", ""), "started")
+            elif kind == "weather_failed":
+                self.say(self.tr("creature.but_it_failed", "But it failed!"))
+            elif kind == "weather_line":
+                self._weather_line(data.get("kind", ""), data.get("moment", ""))
+            elif kind == "weather_hurt":
+                member = entry.member_id
+                self._weather_line(data.get("kind", ""), "hurt", member)
+                if game.battle is not None and member in game.battle.members:
+                    self.act("hp", values={member: self._hp(member)}, hit=(member,))
+                    self._faint_if_down(member)
             elif kind == "state_tick":
                 line = self._state_line(data.get("state", ""), "tick", entry.member_id)
                 if line:
@@ -734,6 +794,11 @@ class CreatureBattleScreen:
             return
         values = {t: self._hp(t) for t in entry.target_ids if t in game.battle.members}
         values[user] = self._hp(user)
+        for target_id, outcome in entry.outcomes or ():
+            ratio = _effectiveness(outcome, str(self.settings.get("effectiveness_rules", "")))
+            if ratio and values.get(target_id, 0) < self.target_hp.get(target_id, 0):
+                self._sound("super" if ratio > 1.001 else "weak" if ratio < 0.999 else "hit")
+                break
         self.act("hp", values=values, hit=tuple(entry.target_ids))
         if self.settings.get("crit_tag", "outcome.crit") in rolled:
             self.say(self.tr("creature.critical", "A critical hit!"))
@@ -848,7 +913,7 @@ class CreatureBattleScreen:
                 name=self.name(member, owner=True),
                 state=label,
             )
-            line = self._state_line(state_id, "applied", member, fallback)
+            line = self._state_line(state_id, "applied", member, fallback, data.get("source"))
             if line:
                 self.say(line)
             return
@@ -905,6 +970,8 @@ class CreatureBattleScreen:
     def _faint_if_down(self, member_id):
         if member_id in self.drop or self._hp(member_id) > 0:
             return
+        self._cry(member_id)
+        self._sound("faint")
         self.act("faint", member=member_id)
         self.say(
             self.tr("creature.fainted", "{name} fainted!", name=self.name(member_id, owner=True))
@@ -914,6 +981,9 @@ class CreatureBattleScreen:
         game = self.game
         if game.battle is None:
             return
+        if self.weather_rules:
+            game.weather_round(self.weather_rules)
+            self._tell(game.drain_battle_log())
         if not game.side_standing("enemies"):
             self._victory()
             return
@@ -977,6 +1047,7 @@ class CreatureBattleScreen:
 
     def _victory(self, caught=False):
         game = self.game
+        game.last_battle_outcome = "caught" if caught else "won"
         self.act("music", track=self.music("victory"))  # the win's tune starts as the foe falls
         before = {p.instance_id: (p.level, p.experience, p.species_id) for p in game.pets()}
         currencies = dict(game.save.rpg_state.currencies)
@@ -1053,6 +1124,7 @@ class CreatureBattleScreen:
         self.act("end")
 
     def _defeat(self):
+        self.game.last_battle_outcome = "lost"
         self.say(
             self.tr(
                 "creature.out_of_creatures",
@@ -1115,8 +1187,12 @@ class CreatureBattleScreen:
         elif kind == "music":
             self._play(step.args.get("track"))
             self.step = None
+        elif kind == "sound":
+            self.rt._sound(step.args.get("asset"))
+            self.step = None
         elif kind == "throw":
             self.throw = {"start": self.time, **step.args}
+            self.rt._sound(self.sounds.get("ball_throw"))
         elif kind == "command":
             self.phase, self.cursor = "command", self.cursor if self.cursor < 4 else 0
             actor = self._stage("heroes")
@@ -1142,6 +1218,10 @@ class CreatureBattleScreen:
         elif kind == "send_out":
             side, member = step.args["side"], step.args["member"]
             self.visible[side] = member
+            self.rt._sound(self.sounds.get("ball_open"))
+            if member is not None and self.sounds.get("cry"):
+                cry = str(self.sounds["cry"]).replace("{species}", self._species_key(member))
+                self.rt._sound(cry)
             if member is not None:
                 value = self._hp(member)
                 self.shown_hp[member] = self.target_hp[member] = value

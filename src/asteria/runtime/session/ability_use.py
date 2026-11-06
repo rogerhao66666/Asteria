@@ -406,6 +406,7 @@ class AbilityUseMixin:
                             "applied": result.applied,
                             "reason": result.reason,
                             "chance": entry.get("chance", 1.0),
+                            "source": str(actor_id),
                         },
                     )
         for command in definition.commands:

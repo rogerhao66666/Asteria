@@ -210,8 +210,12 @@ class EventRunner:
                 break
 
             if instruction.opcode == "DIALOGUE":
+                goes_on = instruction.args.get("wait", True) is False
+                if goes_on and not instruction.args.get("text"):  # no words: the window closes
+                    self.dialogue.held = None
+                    continue
                 self._open_dialogue(instruction)
-                if instruction.args.get("wait", True) is False:  # shown, the event goes on
+                if goes_on:  # shown, the event goes on
                     self.dialogue.held, self.dialogue.dialogue = self.dialogue.dialogue, None
                     continue
                 self.dialogue.held = None

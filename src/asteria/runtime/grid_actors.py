@@ -28,6 +28,8 @@ from types import MappingProxyType
 
 from asteria.core import Component, Field, Transform, component_schema
 
+from .grid_heights import compatible
+
 GRID_BEHAVIOURS = ("still", "look_around", "wander", "wander_vertical", "wander_horizontal")
 FACINGS = ("down", "up", "left", "right")
 STEP = {"down": (0, 1), "up": (0, -1), "left": (-1, 0), "right": (1, 0)}
@@ -98,6 +100,13 @@ def parse_pauses(text):
             "",
             tooltip="The ways it turns between when it looks around ('down, right'; '' = all).",
         ),
+        Field(
+            "height",
+            int,
+            0,
+            minimum=0,
+            tooltip="The height it starts at when its cell has none (0 = meets everybody).",
+        ),
     ),
 )
 class GridMover2DComponent(Component):
@@ -112,6 +121,7 @@ class GridMover2DComponent(Component):
         self.pauses = "0.54, 1.07, 1.61, 2.14"
         self.face_player = True
         self.look_facings = ""
+        self.height = 0
 
 
 @component_schema(
@@ -134,6 +144,20 @@ class GridMover2DComponent(Component):
         Field("music", str, "", tooltip="Music played when it notices the player."),
         Field("emote", str, "exclamation", tooltip="The mark shown over it when it notices."),
         Field("approach", bool, True, tooltip="It walks up to the player before its event."),
+        Field(
+            "reveal_variable",
+            str,
+            "",
+            tooltip="Hidden until found: this variable is 1 while it shows itself, then 2.",
+        ),
+        Field(
+            "reveal_seconds",
+            float,
+            0.0,
+            minimum=0.0,
+            tooltip="How long it takes to show itself once it has noticed the player.",
+        ),
+        Field("every_way", bool, False, tooltip="It notices the player on any side of it."),
     ),
 )
 class SightTrigger2DComponent(Component):
@@ -148,6 +172,9 @@ class SightTrigger2DComponent(Component):
         self.music = ""
         self.emote = "exclamation"
         self.approach = True
+        self.reveal_variable = ""
+        self.reveal_seconds = 0.0
+        self.every_way = False
 
 
 def line_of_sight(spec_range, facing, own_cell, target_cell, blocked):
@@ -182,6 +209,9 @@ class _Mover:
     cell: tuple  # the cell it stands on (the one it left, while stepping)
     target: tuple | None = None  # the cell it is stepping into
     wait: float = 0.0
+    height: int = 0  # how high it stands (runtime/grid_heights.py)
+    drawn: int = 0  # the last height that was not 0: how it is drawn
+    at: tuple | None = None  # the cell its height was last read on
 
 
 class GridMoverSystem:
@@ -195,6 +225,8 @@ class GridMoverSystem:
     def __init__(self, rng=None):
         self.rng = rng or random.Random(0)
         self.state = {}  # entity id -> _Mover
+        self.heights = None  # the map's GridHeights, when it is known
+        self.over = set()  # ids of the movers drawn over the layers above people
 
     @staticmethod
     def cell_of(spec, x, y):
@@ -207,7 +239,33 @@ class GridMoverSystem:
             cell = self.cell_of(spec, transform.x, transform.y)
             mover = self.state[entity.id] = _Mover(cell, cell)
             mover.wait = self.rng.choice(parse_pauses(spec.pauses))
+            mover.height = mover.drawn = int(spec.height)
         return mover
+
+    def _read_height(self, entity_id, mover):
+        """Keep a mover's height current as it moves (walking, or walked by a route)."""
+        heights = self.heights
+        if heights is None or mover.at == mover.cell:
+            return
+        if mover.at is None:
+            mover.height, mover.drawn = heights.placed(mover.cell, mover.height)
+        else:
+            mover.height, mover.drawn = heights.stepped(
+                mover.at, mover.cell, mover.height, mover.drawn
+            )
+        mover.at = mover.cell
+        if mover.drawn in heights.over:
+            self.over.add(entity_id)
+        else:
+            self.over.discard(entity_id)
+
+    def holds_at(self, cell, height, exclude=None):
+        """Whether a mover that somebody at ``height`` would bump into holds ``cell``."""
+        for entity_id, mover in self.state.items():
+            if entity_id != exclude and cell in (mover.cell, mover.target):
+                if compatible(mover.height, height):
+                    return True
+        return False
 
     def held_cells(self, exclude=None):
         """Every cell a mover stands on or steps into."""
@@ -251,6 +309,7 @@ class GridMoverSystem:
             alive.add(entity.id)
             known = entity.id in self.state
             mover = self._mover(entity, spec, transform)
+            self._read_height(entity.id, mover)
             if holders is not None and not known:
                 _hold(holders, entity.id, mover)
             if mover.target is not None:
@@ -290,11 +349,14 @@ class GridMoverSystem:
                 continue
             if walls is not None and walls(*centre):
                 continue
+            if self.heights is not None and self.heights.stopped(mover.cell, cell, mover.height):
+                continue
             mover.target = cell
             holders.setdefault(cell, []).append(entity.id)
         for entity_id in tuple(self.state):
             if entity_id not in alive:
                 del self.state[entity_id]
+                self.over.discard(entity_id)
 
     @staticmethod
     def _inside(spec, mover, cell):
@@ -355,17 +417,30 @@ def parse_step(step):
     * ``jump_<dir>`` / ``jump_2_<dir>`` - a hop of one or two cells (``("jump", dir, cells)``);
       ``jump_in_place_<dir>`` - a hop on the spot;
     * ``walk_in_place[_slow|_fast|_faster]_<dir>`` - steps on the spot facing that way;
-    * ``delay:<seconds>``, ``emote:<key>``, ``hide``, ``show``, ``face_player``.
+    * ``delay:<seconds>``, ``emote:<key>``, ``hide``, ``show``, ``face_player``;
+    * ``face_original`` - back to the way it faced as the scene began; ``lock_facing`` /
+      ``unlock_facing`` - its later steps keep (or again change) the way it faces;
+    * ``until_off:<tag>:<step>`` - does ``<step>``, again while the entity then stands on a
+      tile with that tag (a waterfall climbed);
+    * ``clip:<name>:<seconds>`` - plays the animation clip ``<name>_<facing>`` of the entity for
+      that long (its last frame stays until its next route step).
     """
     step = str(step).strip().lower()
     if step.startswith("delay:"):
         return ("delay", "", float(step.split(":", 1)[1]))
+    if step.startswith("clip:"):
+        _, name, seconds = step.split(":")
+        return ("clip", name, float(seconds))
+    if step.startswith("until_off:"):
+        _, tag, inner = step.split(":")
+        parse_step(inner)
+        return ("until_off", tag, inner)
     if step.startswith("emote:"):
         return ("emote", step.split(":", 1)[1], 0.0)
-    if step in ("hide", "show", "face_player"):
+    if step in ("hide", "show", "face_player", "face_original", "lock_facing", "unlock_facing"):
         return (step, "", 0.0)
     head, _, direction = step.rpartition("_")
-    if direction not in STEP:
+    if direction not in STEP and direction != "ahead":  # ahead: the way it faces when it starts
         raise ValueError(f"unknown route step: {step}")
     if head == "face":
         return ("face", direction, 0.0)
@@ -390,6 +465,7 @@ class _Route:
     target: tuple = (0.0, 0.0)
     time: float = 0.0
     length: float = 0.0
+    locked: bool = False  # lock_facing: steps do not turn it
 
 
 class RouteRunner:
@@ -422,6 +498,15 @@ class RouteRunner:
     def _begin(self, entity_id, route, host):
         kind, direction, amount = route.steps.pop(0)
         transform = host.transform(entity_id)
+        if kind == "until_off":  # the step, then this again unless off the tag (checked there)
+            route.steps[:0] = [parse_step(amount), ("until_off?", direction, amount)]
+            route.current = None
+            return
+        if kind == "until_off?":
+            if transform is not None and host.has_tag(transform.x, transform.y, direction):
+                route.steps.insert(0, ("until_off", direction, amount))
+            route.current = None
+            return
         route.current, route.time = (kind, direction, amount), 0.0
         if transform is None:
             route.current = None
@@ -430,8 +515,16 @@ class RouteRunner:
         cx = int(transform.x // size) * size + size / 2
         cy = int(transform.y // size) * size + size / 2
         route.start = (cx, cy)
+        if direction == "ahead":
+            direction = host.facing(entity_id)
+            route.current = (kind, direction, amount)
         ox, oy = STEP.get(direction, (0, 0))
-        if kind in ("move", "jump", "in_place", "face"):
+        play_clip = getattr(host, "play_clip", None)  # (a host without clips: none to play)
+        if play_clip is not None:
+            play_clip(entity_id, direction if kind == "clip" else "")
+        if kind in ("lock_facing", "unlock_facing"):
+            route.locked = kind == "lock_facing"
+        if kind in ("move", "jump", "in_place", "face") and not route.locked:
             host.set_facing(entity_id, direction)
         if kind == "move":
             route.target = (cx + ox * size, cy + oy * size)
@@ -440,7 +533,7 @@ class RouteRunner:
             cells = amount
             route.target = (cx + ox * size * cells, cy + oy * size * cells)
             route.length = (16 if cells <= 1 else 32) * FRAME * (2 if cells == 0 else 1)
-        elif kind in ("in_place", "delay"):
+        elif kind in ("in_place", "delay", "clip"):
             route.target = (cx, cy)
             route.length = amount
         else:
@@ -451,6 +544,8 @@ class RouteRunner:
                 host.set_hidden(entity_id, kind == "hide")
             elif kind == "face_player":
                 host.face_player(entity_id)
+            elif kind == "face_original":
+                host.face_original(entity_id)
 
     def _advance(self, entity_id, route, dt, host):
         if route.current is None:
@@ -508,8 +603,9 @@ class SwitchVisibility2DComponent(Component):
     ),
 )
 class LookByVariable2DComponent(Component):
-    """A character whose picture follows an event variable (who the rival is): ``looks`` is
-    ``"1=<sheet id>|<animation id>; 2=..."``."""
+    """A character whose picture follows event variables (who the rival is): ``looks`` is
+    ``"1=<sheet id>|<animation id>; 2=..."``; ``variable`` can name several, ``"a,b"``, with
+    looks like ``"1,0=..."`` (one with no value counts as 0 there)."""
 
     def __init__(self):
         super().__init__()
@@ -531,6 +627,13 @@ def parse_looks(text):
 @lru_cache(maxsize=256)
 def _cached_looks(text):
     return MappingProxyType(parse_looks(text))
+
+
+def look_key(variable, get):
+    """The key into ``looks`` of a LookByVariable2D's ``variable``, read through ``get``."""
+    if "," not in variable:
+        return str(get(variable, ""))
+    return ",".join(str(get(name.strip(), 0)) for name in variable.split(","))
 
 
 def looks_of(text):

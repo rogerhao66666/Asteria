@@ -64,8 +64,20 @@ CLOSED = {  # argument -> what it can be
 }
 CLOSED_IN = {  # the same argument name meaning something else in one command
     ("SHOW_POPUP", "kind"): ("info", "item", "warning"),
-    ("SET_BATTLE_WEATHER", "kind"): ("none", "rain", "snow", "leaves", "dust"),
+    ("SET_BATTLE_WEATHER", "kind"): (
+        "none",
+        "rain",
+        "snow",
+        "leaves",
+        "dust",
+        "ash",
+        "sand",
+        "fog",
+        "sun",
+    ),
     ("SHOW_PICTURE", "blend"): ("normal", "add"),
+    ("SCREEN_FADE", "over"): ("world", "message_window", "everything"),
+    ("SET_WEATHER", "kind"): ("none", "rain", "snow", "leaves", "dust", "ash", "sand", "fog"),
 }
 RECORDS = {  # argument -> the vocabulary source its names come from
     "ability_id": "abilities",
@@ -109,6 +121,7 @@ LABELS = {
     "class_ids": "Jobs",
     "clip_set_id": "Clip Set",
     "duration_ms": "Duration (ms)",
+    "over": "Covers",
     "icon_id": "Icon",
     "instance_id": "Gear",
     "interaction_id": "Interaction",

@@ -98,6 +98,8 @@ class FieldMapRules:
         if event.kind == "enter":
             if rule.music:
                 session.area_music = rule.music  # the field plays it (a story track wins)
+            if rule.weather:
+                session.field_weather = "" if rule.weather == "none" else rule.weather
             if rule.title and rule.title != session.area_title_shown:
                 session.area_title_shown = rule.title
                 session.area_title_requests.append(rule.title)
@@ -141,7 +143,36 @@ class FieldMapRules:
         transform = self.session.player.get(Transform)
         here = frozenset(r.key for r in self.runtime.rules_at(transform.x, transform.y))
         before, self._step_keys = getattr(self, "_step_keys", frozenset()), here
-        return self.runtime.roll_encounter(transform.x, transform.y, rng, before)
+        repelled = self._repel_step()
+        encounter = self.runtime.roll_encounter(transform.x, transform.y, rng, before)
+        if encounter and repelled and self._weaker_than_the_lead(encounter):
+            return ""
+        return encounter
+
+    def _repel_step(self):
+        """``field.repel``: variable ``variable`` counts the steps left; while it is on, wild
+        creatures weaker than the first healthy one stay away; at 0 ``wears_off`` runs."""
+        rule = getattr(self.session, "field_repel", None)
+        if not rule:
+            return False
+        context = self.session.save.event_context
+        name = str(rule.get("variable", ""))
+        left = int(context.get_variable(name, 0) or 0)
+        if left <= 0:
+            return False
+        context.set_variable(name, left - 1)
+        if left == 1 and rule.get("wears_off") and not self.session.event_busy:
+            self.session.events.start(str(rule["wears_off"]))
+        return True
+
+    def _weaker_than_the_lead(self, encounter_id):
+        session = self.session
+        encounter = session.project.rpg_database.encounters.get(encounter_id)
+        down = session.rules.knockout_resource_id
+        lead = next((p for p in session.party_pets() if p.resources.get(down, 1) > 0), None)
+        if encounter is None or lead is None or not encounter.members:
+            return False
+        return encounter.members[0].level < lead.level
 
     def _scale_enemy_sight(self, transform, moving):
         from asteria.runtime.field_ai import FieldAIComponent

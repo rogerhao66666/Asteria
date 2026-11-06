@@ -1027,7 +1027,7 @@ Every word a screen draws goes through `game.tr(key, english)`; the keys are lis
 | Signature | Description |
 | --- | --- |
 | `game.start_encounter(encounter_id, *, opening=None)` | Begin a turn-based fight; `opening` is `preemptive`, `normal` or `surprise`. |
-| `game.current_turn_actor()` | Whose turn it is. |
+| `game.current_turn_actor(*, new_round=True)` | Whose turn it is. |
 | `game.ability_unavailable(actor_id, ability_id)` | Why an actor cannot use an ability now (`''`: can). |
 | `game.default_targets(actor_id, ability_id)` | The targets a selection would default to. |
 | `game.preview(actor_id, ability_id, target_ids)` | Predicted results of an action (nothing changes). |
@@ -1044,7 +1044,7 @@ Every word a screen draws goes through `game.tr(key, english)`; the keys are lis
 | `game.steal(actor_id, target_id, *, chance_bonus=0.0)` | Try to steal from an enemy. |
 | `game.auto_battle_act(actor_id, **options)` | Let a hero take its turn automatically. |
 | `game.drain_battle_log()` | Return and clear the battle facts so far. |
-| `game.set_battle_weather(kind, intensity=0.6, wind=0.0)` | The weather of the next battles. |
+| `game.set_battle_weather(kind, intensity=0.6, wind=0.0, turns=0)` | The weather of the next battles. |
 
 ### 15.10 GameSessionRuntime: pets and creatures
 
@@ -1179,7 +1179,7 @@ Conditions (`JUMP_IF`, `IF_FALSE_SKIP`, `WAIT until`, event pages) are `{source,
 
 ### 15.16 World commands
 
-The 83 commands a `WORLD` instruction can run, with the argument names each reads (`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`). In the editor: Events ▸ World.
+The 84 commands a `WORLD` instruction can run, with the argument names each reads (`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`). In the editor: Events ▸ World.
 
 | Command | Arguments |
 | --- | --- |
@@ -1232,8 +1232,8 @@ The 83 commands a `WORLD` instruction can run, with the argument names each read
 | `REFINE_EQUIPMENT` | actor_id, instance_id, protect |
 | `RESTORE_BGM` | — |
 | `REST_PARTY` | — |
-| `SCREEN_FADE` | to, duration, color |
-| `SET_BATTLE_WEATHER` | kind, intensity, wind |
+| `SCREEN_FADE` | to, duration, color, over |
+| `SET_BATTLE_WEATHER` | kind, intensity, wind, turns |
 | `SET_CLASSES` | actor_id, class_ids, unlock |
 | `SET_ENTITY_ICON` | entity, icon_id |
 | `SET_LIGHT` | radius, speed, off |
@@ -1245,6 +1245,7 @@ The 83 commands a `WORLD` instruction can run, with the argument names each read
 | `SET_POSITION` | entity, x, y, facing, permanent |
 | `SET_RESPAWN` | scene_id, x, y, facing |
 | `SET_TILE` | layer, x, y, tile, permanent |
+| `SET_WEATHER` | kind |
 | `SHOW_BALLOON` | entity, balloon, duration_ms |
 | `SHOW_ENTITY` | entity, shown |
 | `SHOW_PICTURE` | picture_id, asset_id, x, y, scale, opacity, frame, columns, rows, layer, click_event, tint, tint_color, frame_rate, frame_loop, scroll_x, scroll_y, wave_amplitude, wave_length, wave_speed, blend, text, font, text_color, shadow_color, text_align |

@@ -49,6 +49,7 @@ class AreaRule:
     switch: str = ""
     battle_background: str = ""
     music: str = ""
+    weather: str = ""  # the field's weather while here ("" = as it is, "none" = clear)
     title: str = ""
     encounters: tuple[tuple[str, float], ...] = ()
     encounter_chance: float = 0.0
@@ -79,6 +80,7 @@ class AreaRule:
         switch="",
         battle_background="",
         music="",
+        weather="",
         title="",
         encounters=(),
         encounter_chance=0.0,
@@ -109,6 +111,7 @@ class AreaRule:
         s(self, "switch", _text(switch))
         s(self, "battle_background", _text(battle_background))
         s(self, "music", _text(music))
+        s(self, "weather", _text(weather))
         s(self, "title", str(title or ""))
         pairs = encounters.items() if isinstance(encounters, dict) else encounters
         table = []
@@ -185,6 +188,7 @@ class AreaRule:
             "switch",
             "battle_background",
             "music",
+            "weather",
             "title",
             "encounter_chance",
             "encounter_first_step",

@@ -127,6 +127,10 @@ class PlayableTestRuntime(
         self._network_input_prediction_sequences = {}
         self._network_prediction_reconciled_revision = -1
         self.game = GameSessionRuntime(project, runtime_save)
+        self.game.field_repel = self.manifest.get("field", {}).get("repel")
+        self.game.height_over = frozenset(
+            int(height) for height in self.manifest.get("field", {}).get("height_over", ())
+        )
         self._skeleton_scene_runtime = SkeletonSceneRuntime()
         self._skeleton_sheet_cache = {}
         self.save = runtime_save
@@ -815,6 +819,8 @@ class PlayableTestRuntime(
             self._draw_dialogue()
             if screen.done:
                 self._creature_battle = None
+                if screen.weather_rules:
+                    self.game.set_battle_weather("none")
                 if screen.defeated and "defeat_continues" in screen.tags:
                     self.game.mode = "field"  # a battle the story goes on after, lost or won
                     self.game.battle = None
@@ -978,7 +984,9 @@ class PlayableTestRuntime(
             else:
                 override = getattr(self, "_bgm_override", None)  # a story event chose the track
                 if override is None:  # else the map area's own music, else the field's
-                    override = self.game.area_music or self.manifest["field"].get("bgm")
+                    ride = self._field_ride()
+                    override = (ride or {}).get("music") or self.game.area_music
+                    override = override or self.manifest["field"].get("bgm")
                 self._music(override)
                 self._preload_battle_images()
                 self._draw_field(moving)

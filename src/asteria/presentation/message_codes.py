@@ -76,6 +76,8 @@ def expand_message(text, context=None, *, _depth=0):
         value = None
         if kind == "V" and context.variable:
             value = context.variable(arg)
+            if isinstance(value, str) and "\\" in value:  # a variable holding codes itself
+                value = expand_message(value, context, _depth=_depth + 1)
         elif kind == "S" and context.switch:
             value = "ON" if context.switch(arg) else "OFF"
         elif kind == "N" and context.actor_name:

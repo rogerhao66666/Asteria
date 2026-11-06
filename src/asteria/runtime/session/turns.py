@@ -41,7 +41,70 @@ class TurnsMixin:
             return self.tr(
                 "battle.escape.blocked", "This battle has no_escape: there is no running away"
             )
+        if any(self.held_on_stage(member_id) for member_id in self.stage_ids("heroes")):
+            return self.tr("battle.escape.held", "Can't escape!")
         return ""
+
+    def weather_round(self, rules):
+        """The end of a round under weather: it counts down and may stop; fighters it hurts lose
+        ``hurt_share``-ths of their top health unless they carry an ``immune_tags`` tag."""
+        weather = self.battle_weather() if self.battle is not None else None
+        if weather is None:
+            return
+        kind = weather[0]
+        rule = dict(dict(rules or {}).get(kind) or {})
+        context = self.save.event_context
+        turns = int(context.get_variable(self.BATTLE_WEATHER_TURNS, 0) or 0)
+        if turns == 1:
+            self.set_battle_weather("none")
+            self._log("weather_line", data={"kind": kind, "moment": "ended"})
+            return
+        if turns > 1:
+            context.set_variable(self.BATTLE_WEATHER_TURNS, turns - 1)
+        self._log("weather_line", data={"kind": kind, "moment": "continues"})
+        share = int(rule.get("hurt_share", 0) or 0)
+        resource = self.rules.knockout_resource_id
+        if not share or not resource:
+            return
+        immune = tuple(rule.get("immune_tags", ()))
+        for member_id in (*self.active_enemy_ids(), *self.active_hero_ids()):
+            subject = self.battle.member(member_id).subject
+            if subject.tags.contains_any(immune):
+                continue
+            hurt = max(1, int(subject.resources.maximum(resource) // share))
+            subject.resources.change(resource, -hurt)
+            self._log("weather_hurt", member_id=member_id, data={"kind": kind})
+        self.settle_objectives()
+        if self.battle is not None and self.battle.benched:
+            self._refill_slots("enemies")
+
+    def held_on_stage(self, member_id):
+        """The states that keep this member from running or being switched out (Wrap...)."""
+        if self.battle is None or member_id is None:
+            return ()
+        self._release_held()
+        subject = self.battle.member(member_id).subject
+        return self.battle.battle_states.leaving_blocked_by(subject)
+
+    def _release_held(self):
+        """A hold ends when whoever holds a member is gone from the stage (or down)."""
+        battle = self.battle
+        policies = battle.battle_states.policies
+        for member in battle.members.values():
+            states = member.subject.states
+            if states is None or member.member_id in battle.benched:
+                continue
+            for active in list(states.active_states()):
+                policy = policies.get(active.state_id)
+                if policy is None or not policy.blocks_leaving:
+                    continue
+                holder = battle.members.get(active.source_id or "")
+                if (
+                    holder is None
+                    or holder.member_id in battle.benched
+                    or not battle.is_active(holder)
+                ):
+                    states.remove(active.state_id)
 
     def escape_chance(self):
         from asteria.rpg.battle_lifecycle import resolve_escape_chance
@@ -154,7 +217,19 @@ class TurnsMixin:
             for a in self.battle.member(member_id).ability_ids
             if record is None or self.pet_uses_left(record, a) != 0
         ]
-        return self.battle.rng.choice(usable) if usable else None
+        if not usable:
+            return None
+        from asteria.rpg.move_choice import choose_move, move_rules_of
+
+        rules = move_rules_of(self._encounter_tags())
+        if not rules:
+            return self.battle.rng.choice(usable)
+        targets = self.active_hero_ids()
+        return choose_move(self, member_id, usable, targets[0] if targets else None, rules)
+
+    def _encounter_tags(self):
+        encounter = self.project.rpg_database.encounters.get(self.encounter_id or "")
+        return tuple(getattr(encounter, "tags", ()) or ())
 
     def plan_round(self, choices=None):
         """Everyone chooses before the round, as in creature games: ``choices`` gives the

@@ -7,6 +7,7 @@ from pathlib import Path
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -21,7 +22,7 @@ from PySide6.QtWidgets import (
 from .game_systems_widget import _IconPicker
 from .image_tools import PortraitLibrary, project_root
 
-DIALOGUE_KEYS = ("speaker", "text", "portrait_asset_id", "portrait_side")
+DIALOGUE_KEYS = ("speaker", "text", "portrait_asset_id", "portrait_side", "wait")
 
 
 def portrait_pixmap(document, portrait_id):
@@ -214,6 +215,12 @@ class DialogueCommandDialog(QDialog):
         form.addRow("Text", self.text)
         form.addRow("Portrait", self.portrait)
         form.addRow("Portrait side", self.side)
+        self.goes_on = QCheckBox("Goes on without a key")
+        self.goes_on.setToolTip(
+            "The line stays on the window while the event goes on; no words close the window"
+        )
+        self.goes_on.setChecked((args or {}).get("wait", True) is False)
+        form.addRow("", self.goes_on)
         self.preview = _MessagePreview(self)
         content.addWidget(form_box, 1)
         content.addWidget(self.preview, 1)
@@ -252,4 +259,6 @@ class DialogueCommandDialog(QDialog):
             args["portrait_asset_id"] = self.portrait.text()
         if self.side.currentData() == "right":
             args["portrait_side"] = "right"
+        if self.goes_on.isChecked():
+            args["wait"] = False
         return args

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import zipfile
+
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
 from asteria.presentation.creature_screens import creature_settings
 from asteria.runtime.collision import box_blocked, feet_box
+from asteria.runtime.movies import Movie, is_movie
 
 from .support import (  # noqa: F401 - the names the moved methods use
     BESTIARY_TAG_KINDS,
@@ -188,12 +191,28 @@ class FieldUiMixin:
         source = icon_source(self.project, picture.asset_id)
         if source is None:
             return None
+        if is_movie(source[0]):
+            return self._movie_image(source[0], picture)
         try:
             image = self.load_image(source[0])
         except (OSError, ValueError, self.pg.error):
             return None
         x, y, w, h = picture.cell(*image.get_size())
         return image.subsurface(self.pg.Rect(x, y, w, h).clip(image.get_rect()))
+
+    def _movie_image(self, source, picture):
+        """The frame a movie picture is at: ``frame_rate`` frames a second since it was shown,
+        from ``frame`` on; the last one stays unless it loops."""
+        movies = self.__dict__.setdefault("_movies", {})
+        try:
+            movie = movies.get(source) or movies.setdefault(
+                source, Movie(self.pg, self.path(source))
+            )
+            index = movie.frame_at(picture.age, picture.frame_rate, picture.frame,
+                                   picture.frame_loop)  # fmt: skip
+            return movie.image(index)
+        except (OSError, ValueError, KeyError, self.pg.error, zipfile.BadZipFile):
+            return None
 
     def _text_picture_font(self, font_id):
         """A text picture's font: the bitmap font ``font_id``, else the message window's."""
@@ -248,6 +267,8 @@ class FieldUiMixin:
         image = self._picture_image(picture)
         if image is None:
             return None
+        if is_movie(self._picture_path(picture)):
+            return image.get_size()
         return self.load_image(self._picture_path(picture)).get_size()
 
     def _picture_path(self, picture):
@@ -544,6 +565,15 @@ class FieldUiMixin:
         return box, (picture, at, style, room)
 
     def _draw_dialogue(self):
+        """The message window, and last of all a SCREEN_FADE ``over`` everything."""
+        self._draw_dialogue_request()
+        effects = self.field_effects
+        if effects.fade_alpha > 0 and effects.fade_over == "everything":
+            shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
+            shade.fill((*effects.fade_color, int(effects.fade_alpha * 255)))
+            self.screen.blit(shade, (0, 0))
+
+    def _draw_dialogue_request(self):
         request = (
             getattr(self, "_network_dialogue", None)
             if self._multiplayer_connected()
@@ -736,6 +766,12 @@ class FieldUiMixin:
             frame = (self.pg.time.get_ticks() // int(settings.get("arrow_frame_ms", 160))) % frames
             ax, ay = settings.get("arrow_at", (220, 24))
             surface.blit(arrow, (ax, ay), (0, frame * ah, aw, ah))
+        effects = self.field_effects
+        if effects.fade_alpha > 0 and effects.fade_over == "message_window":
+            mix = round(effects.fade_alpha * 255)
+            shade = self.pg.Surface(surface.get_size(), self.pg.SRCALPHA)
+            shade.fill((*effects.fade_color, mix))
+            surface.blit(shade, (0, 0))
         big = self.pg.transform.scale(surface, (ww * scale, wh * scale))
         self.screen.blit(big, ((self.width - ww * scale) // 2, self.height - wh * scale))
 
@@ -1064,7 +1100,98 @@ class FieldUiMixin:
             self.game.field_step({"interact": 1.0})
             if self.game.mode == "field":
                 self.game.field_step({"interact": 0.0})
+                self._tile_action()
         return moving
+
+    def _tile_keys(self):
+        """``keys_at(x, y)`` of the field's tile map (its tags and regions), or None."""
+        view = self.tile_view
+        if view is None:
+            return None
+        cache = getattr(self, "_ledge_keys", None)
+        if cache is None or cache[0] is not view.tilemap:
+            from asteria.runtime.map_rules_field import tile_area_keys
+
+            cache = self._ledge_keys = (view.tilemap, tile_area_keys(view.tilemap, view.tileset))
+        return cache[1]
+
+    def _field_ride(self):
+        """``field.rides``: what the player rides now, or None. Each is ``variable`` and
+        ``value`` (its variable has that value while riding), and may have ``tag`` (it moves on
+        tiles with that tag, walls or not, and only there), ``leave_program`` (runs when the
+        player heads for free ground from such tiles), ``speed`` (world units a second) and
+        ``music`` (plays instead of the area's)."""
+        rides = self.manifest.get("field", {}).get("rides")
+        if not rides:
+            return None
+        context = self.game.save.event_context
+        for ride in rides:
+            if context.get_variable(str(ride.get("variable", "")), 0) == ride.get("value"):
+                scenes = ride.get("scenes")  # ``scenes``: it ends anywhere else (no bikes indoors)
+                if scenes and self.game.scene.name not in scenes:
+                    context.set_variable(str(ride["variable"]), 0)
+                    return None
+                return ride
+        return None
+
+    def _field_push(self, dx, dy, size, stopped):
+        """``field.push``: once switch ``switch`` is on, walking into a character whose name is
+        in ``names`` moves it a cell on (``sound`` plays) if the cell behind it is free."""
+        rule = self.manifest.get("field", {}).get("push")
+        game = self.game
+        if not rule or game.event_busy or not (dx or dy) or (dx and dy):
+            return False
+        if not game.save.event_context.get_switch(str(rule.get("switch", ""))):
+            return False
+        movers = game._grid_movers.get(game.scene.id)
+        if movers is None:
+            return False
+        names = set(rule.get("names") or ())
+        transform = game.player.get(Transform)
+        cell = (int(transform.x // size) + (dx > 0) - (dx < 0),
+                int(transform.y // size) + (dy > 0) - (dy < 0))  # fmt: skip
+        for entity_id, mover in movers.state.items():
+            if mover.cell != cell or mover.target is not None:
+                continue
+            entity = game.scene.get_entity(entity_id)
+            if entity is None or entity.name not in names:
+                return False
+            ahead = (cell[0] + (dx > 0) - (dx < 0), cell[1] + (dy > 0) - (dy < 0))
+            if stopped((ahead[0] + 0.5) * size, (ahead[1] + 0.5) * size):
+                return False
+            way = "right" if dx > 0 else "left" if dx < 0 else "down" if dy > 0 else "up"
+            from asteria.events import WorldCommand
+
+            game.world_commands.dispatch(
+                WorldCommand("GRID_ROUTE", {"entity": entity.name, "steps": [f"walk_{way}"]})
+            )
+            self._sound(rule.get("sound"))
+            return True
+        return False
+
+    def _tile_action(self):
+        """``field.tile_actions``: the action key on a tile with ``tag`` starts ``program``
+        (when nobody there took the key), unless variable ``unless`` is ``unless_value``."""
+        actions = self.manifest.get("field", {}).get("tile_actions")
+        keys_at = self._tile_keys() if actions else None
+        game = self.game
+        if keys_at is None or game.event_busy or game.mode != "field":
+            return
+        from asteria.runtime.grid_walk import FACING_STEP
+
+        size = float(self.manifest.get("field", {}).get("grid_size", 16.0))
+        transform = game.player.get(Transform)
+        ox, oy = FACING_STEP.get(game.facing, (0, 0))
+        keys = keys_at(transform.x + ox * size, transform.y + oy * size)
+        get = game.save.event_context.get_variable
+        for action in actions:
+            if f"tag:{action.get('tag')}" not in keys:
+                continue
+            if "unless" in action and get(action["unless"], 0) == action.get("unless_value"):
+                continue
+            game.events.start(str(action["program"]))
+            game.update_events(0.0)
+            return
 
     def _click_move_to(self, screen_x, screen_y):
         """Click to move (``InputActionMap.click_move``, D85): a left click on the map that hit
@@ -1214,9 +1341,42 @@ class FieldUiMixin:
 
         before = walker.target
 
-        def stopped(x, y):  # a wall, or a cell a grid character stands on or walks into
-            return (int(x // size), int(y // size)) in held or blocked.collides_world_point(x, y)
+        ride = self._field_ride()
+        ride_tag = f"tag:{ride['tag']}" if ride and ride.get("tag") else None
+        keys_at = self._tile_keys() if ride_tag else None
+        solid = game.frame_collision_world().blocking_query(exclude={game.player.id})
+        leaving = []
+        heights = game.grid_heights()
+        if heights is not None:
+            self._read_player_height(heights, transform)
 
+        def stopped(x, y):  # a wall, or a cell a grid character stands on or walks into
+            cell = (int(x // size), int(y // size))
+            if movers is not None and heights is not None:
+                if movers.holds_at(cell, game.player_height):
+                    return True
+            elif cell in held:
+                return True
+            if heights is not None and not ride_tag:
+                here = heights.cell_of(transform.x, transform.y)
+                if heights.stopped(here, cell, game.player_height):
+                    return True
+            if keys_at is None:
+                return blocked.collides_world_point(x, y)
+            if solid.collides_world_point(x, y):
+                return True
+            if ride_tag in keys_at(x, y):
+                return False
+            if not blocked.collides_world_point(x, y):
+                leaving.append(cell)  # free ground ahead: the ride ends
+            return True
+
+        if walker.target is None and self._field_push(dx, dy, size, stopped):
+            return
+        if ride is not None and ride.get("speed"):
+            running, walker.run_speed = True, float(ride["speed"])
+        elif ride is None:
+            walker.run_speed = float(self.manifest.get("field", {}).get("run_speed", 120.0))
         facing, moving = walker.step(
             transform,
             game.facing,
@@ -1225,8 +1385,11 @@ class FieldUiMixin:
             dt,
             stopped,
             running=running,
-            ledge=self._grid_ledge(),
+            ledge=None if ride_tag else self._grid_ledge(),
         )
+        if leaving and ride.get("leave_program") and not game.event_busy:
+            game.events.start(str(ride["leave_program"]))
+            game.update_events(0.0)
         game.player_lift = walker.lift  # the view draws a hopping player raised
         if before is not None and walker.target != before and game.mode == "field":
             # a step ended on a cell: the area there may start a random encounter
@@ -1244,6 +1407,23 @@ class FieldUiMixin:
         if moving:
             self._field_step += 1
         return moving
+
+    def _read_player_height(self, heights, transform):
+        """Keep the player's height current: a step changes it by the cell's rules; anything
+        further (a door, an event) puts the player on the cell's own height."""
+        game = self.game
+        cell = heights.cell_of(transform.x, transform.y)
+        last = getattr(self, "_height_cell", None)
+        if last == (game.scene.id, cell):
+            return
+        self._height_cell = (game.scene.id, cell)
+        near = last is not None and last[0] == game.scene.id
+        if near and abs(last[1][0] - cell[0]) + abs(last[1][1] - cell[1]) <= 2:
+            game.player_height, game.player_drawn_height = heights.stepped(
+                last[1], cell, game.player_height, game.player_drawn_height
+            )
+        else:
+            game.player_height, game.player_drawn_height = heights.placed(cell)
 
     def _grid_ledge(self):
         """``ledge(x, y, facing)`` for the grid walk: the tiles there carry the tag

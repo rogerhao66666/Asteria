@@ -468,18 +468,42 @@ class SpriteSheetLibrary(IconLibrary):
         raise NotImplementedError("sprite sheets come in through the picture dialog's Browse")
 
 
+def movie_first_frame(document, asset_id):
+    """A movie asset's first frame as a pixmap (null when it is no movie, or unreadable)."""
+    import zipfile
+
+    from PySide6.QtGui import QPixmap
+
+    pixmap = QPixmap()
+    project = getattr(document, "project", None)
+    record = project.assets.get(asset_id) if project is not None else None
+    if record is None or record.kind != "movie":
+        return pixmap
+    try:
+        with zipfile.ZipFile(project_root(document) / str(record.source_path)) as archive:
+            names = sorted(n for n in archive.namelist() if n.lower().endswith(".png"))
+            if names:
+                pixmap.loadFromData(archive.read(names[0]))
+    except (OSError, zipfile.BadZipFile):
+        pass
+    return pixmap
+
+
 class PictureLibrary(IconLibrary):
-    """The pictures a picture command can show: the project's textures, by name; Browse… makes
-    a picture from anywhere one of them (copied to ``<project>/pictures/``)."""
+    """The pictures a picture command can show: the project's textures and movies, by name;
+    Browse… makes a picture (or a movie: a zip of PNG frames) from anywhere one of them (copied
+    to ``<project>/pictures/``)."""
 
     FOLDER = "pictures"
     KIND = "texture"
+    KINDS = ("texture", "movie")
     CACHE = "_picture_choices_cache"
+    FILE_FILTER = "Pictures and movies (*.png *.jpg *.jpeg *.webp *.zip)"
 
     def _records(self):
         project = getattr(self.document, "project", None)
         records = () if project is None else project.assets.records()
-        pictures = [a for a in records if a.kind == self.KIND]
+        pictures = [a for a in records if a.kind in self.KINDS]
         return sorted(pictures, key=lambda a: (str(a.name), a.id))
 
     def _build(self):
@@ -491,7 +515,11 @@ class PictureLibrary(IconLibrary):
         choices = []
         for asset in self._records():
             path = resolve_texture_source(self.document, asset.id)
-            pixmap = QPixmap(str(path)) if path is not None else QPixmap()
+            pixmap = (
+                QPixmap(str(path))
+                if path is not None
+                else movie_first_frame(self.document, asset.id)
+            )
             icon = QIcon(framed(pixmap, 48)) if not pixmap.isNull() else None
             choices.append((asset.id, icon))
         return tuple(choices)
@@ -509,7 +537,8 @@ class PictureLibrary(IconLibrary):
             if Path(str(asset.source_path)).as_posix() == relative:
                 return asset.id
         name = Path(relative).stem.replace("_", " ").title()
-        record = AssetRecord.create(kind=self.KIND, source_path=relative, name=name)
+        kind = "movie" if relative.lower().endswith(".zip") else self.KIND
+        record = AssetRecord.create(kind=kind, source_path=relative, name=name)
         return self.document.project.assets.add(record).id
 
 

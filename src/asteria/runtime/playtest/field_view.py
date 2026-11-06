@@ -134,7 +134,7 @@ class FieldViewMixin:
                 )
         self.world_done("field")
         alpha = self.field_effects.fade_alpha
-        if alpha > 0:
+        if alpha > 0 and self.field_effects.fade_over != "everything":
             shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
             shade.fill((*self.field_effects.fade_color, int(alpha * 255)))
             self.screen.blit(shade, (0, 0))

@@ -12,7 +12,7 @@
   （Command Menu Pages 的名稱）、`battle.group.<分組名>`（技能的 `menu_category`）、
   `pause.entry.<項目 id>`（暫停選單的自訂項目）。沒寫譯文就照專案寫的顯示。
 
-共 709 個鍵，29 組。
+共 712 個鍵，29 組。
 
 ## Creature battle
 
@@ -44,6 +44,8 @@
 | `creature.bag_empty` | Nothing here. | 什麼都沒有。 |
 | `creature.no_running` | No! There's no running from a trainer battle! | 不行！不能從訓練家的對戰中逃走！ |
 | `creature.got_away` | Got away safely! | 順利逃走了！ |
+| `creature.dex.area_unknown` | AREA UNKNOWN | 棲息地不明 |
+| `creature.cant_switch` | {name} can't be switched out! | {name} 無法替換！ |
 | `creature.used` | {user} used {move}! | {user}使用了{move}！ |
 | `creature.sent_to_storage` | {name} was transferred to storage. | {name}被送到寄放處了。 |
 | `creature.exp` | {name} gained {amount} EXP. Points! | {name}獲得了{amount}經驗值！ |
@@ -645,6 +647,7 @@
 | `battle.break_caption` | Damage up - loses a turn | 受到的傷害提高，失去一回合 |
 | `battle.item_none_left` | no {name} left | {name} 已經用完了 |
 | `battle.escape.no_rule` | The project defines no escape rule | 這個專案沒有設定逃跑規則 |
+| `battle.escape.held` | Can't escape! | 逃不掉！ |
 | `battle.escape.blocked` | This battle has no_escape: there is no running away | 這場戰鬥無法逃跑 |
 | `battle.no_one` | No one can fight: the party has no creature standing | 沒有人能戰鬥：隊伍裡沒有站得住的生物 |
 | `battle.switch.no_room` | There is no room on the stage | 場上沒有空位 |

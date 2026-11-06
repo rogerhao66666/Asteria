@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from .dialogue_command_dialog import _PortraitPicker, fit_pixmap
-from .image_tools import PictureLibrary
+from .image_tools import PictureLibrary, movie_first_frame
 from .menu_layout_authoring import MenuLayoutAuthoringController
 from .picture_preview import (
     WHITE,
@@ -79,7 +79,10 @@ class _PicturePick(_PortraitPicker):
     def _shown(self, *_):
         document = self.library.document
         path = resolve_texture_source(document, self.text()) if document else None
-        pixmap = QPixmap(str(path)) if path is not None else QPixmap()
+        if path is not None:
+            pixmap = QPixmap(str(path))
+        else:  # a movie shows its first frame
+            pixmap = movie_first_frame(document, self.text()) if document else QPixmap()
         side = self.PREVIEW - 8  # inside its frame
         if pixmap.isNull():
             self.preview.setPixmap(QPixmap())
@@ -285,7 +288,7 @@ class PictureCommandDialog(QDialog):
             "frame": "Frame",
             "columns": "Sheet columns",
             "rows": "Sheet rows",
-            "frame_rate": ("Cells a second", "0 = still"),
+            "frame_rate": ("Cells a second", "0 = still; a movie: its frames a second"),
             "frame_loop": ("Cells start again", "Off: play once and keep the last"),
             "scroll_x": ("Scroll right", "Image pixels a second; it wraps round"),
             "scroll_y": ("Scroll down", "Image pixels a second; it wraps round"),
@@ -424,7 +427,9 @@ class PictureCommandDialog(QDialog):
         if self.document is None or self.document.project is None:
             return QPixmap()
         path = resolve_texture_source(self.document, self.asset_id.text().strip())
-        if path is None or not Path(path).is_file():
+        if path is None:  # a movie: its first frame
+            return movie_first_frame(self.document, self.asset_id.text().strip())
+        if not Path(path).is_file():
             return QPixmap()
         pixmap = QPixmap(str(path))
         columns, rows = self.columns.value(), self.rows.value()

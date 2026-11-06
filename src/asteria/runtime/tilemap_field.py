@@ -417,6 +417,11 @@ class TileMapField:
             scale=self.camera.zoom,
             read_shader=read_shader,
         )
+        story = self.session.field_weather  # SET_WEATHER / the area's weather win ("" = the map's)
+        if story:
+            env.weather = story
+            env.weather_intensity = env.weather_intensity or 0.6
+            env.weather_max_particles = env.weather_max_particles or 200
         if env.weather != "none":
             from .weather import WeatherSystem
 

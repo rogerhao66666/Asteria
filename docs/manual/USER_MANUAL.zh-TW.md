@@ -964,7 +964,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | 簽名 | 說明 |
 | --- | --- |
 | `game.start_encounter(encounter_id, *, opening=None)` | 開始回合制戰鬥；`opening` 可為 `preemptive`、`normal` 或 `surprise`。 |
-| `game.current_turn_actor()` | 現在輪到誰。 |
+| `game.current_turn_actor(*, new_round=True)` | 現在輪到誰。 |
 | `game.ability_unavailable(actor_id, ability_id)` | 角色現在不能用某技能的原因（`''` 表示可以）。 |
 | `game.default_targets(actor_id, ability_id)` | 選擇目標時的預設目標。 |
 | `game.preview(actor_id, ability_id, target_ids)` | 預測行動的結果（不會改變任何東西）。 |
@@ -981,7 +981,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | `game.steal(actor_id, target_id, *, chance_bonus=0.0)` | 嘗試偷取敵人的東西。 |
 | `game.auto_battle_act(actor_id, **options)` | 讓角色自動行動一回合。 |
 | `game.drain_battle_log()` | 取出並清空目前的戰鬥紀錄。 |
-| `game.set_battle_weather(kind, intensity=0.6, wind=0.0)` | 之後戰鬥的天氣。 |
+| `game.set_battle_weather(kind, intensity=0.6, wind=0.0, turns=0)` | 之後戰鬥的天氣。 |
 
 ### 15.10 GameSessionRuntime：寵物與生物
 
@@ -1116,7 +1116,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 
 ### 15.16 世界指令
 
-`WORLD` 指令可以執行的 83 個世界指令與各自讀取的參數名（`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`）。編輯器裡：事件 ▸ 世界。
+`WORLD` 指令可以執行的 84 個世界指令與各自讀取的參數名（`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`）。編輯器裡：事件 ▸ 世界。
 
 | 指令 | 參數 |
 | --- | --- |
@@ -1169,8 +1169,8 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | `REFINE_EQUIPMENT` | actor_id, instance_id, protect |
 | `RESTORE_BGM` | — |
 | `REST_PARTY` | — |
-| `SCREEN_FADE` | to, duration, color |
-| `SET_BATTLE_WEATHER` | kind, intensity, wind |
+| `SCREEN_FADE` | to, duration, color, over |
+| `SET_BATTLE_WEATHER` | kind, intensity, wind, turns |
 | `SET_CLASSES` | actor_id, class_ids, unlock |
 | `SET_ENTITY_ICON` | entity, icon_id |
 | `SET_LIGHT` | radius, speed, off |
@@ -1182,6 +1182,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | `SET_POSITION` | entity, x, y, facing, permanent |
 | `SET_RESPAWN` | scene_id, x, y, facing |
 | `SET_TILE` | layer, x, y, tile, permanent |
+| `SET_WEATHER` | kind |
 | `SHOW_BALLOON` | entity, balloon, duration_ms |
 | `SHOW_ENTITY` | entity, shown |
 | `SHOW_PICTURE` | picture_id, asset_id, x, y, scale, opacity, frame, columns, rows, layer, click_event, tint, tint_color, frame_rate, frame_loop, scroll_x, scroll_y, wave_amplitude, wave_length, wave_speed, blend, text, font, text_color, shadow_color, text_align |

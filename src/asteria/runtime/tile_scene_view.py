@@ -376,7 +376,7 @@ class TileSceneView:
                 dt,
                 (t.x, t.y),
                 facing,
-                action_clip(run),
+                self.session.route_clips.get(entity.id) or action_clip(run),
                 float(getattr(animator, "stride", 0.0) or 0.0),
                 float(getattr(animator, "speed", 1.0) or 1.0),
                 action_time=None if run is None else run.time,
@@ -783,6 +783,11 @@ class TileSceneView:
         covers = getattr(self, "_covers", None)
         clip = screen.get_clip()
         drawn_rects = []
+        over_ids = getattr(self.session, "sprites_over_above", None)
+        over_ids = over_ids() if over_ids is not None else ()
+        over_rows = [row for row in sprites if row[2].id in over_ids] if over_ids else []
+        if over_rows:
+            sprites = [row for row in sprites if row[2].id not in over_ids]
         for _, _, entity, sprite, frame, rig_draws in sprites:
             if sprite is None:
                 for draw in rig_draws:
@@ -825,6 +830,21 @@ class TileSceneView:
         if drawn_rects and walls_cover_characters(settings):
             self._cover_with_walls(screen, drawn_rects)
         self._layer(screen, "above")
+        for _, _, entity, sprite, frame, _rig in over_rows:  # on a bridge: over its rails
+            if sprite is None:
+                continue
+            try:
+                image, px, py = self._sprite(sprite.sprite_sheet_asset_id, frame, self.camera.zoom)
+            except Exception:  # noqa: BLE001 - a missing frame is skipped, as below
+                continue
+            t = entity.get(Transform)
+            sx, sy = self.camera.world_to_screen(t.x, feet_y(entity, t.y))
+            if entity is player:
+                sy -= getattr(self.session, "player_lift", 0.0) * self.camera.zoom
+            if sprite.flip_x:
+                image = self.pg.transform.flip(image, True, False)
+            width, height = image.get_size()
+            screen.blit(image, (round(sx - width * px), round(sy - height * py)))
         self._draw_darkness(screen)
 
     def _cover_with_walls(self, screen, rects):

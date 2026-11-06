@@ -744,6 +744,23 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 開源前整理 | MIT 授權；範例改名 `party_rpg_demo`、`arpg_demo`；根目錄文件搬進 `docs/` |
 | 橫向場景的腳與牆 | 橫向的角色站在碰撞框底部（`character_control.feet_y`，圖片與骨骼都用）；`CombatScene.walls_cover_characters`（`auto`／`always`／`never`，auto＝只在橫向）把實心地圖磚畫在角色伸進牆的部分上面，揮劍停在牆面；ARPG 範例每個方向用自己的腳底對齊點、Cave Bat 改成拿掉影子的騎蝙蝠哥布林、Crawler 改成地上的哥布林、Drill Drone 不再埋進地板；測試涵蓋平地、單向平台、木橋、走道、台階、牆邊、跳躍、走下台階、跳上台階 |
 
+### D101 新增（2026-11-05；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 影片 | 資產種類 `movie`（PNG 影格的 zip，`runtime/movies.py`），用 `SHOW_PICTURE` 的 `frame_rate` 播放 |
+| 事件 | `SCREEN_FADE over`（`world`／`message_window`／`everything`）、`DIALOGUE wait:false`、`SET_VARIABLE random`、`SET_WEATHER`、`SET_BATTLE_WEATHER turns`；`rpg` 條件 `party_move:`、`scene`、`battle_outcome` |
+| 野外 | manifest `field.rides`、`field.tile_actions`、`field.push`、`field.repel`；路線步驟 `clip:`、`until_off:`、`jump_ahead`、`face_original`、`lock_facing` |
+| 戰鬥 | `BattleStatePolicy.prevent_resource`／`prevent_amount`／`blocks_leaving`；`rpg/move_choice.py`（特徵 `move_ai.*`）；生物戰畫面的 `weather`、`sounds`；只有回合第一位能開新回合 |
+| 選單 | `bag.use_programs`、`party.field_moves`、`pokenav.rows`、`region_map`（含 `fly`）、圖鑑 AREA 頁與 `dex.search` |
+
+### D102 新增（2026-11-06；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 地圖規則 | `runtime/grid_heights.py`：特徵 `height_<n>`、`block_<方向>`；玩家、走動角色、視線都遵守；manifest `field.height_over` 決定誰畫在上層圖塊之上；`GridMover2D.height` |
+| 躲藏 | `SightTrigger2D.reveal_variable`／`reveal_seconds`／`every_way`，配合 `LookByVariable2D` 換圖 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

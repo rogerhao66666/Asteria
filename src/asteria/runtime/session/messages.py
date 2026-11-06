@@ -343,10 +343,20 @@ class MessagesMixin:
 
     def _message_word(self, name):
         """The words ``\\V[...]`` has for a name no variable holds: ``play.time`` (the time
-        played, ``h:mm``) and ``creatures.owned`` (species owned now or ever caught)."""
+        played, ``h:mm``), ``creatures.owned`` (species owned now or ever caught) and
+        ``party_move.<ability>`` (the name of the first creature in the party knowing it)."""
         if name == "play.time":
             seconds = int(self.world.counters.get("play.seconds", 0.0))
             return f"{seconds // 3600}:{seconds % 3600 // 60:02d}"
+        if name.startswith("party_move."):  # the first creature that knows the move
+            pet = self.party_pet_with_move(name.removeprefix("party_move."))
+            return "" if pet is None else self.pet_display(pet)
+        if name.startswith("party_move_species."):
+            pet = self.party_pet_with_move(name.removeprefix("party_move_species."))
+            return "" if pet is None else pet.species_id
+        if name == "party.lead_species_name":
+            party = self.party_pets()
+            return self.name_of(self.pet_species(party[0])) if party else ""
         if name == "creatures.owned":
             owned = {p.species_id for p in self.pets()}
             owned |= {k for k, v in self.world.bestiary.items() if v.get("captured", 0) > 0}
@@ -368,6 +378,7 @@ class MessagesMixin:
 
     BATTLE_WEATHER = "battle.weather"  # event variable: rain, snow, leaves, dust or "" for none
     BATTLE_WEATHER_INTENSITY = "battle.weather.intensity"
+    BATTLE_WEATHER_TURNS = "battle.weather.turns"
     WEATHER_TAG_PREFIX = "weather."
 
     def battle_weather(self):
@@ -385,19 +396,27 @@ class MessagesMixin:
             float(self.save.event_context.get_variable("battle.weather.wind", 0.0) or 0.0),
         )
 
-    def set_battle_weather(self, kind, intensity=0.6, wind=0.0):
+    def set_battle_weather(self, kind, intensity=0.6, wind=0.0, turns=0):
         """Choose the weather the next battles (and the running one) have; ``"none"`` clears it.
         Every fighter carries the tag ``weather.<kind>`` while it lasts, so interaction rules can
-        react to it (rain strengthens lightning, snow slows...)."""
+        react to it (rain strengthens lightning, snow slows...). ``turns``: it ends by itself
+        after that many rounds of a creature battle (0: it stays)."""
         from asteria.runtime.environment2d import WEATHER_KINDS
 
         kind = str(kind or "none")
         if kind not in WEATHER_KINDS:
             raise GameSessionError(f"unknown weather {kind!r}; choose from {WEATHER_KINDS}")
         context = self.save.event_context
+        now = self.battle_weather()
+        if turns and now is not None and now[0] == kind and self.battle is not None:
+            self._log("weather_failed", data={"kind": kind})  # a move for the weather it is
+            return now
         context.set_variable(self.BATTLE_WEATHER, "" if kind == "none" else kind)
         context.set_variable(self.BATTLE_WEATHER_INTENSITY, float(intensity))
         context.set_variable("battle.weather.wind", float(wind))
+        context.set_variable(self.BATTLE_WEATHER_TURNS, int(turns))
+        if self.mode == "battle" and self.battle is not None and kind != "none":
+            self._log("weather_set", data={"kind": kind})
         if self.mode == "battle" and self.battle is not None:
             self._sync_weather_tags()
         return self.battle_weather()

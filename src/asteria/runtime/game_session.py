@@ -162,6 +162,9 @@ class GameSessionRuntime(
         self.open_crafting_station = None
         self._field_simulation = {}
         self._grid_movers = {}  # scene id -> GridMoverSystem (grid characters)
+        self.player_height = 0  # how high the player stands (runtime/grid_heights.py)
+        self.player_drawn_height = 0  # the last height that was not 0: how the player is drawn
+        self.height_over = frozenset()  # field.height_over: drawn over the layers above people
         self.grid_reserved = ()  # cells the player's grid walk holds (column, row)
         self.player_lift = 0.0  # how high the player is off the ground (a ledge hop)
         self.area_music = ""  # the music of the map area the player is in ('' = none)
@@ -172,6 +175,11 @@ class GameSessionRuntime(
 
         self.routes = RouteRunner()  # scripted grid routes (GRID_ROUTE)
         self.route_hidden = set()  # entities a route hid (until shown or the scene changes)
+        self.route_home_facing = {}  # entity -> the way it faced before a route turned it
+        self.field_repel = None  # manifest ``field.repel`` (map_rules_field)
+        self.field_weather = ""  # the weather a story or the area asks for ("" = the map's own)
+        self.tile_keys_at = None  # keys_at(x, y) of the field's tile map, once bound
+        self.route_clips = {}  # entity -> the clip a route step plays on it (``clip:`` steps)
         self.pending_area_programs = []  # area entry programs queued while an event runs
         self._route_names = {}  # entity id -> the names its route switches use
         self.player_story_moves = 0  # counts events moving the player (grid walk resets)

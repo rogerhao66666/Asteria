@@ -323,6 +323,9 @@ LABELS = {
     "remove_triggers": "Removed when",
     "interaction_tags": "Tick Properties",
     "target_override": "Target Override",
+    "prevent_resource": "Lost Turn Costs",
+    "prevent_amount": "Lost Turn Cost Formula",
+    "blocks_leaving": "Cannot Run Or Switch",
     "interval": "Every (turns)",
     "growth": "Grows by",
     # targeting and timing

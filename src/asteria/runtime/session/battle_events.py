@@ -30,7 +30,8 @@ class BattleEventsMixin:
             "rpg.battle.turn_skipped", self._turn_skipped
         )  # asleep, stunned, broken...: shown in battle
         bus.subscribe("rpg.battle.after_action", self._wear_equipment)  # durability
-        for hook in ("state_ticked", "state_expired", "state_removed"):  # told in battle
+        # told in battle
+        for hook in ("state_ticked", "state_turn", "state_expired", "state_removed"):
             bus.subscribe(f"rpg.battle.{hook}", self._state_event)
         bindings = [
             b
@@ -309,6 +310,7 @@ class BattleEventsMixin:
         data = dict(event.data or {})
         kind = {
             "rpg.battle.state_ticked": "state_tick",
+            "rpg.battle.state_turn": "state_turn",
             "rpg.battle.state_expired": "state_expired",
             "rpg.battle.state_removed": "state_removed",
         }.get(event.name, "")
@@ -329,7 +331,10 @@ class BattleEventsMixin:
         self._log(
             "turn_skipped",
             member_id=str(event.source),
-            data={"states": tuple(data.get("blocking_states", ()))},
+            data={
+                "states": tuple(data.get("blocking_states", ())),
+                "hp": self._knockout_values((str(event.source),)).get(str(event.source)),
+            },
         )
 
     def _battle_value(self, name):

@@ -105,7 +105,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "RESTORE_BGM": (),
     "PLAY_SE": ("asset_id", "volume"),
     "PLAY_ME": ("asset_id", "volume"),
-    "SCREEN_FADE": ("to", "duration", "color"),
+    "SCREEN_FADE": ("to", "duration", "color", "over"),
     "PLAY_VFX": ("asset_id", "entity", "x", "y", "scale", "anchor"),
     "PLAY_ACTION": ("entity", "timeline_id"),
     "INTERACT": ("interaction_id",),
@@ -155,7 +155,8 @@ WORLD_COMMAND_ARGUMENTS = {
     "SPAWN_ENTITY": ("prefab_id", "x", "y", "name"),
     "COPY_ENTITY": ("entity", "x", "y", "name"),
     "MORPH_ENTITY": ("entity", "prefab_id"),
-    "SET_BATTLE_WEATHER": ("kind", "intensity", "wind"),
+    "SET_BATTLE_WEATHER": ("kind", "intensity", "wind", "turns"),
+    "SET_WEATHER": ("kind",),
     "SHOW_PICTURE": (
         "picture_id",
         "asset_id",
@@ -430,6 +431,9 @@ def register_standard_world_commands(router, session):
         return session.open_shop(shop_id)
 
     def presentation_request(command):
+        if "\\V[" in str(command.args.get("asset_id", "")):  # chosen by a variable or a word
+            asset_id = session.expand_message(command.args["asset_id"], plain=True)
+            command = type(command)(command.name, {**command.args, "asset_id": asset_id})
         session.presentation_requests.append(command)
         # a fanfare / sound a host plays: WAIT until ``audio`` ``me`` / ``se`` is off
         kind = {"PLAY_ME": "me", "PLAY_SE": "se"}.get(command.name)
@@ -871,11 +875,18 @@ def register_standard_world_commands(router, session):
                 command.args.get("kind", "none"),
                 _amount(command, "intensity", 0.6),
                 _amount(command, "wind", 0.0),
+                int(_amount(command, "turns", 0)),
             )
         except Exception as exc:  # noqa: BLE001
             raise WorldCommandError(f"SET_BATTLE_WEATHER: {exc}") from exc
 
     router.register("SET_BATTLE_WEATHER", set_battle_weather)
+
+    def set_weather(command):  # the field's weather from now on ("" / none: the map's own)
+        kind = str(command.args.get("kind", ""))
+        session.field_weather = "" if kind == "none" else kind
+
+    router.register("SET_WEATHER", set_weather)
 
     def picture_command(name):
         def handler(command):

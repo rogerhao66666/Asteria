@@ -189,6 +189,8 @@ def describe_instruction(instruction, names=None):
         head = f"{translate('Set Variable')}  {words(a.get('name', ''))} = "
         if a.get("from_variable"):
             return head + words(a.get("from_variable"))
+        if a.get("random") is not None:
+            return head + f"{translate('A random number')} (0-{int(a['random']) - 1})"
         return head + str(a.get("value"))
     if op == "WORLD":
         from .world_command_form import argument_label, command_words, value_words

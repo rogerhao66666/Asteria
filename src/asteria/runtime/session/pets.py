@@ -386,6 +386,13 @@ class PetsMixin:
         rules = self.pet_rules
         return pet.known_moves(self.pet_species(pet), rules.max_moves if rules else 0)
 
+    def party_pet_with_move(self, ability_id):
+        """The first creature travelling with the player that knows ``ability_id``, or None."""
+        for pet in self.party_pets():
+            if str(ability_id) in self.pet_moves(pet):
+                return pet
+        return None
+
     def pet_uses_left(self, pet, ability_id):
         """Uses left of a move with ``max_uses`` (``None`` when the move is unlimited)."""
         definition = self.project.gameplay_library.abilities.get(ability_id)
@@ -744,6 +751,7 @@ class PetsMixin:
         for name, (_low, _high, start) in (self.rules.battle_counters or {}).items():
             if pool.contains(name):  # a creature called back loses its battle counters
                 pool.set_current(name, start)
+        self._end_battle_states(out_member_id)
         self.battle.send_in(in_member_id)
         pet = self.pet_of_member(in_member_id)
         if pet is not None:
@@ -754,6 +762,17 @@ class PetsMixin:
         rules = self.pet_rules
         return rules is None or rules.switch_costs_turn
 
+    def _end_battle_states(self, member_id):
+        """Called back: what lasts only while it is out there ends (flinch, Wrap, confusion...);
+        the main ailments stay. Whoever it held is free."""
+        states = self.battle.member(member_id).subject.states
+        policies = self.battle.battle_states.policies
+        for active in () if states is None else list(states.active_states()):
+            policy = policies.get(active.state_id)
+            if policy is not None and policy.battle_only:
+                states.remove(active.state_id)
+        self._release_held()
+
     def _refill_slots(self, side):
         """Fill the empty stage slots of a side whose host does not choose (the foes): the
         first standing benched members come in, in party order."""
@@ -761,6 +780,7 @@ class PetsMixin:
         while self.switch_needed(side):
             member_id = self.bench_ids(side)[0]
             self.battle.send_in(member_id)
+            self._release_held()
             self._log("sent_in", member_id=member_id, data={"side": side})
             sent.append(member_id)
         return tuple(sent)

@@ -14,6 +14,7 @@ VALID_KINDS = frozenset(
         "font",
         "shader",
         "data",
+        "movie",
     }
 )
 

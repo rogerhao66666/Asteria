@@ -23,7 +23,7 @@ from asteria.render.lighting import ShadowCaster2D
 from asteria.render.postprocess import PostEffect2D
 
 BUILTIN_SCREEN_SHADERS = ("", "grayscale", "sepia", "invert", "wave", "crt", "pixelate")
-WEATHER_KINDS = ("none", "rain", "snow", "leaves", "dust")
+WEATHER_KINDS = ("none", "rain", "snow", "leaves", "dust", "ash", "sand", "fog", "sun")
 
 
 @component_schema(

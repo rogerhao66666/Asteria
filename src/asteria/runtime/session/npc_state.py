@@ -38,9 +38,12 @@ class NpcStateMixin:
         ("open" while a name is entered / a pictured choice is made), ``light`` ("moving"
         while SET_LIGHT's circle changes), ``pressed:<action>`` / ``held:<action>`` (a control
         - confirm, cancel, menu... - pressed this frame / held now; ``a|b``: any of them) and
-        ``saves`` (how many save slots hold a game, as the title screen found them)."""
+        ``saves`` (how many save slots hold a game, as the title screen found them),
+        ``party_move:<ability>`` (a creature in the party knows that move)."""
         kind, _, rest = str(name).partition(":")
         state = self.save.rpg_state
+        if kind == "scene":  # the scene the player is in, by name
+            return self.scene.name if self.scene is not None else ""
         if kind == "level":
             return self.ensure_actor_progression(rest).level
         if kind == "item":
@@ -54,8 +57,12 @@ class NpcStateMixin:
         if kind in ("pressed", "held"):  # the host's controls this frame (a|b: any of them)
             found = getattr(self, "input_actions", {}).get(kind, ())
             return any(action in found for action in rest.split("|"))
+        if kind == "battle_outcome":  # how the last battle ended: won, lost, ran or caught
+            return str(getattr(self, "last_battle_outcome", ""))
         if kind == "saves":
             return int(getattr(self, "saves_used", 0))
+        if kind == "party_move":  # a creature travelling with the player knows this move
+            return self.party_pet_with_move(rest) is not None
         if kind == "light":  # "moving" while SET_LIGHT's circle grows or shrinks, else ""
             return "moving" if self.light_moving() else ""
         if kind == "picture_choice":  # "open" while a PICTURE_CHOICE waits, else ""
