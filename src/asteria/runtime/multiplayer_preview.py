@@ -618,8 +618,8 @@ def install_authoritative_commands(runtime):
     game.set_secondary_class = secondary
     original_build = game.resolve_actor_build
 
-    def resolved_build(actor_id):
-        result = original_build(actor_id)
+    def resolved_build(actor_id, *, apply_slots=True):  # the session's own signature
+        result = original_build(actor_id, apply_slots=apply_slots)
         if runtime._multiplayer_connected() and game._actor_of(game.player) == str(actor_id):
             from dataclasses import replace
 

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from dataclasses import replace
+
 from asteria.gameplay import GameplaySubject
 from asteria.rpg import (
     ActorAbilityState,
@@ -22,8 +25,34 @@ from .support import (  # noqa: F401 - the names the moved methods use
 
 
 class BuildsMixin:
+    _build_memo = None  # inside reading_builds(): (actor id, ...) -> the resolved build
+
+    @contextmanager
+    def reading_builds(self):
+        """Inside ``with``, the save is only read (a menu frame being drawn): each actor's
+        build and stat breakdown is resolved once, not again by every row and panel that
+        shows it. Nested uses share the outer scope; leaving the outermost forgets them."""
+        if self._build_memo is not None:
+            yield
+            return
+        self._build_memo = {}
+        try:
+            yield
+        finally:
+            self._build_memo = None
+
     def resolve_actor_build(self, actor_id, *, apply_slots=True):
         actor_id = str(actor_id)
+        memo = self._build_memo
+        if memo is not None:
+            key = ("build", actor_id, bool(apply_slots))
+            build = memo.get(key)
+            if build is None:
+                build = memo[key] = self._resolve_actor_build(actor_id, apply_slots)
+            return build
+        return self._resolve_actor_build(actor_id, apply_slots)
+
+    def _resolve_actor_build(self, actor_id, apply_slots):
         db = self.project.rpg_database
         actor = self._actor_runtime(actor_id)
         progress = self.save.rpg_state.actor_progression.get(actor_id)
@@ -39,8 +68,6 @@ class BuildsMixin:
         )
         rules = self.ability_loadout_rules
         if rules is not None and apply_slots:  # only equipped slot-limited abilities stay usable
-            from dataclasses import replace
-
             equipped = set(self._ability_state_of(actor_id).equipped_abilities)
             usable = rules.filter(build.abilities, build.ability_grants, equipped)
             build = replace(build, abilities=usable)
@@ -52,6 +79,16 @@ class BuildsMixin:
         points what its stat graphs' ranks add; gear what its equipment adds (stat formulas
         included, so 1 STR from gear that makes 2 power counts as gear power)."""
         actor_id = str(actor_id)
+        memo = self._build_memo
+        if memo is not None:
+            key = ("breakdown", actor_id)
+            found = memo.get(key)
+            if found is None:
+                found = memo[key] = self._stat_breakdown(actor_id)
+            return found
+        return self._stat_breakdown(actor_id)
+
+    def _stat_breakdown(self, actor_id):
         db = self.project.rpg_database
         progress = self.save.rpg_state.actor_progression.get(actor_id)
         level = 1 if progress is None else int(progress.level)

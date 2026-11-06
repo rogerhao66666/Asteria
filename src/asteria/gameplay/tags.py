@@ -7,7 +7,7 @@ def normalize_tag(value):
     tag = str(value).strip().lower()
     if not tag:
         raise ValueError("tag is required")
-    if any(ch.isspace() for ch in tag):
+    if len(tag.split()) != 1:  # str.split() splits on exactly what str.isspace() matches
         raise ValueError("tags cannot contain whitespace")
     return tag
 

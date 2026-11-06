@@ -314,9 +314,10 @@ class MenusDrawMixin:
         )
         c.finish()
 
-    def _draw_backdrop(self, base="field", canvas=None):
-        """The map (or the battle) darkened behind a menu; a layout's own background colour
-        or picture replaces it, and its ``dim`` sets how dark (U2)."""
+    def _draw_backdrop(self, base="field", canvas=None, *, dim=170, shade=(5, 8, 16)):
+        """The map (or the battle) darkened behind a menu (``dim``: the alpha of ``shade``); a
+        layout's own background colour or picture replaces it, and its ``dim`` sets how dark
+        (U2)."""
         layout = canvas.layout if canvas is not None else None
         if layout is None or (layout.background_color is None and not layout.background_image):
             with self.window_drawing():  # a fitted menu's map keeps the window's size (D87)
@@ -324,11 +325,10 @@ class MenusDrawMixin:
                     self._battle_presentation.draw()  # the battle screen as it was left
                 else:
                     self._draw_field(False)
-                dim = 170 if layout is None or layout.dim < 0 else layout.dim
+                if layout is not None and layout.dim >= 0:
+                    dim = layout.dim
                 if dim:
-                    shade = self.pg.Surface((self.width, self.height), self.pg.SRCALPHA)
-                    shade.fill((5, 8, 16, dim))
-                    self.screen.blit(shade, (0, 0))
+                    self.dim_screen((*shade, dim))
         if canvas is not None:
             canvas.begin()
 
@@ -418,9 +418,10 @@ class MenusDrawMixin:
         }
 
     def _map_title(self):
-        scene = getattr(self, "scene", None)
+        """The current map's name in the player's language (``{map.name}`` on menu labels)."""
+        scene = self.game.scene  # the runtime has no scene of its own: it was always empty
         name = getattr(scene, "name", "") if scene is not None else ""
-        return self.game.map_name(getattr(scene, "id", ""), name) if name else ""
+        return self.game.map_name(scene.id, name) if name else ""
 
     def _draw_quests(self):
         c = self.menu_canvas("quests")

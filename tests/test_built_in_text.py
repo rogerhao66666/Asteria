@@ -409,7 +409,7 @@ def test_a_chinese_menu_label_sits_level_with_its_cursor(monkeypatch):
         pytest.skip("no CJK system font")
     runtime = PlayableTestRuntime.__new__(PlayableTestRuntime)
     runtime.pg = pygame
-    runtime._fonts, runtime._cjk_fonts, runtime._glyphs = {}, {}, {}
+    runtime._init_caches()
     for size in (20, 24, 30):
         runtime.screen = pygame.Surface((400, 120))
         runtime.menu_row("攻擊技能", 20, 30, selected=True, size=size, color=(255, 0, 0))

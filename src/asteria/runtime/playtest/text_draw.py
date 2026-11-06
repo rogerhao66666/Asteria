@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from .support import (  # noqa: F401 - the names the moved methods use
-    BESTIARY_TAG_KINDS,
-    FIELD_BODY_HEIGHT,
-    WALK_PATTERN_SEQUENCE,
-    WALK_ROW_BY_FACING,
-    _load_manifest,
-    field_player_render_size,
-    walking_pattern_index,
-    walking_row_index,
+from asteria.graphics.bitmap_font import SheetFont
+from asteria.platform.pygame_battle_ui import (
+    _system_cjk_path,
+    cjk_size,
+    contains_cjk,
+    font_for_text,
+    glyph_shift,
+    render_with_fallback,
+    renderable_text,
 )
+from asteria.presentation.ui_skin import draw_nine_patch
+from asteria.runtime.menu_canvas import MenuCanvas
 
 
 class TextDrawMixin:
@@ -26,13 +28,30 @@ class TextDrawMixin:
         if sheet is not None and sheet.covers(value):
             scale = sheet.scale_for(size)
             return sheet.width(value, scale), sheet.line * scale
-        from asteria.platform.pygame_battle_ui import cjk_size, contains_cjk, font_for_text
+        if font and str(font).startswith("bitmap:"):
+            font = None  # the words the bitmap font lacks: the menu fonts, as text() draws them
+        face, cjk_path = self._font_face(size, font)
+        key = (str(value), int(size), id(face), cjk_path)
+        cache = self._text_sizes
+        found = cache.get(key)
+        if found is None:
+            if len(cache) > 4096:
+                cache.clear()
+            found = cache[key] = self._text_font(value, face, cjk_path).size(str(value))
+        return found
 
-        f, cjk_path = self._font_face(size)
-        if cjk_path and contains_cjk(value):
-            return self.pg.font.Font(cjk_path, cjk_size(f, self.pg, cjk_path)).size(str(value))
-        cjk_pt = cjk_size(f, self.pg) if contains_cjk(value) else 0  # 0: not used
-        return font_for_text(self.pg, f, value, self._cjk_fonts, cjk_pt).size(str(value))
+    def _text_font(self, value, face, cjk_path):
+        """The face ``value`` is drawn with beside ``face``: the menu theme's CJK font or the
+        system CJK face for Chinese, Japanese and Korean, else ``face`` itself."""
+        if not contains_cjk(value):
+            return face
+        if cjk_path:  # the menu theme's own CJK font
+            key = (cjk_path, "cjk", cjk_size(face, self.pg, cjk_path))
+            found = self._asset_fonts.get(key)
+            if found is None:
+                found = self._asset_fonts[key] = self.pg.font.Font(cjk_path, key[2])
+            return found
+        return font_for_text(self.pg, face, value, self._cjk_fonts, cjk_size(face, self.pg))
 
     # --- menu layouts and the menu theme (U2) -----------------------------------------------
     def menu_layout(self, screen_id):
@@ -61,7 +80,7 @@ class TextDrawMixin:
         library = getattr(project, "battle_presentation_library", None)
         style = getattr(library, "_records", {}).get("dialogue_window", {}).get("default")
         if style is not None:
-            cached = self.__dict__.get("_dialogue_style")
+            cached = self._dialogue_style
             if cached is None or cached[0] is not style:  # edited: read again
                 cached = self._dialogue_style = (style, style.settings())
             if cached[1] is not None:
@@ -88,8 +107,6 @@ class TextDrawMixin:
             self._sound(theme.sound("confirm"))
 
     def menu_canvas(self, screen_id, fields=None, size=None, target=None):
-        from asteria.runtime.menu_canvas import MenuCanvas
-
         return MenuCanvas(self, screen_id, fields, size=size, target=target)
 
     def bitmap_font(self, font_id):
@@ -100,14 +117,12 @@ class TextDrawMixin:
         spec = getattr(library, "_records", {}).get("bitmap_font", {}).get(str(font_id))
         if spec is None or not spec.image:
             return None
-        fonts = self.__dict__.setdefault("_bitmap_fonts", {})
+        fonts = self._bitmap_fonts
         found = fonts.get(spec.font_id)
         if found is None or found.spec is not spec:  # edited in the editor: made again
             sheet = self.skin_image(spec.image)
             if sheet is None:
                 return None
-            from asteria.graphics.bitmap_font import SheetFont
-
             found = fonts[spec.font_id] = SheetFont(self.pg, spec, sheet)
         return found
 
@@ -127,7 +142,7 @@ class TextDrawMixin:
         size = (max(1, int(size[0])), max(1, int(size[1])))
         if image.get_size() == size:
             return image
-        cache = self.__dict__.setdefault("_scaled_cache", {})
+        cache = self._scaled_cache
         key = (id(image), size)
         found = cache.get(key)
         if found is None or found[0] is not image:
@@ -141,12 +156,12 @@ class TextDrawMixin:
         theme's Latin font, else the built-in face. Returns ``(face, cjk path or None)``."""
         theme = self.menu_theme()
         asset = font or (theme.font_latin if theme is not None else "")
-        cjk = self.skin_font(theme.font_cjk) if theme is not None and theme.font_cjk else None
+        cjk = self._theme_cjk_path(theme)
         if not asset:
             return self._menu_font(size), cjk
         scale = theme.font_scale if theme is not None else 1.0
         key = (str(asset), int(size), scale)
-        faces = self.__dict__.setdefault("_asset_fonts", {})
+        faces = self._asset_fonts
         face = faces.get(key)
         if face is None:
             path = self.skin_font(asset)
@@ -156,6 +171,16 @@ class TextDrawMixin:
                 else self._menu_font(size)
             )
         return face, cjk
+
+    def _theme_cjk_path(self, theme):
+        """The file of the menu theme's CJK font, or None: looked up once per theme (it probes
+        the disk), not for every line drawn or measured."""
+        if theme is None or not theme.font_cjk:
+            return None
+        known = self._theme_cjk
+        if known is None or known[0] is not theme:
+            known = self._theme_cjk = (theme, self.skin_font(theme.font_cjk))
+        return known[1]
 
     def text(
         self,
@@ -182,31 +207,14 @@ class TextDrawMixin:
         if font and str(font).startswith("bitmap:"):
             font = None  # the words it lacks: the menu fonts
         f, cjk_path = self._font_face(size, font)
-        from asteria.platform.pygame_battle_ui import (
-            cjk_size,
-            contains_cjk,
-            font_for_text,
-            glyph_shift,
-            render_with_fallback,
-            renderable_text,
-        )
-
         # rendered text is cached: HUD labels and damage numbers repeat every frame
         key = (str(value), int(size), tuple(color), id(f), cjk_path)
-        cache = self.__dict__.setdefault("_text_cache", {})
+        cache = self._text_cache
         entry = cache.get(key)
         if entry is None:
             if len(cache) > 2048:
                 cache.clear()
-            if cjk_path and contains_cjk(value):  # the menu theme's own CJK font
-                faces = self.__dict__.setdefault("_asset_fonts", {})
-                face_key = (cjk_path, "cjk", cjk_size(f, self.pg, cjk_path))
-                if face_key not in faces:
-                    faces[face_key] = self.pg.font.Font(cjk_path, face_key[2])
-                text_font = faces[face_key]
-            else:
-                cjk_pt = cjk_size(f, self.pg) if contains_cjk(value) else 0  # 0: not used
-                text_font = font_for_text(self.pg, f, value, self._cjk_fonts, cjk_pt)
+            text_font = self._text_font(value, f, cjk_path)
             if text_font is f and not str(value).isascii():
                 # what the Latin face lacks ("→", "·" in a pixel font) comes from one that has it
                 surf = render_with_fallback(
@@ -244,7 +252,7 @@ class TextDrawMixin:
     def _bitmap_text(self, sheet, value, x, y, size, color, center, anchor):
         scale = sheet.scale_for(size)
         key = ("bitmap", id(sheet), str(value), scale, tuple(color))
-        cache = self.__dict__.setdefault("_text_cache", {})
+        cache = self._text_cache
         surf = cache.get(key)
         if surf is None:
             if len(cache) > 2048:
@@ -264,12 +272,8 @@ class TextDrawMixin:
         """A face for the characters an author's font lacks, ``height`` pixels tall: the
         menu theme's CJK font, else the system CJK face (both have arrows and symbols), else
         the built-in face."""
-        from asteria.platform.pygame_battle_ui import cjk_font_path
-
-        theme = self.menu_theme()
-        path = self.skin_font(theme.font_cjk) if theme is not None and theme.font_cjk else None
-        path = path or cjk_font_path(self.pg)
-        faces = self.__dict__.setdefault("_asset_fonts", {})
+        path = self._theme_cjk_path(self.menu_theme()) or _system_cjk_path(self.pg)
+        faces = self._asset_fonts
         key = (path, "fallback", int(height))
         if key not in faces:
             faces[key] = self.pg.font.Font(path, int(height)) if path else self._menu_font(height)
@@ -319,7 +323,7 @@ class TextDrawMixin:
     def hotspot(self, rect, pick=None, *, key="return"):
         """A place the mouse can point at this frame (``asteria.runtime.pointer``): hovering
         runs ``pick``, a left click runs it and presses ``key``."""
-        pointer = self.__dict__.get("pointer")
+        pointer = self.pointer
         if pointer is not None:
             pointer.add(rect, pick, key=key)
 
@@ -331,6 +335,25 @@ class TextDrawMixin:
             library.require("ui_theme", "default" if "default" in ids else ids[0]) if ids else None
         )
 
+    def shade(self, color, size=None):
+        """A surface of one colour (``(r, g, b, a)``) the window's size, or ``size``: kept, as
+        menus and fades dim the screen every frame."""
+        if size is None:
+            size = (self.width, self.height)
+        size = (max(1, int(size[0])), max(1, int(size[1])))
+        key = (size, tuple(int(v) for v in color))
+        found = self._shades.get(key)
+        if found is None:
+            if len(self._shades) >= 64:  # a fade asks for a new alpha every frame
+                self._shades.clear()
+            found = self._shades[key] = self.pg.Surface(size, self.pg.SRCALPHA)
+            found.fill(key[1])
+        return found
+
+    def dim_screen(self, color):
+        """Cover the window with ``color`` (``(r, g, b, a)``): a menu's or a fade's shade."""
+        self.screen.blit(self.shade(color), (0, 0))
+
     def panel(self, rect, fill=(13, 17, 28, 220), border=(124, 145, 190)):
         menu_theme = self.menu_theme()
         skin = menu_theme.panel_skin if menu_theme is not None else None
@@ -339,13 +362,9 @@ class TextDrawMixin:
             skin = None if theme is None else theme.panel_skin("host:panel")
         image = None if skin is None else self.skin_image(skin.asset_id)
         if image is not None:
-            from asteria.presentation.ui_skin import draw_nine_patch
-
             draw_nine_patch(self.pg, self.screen, image, tuple(int(v) for v in rect), skin)
             return
-        s = self.pg.Surface((rect[2], rect[3]), self.pg.SRCALPHA)
-        s.fill(fill)
-        self.screen.blit(s, (rect[0], rect[1]))
+        self.screen.blit(self.shade(fill, (rect[2], rect[3])), (rect[0], rect[1]))
         self.pg.draw.rect(self.screen, border, rect, 2, border_radius=6)
 
     def bar(self, x, y, w, h, current, maximum, *, fill=(90, 203, 130), bg=(48, 53, 66)):

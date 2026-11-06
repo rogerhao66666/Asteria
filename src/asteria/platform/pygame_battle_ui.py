@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 
 GLYPH_FALLBACKS = {
@@ -86,20 +87,29 @@ def cjk_font_path(pg):
     return None
 
 
+_CJK_CHARACTER = re.compile(
+    "[" + "".join(f"{chr(start)}-{chr(end)}" for start, end in CJK_RANGES) + "]"
+)
+
+
 def contains_cjk(value):
     """Whether ``value`` contains Han, kana, Hangul, or CJK punctuation."""
-    return any(any(start <= ord(char) <= end for start, end in CJK_RANGES) for char in str(value))
+    text = str(value)
+    return not text.isascii() and _CJK_CHARACTER.search(text) is not None
 
 
 def font_for_text(pg, font, value, cache, size):
     """Use a cached CJK system font for CJK text and retain the normal font otherwise."""
     if not contains_cjk(value):
         return font
-    key = (id(font), int(size))
-    if key not in cache:
-        path = cjk_font_path(pg)
-        cache[key] = pg.font.Font(path, int(size)) if path else font
-    return cache[key]
+    path = _system_cjk_path(pg)
+    if not path:
+        return font
+    key = (path, int(size))
+    face = cache.get(key)
+    if face is None:
+        face = cache[key] = pg.font.Font(path, int(size))
+    return face
 
 
 def cjk_size(font, pg=None, path=None):

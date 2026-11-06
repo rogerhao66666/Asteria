@@ -610,15 +610,19 @@ class ProgressionAllocationRuntime:
         unknown = selected - set(self.definitions)
         if unknown:
             raise KeyError("unknown progression graph(s): " + ", ".join(sorted(unknown)))
-        stats, resources, tags, abilities, passives, capabilities = {}, {}, set(), [], [], set()
+        stats, resources, tags, capabilities = {}, {}, set(), set()
+        abilities, passives = {}, {}  # dicts as ordered sets: first grant first
         ability_grants = []
         for graph_id in sorted(selected):
             graph = self.definitions[graph_id]
             ranks = self.allocations[graph_id]
             for node in graph.nodes:
                 active_rank = ranks.get(node.node_id, 0)
-                for rank in range(1, active_rank + 1):
-                    reward = node.reward_for_rank(rank)
+                if active_rank <= 0:
+                    continue
+                if active_rank > node.max_rank:
+                    raise ValueError("rank outside node range")
+                for rank, reward in enumerate(node.rewards[:active_rank], 1):
                     for key, value in reward.stat_bonuses.items():
                         stats[key] = stats.get(key, 0.0) + value
                     for key, value in reward.resource_bonuses.items():
@@ -626,14 +630,11 @@ class ProgressionAllocationRuntime:
                     tags.update(reward.granted_tags)
                     capabilities.update(reward.granted_capabilities)
                     for ability_id in reward.granted_abilities:
-                        if ability_id not in abilities:
-                            abilities.append(ability_id)
+                        abilities[ability_id] = None
                         ability_grants.append(
                             (ability_id, f"{graph_id}:{node.node_id}:rank{rank}")
                         )
-                    for passive_id in reward.unlocked_passives:
-                        if passive_id not in passives:
-                            passives.append(passive_id)
+                    passives.update(dict.fromkeys(reward.unlocked_passives))
         return ProgressionAllocationContribution(
             stats,
             resources,

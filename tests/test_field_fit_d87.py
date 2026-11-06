@@ -3,6 +3,7 @@ ground, figures stand on their feet, and the play-test hint panel never hides th
 
 import json
 import sys
+from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -29,6 +30,7 @@ class _Host(MenuFitMixin):
         self.screen = pg.Surface((960, 540))
         self.manifest = {"render": {"menu_size": menu_size}} if menu_size else {}
         self.pointer = SimpleNamespace(drawn=[Hotspot((0, 0, 5, 5))])
+        self.game = SimpleNamespace(reading_builds=nullcontext)  # a menu only reads the save
 
 
 @pytest.fixture

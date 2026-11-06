@@ -6,6 +6,7 @@ from asteria.gameplay import ResourcePool, StatBlock, TagSet
 
 from .ability_build import AbilityGrant
 from .actors import RpgActorRuntime
+from .derived_stats import apply_derived_stats
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,13 +162,13 @@ def resolve_actor_build(
                 BuildContribution("tag", tag, "class_assignment", assignment.assignment_id)
             )
 
-    progression_stats, progression_tags, _ = actor_runtime._progression_contributions(progression)
+    layers = actor_runtime.build_layers(progression, allocations)  # once, for every step below
+    (progression_stats, progression_tags, _), allocation_contribution = layers
     for stat, value in progression_stats.items():
         contributions.append(BuildContribution("stat", stat, "progression", "progression", value))
     for tag in sorted(progression_tags):
         contributions.append(BuildContribution("tag", tag, "progression", "progression"))
 
-    allocation_contribution = None if allocations is None else allocations.contribution()
     if allocation_contribution is not None:
         for stat, value in allocation_contribution.stat_bonuses.items():
             contributions.append(
@@ -268,15 +269,8 @@ def resolve_actor_build(
                     "stat", stat, "class_growth", assignment.class_id, rate * max(0, level - 1)
                 )
             )
-    stats = actor_runtime.effective_stats(
-        progression=progression,
-        allocations=allocations,
-        loadout=loadout,
-        passives=passive_map,
-        level=level,
-    )
-    from .derived_stats import apply_derived_stats
-
+    tags = actor_runtime._effective_tags(layers, loadout, passive_map)
+    stats = actor_runtime._effective_stats(layers, loadout, passive_map, level, tags)
     for stat, amount in apply_derived_stats(stats, derived_stats, side="actors"):
         contributions.append(BuildContribution("stat", stat, "derived", stat, amount))
     resources = _copy_resources(actor_runtime.resources)
@@ -289,21 +283,15 @@ def resolve_actor_build(
         for resource_id, amount in allocation_contribution.resource_bonuses.items():
             _apply_resource_bonus(resources, resource_id, amount)
 
-    tags = actor_runtime.effective_tags(
-        progression=progression,
-        allocations=allocations,
-        loadout=loadout,
-        passives=passive_map,
-    )
     capabilities = tuple(sorted(tags.values()))
 
-    ability_resolution = actor_runtime.resolve_abilities(
-        progression=progression,
-        allocations=allocations,
-        loadout=loadout,
-        passives=passive_map,
-        evolution_rules=evolution_rules,
-        tags=tuple(tags.values()),  # rune tags from skill trees pick a skill's variant
+    ability_resolution = actor_runtime._resolve_abilities(
+        layers,
+        progression,
+        loadout,
+        passive_map,
+        evolution_rules,
+        tuple(tags.values()),  # rune tags from skill trees pick a skill's variant
     )
     for grant in ability_resolution.grants:
         contributions.append(

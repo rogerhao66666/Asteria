@@ -121,6 +121,7 @@ def test_cjk_text_uses_a_system_font_without_changing_latin_font(monkeypatch):
         "cjk_font_path",
         lambda _pg: "/System/Library/Fonts/STHeiti Medium.ttc",
     )
+    monkeypatch.setattr(pygame_battle_ui, "_SYSTEM_CJK", {})  # the lookup is remembered
 
     assert resolver(pg, latin_font, "Hello", cache, 20) is latin_font
     cjk_font = resolver(pg, latin_font, "繁體中文", cache, 20)

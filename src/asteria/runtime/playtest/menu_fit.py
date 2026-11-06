@@ -18,24 +18,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 
 DESIGN_SIZE = (1280, 720)
-# the screens drawn at the menu size; the skill tree reads the mouse itself (drag, zoom) and
-# the overlay menus already fit any window
-FIT_MODES = frozenset(
-    {
-        "equipment",
-        "enhance",
-        "service",
-        "crafting",
-        "shop",
-        "status",
-        "quests",
-        "achievements",
-        "bestiary",
-        "bag",
-        "extra",
-        "pets",
-    }
-)
 
 
 def fitted_size(window, design):
@@ -59,27 +41,35 @@ class MenuFitMixin:
             return DESIGN_SIZE
         return (width, height)
 
+    _fitting = None  # inside menu_fit on a canvas: (the window surface, the window size)
+    _fit_canvas = None  # the canvas a fitted menu draws on, kept while its size stays
+
     @contextmanager
-    def menu_fit(self, mode=None):
+    def menu_fit(self):
         """Draw a menu screen inside ``with``: on a canvas of its size when the window is
-        smaller, shrunk into the window afterwards (see the module)."""
-        if getattr(self, "_fitting", None) is not None or (
-            mode is not None and mode not in FIT_MODES
-        ):
-            yield
-            return
-        window = (self.width, self.height)
-        size = fitted_size(window, self.menu_design_size())
-        if size == window or self.screen is None:
-            yield
-            return
+        smaller, shrunk into the window afterwards (see the module). Drawing only reads the
+        save, so each actor's build is resolved once for the whole screen."""
+        with self.game.reading_builds():
+            if self._fitting is not None:
+                yield
+                return
+            window = (self.width, self.height)
+            size = fitted_size(window, self.menu_design_size())
+            if size == window or self.screen is None:
+                yield
+                return
+            with self._fitted_canvas(window, size):
+                yield
+
+    @contextmanager
+    def _fitted_canvas(self, window, size):
         pg = self.pg
-        canvas = self.__dict__.get("_fit_canvas")
+        canvas = self._fit_canvas
         if canvas is None or canvas.get_size() != size:
             canvas = self._fit_canvas = pg.Surface(size, pg.SRCALPHA)
         canvas.fill((0, 0, 0, 0))
         real = self.screen
-        pointer = self.__dict__.get("pointer")
+        pointer = self.pointer
         first = len(pointer.drawn) if pointer is not None else 0
         self._fitting = (real, window)
         self.screen, (self.width, self.height) = canvas, size
@@ -104,7 +94,7 @@ class MenuFitMixin:
     def window_drawing(self):
         """Inside a fitted menu: draw on the window itself for a while (the map or battle
         behind the menu keeps its own size)."""
-        fitting = getattr(self, "_fitting", None)
+        fitting = self._fitting
         if fitting is None:
             yield
             return
@@ -118,4 +108,4 @@ class MenuFitMixin:
             self.screen, (self.width, self.height) = canvas, size
 
 
-__all__ = ["DESIGN_SIZE", "FIT_MODES", "MenuFitMixin", "fitted_size"]
+__all__ = ["DESIGN_SIZE", "MenuFitMixin", "fitted_size"]
