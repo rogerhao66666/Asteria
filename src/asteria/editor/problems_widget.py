@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .i18n import translate
 from .problems import collect_problems
 
 ALL_AREAS = "All areas"
@@ -31,7 +32,7 @@ class ProblemsWidget(QWidget):
         self.problems = []
         self.summary = QLabel("No problems")
         self.area = QComboBox()
-        self.area.addItem(ALL_AREAS)
+        self.area.addItem(ALL_AREAS, ALL_AREAS)  # the value is the data: its words may be Chinese
         self.area.currentTextChanged.connect(lambda _text: self._fill())
         refresh = QPushButton("Re-check")
         refresh.clicked.connect(self.refresh)
@@ -63,30 +64,32 @@ class ProblemsWidget(QWidget):
     def refresh(self):
         self._debounce.stop()
         self.problems = collect_problems(self.document, resource_root=self.resource_root)
-        current = self.area.currentText()
+        current = self.area.currentData()
         areas = sorted({p.area for p in self.problems})
         self.area.blockSignals(True)
         self.area.clear()
-        self.area.addItems([ALL_AREAS, *areas])
-        self.area.setCurrentText(current if current in areas else ALL_AREAS)
+        for area in (ALL_AREAS, *areas):
+            self.area.addItem(area, area)
+        self.area.setCurrentIndex(self.area.findData(current if current in areas else ALL_AREAS))
         self.area.blockSignals(False)
         self._fill()
         self.counted.emit(len(self.problems))
         return self.problems
 
     def visible_problems(self):
-        area = self.area.currentText()
+        area = self.area.currentData()
         return [p for p in self.problems if area == ALL_AREAS or p.area == area]
 
     def _fill(self):
         self.tree.clear()
         shown = self.visible_problems()
         for problem in shown:
+            message = translate(problem.message)  # a tree's rows are drawn as given
             item = QTreeWidgetItem(
-                ["✗" if problem.severity == "error" else "!", problem.area, problem.message]
+                ["✗" if problem.severity == "error" else "!", translate(problem.area), message]
             )
-            item.setText(3, problem.location)
-            item.setToolTip(2, problem.message)
+            item.setText(3, translate(problem.location))
+            item.setToolTip(2, message)
             item.setData(0, Qt.UserRole, problem)
             if not problem.target:
                 item.setToolTip(3, "No single location — fix in the area named on the left")

@@ -21,6 +21,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from .record_vocabulary import words
+
 
 @dataclass(frozen=True, slots=True)
 class Problem:
@@ -28,6 +30,7 @@ class Problem:
     area: str
     message: str
     target: tuple = ()
+    engine_words: str = ""  # the sentence a wrapping validator repeats, when it isn't ``message``
 
     @property
     def location(self):
@@ -38,7 +41,9 @@ class Problem:
             return f"{Path(self.target[1]).name}:{self.target[2]}"
         if kind == "combat":
             return f"{self.target[1]} / {self.target[2]}"
-        if kind in ("scene", "sprite", "sequence", "behavior_tree"):
+        if kind == "behavior_tree":
+            return words(self.target[1])
+        if kind in ("scene", "sprite", "sequence"):
             return self.target[1]
         if kind == "entity":
             return f"{self.target[1]} / {self.target[2]}"
@@ -78,6 +83,25 @@ def locate_record_message(message):
     return ()
 
 
+_TREE_ENCOUNTER = re.compile(r"behavior tree (\S+) references unknown encounter ?(\S*)")
+
+
+def _game_data_problem(project, message):
+    """A reference problem in the database; a behavior tree's says so in words and opens the tree
+    (the database's own sentence names ids: it is also what a failed project load reports)."""
+    found = _TREE_ENCOUNTER.fullmatch(message)
+    if found is None:
+        return Problem("error", "Game Data", message, locate_record_message(message))
+    tree = project.rpg_database.behavior_trees[found.group(1)]
+    return Problem(
+        "error",
+        "Game Data",
+        _tree_problem(tree, "encounter", found.group(2)),
+        ("behavior_tree", tree.tree_id),
+        message,
+    )
+
+
 def _attempt(found, area, check, target=()):
     try:
         check()
@@ -113,7 +137,7 @@ def _structure(project, found):
 
 def _references(project, found):
     for message in project.rpg_database.reference_errors():
-        found.append(Problem("error", "Game Data", message, locate_record_message(message)))
+        found.append(_game_data_problem(project, message))
     for message in project.ability_reference_errors():
         found.append(Problem("error", "Abilities", message, locate_record_message(message)))
 
@@ -263,15 +287,15 @@ def _combat(project, found):
                 node.kind in ("use_ability", "ability_ready")
                 and library.abilities.get(str(p.get("ability", ""))) is None
             ):
-                missing = f"ability {p.get('ability')}"
+                missing = ("skill", p.get("ability"))
             elif node.kind in ("apply_state", "has_state") and p.get("state") not in states:
-                missing = f"state {p.get('state')}"
+                missing = ("state", p.get("state"))
             elif node.kind == "summon" and project.prefabs.get(str(p.get("prefab", ""))) is None:
-                missing = f"prefab {p.get('prefab')}"
+                missing = ("prefab", p.get("prefab"))
             if missing:
                 add(
                     "error",
-                    f"behavior tree {tree.tree_id}: {node.kind} uses unknown {missing}",
+                    _tree_problem(tree, *missing),
                     ("behavior_tree", tree.tree_id),
                 )
     from asteria.runtime.action_combat import ActionCombatComponent, parse_bindings
@@ -512,6 +536,15 @@ def _formulas(project, found, data=None):
             found.append(Problem("error", "Formulas", f"{where}: {text} - {problem}", ()))
 
 
+def _tree_problem(tree, what, value):
+    """What is wrong with a node's reference to a ``what`` (a skill, an encounter...), in words:
+    the zh_TW table has these two sentences as patterns."""
+    name = tree.display_name or words(tree.tree_id)
+    if not value:
+        return f"Behavior tree {name}: no {what} is picked"
+    return f"Behavior tree {name}: the {what} {words(value)} is not in the project"
+
+
 def collect_problems(document, *, resource_root=None):
     project = document.project
     if project is None:
@@ -549,7 +582,7 @@ def collect_problems(document, *, resource_root=None):
     # messages
     # without a location; keep only the located copies.
     # (one search for any located message, not one test per pair)
-    located = {p.message for p in found if p.target}
+    located = {p.engine_words or p.message for p in found if p.target}
     if located:
         pattern = re.compile("|".join(re.escape(m) for m in located))
         found = [p for p in found if p.target or not pattern.search(p.message)]
@@ -559,6 +592,7 @@ def collect_problems(document, *, resource_root=None):
         project.validate()
     except Exception as exc:  # noqa: BLE001
         text = str(exc)
-        if not any(p.message in text or text in p.message for p in found):
+        said = [p.engine_words or p.message for p in found]
+        if not any(words_said in text or text in words_said for words_said in said):
             found.append(Problem("error", "Project", text))
     return found

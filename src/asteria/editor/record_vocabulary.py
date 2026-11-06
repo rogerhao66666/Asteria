@@ -667,7 +667,7 @@ class ProjectVocabulary:
         def records(mapping, name_key="display_name"):
             for key in sorted(mapping):
                 value = mapping[key]
-                label = getattr(value, name_key, "") or getattr(value, "name", "") or key
+                label = getattr(value, name_key, "") or getattr(value, "name", "") or words(key)
                 yield Choice(str(key), str(label), str(getattr(value, "icon_id", "") or ""))
 
         if source == "abilities":
@@ -727,6 +727,9 @@ class ProjectVocabulary:
         elif source == "scenes":
             for scene in project.scenes():
                 yield Choice(scene.id, getattr(scene, "name", "") or scene.id)
+        elif source == "prefabs":
+            for key in sorted(project.prefabs.ids()):
+                yield Choice(key, project.prefabs.get(key).name or words(key))
         elif source == "slots":  # the defined equipment slots, then the ones gear names
             defined = sorted(db.equipment_slots.values(), key=lambda x: (x.order, x.slot_id))
             for slot in defined:

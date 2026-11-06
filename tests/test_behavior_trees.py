@@ -168,7 +168,7 @@ def test_editor_api_and_gui_edit_trees_with_undo():
     assert widget.create_tree("sentry", "selector")
     assert widget.add_child("sequence") and widget.select_node((1,))
     assert widget.add_child("player_within") and widget.select_node((1, 1))
-    widget.fields["radius"].setText("72")
+    widget.fields["radius"].set_value(72)
     assert widget.apply_params()
     tree = document.project.rpg_database.behavior_trees["sentry"]
     assert tree.node((1, 1)).params["radius"] == 72.0 and widget.nodes.topLevelItemCount() == 1

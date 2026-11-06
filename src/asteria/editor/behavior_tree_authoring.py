@@ -19,6 +19,7 @@ from asteria.rpg.behavior_tree import (
     BehaviorTree,
 )
 
+from .record_vocabulary import resource_order, vocabulary_for, words
 from .rpg_actor_class_authoring import _DefinitionCommand
 
 # Editable parameters per node kind (name, default) — the form shows exactly these.
@@ -39,7 +40,7 @@ PARAMS = {
     "flee": (("radius", 96.0), ("speed", 40.0)),
     "move_to": (("x", 0.0), ("y", 0.0), ("arrive", 2.0), ("speed", 40.0)),
     "return_home": (("arrive", 2.0), ("speed", 40.0)),
-    "patrol": (("points", "0,0; 32,0"), ("arrive", 2.0), ("speed", 40.0)),
+    "patrol": (("points", "0,0; 32,0"), ("arrive", 2.0), ("speed", 40.0), ("once", False)),
     "wander": (("radius", 48.0), ("arrive", 2.0), ("speed", 40.0)),
     "wait": (("seconds", 1.0),),
     "face_player": (),
@@ -59,16 +60,41 @@ PARAMS = {
     "summon": (("prefab", ""), ("count", 1), ("radius", 32.0)),
     "apply_state": (("state", ""), ("to", "self")),
 }
-KIND_GROUPS = (
-    ("Composite", COMPOSITES),
-    ("Decorator", DECORATORS),
-    ("Condition", CONDITIONS),
-    ("Action", ACTIONS),
+
+# Left out of the data these mean what no number says: a chase that never gives up, a parallel
+# that needs all of its nodes. The field reads 0 for that and 0 is saved as leaving it out. A
+# patrol going round and round is left out too, as its data always had it.
+ABSENT_AT_ZERO = frozenset(
+    {("chase", "lose_radius"), ("parallel", "success_count"), ("patrol", "once")}
 )
+KIND_GROUPS = (
+    ("Run several nodes", COMPOSITES),
+    ("Change one node", DECORATORS),
+    ("Conditions", CONDITIONS),
+    ("Actions", ACTIONS),
+)
+# Settings that name something in the project, and the vocabulary that lists them.
+REFERENCE_SOURCES = {
+    "ability": "abilities",
+    "encounter_id": "encounters",
+    "prefab": "prefabs",
+    "resource": "resources",
+    "state": "states",
+}
 
 
 class BehaviorTreeAuthoringError(ValueError):
     pass
+
+
+def parse_points(text):
+    """A patrol's places: ``"x,y; x,y"`` as ``[(x, y), ...]`` (a ValueError when it isn't)."""
+    points = []
+    for chunk in str(text or "").split(";"):
+        if chunk.strip():
+            x, y = chunk.split(",")
+            points.append((float(x), float(y)))
+    return points
 
 
 def default_node(kind):
@@ -130,16 +156,40 @@ class BehaviorTreeAuthoring:
         return self._store(
             BehaviorTree(tree_id, default_node(root_kind), tree_id),
             None,
-            f"Add Behavior Tree {tree_id}",
+            f"Add Behavior Tree {words(tree_id)}",
         )
 
     def delete(self, tree_id):
         old = self.get(tree_id)
         self.document.execute(
             _DefinitionCommand(
-                self.trees, old.tree_id, None, old, f"Delete Behavior Tree {old.tree_id}"
+                self.trees, old.tree_id, None, old, f"Delete Behavior Tree {words(old.tree_id)}"
             )
         )
+
+    def fresh_node(self, kind):
+        """A new ``kind`` node that works as it is: what it refers to is the project's first."""
+        node = default_node(kind)
+        params = dict(node.params)
+        vocabulary = vocabulary_for(self.document)
+        for name, value in node.params.items():
+            if (kind, name) in ABSENT_AT_ZERO and not value:
+                del params[name]  # left out, as Apply leaves it
+            elif name == "name":
+                params[name] = self._first_switch()
+            elif name in REFERENCE_SOURCES:
+                values = [c.value for c in vocabulary.choices(REFERENCE_SOURCES[name])]
+                if name == "resource":
+                    values.sort(key=resource_order)
+                if values and value not in values:
+                    params[name] = values[0]
+        return replace(node, params=params)
+
+    def _first_switch(self):
+        from .event_flow_authoring import EventFlowAuthoring
+
+        used = EventFlowAuthoring(self.document).names_used("switch")
+        return used[0] if used else "new_switch"
 
     def _edit(self, tree_id, path, change, label):
         old = self.get(tree_id)
@@ -157,14 +207,14 @@ class BehaviorTreeAuthoring:
 
         def change(node):
             if node.kind not in COMPOSITES + DECORATORS:
-                raise BehaviorTreeAuthoringError(f"{node.kind} cannot have children")
+                raise BehaviorTreeAuthoringError("This node cannot hold other nodes")
             if node.kind in DECORATORS:
                 return replace(
-                    node, children=(default_node(kind),)
+                    node, children=(self.fresh_node(kind),)
                 )  # a decorator wraps exactly one child
-            return replace(node, children=(*node.children, default_node(kind)))
+            return replace(node, children=(*node.children, self.fresh_node(kind)))
 
-        return self._edit(tree_id, path, change, f"Add {kind}")
+        return self._edit(tree_id, path, change, "Add node")
 
     def set_params(self, tree_id, path, **params):
         def change(node):
@@ -177,6 +227,9 @@ class BehaviorTreeAuthoring:
             values = dict(node.params)
             for key, value in params.items():
                 default = known[key]
+                if (node.kind, key) in ABSENT_AT_ZERO and not value:
+                    values.pop(key, None)
+                    continue
                 values[key] = type(default)(value) if not isinstance(default, str) else str(value)
             return replace(node, params=values)
 
@@ -184,14 +237,14 @@ class BehaviorTreeAuthoring:
 
     def set_kind(self, tree_id, path, kind):
         def change(node):
-            fresh = default_node(kind)
+            fresh = self.fresh_node(kind)
             if kind in COMPOSITES and node.children:
                 return replace(fresh, children=node.children)
             if kind in DECORATORS and node.children:
                 return replace(fresh, children=node.children[:1])
             return fresh
 
-        return self._edit(tree_id, path, change, f"Change node to {kind}")
+        return self._edit(tree_id, path, change, "Change node kind")
 
     def remove(self, tree_id, path):
         return self._edit(tree_id, path, lambda _node: None, "Remove node")

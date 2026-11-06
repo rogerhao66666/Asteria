@@ -198,7 +198,7 @@ def test_problems_name_broken_real_time_combat_references():
         "projectile none not found",
         "unknown timeline lost",
         "hit property custom is not an attack",
-        "unknown ability zap",
+        "Behavior tree Brain: the skill Zap is not in the project",
         "unknown ability nothing",
         "drop table no_table not found",
         "life resource hp is not among its resources",
