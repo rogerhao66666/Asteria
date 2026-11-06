@@ -49,3 +49,15 @@ def test_the_project_tree_is_freed_without_the_cycle_collector(app):
         return panel
 
     assert _freed_without_the_collector(make)
+
+
+def test_a_section_with_columns_is_freed_without_the_cycle_collector(app):
+    from asteria.editor.record_form import NumberBox, Section
+
+    def make():
+        section = Section("Numbers", columns=3)
+        section.add_row("First", NumberBox(1))
+        assert section.body._section() is section
+        return section
+
+    assert _freed_without_the_collector(make)

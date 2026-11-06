@@ -166,6 +166,14 @@ def translate(key, english):
         row = trial_d91.STATS.get(stat)
         if row is not None:
             return {"name": row[2], "short": row[3], "description": row[7]}.get(field)
+    if key.startswith("data.tag."):  # Game Systems ▸ Properties: their own Chinese (D91)
+        import trial_d91
+        import trial_d92
+
+        tag, field = key[len("data.tag.") :].rsplit(".", 1)
+        row = trial_d92.TAGS.get(tag) or trial_d91.TAGS.get(tag)
+        if row is not None:
+            return {"name": row[1], "description": row[3]}.get(field)
     if key.endswith(".description"):
         return translate_description(english)
     if key.startswith("data.speaker."):

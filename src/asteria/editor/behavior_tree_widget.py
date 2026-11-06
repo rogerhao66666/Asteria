@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QComboBox,
+    QDialog,
     QFormLayout,
     QFrame,
     QGroupBox,
@@ -58,6 +59,7 @@ from .behavior_tree_words import (
 )
 from .event_name_dialog import name_picker
 from .i18n import CURRENT, translate
+from .map_places_dialog import MapPlacesDialog
 from .record_form import NumberBox, Picker, _help_tip, _wheel_guard
 from .record_vocabulary import vocabulary_for
 from .record_vocabulary import words as _words
@@ -87,9 +89,10 @@ def _fill_kinds(combo):
 
 
 class PatrolPlaces(QWidget):
-    """A patrol's places, a row each: the data's ``"x,y; x,y"`` is never shown."""
+    """A patrol's places, a row each: the data's ``"x,y; x,y"`` is never shown. ``pick`` is what
+    Pick on Map… does."""
 
-    def __init__(self, text, parent=None):
+    def __init__(self, text, pick=None, parent=None):
         super().__init__(parent)
         self.rows = []
         self.layout_ = QVBoxLayout(self)
@@ -97,9 +100,14 @@ class PatrolPlaces(QWidget):
         self.layout_.setSpacing(4)
         self.add_button = QPushButton("Add Place")
         self.add_button.clicked.connect(lambda _checked=False: self.add_place())
+        self.pick_button = QPushButton("Pick on Map…")
+        self.pick_button.setVisible(pick is not None)
+        if pick is not None:
+            self.pick_button.clicked.connect(lambda _checked=False: pick())
         buttons = QHBoxLayout()
         buttons.setSpacing(4)
         buttons.addWidget(self.add_button)
+        buttons.addWidget(self.pick_button)
         self.layout_.addLayout(buttons)
         try:
             points = parse_points(text)
@@ -143,6 +151,15 @@ class PatrolPlaces(QWidget):
 
     def places(self):
         return [(boxes[0].number(), boxes[1].number()) for _row, boxes, _remove in self.rows]
+
+    def set_places(self, places):
+        for row, _boxes, _remove in self.rows:
+            self.layout_.removeWidget(row)
+            row.hide()
+            row.deleteLater()
+        self.rows = []
+        for x, y in places:
+            self.add_place(x, y)
 
     def text(self):
         return "; ".join(f"{x:g},{y:g}" for x, y in self.places())
@@ -372,6 +389,10 @@ class BehaviorTreeEditorWidget(QWidget):
             field = self._field(node.kind, name, node.params.get(name, unset))
             self.fields[name] = field
             self.form.addRow(self._field_label(node.kind, name), field)
+            if node.kind == "move_to" and name == "y":
+                pick = QPushButton("Pick on Map…")
+                pick.clicked.connect(lambda _checked=False: self.pick_on_map())
+                self.form.addRow("", pick)
         self.apply_params_button.setVisible(bool(self.fields))
 
     def _field_label(self, kind, name):
@@ -387,7 +408,7 @@ class BehaviorTreeEditorWidget(QWidget):
     def _field(self, kind, name, value):
         """The setting's own kind of field, in words: a number, or a list to pick from."""
         if name == "points":
-            return PatrolPlaces(value)
+            return PatrolPlaces(value, self.pick_on_map)
         if name == "name":
             return name_picker(self.api.document, "switch", str(value or ""))
         if name in REFERENCE_SOURCES:
@@ -447,6 +468,27 @@ class BehaviorTreeEditorWidget(QWidget):
         return translate(template).format(**values)
 
     # -- edits -----------------------------------------------------------------------------------
+    def pick_on_map(self):
+        """The node's place, or a patrol's places, picked on a map. OK saves them with the rest of
+        the node; a dialog's OK needing Apply Parameters after it would be asking twice."""
+        places = self.fields.get("points")
+        many = places is not None
+        current = (
+            places.places() if many else [(self.fields["x"].number(), self.fields["y"].number())]
+        )
+        dialog = MapPlacesDialog(self.api.document, self.tree_id, current, many=many, parent=self)
+        accepted = dialog.exec() == QDialog.Accepted
+        chosen = dialog.places()
+        dialog.deleteLater()
+        if not accepted:
+            return None
+        if many:
+            places.set_places(chosen)
+        else:
+            self.fields["x"].set_value(chosen[0][0])
+            self.fields["y"].set_value(chosen[0][1])
+        return self.apply_params()
+
     def _try(self, action, message, path=None):
         try:
             result = action()

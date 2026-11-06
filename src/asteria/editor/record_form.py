@@ -15,11 +15,12 @@ The form only edits plain record data; each record type's own decoder still vali
 from __future__ import annotations
 
 import re
+import weakref
 from copy import deepcopy
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QIcon, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -41,6 +42,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStyle,
     QStyleOptionComboBox,
     QTableWidget,
@@ -78,6 +80,7 @@ from .record_vocabulary import (
     vocabulary_for,
     words,
 )
+from .responsive_form import columns_that_fit
 
 FORMAT_KEYS = ("schema", "version")
 # written by another view of the same record, not typed here: a skill tree's node positions
@@ -353,6 +356,15 @@ class Picker(QComboBox):
         self.set_value(value)
         self.activated.connect(lambda _i: self.picked.emit())
         self.lineEdit().editingFinished.connect(self._typed)
+        self.currentIndexChanged.connect(self._show_start)
+        self._show_start()
+
+    def _show_start(self, *_args):
+        """Narrower than its words, a box shows how they begin (a line edit would show their
+        end, where the cursor is). Not from resizeEvent: a cursor moved while a form is laid
+        out crashed Qt."""
+        if not self.lineEdit().hasFocus():
+            self.lineEdit().setCursorPosition(0)
 
     def sizeHint(self):  # noqa: N802 - Qt API
         """As wide as the longest choice (up to 280 px) where the form has the room, so a
@@ -461,6 +473,68 @@ class PickDialog(QDialog):
         return chosen
 
 
+class _ElidedLabel(QLabel):
+    """One line of words ending in … where its room runs out; ``text()`` and its tooltip keep
+    them whole. It asks for no width of its own: the fields beside it come first."""
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        return QSize(0, super().minimumSizeHint().height())
+
+    def paintEvent(self, _event):  # noqa: N802 - Qt API
+        room = self.contentsRect()
+        words = self.fontMetrics().elidedText(self.text(), Qt.ElideRight, room.width())
+        self.style().drawItemText(
+            QPainter(self),
+            room,
+            int(self.alignment()),
+            self.palette(),
+            self.isEnabled(),
+            words,
+            self.foregroundRole(),
+        )
+
+
+class _WrappedWords(QLabel):
+    """Words that take as many lines as their width needs, and that height in any layout: a
+    title never holds its card wider than the page."""
+
+    LEAST = 120
+
+    def __init__(self, text=""):
+        super().__init__(text)
+        self.setWordWrap(True)
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        size = super().minimumSizeHint()
+        size.setWidth(min(size.width(), self.LEAST))
+        return size
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self.setMinimumHeight(self.heightForWidth(event.size().width()))
+
+
+def _combo_text_width(box, text):
+    """How wide ``box`` must be to show ``text`` whole (and its icon): the words, plus the
+    box's own frame, padding and arrow."""
+    box.ensurePolished()
+    option = QStyleOptionComboBox()
+    box.initStyleOption(option)
+    field = box.style().subControlRect(
+        QStyle.CC_ComboBox, option, QStyle.SC_ComboBoxEditField, box
+    )
+    width = box.fontMetrics().horizontalAdvance(text) + box.width() - field.width() + 4
+    if not box.itemIcon(box.currentIndex()).isNull():
+        width += box.iconSize().width() + 6
+    return width
+
+
+def _show_start(box):
+    """An editable drop-down narrower than its words shows how they begin, not their end."""
+    if box.isEditable() and not box.lineEdit().hasFocus():
+        box.lineEdit().setCursorPosition(0)
+
+
 class ChipList(QWidget):
     """A list of values as a table (as RPG Maker's Traits: a tag's kind and what it is, or a
     record's name and id), ✕ on a row removes it, Add opens a picker."""
@@ -468,6 +542,9 @@ class ChipList(QWidget):
     edited = Signal()
     ROW = 30  # a row's height (a drop-down fits): the table is as tall as its rows
     SPLIT = 8  # more rows than this: the list in two halves side by side
+    TWO_HALVES_FROM = 640  # narrower, each half's drop-downs would be cut: one long list
+    SECOND_LEAST = 140  # the room the column beside the first keeps, when narrow
+    EFFECT_FROM = 270  # a narrower second column: a tag's drop-down, its words in a tooltip
 
     def __init__(
         self,
@@ -585,6 +662,7 @@ class ChipList(QWidget):
         box.completer().setFilterMode(Qt.MatchContains)
         box.completer().setCompletionMode(QCompleter.PopupCompletion)
         box.setCurrentIndex(max(0, box.findData(value)) if value is not None else 0)
+        _show_start(box)
 
         def picked(_index=None):
             picked_value = box.currentData()
@@ -633,6 +711,7 @@ class ChipList(QWidget):
                     content.setItemData(content.count() - 1, tag, Qt.ToolTipRole)
             content.setCurrentIndex(max(0, content.findData(keep)) if keep else 0)
             content.blockSignals(False)
+            _show_start(content)
 
         def picked(_index):
             tag = content.currentData()
@@ -661,18 +740,73 @@ class ChipList(QWidget):
         line.setContentsMargins(0, 0, 8, 0)
         line.setSpacing(12)
         content.setMinimumWidth(160)
+        # its whole value (as decor gives every drop-down), then what the tag does: where the
+        # words beside it have no room, a hover still says it
+        content.setProperty("full_text_tip", True)
+        content.setToolTip(f"{content.currentText()}\n{translate(effect)}")
         line.addWidget(content, 1)
-        said = QLabel(translate(effect))
+        said = _ElidedLabel(translate(effect))
         said.setObjectName("FormTagEffect")
         said.setToolTip(translate(effect))
         line.addWidget(said, 2)
+        self._effects.append(said)
         self.table.setCellWidget(row, base + 1, cell)
         return content
 
-    def _shape(self):
-        """A long list (more than SPLIT rows) in two halves side by side: half as tall."""
+    def _bands(self):
         count = len(self.values) + (1 if self._pending else 0)
-        table, bands = self.table, 2 if count > self.SPLIT else 1
+        if count <= self.SPLIT:
+            return 1
+        sized = self.testAttribute(Qt.WA_Resized)
+        return 1 if sized and self.width() < self.TWO_HALVES_FROM else 2
+
+    def _first_column_width(self):
+        """The first column of each half: its usual width (more, when a name needs it); when
+        narrow, as wide as its names need, so the column beside it keeps its room."""
+        bands = self._bands()
+        records = self.noun != "tag" and self.detail is not None
+        usual = (320 if bands == 1 else 220) if records else (180 if bands == 1 else 120)
+        if not self.testAttribute(Qt.WA_Resized):
+            return usual
+        need = self._first_column_need()
+        room = self.width() // bands - 30 - self.SECOND_LEAST
+        if max(usual, need) <= room:
+            return max(usual, need)
+        return max(90, min(need, room))
+
+    def _first_column_need(self):
+        """The width the first column's drop-downs need to show what they hold whole."""
+        need = 0
+        for first in range(0, self.table.columnCount(), 3):
+            for row in range(self.table.rowCount()):
+                box = self.table.cellWidget(row, first)
+                if isinstance(box, QComboBox):
+                    need = max(need, _combo_text_width(box, box.currentText()))
+        return need
+
+    def _size_first_columns(self):
+        first_width = self._first_column_width()
+        for first in range(0, self.table.columnCount(), 3):
+            self.table.setColumnWidth(first, first_width)
+        # what a tag does, beside its drop-down, only where a few words of it fit (else its
+        # drop-down's tooltip says it)
+        second = self.width() // self._bands() - 30 - first_width
+        sized = self.testAttribute(Qt.WA_Resized)
+        for said in self._effects:
+            said.setVisible(not sized or second >= self.EFFECT_FROM)
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        if self._bands() != self.table.columnCount() // 3:
+            self._build()
+        elif event.size().width() != event.oldSize().width():
+            self._size_first_columns()
+
+    def _shape(self):
+        """A long list (more than SPLIT rows) in two halves side by side, where the width holds
+        them: half as tall."""
+        count = len(self.values) + (1 if self._pending else 0)
+        table, bands = self.table, self._bands()
         table.setColumnCount(3 * bands)
         table.setHorizontalHeaderLabels([*self.heads, ""] * bands)
         header = table.horizontalHeader()
@@ -684,7 +818,7 @@ class ChipList(QWidget):
             )
             header.setSectionResizeMode(first + 1, QHeaderView.Stretch)
             header.setSectionResizeMode(first + 2, QHeaderView.Fixed)
-            header.resizeSection(first, 180 if bands == 1 else 120)
+            header.resizeSection(first, self._first_column_width())
             header.resizeSection(first + 2, 30)
         rows = -(-count // bands)
         table.setRowCount(rows)
@@ -693,6 +827,7 @@ class ChipList(QWidget):
     def _build(self):
         table = self.table
         table.clearContents()
+        self._effects = []  # each row's words on what its tag does
         rows = self._shape()
         groups = self._groups() if self.noun == "tag" else None
         for index, value in enumerate(self.values):
@@ -740,10 +875,10 @@ class ChipList(QWidget):
             table.setCellWidget(row, 3 * band + 2, cancel)
         if self.noun != "tag":
             for first in range(0, table.columnCount(), 3):
-                if self.detail is not None:
-                    table.setColumnWidth(first, 320 if table.columnCount() == 3 else 220)
                 # a record row is its name: no second column for the id
                 table.setColumnHidden(first + 1, self.detail is None)
+        if self.noun == "tag" or self.detail is not None:
+            self._size_first_columns()  # the drop-downs are there now: what they need
         table.setVisible(bool(self.values) or self._pending)
         self.empty.setVisible(not self.values and not self._pending)
         table.setFixedHeight(table.horizontalHeader().height() + self.ROW * rows + 4)
@@ -847,7 +982,7 @@ class AmountTable(QWidget):
         self.find.setClearButtonEnabled(True)
         self.find.setFixedWidth(180)
         self.find.textChanged.connect(lambda _text: self._build())
-        row = QHBoxLayout()
+        self._buttons = row = QHBoxLayout()
         row.addWidget(add)
         row.addWidget(self.find)
         row.addStretch(1)
@@ -859,6 +994,13 @@ class AmountTable(QWidget):
         self._probe = QLabel(self)
         self._probe.hide()
         self._build()
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        """One pair a row is the narrowest it goes, a long name wrapped (see _arrange)."""
+        size = super().minimumSizeHint()
+        one_pair = 72 + self._pair_rest() - self.GAP
+        size.setWidth(max(one_pair, self._buttons.minimumSize().width()))
+        return size
 
     def _pair_rest(self):
         """A pair's width but for its name: its number, ✕, the gap and the spaces between."""
@@ -1244,6 +1386,39 @@ class ColorButton(QPushButton):
             self.edited.emit()
 
 
+class _SectionBody(QWidget):
+    """A section's fields. Fields in columns re-flow to fewer columns when the width runs out,
+    so the narrowest the section needs is one column, not all of them side by side."""
+
+    def __init__(self, section):
+        super().__init__()
+        # a weak reference: the section holds this body, and a cycle between a widget and the
+        # widget it sits in can crash the cycle collector (tests/test_widget_cycles.py)
+        self._section = weakref.ref(section)
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        size = super().minimumSizeHint()
+        section = self._section()
+        if section is not None and section.flow_cells:
+            margins = section.form.contentsMargins()
+            needed = max(_flow_cell_width(cell) for cell in section.flow_cells)
+            size.setWidth(needed + margins.left() + margins.right())
+        return size
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        section = self._section()
+        if section is not None and event.size().width() != event.oldSize().width():
+            section.reflow()
+
+
+def _flow_cell_width(cell):
+    """How wide one field of a section's columns must be: its own minimum, and its label's."""
+    title, field, _wide = cell
+    width = field.minimumSizeHint().width()
+    return width if title is None else max(width, title.minimumSizeHint().width())
+
+
 class Section(QFrame):
     """A titled card holding fields; ``collapsed`` starts it folded (Advanced)."""
 
@@ -1255,6 +1430,9 @@ class Section(QFrame):
         # ``columns``: small fields (pickers, numbers, switches) sit side by side, this many to
         # a row; lists and long text take a whole row (cards of a list)
         self.columns = columns
+        self.shown_columns = columns  # fewer when the width runs out (see reflow)
+        # (label or None, field, "" | "field" whole row under a label | "whole" row), in order
+        self.flow_cells = []
         self._cell = (0, 0)
         self.keeps_empty = False  # empty optional fields show here (no "show more" link)
         self.toggle = QToolButton()
@@ -1264,7 +1442,7 @@ class Section(QFrame):
         self.toggle.setChecked(not collapsed)
         self.toggle.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.toggle.setArrowType(Qt.DownArrow if not collapsed else Qt.RightArrow)
-        self.body = QWidget()
+        self.body = _SectionBody(self)
         self.form = QGridLayout(self.body)
         self.form.setContentsMargins(4, 2, 4, 4)
         self.form.setHorizontalSpacing(12)
@@ -1372,32 +1550,69 @@ class Section(QFrame):
         Each row of fields is two grid rows (D91): the labels', each label standing on the
         bottom of its cell, then the fields', each at the top of its own. A label that wraps to
         two lines or a tall field beside it no longer pushes its neighbours' boxes down."""
-        row, column = self._cell
-        span = 1
-        if _is_wide(widget):
-            if column:
-                row, column = row + 1, 0
-            span = self.columns
-            self._cell = (row + 1, 0)
-        else:
-            if isinstance(widget, Picker):  # equal columns still show its longest choice
-                widget.setMinimumWidth(max(widget.minimumWidth(), widget.choice_width(220)))
-            self._cell = (row + 1, 0) if column + 1 >= self.columns else (row, column + 1)
+        wide = "field" if _is_wide(widget) else ""
+        if not wide and isinstance(widget, Picker):  # its column still shows its longest choice
+            widget.setMinimumWidth(max(widget.minimumWidth(), widget.choice_width(220)))
         holder.setContentsMargins(0, 0, 0, 8)  # room below a row of fields, before the next
-        self.form.addLayout(holder, 2 * row + 1, column, 1, span, Qt.AlignTop)
+        field = QWidget()  # a widget, not a layout: a re-flow can place it again
+        field.setLayout(holder)
         if isinstance(widget, QCheckBox) and label:
             widget.setText(label)
+            title = None
             # the unused label has no parent: Python frees it (a deleteLater as well would
             # free it twice and crash later)
+        self._add_flow_cell((title, field, wide))
+
+    def _add_flow_cell(self, cell):
+        self.flow_cells.append(cell)
+        self._place_flow_cell(cell)
+        if self.body.width() > 0 and self.body.testAttribute(Qt.WA_Resized):
+            self.reflow()  # added after the section got its width (＋ Empty fields)
+
+    def _place_flow_cell(self, cell):
+        title, field, wide = cell
+        row, column = self._cell
+        if wide:
+            if column:
+                row, column = row + 1, 0
+            self._cell = (row + 1, 0)
+            if wide == "whole":  # add_wide: no label line above it
+                self.form.addWidget(field, 2 * row, 0, 2, self.shown_columns)
+                return
+            span = self.shown_columns
         else:
+            span = 1
+            last = column + 1 >= self.shown_columns
+            self._cell = (row + 1, 0) if last else (row, column + 1)
+        self.form.addWidget(field, 2 * row + 1, column, 1, span, Qt.AlignTop)
+        if title is not None:
             self.form.addWidget(title, 2 * row, column, 1, span, Qt.AlignBottom | Qt.AlignLeft)
+
+    def reflow(self):
+        """As many of the section's columns as this width holds: fields wrap to the next line
+        when side by side they would stick out of the window."""
+        if not self.flow_cells:
+            return
+        margins = self.form.contentsMargins()
+        room = self.body.width() - margins.left() - margins.right()
+        widths = [None if c[2] else _flow_cell_width(c) for c in self.flow_cells]
+        columns = columns_that_fit(
+            widths, room, spacing=self.form.horizontalSpacing(), most=self.columns
+        )
+        if columns == self.shown_columns:
+            return
+        self.shown_columns = columns
+        while self.form.count():
+            self.form.takeAt(0)
+        for column in range(self.columns):
+            self.form.setColumnStretch(column, 1 if column < columns else 0)
+        self._cell = (0, 0)
+        for cell in self.flow_cells:
+            self._place_flow_cell(cell)
 
     def add_wide(self, widget):
         if self.columns:
-            row, column = self._cell
-            row += 1 if column else 0
-            self.form.addWidget(widget, 2 * row, 0, 2, self.columns)
-            self._cell = (row + 1, 0)
+            self._add_flow_cell((None, widget, "whole"))
             return
         self.form.addWidget(widget, self.form.rowCount(), 0, 1, 2)
 
@@ -1862,7 +2077,7 @@ class RecordForm(QScrollArea):
 
             title = record_title(self.category, data, self.vocabulary, data.get(id_key))
             if title:
-                heading = QLabel(title)
+                heading = _WrappedWords(title)  # a long title takes two lines, not the width
                 heading.setObjectName("FormTitle")
                 names.addWidget(heading)
         if id_key is None and self._title:  # a profile without a name: its id in words
@@ -2364,6 +2579,7 @@ class _SubForm(QWidget):
                 form._field(self.section, data, k, v)
 
 
+QWIDGETSIZE_MAX = 16777215  # Qt's "no maximum width"
 FOLD_AFTER = 8  # a list with more entries than this opens one entry at a time
 
 
@@ -2411,7 +2627,7 @@ class CardList(QWidget):
             arrow.setToolTip("Show or hide this entry's fields")
             arrow.setObjectName("FormCardMore")
             head.addWidget(arrow)
-        title = QLabel(f"<b>{index + 1}.</b>  {_entry_title(entry, noun, self.names)}")
+        title = _WrappedWords(f"<b>{index + 1}.</b>  {_entry_title(entry, noun, self.names)}")
         context = _ai_context(self.form._data, entry, self.names)
         if context:  # which phases use the rule / when the phase starts, quieter
             title.setText(f"{title.text()}  <span style='color:#8b8e98'>{context}</span>")
@@ -2900,10 +3116,16 @@ def _entry_list(form, parent, key, entries):
     return CardList(form, parent, key, entries)
 
 
+def _table_part_width(widget):
+    """How wide a part of an entry table must be to show whole: a width it was given, else its
+    own minimum (as a layout reads it)."""
+    return widget.minimumWidth() or widget.minimumSizeHint().width()
+
+
 class EntryTable(CardList):
     """Entries as the rows of a table (as RPG Maker's Traits and drops): a column per field,
     the edit buttons at the row's end; the fields an entry leaves empty open under its row
-    (⋯)."""
+    (⋯). Too narrow for its columns, each entry stacks its fields instead (``reflow``)."""
 
     def __init__(self, form, parent, key, entries, columns):
         QWidget.__init__(self)
@@ -2920,25 +3142,24 @@ class EntryTable(CardList):
         self.grid.setContentsMargins(8, 6, 8, 6)
         self.grid.setHorizontalSpacing(10)
         self.grid.setVerticalSpacing(4)
+        self.stacked = 0  # how many fields a line when too narrow for a table (0: a table)
+        self._wants = {}  # each drop-down's width that shows its longest choice whole
+        self._rows = []  # each entry's (number, cells, buttons, what opens under it)
+        self._captions = None  # each entry's own field names, made the first time it stacks
         head = QLabel("#")
         head.setObjectName("FormTableHead")
-        self.grid.addWidget(head, 0, 0)
+        self._heads = [head]
+        self._stretches = {len(columns) + 1: 1}  # the buttons keep to the right
         for column, field in enumerate(columns, start=1):
-            about = _help(entries[0], field)
-            title = QLabel(label_for(field) + ("  ⓘ" if about else ""))
-            title.setObjectName("FormTableHead")
-            if about:
-                title.setToolTip(about)
-                _help_tip(title)
-            self.grid.addWidget(title, 0, column)
+            self._heads.append(self._field_title(field))
             sample = next((e[field] for e in entries if field in e), "")
             small = isinstance(sample, (bool, int, float))
-            self.grid.setColumnStretch(column, 0 if small else 2)
-        self.grid.setColumnStretch(len(columns) + 1, 1)  # the buttons keep to the right
+            self._stretches[column] = 0 if small else 2
         for index, entry in enumerate(entries):
             self._row(index, entry)
+        self._place_table()
         layout.addWidget(frame)
-        add = QPushButton(f"+ Add {_noun(key)}")
+        add = self._add = QPushButton(f"+ Add {_noun(key)}")
         add.setObjectName("FormAddButton")
         add.clicked.connect(self.add)
         row = QHBoxLayout()
@@ -2946,12 +3167,150 @@ class EntryTable(CardList):
         row.addStretch(1)
         layout.addLayout(row)
 
+    def _field_title(self, field):
+        about = _help(self.entries[0], field)
+        title = QLabel(label_for(field) + ("  ⓘ" if about else ""))
+        title.setObjectName("FormTableHead")
+        if about:
+            title.setToolTip(about)
+            _help_tip(title)
+        return title
+
+    PICKER_LEAST = 140  # one field a line, a drop-down may show only how its words begin
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API
+        """One field a line is the narrowest this table goes (see reflow)."""
+        size = super().minimumSizeHint()
+        margins = self.grid.contentsMargins()
+        frame = self.grid.parentWidget()  # its border is room too
+        border = frame.width() - frame.contentsRect().width()
+        parts = [*self._heads]
+        for _number, cells, buttons, opens in self._rows:
+            parts.extend((*cells, buttons))
+            if opens is not None and not opens.isHidden():
+                parts.append(opens)
+        widest = max(self._least(part) for part in parts)
+        needed = widest + margins.left() + margins.right() + border
+        size.setWidth(max(needed, _table_part_width(self._add)))
+        return size
+
+    def _least(self, part):
+        want = self._wants.get(part)
+        return _table_part_width(part) if want is None else min(want, self.PICKER_LEAST)
+
+    def _want(self, part):
+        want = self._wants.get(part)
+        return _table_part_width(part) if want is None else want
+
+    def _fit_pickers(self, room):
+        """Each drop-down shows its longest choice, unless one field a line is still too
+        narrow for it: then it takes the room there is (``PICKER_LEAST`` at the least)."""
+        for picker, want in self._wants.items():
+            least = want if self.stacked != 1 else max(self.PICKER_LEAST, min(want, room))
+            if picker.minimumWidth() != least:
+                picker.setMinimumWidth(least)
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        if event.size().width() != event.oldSize().width():
+            self.reflow()
+
+    def reflow(self):
+        """A table while its columns fit; narrower, each entry lays its fields out below its
+        number, as many a line as fit, each under its own name."""
+        margins = self.grid.contentsMargins()
+        frame = self.grid.parentWidget()
+        border = frame.width() - frame.contentsRect().width()
+        room = self.width() - margins.left() - margins.right() - border
+        spacing = self.grid.horizontalSpacing()
+        count = len(self.columns)
+        wanted = [_table_part_width(head) for head in self._heads]
+        wanted.append(0)  # the buttons
+        for number, cells, buttons, _opens in self._rows:
+            wanted[0] = max(wanted[0], _table_part_width(number))
+            for column, cell in enumerate(cells, start=1):
+                wanted[column] = max(wanted[column], self._want(cell))
+            wanted[-1] = max(wanted[-1], _table_part_width(buttons))
+        if sum(wanted) + spacing * (count + 1) <= room:
+            stacked = 0
+        else:
+            titles = self._heads[1:]
+            widths = []
+            for _number, cells, _buttons, _opens in self._rows:
+                widths.extend(
+                    max(self._want(c), _table_part_width(t))
+                    for c, t in zip(cells, titles, strict=True)
+                )
+                widths.append(None)
+            stacked = columns_that_fit(widths, room, spacing=spacing, most=count)
+        changed = stacked != self.stacked
+        self.stacked = stacked
+        self._fit_pickers(room)
+        if changed:
+            if stacked:
+                self._place_stacked()
+            else:
+                self._place_table()
+
+    def _clear_grid(self):
+        while self.grid.count():
+            self.grid.takeAt(0)
+        for column in range(len(self.columns) + 2):
+            self.grid.setColumnStretch(column, 0)
+
+    def _place_table(self):
+        self._clear_grid()
+        for column, stretch in self._stretches.items():
+            self.grid.setColumnStretch(column, stretch)
+        for column, head in enumerate(self._heads):
+            head.show()
+            self.grid.addWidget(head, 0, column)
+        for captions in self._captions or ():
+            for caption in captions:
+                caption.hide()
+        for index, (number, cells, buttons, opens) in enumerate(self._rows):
+            line = 1 + 2 * index
+            self.grid.addWidget(number, line, 0)
+            for column, cell in enumerate(cells, start=1):
+                self.grid.addWidget(cell, line, column, Qt.AlignVCenter)
+            self.grid.addWidget(buttons, line, len(self.columns) + 1)
+            if opens is not None:
+                self.grid.addWidget(opens, line + 1, 0, 1, len(self.columns) + 2)
+
+    def _place_stacked(self):
+        self._clear_grid()
+        for head in self._heads:
+            head.hide()
+        if self._captions is None:
+            self._captions = [[self._field_title(f) for f in self.columns] for _r in self._rows]
+        fields = self.stacked
+        for column in range(fields):
+            self.grid.setColumnStretch(column, 1)
+        line = 0
+        for index, (number, cells, buttons, opens) in enumerate(self._rows):
+            self.grid.addWidget(number, line, 0, Qt.AlignLeft | Qt.AlignVCenter)
+            self.grid.addWidget(buttons, line, 0, 1, fields, Qt.AlignRight)
+            line += 1
+            for at, (cell, caption) in enumerate(zip(cells, self._captions[index], strict=True)):
+                row = line + 2 * (at // fields)
+                caption.show()
+                self.grid.addWidget(caption, row, at % fields, Qt.AlignBottom)
+                # a field that stays small (a number) keeps left: in a grid it would cap the
+                # width of its whole column, and every column would float apart
+                grows = cell.sizePolicy().horizontalPolicy().value & QSizePolicy.GrowFlag.value
+                small = cell.maximumWidth() < QWIDGETSIZE_MAX or not grows
+                align = Qt.AlignTop | Qt.AlignLeft if small else Qt.AlignTop
+                self.grid.addWidget(cell, row + 1, at % fields, align)
+            line += 2 * -(-len(cells) // fields)
+            if opens is not None:
+                self.grid.addWidget(opens, line, 0, 1, fields)
+                line += 1
+
     def _row(self, index, entry):
-        line = 1 + 2 * index
         number = QLabel(f"<b>{index + 1}</b>")
         number.setToolTip(_entry_title(entry, _noun(self.key), self.names))
-        self.grid.addWidget(number, line, 0)
-        for column, field in enumerate(self.columns, start=1):
+        cells = []
+        for field in self.columns:
             if isinstance(entry.get(field), list):
                 widget = ListCell(self.form, entry, field)
             elif field in entry:
@@ -2962,9 +3321,15 @@ class EntryTable(CardList):
                 widget = _small("—")
             elif isinstance(widget, QCheckBox):
                 widget.setText("")
-            self.grid.addWidget(widget, line, column, Qt.AlignVCenter)
+            elif isinstance(widget, Picker):  # its column still shows its longest choice
+                want = max(widget.minimumWidth(), widget.choice_width(220))
+                widget.setMinimumWidth(want)
+                self._wants[widget] = want
+            cells.append(widget)
         hidden = [k for k in entry if k not in FORMAT_KEYS and k not in self.columns]
-        buttons = QHBoxLayout()
+        actions = QWidget()  # a widget, not a layout: a re-flow can place it again
+        buttons = QHBoxLayout(actions)
+        buttons.setContentsMargins(0, 0, 0, 0)
         buttons.setSpacing(2)
         buttons.addStretch(1)
         more = None
@@ -2986,14 +3351,14 @@ class EntryTable(CardList):
             button.setToolTip(tip)
             button.clicked.connect(handler)
             buttons.addWidget(button)
-        self.grid.addLayout(buttons, line, len(self.columns) + 1)
         if more is None:
+            self._rows.append((number, cells, actions, None))
             return
         holder = QFrame()
         holder.setObjectName("FormRowMore")  # framed: it belongs to the row above
         holder_layout = QVBoxLayout(holder)
         holder_layout.setContentsMargins(12, 4, 0, 6)
-        self.grid.addWidget(holder, line + 1, 0, 1, len(self.columns) + 2)
+        self._rows.append((number, cells, actions, holder))
         opened = self._opened()
         mark = ("row", id(self.entries), index)
 

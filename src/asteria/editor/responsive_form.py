@@ -25,6 +25,24 @@ from PySide6.QtWidgets import (
 )
 
 
+def columns_that_fit(widths, room, *, spacing, most):
+    """The most columns (up to ``most``) that lay ``widths`` out within ``room`` pixels: each
+    column as wide as its widest field. ``widths`` are in reading order; ``None`` starts a new
+    line (a whole row between fields, the next entry of a table)."""
+    for columns in range(int(most), 1, -1):
+        widest = [0] * columns
+        column = 0
+        for width in widths:
+            if width is None:
+                column = 0
+                continue
+            widest[column] = max(widest[column], width)
+            column = (column + 1) % columns
+        if sum(widest) + spacing * (columns - 1) <= room:
+            return columns
+    return 1
+
+
 class _Cell(QWidget):
     """One label / field pair. Its minimum height is the larger of its plain minimum (what a
     table inside needs) and its height at its own width (a caption wrapped onto two lines):
@@ -131,8 +149,12 @@ class _Pair:
         self.caption.setContentsMargins(0, 7, 0, 0)  # 7 + the grid's 3: 10 between rows
         self.field = widget
 
-    def minimumSizeHint(self):  # noqa: N802 - Qt API, for ResponsiveForm.minimumSizeHint
-        return self.field.minimumSizeHint()
+
+def _row_width(row):
+    """How wide a row of a ResponsiveForm must be, as a layout reads a widget's minimum."""
+    if isinstance(row, _Pair):
+        return row.field.minimumWidth() or row.field.minimumSizeHint().width()
+    return row.minimumWidth() or row.minimumSizeHint().width()
 
 
 class ResponsiveForm(QWidget):
@@ -178,8 +200,8 @@ class ResponsiveForm(QWidget):
         self._place(force=True)
 
     def minimumSizeHint(self):  # noqa: N802 - re-flows to one column, so one column is the minimum
-        widths = [w.minimumSizeHint().width() for w, _ in self.rows] or [0]
-        return QSize(min(max(widths), self.column_width), super().minimumSizeHint().height())
+        widths = [_row_width(w) for w, _ in self.rows] or [0]
+        return QSize(max(widths), super().minimumSizeHint().height())
 
     def columns_for(self, width):
         wanted = max(1, min(self.max_columns, int(width) // self.column_width))
@@ -195,7 +217,12 @@ class ResponsiveForm(QWidget):
         self._place()
 
     def _place(self, force=False):
-        columns = self.columns_for(self.width() or self.column_width)
+        room = self.width() or self.column_width
+        columns = self.columns_for(room)
+        if columns > 1 and self.testAttribute(Qt.WA_Resized):  # a wide field: fewer columns
+            widths = [None if wide else _row_width(w) for w, wide in self.rows]
+            spacing = self.grid.horizontalSpacing()
+            columns = columns_that_fit(widths, room, spacing=spacing, most=columns)
         if columns == self.columns and not force:
             return
         self.columns = columns

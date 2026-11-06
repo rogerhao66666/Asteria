@@ -124,6 +124,25 @@ def layout_children(layout):
     return [child for index, child in sorted(found, key=lambda pair: pair[0]) if index >= 0]
 
 
+def _claim_item_wrappers(layout):
+    """Every wrapper of an item in ``layout`` goes with ``layout``: ``itemAt`` moves it here."""
+    for index in range(layout.count()):
+        nested = layout.itemAt(index).layout()
+        if nested is not None:
+            _claim_item_wrappers(nested)
+
+
+def retire_layout(layout):
+    """Delete ``layout``, already taken out of the layout that held it, with its item wrappers.
+
+    ``addLayout`` of a filled layout wraps every item in it and keeps the wrappers on the OUTER
+    layout, which lives on. The items left here (a stretch, a spacing) are freed with this
+    layout while their wrappers still claim the address; a widget Qt allocates there then comes
+    back from Python as a QSpacerItem, and Python crashes (a segfault far from the cause)."""
+    _claim_item_wrappers(layout)
+    layout.deleteLater()
+
+
 def swap_scroll_page(scroll, page):
     """Show ``page`` in ``scroll`` and retire the page it replaces safely: ``setWidget`` (or a
     ``takeWidget`` left to Python) frees the old page at once, even while a click on one of its

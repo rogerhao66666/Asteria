@@ -50,7 +50,7 @@ from PySide6.QtWidgets import (
 )
 
 from .icons import icon
-from .ui_fit import layout_children, layout_widgets
+from .ui_fit import layout_children, layout_widgets, retire_layout
 
 # (pattern on the button text, icon, role); first match wins
 BUTTON_RULES = (
@@ -72,6 +72,7 @@ BUTTON_RULES = (
     (r"^(settings|options)\b", "settings", ""),
     (r"^(search|find)\b", "search", ""),
     (r"^revert\b", "reload", ""),
+    (r"^pick on map\b", "pin", ""),
 )
 
 # (pattern on a tab / combo / tree label, icon); first match wins
@@ -315,12 +316,12 @@ def flow_button_rows(layout):
                 flow.setAlignment(Qt.AlignRight)
             index = layout.indexOf(child)
             layout.takeAt(index)
-            child.deleteLater()
             # the row goes in empty: inserting a filled one would wrap its items as well
             layout.insertLayout(index, flow)
             for widget in widgets:
                 child.removeWidget(widget)
                 flow.addWidget(widget)
+            retire_layout(child)
         else:
             flow_button_rows(child)
 

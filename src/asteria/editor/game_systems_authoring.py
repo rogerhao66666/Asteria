@@ -1133,8 +1133,6 @@ _AREA_RULE = (
     F("switch", "Only While Switch Is On", "text", default=""),
     F("battle_background", "Battle Background For Fights Here", "icon", default=""),
     F("music", "Music Here (audio asset)", "text", default=""),
-    F("title", "Area Name Shown on Entering", "text", default=""),
-    F("encounters", "Random Encounters (weight each)", "amounts", source="encounters", default={}),
     F(
         "weather",
         "Weather Here",
@@ -1142,6 +1140,8 @@ _AREA_RULE = (
         default="",
         choices=("", "none", "rain", "snow", "leaves", "dust", "ash", "sand", "fog"),
     ),
+    F("title", "Area Name Shown on Entering", "text", default=""),
+    F("encounters", "Random Encounters (weight each)", "amounts", source="encounters", default={}),
     F("encounter_chance", "Encounter Chance per Step (0–1)", "float", default=0.0),
     F("encounter_first_step", "Chance Scale on the Step Into the Area", "float", default=1.0),
     F(

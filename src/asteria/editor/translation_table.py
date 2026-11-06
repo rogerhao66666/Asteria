@@ -203,6 +203,7 @@ class TranslationTable(QWidget):
 
         self.count = QLabel("")
         self.count.setObjectName("FieldHint")
+        self.count.setWordWrap(True)  # a narrow page: the words on two lines, not cut
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

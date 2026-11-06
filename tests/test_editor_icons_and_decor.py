@@ -114,7 +114,7 @@ def test_flowing_button_rows_leaves_no_layout_item_wrappers():
     and a later object allocated there crashed the editor (an intermittent segfault)."""
     import gc
 
-    from PySide6.QtCore import Qt
+    from PySide6.QtCore import QCoreApplication, QEvent, Qt
     from PySide6.QtWidgets import (
         QApplication,
         QHBoxLayout,
@@ -150,10 +150,55 @@ def test_flowing_button_rows_leaves_no_layout_item_wrappers():
     assert isinstance(flow, FlowLayout) and flow.alignment() & Qt.AlignRight
     assert layout_widgets(flow) == buttons
     kept_by_flow = {id(item) for item in flow._items}
+    del row  # the old row goes at the next event loop, and whatever it held goes with it
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete.value)
+    gc.collect()
     left = [w for w in _layout_item_wrappers() if id(w) not in before | kept_by_flow]
     assert left == []  # nothing a box layout keeps, so nothing outlives its item
     banner.setParent(None)  # what RecordForm does with its banner on every rebuild
     banner.deleteLater()
+    page.deleteLater()
+
+
+def test_flowing_a_row_that_was_added_filled_frees_no_item_under_a_wrapper():
+    """``addLayout`` wraps every item of a filled row and keeps the wrappers on the outer layout.
+    Replacing the row freed its stretch under its wrapper, which still claimed the address: a
+    widget Qt allocated there came back from ``allWidgets`` as a QSpacerItem, or Python crashed
+    (an intermittent segfault in tests/test_editor_narrow_pages.py)."""
+    import gc
+
+    from PySide6.QtCore import QCoreApplication, QEvent
+    from PySide6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
+    from asteria.editor.decor import compact
+    from asteria.editor.flow_layout import FlowLayout
+    from asteria.editor.ui_fit import layout_children, layout_widgets
+
+    QApplication.instance() or QApplication([])
+    gc.collect()
+    before = {id(w) for w in _layout_item_wrappers()}
+    page = QWidget()
+    column = QVBoxLayout(page)
+    nested = QHBoxLayout()  # a row inside the row: its items are wrapped on the outer one too
+    nested.addSpacing(4)
+    row = QHBoxLayout()
+    row.addStretch(1)
+    row.addLayout(nested)
+    buttons = [QPushButton(text) for text in ("Add", "Remove")]
+    for button in buttons:
+        row.addWidget(button)
+    column.addLayout(row)  # filled when added, as most rows are
+    assert len([w for w in _layout_item_wrappers() if id(w) not in before]) > len(buttons)
+
+    compact(page)
+    del row, nested  # the last hold on the row: only its own deletion is left
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete.value)
+    gc.collect()
+
+    flow = layout_children(column)[0]
+    assert isinstance(flow, FlowLayout) and layout_widgets(flow) == buttons
+    kept_by_flow = {id(item) for item in flow._items}
+    assert [w for w in _layout_item_wrappers() if id(w) not in before | kept_by_flow] == []
     page.deleteLater()
 
 

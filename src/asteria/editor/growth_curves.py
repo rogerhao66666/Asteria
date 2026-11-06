@@ -163,11 +163,15 @@ class GrowthCurves(QWidget):
     own starting stats come on top, and its jobs change in play). Drawn again a moment after
     each edit."""
 
-    COLUMNS = 4
+    COLUMNS = 4  # at most; as many as the width holds
+    SPACING = 8
+    CHART_WIDTH = 150  # the narrowest a chart goes
 
     def __init__(self, form, category="classes"):
         super().__init__()
         self.form, self.category = form, category
+        self.charts = []
+        self.shown_columns = self.COLUMNS
         self.setObjectName("GrowthCurves")
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
@@ -182,7 +186,7 @@ class GrowthCurves(QWidget):
         controls.addStretch(1)
         column.addLayout(controls)
         self.grid = QGridLayout()
-        self.grid.setSpacing(8)
+        self.grid.setSpacing(self.SPACING)
         column.addLayout(self.grid)
         self.note = QLabel()
         self.note.setObjectName("MutedLabel")
@@ -194,6 +198,33 @@ class GrowthCurves(QWidget):
         self._timer.timeout.connect(self.redraw)
         form.changed.connect(self._timer.start)
         self.redraw()
+
+    def minimumSizeHint(self):  # noqa: N802 - Qt API: one chart a row is the narrowest it goes
+        size = super().minimumSizeHint()
+        controls = self.layout().itemAt(0).minimumSize().width()
+        size.setWidth(max(self.CHART_WIDTH, controls))
+        return size
+
+    def resizeEvent(self, event):  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        if self._columns_for(event.size().width()) != self.shown_columns:
+            self._place_charts()
+
+    def _columns_for(self, width):
+        fit = (width + self.SPACING) // (self.CHART_WIDTH + self.SPACING)
+        return max(1, min(self.COLUMNS, fit))
+
+    def _place_charts(self):
+        """The charts in as many columns as the width holds (all of them before it has one)."""
+        sized = self.testAttribute(Qt.WA_Resized)
+        self.shown_columns = self._columns_for(self.width()) if sized else self.COLUMNS
+        while self.grid.count():
+            self.grid.takeAt(0)
+        for index, chart in enumerate(self.charts):
+            row, column = divmod(index, self.shown_columns)
+            self.grid.addWidget(chart, row, column)
+        for column in range(self.COLUMNS):
+            self.grid.setColumnStretch(column, 1 if column < self.shown_columns else 0)
 
     def _database(self):
         project = getattr(self.form.document, "project", None)
@@ -226,6 +257,7 @@ class GrowthCurves(QWidget):
                 widget.hide()
                 widget.setParent(None)  # gone now (not found among the children)
                 widget.deleteLater()
+        self.charts = []
         try:
             actor, classes = self._inputs()
             curves = growth_curves(actor, classes, self.max_level.value())
@@ -257,10 +289,8 @@ class GrowthCurves(QWidget):
             title = names.get(key) or label_for(key)
             chart = CurveChart(title, values, colour(index))
             chart.setToolTip("")
-            row, column = divmod(index, self.COLUMNS)
-            self.grid.addWidget(chart, row, column)
-        for column in range(self.COLUMNS):
-            self.grid.setColumnStretch(column, 1)
+            self.charts.append(chart)
+        self._place_charts()
 
 
 class StatBar(QWidget):

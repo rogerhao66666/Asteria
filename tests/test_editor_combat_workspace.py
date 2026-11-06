@@ -484,9 +484,175 @@ def test_the_attack_preview_names_the_attack_and_every_setting_shows():
     preview.close()
 
 
+def test_an_attack_a_projectile_carries_is_thrown_at_the_shots_real_speed():
+    from asteria.editor import attack_preview as ap
+    from asteria.gameplay.projectiles import ProjectileDefinition as Shot
+
+    stone = Shot("stone", attack_id="hit", speed=220.0, lifetime=0.7, width=6.0, height=6.0)
+    plan = ap.plan_for(_hit(hitstop=0.1), stone)
+    assert plan.shot.distance == ap.THROW_DISTANCE
+    assert plan.shot.flight == pytest.approx(ap.THROW_DISTANCE / 220)
+    assert plan.hit_at == pytest.approx(ap.LEAD + ap.THROW_WINDUP + plan.shot.flight)
+    assert plan.spacing > ap.REACH  # from afar
+    # the hand goes up with no slash drawn, and it never steps in
+    frames = {ap.attacker_state(plan, plan.released_at + i / 100) for i in range(-30, 80)}
+    assert all(f.x == 0 for f in frames)
+    assert ap.SWING_HIT_FRAME not in {f.frame for f in frames if f.sheet == "swing"}
+    # the shot flies from the hand to the monster's chest, and the blow lands when it arrives
+    assert ap.shot_state(plan, plan.released_at - 0.01) is None
+    assert ap.shot_state(plan, plan.released_at)[0] == 0
+    flown, height, _angle = ap.shot_state(plan, plan.hit_at - 0.001)
+    assert flown == pytest.approx(ap.THROW_DISTANCE, abs=0.3) and height == ap.CHEST_HEIGHT
+    assert ap.shot_state(plan, plan.hit_at) is None
+    assert plan.spacing + ap.HAND - plan.shot.distance == ap.TARGET_CHEST
+    assert not ap.target_state(plan, plan.hit_at - 0.01).flash
+    assert ap.target_state(plan, plan.hit_at).flash
+    # a swing is as it was
+    assert ap.plan_for(_hit()).shot is None and ap.plan_for(_hit()).spacing == ap.REACH
+
+
+def test_a_shot_starts_only_as_far_as_it_can_arrive_from():
+    from asteria.editor import attack_preview as ap
+    from asteria.gameplay.projectiles import ProjectileDefinition as Shot
+
+    short = ap.shot_path(Shot("s", speed=100.0, lifetime=0.3))
+    assert short.distance == pytest.approx(30) and short.flight == pytest.approx(0.3)
+    assert ap.shot_path(Shot("s", speed=0.0)).flight == 0
+    # gravity bends it, and the monster stands where it still meets the falling shot
+    lobbed = ap.shot_path(Shot("s", speed=220.0, lifetime=2.0, gravity=600.0))
+    assert lobbed.distance < ap.THROW_DISTANCE
+    assert lobbed.rise(lobbed.flight) == pytest.approx(ap.CHEST_HEIGHT - ap.BODY_REACH)
+    plan = ap.plan_for(_hit(), Shot("s", speed=220.0, lifetime=2.0, gravity=600.0))
+    assert plan.hit_height == pytest.approx(ap.CHEST_HEIGHT - ap.BODY_REACH)
+    assert ap.shot_state(plan, plan.hit_at - 0.01)[2] != 180  # it turns as it falls
+    still = ap.plan_for(_hit(), Shot("s", gravity=600.0, align_to_velocity=False))
+    assert ap.shot_state(still, still.released_at + 0.01)[2] == 0
+
+
+def test_the_preview_throws_the_first_carrier_and_names_them_all():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from PySide6.QtGui import QPixmap
+
+    from asteria.editor.attack_preview import AttackPreview
+    from asteria.gameplay.projectiles import ProjectileDefinition as Shot
+
+    qapp = QApplication.instance() or QApplication([])
+    preview = AttackPreview()
+    preview.resize(380, 520)
+    attack = _hit()
+    alone = preview._plan(attack)
+    assert alone.shot is None
+    preview.projectiles = {
+        "zed": Shot("zed", "Zed", attack_id="hit", speed=50.0),
+        "arrow": Shot("arrow", "Arrow", attack_id="hit", speed=300.0, sprite="sheet"),
+        "other": Shot("other", attack_id="something else", speed=10.0),
+    }
+    assert preview._plan(attack).shot.speed == 300  # the same one every time
+    assert "Projectile: Arrow, Zed" in [text for text, _ in preview._chips(attack, None, False)]
+    asked = []
+
+    def picture(sprite):
+        asked.append(sprite)
+        return QPixmap(8, 4)
+
+    preview.shot_picture = picture
+    preview.show_record(attack)
+    qapp.processEvents()
+    plan = preview._plan(attack)
+    swung = preview.grab().toImage()
+    preview.seek(plan.released_at + plan.shot.flight / 2)
+    assert not preview.grab().isNull()
+    assert preview.grab().toImage() != swung
+    preview.seek(plan.released_at + plan.shot.flight / 3)
+    assert not preview.grab().isNull()
+    assert asked == ["sheet"]  # read once
+    # no sprite: a small box; a sprite that can't be read: the same box
+    preview.shot_picture = lambda _sprite: None
+    preview._shot_pictures.clear()
+    assert preview._shot_picture("sheet") is None and preview._shot_picture("") is None
+    assert not preview.grab().isNull()
+    preview.close()
+
+
+def test_a_state_shows_as_a_chip_and_only_an_empty_hit_says_it_does_nothing():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.attack_preview import AttackPreview, sample_damage
+    from asteria.gameplay.formulas import ValueFormula
+
+    QApplication.instance() or QApplication([])
+    preview = AttackPreview()
+    preview.state_names = {"blind": "Blind"}
+
+    def words(**values):
+        return [text for text, _ in preview._chips(_hit(**values), None, False)]
+
+    def nothing(**values):
+        attack = _hit(**values)
+        damage = sample_damage(attack, {})[0]
+        return preview._nothing_happens(attack, preview._plan(attack), damage)
+
+    timed = {"state": "blind", "chance": 1.0, "duration": 3.0}
+    assert "Blind 100% 3s" in words(apply_states=(timed,))
+    # no time of its own: the state's lasts; a state the list doesn't know keeps its id
+    assert "Poison 25%" not in words(apply_states=({"state": "poison", "chance": 0.25},))
+    assert "poison 25%" in words(apply_states=({"state": "poison", "chance": 0.25},))
+    assert nothing()
+    assert words() == []
+    for values in (
+        {"apply_states": (timed,)},
+        {"damage_resource": "mp"},
+        {"critical_chance": 0.1},
+        {"critical_chance_stat": "luk"},
+        {"max_targets": 2},
+        {"armor_break": 1},
+        {"poise_damage": 5.0},
+        {"on_hit_event": "boom"},
+        {"tags": ("weak.fire",)},
+        {"knockback": 50.0},
+        {"knockback_lift": 50.0},
+        {"knockdown": True},
+        {"hitstop": 0.1},
+        {"hitstun": 0.1},
+        {"target_iframes": 0.1},
+        {"damage": ValueFormula.constant(5)},
+    ):
+        assert not nothing(**values), values
+    # settings that change nothing while what they qualify is empty stay quiet
+    assert nothing(hitstop_scope="global", critical_multiplier=3.0, knockback_angle=30.0)
+    assert "No damage" in words(on_hit_event="boom")
+    assert "No damage" not in words()
+    preview.close()
+
+
+def test_the_workspace_gives_the_preview_its_projectiles_and_state_names():
+    QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
+    from asteria.editor.attack_preview import AttackPreview
+    from asteria.editor.combat_workspace import CombatWorkspace
+    from asteria.gameplay.projectiles import ProjectileDefinition as Shot
+
+    qapp = QApplication.instance() or QApplication([])
+    document = _document()
+    library = document.project.gameplay_library
+    library.add_attack(AttackDefinition("slash", "Slash"))
+    library.add_attack(AttackDefinition("stone_hit", "Stone Hit"))
+    library.projectiles["stone"] = Shot("stone", "Stone", attack_id="stone_hit", speed=220.0)
+    widget = CombatWorkspace(document)
+    widget.resize(1500, 900)
+    widget.show()
+    qapp.processEvents()
+    assert isinstance(widget.preview, AttackPreview)
+    widget.select_id("slash")
+    assert widget.preview._plan(widget.preview.record).shot is None
+    widget.select_id("stone_hit")
+    assert widget.preview._plan(widget.preview.record).shot.speed == 220
+    assert widget.preview.shot_picture("") is None
+    widget.close()
+
+
 def test_pause_sits_right_under_the_stage_with_room_around_it():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
     from asteria.editor.attack_preview import AttackPreview, plan_for
+    from asteria.gameplay.projectiles import ProjectileDefinition
 
     qapp = QApplication.instance() or QApplication([])
     preview = AttackPreview()

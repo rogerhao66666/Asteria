@@ -43,6 +43,7 @@ DATA_GROUPS = (
         ("quest_boards", "recruit_offices", "gacha_banners"),
     ),  # fmt: skip
     ("Data: skill trees", ("progression_graphs",)),
+    ("Data: properties", ("tag_definitions",)),  # a property's name and what it does (D91)
     ("Data: progression tracks", ("progression_tracks",)),
     ("Data: stats", ("derived_stats",)),
     ("Data: factions and achievements", ("factions", "achievements")),
@@ -279,7 +280,8 @@ def data_groups(project):
     currencies = [(key("currency", c), c) for c in currency_ids(project)]
     if currencies:
         groups.append((CURRENCY_GROUP, currencies))
-    tags = [(key("tag", t), words(t)) for t in menu_tags(project)]
+    have = {k for _t, rows in groups for k, _e in rows}  # a defined property: listed above
+    tags = [(key("tag", t), words(t)) for t in menu_tags(project) if key("tag", t) not in have]
     if tags:  # what a socket takes, what a set bonus gives (U3)
         groups.append((TAGS_GROUP, tags))
     recipes = (getattr(getattr(project, "rpg_database", None), "composition_recipes", None)
