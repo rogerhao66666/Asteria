@@ -740,7 +740,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 |---|---|
 | 備註 | `RpgDatabase.author_notes`（作者備註，不進遊戲）、`RpgDatabase.hidden_descriptions`（「Players See It」沒勾的說明）；`editor/author_note_box.py`、`editor/record_notes.py`；遊戲現在會顯示屬性、標籤、裝備欄位、敵人（圖鑑）與職業的說明 |
 | 效能 | 野外系統從場景索引讀元件、碰撞世界每幀共用、編輯器只重畫看得到的圖塊、多人伺服器每個基準只編碼一次（PR #1） |
-| CI | GitHub Actions 的 Linux 與 macOS 全套測試；PySide6 6.12 回收 widget ↔ 視窗循環參照時會當掉，`pyproject.toml` 暫時限制 `PySide6<6.12` |
+| CI | GitHub Actions 的 Linux 與 macOS 全套測試；`pyproject.toml` 限制 `PySide6<6.11.3`：6.11.3 和 6.12.0 的數字框套上主題樣式後，輸入區從邊框貼左邊開始，沒有箭頭的只剩 1 px（看不到數字），`tests/test_editor_narrow_pages.py` 會抓到。6.12 回收 widget ↔ 子部件循環參照會當掉的問題已改成弱參照（`tests/test_widget_cycles.py`） |
 | 開源前整理 | MIT 授權；範例改名 `party_rpg_demo`、`arpg_demo`；根目錄文件搬進 `docs/` |
 | 橫向場景的腳與牆 | 橫向的角色站在碰撞框底部（`character_control.feet_y`，圖片與骨骼都用）；`CombatScene.walls_cover_characters`（`auto`／`always`／`never`，auto＝只在橫向）把實心地圖磚畫在角色伸進牆的部分上面，揮劍停在牆面；ARPG 範例每個方向用自己的腳底對齊點、Cave Bat 改成拿掉影子的騎蝙蝠哥布林、Crawler 改成地上的哥布林、Drill Drone 不再埋進地板；測試涵蓋平地、單向平台、木橋、走道、台階、牆邊、跳躍、走下台階、跳上台階 |
 

@@ -12,8 +12,11 @@ license={text="MIT"}
 pygame=["pygame-ce>=2.5"]
 moderngl=["moderngl>=5.8", "pygame-ce>=2.5", "Pillow>=10"]
 # PySide6 6.12 segfaults collecting a cycle between a widget and a child that keeps it in an
-# attribute: a child holds its owner weakly (tests/test_widget_cycles.py)
-editor=["PySide6>=6.8"]
+# attribute: a child holds its owner weakly (tests/test_widget_cycles.py).
+# PySide6 6.11.3 and 6.12.0 lay out a styled spin box's text field from its left edge, and
+# 1 px wide when it has no arrows (no number to see): kept below 6.11.3 until a release passes
+# tests/test_editor_narrow_pages.py::test_a_number_box_shows_its_number.
+editor=["PySide6>=6.8,<6.11.3"]
 mv=["Pillow>=10"]
 fast=["numpy>=2"]
 web=["pygbag>=0.9"]

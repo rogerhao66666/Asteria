@@ -57,8 +57,8 @@ Windows／Linux 建置與 CI、Developer ID 簽章與公證、縮小 Qt 外掛�
   Action／Autorun／Parallel、VFX 錨點與混合），要把顯示和值分開；File ▸ New Project… 的範本名稱與說明、
   Export Game 對話框的選項也還沒有中文。
 - HP 卡片的「它會改變什麼」寫「還沒有東西讀它」：要不要寫明「傷害和治療改它的現值」（D99）。
-- PySide6 6.12 回收 widget ↔ 視窗循環參照時會當掉，`pyproject.toml` 暫時限制 `<6.12`；確認編輯器沒有
-  剩下的循環參照後解除。
+- `pyproject.toml` 限制 `PySide6<6.11.3`：6.11.3 和 6.12.0 的數字框套上主題樣式後輸入區只剩 1 px。
+  PySide6 出新版時，用它跑 `tests/test_editor_narrow_pages.py`（數字框那項）通過後再解除。
 
 **D. 需要真人或外部條件**
 

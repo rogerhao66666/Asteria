@@ -379,3 +379,19 @@ def test_a_form_does_not_squeeze_a_wide_field_into_its_columns(themed_app):
     finally:
         host.close()
         host.deleteLater()
+
+
+def test_a_number_box_shows_its_number(themed_app):
+    """The theme's border and padding leave a number box's text field its width. PySide6 6.11.3
+    and 6.12.0 laid it out 1 px wide (no number to see): pyproject.toml keeps PySide6 below."""
+    box = NumberBox(3200, integer=True)
+    box.setFixedWidth(84)
+    host = _hosted(box)
+    try:
+        _settle(themed_app)
+        field = box.lineEdit()
+        assert field.width() >= field.fontMetrics().horizontalAdvance("3200")
+        assert field.geometry().left() > 0  # the padding is inside the border
+    finally:
+        host.close()
+        host.deleteLater()
