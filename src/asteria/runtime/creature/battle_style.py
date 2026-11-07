@@ -11,7 +11,7 @@ W, H = 240, 160
 BOX_TOP = 112  # the message window takes the bottom 48 rows
 
 
-# where things stand in a one-on-one battle (pokeemerald's singles coordinates): the centres
+# where things stand in a one-on-one battle (the original game's singles coordinates): the centres
 # of the 64 x 64 creature pictures and of the info boxes, the 8-pixel text rows and columns
 FOE_CENTRE, MINE_CENTRE = (176, 40), (72, 80)
 

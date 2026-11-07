@@ -256,7 +256,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 | 多武器 | 裝備的每把武器各給一個普通攻擊（拿下劍就沒有 Attack (Sword)）；Twin Fang 要同時裝備劍和矛 |
 | 多段技能 | `hits`：每段各自帶武器或屬性；Brand of Valor（劍矛劍矛雷）、Arrowstorm（五箭＋冰）、Grand Inferno（一發火球打三下）、Elemental Barrage（火冰雷）、Thousand Spears（四下矛）、Amputation（兩下斧） |
 | 主副職業 | 每人兩個職業，副職技能戰鬥中可用 |
-| **寵物（寶可夢式，不是單位）** | Sera 一開始有 Frosty（Frost Lynx，Lv3）；`send_frost_lynx` 的 `requires_pet` 需要對應的寵物，傷害讀 `pet_power`（等級越高越痛），沒有就灰掉並顯示「Needs Frost Lynx」；參戰後贏得戰鬥得經驗升級；捕獲 Ember Hound 得到持有的 Lv2 寵物並解鎖 `send_ember_hound`；暫停選單 Pets 畫面可選出戰寵物與改名 |
+| **寵物（收集生物式，不是單位）** | Sera 一開始有 Frosty（Frost Lynx，Lv3）；`send_frost_lynx` 的 `requires_pet` 需要對應的寵物，傷害讀 `pet_power`（等級越高越痛），沒有就灰掉並顯示「Needs Frost Lynx」；參戰後贏得戰鬥得經驗升級；捕獲 Ember Hound 得到持有的 Lv2 寵物並解鎖 `send_ember_hound`；暫停選單 Pets 畫面可選出戰寵物與改名 |
 | 調合 | Bram 的 Concoct：從背包選底材和觸媒，四種配方（Fire Bomb／Frost Bomb 打全體、Healing Salve 補一人、Storm Flask 打一人並降防禦），產物立即生效 |
 | 給予加速點 | Garrick 的 Donate BP |
 | 狀態 | 毒（每回合更痛）、睡眠（跳過回合）、沉默（封魔法）、攻擊提升、防禦下降；Cleanse 解除 |
@@ -752,7 +752,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 事件 | `SCREEN_FADE over`（`world`／`message_window`／`everything`）、`DIALOGUE wait:false`、`SET_VARIABLE random`、`SET_WEATHER`、`SET_BATTLE_WEATHER turns`；`rpg` 條件 `party_move:`、`scene`、`battle_outcome` |
 | 野外 | manifest `field.rides`、`field.tile_actions`、`field.push`、`field.repel`；路線步驟 `clip:`、`until_off:`、`jump_ahead`、`face_original`、`lock_facing` |
 | 戰鬥 | `BattleStatePolicy.prevent_resource`／`prevent_amount`／`blocks_leaving`；`rpg/battle/move_choice.py`（特徵 `move_ai.*`）；生物戰畫面的 `weather`、`sounds`；只有回合第一位能開新回合 |
-| 選單 | `bag.use_programs`、`party.field_moves`、`pokenav.rows`、`region_map`（含 `fly`）、圖鑑 AREA 頁與 `dex.search` |
+| 選單 | `bag.use_programs`、`party.field_moves`、`navigator.rows`（舊名 `pokenav` 照樣讀）、`region_map`（含 `fly`）、圖鑑 AREA 頁與 `dex.search` |
 
 ### D102 新增（2026-11-06；細節見 DECISION_LOG）
 

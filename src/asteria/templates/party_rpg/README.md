@@ -32,7 +32,7 @@ Rebuild it after changing the script: `python reference_projects/party_rpg_demo/
 - **Twin Fang** (Garrick) needs a sword *and* a spear equipped.
 - **Several hits, several damage types**: *Brand of Valor* (sword, spear, sword, spear, lightning),
   *Elemental Barrage* (fire, ice, lightning), *Thousand Spears* (4 spear hits), *Amputation* (2 axe hits).
-- **Pets (Pokemon-style, not units)**: Sera starts with a Frost Lynx called "Frosty" (level 3). A pet has
+- **Pets (creature-collecting style, not units)**: Sera starts with a Frost Lynx called "Frosty" (level 3). A pet has
   a species (stats and growth per level), a level, experience and a nickname. *Send Frost Lynx* (three
   ice hits) needs the matching pet (`requires_pet`) and hits for the pet's `pet_power`, so a higher
   level hits harder; without a pet the row is greyed out ("Needs Frost Lynx"). A pet sent out in a

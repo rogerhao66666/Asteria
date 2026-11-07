@@ -30,7 +30,7 @@ SUMMARY_PLACES = {  # the summary pages' words: (x, y) in the screen's own pixel
 }
 
 
-CARD_PLACES = {  # the trainer card's words (pokeemerald's Hoenn card)
+CARD_PLACES = {  # the trainer card's words (the original game's card)
     "name": (24, 41),
     "id": (176, 17),
     "money": (24, 65),

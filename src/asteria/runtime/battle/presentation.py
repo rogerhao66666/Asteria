@@ -36,22 +36,6 @@ from asteria.runtime.battle.visuals import (
 )
 from asteria.runtime.field.ai import VisibleEncounterComponent
 
-"""Battle presentation for the playable runtime: the canonical battle screen.
-
-``CanonicalBattleAdapter`` consumes the ``BattleLogEntry`` stream produced by
-``GameSessionRuntime`` (it decides no battle rule) and routes it through
-``BattleScreenRuntime`` (HUD, turn timeline, action menu, value popups, camera
-feedback, VFX, audio cues, hit-stop, result), rendered with
-``PygameBattleUiBackend`` on the pygame or ModernGL presenter. Combatants come
-from authored combatant visuals; a project without battle art gets generated
-combatants built from its manifest images (or silhouettes). The legacy pygame
-battle screen was retired in D19 (CB15 A9).
-
-``entry_semantics`` is the comparison contract: the adapter records, in
-``trace``, what it understood from the log.
-"""
-
-
 PRESENTATION_PROFILE_CATEGORIES = {
     "feedback_profile": "feedback",
     "hud_profile": "hud",

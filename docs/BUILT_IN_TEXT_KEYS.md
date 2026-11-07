@@ -121,8 +121,8 @@
 | `creature.menu.cured` | {name} was cured. | {name}恢復了。 |
 | `creature.menu.tm_booted` | Booted up a TM. | 啟動了招式學習器。 |
 | `creature.menu.tm_contained` | It contained {move}. | 裡面記錄著 {move}。 |
-| `creature.menu.teach_ask` | Teach {move} to a POKéMON? | 要讓寶可夢學會 {move}嗎？ |
-| `creature.menu.teach_which` | Teach which POKéMON? | 要讓哪一隻學？ |
+| `creature.menu.teach_ask` | Teach {move} to a creature? | 要讓生物學會 {move}嗎？ |
+| `creature.menu.teach_which` | Teach which creature? | 要讓哪一隻學？ |
 | `creature.menu.able` | ABLE | 可以學 |
 | `creature.menu.not_able` | NOT ABLE | 不能學 |
 | `creature.menu.learned` | LEARNED | 已學會 |

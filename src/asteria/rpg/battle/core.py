@@ -1029,7 +1029,6 @@ class BattleRuntime:
         return result, chain
 
     def execute_sequence(self, sequence_id, participant_ids, target_ids=(), *, rng=None):
-        rng = self.rng if rng is None else rng
         """Execute a generic multi-hit/chain/cooperative plan.
 
         Game-authored interruption_policy decides failure behavior. Asteria only
@@ -1037,6 +1036,7 @@ class BattleRuntime:
         Participant turn reservation/cost policy remains project-owned rather than
         silently imposed by this convenience execution path.
         """
+        rng = self.rng if rng is None else rng
         plan = self.action_sequences.plan(sequence_id, participant_ids, target_ids)
         definition = self.action_sequences.definitions[plan.sequence_id]
         for participant_id in plan.participant_ids:
@@ -1090,13 +1090,13 @@ class BattleRuntime:
         return plan, tuple(results), tuple(failures)
 
     def execute_ai_turn(self, ai_id, actor_id, *, rng=None, advance_turn=False):
-        rng = self.rng if rng is None else rng
         """Run one AI ready-window through the generic AI/action hook layer.
 
         Custom `action_kind` handlers may bridge any battle-adjacent system: alchemy,
         summoning, transformations, stance systems, plugins, or project scripts.
         Asteria does not prescribe those game rules; it only provides the stable hook.
         """
+        rng = self.rng if rng is None else rng
         actor_id = str(actor_id)
         if actor_id not in self.members:
             raise KeyError(actor_id)

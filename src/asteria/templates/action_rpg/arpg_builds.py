@@ -1330,7 +1330,8 @@ def on_the_strike(cues, ability_id, role):
 
 
 def assign_animations(library):
-    """Point each listed skill's animation cue at its strip (one is added when it has none)."""
+    """Point each listed skill's animation cue at its strip (one is added when it has none);
+    a class skill left on the first strip has its swing put on the strike too."""
     for ability_id, role in ANIMATION.items():
         ability = library.abilities.get(ability_id)
         timeline = library.timelines.get(ability.timeline_id) if ability is not None else None
@@ -1339,4 +1340,18 @@ def assign_animations(library):
         cues = [c for c in timeline.cues if c.kind.value != "animation"]
         cues, swing_at = on_the_strike(cues, ability_id, role)
         cues.append(ActionCue(f"anim_{role}", swing_at, "animation", {"clip": role}))
+        library.timelines[timeline.timeline_id] = ActionTimeline(timeline.timeline_id, cues)
+    for ability_id in library.abilities.ids():
+        ability = library.abilities.get(ability_id)
+        timeline = library.timelines.get(ability.timeline_id)
+        if ability_id in ANIMATION or timeline is None:
+            continue
+        swings = [c for c in timeline.cues if c.kind.value == "animation"]
+        if len(swings) != 1 or swings[0].payload.get("clip") != "attack" or swings[0].time:
+            continue
+        cues, swing_at = on_the_strike(
+            [c for c in timeline.cues if c is not swings[0]], ability_id, "attack"
+        )
+        swing = swings[0]
+        cues.append(ActionCue(swing.cue_id, swing_at, swing.kind, swing.payload))
         library.timelines[timeline.timeline_id] = ActionTimeline(timeline.timeline_id, cues)

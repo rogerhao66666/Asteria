@@ -37,7 +37,7 @@ Asteria 是用 Python（pygame-ce）寫的 2D RPG 引擎，編輯器用 PySide6 
 翻譯。引擎本身沒有內建任何一款遊戲，範例只是示範資料。你可以做：
 
 - 回合制隊伍戰鬥（側視、弱點、護盾與增幅），
-- 生物戰鬥（捕捉、生物隊伍、寶可夢風格的畫面），
+- 生物戰鬥（捕捉、生物隊伍、收集生物風格的畫面），
 - 即時動作 RPG（俯視或橫向捲軸，含掉寶與技能樹），
 - 以及介於兩者之間的任何玩法，因為規則是選項，不是程式碼。
 
@@ -746,7 +746,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | --- | --- |
 | `reference_projects/full_verification_demo` | 建議使用的範本：一整款回合制遊戲。Hearthfold（城鎮）→ Whispering Woods → Catacombs → Ember Throne，主角 Roger 雇用 Mira、Vesper 與 Cael，職業與技能樹、STR / DEX / INT / LUK、屬性、弱點／護盾／破防、精煉與鑲嵌、製作、任務、寵物、地圖區域、繼承新遊戲、完整繁體中文、音樂室。每個編輯器頁面都有資料。 |
 | `reference_projects/arpg_demo` | 即時動作 RPG：城鎮、野外、有平台和梯子的橫向捲軸礦坑、三個職業與技能樹、有稀有度／詞綴／套裝的掉寶、藥水、頭目。 |
-| `reference_projects/party_rpg_demo` | 破防／加速的隊伍戰鬥：四位旅人各有兩個職業、弱點與護盾、增幅點數、神技、多武器攻擊、一隻寶可夢風格的寵物、調合、五場遭遇戰。 |
+| `reference_projects/party_rpg_demo` | 破防／加速的隊伍戰鬥：四位旅人各有兩個職業、弱點與護盾、增幅點數、神技、多武器攻擊、一隻收集生物風格的寵物、調合、五場遭遇戰。 |
 | `reference_projects/complex_reference_rpg` | 資料密集的通用 RPG：12 位角色、8 個職業、24 個技能、16 個被動、八棵技能樹、裝備成長、12 人名冊、有小兵的三階段頭目、自訂戰鬥資源。見它的 `PLAYTEST.md`。 |
 
 想知道某個系統在資料裡怎麼描述，到 Full Verification 範例裡找：它的

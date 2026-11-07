@@ -57,7 +57,7 @@ class CreatureMenuPagesMixin:
         return owned or record.get("seen", 0) > 0, owned
 
     def dex_rows(self):
-        """The dex's rows: up to the last species seen (pokeedex.c lists to the highest)."""
+        """The dex's rows: up to the last species seen (as the original game lists them)."""
         entries = self.dex_entries()
         last = max((n for n, e in enumerate(entries) if self.dex_status(e["species"])[0]),
                    default=-1)  # fmt: skip
@@ -93,7 +93,7 @@ class CreatureMenuPagesMixin:
         if self._pressed("cancel") or self._pressed("move_left"):
             self.phase = "dex_entry"
 
-    # -- the search of the POKéDEX: rows of words, what they keep ---------------------------
+    # -- the dex's search: rows of words, what they keep ---------------------------
     def dex_search_rows(self):
         """``(id, label, [values])``: the letter a name begins with, a type, the order."""
         settings = (self.menu.get("dex") or {}).get("search") or {}
@@ -147,12 +147,16 @@ class CreatureMenuPagesMixin:
             kept.sort(key=lambda e: e.get(field, 0), reverse=way == "down")
         return kept
 
-    # -- POKéNAV and the region map ---------------------------------------------------------
-    def pokenav_rows(self):
-        return list((self.menu.get("pokenav") or {}).get("rows") or ())
+    # -- the navigator (a list of screens to open) and the region map -----------------------
+    def navigator_settings(self):
+        """``navigator``, else ``pokenav`` (its name before D105)."""
+        return self.menu.get("navigator") or self.menu.get("pokenav") or {}
 
-    def _input_pokenav(self):
-        rows = self.pokenav_rows()
+    def navigator_rows(self):
+        return list(self.navigator_settings().get("rows") or ())
+
+    def _input_navigator(self):
+        rows = self.navigator_rows()
         if self._pressed("cancel"):
             self._back()
             return
@@ -253,14 +257,14 @@ class CreatureMenuPagesMixin:
         if not entry.get("area"):
             self._message_window(self.tr("creature.dex.area_unknown", "AREA UNKNOWN"))
 
-    def _draw_pokenav(self):
-        settings = self.menu.get("pokenav") or {}
+    def _draw_navigator(self):
+        settings = self.navigator_settings()
         picture = self._menu_picture(settings.get("background"))
         if picture is not None:
             self.surface.blit(picture, (0, 0))
         else:
             self.surface.fill((48, 96, 144))
-        rows = [str(row.get("label", "")) for row in self.pokenav_rows()]
+        rows = [str(row.get("label", "")) for row in self.navigator_rows()]
         self._list_window(rows, self.list_cursor, 176, 112)
 
     def _draw_dex_search(self):

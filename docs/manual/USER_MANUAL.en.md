@@ -39,7 +39,7 @@ characters, skills, items, enemies, battle rules, screen layouts and translation
 no game of its own built in; the demos are only example data. You can make:
 
 - turn-based party battles (side view, weaknesses, shields and boosts),
-- creature battles (catch, party of creatures, the Pokémon-style screen),
+- creature battles (catch, party of creatures, the creature-collecting screen),
 - real-time action RPGs (top-down or side-scrolling, with loot and skill trees),
 - anything in between, because rules are options, not code.
 
@@ -808,7 +808,7 @@ Open any of them with File ▸ Open Project… or play them with `asteria-previe
 | --- | --- |
 | `reference_projects/full_verification_demo` | The recommended template: a whole turn-based game. Hearthfold (town) → Whispering Woods → Catacombs → Ember Throne, the hero Roger hiring Mira, Vesper and Cael, jobs and skill trees, STR / DEX / INT / LUK, elements, weaknesses / shields / Breaks, refine and sockets, crafting, quests, pets, map areas, New Game Plus, full Traditional Chinese, music room. Every editor page has data. |
 | `reference_projects/arpg_demo` | A real-time action RPG: a town, fields, a side-scrolling mine with platforms and ladders, three classes with skill trees, loot with rarities, affixes and sets, potions, bosses. |
-| `reference_projects/party_rpg_demo` | Party battles with breaks and boosts: four travellers with two jobs each, weaknesses and shields, boost points, divine skills, multi-weapon attacks, a Pokémon-style pet, concoction, five encounters. |
+| `reference_projects/party_rpg_demo` | Party battles with breaks and boosts: four travellers with two jobs each, weaknesses and shields, boost points, divine skills, multi-weapon attacks, a creature-collecting pet, concoction, five encounters. |
 | `reference_projects/complex_reference_rpg` | A dense generic RPG: 12 actors, 8 jobs, 24 abilities, 16 passives, eight skill trees, equipment growth, a 12-person roster, a three-phase boss with adds, custom battle resources. See its `PLAYTEST.md`. |
 
 To see how a system is described in data, find it in the Full Verification demo: its
