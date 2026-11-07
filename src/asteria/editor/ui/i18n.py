@@ -42,6 +42,7 @@ from PySide6.QtWidgets import (
     QMenuBar,
     QMessageBox,
     QPlainTextEdit,
+    QStatusBar,
     QTabBar,
     QTableWidget,
     QTabWidget,
@@ -278,19 +279,28 @@ def _is_icon(value):
     return isinstance(value, QIcon)
 
 
-def _wrap_static(cls, name, positions):
-    """Static dialogs (``QMessageBox.question(parent, title, text, ...)``)."""
+def translate_lines(text, language=None):
+    """``text`` translated whole, else line by line (a report: "Game folder: …\nMissing: …")."""
+    shown = translate(text, language)
+    if shown == text and isinstance(text, str) and "\n" in text:
+        return "\n".join(translate(line, language) for line in text.split("\n"))
+    return shown
+
+
+def _wrap_static(cls, name, positions, *, bound=False):
+    """Static dialogs (``QMessageBox.question(parent, title, text, ...)``); ``bound``: a method
+    of a widget (``QStatusBar.showMessage(text)``), its ``positions`` counting ``self``."""
     original = getattr(cls, name)
 
     def method(*args, **kwargs):
         args = list(args)
         for i in positions:
             if len(args) > i and isinstance(args[i], str):
-                args[i] = translate(args[i])
+                args[i] = translate_lines(args[i])
         return original(*args, **kwargs)
 
     method.__wrapped__ = original
-    setattr(cls, name, staticmethod(method))
+    setattr(cls, name, method if bound else staticmethod(method))
 
 
 _INSTALLED = {"done": False}
@@ -328,6 +338,7 @@ def _install_wrappers():
     _wrap_static(QFileDialog, "getExistingDirectory", (1,))
     _wrap_static(QInputDialog, "getText", (1, 2))
     _wrap_static(QInputDialog, "getItem", (1, 2))
+    _wrap_static(QStatusBar, "showMessage", (1,), bound=True)
     _wrap_menu_adds()
 
 
@@ -553,4 +564,5 @@ __all__ = [
     "set_language",
     "source_text",
     "translate",
+    "translate_lines",
 ]

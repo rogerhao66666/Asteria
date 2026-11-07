@@ -675,3 +675,14 @@ def test_a_needed_node_and_a_beat_cue_are_picked_in_words(app):
     named = [p.currentText() for p in family.editor.findChildren(Picker) if p.value() == "awaken"]
     assert "Awaken" in named  # the node another needs, by its name
     assert RecordForm._STAND_INS["@target"] == "The Target"  # "@target" in words
+
+
+def test_list_nouns_are_made_singular_by_their_endings():
+    """D107: "+ Add switch" (not "switche") and "+ Add term" for a label ending in a sign."""
+    from asteria.editor.records.form_shapes import entry_noun, singular
+
+    pairs = {"switches": "switch", "affixes": "affix", "boxes": "box", "statuses": "status",
+             "phases": "phase", "entries": "entry", "classes": "class", "caches": "cache",
+             "abilities": "ability", "stats": "stat", "what it does": "entry"}  # fmt: skip
+    assert {w: singular(w) for w in pairs} == pairs
+    assert entry_noun("gene_terms") == "term"

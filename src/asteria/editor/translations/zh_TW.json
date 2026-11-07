@@ -4439,9 +4439,191 @@
   "{ability} is ready": "「{ability}」可以用",
   "{probability} chance": "{probability} 機率",
   "{resource} above {fraction}": "{resource} 高於 {fraction}",
-  "{resource} below {fraction}": "{resource} 低於 {fraction}"
+  "{resource} below {fraction}": "{resource} 低於 {fraction}",
+  "Feet": "腳下",
+  "Head": "頭上",
+  "Whole frame": "整格畫面",
+  "Add (brighter)": "相加（變亮）",
+  "Point": "點",
+  "Circle": "圓形",
+  "Ring outline": "圓環",
+  "Line": "線",
+  "Square": "方形",
+  "Spark": "火花",
+  "ID Z→A": "ID Z→A",
+  "Name A→Z": "名稱 A→Z",
+  "Name Z→A": "名稱 Z→A",
+  "Parallel": "並行",
+  "Bounce": "反彈",
+  "Pass": "穿過",
+  "Global": "整個畫面",
+  "Each species' own": "依各物種設定",
+  "Split among fighters": "出戰的平分",
+  "All to each fighter": "出戰的每隻都拿全部",
+  "All to the whole party": "隊伍每隻都拿全部",
+  "Stays": "不變",
+  "Rises by the growth": "增加成長的量",
+  "To full": "回滿",
+  "Always (while it holds)": "總是（條件成立時）",
+  "Once on entering": "進入時一次",
+  "Panel beside the list": "清單旁的面板",
+  "Details button": "「詳細」按鈕",
+  "Item Details": "道具詳細",
+  "Grid": "格狀",
+  "Row": "橫排",
+  "Fish": "釣魚",
+  "Battle Background (fights here)": "戰鬥背景（在這裡的戰鬥）",
+  "loot affixes": "戰利品詞綴",
+  "loot rarities": "戰利品稀有度",
+  "sources": "來源",
+  "No particle effects yet — New Effect… starts from a preset.": "尚無粒子特效 — 「新增特效…」會從預設樣式開始。",
+  "Grip X": "握點 X",
+  "Grip Y": "握點 Y",
+  "Run": "執行",
+  "Execute": "執行",
+  "Skeleton": "骨架",
+  "Saved.": "已儲存。",
+  "Wall layers": "牆壁圖層",
+  "any direction": "任何方向",
+  "must face it": "需面向它",
+  "No Interaction2D": "沒有互動元件",
+  "Bitmap Font": "點陣字型",
+  "Creature Screen": "生物畫面",
+  "Dialogue Window": "對話視窗",
+  "Picture message window": "圖片訊息視窗",
+  "An attack is what one landed hit does: damage, poise, knockback, hit-stop, super armor and knockdown. Hitboxes name it in their hit property.": "攻擊是一次命中造成的效果：傷害、韌性削減、擊退、命中停頓、霸體與擊倒。判定框在它的「命中」屬性裡指定要用哪個攻擊。",
+  "A projectile flies, homes, bounces or pierces, and applies an attack to what it hits. Action timelines fire it.": "投射物會飛行、追蹤、反彈或穿透，並對命中的對象套用一個攻擊。由動作時間軸發射。",
+  "Rarities name how rare loot is, its label colour and how many random affixes it rolls. Without any, the five defaults are used.": "稀有度決定戰利品有多稀有、標籤顏色，以及會隨機擲出幾個詞綴。一個都沒有時使用五個預設稀有度。",
+  "Affixes are the random prefixes and suffixes rolled on dropped equipment — each adds stats within a range.": "詞綴是掉落裝備上隨機擲出的前綴與後綴 — 每個都在一個範圍內增加能力值。",
+  "carry-over": "延續項目",
+  "carry-overs": "延續項目",
+  "Full Verification (Recommended)": "完整驗證（推薦）",
+  "A whole game to learn from: four maps, a town with a house and shops, a party of four with jobs and skill trees, STR / DEX / INT / LUK points, elements, shields and Breaks, bosses, quests, crafting and every editor page filled in.": "一整個可以拿來學的遊戲：四張地圖、有房子和商店的城鎮、四人隊伍（職業與技能樹）、STR / DEX / INT / LUK 點數、屬性、護盾與破防、頭目、任務、合成，每個編輯器頁面都有填。",
+  "Basic RPG (Small)": "基本 RPG（小型）",
+  "One hero, two enemies, Attack, Fire and Heal; a playable field and basic battles.": "一位主角、兩種敵人、攻擊、火焰與治療；可遊玩的地圖與基本戰鬥。",
+  "Party RPG (break and boost battles)": "隊伍 RPG（破防與增幅戰鬥）",
+  "Turn-based battles with weaknesses and shields, boost points, jobs, a pet, concoction, statuses and four enemy types; a field map with encounters.": "有弱點與護盾的回合制戰鬥、增幅點數、職業、寵物、調合、狀態與四種敵人；有遇敵的地圖。",
+  "Action RPG (real-time loot and skill trees)": "動作 RPG（即時戰利品與技能樹）",
+  "Real-time combat with classes and skill trees, loot with rarities and affixes, a set, potions, a grid bag, an action bar with cooldowns; a town, a field and a side-view mine.": "即時戰鬥，有職業與技能樹、帶稀有度與詞綴的戰利品、套裝、藥水、格子背包、有冷卻的快捷列；一個城鎮、一片野外和一座橫向礦坑。",
+  "Completely Empty": "完全空白",
+  "No sample data; build everything yourself.": "沒有範例資料；一切自己做。",
+  "Game name": "遊戲名稱",
+  "Single-file game (.pyz, needs Python)": "單一檔案遊戲（.pyz，需要 Python）",
+  "macOS app (.app)": "macOS App（.app）",
+  "Game folder that runs without Python": "不需要 Python 的遊戲資料夾",
+  "The app runs without Python; the .pyz and the game folder need Python 3.12+.": "App 不需要 Python；.pyz 與遊戲資料夾需要 Python 3.12 以上。",
+  "The game folder always carries the engine; players need Python 3.12+ with pygame-ce.": "遊戲資料夾一定帶著引擎；玩家需要 Python 3.12 以上與 pygame-ce。",
+  "Export To Folder": "匯出到資料夾",
+  "Game folder": "遊戲資料夾",
+  "Single file": "單一檔案",
+  "Game app": "遊戲 App",
+  "Missing": "缺少",
+  "no Python needed": "不需要 Python",
+  "needs Python": "需要 Python",
+  "Unsaved Changes": "尚未儲存的變更",
+  "Save changes before closing Asteria?": "關閉 Asteria 前要儲存變更嗎？",
+  "Save Asteria Project": "儲存 Asteria 專案",
+  "Open Asteria Project": "開啟 Asteria 專案",
+  "Save Project": "儲存專案",
+  "New from Template": "從範本新增",
+  "Template": "範本",
+  "Project name": "專案名稱",
+  "Folder to create the project in": "要建立專案的資料夾",
+  "No project templates are installed.": "沒有安裝任何專案範本。",
+  "Start a new project anyway?": "仍要開始新專案嗎？",
+  "Open another project anyway?": "仍要開啟其他專案嗎？",
+  "Import into a new project anyway?": "仍要匯入成新專案嗎？",
+  "RPG Maker MV Project Folder (contains data/)": "RPG Maker MV 專案資料夾（內含 data/）",
+  "New Asteria Project Folder": "新的 Asteria 專案資料夾",
+  "save the project to a file before exporting": "匯出前請先把專案存成檔案",
+  "the project could not be saved": "無法儲存專案",
+  "Rename Clip": "重新命名片段",
+  "New name": "新名稱",
+  "Open rig": "開啟骨架",
+  "Save Asteria rig": "儲存 Asteria 骨架",
+  "Auto-fix Image": "自動修正圖片",
+  "New Particle Effect": "新增粒子特效",
+  "Start from": "從這個開始",
+  "Duplicate Particle Effect": "複製粒子特效",
+  "Delete Particle Effect": "刪除粒子特效",
+  "Import VFX Sprite Sheet": "匯入特效精靈圖",
+  "Import VFX": "匯入特效",
+  "Asset id": "素材 ID",
+  "Frame size (width x height)": "每格大小（寬 x 高）",
+  "Cannot apply": "無法套用",
+  "Add Field": "新增欄位",
+  "Name (e.g. a resource id)": "名稱（例如資源 ID）",
+  "Add Action": "新增動作",
+  "Action id": "動作 ID",
+  "New Script": "新增腳本",
+  "File name (scripts/…)": "檔名（scripts/…）",
+  "Asteria Controls and Shortcuts": "Asteria 操作與快捷鍵",
+  "Scene Viewport": "場景檢視",
+  "• Click an object, then use arrow keys to move it by 1 unit.": "• 點一個物件，再用方向鍵一次移動 1 單位。",
+  "• Hold Shift with an arrow key to move it by 10 units.": "• 按住 Shift 再按方向鍵，一次移動 10 單位。",
+  "• Click empty space, then use arrow keys to move the view.": "• 點空白處，再用方向鍵移動畫面。",
+  "• Two-finger drag pans the view.": "• 兩指拖曳平移畫面。",
+  "• Two-finger pinch zooms around the view center.": "• 兩指捏合以畫面中心縮放。",
+  "• Command+0 resets the view.": "• Command+0 重設畫面。",
+  "• Command+S saves.": "• Command+S 儲存。",
+  "• Command+Z undoes; Command+Shift+Z redoes.": "• Command+Z 復原；Command+Shift+Z 重做。",
+  "• F2 renames the selected item.": "• F2 重新命名選取的項目。",
+  "• F6 runs the Project from its canonical Game Start.": "• F6 從遊戲開始設定執行整個專案。",
+  "• Ctrl+F6 runs the current scene for local testing.": "• Ctrl+F6 只執行目前的場景來測試。",
+  "• Shift+F6 stops Play.": "• Shift+F6 停止試玩。",
+  "• WASD or arrow keys move the player.": "• WASD 或方向鍵移動玩家。",
+  "• Escape closes the Preview window.": "• Escape 關閉預覽視窗。",
+  "Open a project to import library assets": "先開啟專案才能匯入素材庫的素材",
+  "Select one PNG image in Assets to auto-fix": "在素材裡選一張 PNG 圖片來自動修正",
+  "Select PNG images in Assets to pack": "在素材裡選幾張 PNG 圖片來打包",
+  "Pack into Atlas": "打包成圖集",
+  "Event name": "事件名稱",
+  "Walking Sprite Sheet": "行走精靈圖",
+  "Actor Appearance": "角色外觀",
+  "Select one entity to make a prefab": "選一個實體來做成預製物件",
+  "Create Prefab": "建立預製物件",
+  "Prefab id": "預製物件 ID",
+  "Select a prefab instance": "選一個預製物件的實例",
+  "Cannot use sprite sheet": "無法使用精靈圖",
+  "The project has no actors": "專案裡沒有角色",
+  "No sprite sheets are loaded": "沒有載入任何精靈圖",
+  "The project has no prefabs": "專案裡沒有預製物件",
+  "Play session stopped": "試玩已停止",
+  "Game closed": "遊戲已關閉",
+  "Select an entity in the scene first.": "請先在場景裡選一個實體。",
+  "No addable registered components.": "沒有可以加入的已註冊元件。",
+  "Paste": "貼上",
+  "Script finished": "腳本完成",
+  "Import": "匯入",
+  "Script failed — changes rolled back": "腳本失敗 — 變更已復原",
+  "Data: music room": "資料：音樂室",
+  "Data: stats used by the data": "資料：資料用到的能力值",
+  "Data: credits": "資料：製作人員名單",
+  "Carry-Over": "延續項目",
+  "Boosted": "增幅中",
+  "Can": "可以",
+  "Job tree": "職業樹",
+  "Result": "結果",
+  "Rune": "符文",
+  "Vigil": "警戒",
+  "Weather": "天氣",
+  "Result: critical hit": "結果：爆擊",
+  "Result: hit a weakness": "結果：打中弱點",
+  "Result: dodged (miss)": "結果：閃避（落空）",
+  "Result: blocked": "結果：格擋",
+  "Result: guarded": "結果：防禦",
+  "gene": "個體值",
+  "genes": "個體值"
  },
  "patterns": [
+  [
+   "<b>(?P<n>\\d+)\\.</b>  (?P<t>.+?)  <span style='color:#8b8e98'>(?P<c>.+)</span>",
+   "<b>{n}.</b>  {t!t}  <span style='color:#8b8e98'>{c!t}</span>"
+  ],
+  [
+   "Range (?P<r>[\\d.]+) · (?P<f>must face it|any direction)",
+   "範圍 {r} · {f!t}"
+  ],
   [
    "(?P<errors>\\d+) error\\(s\\), (?P<warnings>\\d+) warning\\(s\\) — showing (?P<shown>\\d+)",
    "{errors} 個錯誤，{warnings} 個警告 — 顯示 {shown} 個"
@@ -4819,16 +5001,20 @@
    "非：{x!t}"
   ],
   [
+   "starts when (?P<a>.+?) and (?P<b>.+)",
+   "{a!t} 且 {b!t} 時開始"
+  ],
+  [
+   "starts when (?P<x>.+)",
+   "{x!t} 時開始"
+  ],
+  [
    "(?P<a>[^:]{1,40}) (?P<o>is below|is at most|is above|is at least|is not|is) (?P<v>-?[\\d.]+(?: %)?)",
    "{a!t} {o!T} {v}"
   ],
   [
    "Phase (?P<o>is not|is) (?P<v>.+)",
    "階段 {o!T} {v!t}"
-  ],
-  [
-   "starts when (?P<x>.+)",
-   "{x!t} 時開始"
   ],
   [
    "(?P<x>.+) is alive",
@@ -4853,6 +5039,90 @@
   [
    "(?P<a>\\d+) parallel tracks",
    "{a} 條同時進行的軌道"
+  ],
+  [
+   "(?P<p>[^\\n]+)\\n(?P<w>\\d+)×(?P<h>\\d+) px frames, (?P<f>\\d+) in 'play', (?P<s>[\\d.]+)s",
+   "{p}\n每格 {w}×{h} px，「play」有 {f} 格，{s} 秒"
+  ],
+  [
+   "New (?P<n>[A-Z][A-Za-z ]{1,30})",
+   "新增{n!T}"
+  ],
+  [
+   "No (?P<n>[A-Za-z][A-Za-z ]{1,30}) yet",
+   "尚無{n!T}"
+  ],
+  [
+   "Pick an? (?P<n>[A-Za-z][A-Za-z ]{1,30})",
+   "選擇{n!T}"
+  ],
+  [
+   "(?P<k>[A-Z][^:\\n]{0,40}):",
+   "{k!T}："
+  ],
+  [
+   "Duplicate (?P<n>[A-Z][A-Za-z ]{1,30})",
+   "複製{n!T}"
+  ],
+  [
+   "There is already a font (?P<n>.+)\\.",
+   "已經有字型 {n}。"
+  ],
+  [
+   "Can't drop there: (?P<e>.+)",
+   "無法放在這裡：{e}"
+  ],
+  [
+   "Imported (?P<n>\\d+) picture\\(s\\) from the library",
+   "從素材庫匯入 {n} 張圖片"
+  ],
+  [
+   "Packed (?P<n>\\d+) images into (?P<f>.+) \\((?P<w>\\d+)x(?P<h>\\d+)\\)",
+   "把 {n} 張圖片打包成 {f}（{w}x{h}）"
+  ],
+  [
+   "Fixed (?P<a>.+); original kept as (?P<b>.+)",
+   "已修正 {a}；原檔保留為 {b}"
+  ],
+  [
+   "This project has unsaved changes\\. (?P<q>.+)",
+   "這個專案有尚未儲存的變更。{q!t}"
+  ],
+  [
+   "Saved script (?P<p>.+)",
+   "已儲存腳本 {p}"
+  ],
+  [
+   "Saved (?P<p>.+)",
+   "已儲存 {p}"
+  ],
+  [
+   "Exported (?P<p>.+)",
+   "已匯出 {p}"
+  ],
+  [
+   "(?P<p>.+) \\((?P<k>no Python needed|needs Python)\\)",
+   "{p}（{k!t}）"
+  ],
+  [
+   "Imported (?P<n>\\d+) maps into (?P<p>.+)\\.",
+   "已匯入 {n} 張地圖到 {p}。"
+  ],
+  [
+   "(?P<n>\\d+) notes \\(content kept out or simplified\\) are listed in the Console\\.",
+   "{n} 則說明（沒帶入或簡化的內容）列在主控台。"
+  ],
+  [
+   "Playing — (?P<n>.+) from \\((?P<x>[^)]+)\\)",
+   "試玩中 — {n}，從 ({x}) 開始"
+  ],
+  [
+   "Playing — (?P<n>.+)",
+   "試玩中 — {n}"
+  ],
+  [
+   "Script failed line (?P<l>\\d+) — changes rolled back",
+   "腳本失敗（第 {l} 行）— 變更已復原"
   ]
  ]
 }

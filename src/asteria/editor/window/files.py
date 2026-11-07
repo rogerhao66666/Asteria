@@ -206,6 +206,7 @@ class ProjectFilesMixin:
         from PySide6.QtWidgets import QInputDialog
 
         from asteria.editor.project.templates import available_templates
+        from asteria.editor.ui.i18n import translate
 
         templates = available_templates()
         if not templates:
@@ -215,12 +216,12 @@ class ProjectFilesMixin:
             return None
         if not self._confirm_discard("Start a new project anyway?"):
             return None
-        titles = [f"{t.title} - {t.description}" for t in templates]
+        titles = [f"{translate(t.title)} - {translate(t.description)}" for t in templates]
         choice, ok = QInputDialog.getItem(self, "New from Template", "Template:", titles, 0, False)
         if not ok:
             return None
         template = templates[titles.index(choice)]
-        name, ok = QInputDialog.getText(
+        name, ok = QInputDialog.getText(  # the name keeps its English: it becomes the folder
             self, "New from Template", "Project name:", text=template.title.split(" (")[0]
         )
         if not ok or not name.strip():

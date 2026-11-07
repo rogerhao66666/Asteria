@@ -6,7 +6,6 @@ from __future__ import annotations
 from PySide6.QtCore import QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
-    QComboBox,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
@@ -27,6 +26,8 @@ from asteria.editor.combat.vfx_authoring import (
     VFXAuthoringController,
     VFXAuthoringError,
 )
+from asteria.editor.records.vocabulary import words
+from asteria.editor.ui.fit import ValueCombo
 from asteria.editor.ui.i18n import translate
 from asteria.runtime.battle.visuals import VFX_ALIGNS, VFX_ANCHORS, VFX_BLENDS, vfx_rect
 
@@ -63,7 +64,7 @@ class VFXStage(QWidget):
         for anchor, lift in (("feet", 0.0), ("center", 0.5), ("head", 1.0)):
             y = fy - lift * PREVIEW_BODY_HEIGHT
             p.drawLine(int(fx - 30), int(y), int(fx - 24), int(y))
-            p.drawText(int(fx - 70), int(y + 4), anchor)
+            p.drawText(int(fx - 70), int(y + 4), translate(words(anchor)))
         if self.pixmap is not None and self.rect is not None and not self.pixmap.isNull():
             cx, cy, w, h = self.rect
             target = QRectF(fx + cx - w / 2, fy + cy - h / 2, w, h)
@@ -131,8 +132,8 @@ class VFXEditorWidget(QWidget):
         center_box = QWidget()
         center_box.setLayout(center)
 
-        self.anchor = QComboBox()
-        self.anchor.addItems(list(VFX_ANCHORS))
+        self.anchor = ValueCombo()  # shown in words, saved as the value
+        self.anchor.addItems(VFX_ANCHORS)
         self.offset_x, self.offset_y = QDoubleSpinBox(), QDoubleSpinBox()
         for spin in (self.offset_x, self.offset_y):
             spin.setRange(-512, 512)
@@ -143,12 +144,13 @@ class VFXEditorWidget(QWidget):
         self.opacity = QDoubleSpinBox()
         self.opacity.setRange(0.0, 1.0)
         self.opacity.setSingleStep(0.05)
-        self.blend = QComboBox()
-        self.blend.addItems(list(VFX_BLENDS))
-        self.align = QComboBox()  # content: the drawn picture lands on the member
-        self.align.addItems(list(VFX_ALIGNS))
+        self.blend = ValueCombo()
+        shown = {"add": "Add (brighter)", "content": "Picture", "frame": "Whole frame"}
+        self.blend.set_choices((v, shown.get(v, words(v))) for v in VFX_BLENDS)
+        self.align = ValueCombo()  # content: the drawn picture lands on the member
+        self.align.set_choices((v, shown.get(v, words(v))) for v in VFX_ALIGNS)
         for widget in (self.anchor, self.blend, self.align):
-            widget.currentTextChanged.connect(lambda _t: self._render())
+            widget.currentIndexChanged.connect(lambda _i: self._render())
         for widget in (self.offset_x, self.offset_y, self.scale, self.opacity):
             widget.valueChanged.connect(lambda _v: self._render())
         apply_button = QPushButton("Apply Placement")

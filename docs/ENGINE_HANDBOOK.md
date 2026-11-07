@@ -358,7 +358,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 原生 kernel 要在開發機編譯一次 | `python -m asteria.kernels.build_native`（macOS 編成 arm64 + x86_64 通用檔，ABI 5）；匯出會先檢查、必要時重編並帶著它，玩家的 Python 沒有 numpy 也能用；沒編譯會退回 numpy／python |
 | 輕量電腦 | 效能只在本機（Apple silicon、沒開低耗電模式）量過；真的輕量電腦或低耗電模式要有人實際跑 |
 | 頭上名字的縮寫 | 名字超過 14 字會縮成縮寫（「Goblin Slinger 2」→「GS2」），要怎麼顯示待使用者決定。2026-10-22 發現的其他戰鬥畫面問題（拉近時的狀態文字、技能列名稱黏花費、狀態畫面 HP／MP 順序）已修（DECISION_LOG D51 補充） |
-| 編輯器 | 中文模式下，顯示的字就是存檔值的固定選項（Enemy AI 的條件／動作／目標、事件觸發、VFX 錨點）還是英文；File ▸ New Project… 的範本名稱與說明也還是英文（`zh_TW.json` 沒有對應的字）；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充） |
+| 編輯器 | 中文模式下剩下的英文都是作者的資料（技能、敵人、階段、圖層、素材的名稱）；稽核（英文與中文、1600×1000 與 1100×700）被截的文字 0 處（D51 補充、D107） |
 | 免安裝版 app（D100） | 只有 macOS，ad-hoc 簽章（沒有 Developer ID 公證，第一次要右鍵打開）；Windows／Linux 建置與 CI 還沒做；app 內不能做網頁匯出；`Asteria.app` 約 277 MB |
 | 遊戲內的文字翻譯 | 引擎自己的字都能用專案的翻譯表翻（D52，見 3.7）；專案資料的名稱、說明、對話也能翻（D60；Full Verification 全部有繁中）；開發用的錯誤訊息維持英文；中文用系統字型，桌面匯出不附中文字型（web 匯出附 Noto Sans TC，`ASTERIA_CJK_FONT` 可指定）；寵物改名不支援中文輸入法組字 |
 | Web 匯出（D59） | `python -m asteria.export_web`（pygbag）：沒有編輯器、多人連線、ModernGL、C++ kernel、預載執行緒；玩家開頁面要連得到 pygame-web 的 CDN（`--cdn` 自架）；存檔在瀏覽器的 localStorage；音訊只有 ogg／wav；本機測試用 `127.0.0.1` 開，不用 `localhost`；證據 `audits/evidence/web_export/` |
@@ -802,7 +802,9 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 - UI 和實機的東西一定在 Cocoa 真實視窗驗證，附截圖，放 `docs/audits/evidence/real_machine/`。
 - 編輯器要好看：有顏色、有圖示、版面密但不擠；稽核腳本要乾淨。
 - 編輯器的新介面文字要在 `src/asteria/editor/translations/zh_TW.json` 加翻譯（或樣板）；依標題挑圖示、樣式或
-  面板的程式碼比對 `i18n.english(text)`，不要比對畫面上的字。
+  面板的程式碼比對 `i18n.english(text)`，不要比對畫面上的字。固定選項的下拉選單要「顯示的字」與「存的值」分開：
+  用 `ui/fit.py` 的 `WordCombo`（值變成字）或 `ValueCombo`（自訂字），或 `addItem(字, 值)`；沒有值的項目不會翻。
+  對話框的多行文字與狀態列訊息會逐行翻（`i18n.translate_lines`，D107）。
 - 遊戲畫面的新文字要寫成 `game.tr("<鍵>", "<英文>")`，並在 `rpg/text/built_in_text.py` 的 `GROUPS` 與
   `rpg/text/built_in_text/zh-TW.json` 各加一條，再跑 `scripts/built_in_text_keys.py`（測試會抓漏）；版面量字寬用
   `presentation/text_cells.cells`（全形字算 2 格），不要用 `len()`。

@@ -82,6 +82,7 @@ WORDS = {
     "Whispering Woods": "低語森林",
     "Catacombs": "地下墓穴",
     "Ember Throne": "餘燼王座",
+    "Under Pressure": "緊迫時刻",  # the music room's battle theme
     "Roger's House": "羅傑的家",
     "Hall of Heroes": "英雄殿堂",
     "Hero's Shrine": "英雄神龕",
@@ -859,6 +860,7 @@ WORDS = {
 }
 
 DESCRIPTION = {
+    "Foozle, CC0": "Foozle，CC0",  # the music room's note on each track (its maker)
     # -- the quest board, guild office and Starfall Chest (U5) --------------------------------
     "Goblin slingers keep stoning the road carts. Three of them, and the guild pays.": (
         "哥布林投石兵一直朝路上的貨車丟石頭。打倒三隻，公會就付錢。"

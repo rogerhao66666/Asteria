@@ -50,6 +50,7 @@ DATA_GROUPS = (
     ("Data: world interactions", ("world_interactions",)),
     ("Data: party setups and drop tables", ("party_setups", "drop_tables")),
     ("Data: menu pages (item tabs and filters)", ("menu_rules", "menu_pages")),
+    ("Data: music room", ("music_tracks",)),
 )
 MAPS_GROUP = "Data: map names"
 CURRENCY_GROUP = "Data: currencies"
@@ -115,6 +116,8 @@ def _rows_of(record):
 
 
 def _instructions(project):
+    """``(program_id, index, instruction)`` of every instruction, the lines inside a
+    SEQUENCE's tracks too (they carry the index of their SEQUENCE)."""
     programs = getattr(project, "event_programs", None)
     if programs is None:
         return
@@ -122,6 +125,19 @@ def _instructions(project):
         program = programs.require(program_id)
         for index, instruction in enumerate(program.instructions):
             yield program_id, index, instruction
+            for _track, _number, inner in _track_lines(instruction):
+                yield program_id, index, inner
+
+
+def _track_lines(instruction):
+    """``(track, number, DIALOGUE)`` of each line in a SEQUENCE's tracks (a cutscene)."""
+    if instruction.opcode != "SEQUENCE":
+        return
+    for track in instruction.args.get("tracks") or ():
+        raw = track.get("instructions") if isinstance(track, dict) else None
+        for number, item in enumerate(raw or ()):
+            if isinstance(item, dict) and str(item.get("opcode", "")).upper() == "DIALOGUE":
+                yield track, number, EventInstruction("DIALOGUE", item.get("args") or {})
 
 
 def recruit_note_key(office_id, actor_id):
@@ -326,6 +342,8 @@ def data_groups(project):
 
 def _needs_keys(instruction):
     args = instruction.args
+    if instruction.opcode == "SEQUENCE":
+        return any(_needs_keys(line) for _t, _n, line in _track_lines(instruction))
     if instruction.opcode == "DIALOGUE":
         return _translatable(args.get("text")) and not args.get("text_key")
     if instruction.opcode == "CHOICE":
@@ -340,8 +358,17 @@ def _needs_keys(instruction):
 
 
 def dialogue_without_keys(project):
-    """How many DIALOGUE / CHOICE instructions still have text without a key."""
-    return sum(1 for _p, _i, ins in _instructions(project) if _needs_keys(ins))
+    """How many DIALOGUE / CHOICE instructions (or cutscenes, SEQUENCE) still have text
+    without a key."""
+    programs = getattr(project, "event_programs", None)
+    if programs is None:
+        return 0
+    return sum(
+        1
+        for program_id in programs.ids()
+        for instruction in programs.require(program_id).instructions
+        if _needs_keys(instruction)
+    )
 
 
 def _short(program_id):
@@ -383,7 +410,9 @@ def keyed_programs(project):
                 continue
             args = dict(instruction.args)
             base = f"dlg.{short}.{index}"
-            if instruction.opcode == "DIALOGUE":
+            if instruction.opcode == "SEQUENCE":
+                args["tracks"] = _keyed_tracks(args.get("tracks") or (), base, fresh)
+            elif instruction.opcode == "DIALOGUE":
                 args["text_key"] = fresh(base)
             else:
                 if _translatable(args.get("prompt")) and not args.get("prompt_key"):
@@ -401,3 +430,22 @@ def keyed_programs(project):
             instructions.append(EventInstruction(instruction.opcode, args))
         changed.append((program_id, EventProgram(instructions, name=old.name), old))
     return changed
+
+
+def _keyed_tracks(tracks, base, fresh):
+    """A SEQUENCE's tracks with a key on each line that has none: ``<base>.<track>.<n>``."""
+    keyed = []
+    for track_number, track in enumerate(tracks, 1):
+        if not isinstance(track, dict):
+            keyed.append(track)
+            continue
+        items = []
+        for number, item in enumerate(track.get("instructions") or (), 1):
+            line = isinstance(item, dict) and str(item.get("opcode", "")).upper() == "DIALOGUE"
+            args = dict(item.get("args") or {}) if line else {}
+            if line and _translatable(args.get("text")) and not args.get("text_key"):
+                args["text_key"] = fresh(f"{base}.{track_number}.{number}")
+                item = {**item, "args": args}
+            items.append(item)
+        keyed.append({**track, "instructions": items})
+    return keyed

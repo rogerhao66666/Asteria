@@ -4534,3 +4534,41 @@ manifest 的鍵與畫面名 `pokenav`，以及註解、說明文字、手冊裡�
 
 **證據：** 完整測試 3910 passed 加上修正後重跑的 11 個；`creature_battle_live_check`（一般與 skin）32 步通過、
 AsteriaEmerald 的 `field_items_live_check`、`screens_live_check` 通過；`ruff`、`sync_templates --check`。
+
+## D107 — 剩下的英文翻完：選項的字與值分開、對話框、事件序列台詞、曲名、寵物改名吃輸入法（2026-11-08）
+
+**問題：** `NEXT_STEPS` C 項：編輯器中文模式還有英文（顯示的字就是存檔值的選項、New Project 的範本、Export
+Game 對話框、組出來的句子）；遊戲端事件序列（`SEQUENCE` 軌道）的台詞、音樂室曲名不能翻；寵物改名只吃
+KEYDOWN 的字母，注音／拼音組好的字打不進去。
+
+**決定：**
+- **名詞單複數：** `form_shapes.singular` 補 `-ches／-shes／-xes／-sses` 與幾個不規則字（「+ Add switche」→
+  switch）；Game Systems 的 `_noun` 不再自己寫一份，改用它；標籤結尾是符號時（「Gene ×」）用欄位鍵的字。
+- **選項的字與值分開：** VFX 的錨點／混合／置中、粒子的形狀與混合、圖像動畫的特效位置改用 `WordCombo`／
+  `ValueCombo`（存的值不變，舊值不在清單也會保留）；資料列表的排序帶值；Game Systems 加 `CHOICE_WORDS`，
+  意思不清楚的值給清楚的字（經驗分配「出戰的平分／每隻都拿全部」、升級回復「增加成長的量」、區域事件
+  「進入時一次」、道具詳細「清單旁的面板」）。
+- **翻譯表：** 約 170 個字與 20 個樣板：戰鬥頁說明、空清單、「新增／複製／選擇 X」、Enemy AI 卡片
+  （`<b>n.</b> 名稱 <span>何時</span>` 整句一個樣板，「starts when A and B」排在條件樣板前面）、互動範圍、
+  VFX 影格資訊、範本名稱與說明、匯出／開啟／儲存對話框、預製物件、腳本結果、操作說明。
+- **對話框與狀態列：** `i18n.translate_lines` 整段找不到時逐行翻（匯出報告「遊戲資料夾：…／缺少：…」）；
+  `QStatusBar.showMessage` 也經過翻譯。New Project 的範本清單在程式裡翻（`QInputDialog` 的項目沒有包裝）。
+- **遊戲端：** 編輯器翻譯頁列出 `SEQUENCE` 軌道裡的台詞與說話者，「替對話產生鍵」也給它們鍵
+  （`dlg.<程式>.<序號>.<軌道>.<n>`；執行時本來就讀 `text_key`）；`MusicTrack` 有 `display_name`／
+  `description`（就是 `name`／`note`），種類 `music_track`，音樂室用 `name_of`／`description_of`，翻譯頁多
+  「資料：音樂室」。生物戰鬥的招式、玩家、道具、狀態名改走 `name_of`（之前直接讀紀錄的英文）。
+- **寵物改名：** 打字改讀 `TEXTINPUT`（輸入法組好的字）、組字中的 `TEXTEDITING` 接在名字後面顯示；組字時
+  Enter／Backspace 交給輸入法；開始改名時 `start_text_input` 並把候選字視窗放在提示旁。沒有 TEXTINPUT 的
+  視窗照舊讀 KEYDOWN 的字。
+- Full Verification 的 zh-TW 表加五首曲名與說明（只加這 10 個鍵，不重存整個檔）。
+- 製作人員名單本來就有資料鍵（`credits_key`），這次只補翻譯頁的分組標題。
+
+**不改的：** 中文模式下剩下的英文都是作者的資料：技能、敵人、階段、圖層、素材、資源（Soul、Unity）的名稱；
+公式按鈕的 `self` 是要打的程式字。
+
+**證據：** 完整測試 3920 passed（之後改的幾個字重跑相關 88 個）；新測試：逐行翻譯與狀態列、組出來的句子、
+選項的字與值、名詞單複數、事件序列台詞的鍵與音樂室的翻譯、寵物改名的輸入法事件（模擬的 TEXTEDITING／
+TEXTINPUT）。中文稽核（Complex Reference 與 Full Verification，每個頁面）剩下的英文逐一看過，都是作者的資料。
+Cocoa 真實視窗截圖：Enemy AI、Pet Rules、戰鬥特效、範本清單都是中文。`ruff`、`sync_templates --check`。
+
+**限制：** 注音輸入法在真的遊戲視窗裡打字沒有人實際試過（測試送的是模擬事件）。

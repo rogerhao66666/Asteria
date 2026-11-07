@@ -30,6 +30,14 @@ class MusicTrack:
         object.__setattr__(self, "note", clean_text(note))
         object.__setattr__(self, "icon_id", clean_text(icon_id))
 
+    @property
+    def display_name(self):  # the name screens and the data translation table read (D60)
+        return self.name
+
+    @property
+    def description(self):  # the note beside the name, translated like a description
+        return self.note
+
     def to_data(self):
         data = {"track_id": self.track_id, "name": self.name, "asset_id": self.asset_id}
         if self.icon_id:

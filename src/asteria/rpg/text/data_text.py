@@ -68,6 +68,7 @@ KINDS = {
     "ItemCategory": ("item_category", "category_id"),
     "ItemFilter": ("item_filter", "filter_id"),
     "StatGroup": ("stat_group", "group_id"),
+    "MusicTrack": ("music_track", "track_id"),
 }
 FIELDS = ("name", "description", "short")  # short: a stat's short name, STR (D91)
 PREFIX = "data."

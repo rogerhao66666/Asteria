@@ -152,7 +152,7 @@ class MusicRoomScreen(_Screen):
                 (at.x(22), y - 4, at.rect[2], at.row), lambda i=i: setattr(self, "index", i)
             )
             selected = i == min(self.index, len(rows) - 1)
-            name = track.name if open_ else self.tr("music.locked", "? ? ?")
+            name = self.game.name_of(track) if open_ else self.tr("music.locked", "? ? ?")
             normal = c.color("rows", c.tone("text", (190, 196, 210)))
             picked = c.tone("selected", (255, 255, 255))
             color = picked if selected else (normal if open_ else (96, 102, 120))
@@ -164,7 +164,8 @@ class MusicRoomScreen(_Screen):
                 playing = self.tr("music.playing", "PLAYING")
                 rt.text(playing, at.right - 118, y + 4, size=20, color=GOOD)
             elif open_ and track.note:
-                rt.text(track.note, at.right - 338, y + 6, size=18, color=muted)
+                note = self.game.description_of(track)
+                rt.text(note, at.right - 338, y + 6, size=18, color=muted)
         c.finish()
 
 

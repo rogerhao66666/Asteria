@@ -18,7 +18,6 @@ from PySide6.QtGui import QColor, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QCheckBox,
     QColorDialog,
-    QComboBox,
     QDoubleSpinBox,
     QHBoxLayout,
     QInputDialog,
@@ -37,6 +36,8 @@ from asteria.editor.combat.particle_authoring import (
     ParticleAuthoringController,
     ParticleAuthoringError,
 )
+from asteria.editor.records.vocabulary import words
+from asteria.editor.ui.fit import ValueCombo
 from asteria.editor.ui.i18n import translate
 from asteria.editor.ui.responsive_form import ResponsiveForm
 from asteria.presentation.visuals.particles import (
@@ -80,6 +81,12 @@ PAIR_NAMES = {
     "spin": ("min", "max"),
 }
 CHOICES = {"shape": EMITTER_SHAPES, "particle": PARTICLE_SHAPES, "blend": PARTICLE_BLENDS}
+CHOICE_WORDS = {  # values whose own words read unclearly
+    "ring": "Ring outline",
+    "rect": "Rectangle",
+    "alpha": "Normal",
+    "add": "Add (brighter)",
+}
 
 
 def _spin(value, *, integer=False):
@@ -299,9 +306,9 @@ class ParticleEffectWidget(QWidget):
                 continue
             value = getattr(sample, f.name)
             if f.name in CHOICES:
-                widget = QComboBox()
-                widget.addItems(CHOICES[f.name])
-                widget.currentTextChanged.connect(self._edited)
+                widget = ValueCombo()  # shown in words, read and set as the value
+                widget.set_choices((v, CHOICE_WORDS.get(v) or words(v)) for v in CHOICES[f.name])
+                widget.currentIndexChanged.connect(self._edited)
             elif f.name == "image":  # an icon picture, chosen as a record's icon is
                 from asteria.editor.assets.image_tools import IconLibrary
                 from asteria.editor.rpg.game_systems_widget import _IconPicker

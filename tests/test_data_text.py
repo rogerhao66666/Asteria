@@ -489,3 +489,39 @@ def test_the_demo_glossary_reads_naturally_for_the_shapes():
         zh.translate_description("Physical + Magic / Light: 4 hits") == "物理＋魔法／光：4 段攻擊"
     )
     assert zh.translate_name("Unknown Thing") is None
+
+
+def test_cutscene_lines_and_music_room_titles_are_translatable():
+    """D107: a SEQUENCE's lines are listed and get keys like any line; a music room track's
+    title and note are rows of their own and read from the table."""
+    from asteria.editor.project import data_translation as dt
+    from asteria.events.program import EventInstruction, EventProgram
+    from asteria.rpg.world.extras import MusicTrack
+
+    project = _plain(_demo_project())
+    line = {"opcode": "DIALOGUE", "args": {"text": "Stand back!", "speaker": "Cael"}}
+    moves = {"opcode": "WAIT", "args": {"seconds": 1}}
+    sequence = EventInstruction(
+        "SEQUENCE", {"tracks": [{"name": "hero", "instructions": [moves, line]}]}
+    )
+    project.event_programs.register("cutscene", EventProgram((sequence,), name="Cutscene"))
+    before = dt.dialogue_without_keys(project)
+    (new,) = [n for pid, n, _old in dt.keyed_programs(project) if pid == "cutscene"]
+    keyed = new.instructions[0].args["tracks"][0]["instructions"]
+    assert keyed[0] == moves and keyed[1]["args"]["text"] == "Stand back!"
+    text_key = keyed[1]["args"]["text_key"]
+    assert text_key.startswith("dlg.cutscene.0.")
+    project.event_programs.replace("cutscene", new)
+    assert dt.dialogue_without_keys(project) == before - 1
+    groups = dict(dt.data_groups(project))
+    assert dict(groups[dt.LINES_GROUP])[text_key] == "Stand back!"
+    assert "data.speaker.Cael.name" in dict(groups[dt.SPEAKERS_GROUP])
+
+    track = MusicTrack("woods", "Whispering Woods", "woods", note="by Foozle")
+    project.rpg_database.music_tracks["woods"] = track
+    rows = dict(dict(dt.data_groups(project))["Data: music room"])
+    assert rows["data.music_track.woods.name"] == "Whispering Woods"
+    assert rows["data.music_track.woods.description"] == "by Foozle"
+    table = {"data.music_track.woods.name": "低語森林"}
+    assert data_text.name_of(table.get, track) == "低語森林"
+    assert data_text.description_of(table.get, track) == "by Foozle"  # none: its own

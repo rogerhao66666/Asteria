@@ -350,11 +350,21 @@ def singular(text):
     text = str(text).strip()
     if " " in text:
         return "entry"
-    # "phases" -> "phase" (not "phas"), "statuses" -> "status"
-    for suffix, replacement in (("ies", "y"), ("ases", "ase"), ("ses", "s"), ("s", "")):
-        if text.endswith(suffix) and len(text) > 3:
+    lower = text.lower()
+    if lower in _SINGULARS:
+        return text[: len(text) - len(lower)] + _SINGULARS[lower]
+    # "phases" -> "phase" (not "phas"), "switches" -> "switch", "boxes" -> "box"
+    for suffix, replacement in _SINGULAR_ENDINGS:
+        if lower.endswith(suffix) and len(text) > 3:
             return text[: -len(suffix)] + replacement
     return text
+
+
+# words whose plural the endings below get wrong
+_SINGULARS = {"statuses": "status", "bonuses": "bonus", "aliases": "alias", "caches": "cache",
+              "niches": "niche", "entries": "entry", "buses": "bus"}  # fmt: skip
+_SINGULAR_ENDINGS = (("ies", "y"), ("sses", "ss"), ("ches", "ch"), ("shes", "sh"),
+                     ("xes", "x"), ("s", ""))  # fmt: skip
 
 
 def entry_title(entry, noun, names=None):

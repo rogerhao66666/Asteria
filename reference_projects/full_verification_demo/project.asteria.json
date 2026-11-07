@@ -104798,7 +104798,17 @@
           "data.menu_page.items.name": "\u9053\u5177",
           "data.menu_page.materials.name": "\u7d20\u6750",
           "tag.meaning": "{tag}\uff1a{meaning}",
-          "status.job_meaning": "{job}\uff1a{meaning}"
+          "status.job_meaning": "{job}\uff1a{meaning}",
+          "data.music_track.battle_theme.name": "\u7dca\u8feb\u6642\u523b",
+          "data.music_track.battle_theme.description": "Foozle\uff0cCC0",
+          "data.music_track.crypt_theme.name": "\u5730\u4e0b\u5893\u7a74",
+          "data.music_track.crypt_theme.description": "Foozle\uff0cCC0",
+          "data.music_track.throne_theme.name": "\u9918\u71fc\u738b\u5ea7",
+          "data.music_track.throne_theme.description": "Foozle\uff0cCC0",
+          "data.music_track.town_theme.name": "\u7210\u5fc3\u93ae",
+          "data.music_track.town_theme.description": "Foozle\uff0cCC0",
+          "data.music_track.woods_theme.name": "\u4f4e\u8a9e\u68ee\u6797",
+          "data.music_track.woods_theme.description": "Foozle\uff0cCC0"
         },
         "locale": "zh-TW"
       }
