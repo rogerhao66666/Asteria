@@ -67,6 +67,9 @@ class _EntityScene:
 
 
 class ProjectDemoAdapter:
+    # defaults until something sets them (code may read them first)
+    _active_combat_scene = None
+
     network_tick_interval = 1 / 30
     SAVE_NAMESPACE = "project_demo"
 
@@ -576,7 +579,7 @@ class ProjectDemoAdapter:
             )
             if claim_policy == "personal":
                 owners = eligible
-            scene = getattr(self, "_active_combat_scene", None)
+            scene = self._active_combat_scene
             if scene is None:
                 return
             loot_system = self.systems[scene.id]["loot"]

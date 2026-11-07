@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from asteria.core import Transform
-from asteria.runtime.session.support import (
-    GameSessionError,
-)
+from asteria.runtime.session.support import GameSessionError
 
 
 class NpcStateMixin:
     # -- NPC state (WLD-02) -----------------------------------------------------------------------
+    # defaults until something sets them (code may read them first)
+    last_battle_outcome = ""
+    name_input_request = None
+    picture_choice_request = None
+    saves_used = 0
+
     def _record_npc(self, entity):
         from asteria.runtime.field.npc_state import NpcIdentity2DComponent
 
@@ -46,20 +50,20 @@ class NpcStateMixin:
         if kind == "shop":  # the shop open now ("" when none): WAIT until it is ""
             return self.open_shop_id or ""
         if kind == "name_input":  # "open" while the name screen waits for a name, else ""
-            return "open" if getattr(self, "name_input_request", None) else ""
+            return "open" if self.name_input_request else ""
         if kind in ("pressed", "held"):  # the host's controls this frame (a|b: any of them)
             found = getattr(self, "input_actions", {}).get(kind, ())
             return any(action in found for action in rest.split("|"))
         if kind == "battle_outcome":  # how the last battle ended: won, lost, ran or caught
-            return str(getattr(self, "last_battle_outcome", ""))
+            return str(self.last_battle_outcome)
         if kind == "saves":
-            return int(getattr(self, "saves_used", 0))
+            return int(self.saves_used)
         if kind == "party_move":  # a creature travelling with the player knows this move
             return self.party_pet_with_move(rest) is not None
         if kind == "light":  # "moving" while SET_LIGHT's circle grows or shrinks, else ""
             return "moving" if self.light_moving() else ""
         if kind == "picture_choice":  # "open" while a PICTURE_CHOICE waits, else ""
-            return "open" if getattr(self, "picture_choice_request", None) else ""
+            return "open" if self.picture_choice_request else ""
         if kind == "gold":
             return state.currencies.get("gold", 0.0)
         if kind == "currency":

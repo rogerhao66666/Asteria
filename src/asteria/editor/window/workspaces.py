@@ -22,8 +22,22 @@ from asteria.authoring import run_authoring_script
 class WorkspaceSwitchMixin:
     """Switching and refreshing workspaces and pages."""
 
+    # defaults until something sets them (code may read them first)
+    _refresh_epoch = 0
+    _warm = None
+    battle_workspace_action = None
+    code_workspace_action = None
+    event_workspace_action = None
+    multiplayer_workspace_action = None
+    panel_shortcuts = ()
+    problems_widget = None
+    rpg_workspace_action = None
+    scene_workspace_action = None
+    ui_workspace_action = None
+    workspace = None
+
     def _warm_next_workspace(self):
-        if not getattr(self, "_warm", None) or self.document.project is None:
+        if not self._warm or self.document.project is None:
             return
         self._ensure_workspace_fresh(self._warm.pop(0), every_tab=True)
         if self._warm:
@@ -32,20 +46,20 @@ class WorkspaceSwitchMixin:
     def _workspace_mode_changed(self, mode):
         current = WorkspaceMode(mode)
         for action, candidate in (
-            (getattr(self, "scene_workspace_action", None), WorkspaceMode.SCENE),
-            (getattr(self, "rpg_workspace_action", None), WorkspaceMode.RPG),
-            (getattr(self, "battle_workspace_action", None), WorkspaceMode.BATTLE),
-            (getattr(self, "ui_workspace_action", None), WorkspaceMode.UI),
-            (getattr(self, "event_workspace_action", None), WorkspaceMode.EVENT),
-            (getattr(self, "code_workspace_action", None), WorkspaceMode.CODE),
+            (self.scene_workspace_action, WorkspaceMode.SCENE),
+            (self.rpg_workspace_action, WorkspaceMode.RPG),
+            (self.battle_workspace_action, WorkspaceMode.BATTLE),
+            (self.ui_workspace_action, WorkspaceMode.UI),
+            (self.event_workspace_action, WorkspaceMode.EVENT),
+            (self.code_workspace_action, WorkspaceMode.CODE),
             (
-                getattr(self, "multiplayer_workspace_action", None),
+                self.multiplayer_workspace_action,
                 WorkspaceMode.MULTIPLAYER,
             ),
         ):
             if action is not None:
                 action.setChecked(current == candidate)
-        for shortcut in getattr(self, "panel_shortcuts", ()):  # P / T / L: Scene's keys
+        for shortcut in self.panel_shortcuts:  # P / T / L: Scene's keys
             shortcut.setEnabled(current == WorkspaceMode.SCENE)
         self.set_focus_mode(False)  # each workspace keeps its own panels
         self._switch_workspace_docks(current)
@@ -79,7 +93,7 @@ class WorkspaceSwitchMixin:
         stamp = (
             id(self.document.project),
             self.document.revision,
-            getattr(self, "_refresh_epoch", 0),
+            self._refresh_epoch,
         )
         fresh = self._workspace_stamps
         tabs = getattr(self, self._WORKSPACE_TABS.get(mode, ""), None)
@@ -183,7 +197,7 @@ class WorkspaceSwitchMixin:
         database = getattr(project, "rpg_database", None)
         if database is not None and set(database.doodads) != set(self.tile_palette._doodads):
             self.tile_palette.set_doodads(database.doodads)
-        if getattr(self, "problems_widget", None) is not None:
+        if self.problems_widget is not None:
             self.problems_widget.schedule_refresh()
         self.project_tree.refresh()
         self.refresh_asset_list()
@@ -191,8 +205,8 @@ class WorkspaceSwitchMixin:
         self._sync_scene_authoring_context()
         self._sync_event_context()
         # the page on screen is rebuilt now; the others when they are next opened
-        self._refresh_epoch = getattr(self, "_refresh_epoch", 0) + 1
-        workspace = getattr(self, "workspace", None)
+        self._refresh_epoch = self._refresh_epoch + 1
+        workspace = self.workspace
         if workspace is not None:
             self._ensure_workspace_fresh(workspace.mode, force=True)
         self.viewport.refresh()

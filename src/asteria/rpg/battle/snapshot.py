@@ -78,7 +78,7 @@ def _pack_member(member):
 
 
 def _unpack_member(raw):
-    from asteria.rpg.battle.core import PartyMember
+    from asteria.rpg.battle.runtime_types import PartyMember
 
     stats = StatBlock.from_data(raw["stats"])
     resources = ResourcePool.from_data(raw["resources"])
@@ -160,8 +160,8 @@ def restore_battle_snapshot(battle, snapshot):
             battle.parties[replacement.side].members.append(replacement)
         battle.members[member_id] = replacement
     battle.targeting.members = dict(battle.members)
-    from asteria.rpg.battle.core import TurnQueue
     from asteria.rpg.battle.lifecycle import CombatantLifecycleRuntime
+    from asteria.rpg.battle.runtime_types import TurnQueue
     from asteria.rpg.battle.scheduler import BattleScheduler
     from asteria.rpg.battle.timing import BattleActionTimingRuntime
 

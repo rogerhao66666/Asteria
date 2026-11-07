@@ -168,6 +168,10 @@ STAMP_COLORS = {
 
 
 class QuestBoardScreen(ServiceScreen):
+    # defaults until something sets them (code may read them first)
+    _second = None
+    canvas = None
+
     SCREEN, ID = "quest_board", "board_id"
 
     def __init__(self, runtime, board_id, back="field"):
@@ -189,7 +193,7 @@ class QuestBoardScreen(ServiceScreen):
         return max(1, int(self.canvas_number("cards", "columns", 3)))
 
     def canvas_number(self, element_id, name, default):
-        canvas = getattr(self, "canvas", None)
+        canvas = self.canvas
         return canvas.number(element_id, name, default) if canvas is not None else default
 
     def refresh(self):
@@ -199,7 +203,7 @@ class QuestBoardScreen(ServiceScreen):
         rt, pg = self.rt, self.rt.pg
         inp = rt.input
         self.tick(dt)
-        if int(play_seconds(self.game)) != getattr(self, "_second", None):
+        if int(play_seconds(self.game)) != self._second:
             self._second = int(play_seconds(self.game))
             self.refresh()  # deadlines and refresh times move on
         keys = {e.key for e in events if e.type == pg.KEYDOWN}

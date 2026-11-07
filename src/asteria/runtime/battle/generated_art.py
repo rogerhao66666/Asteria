@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 from asteria.gameplay import ActionCue, ActionCueKind, PresentationCue
-from asteria.presentation import (
-    BattlePresentationEventKind,
-)
+from asteria.presentation import BattlePresentationEventKind
 from asteria.presentation.battle.runtime import _mirrored
 from asteria.presentation.visuals.particles import effect_definition
 from asteria.rpg import BattleOutcome
 from asteria.runtime.battle.presentation_parts import CHANNEL_KINDS, PARTY_SIDES
-from asteria.runtime.battle.visuals import (
-    member_body_height,
-)
+from asteria.runtime.battle.visuals import member_body_height
 
 
 class GeneratedBattleArtMixin:
     """Battle pictures for projects without battle art: generated combatant and effect sheets."""
+
+    # defaults until something sets them (code may read them first)
+    _icon_px = 16
+    _semantic_action = None
 
     def _source_image(self, member_id, side, index):
         """The manifest image a project without battle art shows for a combatant (None: draw a
@@ -345,7 +345,7 @@ class GeneratedBattleArtMixin:
     def _resolve_icon(self, asset_id):
         """A skill / item icon of the project (menu rows with an ``icon_id``), or ``None``."""
         try:
-            return self.host.icon_image(asset_id, getattr(self, "_icon_px", 16))
+            return self.host.icon_image(asset_id, self._icon_px)
         except Exception as exc:  # pygame.error / a missing file: the row shows a plain box
             if type(exc).__name__ not in ("error", "FileNotFoundError", "KeyError"):
                 raise
@@ -621,7 +621,7 @@ class GeneratedBattleArtMixin:
         rebuilt is kept across batches and finalized when the next fact starts.
         """
         result = []
-        pending = getattr(self, "_semantic_action", None)
+        pending = self._semantic_action
         if pending is not None:
             result.append(pending)
         for event in events:
@@ -671,7 +671,7 @@ class GeneratedBattleArtMixin:
 
     def finalize_trace(self):
         """Close the action still being rebuilt (call once the presentation is idle)."""
-        pending = getattr(self, "_semantic_action", None)
+        pending = self._semantic_action
         if pending is not None:
             self.trace.append(("action", pending[0], pending[1], pending[2], tuple(pending[3])))
             self._semantic_action = None

@@ -11,9 +11,7 @@ from asteria.rpg import PartyMember
 from asteria.rpg.characters.pets import PetRecord
 from asteria.rpg.enemies.definitions import RewardDefinition
 from asteria.rpg.text.built_in_text import Words
-from asteria.runtime.session.support import (
-    GameSessionError,
-)
+from asteria.runtime.session.support import GameSessionError
 
 PET_MEMBER_PREFIX = "pet:"
 
@@ -43,6 +41,11 @@ class SpeciesFoe:
 
 class PetsMixin:
     # -- pets ---------------------------------------------------------------------------------
+    # defaults until something sets them (code may read them first)
+    _pending_pet_moves = ()
+    _pet_stash = None
+    _species_foes = None
+
     def pets(self):
         """The owned pets (``rpg.pets.PetRecord``)."""
         return tuple(self.save.rpg_state.pets)
@@ -310,7 +313,7 @@ class PetsMixin:
 
     def restore_pets(self):
         """PARTY_RESTORE: the creatures put aside come back as they were."""
-        stash = getattr(self, "_pet_stash", None)
+        stash = self._pet_stash
         if stash is None:
             return 0
         state = self.save.rpg_state
@@ -444,7 +447,7 @@ class PetsMixin:
     def pending_pet_moves(self):
         """``[(instance_id, ability_id), ...]``: moves learned while the pet already knows
         the rules' ``max_moves`` - the game asks which to forget (``learn_pet_move``)."""
-        return tuple(getattr(self, "_pending_pet_moves", ()))
+        return tuple(self._pending_pet_moves)
 
     def learn_pet_move(self, instance_id, ability_id, forget_ability_id=""):
         """Teach a pet a move; with the moves full, ``forget_ability_id`` makes room (empty =
@@ -628,7 +631,7 @@ class PetsMixin:
         if rules is not None and rules.max_moves and not record.moves:
             record.moves = list(record.known_moves(species, rules.max_moves))
         member_id = f"{member.pet_species_id}:{serial}"
-        foes = getattr(self, "_species_foes", None)
+        foes = self._species_foes
         if foes is None:
             foes = self._species_foes = {}
         foes[member_id] = record

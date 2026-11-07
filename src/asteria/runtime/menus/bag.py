@@ -50,6 +50,9 @@ def format_value(value, operation):
 class BagScreen:
     """Made when opened; each frame ``handle(events?)`` then ``draw()``; ``closed`` ends it."""
 
+    # defaults until something sets them (code may read them first)
+    canvas = None
+
     def __init__(self, runtime):
         self.rt = runtime
         self.index = 0  # position in the bag grid; -1 row = worn strip (see ``row_worn``)
@@ -350,7 +353,7 @@ class BagScreen:
         game = self.game
         tr = game.tr
         item, slot_id, worn = self.selected()
-        canvas = getattr(self, "canvas", None) or rt.menu_canvas("bag")
+        canvas = self.canvas or rt.menu_canvas("bag")
         if not canvas.shown("detail"):
             return
         default = (rt.width - 380, 100, 344, rt.height - 100 - 56)

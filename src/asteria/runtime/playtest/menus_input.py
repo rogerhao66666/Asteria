@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from asteria.rpg.text.built_in_text import translated
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.menus.game_menus import (
-    CraftingScreen,
-)
+from asteria.runtime.menus.game_menus import CraftingScreen
 from asteria.runtime.menus.status import TAB_WORDS, TABS, StatusMenu
 
 
 class MenusInputMixin:
     # --- pause, quests, shop and game over (UI-02) --------------------------
+
+    # defaults until something sets them (code may read them first)
+    _crafting_back = "field"
 
     def _menu_step(self, cursor):
         if self.input.just_pressed("move_up"):
@@ -363,7 +364,7 @@ class MenusInputMixin:
             if screen is not None:
                 screen.close()
             self._crafting_screen = None
-            self._ui_mode = getattr(self, "_crafting_back", "field")
+            self._ui_mode = self._crafting_back
             return
         pg = self.pg
         keys = {e.key for e in events if e.type == pg.KEYDOWN}

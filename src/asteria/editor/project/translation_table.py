@@ -148,6 +148,9 @@ def _icon(name, color=None):
 class TranslationTable(QWidget):
     """Search, a Show filter, Fill from the engine's translation, and the grouped rows."""
 
+    # defaults until something sets them (code may read them first)
+    _data_cache = None
+
     changed = Signal()
 
     def __init__(self, document=None, parent=None):
@@ -263,7 +266,7 @@ class TranslationTable(QWidget):
         """The project's data rows (``data_translation.data_groups``), worked out again when
         the rows are set or the document changed (an undo of Give dialogue lines keys...)."""
         stamp = (id(self._project()), getattr(self.document, "revision", None))
-        cached = getattr(self, "_data_cache", None)
+        cached = self._data_cache
         if cached is None or cached[0] != stamp:
             cached = self._data_cache = (stamp, data_translation.data_groups(self._project()))
         return cached[1]

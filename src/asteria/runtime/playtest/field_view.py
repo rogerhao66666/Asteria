@@ -10,13 +10,8 @@ from asteria.presentation.visuals.motion_fx import EchoSettings, MotionEchoes
 from asteria.reference_data import load_sprite_sheet
 from asteria.runtime.battle.visuals import vfx_content_center, vfx_rect
 from asteria.runtime.field.ai import FieldAIComponent, VisibleEncounterComponent
-from asteria.runtime.field.camera import (
-    FieldViewCamera,
-    scene_camera_follow,
-)
-from asteria.runtime.field.presentation import (
-    FieldEffects,
-)
+from asteria.runtime.field.camera import FieldViewCamera, scene_camera_follow
+from asteria.runtime.field.presentation import FieldEffects
 from asteria.runtime.field.tile_scene_view import TileSceneView
 from asteria.runtime.playtest.support import (
     FIELD_BODY_HEIGHT,
@@ -30,10 +25,19 @@ FIELD_HINT_PANEL = 92  # screen pixels the play-test's hint panel covers at the 
 
 
 class FieldViewMixin:
+    # defaults until something sets them (code may read them first)
+    _authoritative_project_mode = False
+    _field_camera = None
+    _field_effects = None
+    _lit_last_frame = False
+    _normal_layer = None
+    _normal_layer_active = False
+    _tile_view = None
+
     @property
     def field_camera(self):
         """Field view camera (CAM-02); identity unless an event focuses or shakes it."""
-        camera = getattr(self, "_field_camera", None)
+        camera = self._field_camera
         if camera is None:
             scale = float(self.manifest["field"].get("world_to_screen_scale", 3.0))
             follow = self.manifest["field"].get("camera", {}).get("follow")
@@ -51,7 +55,7 @@ class FieldViewMixin:
     @property
     def field_effects(self):
         """Screen fades and field VFX started by event programs (EVT-02 / EVT-04)."""
-        effects = getattr(self, "_field_effects", None)
+        effects = self._field_effects
         if effects is None:
             effects = self._field_effects = FieldEffects()
         return effects
@@ -158,7 +162,7 @@ class FieldViewMixin:
             known = self._tile_scene = (scene, TileSceneView.available(scene))
         if not known[1]:
             return None
-        view = getattr(self, "_tile_view", None)
+        view = self._tile_view
         if view is not None and view.session is not self.game:
             view = None  # a loaded save is a new session: the old view still holds the old one
         if view is None:
@@ -180,9 +184,7 @@ class FieldViewMixin:
             if not hasattr(view, "_offline_class_looks"):
                 view._offline_class_looks = view._apply_class_looks
                 view._apply_class_looks = lambda: None
-        elif not getattr(self, "_authoritative_project_mode", False) and hasattr(
-            view, "_offline_class_looks"
-        ):
+        elif not self._authoritative_project_mode and hasattr(view, "_offline_class_looks"):
             view._apply_class_looks = view._offline_class_looks
             del view._offline_class_looks
         return view
@@ -309,10 +311,10 @@ class FieldViewMixin:
 
     def _begin_normals(self):
         """Prepare a flat normal layer when last frame's environment lit the world on the GPU."""
-        if self.gpu is None or not getattr(self, "_lit_last_frame", False):
+        if self.gpu is None or not self._lit_last_frame:
             self._normal_layer_active = False
             return
-        if getattr(self, "_normal_layer", None) is None or self._normal_layer.get_size() != (
+        if self._normal_layer is None or self._normal_layer.get_size() != (
             self.width,
             self.height,
         ):
@@ -323,7 +325,7 @@ class FieldViewMixin:
     def _blit_normal(self, image_path, source_rect, size, position):
         """Draw the normal-map frame matching a world sprite blit (same source rect, size and
         place)."""
-        if not getattr(self, "_normal_layer_active", False):
+        if not self._normal_layer_active:
             return
         normal = self._normal_image(image_path)
         if normal is None:
@@ -535,10 +537,7 @@ class FieldViewMixin:
         self._blit_with_trail(self.game.player, pf, position)
         for image, at in front:
             self.screen.blit(image, at)
-        if (
-            getattr(self, "_normal_layer_active", False)
-            and self._normal_image(sheet_path) is not None
-        ):
+        if self._normal_layer_active and self._normal_image(sheet_path) is not None:
             fw, fh = self.manifest["field"]["player_frame_size"]
             row = walking_row_index(self.game.facing)
             col = walking_pattern_index(self._field_step) if moving else 1

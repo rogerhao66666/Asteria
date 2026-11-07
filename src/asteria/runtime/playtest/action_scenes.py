@@ -7,9 +7,13 @@ from asteria.runtime.field.character_control import CharacterController2DCompone
 
 class ActionSceneMixin:
     # -- action scenes (ASTERIA_SPEC §20; D22 A8) -------------------------------------------------
+    # defaults until something sets them (code may read them first)
+    _action_hud = None
+    _click_path = None
+
     @property
     def action_hud(self):
-        hud = getattr(self, "_action_hud", None)
+        hud = self._action_hud
         if hud is None:
             from asteria.runtime.action.play import ActionHud
 
@@ -23,7 +27,7 @@ class ActionSceneMixin:
             self.game.prepare_action_player()
         actions = dict(self.input.current.actions)
         dx, dy = self._click_move_vector(*self.input.current.movement_vector(), dt)
-        if getattr(self, "_click_path", None) is not None:  # walking to a click (D85)
+        if self._click_path is not None:  # walking to a click (D85)
             for name, value in (
                 ("move_left", -dx),
                 ("move_right", dx),

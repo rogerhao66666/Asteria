@@ -36,6 +36,10 @@ class TileGrid(QWidget):
     and a tileset wider than the panel is cut into strips laid under each other (the way RPG
     Maker's palette wraps a tileset), each strip keeping its tiles side by side."""
 
+    # defaults until something sets them (code may read them first)
+    _lines = 0
+    _pages = ()
+
     if Signal is not None:
         blockSelected = Signal(object)  # rows of tile ids
 
@@ -179,7 +183,7 @@ class TileGrid(QWidget):
         self._col_at = {}  # (line, shown column) -> atlas column
         self._pieces = []  # (line, shown column, first atlas column, last atlas column)
         line, x = 0, 0
-        for first, last in getattr(self, "_pages", ()):
+        for first, last in self._pages:
             column = first
             while column <= last:
                 width = min(per, last - column + 1)
@@ -212,7 +216,7 @@ class TileGrid(QWidget):
 
     def strips(self):
         """How many lines the pages take."""
-        return getattr(self, "_lines", 0)
+        return self._lines
 
     def _strip_height(self):
         return self._rows * self._cell_px()[1] + self.GAP

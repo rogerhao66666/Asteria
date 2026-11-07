@@ -4510,3 +4510,27 @@ manifest 的鍵與畫面名 `pokenav`，以及註解、說明文字、手冊裡�
 
 **證據：** `tests/test_creature_menu.py::test_the_navigator_opens_its_rows_screens_under_its_old_name_too`
 （新鍵與舊鍵都測）、`tests/test_creature_screens_v5.py`（說明文字都有中文）、`docs/BUILT_IN_TEXT_KEYS.md` 重新產生。
+
+## D106 — 最後兩個大類別拆開、安全的 getattr 換成宣告、範本不帶建置工具、live check 的私人覆寫搬出 repo（2026-11-07）
+
+**問題：** D104／D105 留下幾項「刻意不改」：`BattleRuntime`（1080 行）與 `SceneViewportWidget`（1051 行）還是
+大類別；171 處 `getattr(self, "x", 預設)`；`templates/action_rpg/lucifer_art.py` 不能單獨匯入；
+`scripts/creature_battle_live_check.py --emerald` 在引擎 repo 裡寫著原作的名字與字詞。
+
+**決定：**
+- **`BattleRuntime`：** 隊伍、回合佇列、行動與結果這些資料型別搬到 `rpg/battle/runtime_types.py`（`asteria.rpg`
+  的名字照舊）；方法分成 `runtime_roster`（成員、上場、召喚、變身、逃跑）、`runtime_actions`（送出、預覽、
+  執行、反應、連段、AI 的回合）、`runtime_turns`（下一個行動者、冷卻、回合、快照、結果）。`core.py` 剩建構。
+- **`SceneViewportWidget`：** 分成 `viewport_tiles`、`viewport_framing`、`viewport_painting`、`viewport_input`；
+  `shown_combat_boxes` 搬到 `collision_overlay.py`。每個 mixin 只匯入自己用到的 Qt 名字。
+- **getattr：** 只換安全的 121 個名字（固定的預設值、不是 dataclass／`__slots__`、不和方法同名），在類別上
+  宣告預設值，方法裡直接讀。`PlayableTestRuntime` 與編輯器的 `play.py` 維持原寫法：測試拿替身物件呼叫它們。
+  剩 41 處，都是要算出來的預設值或替身物件會走到的路徑。
+- **範本：** `lucifer_art.py` 是建置工具（需要 `art.py` 與 repo 的腳本），範本同步時跟 `art.py` 一樣略過。
+- **live check：** `--emerald DIR` 改成通用的 `--skin FILE DIR`：讀專案自己的 skin 檔（美術、改名、字詞、音樂）。
+  AsteriaEmerald 的表搬到它自己的 `tools/battle_check_skin.py`。順手修了這支 live check 本來就會卡住的地方：
+  訓練家要換下一隻時會問「要換嗎？」，腳本現在回答 NO；第一下打空時再打一次。步數 31 → 32。
+- AsteriaEmerald 用原作的原始碼重新建置：與手改的結果只差兩個鍵的順序。
+
+**證據：** 完整測試 3910 passed 加上修正後重跑的 11 個；`creature_battle_live_check`（一般與 skin）32 步通過、
+AsteriaEmerald 的 `field_items_live_check`、`screens_live_check` 通過；`ruff`、`sync_templates --check`。

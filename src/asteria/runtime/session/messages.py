@@ -6,13 +6,15 @@ from asteria.presentation.text.message_codes import MessageContext, expand_messa
 from asteria.rpg.data.tag_definitions import definition_for
 from asteria.rpg.text import data_text
 from asteria.rpg.text.effect_text import amount, modifier_lines
-from asteria.runtime.session.support import (
-    GameSessionError,
-)
+from asteria.runtime.session.support import GameSessionError
 
 
 class MessagesMixin:
     # --- messages, translation and the message log ------------------------------------------
+    # defaults until something sets them (code may read them first)
+    name_input_request = None
+    picture_choice_request = None
+
     @property
     def message_settings(self):
         values = self.project.rpg_database.message_settings
@@ -225,7 +227,7 @@ class MessagesMixin:
 
     def name_input_pet(self):
         """The creature being named by the open name screen, or None."""
-        request = getattr(self, "name_input_request", None) or {}
+        request = self.name_input_request or {}
         target = str(request.get("target", ""))
         if not target.startswith("pet:"):
             return None
@@ -236,7 +238,7 @@ class MessagesMixin:
 
     def finish_name_input(self, name):
         """The name screen's answer: the variable or the creature's nickname gets ``name``."""
-        request = getattr(self, "name_input_request", None)
+        request = self.name_input_request
         if not request:
             return False
         target = request["target"]
@@ -256,7 +258,7 @@ class MessagesMixin:
         return self.picture_choice_request
 
     def finish_picture_choice(self, value):
-        request = getattr(self, "picture_choice_request", None)
+        request = self.picture_choice_request
         if not request:
             return False
         if request["variable"] and value is not None:

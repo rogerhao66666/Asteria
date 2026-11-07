@@ -36,6 +36,12 @@ from asteria.graphics import TileLayer
 class PlacementMixin:
     """Putting things on the map."""
 
+    # defaults until something sets them (code may read them first)
+    _pending_character_name = None
+    _pending_character_visual = None
+    _placement_status_widget = None
+    tool_strip = None
+
     def begin_character_placement(self, visual, status_widget=None, ghost=None):
         """Switch to Scene and wait for one map-cell click to place a ``CharacterVisualSet``;
         ``ghost`` (a QPixmap of the character) rides under the mouse until then."""
@@ -57,13 +63,13 @@ class PlacementMixin:
         return bundle
 
     def _strip_sync(self, mode=None):
-        strip = getattr(self, "tool_strip", None)
+        strip = self.tool_strip
         if strip is not None:
             strip.sync(mode or self.viewport.tile_tools.mode)
 
     def cancel_character_placement(self):
         """Forget the character waiting to be placed (Escape over the map)."""
-        if getattr(self, "_pending_character_visual", None) is None:
+        if self._pending_character_visual is None:
             return
         self._pending_character_visual = None
         self._placement_status_widget = None
@@ -262,12 +268,12 @@ class PlacementMixin:
 
     def _place_character_at(self, cell):
         """Commit the pending ``CharacterVisualSet`` at the map cell clicked in Scene."""
-        visual = getattr(self, "_pending_character_visual", None)
+        visual = self._pending_character_visual
         if visual is None:
             return None
         project = self.document.project
         scene = self.viewport.current_scene()
-        status_widget = getattr(self, "_placement_status_widget", None) or self._status_sink()
+        status_widget = self._placement_status_widget or self._status_sink()
         if project is None or scene is None:
             self.viewport.end_character_placement()
             self._strip_sync()
@@ -283,7 +289,7 @@ class PlacementMixin:
                     scene,
                     cell,
                     visual,
-                    display_name=getattr(self, "_pending_character_name", None),
+                    display_name=self._pending_character_name,
                     tile_size=self.viewport._tile_size(),
                 )
             else:
@@ -292,7 +298,7 @@ class PlacementMixin:
                     project,
                     scene,
                     cell,
-                    display_name=getattr(self, "_pending_character_name", None),
+                    display_name=self._pending_character_name,
                     tile_size=self.viewport._tile_size(),
                 )
             self.document.execute(command)

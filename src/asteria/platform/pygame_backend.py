@@ -32,6 +32,11 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
     Engine/editor/project layers never receive pygame objects.
     """
 
+    # defaults until something sets them (code may read them first)
+    _l0 = None
+    _pending_text = None
+    _rect_layer = None
+
     def __init__(self, input_map=None):
         try:
             import pygame
@@ -126,7 +131,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
 
     def draw_rects(self, rects):
         """Flat rectangles ``(x, y, w, h, (r, g, b, a))`` in screen pixels (weather particles)."""
-        layer = getattr(self, "_rect_layer", None)
+        layer = self._rect_layer
         if layer is None or layer.get_size() != self.screen.get_size():
             layer = self._rect_layer = self.pg.Surface(self.screen.get_size(), self.pg.SRCALPHA)
         layer.fill((0, 0, 0, 0))
@@ -167,12 +172,12 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
                 unsupported,
             )
 
-            if getattr(self, "_l0", None) is None:
+            if self._l0 is None:
                 self._l0 = PygameEnvironmentRenderer(self.pg)
             self._l0.time = self.environment_time
             self._l0.apply(self.screen, env)
             self.environment_unsupported = unsupported(env)
-            text, self._pending_text = getattr(self, "_pending_text", None), None
+            text, self._pending_text = self._pending_text, None
             if text is not None:
                 self.draw_text_box(text, _now=True)
         self.pg.display.flip()

@@ -33,6 +33,10 @@ class EventVM:
     top without changing the VM state contract.
     """
 
+    # defaults until something sets them (code may read them first)
+    _until = None
+    _until_limit = False
+
     def __init__(
         self,
         program: EventProgram,
@@ -81,11 +85,11 @@ class EventVM:
             raise ValueError("dt must be >= 0")
         if self.state.status != EventVMStatus.WAITING:
             return self.state.status
-        until = getattr(self, "_until", None)
+        until = self._until
         if until is not None:  # WAIT until: still waiting while the condition is false
             if until.evaluate(self.context):
                 self.state.wait_remaining = 0.0
-            elif not getattr(self, "_until_limit", False):
+            elif not self._until_limit:
                 return self.state.status
             elif self.state.wait_remaining - dt > 0.0:  # (seconds too: the time runs out)
                 self.state.wait_remaining -= dt

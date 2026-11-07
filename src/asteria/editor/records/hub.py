@@ -562,6 +562,9 @@ class SkillTreeGraphView(QGraphicsView):
     name, ranks and what it gives (coloured by kind), arrows from each prerequisite (dashed for
     "any of"). Cards can be dragged (Save Graph Layout keeps them); Ctrl + wheel zooms."""
 
+    # defaults until something sets them (code may read them first)
+    _edge_items = ()
+
     def __init__(self, parent=None, *, document=None):
         if not QT_AVAILABLE:
             raise RuntimeError("PySide6 is required")
@@ -755,7 +758,7 @@ class SkillTreeGraphView(QGraphicsView):
         from PySide6.QtCore import QPointF
         from PySide6.QtGui import QBrush, QColor, QPainterPath, QPen, QPolygonF
 
-        for item in getattr(self, "_edge_items", ()):
+        for item in self._edge_items:
             self.scene_graph.removeItem(item)
         self._edge_items = []
         for source, target, either in self._edges:

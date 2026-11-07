@@ -586,7 +586,7 @@ class EnemyAIRuntime:
         )
 
     def execute_decision(self, battle, decision, *, rng=None):
-        from asteria.rpg.battle.core import BattleAction
+        from asteria.rpg.battle.runtime_types import BattleAction
 
         if decision.action_kind == "ability":
             ability_id = required_id(decision.payload.get("ability_id"), "ability_id")

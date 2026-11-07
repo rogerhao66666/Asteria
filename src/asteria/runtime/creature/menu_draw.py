@@ -15,6 +15,9 @@ from asteria.runtime.pointer import hand_over
 class CreatureMenuDrawMixin:
     """Drawing the start menu and each of its screens."""
 
+    # defaults until something sets them (code may read them first)
+    teach_ask = ""
+
     # -- drawing -------------------------------------------------------------------------------
     def draw(self):
         s = self.surface
@@ -327,7 +330,7 @@ class CreatureMenuDrawMixin:
         if self.note:
             self._message_window(self.note)
             return
-        self._message_window(getattr(self, "teach_ask", ""))
+        self._message_window(self.teach_ask)
         rows = [self.tr("creature.yes", "YES"), self.tr("creature.no", "NO")]
         self._list_window(rows, self.action_cursor, W - 2, H - 48)
 

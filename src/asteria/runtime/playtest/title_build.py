@@ -8,6 +8,9 @@ from asteria.runtime.save_slots import SaveSlots
 
 
 class TitleBuildMixin:
+    # defaults until something sets them (code may read them first)
+    _title_running = ""
+
     def _draw_title(self):
         c = self.menu_canvas("title", {"game.title": self.manifest.get("title", "")})
         layout = c.layout
@@ -110,7 +113,7 @@ class TitleBuildMixin:
     def _title_program_frame(self, events, dt, program):
         """One frame of a title screen made as an event program: its pictures, sounds and
         choices; TITLE_COMMAND says where it goes."""
-        if getattr(self, "_title_running", "") != program:
+        if self._title_running != program:
             self._start_title_program(program)
         game = self.game
         self._dialogue_input(events)

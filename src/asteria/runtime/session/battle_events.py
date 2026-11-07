@@ -10,13 +10,15 @@ from asteria.events import LifecycleEventBridge
 from asteria.events.scheduler import EventScheduleMode, ScheduledEventSpec
 from asteria.rpg.items.disassembly import disassemble
 from asteria.rpg.world.new_game_plus import carry_over
-from asteria.runtime.session.support import (
-    GameSessionError,
-)
+from asteria.runtime.session.support import GameSessionError
 
 
 class BattleEventsMixin:
     # -- battle events (EVT-03) -------------------------------------------------------------------
+    # defaults until something sets them (code may read them first)
+    _revealed_weaknesses = None
+    refine_rng = None
+
     def _battle_hook_bus(self):
         """A fresh hook bus per battle; project lifecycle bindings on ``rpg.battle.*`` hooks run as
         battle events."""
@@ -176,7 +178,7 @@ class BattleEventsMixin:
         funds = self.save.rpg_state.currencies
         if cost and funds.get(rules.currency, 0.0) < cost:
             raise GameSessionError(f"a refine costs {cost:g} {rules.currency}")
-        rng = getattr(self, "refine_rng", None)  # a test or replay may fix the rolls
+        rng = self.refine_rng  # a test or replay may fix the rolls
         before = item.refine_level
         result = rules.attempt(item, rng or (self.battle.rng if self.mode == "battle" else None))
         if cost:
@@ -262,7 +264,7 @@ class BattleEventsMixin:
     def revealed_weaknesses(self):
         """``{(enemy kind, interaction rule id)}`` found by hitting a weakness (kept for the whole
         session)."""
-        values = getattr(self, "_revealed_weaknesses", None)
+        values = self._revealed_weaknesses
         if values is None:
             values = self._revealed_weaknesses = set()
         return values

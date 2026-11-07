@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from asteria.core import Transform
 from asteria.events import SceneEventRuntime
-from asteria.runtime.session.support import (
-    GameSessionError,
-)
+from asteria.runtime.session.support import GameSessionError
 
 
 class SceneEventsMixin:
+    # defaults until something sets them (code may read them first)
+    sighting = None
+
     def check_visible_encounter(self):
         """Start the encounter of a field enemy (VisibleEncounterComponent) the player touches."""
         from asteria.runtime.field.ai import VisibleEncounterComponent, touched_encounter
@@ -47,7 +48,7 @@ class SceneEventsMixin:
             self.events.busy
             or (self.scene_events is not None and self.scene_events.scheduler.autorun_busy)
             or self.common_events.autorun_busy
-            or getattr(self, "sighting", None) is not None
+            or self.sighting is not None
         )
 
     def _all_runners(self):

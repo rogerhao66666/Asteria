@@ -14,31 +14,36 @@ from asteria.runtime.battle.visuals import (
     vfx_placement,
     vfx_rect,
 )
-from asteria.runtime.scene.camera import (
-    Camera2D,
-)
+from asteria.runtime.scene.camera import Camera2D
 
 
 class BattleFrameMixin:
     """One frame of the battle screen: updating and drawing what the presentation shows."""
 
+    # defaults until something sets them (code may read them first)
+    _background_cache = None
+    _background_image = None
+    _camera_view = None
+    _hit_stop = 0.0
+    camera_director = None
+
     # -- frame --------------------------------------------------------------
     def _start_hit_stop(self, duration):
         """Freeze the action for ``duration`` seconds at an impact (BTL-04 hit-stop)."""
-        self._hit_stop = max(getattr(self, "_hit_stop", 0.0), float(duration))
+        self._hit_stop = max(self._hit_stop, float(duration))
 
     def update(self, dt):
         if not self._ensure():
             return
         game = self.host.game
         dt = float(dt)
-        frozen = min(dt, getattr(self, "_hit_stop", 0.0))
+        frozen = min(dt, self._hit_stop)
         if frozen > 0:
             self._hit_stop -= frozen
             dt -= frozen  # the presentation clock and animations hold during hit-stop
         self._clock += dt
         self._release_due()
-        director = getattr(self, "camera_director", None)
+        director = self.camera_director
         if director is not None:
             self._camera_view = self._clamped_view(
                 director, director.update(dt, (*self._camera_center, 1.0))
@@ -46,7 +51,7 @@ class BattleFrameMixin:
 
         # names and captions over heads wait while the camera is zoomed in (a boss intro, a
         # close-up) and while actions play: a growing or lunging figure would run under them
-        view = getattr(self, "_camera_view", None)
+        view = self._camera_view
         self.screen.overhead_hidden = (view is not None and view[2] > 1.001) or self.busy()
         if game.battle is not None:
             self._show_new_combatants(game)
@@ -165,7 +170,7 @@ class BattleFrameMixin:
 
     def _background(self):
         """The battle background image, or a plain backdrop when the project has none."""
-        cached = getattr(self, "_background_image", None)
+        cached = self._background_image
         if cached is not None:
             return cached
         pg = self.host.pg
@@ -190,7 +195,7 @@ class BattleFrameMixin:
         if not self._ensure():
             return None
         layout = self.screen.composer.layout
-        cx, cy, zoom = getattr(self, "_camera_view", None) or (
+        cx, cy, zoom = self._camera_view or (
             layout.virtual_width / 2,
             layout.virtual_height / 2,
             1.0,
@@ -279,7 +284,7 @@ class BattleFrameMixin:
     def _scaled_background(self, background, size):
         """The battlefield picture at ``size``: scaled once while the camera holds still (it was
         smoothed again every frame), in the screen's pixel format (a quicker blit)."""
-        cached = getattr(self, "_background_cache", None)
+        cached = self._background_cache
         if cached is not None and cached[0] is background and cached[1] == size:
             return cached[2]
         pg = self.host.pg

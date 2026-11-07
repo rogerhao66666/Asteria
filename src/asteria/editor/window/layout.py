@@ -34,6 +34,14 @@ if QApplication is not None:
 class WindowLayoutMixin:
     """Docks and layout of the main window."""
 
+    # defaults until something sets them (code may read them first)
+    _console_waits = False
+    _docks_mode = None
+    _focus_on = False
+    _shown_once = False
+    focus_mode_action = None
+    panel_switches = ()
+
     def _schedule_dock_tab_cleanup(self, *_):
         QTimer.singleShot(0, self, self.hide_stale_dock_tab_bars)
 
@@ -112,12 +120,12 @@ class WindowLayoutMixin:
 
     def _sync_panel_switches(self):
         current = self.current_left_tab()
-        for switch in getattr(self, "panel_switches", ()):
+        for switch in self.panel_switches:
             switch.sync(current)
 
     def _switch_workspace_docks(self, mode):
         states = self._workspace_dock_states
-        previous = getattr(self, "_docks_mode", None)
+        previous = self._docks_mode
         if previous == mode or not hasattr(self, "_default_dock_state"):
             self._docks_mode = mode
             return
@@ -140,7 +148,7 @@ class WindowLayoutMixin:
 
         on = bool(on)
         hidden = self._focus_hidden
-        if on == bool(hidden) and on == getattr(self, "_focus_on", False):
+        if on == bool(hidden) and on == self._focus_on:
             return
         self._focus_on = on
         if on:
@@ -163,7 +171,7 @@ class WindowLayoutMixin:
                 except RuntimeError:  # deleted while folded (a page rebuilt)
                     pass
             self.hide_stale_dock_tab_bars()
-        action = getattr(self, "focus_mode_action", None)
+        action = self.focus_mode_action
         if action is not None and action.isChecked() != on:
             action.blockSignals(True)
             action.setChecked(on)
@@ -176,7 +184,7 @@ class WindowLayoutMixin:
 
     def showEvent(self, event):
         super().showEvent(event)
-        if not getattr(self, "_shown_once", False):
+        if not self._shown_once:
             self._shown_once = True
             # the left panel opens on Project: once the docks are laid out (a restored layout
             # picks its own tab while the window first appears), and again after a moment
@@ -260,7 +268,7 @@ class WindowLayoutMixin:
 
     def _console_written(self):
         """The Console opens itself the first time something is written to it."""
-        if not getattr(self, "_console_waits", False) or not self.console.toPlainText().strip():
+        if not self._console_waits or not self.console.toPlainText().strip():
             return
         self._console_waits = False
         dock = self.findChild(QDockWidget, "ConsoleDock")
