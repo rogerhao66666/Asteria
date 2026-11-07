@@ -1,7 +1,7 @@
 from pathlib import PurePosixPath
 
-from .cache import ImportArtifact, artifact_key
-from .change_detection import detect_import_status, settings_hash
+from asteria.assets.cache import ImportArtifact, artifact_key
+from asteria.assets.change_detection import detect_import_status, settings_hash
 
 
 class ImportPipeline:

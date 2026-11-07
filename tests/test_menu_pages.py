@@ -8,8 +8,8 @@ import pytest
 from test_session_events import _project
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import FORMS, GameSystemsAuthoringController
-from asteria.rpg.menu_rules import ItemCategory, ItemFilter, MenuRules, menu_rules
+from asteria.editor.rpg.game_systems_authoring import FORMS, GameSystemsAuthoringController
+from asteria.rpg.menus.rules import ItemCategory, ItemFilter, MenuRules, menu_rules
 from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
@@ -53,7 +53,7 @@ def test_menu_pages_are_a_game_systems_record_that_survives_the_form():
     assert {f.key for f in FORMS["menu_rules"]} <= set(data)
     api.edit("menu_rules", "pages", data)
     assert api.get("menu_rules", "pages") == RULES
-    from asteria.rpg.actors import RpgDatabase
+    from asteria.rpg.data.database import RpgDatabase
 
     restored = RpgDatabase.from_data(document.project.rpg_database.to_data())
     assert menu_rules(restored) == RULES
@@ -81,7 +81,7 @@ def window():
 def test_the_menu_pages_form_shows_and_applies(window):
     """D96: a page's blocks are a table; an Item List block shows its tabs, filters and
     details, and only those."""
-    from asteria.rpg.menu_pages import MenuBlock, MenuPage
+    from asteria.rpg.menus.pages import MenuBlock, MenuPage
 
     page = MenuPage(
         "bag",
@@ -125,7 +125,7 @@ def test_the_menu_pages_form_shows_and_applies(window):
 def test_the_editor_words_the_new_form_in_chinese():
     import json
 
-    from asteria.editor.game_systems_authoring import _MENU_BLOCK
+    from asteria.editor.rpg.game_systems_authoring import _MENU_BLOCK
 
     table = json.loads(
         (
@@ -268,7 +268,7 @@ def test_the_pages_draw_fitted_in_chinese_with_clicks_where_they_show(host):
 
 
 def test_default_item_tabs_without_menu_pages():
-    from asteria.runtime.status_menu import StatusMenu
+    from asteria.runtime.menus.status import StatusMenu
 
     class Game:
         project = _project()
@@ -317,7 +317,7 @@ def test_the_pause_menu_adds_and_removes_pages_and_event_entries(window):
     goes back to the engine's."""
     from PySide6.QtCore import Qt
 
-    from asteria.editor.pause_menu_widget import _new_id
+    from asteria.editor.rpg.pause_menu_widget import _new_id
 
     editor = window.game_systems_editor
     api = editor.controller

@@ -1,5 +1,5 @@
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.inspector import (
+from asteria.editor.scene.inspector import (
     build_follow_entity_choices,
     build_inspector_fields,
 )

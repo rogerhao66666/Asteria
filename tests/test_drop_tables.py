@@ -6,7 +6,7 @@ from dataclasses import replace
 
 import pytest
 
-from asteria.rpg.drop_tables import DropEntry, DropTable, PityRule, roll_drop_table
+from asteria.rpg.items.drop_tables import DropEntry, DropTable, PityRule, roll_drop_table
 
 
 def test_weighted_picks_follow_their_weights_and_no_drop():
@@ -117,7 +117,7 @@ def test_drop_tables_are_edited_in_the_game_systems_forms_and_validated():
     from pathlib import Path
 
     from asteria.editor import EditorDocument
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
     from asteria.project import Project
 
     ref = (

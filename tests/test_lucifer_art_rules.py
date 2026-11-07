@@ -26,8 +26,8 @@ def test_the_party_uses_left_strips_and_the_foes_right_ones():
 
 
 def test_art_that_already_faces_left_is_not_turned_round():
-    from asteria.presentation.battle import BattleCombatantVisual, BattleVisualAnchor
-    from asteria.presentation.battle_runtime import _mirrored
+    from asteria.presentation.battle.runtime import _mirrored
+    from asteria.presentation.battle.scene import BattleCombatantVisual, BattleVisualAnchor
 
     def visual(facing, art="right"):
         return BattleCombatantVisual(
@@ -171,6 +171,14 @@ ACTION_ROOTS = (
 )
 
 
+def _art_source(root):
+    """The lucifer_art.py that built ``root`` (the offline demo's code builds both demos)."""
+    own = root / "lucifer_art.py"
+    return (own if own.is_file() else ROOT.parent / "arpg_demo" / "lucifer_art.py").read_text(
+        "utf-8"
+    )
+
+
 @pytest.mark.parametrize("root", ACTION_ROOTS, ids=lambda r: r.name)
 @pytest.mark.parametrize("name", ("hero", "smith", "trainer_warrior"))
 def test_the_warrior_cuts_from_above_whichever_way_it_faces(root, name):
@@ -199,7 +207,7 @@ def _swing_order(root):
     sys.path.insert(0, str(ROOT))
     import trial_lucifer
 
-    source = (root / "lucifer_art.py").read_text("utf-8")
+    source = _art_source(root)
     keep = []
     for node in ast.parse(source).body:
         if isinstance(node, ast.FunctionDef) and node.name == "swing_order":
@@ -369,7 +377,7 @@ def _action_space(root):
 
     keep = [
         node
-        for node in ast.parse((root / "lucifer_art.py").read_text("utf-8")).body
+        for node in ast.parse(_art_source(root)).body
         if isinstance(node, ast.Assign)
         and getattr(node.targets[0], "id", "") in ("ACTIONS", "SHORT_WINDUP")
     ]

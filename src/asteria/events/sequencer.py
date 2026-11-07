@@ -33,9 +33,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .program import EventInstruction, EventProgram
-from .state import EventVMStatus
-from .vm import EventVM
+from asteria.events.program import EventInstruction, EventProgram
+from asteria.events.state import EventVMStatus
+from asteria.events.vm import EventVM
 
 INTRINSIC = {
     "WAIT",

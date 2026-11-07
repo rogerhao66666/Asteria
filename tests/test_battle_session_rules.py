@@ -7,7 +7,7 @@ import pytest
 
 from asteria.project import Project
 from asteria.rpg import BattleSessionRules, RpgDatabase
-from asteria.rpg.targeting import TargetRelation
+from asteria.rpg.battle.targeting import TargetRelation
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
@@ -150,7 +150,7 @@ def test_runtime_contains_no_project_specific_battle_ids():
     pattern = re.compile(r"""["'](""" + "|".join(names) + r""")["']""")
     offenders = [
         f"{path.name}:{number}"
-        for path in sorted((REPO / "src" / "asteria" / "runtime").glob("*.py"))
+        for path in sorted((REPO / "src" / "asteria" / "runtime").rglob("*.py"))
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
         if pattern.search(line)
     ]

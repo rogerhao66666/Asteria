@@ -9,8 +9,7 @@ from asteria.rpg import (
     FormationSlotDefinition,
     Party,
 )
-
-from .playable_battle_party import build_playable_party_scenario
+from asteria.validation.playable_battle_party import build_playable_party_scenario
 
 
 @dataclass(frozen=True, slots=True)

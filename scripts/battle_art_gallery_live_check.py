@@ -36,8 +36,8 @@ def main(argv=None):
     from PIL import Image
 
     from asteria.project import Project
-    from asteria.runtime.battle_presentation_adapters import PygameTextureDrawer
-    from asteria.runtime.battle_visuals import (
+    from asteria.runtime.battle.presentation import PygameTextureDrawer
+    from asteria.runtime.battle.visuals import (
         BattleVisualResolver,
         vfx_content_center,
         vfx_placement,

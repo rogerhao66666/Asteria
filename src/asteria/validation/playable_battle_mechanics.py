@@ -37,8 +37,7 @@ from asteria.rpg import (
     Party,
     PartyMember,
 )
-
-from .playable_rpg import PlayableRpgValidationHarness
+from asteria.validation.playable_rpg import PlayableRpgValidationHarness
 
 
 @dataclass(slots=True)

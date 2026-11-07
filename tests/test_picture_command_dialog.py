@@ -3,8 +3,8 @@
 import pytest
 
 from asteria.assets import AssetRecord
-from asteria.editor.model import EditorDocument
-from asteria.editor.picture_command_dialog import PictureCommandDialog
+from asteria.editor.events.picture_dialog import PictureCommandDialog
+from asteria.editor.project.model import EditorDocument
 from asteria.project import Project
 
 
@@ -125,7 +125,7 @@ def test_colours_are_picked_and_the_rest_chosen_from_lists(app, tmp_path):
 def test_browse_makes_a_picture_from_anywhere_one_of_the_projects(app, tmp_path):
     from PySide6.QtGui import QColor, QImage
 
-    from asteria.editor.image_tools import PictureLibrary
+    from asteria.editor.assets.image_tools import PictureLibrary
 
     outside = tmp_path / "elsewhere"
     outside.mkdir()
@@ -198,7 +198,7 @@ def test_the_preview_scrolls_waves_and_cycles_as_time_goes_by(app, tmp_path):
     left = dialog.frame_pixmap(age=0.0).toImage().pixelColor(0, 4)
     assert left.blue() > 150  # the first cell starts with the blue column
     assert dialog.frame_pixmap(age=0.5).toImage().pixelColor(0, 4).blue() < 100
-    from asteria.editor.picture_preview import cycled_frame
+    from asteria.editor.events.picture_preview import cycled_frame
 
     assert cycled_frame(1, 2, 4, True, 2.0) == 1
     assert cycled_frame(1, 2, 4, False, 2.0) == 3
@@ -208,8 +208,8 @@ def test_the_preview_scrolls_waves_and_cycles_as_time_goes_by(app, tmp_path):
 def test_the_preview_draws_words_in_their_colours_and_font(app, tmp_path):
     from PySide6.QtGui import QColor, QImage
 
-    from asteria.editor.menu_layout_authoring import MenuLayoutAuthoringController
-    from asteria.presentation.menu_layout import MenuBitmapFont
+    from asteria.editor.menus.layout_authoring import MenuLayoutAuthoringController
+    from asteria.presentation.screens.menu_layout import MenuBitmapFont
 
     dialog = _picture_dialog(tmp_path, text="Hi", text_color="0,255,0", shadow_color="255,0,0")
     image, is_words = dialog.picture_image()

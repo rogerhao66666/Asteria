@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from asteria.presentation.battle_layout import BattleScreenLayout
-from asteria.presentation.battle_ui import BattleUiPanel, BattleUiText
-from asteria.presentation.menu_layout import MenuElement, MenuLayout
+from asteria.presentation.battle.layout import BattleScreenLayout
+from asteria.presentation.battle.ui_parts import BattleUiPanel, BattleUiText
+from asteria.presentation.screens.menu_layout import MenuElement, MenuLayout
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 PURPLE, GOLD = (30, 0, 60, 255), (200, 160, 0, 255)
@@ -212,7 +212,7 @@ def test_the_editor_preview_opens_a_battle_and_measures_it_in_battle_units():
     pytest.importorskip("pygame")
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.menu_preview import MenuPreview
+    from asteria.runtime.menus.preview import MenuPreview
 
     project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     preview = MenuPreview(project, ROOT, size=(960, 540))

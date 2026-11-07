@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from asteria.core import Transform
-
-from .support import (
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 
@@ -12,7 +11,7 @@ from .support import (
 class NpcStateMixin:
     # -- NPC state (WLD-02) -----------------------------------------------------------------------
     def _record_npc(self, entity):
-        from asteria.runtime.npc_state import NpcIdentity2DComponent
+        from asteria.runtime.field.npc_state import NpcIdentity2DComponent
 
         identity = entity.try_get(NpcIdentity2DComponent)
         if identity is None or not identity.npc_id:
@@ -91,7 +90,7 @@ class NpcStateMixin:
     def set_npc(self, npc_id, key, value):
         """Change an NPC's saved state: visible, alive, mood, stage or flag.<name>; applied to the
         scene now."""
-        from asteria.runtime.npc_state import NPC_KEYS, apply_npc_states, coerce_npc_value
+        from asteria.runtime.field.npc_state import NPC_KEYS, apply_npc_states, coerce_npc_value
 
         key = str(key)
         state = self.world.npc(npc_id)
@@ -108,7 +107,7 @@ class NpcStateMixin:
     def move_npc(self, npc_id, scene_id, x, y):
         """Relocate an NPC (possibly to another scene); it appears there when that scene is
         entered."""
-        from asteria.runtime.npc_state import apply_npc_states
+        from asteria.runtime.field.npc_state import apply_npc_states
 
         if self.project.scene(str(scene_id)) is None:
             raise GameSessionError(f"unknown scene: {scene_id}")
@@ -126,7 +125,7 @@ class NpcStateMixin:
         return self.entity_facing[entity.id]
 
     def play_animation(self, key, clip):
-        from asteria.runtime.components2d import Animator2DComponent
+        from asteria.runtime.scene.components import Animator2DComponent
 
         entity = self._sequence_entity(key)
         animator = entity.try_get(Animator2DComponent)

@@ -3,7 +3,7 @@ command menus sit on the body instead of on empty room in the frame."""
 
 import pytest
 
-from asteria.runtime.battle_visuals import member_body_height
+from asteria.runtime.battle.visuals import member_body_height
 
 
 def test_frame_height_is_the_default():

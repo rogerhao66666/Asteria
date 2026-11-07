@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from asteria.editor.commands import CommandStack, SetSkeletonCommand
+from asteria.editor.project.commands import CommandStack, SetSkeletonCommand
 from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
 from asteria.graphics.skeleton_data import load_skeleton, save_skeleton
 
@@ -47,7 +47,7 @@ def test_skeleton_json_round_trip_uses_native_asteria_format(tmp_path):
 
 
 def test_bone_edit_commands_apply_undo_and_redo_as_single_steps():
-    from asteria.editor.skeleton_editing import (
+    from asteria.editor.animation.skeleton_editing import (
         add_bone,
         delete_bone,
         edit_bone,
@@ -76,7 +76,7 @@ def test_bone_edit_commands_apply_undo_and_redo_as_single_steps():
 
 
 def test_keyframe_edit_can_add_move_edit_easing_and_delete():
-    from asteria.editor.skeleton_editing import set_key
+    from asteria.editor.animation.skeleton_editing import set_key
 
     original = sample_skeleton()
     moved = set_key(original, "walk", "arm", "rotation", 1.0, time=0.5)
@@ -95,7 +95,7 @@ def test_keyframe_edit_can_add_move_edit_easing_and_delete():
 
 
 def test_reparent_reorders_bones_and_rejects_parent_that_would_make_a_cycle():
-    from asteria.editor.skeleton_editing import edit_bone
+    from asteria.editor.animation.skeleton_editing import edit_bone
 
     original = sample_skeleton()
     moved = edit_bone(original, "arm", parent="")
@@ -115,7 +115,7 @@ def test_skeleton_widget_edits_bones_and_keys_through_command_stack(app):
     from PySide6.QtCore import QPoint, Qt
     from PySide6.QtTest import QTest
 
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
 
     widget = SkeletonViewerWidget()
     widget.set_skeleton(sample_skeleton())
@@ -159,7 +159,7 @@ def test_skeleton_widget_edits_bones_and_keys_through_command_stack(app):
 
 
 def test_skeleton_widget_saves_and_reopens_native_project_json(app, tmp_path):
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
 
     path = tmp_path / "hero.asteria.skeleton.json"
     widget = SkeletonViewerWidget()
@@ -179,8 +179,8 @@ def test_wheel_over_unfocused_skeleton_field_scrolls_panel_not_field(app):
     from PySide6.QtCore import QPoint, QPointF, Qt
     from PySide6.QtGui import QWheelEvent
 
-    from asteria.editor.decor import install
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.ui.decor import install
 
     install(app)  # the app-wide filter that hands wheel input to the scroll area
     widget = SkeletonViewerWidget()
@@ -224,8 +224,8 @@ def test_skeleton_preview_draws_slot_sprite_through_runtime_adapter(app, tmp_pat
     from PySide6.QtGui import QColor, QImage, QPainter
 
     from asteria.assets import AssetRecord, AssetRef
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.project.model import EditorDocument
     from asteria.graphics import SpriteFrame, SpriteSheet
 
     texture = QImage(4, 4, QImage.Format_ARGB32)
@@ -268,10 +268,10 @@ def test_skeleton_preview_draws_slot_sprite_through_runtime_adapter(app, tmp_pat
 
 def test_skeleton_widget_attaches_rig_as_one_undoable_scene_component(app):
     from asteria.core import Entity, Scene
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.project.model import EditorDocument
     from asteria.project import Project
-    from asteria.runtime.skeleton_component import SkeletonAnimation2DComponent
+    from asteria.runtime.scene.skeleton_component import SkeletonAnimation2DComponent
 
     project = Project("Attach skeleton")
     scene = project.add_scene(Scene("Field"))
@@ -293,8 +293,8 @@ def test_skeleton_widget_attaches_rig_as_one_undoable_scene_component(app):
 
 
 def test_skeleton_presentation_tab_floats_and_returns_to_its_tab(app):
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     window = AsteriaEditorWindow()
     try:
@@ -338,7 +338,7 @@ def test_the_canvas_and_timeline_hold_the_viewer_weakly(app):
     that PySide6 6.12 crashed collecting."""
     import gc
 
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
 
     widget = SkeletonViewerWidget()
     for part in (widget.canvas, widget.timeline):
@@ -349,7 +349,11 @@ def test_the_canvas_and_timeline_hold_the_viewer_weakly(app):
 
 
 def test_no_rig_open_offers_new_rigs_and_the_projects_rigs(app, tmp_path):
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget, humanoid_rig, project_rigs
+    from asteria.editor.animation.skeleton_widget import (
+        SkeletonViewerWidget,
+        humanoid_rig,
+        project_rigs,
+    )
 
     widget = SkeletonViewerWidget()
     assert not widget.starter.isHidden()  # the empty canvas offers a start

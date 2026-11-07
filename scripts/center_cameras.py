@@ -18,7 +18,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
-from asteria.editor.scene_cameras import add_missing_cameras, center  # noqa: E402
+from asteria.editor.scene.cameras import add_missing_cameras, center  # noqa: E402
 
 
 def center_file(folder, *, add=False):

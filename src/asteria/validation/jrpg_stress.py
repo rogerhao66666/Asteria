@@ -18,8 +18,8 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 
-from asteria.rpg.capture import CaptureRule
-from asteria.rpg.world_interactions import WorldInteraction
+from asteria.rpg.battle.capture import CaptureRule
+from asteria.rpg.world.interactions import WorldInteraction
 from asteria.runtime.game_session import GameSessionRuntime
 
 ITEMS = (

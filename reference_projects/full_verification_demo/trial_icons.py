@@ -207,7 +207,7 @@ WEAPON_RARITY = {  # a weapon's rarity: what its Lucifer picture is called (Comm
 def weapon_rarities(context):
     """Every weapon wears the rarity its picture names; Mythic is added for the Godhammer and the
     Demon Ring (weight 0: authored only, never rolled as loot)."""
-    from asteria.rpg.loot import RarityDefinition
+    from asteria.rpg.items.loot import RarityDefinition
 
     db = context.db
     if "mythic" not in db.rarities:

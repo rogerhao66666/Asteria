@@ -15,9 +15,10 @@ DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 def test_the_tag_list_is_named_without_the_usage_cards(monkeypatch):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import EditorDocument, tag_usage
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
-    from asteria.editor.game_systems_widget import GameSystemsEditorWidget
+    from asteria.editor import EditorDocument
+    from asteria.editor.rpg import tag_usage
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.editor.rpg.game_systems_widget import GameSystemsEditorWidget
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 

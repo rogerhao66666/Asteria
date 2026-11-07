@@ -14,17 +14,12 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from asteria.rpg.data_text import map_name, name_of
-
-from .game_save import GameRuntimeSave
+from asteria.rpg.text.built_in_text import english
+from asteria.rpg.text.data_text import map_name, name_of
+from asteria.runtime.game_save import GameRuntimeSave
 
 SLOT_COUNT = 3
 AUTOSAVE = "autosave"
-
-
-def _english(key, english, **params):
-    """A message's English (no translations): ``tr``'s stand-in."""
-    return english.format(**params) if params else english
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,7 +39,7 @@ class SlotInfo:
     def summary_text(self, tr=None):
         """The slot's line under its name; ``tr`` (``GameSessionRuntime.tr``) words it in the
         player's language."""
-        tr = tr or _english
+        tr = tr or english
         if self.error:
             return tr("slots.damaged", "damaged save ({error})", error=self.error)
         if not self.exists:
@@ -130,7 +125,7 @@ class SlotMenu:
             raise ValueError("mode must be save or load")
         self.slots = slots
         self.mode = mode
-        self.tr = tr or _english  # GameSessionRuntime.tr: messages in the player's language
+        self.tr = tr or english  # GameSessionRuntime.tr: messages in the player's language
         self.row = 0 if mode == "load" else 1  # saving starts on slot 1, not the autosave
         self.pending = None  # ("overwrite" | "delete", slot) awaiting confirmation
         self.message = ""

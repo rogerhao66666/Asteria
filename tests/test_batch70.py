@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from asteria.presentation.attachments import (
+from asteria.presentation.visuals.attachments import (
     Attachment,
     Socket,
     SocketKey,

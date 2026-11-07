@@ -8,8 +8,8 @@ import uuid
 from collections.abc import Mapping
 from typing import Any
 
-from .adapter import AdapterUpdate
-from .rules import default_rules, validate_rules
+from asteria.multiplayer.adapter import AdapterUpdate
+from asteria.multiplayer.rules import default_rules, validate_rules
 
 
 class CooperativeBossAdapter:

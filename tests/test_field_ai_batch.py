@@ -11,11 +11,11 @@ from asteria import kernels
 from asteria.core import Entity, Scene, Transform
 from asteria.kernels import _python
 from asteria.runtime import FieldAIComponent, FieldAISystem
-from asteria.runtime.character_control import (
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     CharacterControllerSystem,
 )
-from asteria.runtime.collision import (
+from asteria.runtime.field.collision import (
     ALL_LAYERS,
     Collider2DComponent,
     CollisionWorld,

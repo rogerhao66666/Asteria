@@ -2,18 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from math import isfinite
 
-from .formulas import FormulaContext, ValueFormula
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet, normalize_tag
-
-
-def _number(value, *, name="value"):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{name} must be finite")
-    return value
+from asteria.core.values import finite
+from asteria.gameplay.formulas import FormulaContext, ValueFormula
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet, normalize_tag
 
 
 class EffectOperationKind(str, Enum):
@@ -42,7 +35,7 @@ class EffectOperation:
             EffectOperationKind.RESOURCE_SET,
         }:
             if not isinstance(value, ValueFormula):
-                value = _number(value)
+                value = finite(value, "value")
         elif kind in {
             EffectOperationKind.TAG_ADD,
             EffectOperationKind.TAG_REMOVE,

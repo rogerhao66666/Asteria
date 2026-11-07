@@ -1,0 +1,549 @@
+"""Editor image tools (AST-11): the asset pipeline's safe auto-fixes and atlas packing, from the
+Asset list.
+
+* Auto-fix Image... - choose a fix, see the image before and after, apply. The original is kept as
+  ``<name>.bak.png``; fixes that would lose visible pixels ask for confirmation first
+  (``autofix``).
+* Pack into Atlas... - the selected images packed into one PNG plus a JSON of named regions.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import time
+import zipfile
+from io import BytesIO
+from pathlib import Path
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QVBoxLayout,
+)
+
+from asteria.assets.autofix import ConfirmationRequired, apply_fix, preview_fix, repack_atlas
+from asteria.assets.types import AssetRecord
+from asteria.editor.scene.render import resolve_texture_source
+
+# fixes that need no extra numbers: the dialog offers these
+SIMPLE_FIXES = {
+    "crop_transparent_border": "Crop transparent border",
+    "remove_empty_outer": "Remove empty outer rows / columns",
+    "normalize_alpha": "Normalize alpha (no half-transparent pixels)",
+    "align_pivot": "Align content to the bottom-centre pivot",
+}
+
+
+# fields holding a picture of the author's own: every one gets a picker with Browse… (V1);
+# asset ids (``*_asset_id``) pick from the imported assets instead, portraits from portraits/
+PICTURE_KEYS = frozenset(
+    ("icon_id", "image", "picture", "portrait", "card_image", "sprite", "background")
+)
+PICTURE_SUFFIXES = ("_image", "_icon", "_picture", "_background")
+
+
+def picture_field(key):
+    """Whether a record field named ``key`` holds a picture file or icon id."""
+    key = str(key or "")
+    return key in PICTURE_KEYS or key.endswith(PICTURE_SUFFIXES)
+
+
+def project_root(document):
+    path = getattr(document, "file_path", None)
+    return Path(path).parent if path else Path.cwd()
+
+
+def _pixmap(image, box=220):
+    data = BytesIO()
+    image.save(data, "PNG")
+    qimage = QImage.fromData(data.getvalue())
+    pixmap = QPixmap.fromImage(qimage)
+    scale = max(1, min(box // max(1, pixmap.width()), box // max(1, pixmap.height())))
+    return pixmap.scaled(
+        pixmap.width() * scale, pixmap.height() * scale, Qt.KeepAspectRatio, Qt.FastTransformation
+    )
+
+
+def fix_image_file(path, fix, *, confirmed=False):
+    """Apply ``fix`` to the PNG at ``path``; the original is kept beside it. Returns the
+    FixReport."""
+    from PIL import Image
+
+    path = Path(path)
+    with Image.open(path) as source:
+        image = source.convert("RGBA")
+    after, report = apply_fix(fix, image, confirmed=confirmed)
+    backup = path.with_name(path.stem + ".bak" + path.suffix)
+    if not backup.exists():
+        shutil.copy2(path, backup)
+    after.save(path)
+    return report
+
+
+def pack_atlas(paths, output, *, padding=1, max_width=1024):
+    """Pack the PNGs at ``paths`` into ``output`` (PNG) and ``output``.json (``{"regions": {name:
+    [x,y,w,h]}}``)."""
+    from PIL import Image
+
+    frames = {}
+    for path in paths:
+        path = Path(path)
+        with Image.open(path) as image:
+            frames[path.stem] = image.convert("RGBA")
+    atlas, report = repack_atlas(frames, padding=padding, max_width=max_width)
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    atlas.image.save(output)
+    regions = {name: list(rect) for name, rect in sorted(atlas.regions.items())}
+    meta = output.with_suffix(".json")
+    meta.write_text(
+        json.dumps({"image": output.name, "regions": regions}, indent=2) + "\n", encoding="utf-8"
+    )
+    return output, meta, report
+
+
+class ImageFixDialog(QDialog):
+    """Preview a safe fix on one image, then apply it."""
+
+    def __init__(self, path, parent=None):
+        from PIL import Image
+
+        super().__init__(parent)
+        self.setWindowTitle(f"Auto-fix Image — {Path(path).name}")
+        self.path = Path(path)
+        with Image.open(self.path) as source:
+            self.image = source.convert("RGBA")
+        self.fix = QComboBox()
+        for key, label in SIMPLE_FIXES.items():
+            self.fix.addItem(label, key)
+        self.fix.currentIndexChanged.connect(self._preview)
+        self.before, self.after = QLabel(), QLabel()
+        for label in (self.before, self.after):
+            label.setAlignment(Qt.AlignCenter)
+            label.setMinimumSize(240, 240)
+        self.report = QLabel()
+        self.report.setObjectName("MutedLabel")
+        self.report.setWordWrap(True)
+        images = QHBoxLayout()
+        for caption, label in (("Before", self.before), ("After", self.after)):
+            column = QVBoxLayout()
+            title = QLabel(caption)
+            title.setObjectName("FieldLabel")
+            column.addWidget(title)
+            column.addWidget(label, 1)
+            images.addLayout(column)
+        buttons = QDialogButtonBox(QDialogButtonBox.Apply | QDialogButtonBox.Cancel)
+        buttons.button(QDialogButtonBox.Apply).clicked.connect(self.apply)
+        buttons.rejected.connect(self.reject)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.fix)
+        layout.addLayout(images, 1)
+        layout.addWidget(self.report)
+        layout.addWidget(buttons)
+        self.applied = None
+        self._preview()
+
+    @property
+    def fix_id(self):
+        return self.fix.currentData()
+
+    def _preview(self, *_):
+        before, after, report = preview_fix(self.fix_id, self.image)
+        self.before.setPixmap(_pixmap(before))
+        self.after.setPixmap(_pixmap(after))
+        size = (
+            f"{report.before_size[0]}x{report.before_size[1]} → "
+            f"{report.after_size[0]}x{report.after_size[1]}"
+        )
+        warning = (
+            "  This fix loses visible pixels; you will be asked to confirm."
+            if report.destructive
+            else ""
+        )
+        self.report.setText(f"{size}.{warning}")
+        self.preview_report = report
+
+    def apply(self, *, confirm=None):
+        confirmed = False
+        if self.preview_report.destructive:
+            answer = (
+                confirm
+                if confirm is not None
+                else QMessageBox.question(self, "Auto-fix Image", self.report.text())
+            )
+            confirmed = answer in (True, QMessageBox.Yes)
+            if not confirmed:
+                return None
+        try:
+            self.applied = fix_image_file(self.path, self.fix_id, confirmed=confirmed)
+        except ConfirmationRequired:
+            return None
+        self.accept()
+        return self.applied
+
+
+_FORGED_ICONS = {}  # (icon id, size) -> QIcon: drawing the built-in library once is enough
+
+
+def forged_qicon(icon_id, size=32):
+    """A QIcon of a built-in (``forged:``) icon id, or ``None``."""
+    key = (str(icon_id), int(size))
+    if key not in _FORGED_ICONS:
+        _FORGED_ICONS[key] = _draw_forged_qicon(icon_id, size)
+    return _FORGED_ICONS[key]
+
+
+def _draw_forged_qicon(icon_id, size):
+    from PySide6.QtGui import QIcon, QImage, QPixmap
+
+    from asteria.runtime.menus.icons import forged_surface
+
+    surface = forged_surface(icon_id, size)
+    if surface is None:
+        return None
+    import pygame
+
+    data = pygame.image.tobytes(surface, "RGBA")
+    image = QImage(data, size, size, size * 4, QImage.Format_RGBA8888).copy()
+    return QIcon(QPixmap.fromImage(image))
+
+
+_SKIPPED_FOLDERS = {
+    "__pycache__",
+    "node_modules",
+    "venv",
+    "site-packages",
+    "build",
+    "dist",
+    "local_reference",
+}
+
+
+def _icon_files(
+    root, limit=600, depth=4, folder_budget=1500, *, folders=("icons",), suffixes=(".png",)
+):
+    """Picture files in folders named in ``folders`` (``icons``) under ``root`` (a bounded walk:
+    hidden and build folders are skipped, so a project opened from a big folder still lists
+    quickly)."""
+
+    found = []
+    base_depth = len(Path(root).parts)
+    for visited, (folder, names, files) in enumerate(os.walk(root)):
+        if visited >= folder_budget:  # a very big folder: stop looking
+            break
+        names[:] = sorted(
+            n
+            for n in names
+            if not n.startswith(".")
+            and n not in _SKIPPED_FOLDERS
+            and len(Path(folder, n).parts) - base_depth <= depth
+        )
+        if Path(folder).name.lower() in folders:
+            found.extend(Path(folder, f) for f in sorted(files) if f.lower().endswith(suffixes))
+        if len(found) >= limit:
+            break
+    return found[:limit]
+
+
+PORTRAIT_FOLDERS = ("portraits", "faces", "facesets")  # folders whose pictures are portraits
+PORTRAIT_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+
+
+def icon_pixmap(document, icon_id, size=32):
+    """The picture an ``icon_id`` field names (an icon asset, a picture file of the project, or
+    a ``forged:`` icon) as a ``size`` QPixmap, or ``None``."""
+    from asteria.runtime.menus.icons import icon_source
+
+    icon_id = str(icon_id or "").strip()
+    if not icon_id:
+        return None
+    if icon_id.startswith("forged:"):
+        icon = forged_qicon(icon_id, size)
+        return None if icon is None else icon.pixmap(size, size)
+    project = getattr(document, "project", None)
+    root = project_root(document)
+    region = None
+    path = Path(icon_id) if Path(icon_id).is_absolute() else root / icon_id
+    try:
+        is_file = path.is_file()
+    except OSError:  # not a path at all (too long for one)
+        is_file = False
+    if not is_file and project is not None:  # an icon asset (maybe a sheet cell)
+        try:
+            source = icon_source(project, icon_id)
+        except (KeyError, ValueError):
+            return None
+        if source is None:  # no such icon asset either
+            return None
+        uri, region = source
+        path = Path(uri) if Path(uri).is_absolute() else root / uri
+    if not path.is_file():
+        return None
+    pixmap = QPixmap(str(path))
+    if pixmap.isNull():
+        return None
+    if region:
+        pixmap = pixmap.copy(*region)
+    return pixmap.scaled(size, size, Qt.KeepAspectRatio, Qt.FastTransformation)
+
+
+def icon_choices(document):
+    """Every icon an ``icon_id`` field can take, as ``((icon id, QIcon or None), ...)``: the
+    project's own picture files (any ``icons`` folder) and ``icon`` assets, then the engine's
+    built-in library (``forged:<kind>``)."""
+    from PySide6.QtGui import QIcon
+
+    from asteria.graphics.forged_icons import DRAWINGS
+    from asteria.runtime.menus.icons import icon_source
+
+    project = getattr(document, "project", None)
+    if project is None:
+        return ()
+    root = project_root(document)
+    sheets = {}
+    choices, seen = [], set()
+    for asset in sorted(project.assets.query(kind="icon"), key=lambda a: a.asset_id):
+        uri, region = icon_source(project, asset.asset_id)
+        path = Path(uri) if Path(uri).is_absolute() else root / uri
+        if path not in sheets:
+            sheets[path] = QPixmap(str(path)) if path.is_file() else QPixmap()
+        sheet = sheets[path]
+        icon = None
+        if not sheet.isNull():
+            cell = sheet.copy(*region) if region else sheet
+            icon = QIcon(cell.scaled(32, 32, Qt.KeepAspectRatio, Qt.FastTransformation))
+        choices.append((asset.asset_id, icon))
+        seen.add(asset.asset_id)
+    if root.is_dir():  # picture files in the project's icon folders
+        for path in _icon_files(root):
+            rel = path.relative_to(root).as_posix()
+            if rel in seen:
+                continue
+            seen.add(rel)
+            pixmap = QPixmap(str(path))
+            icon = None
+            if not pixmap.isNull():
+                icon = QIcon(pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.FastTransformation))
+            choices.append((rel, icon))
+    for kind in sorted(DRAWINGS):
+        choices.append((f"forged:{kind}", forged_qicon(f"forged:{kind}")))
+    return tuple(choices)
+
+
+def portrait_choices(document):
+    """Every picture a dialogue portrait field can take, as ``((id, QIcon or None), ...)``: the
+    project's ``portrait`` assets, then the picture files in its ``portraits`` / ``faces`` /
+    ``facesets`` folders (ids are paths relative to the project folder)."""
+    from PySide6.QtGui import QIcon
+
+    from asteria.runtime.menus.icons import icon_source
+
+    project = getattr(document, "project", None)
+    if project is None:
+        return ()
+    root = project_root(document)
+
+    def thumbnail(path, region=None):
+        pixmap = QPixmap(str(path)) if Path(path).is_file() else QPixmap()
+        if pixmap.isNull():
+            return None
+        if region:
+            pixmap = pixmap.copy(*region)
+        return QIcon(pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+    choices, seen = [], set()
+    for asset in sorted(project.assets.query(kind="portrait"), key=lambda a: a.asset_id):
+        uri, region = icon_source(project, asset.asset_id)
+        path = Path(uri) if Path(uri).is_absolute() else root / uri
+        choices.append((asset.asset_id, thumbnail(path, region)))
+        seen.add(asset.asset_id)
+    if root.is_dir():
+        for path in _icon_files(root, folders=PORTRAIT_FOLDERS, suffixes=PORTRAIT_SUFFIXES):
+            rel = path.relative_to(root).as_posix()
+            if rel not in seen:
+                seen.add(rel)
+                choices.append((rel, thumbnail(path)))
+    return tuple(choices)
+
+
+class IconLibrary:
+    """The icons a project's ``icon_id`` fields can use: ``choices()`` for pickers and
+    ``import_file(path)`` to bring a picture of the author's own into the project."""
+
+    FOLDER = "icons"
+    KIND = "icon"  # the asset kind listed
+    CACHE = "_icon_choices_cache"  # where the document keeps the list
+
+    def __init__(self, document):
+        self.document = document
+
+    FILES_SECONDS = 30.0  # picture files added outside the editor show up within this
+
+    def _build(self):
+        return icon_choices(self.document)
+
+    def name_of(self, icon_id):
+        """The picture's name in words."""
+        from asteria.editor.records.icon_picker import icon_name
+
+        return icon_name(icon_id)
+
+    def choices(self):
+        """The list, built again only when the project's icons change (another project, an
+        icon asset added or removed, a picture imported) or the picture files may have -
+        not after every edit, nor for every form that shows a picker."""
+
+        project = getattr(self.document, "project", None)
+        icons = () if project is None else project.assets.query(kind=self.KIND)
+        folder = getattr(self.document, "file_path", None)  # pictures are read from there
+        stamp = (id(project), folder, tuple(sorted(a.asset_id for a in icons)))
+        now = time.monotonic()
+        # kept on the document: every library made for it (one per page) shares the list
+        holder = self.document if self.document is not None else self
+        cached = getattr(holder, self.CACHE, None)
+        if cached is not None and cached[0] == stamp and now - cached[1] < self.FILES_SECONDS:
+            return cached[2]
+        choices = self._build()
+        setattr(holder, self.CACHE, (stamp, now, choices))
+        return choices
+
+    def import_file(self, path):
+        """Use the picture at ``path`` as an icon: a file already inside the project keeps its
+        place; any other is copied to ``<project>/icons/``. Returns the ``icon_id`` (a path
+        relative to the project folder)."""
+        holder = self.document if self.document is not None else self
+        setattr(holder, self.CACHE, None)  # the new picture joins the list
+
+        source = Path(path).resolve()
+        root = project_root(self.document).resolve()
+        try:
+            return source.relative_to(root).as_posix()
+        except ValueError:
+            pass
+        folder = root / self.FOLDER
+        folder.mkdir(parents=True, exist_ok=True)
+        target = folder / source.name
+        counter = 2
+        while target.exists() and target.read_bytes() != source.read_bytes():
+            target = folder / f"{source.stem}_{counter}{source.suffix}"
+            counter += 1
+        if not target.exists():
+            shutil.copyfile(source, target)
+        return target.relative_to(root).as_posix()
+
+
+class SpriteSheetLibrary(IconLibrary):
+    """The project's sprite sheets (a fighter's battlefield picture), each listed with its
+    first frame. Sheets are not imported here: a battle sheet needs its frame size and clips,
+    which the Assets panel's import brings along."""
+
+    KIND = "sprite_sheet"
+    CACHE = "_sprite_sheet_choices_cache"
+
+    def _build(self):
+        from PySide6.QtGui import QIcon
+
+        from asteria.editor.records.pictures import framed, sprite_sheet_pixmap
+
+        project = getattr(self.document, "project", None)
+        if project is None:
+            return ()
+        choices = []
+        for asset in sorted(project.assets.query(kind=self.KIND), key=lambda a: a.asset_id):
+            pixmap = sprite_sheet_pixmap(self.document, asset.asset_id)
+            icon = None
+            if pixmap is not None and not pixmap.isNull():
+                icon = QIcon(framed(pixmap, 48))
+            choices.append((asset.asset_id, icon))
+        return tuple(choices)
+
+    def import_file(self, path):
+        raise NotImplementedError("sprite sheets come in through the picture dialog's Browse")
+
+
+def movie_first_frame(document, asset_id):
+    """A movie asset's first frame as a pixmap (null when it is no movie, or unreadable)."""
+
+    pixmap = QPixmap()
+    project = getattr(document, "project", None)
+    record = project.assets.get(asset_id) if project is not None else None
+    if record is None or record.kind != "movie":
+        return pixmap
+    try:
+        with zipfile.ZipFile(project_root(document) / str(record.source_path)) as archive:
+            names = sorted(n for n in archive.namelist() if n.lower().endswith(".png"))
+            if names:
+                pixmap.loadFromData(archive.read(names[0]))
+    except (OSError, zipfile.BadZipFile):
+        pass
+    return pixmap
+
+
+class PictureLibrary(IconLibrary):
+    """The pictures a picture command can show: the project's textures and movies, by name;
+    Browse… makes a picture (or a movie: a zip of PNG frames) from anywhere one of them (copied
+    to ``<project>/pictures/``)."""
+
+    FOLDER = "pictures"
+    KIND = "texture"
+    KINDS = ("texture", "movie")
+    CACHE = "_picture_choices_cache"
+    FILE_FILTER = "Pictures and movies (*.png *.jpg *.jpeg *.webp *.zip)"
+
+    def _records(self):
+        project = getattr(self.document, "project", None)
+        records = () if project is None else project.assets.records()
+        pictures = [a for a in records if a.kind in self.KINDS]
+        return sorted(pictures, key=lambda a: (str(a.name), a.id))
+
+    def _build(self):
+        from PySide6.QtGui import QIcon, QPixmap
+
+        from asteria.editor.records.pictures import framed
+
+        choices = []
+        for asset in self._records():
+            path = resolve_texture_source(self.document, asset.id)
+            pixmap = (
+                QPixmap(str(path))
+                if path is not None
+                else movie_first_frame(self.document, asset.id)
+            )
+            icon = QIcon(framed(pixmap, 48)) if not pixmap.isNull() else None
+            choices.append((asset.id, icon))
+        return tuple(choices)
+
+    def name_of(self, icon_id):
+        project = getattr(self.document, "project", None)
+        record = project.assets.get(icon_id) if project is not None else None
+        return str(record.name) if record is not None and record.name else super().name_of(icon_id)
+
+    def import_file(self, path):
+        relative = super().import_file(path)
+        for asset in self._records():
+            if Path(str(asset.source_path)).as_posix() == relative:
+                return asset.id
+        name = Path(relative).stem.replace("_", " ").title()
+        kind = "movie" if relative.lower().endswith(".zip") else self.KIND
+        record = AssetRecord.create(kind=kind, source_path=relative, name=name)
+        return self.document.project.assets.add(record).id
+
+
+class PortraitLibrary(IconLibrary):
+    """The pictures a dialogue line's portrait can use (``portrait_choices``); Browse… copies
+    a picture from outside the project to ``<project>/portraits/``."""
+
+    FOLDER = "portraits"
+    KIND = "portrait"
+    CACHE = "_portrait_choices_cache"
+
+    def _build(self):
+        return portrait_choices(self.document)

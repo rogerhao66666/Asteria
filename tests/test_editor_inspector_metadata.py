@@ -1,6 +1,6 @@
 from asteria.core import Component
 from asteria.core.metadata import Field, component_schema
-from asteria.editor.inspector import build_inspector_fields
+from asteria.editor.scene.inspector import build_inspector_fields
 
 
 @component_schema(

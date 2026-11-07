@@ -51,7 +51,7 @@ def _view(layer_tiles):
     """A tile scene view over a 4 x 1 strip of 16 px frames 0..7 (frame n is red n x 30),
     with tile 1 animated through frames 1, 2, 3 (100 ms each) and tile 5 a cover tile that
     plays 6, 7 once."""
-    from asteria.runtime.tile_scene_view import TileSceneView
+    from asteria.runtime.field.tile_scene_view import TileSceneView
 
     texture = pygame.Surface((8 * 16, 16), pygame.SRCALPHA)
     for n in range(8):

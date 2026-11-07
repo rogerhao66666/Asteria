@@ -16,13 +16,13 @@ from asteria.gameplay.formulas import FormulaTerm, ValueFormula
 from asteria.gameplay.modifiers import StatModifier
 from asteria.gameplay.states import PeriodicEffect, StateDefinition
 from asteria.rpg import BattleStatePolicy
-from asteria.rpg.battle_resources import BattleResourceDefinition
-from asteria.rpg.gauge_composition import (
+from asteria.rpg.battle.gauges import (
     GaugeCompositionDefinition,
     GaugeImpactRule,
     GaugeThresholdRule,
 )
-from asteria.rpg.interactions import InteractionRule, OutcomeCheckDefinition
+from asteria.rpg.battle.interactions import InteractionRule, OutcomeCheckDefinition
+from asteria.rpg.battle.resources import BattleResourceDefinition
 
 HP, SP, BP, SHIELD = "vitality", "technique", "bp", "shield"
 WEAPONS = ("sword", "spear", "dagger", "axe", "bow", "staff")
@@ -416,13 +416,13 @@ def gear(c):
         ItemDefinition,
         SocketDefinition,
     )
-    from asteria.rpg.durability import DurabilityRules, WearEvent
-    from asteria.rpg.equipment_growth import (
+    from asteria.rpg.items.durability import DurabilityRules, WearEvent
+    from asteria.rpg.items.growth import (
         EquipmentGrowthDefinition,
         EquipmentGrowthNodeDefinition,
         EquipmentGrowthReward,
     )
-    from asteria.rpg.refine import RefineRules
+    from asteria.rpg.items.refine import RefineRules
 
     db = c.db
     names = {
@@ -1009,7 +1009,7 @@ def hero_skills(c):
 def _node(node_id, name, ranks, cost, reward, **links):
     """A tree node: ``ranks`` ranks, each costing ``cost`` and giving ``reward`` (cumulative)."""
     from asteria.rpg import ProgressionNodeDefinition, ProgressionNodeRequirement
-    from asteria.rpg.progression_graph import ProgressionNodeReward
+    from asteria.rpg.characters.progression_graph import ProgressionNodeReward
 
     def reqs(items):
         return [
@@ -1034,9 +1034,9 @@ def _node(node_id, name, ranks, cost, reward, **links):
 
 def hero_jobs_and_trees(c):
     from asteria.rpg import ClassAssignment, ClassDefinition, ProgressionGraphDefinition
-    from asteria.rpg.ability_build import PassiveDefinition
-    from asteria.rpg.battle_extensions import BattleExtensionRules
-    from asteria.rpg.job_points import JobPointRules
+    from asteria.rpg.battle.extensions import BattleExtensionRules
+    from asteria.rpg.characters.abilities import PassiveDefinition
+    from asteria.rpg.characters.job_points import JobPointRules
 
     db = c.db
     cap = "capability.weapon."
@@ -1405,9 +1405,9 @@ def _cond(kind, negate=False, **params):
 
 def boss(c):
     from asteria.rpg import EnemyDefinition
-    from asteria.rpg.enemies import LootEntry
-    from asteria.rpg.enemy_ai import EnemyAIDefinition
-    from asteria.rpg.enemy_behavior import EnemyBehaviorBinding
+    from asteria.rpg.enemies.ai import EnemyAIDefinition
+    from asteria.rpg.enemies.behavior import EnemyBehaviorBinding
+    from asteria.rpg.enemies.definitions import LootEntry
 
     db, add = c.db, c.add
     kill_hero = {
@@ -1807,7 +1807,7 @@ def world(c):
     from asteria.events import EventProgram
     from asteria.events.binding import EventBinding, SceneEventBindings
     from asteria.events.program import EventInstruction
-    from asteria.runtime.components2d import Interaction2DComponent
+    from asteria.runtime.scene.components import Interaction2DComponent
 
     project = c.project
     scene = project.scene(project.startup_scene_id)
@@ -2072,7 +2072,7 @@ def _fx_plan(ability_id, definition):
 
 
 def _apply_fx(beats, ability_id, definition, source):
-    from asteria.presentation.battle_motion_sequence import BattleMotionBeat
+    from asteria.presentation.battle.motion_sequence import BattleMotionBeat
 
     plan = _fx_plan(ability_id, definition)
     if not plan:
@@ -2132,7 +2132,7 @@ def _apply_attack_clip(beats, ability_id, definition):
 
 def _apply_lunge(beats, ability_id, definition):
     """Melee skills step up to the foe, strike and step back (the ``move`` channel)."""
-    from asteria.presentation.battle_motion_sequence import BattleMotionBeat
+    from asteria.presentation.battle.motion_sequence import BattleMotionBeat
 
     melee = ability_id in MELEE_MOVES or any(t in definition.tags for t in MELEE_TAGS)
     if not melee or ability_id in SELF_TARGETED:
@@ -2161,8 +2161,8 @@ def _apply_lunge(beats, ability_id, definition):
 
 def presentation(c):
     """Motion sequences for every skill, and the side-view layout of the demo."""
-    from asteria.presentation.battle_hud import BattleHudResourceStyle
-    from asteria.presentation.particles import particle_effect_asset, preset
+    from asteria.presentation.battle.hud import BattleHudResourceStyle
+    from asteria.presentation.visuals.particles import particle_effect_asset, preset
 
     project, abilities = c.project, c.abilities
     sequences = project.battle_presentation_library

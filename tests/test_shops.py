@@ -35,8 +35,8 @@ def _game(project):
 
 
 def test_a_shop_runtime_sells_gear_into_the_equipment_bag():
-    from asteria.rpg.economy import ShopDefinition, ShopEntry, ShopRuntime
-    from asteria.rpg.items import Inventory
+    from asteria.rpg.items.definitions import Inventory
+    from asteria.rpg.items.shops import ShopDefinition, ShopEntry, ShopRuntime
 
     shop = ShopDefinition(
         "s",

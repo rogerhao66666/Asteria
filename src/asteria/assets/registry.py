@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .canonical import AssetRef as CanonicalAssetRef
+from asteria.assets.canonical import AssetRef as CanonicalAssetRef
 
 
 @dataclass(frozen=True, slots=True)

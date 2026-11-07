@@ -8,11 +8,10 @@ from asteria.rpg import (
     BattleAction,
     RpgActorSnapshot,
 )
-from asteria.rpg.battle_lifecycle import resolve_escape_chance
-from asteria.rpg.move_choice import choose_move, move_rules_of
-from asteria.rpg.targeting import TargetRelation
-
-from .support import (
+from asteria.rpg.battle.lifecycle import resolve_escape_chance
+from asteria.rpg.battle.move_choice import choose_move, move_rules_of
+from asteria.rpg.battle.targeting import TargetRelation
+from asteria.runtime.session.support import (
     BattleLogEntry,
     GameSessionError,
     _base_relative,

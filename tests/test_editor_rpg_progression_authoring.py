@@ -2,7 +2,7 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.rpg_progression_authoring import (
+from asteria.editor.rpg.progression_authoring import (
     RpgProgressionAuthoringController,
     RpgProgressionAuthoringError,
 )

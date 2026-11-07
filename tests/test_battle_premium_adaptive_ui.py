@@ -150,7 +150,7 @@ def test_the_cursor_is_drawn_centred_on_its_labels_capitals_in_any_font():
     and to the side. It is now a shape centred on the label's capital letters."""
     pygame = pytest.importorskip("pygame")
     from asteria.platform.pygame_battle_ui import PygameBattleUiBackend
-    from asteria.presentation.battle_ui import BattleUiText
+    from asteria.presentation.battle.ui_parts import BattleUiText
 
     pygame.init()
     for scale in (1.0, 2.0, 3.0):

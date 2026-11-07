@@ -6,9 +6,9 @@ import pytest
 
 from asteria.gameplay.modifiers import StatModifier
 from asteria.project import Project
-from asteria.rpg.effect_text import amount, modifier_lines
-from asteria.rpg.stat_definitions import StatDefinition
-from asteria.rpg.tag_definitions import TagDefinition, built_in, definition_for
+from asteria.rpg.data.stat_definitions import StatDefinition
+from asteria.rpg.data.tag_definitions import TagDefinition, built_in, definition_for
+from asteria.rpg.text.effect_text import amount, modifier_lines
 from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).parents[1] / "reference_projects/full_verification_demo"
@@ -58,13 +58,13 @@ def test_a_value_is_written_the_stats_way():
 @pytest.mark.parametrize(
     "module, cls, args",
     [
-        ("asteria.rpg.ability_build", "PassiveDefinition", ("iron_skin", "Iron Skin")),
+        ("asteria.rpg.characters.abilities", "PassiveDefinition", ("iron_skin", "Iron Skin")),
         ("asteria.gameplay.states", "StateDefinition", ("burn", 3.0)),
-        ("asteria.rpg.actors", "ClassDefinition", ("knight", "Knight")),
-        ("asteria.rpg.actors", "ActorDefinition", ("hero", "Hero")),
-        ("asteria.rpg.enemies", "EnemyDefinition", ("slime", "Slime")),
-        ("asteria.rpg.items", "EquipmentDefinition", ("sword", "Sword")),
-        ("asteria.rpg.items", "AttachmentDefinition", ("ruby", "Ruby")),
+        ("asteria.rpg.characters.actors", "ClassDefinition", ("knight", "Knight")),
+        ("asteria.rpg.characters.actors", "ActorDefinition", ("hero", "Hero")),
+        ("asteria.rpg.enemies.definitions", "EnemyDefinition", ("slime", "Slime")),
+        ("asteria.rpg.items.definitions", "EquipmentDefinition", ("sword", "Sword")),
+        ("asteria.rpg.items.definitions", "AttachmentDefinition", ("ruby", "Ruby")),
     ],
 )
 def test_every_player_facing_record_can_say_what_it_is(module, cls, args):
@@ -79,8 +79,8 @@ def test_every_player_facing_record_can_say_what_it_is(module, cls, args):
 
 
 def test_the_demo_defines_every_stat_and_tag_it_uses(demo):
-    from asteria.editor.problems import used_stats
-    from asteria.editor.tag_usage import project_tags
+    from asteria.editor.project.problems import used_stats
+    from asteria.editor.rpg.tag_usage import project_tags
 
     db = demo.rpg_database
     assert used_stats(demo) <= set(db.stat_definitions)
@@ -90,7 +90,7 @@ def test_the_demo_defines_every_stat_and_tag_it_uses(demo):
 
 
 def test_the_tag_page_lists_who_carries_and_what_reads(demo):
-    from asteria.editor.tag_usage import tag_usage
+    from asteria.editor.rpg.tag_usage import tag_usage
 
     text = tag_usage(demo, "capability.weapon.*")
     assert "Classes brave" in text and "Any capabilities" in text
@@ -100,7 +100,7 @@ def test_the_tag_page_lists_who_carries_and_what_reads(demo):
 
 
 def test_an_undefined_tag_is_a_problem_once_tags_are_defined(demo):
-    from asteria.editor.problems import Problem, _tags
+    from asteria.editor.project.problems import Problem, _tags
 
     found = []
     _tags(demo, found)
@@ -131,7 +131,7 @@ def test_jobs_decide_who_wields_what_and_the_brave_wields_all(demo):
 
 def test_the_skill_tree_says_what_a_passive_does(demo):
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.skill_tree_screen import StatNames, describe_reward
+    from asteria.runtime.menus.skill_tree import StatNames, describe_reward
 
     game = GameSessionRuntime(demo, demo.game_start.instantiate(demo))
     names = StatNames(game)
@@ -151,7 +151,7 @@ def test_the_skill_tree_says_what_a_passive_does(demo):
 
 
 def test_the_formulas_are_shared_and_written_plainly(demo):
-    from asteria.rpg.derived_stats import apply_derived_stats
+    from asteria.rpg.characters.derived_stats import apply_derived_stats
 
     db = demo.rpg_database
     rules = list(db.derived_stats.values())

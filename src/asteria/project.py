@@ -327,7 +327,7 @@ class Project:
         )
         retired = p.battle_presentation_library.retired
         if retired:  # D98: an old file's screen records: their names and order move to the data
-            from asteria.presentation.retired_screens import move_retired
+            from asteria.presentation.screens.retired import move_retired
 
             move_retired(retired, p.rpg_database)
             p.battle_presentation_library.retired = {}

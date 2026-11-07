@@ -1,4 +1,4 @@
-"""The multiplayer experiment remains a distinct copy of the offline reference project."""
+"""The multiplayer demo is the offline reference project built into its own folder."""
 
 import json
 from pathlib import Path
@@ -15,6 +15,7 @@ def test_multiplayer_demo_copies_the_offline_project_and_assets_without_changing
         if (
             not source.is_file()
             or "__pycache__" in source.parts
+            or source.suffix == ".py"
             or source.name
             in {
                 "README.md",

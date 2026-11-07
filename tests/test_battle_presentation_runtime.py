@@ -10,11 +10,11 @@ from asteria.presentation import (
     BattlePresentationScene,
     BattleVisualAnchor,
 )
-from asteria.presentation.battle_animation_timing import (
+from asteria.presentation.battle.animation_timing import (
     BattleAnimationTimingProfile,
     BattleAnimationTimingRule,
 )
-from asteria.rpg.battle_lifecycle import CombatantLifecycleRuntime
+from asteria.rpg.battle.lifecycle import CombatantLifecycleRuntime
 from asteria.runtime import AnimationClipSet, Camera2D
 
 

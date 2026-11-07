@@ -1,6 +1,6 @@
 # Asteria 架構
 
-**更新：** 2026-10-29。這份說明程式怎麼分層、一個專案從檔案到畫面經過哪些地方。每個系統的功能看
+**更新：** 2026-11-07（D104：子套件分類）。這份說明程式怎麼分層、一個專案從檔案到畫面經過哪些地方。每個系統的功能看
 [`ENGINE_HANDBOOK.md`](ENGINE_HANDBOOK.md)，設計決策看 [`audits/DECISION_LOG.md`](audits/DECISION_LOG.md)。
 Batch 94～119 時期的架構筆記保留在 [`history/ARCHITECTURE_BATCH94-119.md`](history/ARCHITECTURE_BATCH94-119.md)。
 
@@ -21,7 +21,7 @@ Batch 94～119 時期的架構筆記保留在 [`history/ARCHITECTURE_BATCH94-119
 | 核心 | `core` | ECS：`Entity`、`Component`、`Scene`、`System`、`SystemScheduler`、事件匯流排；熱資料的欄位陣列（`core/columns.py`，每個場景一組 `array.array`）；prefab、序列化、版本遷移 |
 | 計算 | `kernels` | 三組結果逐位元相同的計算核心（見 [`NATIVE_KERNELS.md`](NATIVE_KERNELS.md)） |
 | 玩法積木 | `gameplay` | 數值、資源、公式（`expressions`）、標籤、效果、狀態、技能（Ability）、攻擊、投射物、動作時間軸 |
-| RPG 資料 | `rpg` | `RpgDatabase`（`rpg/actors.py`）與所有紀錄：職業、技能樹、裝備、掉落、任務、商店、寵物、選單規則與選單頁、標籤與屬性定義；回合制戰鬥的生命週期（`battle_lifecycle`）；內建字詞（`built_in_text`） |
+| RPG 資料 | `rpg` | `RpgDatabase`（`rpg/data/database.py`）與所有紀錄：職業、技能樹、裝備、掉落、任務、商店、寵物、選單規則與選單頁、標籤與屬性定義；回合制戰鬥的生命週期（`rpg/battle/lifecycle.py`）；內建字詞（`rpg/text/built_in_text.py`） |
 | 事件 | `events` | 事件程式的 VM、排程、對話、選項、世界指令的綁定 |
 | 圖像 | `graphics`、`render`、`platform` | 精靈、圖塊地圖、骨骼、光照、點陣字；繪製指令與管線；pygame、ModernGL、headless 三種後端與輸入、音訊 |
 | 戰鬥呈現 | `presentation` | 回合制戰鬥畫面：版面、HUD、指令選單、鏡頭、特效排程、角色與隊伍畫面 |
@@ -29,6 +29,25 @@ Batch 94～119 時期的架構筆記保留在 [`history/ARCHITECTURE_BATCH94-119
 | 執行環境 | `runtime` | 場景系統、角色控制、碰撞、即時戰鬥（`action_*`）、存檔，以及下面兩個大類別 |
 | 專案 | `project.py`、`project_tools.py` | `Project`（專案檔的讀寫與版本）；升級與匯出 |
 | 工具 | `editor`、`multiplayer`、`authoring`、`export_web.py`、`frozen.py`、`validation` | 編輯器、多人連線、作者腳本 API、網頁匯出、免安裝版 app、壓力測試 |
+
+### 2.1 子套件（D104）
+
+大套件依主題分成子套件；套件層級的名字（`asteria.rpg.X`、`asteria.runtime.X`、`asteria.presentation.X`、
+`asteria.assets.X`）照舊可用，由各 `__init__.py` 用到才匯入。每個子套件的 `__init__.py` 第一段說明它管什麼。
+
+| 套件 | 子套件 |
+| --- | --- |
+| `rpg` | `battle`（回合制核心與它讀的規則）、`characters`（角色、職業、技能、成長、build）、`data`（`RpgDatabase` 與定義）、`enemies`、`items`、`menus`、`text`（內建字詞與翻譯）、`world`（任務、地圖規則、世界紀錄） |
+| `runtime` | `action`（即時戰鬥）、`battle`（回合制戰鬥畫面）、`creature`（生物遊戲的畫面）、`field`（野外移動、碰撞、NPC）、`menus`（選單畫面）、`scene`（場景元件、動畫、天氣、圖片）、`session`、`playtest`、`tools`（除錯器、profiler） |
+| `presentation` | `battle`（戰鬥畫面的 HUD、選單、版面、時序）、`screens`（選單版面與 RPG 畫面）、`text`（動態字、訊息碼、訊息窗）、`visuals`（分層角色、附件、粒子） |
+| `assets` | `kinds`（各種素材）、`codecs`、`packages`（素材包與匯入）、`loading`（從專案到後端資源）、`rpg_maker_mv`（MV 轉換的邊界） |
+| `editor` | `window`（主視窗的 mixin）、`project`、`records`（紀錄表單）、`rpg`、`combat`、`events`、`menus`、`animation`、`scene`、`assets`、`tools`、`ui` |
+
+大類別一律用 mixin 拆開，類別本身只留建構與少數入口：`GameSessionRuntime`（`runtime/session/`）、
+`PlayableTestRuntime`（`runtime/playtest/`，每一幀交給 `frame_modes.SCREEN_FRAMES` 裡該畫面的方法）、
+`AsteriaEditorWindow`（`editor/window/`）、`CreatureBattleScreen`（`runtime/creature/battle_*.py`）、
+`CanonicalBattleAdapter`（`runtime/battle/frame.py`、`generated_art.py`、`timeline.py`）、
+`BattleUiComposer`（`presentation/battle/ui_hud.py`、`ui_menu.py`、`ui_feedback.py`）。
 
 ## 3. 一個專案從檔案到畫面
 
@@ -56,8 +75,8 @@ project.asteria.json ──Project.load_json──▶ Project ─┬─ scenes�
   `strikes`、`turns`、`economy`、`interactions`、`map_tiles`、`rewards`。
 - **畫面**：`PlayableTestRuntime`（`runtime/playable_test_runtime.py`）由 `runtime/playtest/` 的 mixin 組成：
   `resources`、`environment`、`text_draw`、`field_view`、`multiplayer`、`field_ui`、`action_scenes`、
-  `title_build`、`workshop`、`battle_flow`、`menus_input`、`save_slots`、`menus_draw`、`menu_fit`、
-  `menu_pages`、`capture`。它只處理輸入、像素、選單導覽與特效播放；規則一律呼叫 session。
+  `frame_modes`（每個畫面的一幀）、`title_build`、`workshop`、`battle_flow`、`menus_input`、`save_slots`、
+  `menus_draw`、`menu_fit`、`menu_pages`、`capture`。它只處理輸入、像素、選單導覽與特效播放；規則一律呼叫 session。
 - **進入點**：`asteria-preview`（`runtime/preview.py`）讀專案、建立或讀取存檔；專案資料夾有
   `playable_test_manifest.json` 時交給 `run_playable_test_runtime`，否則跑一般的場景預覽。
 
@@ -67,21 +86,21 @@ project.asteria.json ──Project.load_json──▶ Project ─┬─ scenes�
   `SystemScheduler`。`Scene.update(dt)` 依 `order` 執行系統；更新途中加入或移除的實體延到這一幀結束才生效。
 - 野外的系統（`runtime/systems.py`、`character_control`、`collision`、`field_ai`、`projectiles`…）從場景索引
   讀元件，每幀共用同一個碰撞世界，數量多的部分交給 kernel。
-- 即時戰鬥：場景裡有 `CombatSceneComponent` 時，敵人在野外即時戰鬥，不切到回合制畫面（`runtime/action_play.py`、
+- 即時戰鬥：場景裡有 `CombatSceneComponent` 時，敵人在野外即時戰鬥，不切到回合制畫面（`runtime/action/play.py`、
   `action_combat.py`）。
-- 回合制戰鬥：遭遇開始後，`rpg/battle_lifecycle.py` 管回合與結果，`presentation/` 把狀態轉成繪製指令，
+- 回合制戰鬥：遭遇開始後，`rpg/battle/lifecycle.py` 管回合與結果，`presentation/` 把狀態轉成繪製指令，
   `platform/pygame_battle_ui.py` 畫出來。
 
 ## 5. 編輯器
 
-- `AsteriaEditorWindow`（`editor/shell.py`）持有一份 `EditorDocument`（`editor/model.py`）：目前的 `Project`、
-  是否有未存的修改，以及 `CommandStack`（`editor/commands.py`）。**每個修改都是一個可復原的指令**；表單停止
+- `AsteriaEditorWindow`（`editor/shell.py`，行為在 `editor/window/` 的 mixin）持有一份 `EditorDocument`（`editor/project/model.py`）：目前的 `Project`、
+  是否有未存的修改，以及 `CommandStack`（`editor/project/commands.py`）。**每個修改都是一個可復原的指令**；表單停止
   輸入約 0.35 秒後自動套用。
 - 七個工作區（Scene、Database、Battle、Presentation、Events、Code、Multiplayer）各自由 `*_widget.py`
   （畫面）和 `*_authoring.py`（讀寫專案資料的 controller）組成；畫面不直接改資料。
-- 介面文字一律是英文原文，經 `editor/i18n.py` 依 `translations/zh_TW.json` 即時換成繁中。
-- **試玩**：`editor/runtime_launcher.py` 用 `sys.executable -m asteria.runtime.preview` 開一個子程序，加上
-  `--debug-port`；Debugger 與 Profiler 面板透過 `runtime/debug_server.py` 的本機通道讀遊戲狀態。在免安裝版
+- 介面文字一律是英文原文，經 `editor/ui/i18n.py` 依 `translations/zh_TW.json` 即時換成繁中。
+- **試玩**：`editor/project/runtime_launcher.py` 用 `sys.executable -m asteria.runtime.preview` 開一個子程序，加上
+  `--debug-port`；Debugger 與 Profiler 面板透過 `runtime/tools/debug_server.py` 的本機通道讀遊戲狀態。在免安裝版
   app 裡，`sys.executable` 就是 app 本身（`frozen.py`）。
 
 ## 6. 匯出與發布

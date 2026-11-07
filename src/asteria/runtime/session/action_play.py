@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from asteria.core import Transform
 from asteria.gameplay import ResourcePool, StatBlock, TagSet
-from asteria.runtime.character_control import CharacterController2DComponent
-from asteria.runtime.input import InputSnapshot
+from asteria.runtime.field.character_control import CharacterController2DComponent
+from asteria.runtime.input_map import InputSnapshot
 
 
 class ActionPlayMixin:
     # -- real-time play with RPG actors (ASTERIA_SPEC §20, §21; D22 A7) ---------------------------
     def _actor_of(self, entity):
-        from asteria.runtime.actor_link import ActorLinkComponent
+        from asteria.runtime.field.actor_link import ActorLinkComponent
 
         link = entity.try_get(ActorLinkComponent)
         if link is None or link.actor_id not in self.project.rpg_database.actors:
@@ -22,7 +22,7 @@ class ActionPlayMixin:
         """Combat stats, resources and tags of an ActorLink entity: its actor's resolved build
         (classes, level,
         skill tree, equipment and rolled affixes)."""
-        from asteria.runtime.combat import CombatantState
+        from asteria.runtime.action.combat import CombatantState
 
         actor_id = self._actor_of(entity)
         if actor_id is None:
@@ -49,7 +49,7 @@ class ActionPlayMixin:
         """Rebuild an entity's combat stats (after a level-up, a new class, a skill point, an
         equipment change);
         current resource values (hp...) and running states are kept."""
-        from asteria.runtime.combat import CombatantComponent
+        from asteria.runtime.action.combat import CombatantComponent
 
         combatant = entity.try_get(CombatantComponent)
         if combatant is None or combatant.state is None:
@@ -73,7 +73,7 @@ class ActionPlayMixin:
         return new
 
     def refresh_actor_combatants(self, actor_id):
-        from asteria.runtime.actor_link import ActorLinkComponent
+        from asteria.runtime.field.actor_link import ActorLinkComponent
 
         for entity, link in self.scene.query(ActorLinkComponent):
             if link.actor_id == str(actor_id):
@@ -82,7 +82,7 @@ class ActionPlayMixin:
     @property
     def combat_scene(self):
         """The current scene's ``CombatScene`` settings (``None``: a classic encounter scene)."""
-        from asteria.runtime.action_play import combat_scene
+        from asteria.runtime.action.play import combat_scene
 
         return combat_scene(self.scene)
 
@@ -101,15 +101,15 @@ class ActionPlayMixin:
         settings = self.combat_scene
         if settings is None or settings.combat_mode != "action":
             return
-        from asteria.runtime.action_combat import ActionCombatComponent
-        from asteria.runtime.actor_link import ActorLinkComponent
-        from asteria.runtime.character_control import (
+        from asteria.runtime.action.abilities import ActionCombatComponent
+        from asteria.runtime.action.combat import CombatantComponent
+        from asteria.runtime.action.ground_loot import LooterComponent
+        from asteria.runtime.field.actor_link import ActorLinkComponent
+        from asteria.runtime.field.character_control import (
             Hitbox2DComponent,
             Hurtbox2DComponent,
             PlayerInput2DComponent,
         )
-        from asteria.runtime.combat import CombatantComponent
-        from asteria.runtime.loot import LooterComponent
 
         player = self.player
         controller = player.try_get(CharacterController2DComponent)
@@ -160,7 +160,7 @@ class ActionPlayMixin:
             controller.lock_control(self.player_down)
 
     def _respawn_player(self):
-        from asteria.runtime.combat import CombatantComponent
+        from asteria.runtime.action.combat import CombatantComponent
 
         x, y = self._action_spawn.get(
             self.scene.id, (self.player.get(Transform).x, self.player.get(Transform).y)
@@ -185,7 +185,7 @@ class ActionPlayMixin:
     def _remove_defeated(self, scene):
         """Entities whose ``defeat_switch`` is on stay gone (they were beaten in an earlier
         visit or session)."""
-        from asteria.runtime.combat import CombatantComponent
+        from asteria.runtime.action.combat import CombatantComponent
 
         for entity, combatant in list(scene.query(CombatantComponent)):
             name = combatant.defeat_switch

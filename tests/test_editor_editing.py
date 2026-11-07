@@ -2,8 +2,8 @@ import pytest
 
 from asteria.core import Component, Transform
 from asteria.core.metadata import Field, component_schema
-from asteria.editor.editing import EditError, build_set_component_field_command
-from asteria.editor.model import EditorDocument
+from asteria.editor.project.editing import EditError, build_set_component_field_command
+from asteria.editor.project.model import EditorDocument
 
 
 @component_schema(

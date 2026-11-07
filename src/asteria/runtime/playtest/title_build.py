@@ -135,7 +135,7 @@ class TitleBuildMixin:
             self.open_slots("load", back="title")
             return
         if action == "screen":
-            from asteria.runtime.creature_menu import CreatureMenuScreen
+            from asteria.runtime.creature.menu import CreatureMenuScreen
 
             self._creature_menu = CreatureMenuScreen(self)
             self._creature_menu.open_alone(request["screen"])

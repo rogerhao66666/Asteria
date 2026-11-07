@@ -48,22 +48,22 @@ from asteria.gameplay.conditions import ConditionGroup, TagCondition  # noqa: E4
 from asteria.gameplay.formulas import FormulaTerm, ValueFormula  # noqa: E402
 from asteria.gameplay.modifiers import StatModifier  # noqa: E402
 from asteria.gameplay.states import PeriodicEffect, StateDefinition  # noqa: E402
-from asteria.presentation.particles import particle_effect_asset, preset  # noqa: E402
+from asteria.presentation.visuals.particles import particle_effect_asset, preset  # noqa: E402
 from asteria.project import Project  # noqa: E402
 from asteria.rpg import BattleStatePolicy, EnemyDefinition  # noqa: E402
-from asteria.rpg.battle_resources import BattleResourceDefinition  # noqa: E402
-from asteria.rpg.composition import (  # noqa: E402
-    CompositionOutput,
-    CompositionRecipeDefinition,
-    CompositionSelection,
-)
-from asteria.rpg.gauge_composition import (  # noqa: E402
+from asteria.rpg.battle.gauges import (  # noqa: E402
     GaugeCompositionDefinition,
     GaugeImpactRule,
     GaugeThresholdRule,
 )
-from asteria.rpg.interactions import InteractionRule  # noqa: E402
-from asteria.rpg.items import ItemDefinition  # noqa: E402
+from asteria.rpg.battle.interactions import InteractionRule  # noqa: E402
+from asteria.rpg.battle.resources import BattleResourceDefinition  # noqa: E402
+from asteria.rpg.items.crafting import (  # noqa: E402
+    CompositionOutput,
+    CompositionRecipeDefinition,
+    CompositionSelection,
+)
+from asteria.rpg.items.definitions import ItemDefinition  # noqa: E402
 from asteria.runtime.component_registry import default_component_registry  # noqa: E402
 
 HP, SP, BP, SHIELD = "vitality", "technique", "bp", "shield"
@@ -663,8 +663,8 @@ def main():
         )
 
     # -- pets: species here, owned pets in the save; capturing the hound gives one -----------
-    from asteria.rpg.capture import CaptureRule
-    from asteria.rpg.pets import PetSpeciesDefinition
+    from asteria.rpg.battle.capture import CaptureRule
+    from asteria.rpg.characters.pets import PetSpeciesDefinition
 
     db.pet_species["frost_lynx"] = PetSpeciesDefinition(
         "frost_lynx",
@@ -928,7 +928,7 @@ def main():
             stage_front=0.16,
         ),
     )
-    from asteria.presentation.battle_hud import BattleHudResourceStyle
+    from asteria.presentation.battle.hud import BattleHudResourceStyle
 
     hud = sequences.require("hud", "adaptive")
     sequences.set(
@@ -954,7 +954,7 @@ def main():
         ),
     )
 
-    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+    from asteria.runtime.scene.environment import ParticleEmitter2DComponent
 
     scene = project.scene(project.startup_scene_id)
     boss = next(e for e in scene.entities() if e.name == "Astral Tyrant")
@@ -1150,15 +1150,15 @@ def add_monster_types(project, db, add):
     field spots."""
     from asteria.assets.canonical import AssetSource, CanonicalAsset
     from asteria.core import Entity, Transform
-    from asteria.presentation.battle_combatant_visuals import (
+    from asteria.presentation.battle.combatant_visuals import (
         BattleCombatantVisualProfile,
         BattleVisualAssetSet,
         BattleVisualStateDefinition,
         BattleVisualTransform,
     )
-    from asteria.rpg.enemy_ai import EnemyAIDefinition
-    from asteria.rpg.enemy_behavior import EnemyBehaviorBinding
-    from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
+    from asteria.rpg.enemies.ai import EnemyAIDefinition
+    from asteria.rpg.enemies.behavior import EnemyBehaviorBinding
+    from asteria.runtime.field.ai import FieldAIComponent, VisibleEncounterComponent
 
     weak, multi = damage, ability
     skills = {

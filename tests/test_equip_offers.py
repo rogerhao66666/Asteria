@@ -12,7 +12,7 @@ sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402
 
-from asteria.rpg.items import InventoryRules  # noqa: E402
+from asteria.rpg.items.definitions import InventoryRules  # noqa: E402
 from asteria.runtime.game_session import GameSessionError  # noqa: E402
 
 HERO = smoke.HERO

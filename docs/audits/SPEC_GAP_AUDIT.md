@@ -16,7 +16,7 @@
 | 流程／模板 | `CODEX_PROMPT.md`、`REPORT_INDEX.md`（同一個 zip） | 定義流程和報告格式 |
 | Handoff | `CODEX_HANDOFF.md`、`PROJECT_HANDOFF.md`、`ASTERIA_FINAL_ALIGNMENT_AUDIT.md`、`START_HERE_MAC.md` | 操作指引；`CODEX_HANDOFF.md` 第 4 點規定 MV 邊界 |
 | 歷史／證據 | `docs/BATCH*.md`（17–158）、`docs/PHASE_*`、`audit/*.md`、`review/*` | 只作為來歷，不重開凍結邊界 |
-| 舊版 SPEC | `docs/CANONICAL_SPEC.md`（2026-09-13）、`docs/ARCHITECTURE.md`、`docs/NEXT_PHASE_PLAN.md` | 已被 5 份 `ASTERIA_*.md` 取代 |
+| 舊版 SPEC | `docs/history/batches/CANONICAL_SPEC.md`（2026-09-13）、`docs/ARCHITECTURE.md`、`docs/history/batches/NEXT_PHASE_PLAN.md` | 已被 5 份 `ASTERIA_*.md` 取代 |
 | 設計／計畫（未追蹤） | `docs/superpowers/specs|plans/2026-10-0*` | 工作紀錄；其中 starter art／boss sprites 依 SCOPE_DECISIONS 已停止 |
 | Build／CI | `pyproject.toml`（`0.158.0a158`；extras：pygame、editor、mv、dev） | **沒有 CI 設定**；沒有 packaging／launcher 設定 |
 
@@ -24,7 +24,7 @@
 
 | # | 衝突 | 影響 | 處理 |
 |---|---|---|---|
-| C-1 | `README.md` 寫 v0.158／Batch 98／554 passed，並連到 `docs/CANONICAL_SPEC.md` | 新人會讀到過時的權威 | CB0 文件同步 |
+| C-1 | `README.md` 寫 v0.158／Batch 98／554 passed，並連到 `docs/history/batches/CANONICAL_SPEC.md` | 新人會讀到過時的權威 | CB0 文件同步 |
 | C-2 | `ASTERIA_PROGRESS.md` 第 84 行把 ModernGL 後端和外觀面板列為已 commit，但 `bf4a993` 已刪除 | ledger 不正確 | D1／D2；CB0 |
 | C-3 | `ASTERIA_PROGRESS.md` 最後一筆停在 2026-09-26；後面 14 個 commit（MV 地圖／專案／角色產生器）和未提交工作都沒有記錄 | ledger 不完整 | CB0 |
 | C-4 | `audit/REAL_ENVIRONMENT_VALIDATION.md` 寫 MV fixture「not available」，但 `audit/REAL_VALIDATION_ACCEPTANCE_REPORT_2026-09-26.md` 寫 15 個 MV 實機測試 PASS | 證據互相矛盾 | 以較新的 acceptance report 為準；CB0 標註 |

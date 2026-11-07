@@ -322,7 +322,7 @@ class PygameBattleUiBackend:
         if skin is not None and self.resolve_skin is not None:
             image = self.resolve_skin(skin.asset_id)
             if image is not None:  # a picture-framed panel; a missing picture falls back below
-                from asteria.presentation.ui_skin import draw_nine_patch
+                from asteria.presentation.screens.ui_skin import draw_nine_patch
 
                 draw_nine_patch(self.pg, self.screen, image, tuple(rect), skin, scale=self.scale)
                 return

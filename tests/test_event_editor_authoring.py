@@ -1,7 +1,7 @@
 import json
 
 from asteria.core import ComponentRegistry, Entity, Scene, Transform
-from asteria.editor.event_editing import (
+from asteria.editor.events.editing import (
     AddEventBindingCommand,
     AddEventProgramCommand,
     ReplaceEventBindingCommand,

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from .canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
+from asteria.assets.canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
 
 
 @dataclass(frozen=True, slots=True)

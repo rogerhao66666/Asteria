@@ -22,8 +22,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
-from asteria.rpg.menu_pages import MenuBlock, MenuPage, default_pages  # noqa: E402
-from asteria.rpg.menu_rules import MenuRules  # noqa: E402
+from asteria.rpg.menus.pages import MenuBlock, MenuPage, default_pages  # noqa: E402
+from asteria.rpg.menus.rules import MenuRules  # noqa: E402
 
 PAGE_SETTINGS = (
     *("stat_graph", "stat_columns", "stat_rows", "stat_groups", "stat_lines"),

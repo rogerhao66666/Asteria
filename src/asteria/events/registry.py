@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .program import EventProgram
+from asteria.events.program import EventProgram
 
 
 @dataclass(slots=True)

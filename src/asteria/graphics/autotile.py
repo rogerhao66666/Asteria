@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .tilemap import EMPTY_TILE
+from asteria.graphics.tilemap import EMPTY_TILE
 
 N, E, S, W = 1, 2, 4, 8
 NE, SE, SW, NW = 16, 32, 64, 128

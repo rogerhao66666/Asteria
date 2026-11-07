@@ -209,7 +209,7 @@ class AuthoringSession:
     # -- common and battle events (EVT-03) --------------------------------------------------------
     @property
     def _event_flow(self):
-        from asteria.editor.event_flow_authoring import EventFlowAuthoring
+        from asteria.editor.events.flow_authoring import EventFlowAuthoring
 
         return EventFlowAuthoring(SimpleNamespace(project=self._project, execute=self._run))
 
@@ -382,7 +382,7 @@ class AuthoringEvent:
     def sequence(self, *tracks, cutscene=False, skippable=False, wait="all") -> AuthoringEvent:
         """Add a SEQUENCE: ``tracks`` built with ``track(name, move(...), say(...), ...)`` run in
         parallel."""
-        from asteria.editor.event_flow_authoring import EventFlowAuthoring
+        from asteria.editor.events.flow_authoring import EventFlowAuthoring
 
         args = EventFlowAuthoring.sequence_args(
             tracks, cutscene=cutscene, skippable=skippable, wait=wait
@@ -611,7 +611,7 @@ class AuthoringEntity:
 # -- sequence track helpers (EVT-04) --------------------------------------------------------------
 def track(name, *steps):
     """A parallel track: ``track("hero", move("player", 40, 0, 1.0), face("player", "left"))``."""
-    from asteria.editor.event_flow_authoring import track as make_track
+    from asteria.editor.events.flow_authoring import track as make_track
 
     return make_track(name, *steps)
 

@@ -14,8 +14,8 @@ import pytest
 pygame = pytest.importorskip("pygame")
 
 from asteria import export_web  # noqa: E402
-from asteria.runtime.image_preloader import ImagePreloader  # noqa: E402
-from asteria.runtime.web_persistence import DictStorage, FolderMirror  # noqa: E402
+from asteria.runtime.scene.image_preloader import ImagePreloader  # noqa: E402
+from asteria.runtime.tools.web_persistence import DictStorage, FolderMirror  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 DEMO = REPO / "reference_projects" / "party_rpg_demo" / "project.asteria.json"
@@ -38,7 +38,7 @@ def test_the_app_folder_holds_the_game_a_slim_engine_the_font_and_main_py(export
     assert not (app / "run_game.py").exists()  # the desktop launcher stays home
     engine = app / "asteria"
     assert (engine / "runtime" / "playable_test_runtime.py").is_file()
-    assert (engine / "runtime" / "web_persistence.py").is_file()
+    assert (engine / "runtime" / "tools" / "web_persistence.py").is_file()
     for skipped in export_web.ENGINE_SKIP_DIRS:
         assert not (engine / skipped).exists(), skipped
     assert not (engine / "kernels" / "native").exists()

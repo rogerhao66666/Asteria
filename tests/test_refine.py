@@ -6,7 +6,7 @@ from test_break_battle import _project
 from test_session_events import _session
 
 from asteria.gameplay.modifiers import StatModifier
-from asteria.rpg.refine import RefineRules
+from asteria.rpg.items.refine import RefineRules
 
 
 def _game(rules=None, gold=10_000):

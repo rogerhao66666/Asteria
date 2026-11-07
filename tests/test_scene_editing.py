@@ -1,6 +1,6 @@
 from asteria.core import Scene
-from asteria.editor.model import EditorDocument
-from asteria.editor.scenes import (
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.scenes import (
     build_add_scene_command,
     build_remove_scene_command,
     build_reorder_scene_command,

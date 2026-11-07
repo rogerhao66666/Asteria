@@ -149,7 +149,7 @@ def add_slots(project):
 def add_to_shop(project):
     import trial_shops as shops
 
-    from asteria.rpg.economy import ShopDefinition, ShopEntry
+    from asteria.rpg.items.shops import ShopDefinition, ShopEntry
 
     db = project.rpg_database
     shop = db.shops.get("armour_shop")
@@ -168,8 +168,8 @@ def add_to_shop(project):
 
 def layouts(root):
     """The equipment and enhance screens' layouts (``MenuLayout``)."""
-    from asteria.presentation.menu_layout import MenuElement, MenuLayout, MenuSlotPlace
-    from asteria.presentation.ui_skin import NinePatch
+    from asteria.presentation.screens.menu_layout import MenuElement, MenuLayout, MenuSlotPlace
+    from asteria.presentation.screens.ui_skin import NinePatch
 
     target = Path(root) / DOLL
     target.parent.mkdir(parents=True, exist_ok=True)

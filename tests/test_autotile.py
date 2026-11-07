@@ -3,8 +3,8 @@
 import pytest
 
 from asteria.assets.types import AssetRef
-from asteria.editor.commands import CommandStack
-from asteria.editor.tile_edit import TileEditError, build_terrain_command, tile_at
+from asteria.editor.project.commands import CommandStack
+from asteria.editor.scene.tile_edit import TileEditError, build_terrain_command, tile_at
 from asteria.graphics import EMPTY_TILE, TileChunk, TileLayer, TileMap
 from asteria.graphics.autotile import (
     NE,
@@ -82,7 +82,7 @@ def test_other_terrains_and_empty_cells_do_not_join():
     tilemap, layer = _map()
     tileset = _tileset()
     auto = build_autotile_set(tileset, "water")
-    from asteria.editor.tile_edit import SetTileCommand
+    from asteria.editor.scene.tile_edit import SetTileCommand
 
     SetTileCommand(tilemap, layer, 1, 1, 7).redo()  # grass next to the water
     updates = terrain_updates(tilemap, layer, tileset, {"water": auto}, [(2, 1)])

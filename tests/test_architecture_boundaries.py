@@ -93,7 +93,7 @@ def test_playing_the_game_never_loads_mv_adapter_code(tmp_path):
 import sys
 from pathlib import Path
 from asteria.project_tools import load_project
-from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 root = Path({str(SRC.parents[1] / "reference_projects" / "complex_reference_rpg")!r})

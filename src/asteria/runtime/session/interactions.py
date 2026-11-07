@@ -6,8 +6,7 @@ from __future__ import annotations
 import random
 
 from asteria.events.conditions import EventCondition
-
-from .support import (
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 

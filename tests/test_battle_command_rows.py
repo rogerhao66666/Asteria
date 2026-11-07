@@ -15,12 +15,12 @@ sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402
 
-from asteria.presentation.battle_action_menu import (  # noqa: E402
+from asteria.presentation.battle.action_menu import (  # noqa: E402
     BattleActionEntry,
     BattleActionMenuRuntime,
 )
-from asteria.runtime.battle_commands import BattleCommands  # noqa: E402
-from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter  # noqa: E402
+from asteria.runtime.battle.commands import BattleCommands  # noqa: E402
+from asteria.runtime.battle.presentation import CanonicalBattleAdapter  # noqa: E402
 
 VESPER = "hero_03"
 KEYS = ("up", "down", "down", "category", "confirm", "confirm", "cancel", "left", "right")

@@ -8,7 +8,7 @@ changed cell of a collision layer opens or closes it."""
 
 from __future__ import annotations
 
-from .support import GameSessionError
+from asteria.runtime.session.support import GameSessionError
 
 
 class MapTilesMixin:

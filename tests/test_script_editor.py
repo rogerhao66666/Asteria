@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor.script_tools import complete, script_frames
+from asteria.editor.tools.script_tools import complete, script_frames
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 

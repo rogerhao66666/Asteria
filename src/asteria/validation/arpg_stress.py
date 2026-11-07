@@ -28,16 +28,16 @@ from asteria.gameplay.formulas import ValueFormula
 from asteria.gameplay.projectiles import ProjectileDefinition
 from asteria.project import Project
 from asteria.runtime import Collider2DComponent, FieldAIComponent
-from asteria.runtime.character_control import (
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
     Hitbox2DComponent,
     Hurtbox2DComponent,
 )
-from asteria.runtime.combat import CombatantComponent
-from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-from asteria.runtime.profiler import RuntimeProfiler
+from asteria.runtime.tools.profiler import RuntimeProfiler
 
 DT = 1.0 / 60.0
 

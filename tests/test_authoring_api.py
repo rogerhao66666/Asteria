@@ -1,6 +1,6 @@
 from asteria.authoring import AuthoringSession, run_authoring_script
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.commands import CommandStack, CommandTransaction
+from asteria.editor.project.commands import CommandStack, CommandTransaction
 from asteria.project import Project
 
 

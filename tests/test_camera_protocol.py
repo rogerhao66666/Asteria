@@ -1,4 +1,4 @@
-from asteria.editor.viewport import ViewportCamera
+from asteria.editor.scene.viewport import ViewportCamera
 
 
 def test_viewport_camera_supports_shared_render_transform_protocol():

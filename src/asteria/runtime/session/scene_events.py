@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from asteria.core import Transform
 from asteria.events import SceneEventRuntime
-
-from .support import (
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 
@@ -13,7 +12,7 @@ from .support import (
 class SceneEventsMixin:
     def check_visible_encounter(self):
         """Start the encounter of a field enemy (VisibleEncounterComponent) the player touches."""
-        from asteria.runtime.field_ai import VisibleEncounterComponent, touched_encounter
+        from asteria.runtime.field.ai import VisibleEncounterComponent, touched_encounter
 
         if self.mode != "field" or self.event_busy:
             return None

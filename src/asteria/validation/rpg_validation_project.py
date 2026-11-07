@@ -4,19 +4,18 @@ from dataclasses import dataclass
 
 from asteria.gameplay import AbilityRegistry, AbilityRuntime
 from asteria.rpg import AIDecisionRule, BattleRuntime, EnemyAIDefinition, Party, PartyMember
-
-from .character_progression_lab import CharacterProgressionLab
-from .equipment_lab import EquipmentLab
-from .inventory_crafting_lab import InventoryCraftingLab
-from .party_formation_lab import PartyFormationLab
-from .playable_battle import (
+from asteria.validation.character_progression_lab import CharacterProgressionLab
+from asteria.validation.equipment_lab import EquipmentLab
+from asteria.validation.inventory_crafting_lab import InventoryCraftingLab
+from asteria.validation.party_formation_lab import PartyFormationLab
+from asteria.validation.playable_battle import (
     PlayableBattleScenario,
     PlayableBattleValidationHarness,
     _damage_ability,
     _reference_enemy_subject,
     _subject_from_resolved_build,
 )
-from .playable_rpg import build_reference_actor_scenario
+from asteria.validation.playable_rpg import build_reference_actor_scenario
 
 
 @dataclass(frozen=True, slots=True)

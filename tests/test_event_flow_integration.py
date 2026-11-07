@@ -6,7 +6,7 @@ import pytest
 pygame = pytest.importorskip("pygame")
 
 from asteria.core import Transform  # noqa: E402
-from asteria.editor.event_flow_authoring import battle_condition, track  # noqa: E402
+from asteria.editor.events.flow_authoring import battle_condition, track  # noqa: E402
 from asteria.events import EventInstruction, EventProgram, LifecycleEventBinding  # noqa: E402
 from asteria.events.common import CommonEvent  # noqa: E402
 
@@ -219,7 +219,7 @@ def test_common_and_battle_events_panel_edits_the_project_with_undo(window):
 def test_sequence_editor_builds_tracks_and_the_event_editor_inserts_and_edits_them(
     window, monkeypatch
 ):
-    from asteria.editor.event_flow_widget import SequenceEditorDialog
+    from asteria.editor.events.flow_widget import SequenceEditorDialog
 
     dialog = SequenceEditorDialog()
     dialog.opcode.setCurrentText("MOVE")
@@ -242,7 +242,7 @@ def test_sequence_editor_builds_tracks_and_the_event_editor_inserts_and_edits_th
     }
     assert args["tracks"][1]["instructions"][0]["args"]["wait"] == 0.5
 
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     window.workspace.set_mode(WorkspaceMode.EVENT)
     boss = next(
@@ -387,8 +387,8 @@ def test_entity_events_lists_the_scenes_people_and_objects_beside_the_events(win
 
 
 def test_conditions_read_in_words_and_are_picked(window):
-    from asteria.editor.event_flow_widget import describe_condition
-    from asteria.editor.record_vocabulary import words
+    from asteria.editor.events.flow_widget import describe_condition
+    from asteria.editor.records.vocabulary import words
     from asteria.events.conditions import EventCondition as Condition
 
     names = {"warlord": "Crimson Warlord"}
@@ -423,8 +423,8 @@ def test_conditions_read_in_words_and_are_picked(window):
 
 
 def test_a_world_command_is_a_form_of_its_own_fields_and_loses_nothing(window):
-    from asteria.editor.world_command_form import WorldCommandDialog, WorldCommandForm
-    from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
+    from asteria.editor.events.world_command_form import WorldCommandDialog, WorldCommandForm
+    from asteria.runtime.session.world_commands import WORLD_COMMAND_ARGUMENTS
 
     form = WorldCommandForm(window.document)
     for command, keys in WORLD_COMMAND_ARGUMENTS.items():
@@ -456,8 +456,8 @@ def test_a_world_command_is_a_form_of_its_own_fields_and_loses_nothing(window):
 
 
 def test_a_new_name_takes_one_click_and_stays_free(window):
-    from asteria.editor.event_name_dialog import SwitchDialog, VariableDialog, name_picker
-    from asteria.editor.ui_fit import ValueCombo
+    from asteria.editor.events.name_dialog import SwitchDialog, VariableDialog, name_picker
+    from asteria.editor.ui.fit import ValueCombo
 
     combo = name_picker(window.document, "switch", "door_open")
     combo.setCurrentIndex(combo.findData(ValueCombo.NEW))
@@ -479,7 +479,7 @@ def test_a_new_name_takes_one_click_and_stays_free(window):
 
 
 def test_world_and_switch_commands_are_made_and_edited_by_dialogs(window, monkeypatch):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     window.workspace.set_mode(WorkspaceMode.EVENT)
     boss = next(
@@ -506,9 +506,9 @@ def test_world_and_switch_commands_are_made_and_edited_by_dialogs(window, monkey
 
 
 def test_a_new_command_goes_before_the_end_and_rows_name_records(window, monkeypatch):
-    from asteria.editor.event_editing import describe_instruction
-    from asteria.editor.workspace import WorkspaceMode
-    from asteria.editor.world_command_form import record_names
+    from asteria.editor.events.editing import describe_instruction
+    from asteria.editor.events.world_command_form import record_names
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.events import EventInstruction, EventProgram
 
     window.workspace.set_mode(WorkspaceMode.EVENT)
@@ -537,7 +537,7 @@ def test_a_new_command_goes_before_the_end_and_rows_name_records(window, monkeyp
 def test_a_sequence_step_is_edited_where_it_stands():
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.event_flow_widget import SequenceEditorDialog
+    from asteria.editor.events.flow_widget import SequenceEditorDialog
 
     _app = QApplication.instance() or QApplication([])
 

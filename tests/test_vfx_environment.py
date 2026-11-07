@@ -7,7 +7,7 @@ import pytest
 pygame = pytest.importorskip("pygame")
 
 from asteria.core import Entity, Scene, Transform  # noqa: E402
-from asteria.runtime.environment2d import (  # noqa: E402
+from asteria.runtime.scene.environment import (  # noqa: E402
     Environment2DComponent,
     LightSource2DComponent,
     ShadowCaster2DComponent,
@@ -169,7 +169,7 @@ def test_fog_mixes_toward_its_colour(gl):
 
 
 def test_pygame_fallback_lights_and_fogs_and_reports_gpu_only_effects():
-    from asteria.runtime.environment_fallback import PygameEnvironmentRenderer, unsupported
+    from asteria.runtime.scene.environment_fallback import PygameEnvironmentRenderer, unsupported
 
     scene = _scene(
         lighting_enabled=True, ambient_intensity=0.2, bloom_enabled=True, fog_density=0.0
@@ -183,7 +183,7 @@ def test_pygame_fallback_lights_and_fogs_and_reports_gpu_only_effects():
 
 
 def test_weather_is_deterministic_capped_and_follows_the_camera():
-    from asteria.runtime.weather import WeatherSystem
+    from asteria.runtime.scene.weather import WeatherSystem
 
     a, b = WeatherSystem(W, H, seed="s"), WeatherSystem(W, H, seed="s")
     for system in (a, b):
@@ -229,7 +229,7 @@ def test_environment_components_survive_project_save_and_reload(tmp_path):
 
 
 def _water(scene, x, y, w, h, **kw):
-    from asteria.runtime.environment2d import WaterRegion2DComponent
+    from asteria.runtime.scene.environment import WaterRegion2DComponent
 
     entity = scene.add_entity(Entity("Pond"))
     entity.add_component(Transform(x, y))
@@ -261,7 +261,7 @@ def test_water_ripples_and_tints_only_inside_its_region(gl):
 
 
 def test_water_fallback_shifts_rows_and_tints():
-    from asteria.runtime.environment_fallback import PygameEnvironmentRenderer
+    from asteria.runtime.scene.environment_fallback import PygameEnvironmentRenderer
 
     scene = _scene()
     _water(scene, 24, 32, 48, 64, amplitude=2.0, wavelength=8.0, tint_strength=0.5)
@@ -275,7 +275,7 @@ def test_water_fallback_shifts_rows_and_tints():
 
 
 def test_motion_echo_records_fades_and_expires():
-    from asteria.presentation.motion_fx import EchoSettings, MotionEcho
+    from asteria.presentation.visuals.motion_fx import EchoSettings, MotionEcho
 
     echo = MotionEcho(EchoSettings.of("afterimage"))
     echo.activate(0.0, 0.2)
@@ -295,10 +295,10 @@ def test_motion_fx_beats_give_battle_afterimages(resource_root, monkeypatch):
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from test_playable_battle_loop import _boss_runtime
 
-    from asteria.editor.action_timeline_authoring import ActionTimelineController
-    from asteria.editor.model import EditorDocument
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
-    from asteria.runtime.camera import Camera2D
+    from asteria.editor.animation.timeline_authoring import ActionTimelineController
+    from asteria.editor.project.model import EditorDocument
+    from asteria.runtime.battle.presentation import CanonicalBattleAdapter
+    from asteria.runtime.scene.camera import Camera2D
 
     runtime = _boss_runtime(resource_root)
     try:
@@ -312,7 +312,7 @@ def test_motion_fx_beats_give_battle_afterimages(resource_root, monkeypatch):
             assert not [
                 p for p in timeline.problems(timeline.get(sequence_id)) if "motion_fx" in p
             ]
-        from asteria.editor.action_timeline_authoring import ActionTimelineError
+        from asteria.editor.animation.timeline_authoring import ActionTimelineError
 
         with pytest.raises(ActionTimelineError, match="motion_fx cue"):  # rejected when authored
             timeline.add_beat(
@@ -353,7 +353,7 @@ def test_field_trail_and_environment_layers_on_the_pygame_path(resource_root, mo
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from test_playable_battle_loop import _boss_runtime
 
-    from asteria.runtime.environment2d import MotionTrail2DComponent
+    from asteria.runtime.scene.environment import MotionTrail2DComponent
 
     runtime = _boss_runtime(resource_root)
     try:

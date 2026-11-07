@@ -1,4 +1,4 @@
-from asteria.editor.theme import ASTERIA_DARK, ASTERIA_DARK_QSS, WORKSPACE_ACCENTS
+from asteria.editor.ui.theme import ASTERIA_DARK, ASTERIA_DARK_QSS, WORKSPACE_ACCENTS
 
 
 def test_theme_has_coherent_tokens_and_nonempty_qss():
@@ -105,7 +105,7 @@ def test_buttons_have_colour_roles_and_each_workspace_its_accent():
 
 
 def test_every_palette_fills_the_whole_style_sheet():
-    from asteria.editor.theme import PALETTES, build_qss
+    from asteria.editor.ui.theme import PALETTES, build_qss
 
     for key, palette in PALETTES.items():
         qss = build_qss(palette)
@@ -114,7 +114,7 @@ def test_every_palette_fills_the_whole_style_sheet():
 
 
 def test_saved_palette_name_falls_back_to_the_default():
-    from asteria.editor.theme import DEFAULT_PALETTE, palette_name
+    from asteria.editor.ui.theme import DEFAULT_PALETTE, palette_name
 
     class Settings(dict):
         def value(self, key, default=None):
@@ -129,7 +129,7 @@ def test_tooltips_show_quickly_and_the_theme_can_be_applied_again(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication, QStyle
 
-    from asteria.editor.theme import TOOLTIP_DELAY_MS, apply_asteria_theme
+    from asteria.editor.ui.theme import TOOLTIP_DELAY_MS, apply_asteria_theme
 
     app = QApplication.instance() or QApplication([])
     apply_asteria_theme(app)
@@ -143,7 +143,7 @@ def test_a_padded_label_has_no_hidden_indent(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication, QLabel
 
-    from asteria.editor.theme import apply_asteria_theme
+    from asteria.editor.ui.theme import apply_asteria_theme
 
     app = QApplication.instance() or QApplication([])
     apply_asteria_theme(app)

@@ -9,9 +9,8 @@ from pathlib import Path
 import pytest
 
 from asteria.gameplay.abilities import AbilityDefinition
-from asteria.rpg.capture import CaptureRule
-from asteria.rpg.enemies import EncounterDefinition, EncounterMember
-from asteria.rpg.pets import (
+from asteria.rpg.battle.capture import CaptureRule
+from asteria.rpg.characters.pets import (
     PetExpCurve,
     PetMove,
     PetRecord,
@@ -19,7 +18,8 @@ from asteria.rpg.pets import (
     PetSpeciesDefinition,
     PetStatFormula,
 )
-from asteria.rpg.save_state import RpgRuntimeState
+from asteria.rpg.data.save_state import RpgRuntimeState
+from asteria.rpg.enemies.definitions import EncounterDefinition, EncounterMember
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 sys.path.insert(0, str(DEMO))
@@ -244,7 +244,7 @@ def test_creatures_fight_from_the_bench_and_the_trainer_stays_out(monkeypatch):
     assert game.battle_profile_key("pet:cub#1") == "pet"
     assert game.battle_profile_key("cub:1") == "pet"
     assert game.foe_definition("cub").display_name == "Cub"
-    from asteria.runtime.battle_commands import BattleCommands
+    from asteria.runtime.battle.commands import BattleCommands
 
     commands = BattleCommands(game)
     assert commands.display_name("cub:1") == "Cub" and commands.display_name("wolf:2") == "Wolf"
@@ -394,7 +394,7 @@ def test_a_creature_with_no_move_uses_left_struggles_and_hurts_itself(monkeypatc
 def test_the_creature_screen_picks_music_by_the_kind_of_battle(monkeypatch):
     from types import SimpleNamespace
 
-    from asteria.runtime.creature_battle import CreatureBattleScreen
+    from asteria.runtime.creature.battle import CreatureBattleScreen
 
     tracks = {
         "wild": "w.ogg",
@@ -426,7 +426,7 @@ def test_the_creature_screen_picks_music_by_the_kind_of_battle(monkeypatch):
 
 
 def test_a_creature_called_back_loses_its_battle_counters(monkeypatch):
-    from asteria.rpg.battle_session_rules import BattleSessionRules
+    from asteria.rpg.battle.session_rules import BattleSessionRules
 
     game = _creature_game(monkeypatch)
     db = game.project.rpg_database
@@ -446,7 +446,7 @@ def test_a_creature_called_back_loses_its_battle_counters(monkeypatch):
 def test_the_creature_screen_tells_effectiveness_by_its_rules_and_switch_lines():
     from types import SimpleNamespace
 
-    from asteria.runtime.creature_battle import _effectiveness
+    from asteria.runtime.creature.battle_style import _effectiveness
 
     outcome = SimpleNamespace(
         value=SimpleNamespace(trace=(("type.water_vs_fire", 10.0, 20.0), ("crit_x", 20.0, 40.0)))

@@ -1,4 +1,4 @@
-"""The field's start menu in a creature game's art (runtime/creature_menu.py): rows shown by
+"""The field's start menu in a creature game's art (runtime/creature/menu.py): rows shown by
 switches, switching party places, bag pockets, the dex's seen / owned, options kept in
 variables, saving to a slot, and the time played."""
 
@@ -44,7 +44,7 @@ def _menu(monkeypatch, tmp_path):
     import run_trial_smoke as smoke
     import trial_creatures
 
-    from asteria.runtime.creature_menu import CreatureMenuScreen
+    from asteria.runtime.creature.menu import CreatureMenuScreen
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")

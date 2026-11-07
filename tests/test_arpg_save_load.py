@@ -74,7 +74,7 @@ def test_a_played_session_comes_back_exactly_after_save_and_load(monkeypatch, tm
         game.allocate_progression("hero", "warrior_tree", node)
     game.allocate_progression("hero", "attributes", "a_str")
     # loot: a rolled drop is picked up, one piece is worn, the potion count changes
-    from asteria.rpg.loot import roll_equipment
+    from asteria.rpg.items.loot import roll_equipment
 
     db = project.rpg_database
     import random
@@ -129,7 +129,7 @@ def test_a_played_session_comes_back_exactly_after_save_and_load(monkeypatch, tm
 
 
 def test_a_save_made_in_a_side_view_scene_loads_back_into_it(monkeypatch, tmp_path):
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
     from asteria.runtime.game_save import GameRuntimeSave
 
     rt, project = _open(monkeypatch)
@@ -151,7 +151,7 @@ def test_a_save_made_in_a_side_view_scene_loads_back_into_it(monkeypatch, tmp_pa
 
 
 def test_a_defeated_boss_stays_dead_after_save_and_load(monkeypatch, tmp_path):
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action.combat import CombatantComponent
     from asteria.runtime.game_save import GameRuntimeSave
 
     rt, project = _open(monkeypatch)
@@ -172,7 +172,7 @@ def test_a_defeated_boss_stays_dead_after_save_and_load(monkeypatch, tmp_path):
     # defeat it the way play does: a hit that kills goes through the combat system
     from asteria.gameplay.attacks import AttackDefinition
     from asteria.gameplay.formulas import ValueFormula
-    from asteria.runtime.character_control import HitEvent
+    from asteria.runtime.field.character_control import HitEvent
 
     game.project.gameplay_library.attacks["_kill"] = AttackDefinition(
         "_kill", damage=ValueFormula.constant(1e9)

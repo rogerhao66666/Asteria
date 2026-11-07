@@ -1116,7 +1116,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 
 ### 15.16 世界指令
 
-`WORLD` 指令可以執行的 84 個世界指令與各自讀取的參數名（`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`）。編輯器裡：事件 ▸ 世界。
+`WORLD` 指令可以執行的 84 個世界指令與各自讀取的參數名（`asteria.runtime.session.world_commands.WORLD_COMMAND_ARGUMENTS`）。編輯器裡：事件 ▸ 世界。
 
 | 指令 | 參數 |
 | --- | --- |

@@ -28,7 +28,7 @@ import trial_lucifer as lucifer  # noqa: E402
 import trial_maps as world  # noqa: E402
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
-from asteria.presentation.battle_combatant_visuals import (  # noqa: E402
+from asteria.presentation.battle.combatant_visuals import (  # noqa: E402
     BattleCombatantVisualProfile,
     BattleVisualAssetSet,
     BattleVisualStateDefinition,

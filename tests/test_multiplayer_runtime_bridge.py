@@ -9,7 +9,7 @@ import pytest
 
 from asteria.multiplayer.boss_demo import build_boss_adapter
 from asteria.multiplayer.server import MultiplayerServer
-from asteria.runtime.multiplayer_preview import (
+from asteria.runtime.tools.multiplayer_preview import (
     MultiplayerPreviewBridge,
     load_runtime_multiplayer_profile,
     map_network_position,
@@ -192,10 +192,10 @@ def test_project_snapshot_replaces_scene_and_maps_guest_without_local_simulation
     from asteria.core import Transform
     from asteria.core.serialization import serialize_scene
     from asteria.project import Project
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action.combat import CombatantComponent
     from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.multiplayer_preview import apply_project_snapshot
+    from asteria.runtime.tools.multiplayer_preview import apply_project_snapshot
 
     demo_root = (
         Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
@@ -247,7 +247,7 @@ def test_authoritative_menu_commands_do_not_mutate_projected_save():
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.multiplayer_preview import install_authoritative_commands
+    from asteria.runtime.tools.multiplayer_preview import install_authoritative_commands
 
     demo_root = (
         Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
@@ -301,7 +301,7 @@ def test_project_server_drives_real_runtime_frames_and_skill_screen(monkeypatch,
     from asteria.multiplayer.project_demo import build_project_adapter
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.network_bag_screen import NetworkSkillTreeScreen
+    from asteria.runtime.menus.network_bag import NetworkSkillTreeScreen
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     demo_root = (
@@ -422,11 +422,11 @@ def test_project_snapshot_keeps_each_guests_class_appearance():
 
     from asteria.core.serialization import serialize_scene
     from asteria.project import Project
-    from asteria.runtime.actor_link import ClassAppearanceComponent
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.components2d import SpriteRenderer2D
+    from asteria.runtime.field.actor_link import ClassAppearanceComponent
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.multiplayer_preview import apply_project_snapshot
+    from asteria.runtime.scene.components import SpriteRenderer2D
+    from asteria.runtime.tools.multiplayer_preview import apply_project_snapshot
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_multiplayer_demo"
     project = Project.load_json(root / "project.asteria.json", default_component_registry())

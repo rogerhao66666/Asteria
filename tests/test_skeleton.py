@@ -160,7 +160,7 @@ def test_sprite_rows_become_texture_draws_rotating_about_the_pivot():
     from types import SimpleNamespace
 
     from asteria.graphics.skeleton import SpriteDraw
-    from asteria.runtime.skeleton_draw import to_texture_draws
+    from asteria.runtime.scene.skeleton_draw import to_texture_draws
 
     frame = SimpleNamespace(x=0, y=0, width=10, height=20, pivot_x=5, pivot_y=20)  # feet pivot
     sheet = SimpleNamespace(frames=[frame], texture=SimpleNamespace(asset_id="tex"))

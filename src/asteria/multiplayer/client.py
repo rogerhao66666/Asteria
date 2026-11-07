@@ -11,9 +11,9 @@ import uuid
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from .delta import DeltaError
-from .delta import apply as apply_delta
-from .protocol import (
+from asteria.multiplayer.delta import DeltaError
+from asteria.multiplayer.delta import apply as apply_delta
+from asteria.multiplayer.protocol import (
     MAX_FRAME_BYTES,
     ProtocolError,
     clean_guest_id,
@@ -107,7 +107,7 @@ class MultiplayerClient:
             connection = socket.create_connection((str(host), int(port)), timeout=float(timeout))
             connection.settimeout(float(timeout))
             if tls:
-                from .security import client_context
+                from asteria.multiplayer.security import client_context
 
                 context = tls if isinstance(tls, ssl.SSLContext) else client_context(cafile)
                 connection = context.wrap_socket(

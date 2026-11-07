@@ -1,4 +1,4 @@
-from .abilities import (
+from asteria.gameplay.abilities import (
     AbilityCost,
     AbilityDefinition,
     AbilityEffect,
@@ -9,7 +9,7 @@ from .abilities import (
     AbilityTargetMode,
     TargetingRule,
 )
-from .action_timeline import (
+from asteria.gameplay.action_timeline import (
     ActionCue,
     ActionCueKind,
     ActionTimeline,
@@ -17,8 +17,8 @@ from .action_timeline import (
     PresentationCue,
     TimelineAdvanceResult,
 )
-from .components import GameplayAttributesComponent
-from .conditions import (
+from asteria.gameplay.components import GameplayAttributesComponent
+from asteria.gameplay.conditions import (
     ConditionGroup,
     ConditionGroupMode,
     ConditionSubject,
@@ -32,14 +32,14 @@ from .conditions import (
     deserialize_condition,
     serialize_condition,
 )
-from .effects import (
+from asteria.gameplay.effects import (
     Effect,
     EffectApplicationResult,
     EffectOperation,
     EffectOperationKind,
     apply_effect,
 )
-from .formulas import (
+from asteria.gameplay.formulas import (
     ConditionalMultiplier,
     FormulaBuilder,
     FormulaCondition,
@@ -48,9 +48,9 @@ from .formulas import (
     ValueFormula,
     ValueSource,
 )
-from .library import GameplayLibrary
-from .modifiers import ModifierOperation, ModifierSet, StatModifier
-from .presets import (
+from asteria.gameplay.library import GameplayLibrary
+from asteria.gameplay.modifiers import ModifierOperation, ModifierSet, StatModifier
+from asteria.gameplay.presets import (
     GameplayPresetCatalog,
     GameplayStarterAttributes,
     basic_attack_ability,
@@ -61,7 +61,7 @@ from .presets import (
     standard_magic_formula,
     standard_physical_formula,
 )
-from .states import (
+from asteria.gameplay.states import (
     ActiveState,
     PeriodicEffect,
     StackingPolicy,
@@ -69,8 +69,8 @@ from .states import (
     StateRegistry,
     StateRuntime,
 )
-from .stats import ResourcePool, ResourceValue, StatBlock
-from .tags import TagSet, normalize_tag
+from asteria.gameplay.stats import ResourcePool, ResourceValue, StatBlock
+from asteria.gameplay.tags import TagSet, normalize_tag
 
 __all__ = [
     "AbilityCost",
@@ -143,7 +143,7 @@ __all__ = [
     "standard_physical_formula",
 ]
 
-from .triggers import (
+from asteria.gameplay.triggers import (
     GameplayTrigger,
     TriggerEvent,
     TriggerExecutionResult,

@@ -8,22 +8,22 @@ import pytest
 
 from asteria.core import Entity, Scene, Transform
 from asteria.editor import EditorDocument
-from asteria.editor.collision_overlay import build_combat_boxes
-from asteria.editor.combat_authoring import KINDS, CombatAuthoringController, CombatAuthoringError
-from asteria.editor.problems import collect_problems
+from asteria.editor.combat.authoring import KINDS, CombatAuthoringController, CombatAuthoringError
+from asteria.editor.project.problems import collect_problems
+from asteria.editor.scene.collision_overlay import build_combat_boxes
 from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
 from asteria.gameplay.attacks import AttackDefinition
 from asteria.gameplay.projectiles import ProjectileDefinition
 from asteria.project import Project
-from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
-from asteria.runtime.action_combat import ActionCombatComponent
-from asteria.runtime.character_control import (
+from asteria.rpg.world.behavior_tree import BehaviorNode, BehaviorTree
+from asteria.runtime.action.abilities import ActionCombatComponent
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     Hitbox2DComponent,
     Hurtbox2DComponent,
 )
-from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.field.collision import Collider2DComponent
 
 
 def _document():
@@ -62,8 +62,8 @@ def test_every_kind_is_created_edited_duplicated_deleted_and_undone():
 
 def test_the_workspace_form_edits_the_record_and_previews_live():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.attack_preview import sample_damage
-    from asteria.editor.combat_workspace import (
+    from asteria.editor.combat.attack_preview import sample_damage
+    from asteria.editor.combat.workspace import (
         AttackPreview,
         CombatWorkspace,
         ProjectilePreview,
@@ -129,7 +129,7 @@ def test_the_workspace_form_edits_the_record_and_previews_live():
 
 
 def test_the_scene_view_outlines_colliders_hurtboxes_and_facing_hitboxes():
-    from asteria.editor.viewport import ViewportCamera
+    from asteria.editor.scene.viewport import ViewportCamera
 
     scene = Scene("S")
     hero = scene.add_entity(Entity("Hero"))
@@ -215,8 +215,8 @@ def test_problems_name_broken_real_time_combat_references():
 
 def test_the_record_actions_sit_at_the_foot_and_the_completion_list_closes_with_its_page():
     QtWidgets = pytest.importorskip("PySide6.QtWidgets")
-    from asteria.editor.code_workspace import CodeWorkspaceWidget
-    from asteria.editor.combat_workspace import CombatWorkspace
+    from asteria.editor.combat.workspace import CombatWorkspace
+    from asteria.editor.tools.code_workspace import CodeWorkspaceWidget
 
     qapp = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     document = _document()
@@ -256,7 +256,7 @@ def _hit(**values):
 
 
 def test_the_attack_preview_plays_the_hit_by_this_attacks_numbers():
-    from asteria.editor.attack_preview import attacker_state, plan_for, target_state
+    from asteria.editor.combat.attack_preview import attacker_state, plan_for, target_state
 
     plan = plan_for(_hit(hitstop=0.2, hitstun=0.5, knockback=300, target_iframes=1.0))
     assert target_state(plan, plan.hit_at - 0.01).sheet == "idle"
@@ -288,7 +288,7 @@ def test_the_attack_preview_plays_the_hit_by_this_attacks_numbers():
 
 
 def test_the_attack_preview_shows_a_sample_of_the_damage_or_says_there_is_none():
-    from asteria.editor.attack_preview import sample_damage
+    from asteria.editor.combat.attack_preview import sample_damage
     from asteria.gameplay.formulas import ValueFormula
 
     assert sample_damage(_hit(), {}) == (None, False)
@@ -300,8 +300,8 @@ def test_the_attack_preview_shows_a_sample_of_the_damage_or_says_there_is_none()
 
 def test_the_attack_preview_runs_only_while_seen_and_draws_without_the_art():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor import attack_preview
-    from asteria.editor.attack_preview import AttackPreview, plan_for
+    from asteria.editor.combat import attack_preview
+    from asteria.editor.combat.attack_preview import AttackPreview, plan_for
 
     qapp = QApplication.instance() or QApplication([])
     preview = AttackPreview()
@@ -353,8 +353,8 @@ def test_the_attack_preview_runs_only_while_seen_and_draws_without_the_art():
 
 def test_combat_fields_are_picked_and_keep_values_not_on_the_list():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.combat_workspace import CombatWorkspace
-    from asteria.editor.record_form import ChipList
+    from asteria.editor.combat.workspace import CombatWorkspace
+    from asteria.editor.records.form_chips import ChipList
     from asteria.gameplay.projectiles import ProjectileDefinition as Shot
 
     qapp = QApplication.instance() or QApplication([])
@@ -403,7 +403,7 @@ def test_combat_fields_are_picked_and_keep_values_not_on_the_list():
 
 def test_a_damage_formula_keeps_its_exact_numbers_through_the_form():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.combat_workspace import FormulaEditor
+    from asteria.editor.combat.workspace import FormulaEditor
 
     QApplication.instance() or QApplication([])
     editor = FormulaEditor()
@@ -413,7 +413,7 @@ def test_a_damage_formula_keeps_its_exact_numbers_through_the_form():
 
 
 def test_the_swing_is_a_cut_from_above_and_always_shows_the_slash():
-    from asteria.editor import attack_preview as ap
+    from asteria.editor.combat import attack_preview as ap
 
     # the swordsman stands on the right: facing left the art comes down as drawn
     assert ap.SHEETS[("attacker", "swing")][1] == "Left/Png/WarriorLeftAttack01.png"
@@ -436,7 +436,7 @@ def test_the_swing_is_a_cut_from_above_and_always_shows_the_slash():
 
 
 def test_a_long_stun_flinches_red_then_stands_dazed_and_a_pushed_monster_fades_back():
-    from asteria.editor import attack_preview as ap
+    from asteria.editor.combat import attack_preview as ap
 
     plan = ap.plan_for(_hit(hitstun=2.0, knockback=100))
     flinch = ap.target_state(plan, plan.moves_at + 0.02)
@@ -452,7 +452,7 @@ def test_a_long_stun_flinches_red_then_stands_dazed_and_a_pushed_monster_fades_b
 
 def test_the_attack_preview_names_the_attack_and_every_setting_shows():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.attack_preview import AttackPreview
+    from asteria.editor.combat.attack_preview import AttackPreview
 
     qapp = QApplication.instance() or QApplication([])
     preview = AttackPreview()
@@ -485,7 +485,7 @@ def test_the_attack_preview_names_the_attack_and_every_setting_shows():
 
 
 def test_an_attack_a_projectile_carries_is_thrown_at_the_shots_real_speed():
-    from asteria.editor import attack_preview as ap
+    from asteria.editor.combat import attack_preview as ap
     from asteria.gameplay.projectiles import ProjectileDefinition as Shot
 
     stone = Shot("stone", attack_id="hit", speed=220.0, lifetime=0.7, width=6.0, height=6.0)
@@ -512,7 +512,7 @@ def test_an_attack_a_projectile_carries_is_thrown_at_the_shots_real_speed():
 
 
 def test_a_shot_starts_only_as_far_as_it_can_arrive_from():
-    from asteria.editor import attack_preview as ap
+    from asteria.editor.combat import attack_preview as ap
     from asteria.gameplay.projectiles import ProjectileDefinition as Shot
 
     short = ap.shot_path(Shot("s", speed=100.0, lifetime=0.3))
@@ -533,7 +533,7 @@ def test_the_preview_throws_the_first_carrier_and_names_them_all():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
     from PySide6.QtGui import QPixmap
 
-    from asteria.editor.attack_preview import AttackPreview
+    from asteria.editor.combat.attack_preview import AttackPreview
     from asteria.gameplay.projectiles import ProjectileDefinition as Shot
 
     qapp = QApplication.instance() or QApplication([])
@@ -576,7 +576,7 @@ def test_the_preview_throws_the_first_carrier_and_names_them_all():
 
 def test_a_state_shows_as_a_chip_and_only_an_empty_hit_says_it_does_nothing():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.attack_preview import AttackPreview, sample_damage
+    from asteria.editor.combat.attack_preview import AttackPreview, sample_damage
     from asteria.gameplay.formulas import ValueFormula
 
     QApplication.instance() or QApplication([])
@@ -626,8 +626,8 @@ def test_a_state_shows_as_a_chip_and_only_an_empty_hit_says_it_does_nothing():
 
 def test_the_workspace_gives_the_preview_its_projectiles_and_state_names():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.attack_preview import AttackPreview
-    from asteria.editor.combat_workspace import CombatWorkspace
+    from asteria.editor.combat.attack_preview import AttackPreview
+    from asteria.editor.combat.workspace import CombatWorkspace
     from asteria.gameplay.projectiles import ProjectileDefinition as Shot
 
     qapp = QApplication.instance() or QApplication([])
@@ -651,7 +651,7 @@ def test_the_workspace_gives_the_preview_its_projectiles_and_state_names():
 
 def test_pause_sits_right_under_the_stage_with_room_around_it():
     QApplication = pytest.importorskip("PySide6.QtWidgets").QApplication
-    from asteria.editor.attack_preview import AttackPreview, plan_for
+    from asteria.editor.combat.attack_preview import AttackPreview, plan_for
     from asteria.gameplay.projectiles import ProjectileDefinition
 
     qapp = QApplication.instance() or QApplication([])

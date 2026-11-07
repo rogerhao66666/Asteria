@@ -5,15 +5,15 @@ slopes and ladders; every option defaults to the earlier behaviour."""
 import pytest
 
 from asteria.core import ComponentRegistry, Entity, Scene, Transform, deserialize_component
-from asteria.runtime.character_control import (
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     CharacterControllerSystem,
     PlayerInput2DComponent,
     PlayerInputSystem,
     register_character_components,
 )
-from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.input import InputSnapshot
+from asteria.runtime.field.collision import Collider2DComponent
+from asteria.runtime.input_map import InputSnapshot
 
 DT = 1 / 60
 
@@ -187,7 +187,7 @@ def test_old_controllers_and_colliders_load_with_the_earlier_behaviour():
 
 
 def test_a_side_view_character_has_its_feet_at_the_bottom_of_its_box():
-    from asteria.runtime.character_control import feet_y
+    from asteria.runtime.field.character_control import feet_y
 
     side = Entity("Side")
     side.add_component(_set(CharacterController2DComponent(), mode="side", half_height=7.0))

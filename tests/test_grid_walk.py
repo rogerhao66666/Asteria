@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from asteria.runtime.grid_walk import GridWalker
+from asteria.runtime.field.grid_walk import GridWalker
 
 
 def _walk(walker, transform, facing, dx, dy, seconds, blocked=lambda x, y: False, dt=1 / 60):

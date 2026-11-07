@@ -2,7 +2,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 
 from asteria.assets import AssetRef
-from asteria.assets.rpg_maker_mv_weapon import apply_weapon_overlays, weapon_overlay_for_loadout
+from asteria.assets.rpg_maker_mv.weapon import apply_weapon_overlays, weapon_overlay_for_loadout
 from asteria.gameplay import (
     ActionCue,
     GameplaySubject,

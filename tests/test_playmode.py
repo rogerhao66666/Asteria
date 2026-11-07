@@ -1,6 +1,6 @@
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.model import EditorDocument
-from asteria.editor.playmode import create_play_session
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.playmode import create_play_session
 from asteria.project import Project
 
 

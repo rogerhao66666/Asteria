@@ -39,7 +39,7 @@ def test_focus_mode_folds_both_sides_and_brings_them_back(window):
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QDockWidget
 
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     sides = (Qt.LeftDockWidgetArea, Qt.RightDockWidgetArea)
 
@@ -78,8 +78,8 @@ def test_focus_mode_folds_both_sides_and_brings_them_back(window):
 
 
 def test_search_everything_finds_and_opens(window):
-    from asteria.editor.global_search import matches, open_entry, search_entries
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.global_search import matches, open_entry, search_entries
+    from asteria.editor.project.workspace import WorkspaceMode
 
     assert window.search_action.shortcut().toString() == "Ctrl+K"
     entries = search_entries(window)

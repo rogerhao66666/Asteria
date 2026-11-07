@@ -13,8 +13,8 @@ def test_hits_costs_and_states_are_added_in_the_record_tree_and_applied():
     from test_break_battle import _project
 
     from asteria.editor import EditorDocument
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.records.hub import AdapterFamilyWidget
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     QApplication.instance() or QApplication([])
     project = _project()

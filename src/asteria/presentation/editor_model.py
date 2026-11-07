@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from .canonical import Kind, Node, Sequence
+from asteria.presentation.canonical import Kind, Node, Sequence
 
 _CONTAINER = {Kind.SEQUENCE, Kind.PARALLEL, Kind.BRANCH, Kind.LOOP}
 

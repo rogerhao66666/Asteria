@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .binding import EventTriggerKind, SceneEventBindings
-from .context import EventContext
-from .scheduler import EventScheduler
+from asteria.events.binding import EventTriggerKind, SceneEventBindings
+from asteria.events.context import EventContext
+from asteria.events.scheduler import EventScheduler
 
 
 @dataclass(slots=True)

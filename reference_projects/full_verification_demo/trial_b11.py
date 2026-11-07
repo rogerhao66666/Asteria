@@ -19,7 +19,7 @@ from asteria.gameplay.formulas import FormulaTerm, ValueFormula
 from asteria.gameplay.modifiers import StatModifier
 from asteria.gameplay.states import StateDefinition
 from asteria.rpg import BattleStatePolicy, ClassDefinition
-from asteria.rpg.interactions import OutcomeCheckDefinition
+from asteria.rpg.battle.interactions import OutcomeCheckDefinition
 
 HP, SP, BP = tc.HP, tc.SP, tc.BP
 ability, op, damage, healing = tc.ability, tc.op, tc.damage, tc.healing

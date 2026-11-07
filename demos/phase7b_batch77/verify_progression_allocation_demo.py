@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 
-from asteria.editor.model import EditorDocument
-from asteria.editor.storage import load_document
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.storage import load_document
 from asteria.rpg import ProgressionAllocationRuntime, RpgRuntimeState
 
 root = Path(__file__).resolve().parents[2]

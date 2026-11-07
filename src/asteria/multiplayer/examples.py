@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
-from .adapter import AdapterUpdate
+from asteria.multiplayer.adapter import AdapterUpdate
 
 
 class SharedCounterAdapter:

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from asteria.rpg.built_in_text import translated
-from asteria.runtime.game_menus import (
+from asteria.rpg.text.built_in_text import translated
+from asteria.runtime.game_session import GameSessionRuntime
+from asteria.runtime.menus.game_menus import (
     CraftingScreen,
 )
-from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.status_menu import TAB_WORDS, TABS, StatusMenu
+from asteria.runtime.menus.status import TAB_WORDS, TABS, StatusMenu
 
 
 class MenusInputMixin:
@@ -263,7 +263,7 @@ class MenusInputMixin:
         elif choice == "enhance":
             self.open_enhance_screen(back="pause")
         elif choice in ("backlog", "music", "credits", "skill_slots"):
-            from asteria.runtime import extras_screens
+            from asteria.runtime.menus import extras as extras_screens
 
             screen = {
                 "backlog": extras_screens.BacklogScreen,
@@ -276,7 +276,7 @@ class MenusInputMixin:
         elif choice.startswith("entry:"):
             self._run_menu_entry(choice[len("entry:") :])
         elif choice == "pets":
-            from asteria.runtime.pets_screen import PetsScreen
+            from asteria.runtime.menus.pets import PetsScreen
 
             self._pets_screen = PetsScreen(self)
             self._ui_mode = "pets"
@@ -349,7 +349,7 @@ class MenusInputMixin:
 
     def _open_crafting(self, station, back="field"):
         if self._multiplayer_connected():
-            from asteria.runtime.network_bag_screen import NetworkCraftingScreen
+            from asteria.runtime.menus.network_bag import NetworkCraftingScreen
 
             self._crafting_screen = NetworkCraftingScreen(self, station)
         else:

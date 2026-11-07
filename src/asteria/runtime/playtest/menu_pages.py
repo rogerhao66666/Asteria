@@ -12,8 +12,7 @@ picture, description and facts beside the list or behind a Details button (D88, 
 
 from __future__ import annotations
 
-from asteria.rpg.data_text import record_key
-from asteria.rpg.menu_pages import (
+from asteria.rpg.menus.pages import (
     MENU_ENTRY,
     PAGE_ENTRY,
     menu_pages,
@@ -21,9 +20,10 @@ from asteria.rpg.menu_pages import (
     pause_menu,
     usable_pause_entries,
 )
-from asteria.rpg.menu_rules import STAT_COLUMNS
-from asteria.runtime.crafting_screen import wrap
-from asteria.runtime.game_menus import PAUSE_WORDS, text_keys
+from asteria.rpg.menus.rules import STAT_COLUMNS
+from asteria.rpg.text.data_text import record_key
+from asteria.runtime.menus.crafting import wrap
+from asteria.runtime.menus.game_menus import PAUSE_WORDS, text_keys
 
 
 def _number(value):
@@ -125,10 +125,10 @@ class MenuPagesMixin:
             self.open_equipment_screen(back="pause")
             return
         if page == "skills":
-            from asteria.runtime.skill_tree_screen import SkillTreeScreen
+            from asteria.runtime.menus.skill_tree import SkillTreeScreen
 
             if self._multiplayer_connected():
-                from asteria.runtime.network_bag_screen import NetworkSkillTreeScreen
+                from asteria.runtime.menus.network_bag import NetworkSkillTreeScreen
 
                 tree = NetworkSkillTreeScreen(self)
             else:
@@ -193,6 +193,7 @@ class MenuPagesMixin:
         exp = tr("status.exp", "EXP {value}", value=f"{experience:g}")
         c.text("exp", exp, px + pw, py + 2, size=18, color=muted, anchor="topright")
         bar_y = py + 62
+        knockout = game.rules.knockout_resource_id  # the bar that ends a fight is drawn red
         for resource in (view.resources if view is not None else ())[:3]:
             name = menu._word("resource", resource.resource_id, resource.label)
             self.text(name, px, bar_y, size=18, color=normal)
@@ -200,7 +201,7 @@ class MenuPagesMixin:
             pg.draw.rect(self.screen, (30, 34, 48), bar, border_radius=4)
             share = resource.current / resource.maximum if resource.maximum else 0.0
             fill = (bar[0], bar[1], int(bar[2] * max(0.0, min(1.0, share))), bar[3])
-            tone = (214, 72, 72) if resource.resource_id.lower() in ("hp", "vitality") else None
+            tone = (214, 72, 72) if knockout and resource.resource_id == knockout else None
             pg.draw.rect(self.screen, tone or (70, 128, 222), fill, border_radius=4)
             amount = f"{resource.current:g} / {resource.maximum:g}"
             self.text(amount, bar[0] + bar[2] // 2, bar_y + 2, size=16, anchor="midtop")
@@ -451,7 +452,7 @@ class MenuPagesMixin:
             self.hotspot(rect.inflate(16, 10), key="f")  # a click: the next filter
 
     def _draw_item_detail(self, c, menu, rect):
-        """The chosen row's :class:`~asteria.runtime.status_menu.ItemDetail` in ``rect``: its
+        """The chosen row's :class:`~asteria.runtime.menus.status.ItemDetail` in ``rect``: its
         icon big, its name in its rarity's colour, what it is, its description and facts."""
 
         detail = menu.detail()

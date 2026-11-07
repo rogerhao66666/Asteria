@@ -278,7 +278,7 @@ def test_editor_export_game_saves_and_packages(tmp_path):
     window.document.set_project(
         load_project(source / "project.asteria.json"), file_path=source / "project.asteria.json"
     )
-    from asteria.editor.commands import SetAttributeCommand
+    from asteria.editor.project.commands import SetAttributeCommand
 
     window.document.execute(
         SetAttributeCommand(

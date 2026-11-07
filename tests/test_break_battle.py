@@ -17,8 +17,8 @@ from test_session_events import _session
 from asteria.gameplay import Effect, EffectOperation, EffectOperationKind
 from asteria.gameplay.states import PeriodicEffect, StateDefinition
 from asteria.rpg import BattleStatePolicy
-from asteria.rpg.interactions import InteractionRule
-from asteria.rpg.items import EquipmentSlotDefinition, ItemDefinition
+from asteria.rpg.battle.interactions import InteractionRule
+from asteria.rpg.items.definitions import EquipmentSlotDefinition, ItemDefinition
 
 DAMAGE = "vitality"
 BP = "momentum"  # the reference project's boost resource
@@ -202,8 +202,8 @@ def test_secondary_job_and_a_poison_that_worsens_every_turn():
 
 def test_status_definitions_and_poison_growth_are_editable_in_game_data():
     from asteria.editor import EditorDocument
-    from asteria.editor.authoring_hub_widget import with_optional_fields
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.records.hub import with_optional_fields
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     project = _project()
     document = EditorDocument(project)
@@ -341,7 +341,7 @@ def test_a_skill_calls_a_pet_into_the_battle():
 
 
 def test_concoct_combines_ingredients_into_an_item_that_acts_at_once():
-    from asteria.rpg.composition import (
+    from asteria.rpg.items.crafting import (
         CompositionOutput,
         CompositionRecipeDefinition,
         CompositionSelection,
@@ -420,7 +420,7 @@ def test_ailments_sleep_and_silence_come_from_authored_policies():
 
 def test_an_ability_can_require_items_and_a_capture_can_give_a_pet_item():
     from asteria.gameplay.abilities import AbilityDefinition
-    from asteria.rpg.capture import CaptureRule
+    from asteria.rpg.battle.capture import CaptureRule
 
     ability = AbilityDefinition("send_pet", requires_items={"pet_x": 1})
     assert AbilityDefinition.from_data(ability.to_data()).requires_items == {"pet_x": 1}
@@ -436,8 +436,8 @@ def test_an_ability_can_require_items_and_a_capture_can_give_a_pet_item():
 
 def test_pet_species_are_authored_in_the_editor_with_undo_and_levelled_by_data():
     from asteria.editor import EditorDocument
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
-    from asteria.rpg.pets import PetRecord
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.rpg.characters.pets import PetRecord
 
     document = EditorDocument()
     document.set_project(_project())

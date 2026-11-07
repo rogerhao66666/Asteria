@@ -8,7 +8,7 @@ import pytest
 
 from asteria import kernels
 from asteria.kernels import _python
-from asteria.presentation.particles import PRESETS, ParticleSystem, preset
+from asteria.presentation.visuals.particles import PRESETS, ParticleSystem, preset
 
 np_kernels = pytest.importorskip("asteria.kernels._numpy")
 
@@ -122,7 +122,7 @@ def test_numpy_weather_moves_and_draws_exactly_like_the_reference(kind, wind, re
     import numpy as np
     import pygame
 
-    from asteria.runtime.weather import WeatherSystem
+    from asteria.runtime.scene.weather import WeatherSystem
 
     pygame.init()
     systems = {}

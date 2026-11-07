@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from asteria.runtime.menu_icons import forged_surface, icon_source
-from asteria.runtime.particle_draw import ParticleDrawer
+from asteria.runtime.menus.icons import forged_surface, icon_source
+from asteria.runtime.scene.particle_draw import ParticleDrawer
 
 
 class ResourceMixin:
@@ -175,7 +175,7 @@ class ResourceMixin:
                 enabled = driver not in ("dummy", "offscreen")
             if budget <= 0 or upcoming is None or not enabled:
                 return
-            from asteria.runtime.image_preloader import ImagePreloader
+            from asteria.runtime.scene.image_preloader import ImagePreloader
 
             preloader = self._preloader = ImagePreloader(
                 self.pg, self.path, self._loaded, budget_bytes=int(budget * (1 << 20))

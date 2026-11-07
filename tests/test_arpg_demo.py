@@ -65,8 +65,8 @@ def _entity(scene, prefix):
 
 # -- the project ----------------------------------------------------------------------------------
 def test_the_demo_is_plain_project_data_with_three_tile_scenes():
-    from asteria.runtime.action_play import combat_scene
-    from asteria.runtime.tilemap_field import AssetResources, tilemap_binding
+    from asteria.runtime.action.play import combat_scene
+    from asteria.runtime.field.tilemap_field import AssetResources, tilemap_binding
 
     project = _project()
     project.validate()
@@ -110,7 +110,7 @@ def _xy(entity):
 
 
 def test_tile_walls_block_the_player_and_projectiles(demo):
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game = demo.game
     field = _scene(game.project, "Greenvale")
@@ -133,12 +133,12 @@ def test_tile_walls_block_the_player_and_projectiles(demo):
 
 
 def test_a_trainer_changes_the_class_and_the_bindings_follow(demo):
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game = demo.game
     hud_slots = lambda: [  # noqa: E731
         game.action_combat.bound_ability(game.player, value)
-        for value in __import__("asteria.runtime.action_combat", fromlist=["parse_bindings"])
+        for value in __import__("asteria.runtime.action.abilities", fromlist=["parse_bindings"])
         .parse_bindings(game.player.get(_action_type()).bindings)
         .values()
     ]
@@ -157,13 +157,13 @@ def test_a_trainer_changes_the_class_and_the_bindings_follow(demo):
 
 
 def _action_type():
-    from asteria.runtime.action_combat import ActionCombatComponent
+    from asteria.runtime.action.abilities import ActionCombatComponent
 
     return ActionCombatComponent
 
 
 def test_the_skill_tree_screen_learns_nodes_and_grants_skills(demo):
-    from asteria.runtime.skill_tree_screen import actor_graphs
+    from asteria.runtime.menus.skill_tree import actor_graphs
 
     game = demo.game
     game.set_classes("", ["mage"])
@@ -199,7 +199,7 @@ def test_set_classes_command_unlocks_and_activates(demo):
         )
     )
     game.project.event_programs.register("test.classes", program)
-    from asteria.runtime.interaction import InteractionTrigger
+    from asteria.runtime.field.interaction import InteractionTrigger
 
     game.events.start_trigger(InteractionTrigger(game.player.id, "test.classes", "t"))
     game.update_events(0.0)
@@ -227,7 +227,7 @@ def test_potions_are_items_an_ability_spends(demo):
 
 
 def test_whirlwind_reshapes_the_hitbox_only_while_it_lasts(demo):
-    from asteria.runtime.character_control import Hitbox2DComponent
+    from asteria.runtime.field.character_control import Hitbox2DComponent
 
     game = demo.game
     game.set_classes("", ["warrior"])
@@ -261,7 +261,7 @@ def test_war_cry_puts_a_state_on_the_user(demo):
 def test_uniques_and_set_pieces_keep_their_rarity_and_labels_stay_short():
     import random
 
-    from asteria.rpg.loot import fixed_rarity, item_display_name, roll_equipment
+    from asteria.rpg.items.loot import fixed_rarity, item_display_name, roll_equipment
 
     db = _project().rpg_database
     rng = random.Random(4)
@@ -302,7 +302,7 @@ def test_projectiles_with_a_sprite_are_drawn_turned_to_their_flight(demo):
 
 
 def test_the_side_view_mine_lets_the_player_stand_jump_and_climb(demo):
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game = demo.game
     mine = _scene(game.project, "Rustdeep")
@@ -323,8 +323,8 @@ def test_the_side_view_mine_lets_the_player_stand_jump_and_climb(demo):
 def _assert_feet_on_the_ground(demo):
     """The player is grounded and the lowest row of its drawn figure is the bottom of its box
     (the top of what holds it up), within one world pixel."""
-    from asteria.runtime.character_control import CharacterController2DComponent
-    from asteria.runtime.components2d import SpriteRenderer2D
+    from asteria.runtime.field.character_control import CharacterController2DComponent
+    from asteria.runtime.scene.components import SpriteRenderer2D
 
     game = demo.game
     controller = game.player.get(CharacterController2DComponent)
@@ -390,7 +390,7 @@ def _hold(demo, keys, frames):
 def test_side_view_feet_land_back_on_the_ground_after_moving(demo, move):
     """After a jump on the spot, a walk off a one-way ledge's end down to the floor, or a jump
     up a step, the player stands on what caught it with its feet on its top."""
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game, pg = demo.game, demo.pg
     mine = _scene(game.project, "Rustdeep")
@@ -418,7 +418,7 @@ def test_side_view_feet_land_back_on_the_ground_after_moving(demo, move):
 
 def _pixels_in_walls(demo, entity):
     """How many of ``entity``'s drawn pixels show over solid map tiles (no time passes)."""
-    from asteria.runtime.components2d import SpriteRenderer2D
+    from asteria.runtime.scene.components import SpriteRenderer2D
 
     sprite = entity.get(SpriteRenderer2D)
     shots = []
@@ -443,7 +443,7 @@ def _pixels_in_walls(demo, entity):
 def test_a_sword_swung_at_a_wall_stops_at_its_face(demo, mode, covered):
     """Side view: walls are drawn over the parts of a character reaching into them - the swing
     against the cave wall shows no pixel inside the wall (``never`` draws them, as before)."""
-    from asteria.runtime.action_play import combat_scene
+    from asteria.runtime.action.play import combat_scene
 
     game, pg = demo.game, demo.pg
     mine = _scene(game.project, "Rustdeep")
@@ -462,7 +462,7 @@ def test_a_sword_swung_at_a_wall_stops_at_its_face(demo, mode, covered):
 
 
 def test_walls_cover_characters_in_side_view_unless_set_otherwise():
-    from asteria.runtime.action_play import CombatSceneComponent, walls_cover_characters
+    from asteria.runtime.action.play import CombatSceneComponent, walls_cover_characters
 
     settings = CombatSceneComponent()
     assert settings.walls_cover_characters == "auto"
@@ -479,7 +479,7 @@ def test_walls_cover_characters_in_side_view_unless_set_otherwise():
 def test_no_character_starts_or_ends_up_inside_a_wall(demo):
     """Every character's box is clear of the map's walls where it is placed and after the
     scene has run a while (one placed into the floor could not move at all)."""
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game = demo.game
     start = {  # an open spot in each scene for the player
@@ -507,8 +507,8 @@ def test_no_character_starts_or_ends_up_inside_a_wall(demo):
 def test_side_view_monsters_stand_on_the_ground_unless_they_fly(demo):
     """In the mine every monster with gravity is on the ground once it has settled; only the
     ones made to fly (no gravity) are in the air, and those show no shadow under them."""
-    from asteria.runtime.character_control import CharacterController2DComponent
-    from asteria.runtime.components2d import SpriteRenderer2D
+    from asteria.runtime.field.character_control import CharacterController2DComponent
+    from asteria.runtime.scene.components import SpriteRenderer2D
 
     game = demo.game
     mine = _scene(game.project, "Rustdeep")
@@ -536,7 +536,7 @@ def test_side_view_monsters_stand_on_the_ground_unless_they_fly(demo):
 
 
 def test_particle_effects_and_text_use_the_tile_scenes_camera_and_are_cached(demo):
-    from asteria.presentation.particles import ParticleSystem, preset
+    from asteria.presentation.visuals.particles import ParticleSystem, preset
 
     game = demo.game
     field = _scene(game.project, "Greenvale")
@@ -574,8 +574,8 @@ def test_a_huge_map_costs_only_what_the_camera_sees(monkeypatch, tmp_path):
     pytest.importorskip("pygame")
     import real_window
 
+    from asteria.runtime.field.tile_scene_view import CHUNK_CACHE
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-    from asteria.runtime.tile_scene_view import CHUNK_CACHE
 
     root = tmp_path / "game"
     shutil.copytree(ROOT, root)
@@ -619,8 +619,8 @@ def test_a_huge_map_costs_only_what_the_camera_sees(monkeypatch, tmp_path):
 def test_the_bag_grid_compares_stats_equips_unequips_and_shows_the_set(demo):
     import random
 
-    from asteria.rpg.loot import roll_equipment
-    from asteria.runtime.bag_screen import BagScreen, compare
+    from asteria.rpg.items.loot import roll_equipment
+    from asteria.runtime.menus.bag import BagScreen, compare
 
     game = demo.game
     db = game.project.rpg_database
@@ -676,9 +676,9 @@ def test_the_bag_grid_compares_stats_equips_unequips_and_shows_the_set(demo):
 
 
 def test_class_looks_swap_with_the_class_and_the_camera_looks_ahead(demo):
-    from asteria.runtime.actor_link import ClassAppearanceComponent
-    from asteria.runtime.character_control import CharacterController2DComponent
-    from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+    from asteria.runtime.field.actor_link import ClassAppearanceComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
+    from asteria.runtime.scene.components import Animator2DComponent, SpriteRenderer2D
 
     game = demo.game
     player = game.player
@@ -704,7 +704,7 @@ def test_class_looks_swap_with_the_class_and_the_camera_looks_ahead(demo):
 
 
 def test_parallax_layers_scroll_slower_than_the_camera(demo):
-    from asteria.runtime.components2d import ParallaxBackground2DComponent
+    from asteria.runtime.scene.components import ParallaxBackground2DComponent
 
     game = demo.game
     mine = _scene(game.project, "Rustdeep")
@@ -748,11 +748,11 @@ def test_the_demo_map_can_be_edited_undone_saved_and_the_walls_change_in_play(
     import shutil
 
     from asteria.editor import EditorDocument
-    from asteria.editor.resource_resolver import resolve_project_resources
-    from asteria.editor.storage import load_document, save_document
-    from asteria.editor.tile_edit import build_paint_command, tile_at
+    from asteria.editor.assets.resource_resolver import resolve_project_resources
+    from asteria.editor.project.storage import load_document, save_document
+    from asteria.editor.scene.tile_edit import build_paint_command, tile_at
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.tilemap_field import tilemap_binding
+    from asteria.runtime.field.tilemap_field import tilemap_binding
 
     root = tmp_path / "game"
     shutil.copytree(ROOT, root)
@@ -798,7 +798,7 @@ def test_the_demo_map_can_be_edited_undone_saved_and_the_walls_change_in_play(
 
 
 def test_the_hud_shows_keycaps_orbs_statuses_and_item_counts(demo):
-    from asteria.runtime.hud_bottom import active_statuses, key_label, state_kind
+    from asteria.runtime.action.hud import active_statuses, key_label, state_kind
 
     game = demo.game
     # keys come from the project's input map, not from the HUD
@@ -836,7 +836,7 @@ def test_the_hud_shows_keycaps_orbs_statuses_and_item_counts(demo):
 def test_states_and_abilities_carry_a_name_and_an_icon(demo):
     from asteria.gameplay.abilities import AbilityDefinition
     from asteria.gameplay.states import StateDefinition
-    from asteria.runtime.hud_bottom import active_statuses
+    from asteria.runtime.action.hud import active_statuses
 
     library = demo.game.project.gameplay_library
     burning = library.states.get("burning")
@@ -859,8 +859,9 @@ def test_states_and_abilities_carry_a_name_and_an_icon(demo):
 
 
 def test_enemies_show_their_statuses_as_pips_over_the_bar(demo):
-    from asteria.runtime import action_play, hud_bottom
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action import hud as hud_bottom
+    from asteria.runtime.action import play as action_play
+    from asteria.runtime.action.combat import CombatantComponent
 
     game = demo.game
     game.set_classes("", ["warrior"])
@@ -890,7 +891,7 @@ def test_enemies_show_their_statuses_as_pips_over_the_bar(demo):
 
 def test_the_editor_edits_a_status_name_and_icon_and_undoes_it():
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     project = _project()
     document = EditorDocument()
@@ -912,7 +913,7 @@ def test_the_editor_edits_a_status_name_and_icon_and_undoes_it():
 
 
 def test_a_cooldown_goes_dark_and_a_wedge_turns_clockwise_to_bright_with_a_ready_flash(demo):
-    from asteria.runtime.hud_bottom import BottomHud
+    from asteria.runtime.action.hud import BottomHud
 
     pg, screen = demo.pg, demo.screen
     hud = BottomHud()
@@ -945,9 +946,9 @@ def test_a_cooldown_goes_dark_and_a_wedge_turns_clockwise_to_bright_with_a_ready
 
 
 def test_the_locked_target_frame_shows_status_names_and_time(demo):
-    from asteria.runtime import hud_bottom
-    from asteria.runtime.action_combat import ActionCombatComponent
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action import hud as hud_bottom
+    from asteria.runtime.action.abilities import ActionCombatComponent
+    from asteria.runtime.action.combat import CombatantComponent
 
     game = demo.game
     game.set_classes("", ["warrior"])
@@ -984,7 +985,7 @@ def test_the_locked_target_frame_shows_status_names_and_time(demo):
 
 @pytest.mark.parametrize("facing", ("right", "up", "left", "down"))
 def test_the_blow_lands_on_the_frame_the_slash_appears(demo, facing):
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action.combat import CombatantComponent
 
     game, pg = demo.game, demo.pg
     game.set_classes("", ["warrior"])
@@ -1021,7 +1022,7 @@ def test_the_blow_lands_on_the_frame_the_slash_appears(demo, facing):
 def _animated():
     from types import SimpleNamespace
 
-    from asteria.runtime.tile_scene_view import _Animated
+    from asteria.runtime.field.tile_scene_view import _Animated
 
     def clip(*frames):
         keys = [SimpleNamespace(duration=0.1, frame_index=f) for f in frames]
@@ -1069,7 +1070,7 @@ def test_a_short_action_shows_all_of_its_picture_unless_the_figure_walks_off():
 
 def test_an_action_waits_for_its_animation_cue_before_it_swings():
     from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
-    from asteria.runtime.entity_actions import _Running, action_clip
+    from asteria.runtime.field.entity_actions import _Running, action_clip
 
     timed = ActionTimeline("t", [ActionCue("a", 0.3, "animation", {"clip": "attack2"})])
     run = _Running(timed)

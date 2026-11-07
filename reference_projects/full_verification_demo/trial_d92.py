@@ -209,7 +209,7 @@ def patch_words(data):
                 "description": meaning,
             }
         ]
-    from asteria.rpg.built_in_text import engine_translations
+    from asteria.rpg.text.built_in_text import engine_translations
 
     for word, chinese in engine_translations("zh-TW").items():  # the engine's new words
         tables["zh-TW"].setdefault(word, chinese)

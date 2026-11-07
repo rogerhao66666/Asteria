@@ -7,8 +7,8 @@ import pytest
 from asteria.core import Entity, Transform
 from asteria.events.world_commands import WorldCommand
 from asteria.project import Project
-from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.collision import Collider2DComponent
 from asteria.runtime.game_session import GameSessionRuntime
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
@@ -84,7 +84,7 @@ def test_the_walk_to_command_starts_a_walk(game):
         WorldCommand("WALK_TO", {"entity": "pilgrim", "x": 120, "y": 40, "speed": 50})
     )
     assert npc.id in game.walkers
-    from asteria.runtime.world_command_handlers import WorldCommandError
+    from asteria.runtime.session.world_commands import WorldCommandError
 
     with pytest.raises(WorldCommandError):
         game.world_commands.dispatch(WorldCommand("WALK_TO", {"entity": "nobody", "x": 1, "y": 1}))
@@ -114,7 +114,7 @@ def test_move_route_walks_relative_steps_and_flags_arrival(game):
 
 
 def test_move_route_rejects_an_unknown_direction(game):
-    from asteria.runtime.world_command_handlers import WorldCommandError
+    from asteria.runtime.session.world_commands import WorldCommandError
 
     _add(game, "sailor", 10.0, 10.0)
     with pytest.raises(WorldCommandError):
@@ -156,7 +156,7 @@ def test_events_can_spawn_copy_and_morph_entities(game):
     )
     game.scene.update(0)
     assert game.scene.get_entity(morphed).get(Transform).x == 70
-    from asteria.runtime.world_command_handlers import WorldCommandError
+    from asteria.runtime.session.world_commands import WorldCommandError
 
     with pytest.raises(WorldCommandError):
         game.world_commands.dispatch(
@@ -169,7 +169,7 @@ def test_events_can_spawn_copy_and_morph_entities(game):
 
 
 def test_a_click_triggered_interaction_starts_its_program_on_click(game):
-    from asteria.runtime.components2d import Interaction2DComponent
+    from asteria.runtime.scene.components import Interaction2DComponent
 
     npc = _add(game, "signpost", 100.0, 100.0)
     interaction = npc.add_component(Interaction2DComponent())
@@ -197,7 +197,7 @@ def test_an_event_can_keep_an_icon_over_an_entity(game):
     assert game.save.event_context.get_variable(f"icon.{npc.id}") == "icon.quest"
     game.world_commands.dispatch(WorldCommand("SET_ENTITY_ICON", {"entity": npc.id}))
     assert game.entity_icons() == {}
-    from asteria.runtime.world_command_handlers import WorldCommandError
+    from asteria.runtime.session.world_commands import WorldCommandError
 
     with pytest.raises(WorldCommandError):
         game.world_commands.dispatch(

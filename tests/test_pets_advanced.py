@@ -3,7 +3,7 @@
 import pytest
 from test_party_rpg_demo import BOSS, demo  # noqa: F401  (pytest fixture)
 
-from asteria.rpg.pets import PetEvolution, PetMove, PetRecord, PetSpeciesDefinition
+from asteria.rpg.characters.pets import PetEvolution, PetMove, PetRecord, PetSpeciesDefinition
 
 
 def _species(**extra):
@@ -149,7 +149,7 @@ def test_battle_unit_pets_join_the_heroes_when_enabled(demo):  # noqa: F811
 
 def test_region_chooses_the_battle_background(demo):  # noqa: F811
     from asteria.core import Transform
-    from asteria.rpg.map_rules import AreaRule, MapRuleSet
+    from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
 
     _runtime, game, _commands = demo
     game.project.rpg_database.map_rule_sets["m"] = MapRuleSet(
@@ -170,7 +170,7 @@ def test_region_chooses_the_battle_background(demo):  # noqa: F811
 
 
 def test_party_gauges_fill_from_battle_events_and_persist(demo):  # noqa: F811
-    from asteria.rpg.battle_extensions import BattleExtensionRules, ResourceGain
+    from asteria.rpg.battle.extensions import BattleExtensionRules, ResourceGain
 
     _runtime, game, _commands = demo
     base = game.extension_rules
@@ -227,7 +227,7 @@ def test_auto_battle_picks_a_usable_ability_and_acts(demo):  # noqa: F811
 
 
 def test_project_menu_entries_queue_their_event_program(demo):  # noqa: F811
-    from asteria.rpg.extras import MenuEntry
+    from asteria.rpg.world.extras import MenuEntry
 
     runtime, game, _commands = demo
     entry = MenuEntry("hello", "Hello", "greet", visible_switch="show.hello", order=2)
@@ -266,7 +266,7 @@ def test_abilities_can_name_their_own_menu_category(demo):  # noqa: F811
 
 
 def test_ability_slots_limit_learned_abilities_to_the_equipped_ones(demo):  # noqa: F811
-    from asteria.rpg.ability_loadout import AbilityLoadoutRules
+    from asteria.rpg.characters.ability_slots import AbilityLoadoutRules
 
     _runtime, game, _commands = demo
     hero = game.active_hero_ids()[0]
@@ -316,7 +316,7 @@ def test_actor_variables_are_saved_with_the_event_variables(demo):  # noqa: F811
 
 
 def test_low_health_combatants_rest_in_a_weak_pose(demo):  # noqa: F811
-    from asteria.rpg.pets import PetSpeciesDefinition
+    from asteria.rpg.characters.pets import PetSpeciesDefinition
 
     runtime, game, _commands = demo
     adapter = runtime._battle_presentation
@@ -383,10 +383,10 @@ def test_the_skill_slots_screen_equips_and_removes_abilities():
     from pathlib import Path
 
     from asteria.project import Project
-    from asteria.rpg.ability_loadout import AbilityLoadoutRules
+    from asteria.rpg.characters.ability_slots import AbilityLoadoutRules
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.extras_screens import AbilitySlotsScreen
     from asteria.runtime.game_session import GameSessionRuntime
+    from asteria.runtime.menus.extras import AbilitySlotsScreen
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", default_component_registry())
@@ -435,7 +435,7 @@ def test_the_auto_key_plays_the_turn_through_the_menu_controller(demo):  # noqa:
 
 
 def test_a_pet_unit_alone_does_not_keep_the_heroes_in_the_fight(demo):  # noqa: F811
-    from asteria.rpg.pets import PetSpeciesDefinition
+    from asteria.rpg.characters.pets import PetSpeciesDefinition
 
     _runtime, game, _commands = demo
     base = game.project.rpg_database.pet_species["frost_lynx"]
@@ -453,7 +453,7 @@ def test_a_pet_unit_alone_does_not_keep_the_heroes_in_the_fight(demo):  # noqa: 
 
 
 def test_a_pet_unit_is_called_by_its_nickname_in_battle(demo):  # noqa: F811
-    from asteria.rpg.pets import PetSpeciesDefinition
+    from asteria.rpg.characters.pets import PetSpeciesDefinition
 
     runtime, game, commands = demo
     base = game.project.rpg_database.pet_species["frost_lynx"]
@@ -470,7 +470,7 @@ def test_a_pet_unit_is_called_by_its_nickname_in_battle(demo):  # noqa: F811
 
 
 def test_battle_options_in_the_project_override_the_manifest(demo):  # noqa: F811
-    from asteria.rpg.extras import BattleOptions
+    from asteria.rpg.world.extras import BattleOptions
 
     runtime, game, _commands = demo
     runtime.manifest["battle"]["weak_below"] = 0.4
@@ -488,7 +488,7 @@ def test_battle_options_in_the_project_override_the_manifest(demo):  # noqa: F81
 
 
 def test_battle_menu_rows_carry_the_skill_icons_and_the_menu_draws_them(demo):  # noqa: F811
-    from asteria.presentation.battle_action_menu import BattleActionEntry
+    from asteria.presentation.battle.action_menu import BattleActionEntry
 
     runtime, game, commands = demo
     hero = game.active_hero_ids()[0]

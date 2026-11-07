@@ -18,24 +18,23 @@ from pathlib import Path
 
 from asteria.core import Transform
 from asteria.core.serialization import deserialize_entity, serialize_entity, serialize_scene
+from asteria.multiplayer.adapter import AdapterUpdate
+from asteria.multiplayer.project_snapshot import pack_scene_data
+from asteria.multiplayer.rules import default_rules, validate_rules
 from asteria.project import Project
 from asteria.rpg import RpgActorRuntime
-from asteria.runtime.action_combat import ActionCombatComponent
-from asteria.runtime.character_control import (
+from asteria.runtime.action.abilities import ActionCombatComponent
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.action.ground_loot import LootComponent, LooterComponent
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
 )
-from asteria.runtime.combat import CombatantComponent
-from asteria.runtime.component_registry import default_component_registry
-from asteria.runtime.entity_actions import action_clip
+from asteria.runtime.field.entity_actions import action_clip
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.input import InputSnapshot
-from asteria.runtime.loot import LootComponent, LooterComponent
-
-from .adapter import AdapterUpdate
-from .project_snapshot import pack_scene_data
-from .rules import default_rules, validate_rules
+from asteria.runtime.input_map import InputSnapshot
 
 
 class _EntityScene:
@@ -374,7 +373,7 @@ class ProjectDemoAdapter:
                 self.systems[previous_scene]["actions"].cancel(
                     session.player.id, old_scene, force=True
                 )
-                from asteria.runtime.character_control import Hitbox2DComponent
+                from asteria.runtime.field.character_control import Hitbox2DComponent
 
                 hitbox = session.player.try_get(Hitbox2DComponent)
                 if hitbox is not None:
@@ -415,8 +414,8 @@ class ProjectDemoAdapter:
             systems["ai"]._target_of = nearest_target
             systems["loot"].collect = self._collect
             if self.project_root:
-                from asteria.runtime.tilemap_field import AssetResources, tilemap_binding
-                from asteria.runtime.tilequery import TileMapQuery
+                from asteria.runtime.field.tile_query import TileMapQuery
+                from asteria.runtime.field.tilemap_field import AssetResources, tilemap_binding
 
                 binding = tilemap_binding(scene)
                 if binding:
@@ -745,7 +744,7 @@ class ProjectDemoAdapter:
                     actor, payload.get("class_ids", [payload.get("class_id", "")])
                 )
             elif command == "bind_skill":
-                from asteria.runtime.action_combat import ActionCombatComponent, parse_bindings
+                from asteria.runtime.action.abilities import ActionCombatComponent, parse_bindings
 
                 action, ability = str(payload["action"]), str(payload["ability_id"])
                 if action not in {
@@ -795,7 +794,7 @@ class ProjectDemoAdapter:
                 session._store_ability_state(actor, old)
                 session.refresh_combatant(session.player)
             elif command == "use_item":
-                from asteria.rpg.items import use_inventory_item
+                from asteria.rpg.items.definitions import use_inventory_item
 
                 item_id = str(payload["item_id"])
                 ability = self.project.gameplay_library.abilities.get(item_id)

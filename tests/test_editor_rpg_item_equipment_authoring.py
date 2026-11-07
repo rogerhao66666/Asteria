@@ -2,12 +2,9 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.rpg_item_equipment_authoring import (
+from asteria.editor.rpg.item_equipment_authoring import (
     RpgItemEquipmentAuthoringController,
     RpgItemEquipmentAuthoringError,
-)
-from asteria.editor.rpg_item_equipment_workspace import (
-    RpgItemEquipmentWorkspaceModel,
 )
 from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
@@ -233,44 +230,6 @@ def test_information_architecture_is_progressively_disclosed():
     assert ia.progressive_disclosure
     assert not ia.show_all_details_simultaneously
     assert ia.section("growth").mode == "graph_detail"
-
-
-def test_workspace_keeps_one_category_and_context_at_a_time():
-    _, _, c = make()
-    c.create_item(ItemDefinition("herb", "Red Herb", tags=("material",)))
-    c.create_equipment(EquipmentDefinition("blade", "Blade", tags=("weapon",)))
-    w = RpgItemEquipmentWorkspaceModel(c)
-    assert w.snapshot().visible_ids == ("herb",)
-    w.set_section("equipment")
-    assert w.snapshot().visible_ids == ("blade",)
-    w.select("blade")
-    assert w.snapshot().selected_id == "blade"
-    w.set_section("items")
-    assert w.snapshot().selected_id is None
-
-
-def test_workspace_search_and_growth_node_focus():
-    _, _, c = make()
-    c.create_item(ItemDefinition("herb", "Red Herb", tags=("material",)))
-    c.create_item(ItemDefinition("potion", "Potion", tags=("consumable",)))
-    c.create_growth(
-        EquipmentGrowthDefinition(
-            "g",
-            "Growth",
-            nodes=(
-                EquipmentGrowthNodeDefinition("root"),
-                EquipmentGrowthNodeDefinition("branch"),
-            ),
-        )
-    )
-    w = RpgItemEquipmentWorkspaceModel(c)
-    w.set_query("material")
-    assert w.visible_ids() == ("herb",)
-    w.set_section("growth")
-    w.set_query("")
-    w.select("g")
-    w.select_node("branch")
-    assert w.snapshot().selected_node_id == "branch"
 
 
 def test_project_validation_after_full_item_authoring():

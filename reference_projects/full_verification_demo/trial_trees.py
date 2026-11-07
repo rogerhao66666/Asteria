@@ -21,7 +21,7 @@ import math
 import trial_content as tc
 
 from asteria.rpg import ProgressionGraphDefinition
-from asteria.rpg.ability_build import AbilityEvolutionRule, PassiveDefinition
+from asteria.rpg.characters.abilities import AbilityEvolutionRule, PassiveDefinition
 
 HP, SP = tc.HP, tc.SP
 STAT = {  # keyword -> (stat or resource, amount per rank)

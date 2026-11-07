@@ -19,11 +19,11 @@ last four Game Systems categories, each designed and used by the game.
 from __future__ import annotations
 
 from asteria.events.program import EventInstruction, EventProgram
-from asteria.rpg.built_in_text import engine_translations
-from asteria.rpg.extras import MusicTrack
-from asteria.rpg.localization import LocaleTable
-from asteria.rpg.map_rules import AreaRule, MapRuleSet
-from asteria.rpg.new_game_plus import NewGamePlusRules
+from asteria.rpg.text.built_in_text import engine_translations
+from asteria.rpg.text.localization import LocaleTable
+from asteria.rpg.world.extras import MusicTrack
+from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
+from asteria.rpg.world.new_game_plus import NewGamePlusRules
 
 BACKDROPS = {  # area -> battle backdrop (painted from the area's own tileset)
     "bog": "playable_assets/battle_bog.png",

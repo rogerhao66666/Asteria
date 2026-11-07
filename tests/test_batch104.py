@@ -1,5 +1,5 @@
-from asteria.presentation.actor_visual_layers import ActorVisualLayerTrack, FrameVisualLayer
-from asteria.presentation.attachments import Socket, SocketRig, Transform2D
+from asteria.presentation.visuals.actor_layers import ActorVisualLayerTrack, FrameVisualLayer
+from asteria.presentation.visuals.attachments import Socket, SocketRig, Transform2D
 
 
 def rig():
@@ -39,7 +39,7 @@ def test_layer_track_roundtrip():
 def test_layer_track_is_generic_not_weapon_or_genre_specific():
     import inspect
 
-    import asteria.presentation.actor_visual_layers as mod
+    import asteria.presentation.visuals.actor_layers as mod
 
     s = inspect.getsource(mod).lower()
     assert "if jrpg" not in s and "if arpg" not in s and "if sword" not in s

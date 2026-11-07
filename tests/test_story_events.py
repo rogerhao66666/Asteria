@@ -10,9 +10,9 @@ import pytest
 from asteria.core import Entity, Transform
 from asteria.events import EventProgram
 from asteria.events.program import EventInstruction
-from asteria.rpg.battle_session_rules import BattleSessionRules
-from asteria.rpg.map_rules import AreaRule
-from asteria.runtime.grid_actors import (
+from asteria.rpg.battle.session_rules import BattleSessionRules
+from asteria.rpg.world.map_rules import AreaRule
+from asteria.runtime.field.grid_actors import (
     GridMover2DComponent,
     LookByVariable2DComponent,
     RouteRunner,
@@ -125,7 +125,7 @@ def test_area_autorun_and_entry_programs_queued_while_busy():
     with pytest.raises(ValueError):
         AreaRule("region:1", autorun=[{"variable": "x", "switch": "y", "program": "p"}])
 
-    from asteria.runtime.map_rules_field import FieldMapRules
+    from asteria.runtime.field.map_rules import FieldMapRules
 
     class Runtime:
         def advance(self, *_):
@@ -162,7 +162,7 @@ def test_switch_visibility_looks_and_kept_positions():
     shown.hidden_switch = "rival_gone"
     look = person.add_component(LookByVariable2DComponent())
     look.variable, look.looks = "rival", "0=may_sheet|may_walk; 1=brendan_sheet|brendan_walk"
-    from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+    from asteria.runtime.scene.components import Animator2DComponent, SpriteRenderer2D
 
     sprite = person.add_component(SpriteRenderer2D())
     animator = person.add_component(Animator2DComponent())

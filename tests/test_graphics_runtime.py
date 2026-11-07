@@ -16,8 +16,6 @@ from asteria.runtime import (
     CharacterAnimationController,
     CharacterController2D,
     InputSnapshot,
-    PlayerRuntime,
-    SpriteRendererState,
     TileMapQuery,
 )
 
@@ -45,9 +43,12 @@ def test_character_animation_camera_runtime():
     ctrl = CharacterController2D(32, 32, 32, 4, 4)
     a = AnimatorState(clips.idle["down"])
     ac = CharacterAnimationController(clips, a)
-    spr = SpriteRendererState("hero", sheet.frames)
     cam = Camera2D(0, 0, 160, 90, 1)
     follow = CameraFollow2D(cam)
-    p = PlayerRuntime(ctrl, TileMapQuery(tm), a, ac, spr, follow)
-    p.update(InputSnapshot({"move_right": 1}), 0.1)
-    assert ac.facing == "right" and spr.frame_index == 6
+    dx, dy = InputSnapshot({"move_right": 1}).movement_vector()
+    moved_x, moved_y = ctrl.move(dx, dy, 0.1, TileMapQuery(tm))
+    ac.update_motion(moved_x, moved_y)
+    a.update(0.1)
+    follow.update(ctrl.x, ctrl.y, 0.1)
+    assert ac.facing == "right" and a.frame_index == 6
+    assert sheet.frames[a.frame_index] is sheet.frames[6]

@@ -1,6 +1,6 @@
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.model import EditorDocument
-from asteria.editor.structure import (
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.structure import (
     build_add_component_command,
     build_add_entity_command,
     build_remove_component_command,

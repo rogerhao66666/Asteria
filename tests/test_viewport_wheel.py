@@ -26,7 +26,7 @@ def view():
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget
     from asteria.project import Project
 
     app = QApplication.instance() or QApplication([])

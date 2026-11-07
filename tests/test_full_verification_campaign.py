@@ -60,7 +60,7 @@ def test_every_foe_has_a_drop_table_with_the_chances_its_weights_say(played):
     import random
     from collections import Counter
 
-    from asteria.rpg.drop_tables import roll_drop_table
+    from asteria.rpg.items.drop_tables import roll_drop_table
 
     campaign, _facts = played
     db = campaign.game.project.rpg_database

@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from asteria.presentation.menu_layout import EMPTY_CELL, MenuBitmapFont
+from asteria.presentation.screens.menu_layout import EMPTY_CELL, MenuBitmapFont
 
 LETTER, SHADOW = (255, 255, 255), (128, 128, 128)
 

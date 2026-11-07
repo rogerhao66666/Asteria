@@ -18,9 +18,9 @@ from asteria.rpg import (
     EncounterMember,
     EnemyDefinition,
 )
-from asteria.rpg.enemies import RewardDefinition
-from asteria.rpg.enemy_ai import EnemyAIDefinition
-from asteria.rpg.enemy_behavior import EnemyBehaviorBinding
+from asteria.rpg.enemies.ai import EnemyAIDefinition
+from asteria.rpg.enemies.behavior import EnemyBehaviorBinding
+from asteria.rpg.enemies.definitions import RewardDefinition
 
 HP, SP, SHIELD = tc.HP, tc.SP, tc.SHIELD
 ability, op, damage, healing = tc.ability, tc.op, tc.damage, tc.healing
@@ -380,7 +380,7 @@ def foes(c):
                 "tags": [],
             }
         )
-    from asteria.rpg.drop_tables import DropEntry, DropTable
+    from asteria.rpg.items.drop_tables import DropEntry, DropTable
 
     gear = [DropEntry(g, weight=1.0) for g in ("w_sword", "w_axe", "w_spear", "w_dagger", "w_bow")]
     tables = {

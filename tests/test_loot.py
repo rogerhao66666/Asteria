@@ -12,15 +12,15 @@ from asteria.core import Entity, Scene, Transform
 from asteria.gameplay.modifiers import StatModifier
 from asteria.gameplay.stats import StatBlock
 from asteria.rpg import RpgDatabase
-from asteria.rpg.drop_tables import DropEntry, DropTable
-from asteria.rpg.items import (
+from asteria.rpg.items.definitions import (
     EquipmentDefinition,
     EquipmentLoadout,
     EquipmentSlotDefinition,
     EquippedItem,
     ItemDefinition,
 )
-from asteria.rpg.loot import (
+from asteria.rpg.items.drop_tables import DropEntry, DropTable
+from asteria.rpg.items.loot import (
     DEFAULT_RARITIES,
     AffixDefinition,
     AffixModifier,
@@ -31,7 +31,7 @@ from asteria.rpg.loot import (
     roll_equipment,
     roll_rarity,
 )
-from asteria.runtime.loot import LootComponent, LooterComponent, LootSystem
+from asteria.runtime.action.ground_loot import LootComponent, LooterComponent, LootSystem
 
 
 def _db():
@@ -201,7 +201,7 @@ def test_rolled_equipment_joins_the_build_and_round_trips():
 
 
 def test_the_equipment_bag_is_saved():
-    from asteria.rpg.save_state import RpgRuntimeState
+    from asteria.rpg.data.save_state import RpgRuntimeState
 
     db = _db()
     state = RpgRuntimeState()
@@ -292,8 +292,8 @@ def test_auto_pickup_by_rarity():
 def test_enemies_drop_loot_in_the_game_session_and_it_reaches_the_save(runtime):
     from asteria.gameplay.attacks import AttackDefinition
     from asteria.gameplay.formulas import ValueFormula
-    from asteria.runtime.character_control import HitEvent, Hurtbox2DComponent
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action.combat import CombatantComponent
+    from asteria.runtime.field.character_control import HitEvent, Hurtbox2DComponent
 
     game = runtime.game
     db = game.project.rpg_database
@@ -338,7 +338,7 @@ def test_enemies_drop_loot_in_the_game_session_and_it_reaches_the_save(runtime):
 
 def test_rarities_and_affixes_are_authored_in_the_editor(runtime):
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     document = EditorDocument()
     document.set_project(runtime.game.project)

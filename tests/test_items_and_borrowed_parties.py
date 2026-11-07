@@ -25,7 +25,7 @@ def _game(monkeypatch, **rules):
 def _potion(project, amount=20.0, tags=()):
     from asteria.gameplay import Effect, EffectOperation
     from asteria.gameplay.formulas import ValueFormula
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
 
     heal = Effect("potion.heal", [EffectOperation("resource_delta", "vitality",
                                                   ValueFormula.constant(amount))])  # fmt: skip
@@ -53,7 +53,7 @@ def test_a_potion_heals_a_creature_from_the_bag_and_is_used_up(monkeypatch):
 
 def test_an_item_cures_the_states_its_tags_name(monkeypatch):
     from asteria.gameplay import StateDefinition
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
 
     project, game = _game(monkeypatch)
     if project.gameplay_library.states.get("poison") is None:
@@ -81,7 +81,7 @@ def test_a_party_put_aside_comes_back_and_what_came_between_goes(monkeypatch):
 
 def test_a_sure_capture_battle_and_the_party_size_condition(monkeypatch):
     from asteria.events import EventCondition
-    from asteria.rpg.enemies import EncounterDefinition, EncounterMember
+    from asteria.rpg.enemies.definitions import EncounterDefinition, EncounterMember
 
     project, game = _game(monkeypatch)
     project.rpg_database.add_encounter(
@@ -121,7 +121,7 @@ def test_set_variable_adds(monkeypatch):
 
 @pytest.mark.parametrize("whole,expected_fraction", [(True, 0.0), (False, None)])
 def test_whole_experience_points(monkeypatch, whole, expected_fraction):
-    from asteria.rpg.pets import PetRules
+    from asteria.rpg.characters.pets import PetRules
 
     rules = PetRules("r", exp_share="split", exp_divisor=7.0, exp_whole=whole)
     assert PetRules.from_data(rules.to_data()) == rules

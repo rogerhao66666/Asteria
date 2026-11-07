@@ -3,13 +3,13 @@
 import pytest
 
 from asteria.gameplay import ModifierOperation, StatBlock, StatModifier
-from asteria.rpg.durability import DurabilityRules, WearEvent
-from asteria.rpg.items import (
+from asteria.rpg.items.definitions import (
     EquipmentDefinition,
     EquipmentLoadout,
     EquipmentSlotDefinition,
     EquippedItem,
 )
+from asteria.rpg.items.durability import DurabilityRules, WearEvent
 
 SWORD = EquipmentDefinition(
     "sword",

@@ -2,17 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from math import isfinite
 
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet, normalize_tag
-
-
-def _number(value, *, name="value"):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{name} must be finite")
-    return value
+from asteria.core.values import finite
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet, normalize_tag
 
 
 class ValueSource(str, Enum):
@@ -40,7 +33,7 @@ class FormulaTerm:
             raise ValueError("constant formula term cannot have a key")
         object.__setattr__(self, "source", source)
         object.__setattr__(self, "key", key)
-        object.__setattr__(self, "coefficient", _number(coefficient))
+        object.__setattr__(self, "coefficient", finite(coefficient, "value"))
 
     @classmethod
     def constant(cls, value):
@@ -124,7 +117,7 @@ class ConditionalMultiplier:
     def __init__(self, multiplier, condition):
         if not isinstance(condition, FormulaCondition):
             raise TypeError("condition must be FormulaCondition")
-        object.__setattr__(self, "multiplier", _number(multiplier))
+        object.__setattr__(self, "multiplier", finite(multiplier, "value"))
         object.__setattr__(self, "condition", condition)
 
     def to_data(self):
@@ -181,8 +174,8 @@ class ValueFormula:
             raise TypeError("terms must be FormulaTerm values")
         if any(not isinstance(x, ConditionalMultiplier) for x in multipliers):
             raise TypeError("multipliers must be ConditionalMultiplier values")
-        minimum = None if minimum is None else _number(minimum, name="minimum")
-        maximum = None if maximum is None else _number(maximum, name="maximum")
+        minimum = None if minimum is None else finite(minimum, "minimum")
+        maximum = None if maximum is None else finite(maximum, "maximum")
         if minimum is not None and maximum is not None and maximum < minimum:
             raise ValueError("formula maximum must be >= minimum")
         object.__setattr__(self, "terms", terms)
@@ -191,7 +184,7 @@ class ValueFormula:
         object.__setattr__(self, "maximum", maximum)
         expression = str(expression or "").strip()
         if expression:
-            from .expressions import check_expression
+            from asteria.gameplay.expressions import check_expression
 
             check_expression(expression, ("source", "target"))
         object.__setattr__(self, "expression", expression)
@@ -218,10 +211,10 @@ class ValueFormula:
             value = max(self.minimum, value)
         if self.maximum is not None:
             value = min(self.maximum, value)
-        return _number(value)
+        return finite(value, "value")
 
     def _expression_value(self, context):
-        from .expressions import SubjectView, evaluate
+        from asteria.gameplay.expressions import SubjectView, evaluate
 
         def view(subject, stats, resources, tags):
             if subject is None:

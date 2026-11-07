@@ -1,5 +1,5 @@
 from asteria.core import Entity
-from asteria.editor.model import EditorDocument
+from asteria.editor.project.model import EditorDocument
 
 
 def test_multi_selection_is_homogeneous_data():

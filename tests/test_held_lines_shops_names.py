@@ -132,7 +132,7 @@ def test_a_picture_choice_waits_and_gives_the_value():
 
 
 def test_an_item_keeps_its_description():
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
 
     item = ItemDefinition("potion", "POTION", description="Restores 20 HP.")
     assert ItemDefinition.from_data(item.to_data()).description == "Restores 20 HP."
@@ -176,8 +176,8 @@ def _key(rt, key):
 
 
 def test_the_creature_shop_buys_with_a_count_and_a_yes(monkeypatch):
-    from asteria.rpg.economy import ShopDefinition, ShopEntry
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
+    from asteria.rpg.items.shops import ShopDefinition, ShopEntry
 
     rt = _runtime(monkeypatch, {"creature_shop": {"map_front_at": [72, 72]}})
     try:

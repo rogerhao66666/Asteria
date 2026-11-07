@@ -1,4 +1,4 @@
-from .tilemap import TileChunk, TileLayer, TileMap
+from asteria.graphics.tilemap import TileChunk, TileLayer, TileMap
 
 
 def tilemap_to_data(tilemap):

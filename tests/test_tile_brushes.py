@@ -3,7 +3,7 @@ eyedropper, tool keys and painting that shows while the mouse is still down."""
 
 import pytest
 
-from asteria.editor.tile_palette import TileToolState
+from asteria.editor.scene.tile_palette import TileToolState
 from asteria.graphics import EMPTY_TILE
 
 
@@ -37,8 +37,8 @@ def viewport():
     from asteria.assets.types import AssetRef
     from asteria.core import Scene
     from asteria.editor import EditorDocument
-    from asteria.editor.scene_render import TileMapRenderSource
-    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.editor.scene.render import TileMapRenderSource
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget
     from asteria.graphics.tilemap import TileLayer, TileMap
     from asteria.project import Project
 
@@ -73,7 +73,7 @@ def _mouse(widget, kind, x, y, button):
 def test_a_stroke_shows_while_dragging_and_undoes_in_one_step(viewport):
     from PySide6.QtCore import QEvent, Qt
 
-    from asteria.editor.tile_edit import tile_at
+    from asteria.editor.scene.tile_edit import tile_at
 
     widget, tilemap, layer = viewport
     widget.tile_tools.mode, widget.tile_tools.selected_tile_id = "paint", 5
@@ -89,7 +89,7 @@ def test_a_stroke_shows_while_dragging_and_undoes_in_one_step(viewport):
 def test_right_drag_picks_a_block_off_the_map(viewport):
     from PySide6.QtCore import QEvent, Qt
 
-    from asteria.editor.tile_edit import build_assign_command
+    from asteria.editor.scene.tile_edit import build_assign_command
 
     widget, tilemap, layer = viewport
     build_assign_command(tilemap, layer, {(0, 0): 1, (1, 0): 2, (0, 1): 3, (1, 1): 4}).redo()
@@ -105,7 +105,7 @@ def test_tool_keys_switch_the_tiles_panel(viewport):
     from PySide6.QtCore import QEvent, Qt
     from PySide6.QtGui import QKeyEvent
 
-    from asteria.editor.tile_palette_widget import TilePaletteWidget
+    from asteria.editor.scene.tile_palette_widget import TilePaletteWidget
 
     widget, _tilemap, _layer = viewport
     palette = TilePaletteWidget()

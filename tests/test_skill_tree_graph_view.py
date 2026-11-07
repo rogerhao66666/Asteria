@@ -16,13 +16,13 @@ from PySide6.QtWidgets import (  # noqa: E402
 )
 
 from asteria.editor import EditorDocument  # noqa: E402
-from asteria.editor.authoring_hub_widget import (  # noqa: E402
+from asteria.editor.project.storage import load_document  # noqa: E402
+from asteria.editor.records.hub import (  # noqa: E402
     _NODE_H,
     _NODE_W,
     SkillTreeGraphView,
     _spread,
 )
-from asteria.editor.storage import load_document  # noqa: E402
 from asteria.project import Project  # noqa: E402
 from asteria.runtime.component_registry import default_component_registry
 

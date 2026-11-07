@@ -8,15 +8,15 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import FORMS, GameSystemsAuthoringController
-from asteria.rpg.actors import RpgDatabase
+from asteria.editor.rpg.game_systems_authoring import FORMS, GameSystemsAuthoringController
+from asteria.rpg.data.database import RpgDatabase
 from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
 
 def _document():
-    from asteria.editor.storage import load_document
+    from asteria.editor.project.storage import load_document
 
     document = EditorDocument()
     load_document(document, str(DEMO / "project.asteria.json"))
@@ -96,7 +96,7 @@ def test_an_item_lists_what_its_shown_tags_mean(host):
 
 
 def test_slots_enemies_and_jobs_describe_themselves(host):
-    from asteria.runtime.game_menus import bestiary_rows
+    from asteria.runtime.menus.game_menus import bestiary_rows
 
     game = host.game
     db = game.project.rpg_database
@@ -120,8 +120,8 @@ def test_game_data_records_have_a_note_box_and_players_see_it():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QLabel
 
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.records.hub import AdapterFamilyWidget
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     QApplication.instance() or QApplication([])
     document = _document()
@@ -161,7 +161,7 @@ def test_players_see_it_stands_on_the_description_line():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_systems_widget import RecordForm
+    from asteria.editor.rpg.game_systems_widget import RecordForm
 
     QApplication.instance() or QApplication([])
     form = RecordForm(FORMS["tag_definitions"], lambda _kind: ())

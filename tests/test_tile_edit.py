@@ -1,6 +1,6 @@
 from asteria.assets import AssetRef
-from asteria.editor.model import EditorDocument
-from asteria.editor.tile_edit import (
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.tile_edit import (
     AddTileLayerCommand,
     RemoveTileLayerCommand,
     build_paint_command,

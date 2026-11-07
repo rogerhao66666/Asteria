@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from asteria.rpg.menu_pages import MenuBlock, MenuPage, default_pages, menu_pages, page_entries
-from asteria.rpg.menu_rules import ItemCategory, MenuRules
+from asteria.rpg.menus.pages import MenuBlock, MenuPage, default_pages, menu_pages, page_entries
+from asteria.rpg.menus.rules import ItemCategory, MenuRules
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 

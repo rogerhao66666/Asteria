@@ -4,7 +4,7 @@ import pytest
 
 from asteria.gameplay import StatBlock
 from asteria.rpg import RpgDatabase
-from asteria.rpg.derived_stats import DerivedStatRule, apply_derived_stats
+from asteria.rpg.characters.derived_stats import DerivedStatRule, apply_derived_stats
 
 
 def test_rules_add_their_formula_in_order_with_floor_and_cap():

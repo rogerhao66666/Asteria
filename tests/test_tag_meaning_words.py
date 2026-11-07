@@ -12,18 +12,18 @@ pytest.importorskip("PySide6")
 
 from PySide6.QtWidgets import QApplication, QComboBox, QLabel  # noqa: E402
 
-from asteria.editor import i18n  # noqa: E402
-from asteria.editor.data_translation import data_groups  # noqa: E402
-from asteria.editor.record_form import ChipList  # noqa: E402
-from asteria.editor.record_vocabulary import (  # noqa: E402
+from asteria.editor.project.data_translation import data_groups  # noqa: E402
+from asteria.editor.records.form_chips import ChipList
+from asteria.editor.records.vocabulary import (  # noqa: E402
     _TAG_MEANINGS,
     ProjectVocabulary,
     tag_label,
     tag_meaning,
 )
+from asteria.editor.ui import i18n
 from asteria.project import Project  # noqa: E402
-from asteria.rpg.data_text import key  # noqa: E402
-from asteria.rpg.tag_definitions import BUILT_IN  # noqa: E402
+from asteria.rpg.data.tag_definitions import BUILT_IN  # noqa: E402
+from asteria.rpg.text.data_text import key  # noqa: E402
 from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
@@ -109,9 +109,9 @@ def test_the_translations_page_lists_each_property_once(chinese):
 
 
 def test_the_first_page_of_an_editor_opened_on_the_demo_says_it_in_chinese():
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
+    from asteria.editor.project.workspace import WorkspaceMode
+    from asteria.editor.records.hub import AdapterFamilyWidget
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
     project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())

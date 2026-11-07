@@ -67,30 +67,32 @@ from asteria.rpg import (  # noqa: E402
     ProgressionRuntime,
     RpgRuntimeState,
 )
-from asteria.rpg.ability_loadout import AbilityLoadoutRules  # noqa: E402
-from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree  # noqa: E402
-from asteria.rpg.composition import (  # noqa: E402
+from asteria.rpg.characters.ability_slots import AbilityLoadoutRules  # noqa: E402
+from asteria.rpg.items.crafting import (  # noqa: E402
     CompositionOutput,
     CompositionRecipeDefinition,
     CompositionSelection,
 )
-from asteria.rpg.economy import ShopDefinition, ShopEntry  # noqa: E402
-from asteria.runtime.action_combat import ActionCombatComponent  # noqa: E402
-from asteria.runtime.action_play import CombatSceneComponent  # noqa: E402
-from asteria.runtime.actor_link import (  # noqa: E402
+from asteria.rpg.items.shops import ShopDefinition, ShopEntry  # noqa: E402
+from asteria.rpg.world.behavior_tree import BehaviorNode, BehaviorTree  # noqa: E402
+from asteria.runtime.action.abilities import ActionCombatComponent  # noqa: E402
+from asteria.runtime.action.combat import CombatantComponent  # noqa: E402
+from asteria.runtime.action.ground_loot import LooterComponent  # noqa: E402
+from asteria.runtime.action.play import CombatSceneComponent  # noqa: E402
+from asteria.runtime.field.actor_link import (  # noqa: E402
     ActorLinkComponent,
     ClassAppearanceComponent,
 )
-from asteria.runtime.character_control import (  # noqa: E402
+from asteria.runtime.field.character_control import (  # noqa: E402
     AIController2DComponent,
     CharacterController2DComponent,
     Hitbox2DComponent,
     Hurtbox2DComponent,
     PlayerInput2DComponent,
 )
-from asteria.runtime.collision import Collider2DComponent  # noqa: E402
-from asteria.runtime.combat import CombatantComponent  # noqa: E402
-from asteria.runtime.components2d import (  # noqa: E402
+from asteria.runtime.field.collision import Collider2DComponent  # noqa: E402
+from asteria.runtime.game_start import GameStartDefinition  # noqa: E402
+from asteria.runtime.scene.components import (  # noqa: E402
     Animator2DComponent,
     Camera2DComponent,
     Interaction2DComponent,
@@ -98,8 +100,6 @@ from asteria.runtime.components2d import (  # noqa: E402
     SpriteRenderer2D,
     TileMap2DComponent,
 )
-from asteria.runtime.game_start import GameStartDefinition  # noqa: E402
-from asteria.runtime.loot import LooterComponent  # noqa: E402
 
 HERO = "hero"
 CLASSES = ("warrior", "ranger", "mage")
@@ -1472,36 +1472,38 @@ def make_art(assets):
     return looks
 
 
-def dress_in_lucifer(project):
+def dress_in_lucifer(project, folder=HERE):
     """The Lucifer UI skin and pixel font for the HUD and the host menus, and Lucifer icons for
     every skill, state, item and piece of gear (the pictures written first are dropped)."""
     import lucifer_reskin
 
-    from asteria.presentation.battle_ui_renderer import BattleUiTheme
+    from asteria.presentation.battle.ui_renderer import BattleUiTheme
 
     library = project.battle_presentation_library
     if "default" not in library.ids("ui_theme"):
         library.set("ui_theme", "default", BattleUiTheme())
-    reskin = lucifer_reskin.Reskin(project, HERE)
+    reskin = lucifer_reskin.Reskin(project, folder)
     reskin.ui()
     reskin.icons()
     la.node_icons(reskin, project)  # skill-tree nodes without a skill
     la.gear_icons(reskin, project, loot.ICON_FILES)  # a picture for every piece of gear
-    gothic = la.gothic_ui(project, HERE)  # the ornate dark panels of Foozle's RPG UI Set 1
+    gothic = la.gothic_ui(project, folder)  # the ornate dark panels of Foozle's RPG UI Set 1
     db = project.rpg_database
     for item_id, picture in (("gear_scrap", "bag"), ("slime_gel", "coins")):
         if item_id in db.items:
             db.items[item_id] = dataclasses.replace(db.items[item_id], icon_id=gothic[picture])
-    shutil.rmtree(HERE / art.OUT / "icons", ignore_errors=True)
+    shutil.rmtree(folder / art.OUT / "icons", ignore_errors=True)
 
 
-def main():
-    target = HERE / art.OUT
+def main(folder=HERE, name="Asteria ARPG Demo"):
+    """Write the demo into ``folder`` (the multiplayer demo builds the same game into its own
+    folder under another name)."""
+    target = folder / art.OUT
     if target.exists():
         shutil.rmtree(target)
-    project = Project("Asteria ARPG Demo", project_id=PROJECT_ID)
-    assets = art.Assets(project)
-    art.write_credits()
+    project = Project(name, project_id=PROJECT_ID)
+    assets = art.Assets(project, folder)
+    art.write_credits(folder)
     looks = make_art(assets)
     overworld = la.overworld_atlas()
     dungeon_tiles = la.dungeon_atlas()
@@ -1532,15 +1534,15 @@ def main():
     behaviour(db)
     town, hero = build_scenes(project, looks, tilemaps, layouts, la.mine_backdrops(assets))
     new_game(project, town, hero)
-    dress_in_lucifer(project)
-    art.title_image(HERE, layouts["field"], overworld)
+    dress_in_lucifer(project, folder)
+    art.title_image(folder, layouts["field"], overworld)
     project.validate()
-    path = HERE / "project.asteria.json"
+    path = folder / "project.asteria.json"
     project.save_json(path)
     manifest = {
         "schema": "asteria.playable_test_content",
         "version": 1,
-        "title": "Asteria ARPG Demo",
+        "title": name,
         "subtitle": "Hollowbrook - an ARPG demo",
         "field": {
             "background": f"{art.OUT}/title.png",
@@ -1554,13 +1556,13 @@ def main():
         },
         "battle": {"skills": {k: {"label": v} for k, v in LABELS.items()}},
     }
-    (HERE / "playable_test_manifest.json").write_text(
+    (folder / "playable_test_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     sys.path.insert(0, str(REPO / "scripts"))
     from center_cameras import center_file
 
-    center_file(HERE)  # every scene's camera on the hero; the Player's place is the start
+    center_file(folder)  # every scene's camera on the hero; the Player's place is the start
     print(
         f"wrote {path.relative_to(REPO)}: {len(project.scenes())} scenes, "
         f"{len(project.gameplay_library.abilities.ids())} abilities, {len(db.classes)} classes, "

@@ -7,8 +7,8 @@ import json
 import pytest
 
 from asteria.events.dialogue import ChoiceRequest, DialogueChoice, DialogueLine, DialogueRequest
-from asteria.presentation.dialogue_window import DialogueWindowStyle
-from asteria.presentation.menu_layout import MenuElement, MenuLayout
+from asteria.presentation.screens.menu_layout import MenuElement, MenuLayout
+from asteria.presentation.text.dialogue_window import DialogueWindowStyle
 
 GOLD = (255, 200, 0)
 
@@ -19,7 +19,7 @@ def _layout(runtime, screen_id, *elements):
 
 
 def _draw(runtime, request):
-    from asteria.runtime.dialogue_screen import draw_message_window
+    from asteria.runtime.menus.dialogue import draw_message_window
 
     runtime.screen.fill((0, 0, 0))
     draw_message_window(runtime, request, getattr(request, "line", None))
@@ -188,7 +188,7 @@ def test_the_converted_picture_window_draws_the_manifests_pixels(runtime, docume
     from_manifest = picture()
     assert runtime.screen.get_at((480, 530))[:3] == (250, 250, 250)  # the window, scaled
     document = document_for(runtime.project, runtime.resource_root)
-    from asteria.editor.menu_layout_authoring import MenuLayoutAuthoringController
+    from asteria.editor.menus.layout_authoring import MenuLayoutAuthoringController
 
     controller = MenuLayoutAuthoringController(document)
     style = controller.import_dialogue_manifest(runtime.resource_root)

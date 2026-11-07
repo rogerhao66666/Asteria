@@ -39,7 +39,7 @@ def _walking_sheet(path, size=(96, 128)):
 
 
 def test_folders_name_the_kind_of_a_picture():
-    from asteria.editor.picture_categories import folder_category
+    from asteria.editor.assets.picture_categories import folder_category
 
     assert folder_category("playable_assets/characters/hero.png") == "characters"
     assert folder_category("art/Monsters/slime.png") == "characters"  # monsters are characters
@@ -53,8 +53,8 @@ def test_the_picture_dialog_starts_at_characters(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.picture_categories import sheet_category
-    from asteria.editor.sprite_sheet_picker import PicturePickerDialog
+    from asteria.editor.assets.picture_categories import sheet_category
+    from asteria.editor.records.sprite_sheet_picker import PicturePickerDialog
 
     app = QApplication.instance() or QApplication([])
     window = _window(DEMO / "project.asteria.json")
@@ -93,14 +93,14 @@ def test_the_leader_wears_the_players_look_and_a_new_picture_walks(monkeypatch, 
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.actor_appearance import get_actor_appearance
-    from asteria.editor.picture_import import (
+    from asteria.editor.assets.picture_import import (
         PictureImportError,
         folder_pictures,
         import_walking_picture,
     )
-    from asteria.editor.record_form import RecordForm
-    from asteria.editor.sprite_sheet_picker import PictureBox, resolve_pictures
+    from asteria.editor.records.form import RecordForm
+    from asteria.editor.records.sprite_sheet_picker import PictureBox, resolve_pictures
+    from asteria.editor.scene.actor_appearance import get_actor_appearance
     from asteria.runtime import Animator2DComponent, SpriteRenderer2D
 
     app = QApplication.instance() or QApplication([])
@@ -156,9 +156,9 @@ def test_an_icon_is_chosen_from_its_kind_as_a_picture(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_systems_widget import _IconPicker
-    from asteria.editor.icon_picker_dialog import IconPickerDialog
-    from asteria.editor.image_tools import IconLibrary
+    from asteria.editor.assets.image_tools import IconLibrary
+    from asteria.editor.records.icon_picker import IconPickerDialog
+    from asteria.editor.rpg.game_systems_widget import _IconPicker
 
     app = QApplication.instance() or QApplication([])
     window = _window(DEMO / "project.asteria.json")
@@ -178,7 +178,7 @@ def test_an_icon_is_chosen_from_its_kind_as_a_picture(monkeypatch):
         picker.setText(current)
         assert picker.name.text() == "Clock" and picker.combo.isHidden()  # in words
         monkeypatch.setattr(
-            "asteria.editor.icon_picker_dialog.pick_icon",
+            "asteria.editor.records.icon_picker.pick_icon",
             lambda *a, **k: "forged:fire",
         )
         picker.preview.doubleClicked.emit()  # a double-click on the picture chooses
@@ -194,9 +194,9 @@ def test_a_fighter_chooses_from_every_character_and_a_map_one_becomes_a_battle_s
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.picture_import import _image_size, _project_dir
-    from asteria.editor.sprite_sheet_picker import PicturePickerDialog
-    from asteria.runtime.battle_visuals import BattleVisualResolver
+    from asteria.editor.assets.picture_import import _image_size, _project_dir
+    from asteria.editor.records.sprite_sheet_picker import PicturePickerDialog
+    from asteria.runtime.battle.visuals import BattleVisualResolver
 
     app = QApplication.instance() or QApplication([])
     window = _window(DEMO / "project.asteria.json")

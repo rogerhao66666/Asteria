@@ -17,10 +17,10 @@ def _records():
         QuestObjective,
         ShopDefinition,
     )
-    from asteria.rpg.ability_build import PassiveDefinition
-    from asteria.rpg.actors import ClassDefinition
-    from asteria.rpg.extras import MenuEntry, MusicTrack
-    from asteria.rpg.items import AttachmentDefinition
+    from asteria.rpg.characters.abilities import PassiveDefinition
+    from asteria.rpg.characters.actors import ClassDefinition
+    from asteria.rpg.items.definitions import AttachmentDefinition
+    from asteria.rpg.world.extras import MenuEntry, MusicTrack
 
     return [
         QuestDefinition("q", "Q", objectives=[QuestObjective("o")], icon_id="forged:star"),
@@ -49,7 +49,7 @@ def test_records_round_trip_their_icon_and_write_nothing_by_default(index):
 
 
 def test_built_in_icons_resolve_for_the_runtime():
-    from asteria.runtime.menu_icons import forged_spec, forged_surface
+    from asteria.runtime.menus.icons import forged_spec, forged_surface
 
     assert forged_spec("forged:fire") == ("kind", "fire")
     assert forged_spec("forged:mono:Ab") == ("mono", "Ab")
@@ -77,7 +77,7 @@ def document():
 
 
 def test_the_choices_list_project_pictures_and_the_built_in_library(document):
-    from asteria.editor.image_tools import icon_choices
+    from asteria.editor.assets.image_tools import icon_choices
 
     ids = [i for i, _ in icon_choices(document)]
     assert any(i.startswith("playable_assets/lucifer/icons/skill_") for i in ids)
@@ -86,7 +86,7 @@ def test_the_choices_list_project_pictures_and_the_built_in_library(document):
 
 
 def test_importing_a_picture_copies_it_into_the_project_once(document, tmp_path):
-    from asteria.editor.image_tools import IconLibrary
+    from asteria.editor.assets.image_tools import IconLibrary
 
     project_dir = tmp_path / "proj"
     project_dir.mkdir()
@@ -109,8 +109,8 @@ def test_importing_a_picture_copies_it_into_the_project_once(document, tmp_path)
 
 
 def test_the_form_icon_field_picks_shows_and_saves_an_icon(document):
-    from asteria.editor.game_systems_authoring import FORMS, GameSystemsAuthoringController
-    from asteria.editor.game_systems_widget import RecordForm
+    from asteria.editor.rpg.game_systems_authoring import FORMS, GameSystemsAuthoringController
+    from asteria.editor.rpg.game_systems_widget import RecordForm
 
     controller = GameSystemsAuthoringController(document)
     for kind in (
@@ -135,9 +135,9 @@ def test_the_form_icon_field_picks_shows_and_saves_an_icon(document):
 
 
 def test_every_game_systems_kind_has_an_icon():
-    from asteria.editor.decor import label_icon
-    from asteria.editor.game_systems_authoring import KINDS
-    from asteria.editor.icons import DRAWINGS
+    from asteria.editor.rpg.game_systems_authoring import KINDS
+    from asteria.editor.ui.decor import label_icon
+    from asteria.editor.ui.icons import DRAWINGS
 
     missing = [k.label for k in KINDS if label_icon(k.label) not in DRAWINGS]
     assert missing == []
@@ -146,7 +146,7 @@ def test_every_game_systems_kind_has_an_icon():
 def test_the_pause_menu_and_quest_log_draw_icons(monkeypatch):
     from asteria.project import Project
     from asteria.rpg import QuestDefinition, QuestObjective
-    from asteria.rpg.extras import MenuEntry
+    from asteria.rpg.world.extras import MenuEntry
     from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 

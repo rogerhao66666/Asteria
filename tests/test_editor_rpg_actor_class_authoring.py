@@ -2,7 +2,7 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.rpg_actor_class_authoring import (
+from asteria.editor.rpg.actor_class_authoring import (
     RpgActorClassAuthoringController,
     RpgActorClassAuthoringError,
 )

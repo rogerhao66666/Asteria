@@ -1160,7 +1160,7 @@ def _row(target, prefix, lang):
 
 
 def chapter(lang):
-    from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
+    from asteria.runtime.session.world_commands import WORLD_COMMAND_ARGUMENTS
 
     zh = lang == "zh"
     head = ("| Signature | Description |", "| 簽名 | 說明 |")[zh]
@@ -1206,10 +1206,10 @@ def chapter(lang):
     out.append(
         (
             f"The {len(WORLD_COMMAND_ARGUMENTS)} commands a `WORLD` instruction can run, with "
-            "the argument names each reads (`asteria.runtime.world_command_handlers."
+            "the argument names each reads (`asteria.runtime.session.world_commands."
             "WORLD_COMMAND_ARGUMENTS`). In the editor: Events ▸ World.",
             f"`WORLD` 指令可以執行的 {len(WORLD_COMMAND_ARGUMENTS)} 個世界指令與各自讀取的參數名"
-            "（`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`）。"
+            "（`asteria.runtime.session.world_commands.WORLD_COMMAND_ARGUMENTS`）。"
             "編輯器裡：事件 ▸ 世界。",
         )[zh]
     )

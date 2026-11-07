@@ -351,7 +351,7 @@ def patch_menu(db):
 
 def patch_words(data):
     """English names on the character screen's stat labels; Chinese in the zh-TW table."""
-    from asteria.rpg.built_in_text import engine_translations
+    from asteria.rpg.text.built_in_text import engine_translations
 
     db = data["rpg_database"]
     # D98: the screen record is retired (its names moved to the Stats); older files have it

@@ -1,7 +1,7 @@
 from asteria.core import Scene
-from asteria.editor.model import EditorDocument
-from asteria.editor.playmode import create_play_session
-from asteria.editor.runtime_launcher import launch_play_session
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.playmode import create_play_session
+from asteria.editor.project.runtime_launcher import launch_play_session
 from asteria.project import Project
 
 

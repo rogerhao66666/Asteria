@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 
 from asteria.project import Project
-from asteria.runtime.battle_presentation_adapters import entry_semantics
+from asteria.runtime.battle.presentation import entry_semantics
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime

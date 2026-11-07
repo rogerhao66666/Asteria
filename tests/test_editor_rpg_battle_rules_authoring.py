@@ -2,11 +2,10 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.rpg_battle_rules_authoring import (
+from asteria.editor.rpg.battle_rules_authoring import (
     RpgBattleRulesAuthoringController,
     RpgBattleRulesAuthoringError,
 )
-from asteria.editor.rpg_battle_rules_workspace import RpgBattleRulesWorkspaceModel
 from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
 from asteria.rpg import (
@@ -221,43 +220,6 @@ def test_information_architecture_groups_complexity_in_two_levels():
     assert ia.progressive_disclosure
     assert not ia.show_all_rule_kinds_simultaneously
     assert not ia.show_all_details_simultaneously
-
-
-def test_workspace_group_switch_does_not_show_every_rule_kind():
-    _, _, c = make()
-    c.create("resources", BattleResourceDefinition("hp"))
-    c.create("schedulers", BattleSchedulerDefinition("turns"))
-    w = RpgBattleRulesWorkspaceModel(c)
-    assert w.snapshot().group_id == "combat_model"
-    assert w.snapshot().kind_id == "resources"
-    assert w.snapshot().visible_ids == ("hp",)
-    w.set_group("turn_flow")
-    assert w.snapshot().kind_id == "schedulers"
-    assert w.snapshot().visible_ids == ("turns",)
-
-
-def test_workspace_contextual_child_focus_for_sequence_and_gauge():
-    _, _, c = make()
-    c.create("sequences", sample_definitions()["sequences"])
-    w = RpgBattleRulesWorkspaceModel(c)
-    w.set_group("action_logic")
-    w.set_kind("sequences")
-    w.select("triple")
-    w.focus_child("step:0")
-    assert w.snapshot().focused_child_id == "step:0"
-    w.set_kind("reactions")
-    assert w.snapshot().focused_child_id is None
-    with pytest.raises(RuntimeError):
-        w.focus_child("anything")
-
-
-def test_search_filters_current_rule_kind_only():
-    _, _, c = make()
-    c.create("resources", BattleResourceDefinition("stagger"))
-    c.create("resources", BattleResourceDefinition("boost"))
-    w = RpgBattleRulesWorkspaceModel(c)
-    w.set_query("stag")
-    assert w.visible_ids() == ("stagger",)
 
 
 def test_current_project_roundtrip_preserves_all_battle_rule_types():

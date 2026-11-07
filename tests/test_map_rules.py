@@ -2,7 +2,7 @@
 
 import pytest
 
-from asteria.rpg.map_rules import AreaRule, MapRuleSet, MapRulesRuntime
+from asteria.rpg.world.map_rules import AreaRule, MapRuleSet, MapRulesRuntime
 
 
 def _runtime(rules, areas, switches=None, **options):
@@ -197,7 +197,7 @@ def test_music_title_and_encounters_round_trip():
 
 
 def test_an_unknown_encounter_in_an_area_is_a_reference_error():
-    from asteria.rpg.actors import RpgDatabase
+    from asteria.rpg.data.database import RpgDatabase
 
     db = RpgDatabase()
     db.add_map_rule_set(

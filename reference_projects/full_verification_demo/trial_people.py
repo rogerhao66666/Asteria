@@ -108,7 +108,7 @@ def look(assets, key, who, name):
 
 def dress(assets, builders):
     """Give every person in ``CAST`` their own look (they all had to share four)."""
-    from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+    from asteria.runtime.scene.components import Animator2DComponent, SpriteRenderer2D
 
     made, worn = {}, set()
     for builder in builders.values():

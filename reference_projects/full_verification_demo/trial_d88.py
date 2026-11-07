@@ -54,7 +54,7 @@ def _components(node):
 
 def boxes():
     """Entity id -> picture box of every object, measured from the project as it stands."""
-    from asteria.editor.passability import picture_box
+    from asteria.editor.scene.passability import picture_box
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 
@@ -215,7 +215,7 @@ def patch_items(data):
 
 def patch_words(data):
     """The engine's Chinese for the words the demo's table does not have yet (D88's new ones)."""
-    from asteria.rpg.built_in_text import engine_translations
+    from asteria.rpg.text.built_in_text import engine_translations
 
     tables = data["rpg_database"]["locale_tables"]
     entries = next(t for t in tables if t["locale"] == "zh-TW")["entries"]

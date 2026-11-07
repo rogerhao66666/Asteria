@@ -1179,7 +1179,7 @@ Conditions (`JUMP_IF`, `IF_FALSE_SKIP`, `WAIT until`, event pages) are `{source,
 
 ### 15.16 World commands
 
-The 84 commands a `WORLD` instruction can run, with the argument names each reads (`asteria.runtime.world_command_handlers.WORLD_COMMAND_ARGUMENTS`). In the editor: Events ▸ World.
+The 84 commands a `WORLD` instruction can run, with the argument names each reads (`asteria.runtime.session.world_commands.WORLD_COMMAND_ARGUMENTS`). In the editor: Events ▸ World.
 
 | Command | Arguments |
 | --- | --- |

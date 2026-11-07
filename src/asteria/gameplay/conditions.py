@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
-from .states import StateRuntime
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet, normalize_tag
+from asteria.gameplay.states import StateRuntime
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet, normalize_tag
 
 
 class ConditionSubject(str, Enum):

@@ -11,9 +11,9 @@ from asteria.multiplayer.project_demo import build_project_adapter
 from asteria.multiplayer.project_snapshot import unpack_scene_data
 from asteria.multiplayer.protocol import encode_frame, message
 from asteria.multiplayer.rules import default_rules
-from asteria.runtime.character_control import HitEvent
-from asteria.runtime.combat import CombatantComponent
-from asteria.runtime.loot import LootComponent
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.action.ground_loot import LootComponent
+from asteria.runtime.field.character_control import HitEvent
 
 PROJECT = (
     Path(__file__).resolve().parents[1]
@@ -473,7 +473,7 @@ def test_rapid_turn_uses_current_controller_facing_for_npc_interaction(tmp_path,
         session.set_player_facing("down")
         game.handle_input("one", {"move_y": -1})
         game.network_tick(1 / 30)
-        from asteria.runtime.character_control import CharacterController2DComponent
+        from asteria.runtime.field.character_control import CharacterController2DComponent
 
         assert session.player.get(CharacterController2DComponent).facing == "up"
         if interaction_path == "command":
@@ -488,7 +488,7 @@ def test_rapid_turn_uses_current_controller_facing_for_npc_interaction(tmp_path,
 
 
 def test_authored_mine_door_prepares_side_controller_and_jump(tmp_path):
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game = adapter(tmp_path, fields=True)
     try:

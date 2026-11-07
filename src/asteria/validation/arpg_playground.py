@@ -22,21 +22,21 @@ from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
 from asteria.gameplay.attacks import AttackDefinition
 from asteria.gameplay.formulas import FormulaTerm, ValueFormula
 from asteria.gameplay.projectiles import ProjectileDefinition
-from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
-from asteria.rpg.drop_tables import DropEntry, DropTable
-from asteria.rpg.items import EquipmentDefinition
-from asteria.rpg.loot import AffixDefinition, AffixModifier
-from asteria.runtime.action_combat import ActionCombatComponent
-from asteria.runtime.action_play import CombatSceneComponent
-from asteria.runtime.character_control import (
+from asteria.rpg.items.definitions import EquipmentDefinition
+from asteria.rpg.items.drop_tables import DropEntry, DropTable
+from asteria.rpg.items.loot import AffixDefinition, AffixModifier
+from asteria.rpg.world.behavior_tree import BehaviorNode, BehaviorTree
+from asteria.runtime.action.abilities import ActionCombatComponent
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.action.play import CombatSceneComponent
+from asteria.runtime.field.ai import VisibleEncounterComponent
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
     Hitbox2DComponent,
     Hurtbox2DComponent,
 )
-from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.combat import CombatantComponent
-from asteria.runtime.field_ai import VisibleEncounterComponent
+from asteria.runtime.field.collision import Collider2DComponent
 
 
 def _set(component, **fields):

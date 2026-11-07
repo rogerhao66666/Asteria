@@ -1,4 +1,4 @@
-from asteria.presentation.attachments import Socket, SocketKey, SocketRig, Transform2D
+from asteria.presentation.visuals.attachments import Socket, SocketKey, SocketRig, Transform2D
 
 
 def test_32_frame_socket_track_supports_dense_authored_motion():

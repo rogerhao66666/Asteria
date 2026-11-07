@@ -95,7 +95,7 @@ def test_apply_writes_png_files_and_only_touches_icon_lines(tmp_path):
 def test_the_reference_projects_have_working_original_icons(name):
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.menu_icons import icon_source
+    from asteria.runtime.menus.icons import icon_source
 
     folder = ROOT / "reference_projects" / name
     project = Project.load_json(folder / "project.asteria.json", default_component_registry())

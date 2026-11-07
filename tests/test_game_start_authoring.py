@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_start_authoring import (
+from asteria.editor.rpg.game_start_authoring import (
     GameStartAuthoringController,
     GameStartAuthoringError,
 )
@@ -61,7 +61,7 @@ def test_invalid_data_is_rejected_and_nothing_changes(controller):
 def test_the_widget_edits_and_applies(controller):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_start_widget import GameStartEditorWidget
+    from asteria.editor.rpg.game_start_widget import GameStartEditorWidget
 
     QApplication.instance() or QApplication([])
 
@@ -117,7 +117,7 @@ def test_the_demo_starts_with_spare_gear():
 def _page(controller, width):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_start_widget import GameStartEditorWidget
+    from asteria.editor.rpg.game_start_widget import GameStartEditorWidget
 
     qapp = QApplication.instance() or QApplication([])
     widget = GameStartEditorWidget(controller)
@@ -131,7 +131,7 @@ def _page(controller, width):
 def test_no_name_on_the_page_is_cut_or_runs_into_its_number(controller, width):
     from PySide6.QtWidgets import QLabel, QSpinBox
 
-    from asteria.editor.record_form import AmountTable
+    from asteria.editor.records.form_tables import AmountTable
 
     widget, qapp = _page(controller, width)
     data = widget.form.data()
@@ -211,8 +211,8 @@ DEMOS = Path(__file__).resolve().parents[1] / "reference_projects"
 def _map_page(name="full_verification_demo", width=1000):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_start_widget import GameStartEditorWidget
-    from asteria.editor.resource_resolver import resolve_project_resources
+    from asteria.editor.assets.resource_resolver import resolve_project_resources
+    from asteria.editor.rpg.game_start_widget import GameStartEditorWidget
 
     qapp = QApplication.instance() or QApplication([])
     path = DEMOS / name / "project.asteria.json"
@@ -307,8 +307,8 @@ def test_the_map_is_really_painted():
 def test_a_place_the_player_cannot_stand_on_is_said_and_not_refused():
     """On a wall tile, in a solid object, off the map; and what the field itself then does."""
     from asteria.core import Transform
+    from asteria.runtime.field.tilemap_field import TileMapField
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.tilemap_field import TileMapField
 
     widget, qapp = _map_page()
     form, picker = widget.form, widget.form.map
@@ -384,7 +384,7 @@ def test_a_long_list_can_be_searched():
     from PySide6.QtWidgets import QApplication, QLabel
 
     QApplication.instance() or QApplication([])
-    from asteria.editor.record_form import AmountTable
+    from asteria.editor.records.form_tables import AmountTable
 
     values = {f"thing_{i}": 1 for i in range(13)}
     table = AmountTable(values, ())
@@ -399,7 +399,7 @@ def test_a_long_list_can_be_searched():
 def test_a_narrow_list_keeps_two_columns_by_wrapping_its_names():
     from PySide6.QtWidgets import QApplication, QLabel
 
-    from asteria.editor.record_form import AmountTable
+    from asteria.editor.records.form_tables import AmountTable
 
     qapp = QApplication.instance() or QApplication([])
     values = {"flawless_sapphire_of_the_north": 1, "moonstone_necklace": 2, "ruby": 3}
@@ -438,9 +438,9 @@ def test_a_record_with_no_picture_shows_its_kind_beside_those_with_one():
 def test_the_project_s_own_names_show_in_the_editor_s_language():
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import i18n
-    from asteria.editor.data_translation import project_words
-    from asteria.editor.record_form import AmountTable
+    from asteria.editor.project.data_translation import project_words
+    from asteria.editor.records.form_tables import AmountTable
+    from asteria.editor.ui import i18n
 
     app = QApplication.instance() or QApplication([])
     widget, _qapp = _map_page()
@@ -467,10 +467,10 @@ def test_the_project_s_own_names_show_in_the_editor_s_language():
 def test_the_game_data_list_shows_the_project_s_own_names_and_finds_them():
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import i18n
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
+    from asteria.editor.project.workspace import WorkspaceMode
+    from asteria.editor.records.hub import AdapterFamilyWidget
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.ui import i18n
 
     app = QApplication.instance() or QApplication([])
     path = DEMOS / "full_verification_demo" / "project.asteria.json"

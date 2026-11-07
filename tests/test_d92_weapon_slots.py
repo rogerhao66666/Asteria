@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from asteria.gameplay.modifiers import StatModifier
-from asteria.presentation.menu_layout import MenuSlotPlace
-from asteria.rpg.items import (
+from asteria.presentation.screens.menu_layout import MenuSlotPlace
+from asteria.rpg.items.definitions import (
     EquipmentDefinition,
     EquipmentLoadout,
     EquipmentSlotDefinition,
@@ -147,7 +147,7 @@ def test_the_brave_carries_weapons_and_the_others_do_not(game):
 
 
 def test_swapping_in_battle_changes_the_fighter_at_once(game):
-    from asteria.runtime.battle_commands import BattleCommands
+    from asteria.runtime.battle.commands import BattleCommands
 
     game.start_encounter("boss_room")
     commands = BattleCommands(game, style="root")
@@ -175,7 +175,7 @@ def test_swapping_in_battle_changes_the_fighter_at_once(game):
 def test_a_free_swap_keeps_the_turn_and_off_hides_the_command(game):
     import dataclasses
 
-    from asteria.runtime.battle_commands import BattleCommands
+    from asteria.runtime.battle.commands import BattleCommands
 
     inventory = game.save.rpg_state.inventory
     inventory.rules = dataclasses.replace(inventory.rules, battle_swap="free")

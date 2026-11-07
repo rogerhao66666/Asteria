@@ -1,5 +1,5 @@
-from asteria.editor.code_workspace import DEFAULT_AUTHORING_SCRIPT, CodeBuffer
-from asteria.editor.workspace import EditorWorkspace, WorkspaceMode
+from asteria.editor.project.workspace import EditorWorkspace, WorkspaceMode
+from asteria.editor.tools.code_workspace import DEFAULT_AUTHORING_SCRIPT, CodeBuffer
 
 
 def test_workspace_modes_are_stable_authoring_surfaces():

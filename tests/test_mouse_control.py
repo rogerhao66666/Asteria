@@ -251,7 +251,7 @@ def _open(runtime, name):
         runtime._settings_menu.index = 0
         runtime._ui_mode = "settings"
     elif name in ("backlog", "music", "credits", "skill_slots"):
-        from asteria.runtime import extras_screens
+        from asteria.runtime.menus import extras as extras_screens
 
         screen = {
             "backlog": extras_screens.BacklogScreen,
@@ -328,12 +328,12 @@ def test_quick_clicks_are_separate_presses():
 
 
 def test_the_creature_menu_shop_and_name_screens_answer_the_pointer(creature_runtime):
-    from asteria.presentation.creature_screens import CreatureScreenSettings
-    from asteria.rpg.economy import ShopDefinition, ShopEntry
-    from asteria.rpg.items import ItemDefinition
-    from asteria.runtime.creature_menu import CreatureMenuScreen
-    from asteria.runtime.creature_shop import CreatureShopScreen
-    from asteria.runtime.name_input import NameInputScreen
+    from asteria.presentation.screens.creature import CreatureScreenSettings
+    from asteria.rpg.items.definitions import ItemDefinition
+    from asteria.rpg.items.shops import ShopDefinition, ShopEntry
+    from asteria.runtime.creature.menu import CreatureMenuScreen
+    from asteria.runtime.creature.shop import CreatureShopScreen
+    from asteria.runtime.menus.name_input import NameInputScreen
 
     rt = creature_runtime
     rt.game.add_pet("cub", level=5)
@@ -384,8 +384,8 @@ def test_the_editor_turns_mouse_control_off_with_undo(monkeypatch):
     from PySide6.QtWidgets import QApplication, QLabel
 
     from asteria.editor import EditorDocument
-    from asteria.editor.i18n import translate
-    from asteria.editor.input_map_widget import InputMapWidget
+    from asteria.editor.rpg.input_map_widget import InputMapWidget
+    from asteria.editor.ui.i18n import translate
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
@@ -460,7 +460,7 @@ def test_the_mouse_hint_shows_once_the_mouse_is_used(runtime):
 
     import asteria.rpg
 
-    table = Path(asteria.rpg.__file__).parent / "built_in_text" / "zh-TW.json"
+    table = Path(asteria.rpg.__file__).parent / "text" / "built_in_text" / "zh-TW.json"
     assert (
         json.loads(table.read_text(encoding="utf-8"))["entries"]["hint.mouse"]
         == "點擊：選擇   右鍵：返回"
@@ -507,8 +507,8 @@ def test_the_editor_turns_click_to_move_on_with_undo(monkeypatch):
     from PySide6.QtWidgets import QApplication, QLabel
 
     from asteria.editor import EditorDocument
-    from asteria.editor.i18n import translate
-    from asteria.editor.input_map_widget import InputMapWidget
+    from asteria.editor.rpg.input_map_widget import InputMapWidget
+    from asteria.editor.ui.i18n import translate
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
@@ -533,7 +533,7 @@ def test_the_editor_turns_click_to_move_on_with_undo(monkeypatch):
 
 def test_click_to_move_on_a_figure_walks_up_and_talks(runtime):
     from asteria.core import Transform
-    from asteria.runtime.components2d import Interaction2DComponent
+    from asteria.runtime.scene.components import Interaction2DComponent
 
     runtime._ui_mode = "field"
     runtime.input.input_map.click_move = True
@@ -560,7 +560,7 @@ def test_click_to_move_on_a_figure_walks_up_and_talks(runtime):
 
 
 def test_click_to_move_skips_a_side_view_action_scene(runtime):
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     game = runtime.game
     assert runtime._click_move_scene()  # the field
@@ -580,7 +580,7 @@ def test_the_full_verification_demo_keeps_the_mouse_but_draws_no_hint():
     """D99: the demo blanks ``hint.mouse`` in both its languages; clicks still work."""
     import json
 
-    from asteria.rpg.localization import LocaleTable, Localizer
+    from asteria.rpg.text.localization import LocaleTable, Localizer
 
     demo = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
     data = json.loads((demo / "project.asteria.json").read_text(encoding="utf-8"))

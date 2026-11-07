@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from asteria.presentation.menu_layout import (
+from asteria.presentation.screens.menu_layout import (
     SCREEN_IDS,
     MenuElement,
     MenuLayout,
@@ -105,7 +105,7 @@ def host(monkeypatch):
 
 
 def _draw(host, screen_id):
-    from asteria.runtime.menu_preview import open_menu_screen
+    from asteria.runtime.menus.preview import open_menu_screen
 
     host._ui_mode = "field"
     open_menu_screen(host, screen_id)
@@ -157,8 +157,8 @@ def test_the_shop_draws_through_its_layout(host):
 
 def test_the_editor_changes_a_layout_one_undo_step_at_a_time():
     from asteria.editor import EditorDocument
-    from asteria.editor.menu_layout_authoring import MenuLayoutAuthoringController
-    from asteria.editor.storage import load_document
+    from asteria.editor.menus.layout_authoring import MenuLayoutAuthoringController
+    from asteria.editor.project.storage import load_document
 
     document = EditorDocument()
     load_document(document, str(DEMO / "project.asteria.json"))
@@ -189,8 +189,8 @@ def test_the_editor_changes_a_layout_one_undo_step_at_a_time():
 
 def test_the_preview_draws_every_screen_and_where_its_elements_are(monkeypatch):
     from asteria.editor import EditorDocument
-    from asteria.editor.storage import load_document
-    from asteria.runtime.menu_preview import MenuPreview
+    from asteria.editor.project.storage import load_document
+    from asteria.runtime.menus.preview import MenuPreview
 
     monkeypatch.setenv("ASTERIA_MUTE", "1")
     document = EditorDocument()
@@ -220,8 +220,8 @@ def test_the_layout_page_outlines_moves_and_edits_elements(monkeypatch):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.menu_layout_widget import MenuLayoutWorkspace
-    from asteria.editor.storage import load_document
+    from asteria.editor.menus.layout_widget import MenuLayoutWorkspace
+    from asteria.editor.project.storage import load_document
 
     QApplication.instance() or QApplication([])
     document = EditorDocument()

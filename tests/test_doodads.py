@@ -5,12 +5,12 @@ import random
 import pytest
 
 from asteria.core import Scene, Transform
-from asteria.editor.commands import CommandStack
-from asteria.editor.doodads import build_place_doodads_command, doodad_of, make_doodad_entity
-from asteria.rpg.actors import RpgDatabase
-from asteria.rpg.doodads import DoodadDefinition, scatter_positions, snap_position
-from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.components2d import SpriteRenderer2D
+from asteria.editor.project.commands import CommandStack
+from asteria.editor.scene.doodads import build_place_doodads_command, doodad_of, make_doodad_entity
+from asteria.rpg.data.database import RpgDatabase
+from asteria.rpg.world.doodads import DoodadDefinition, scatter_positions, snap_position
+from asteria.runtime.field.collision import Collider2DComponent
+from asteria.runtime.scene.components import SpriteRenderer2D
 
 SHEET = "11111111-1111-4111-8111-111111111111"
 TREE = DoodadDefinition(

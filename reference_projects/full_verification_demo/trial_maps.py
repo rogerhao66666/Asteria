@@ -240,15 +240,15 @@ def character(assets, key, lucifer_key, name, *, townsfolk=False):
 
 
 # -- scenes ---------------------------------------------------------------------------------------
-from asteria.runtime.collision import Collider2DComponent  # noqa: E402
-from asteria.runtime.components2d import (  # noqa: E402
+from asteria.runtime.field.ai import VisibleEncounterComponent  # noqa: E402
+from asteria.runtime.field.collision import Collider2DComponent  # noqa: E402
+from asteria.runtime.scene.components import (  # noqa: E402
     Animator2DComponent,
     Camera2DComponent,
     Interaction2DComponent,
     SpriteRenderer2D,
     TileMap2DComponent,
 )
-from asteria.runtime.field_ai import VisibleEncounterComponent  # noqa: E402
 
 
 def _set(component, **fields):

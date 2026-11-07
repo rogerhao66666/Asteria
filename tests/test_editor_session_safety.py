@@ -1,5 +1,5 @@
-from asteria.editor.commands import SetAttributeCommand
-from asteria.editor.model import EditorDocument
+from asteria.editor.project.commands import SetAttributeCommand
+from asteria.editor.project.model import EditorDocument
 
 
 class X:

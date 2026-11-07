@@ -4,8 +4,7 @@ from dataclasses import dataclass
 
 from asteria.core import Entity, Scene, Transform
 from asteria.runtime import InputSnapshot, Interaction2DComponent, InteractionController
-
-from .rpg_validation_project import AsteriaRpgValidationProject
+from asteria.validation.rpg_validation_project import AsteriaRpgValidationProject
 
 
 @dataclass(frozen=True, slots=True)

@@ -3,9 +3,8 @@ import json
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
+from asteria.assets.fingerprint import SourceFingerprint
 from asteria.core.ids import validate_id
-
-from .fingerprint import SourceFingerprint
 
 
 def canonical_settings(settings):

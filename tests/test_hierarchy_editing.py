@@ -1,9 +1,9 @@
 from asteria.core import Entity, Scene
-from asteria.editor.hierarchy import (
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.hierarchy import (
     build_move_entity_to_scene_command,
     build_reorder_entity_command,
 )
-from asteria.editor.model import EditorDocument
 
 
 def names(scene):

@@ -11,9 +11,9 @@ import pytest
 from PIL import Image
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset
-from asteria.assets.character_visual import CharacterVisualSet
+from asteria.assets.kinds.character_visual import CharacterVisualSet
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.create_character_command import CreateCharacterCommand
+from asteria.editor.scene.create_character import CreateCharacterCommand
 from asteria.project import Project
 from asteria.rpg import ActorDefinition
 from asteria.runtime import AnimationClipSet, Animator2DComponent, SpriteRenderer2D

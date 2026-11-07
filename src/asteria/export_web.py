@@ -15,7 +15,7 @@ runs. ``pygbag --build`` then packs that folder into ``OUT_DIR/<game>/build/web/
 
 On the web the game runs on the pure Python kernels, has no threads (battle pictures are
 decoded one per frame instead of on a worker), no multiplayer, no ModernGL back end, and keeps
-its saves and settings in the browser's ``localStorage`` (``runtime/web_persistence.py``).
+its saves and settings in the browser's ``localStorage`` (``runtime/tools/web_persistence.py``).
 Music and sounds must be ``.ogg`` or ``.wav``: the browser build has no mp3 decoder.
 """
 
@@ -111,7 +111,7 @@ def build_runtime():
 
 
 def saves_mirror():
-    from asteria.runtime.web_persistence import DictStorage, FolderMirror, browser_storage
+    from asteria.runtime.tools.web_persistence import DictStorage, FolderMirror, browser_storage
 
     storage = browser_storage()
     if storage is None and os.environ.get("ASTERIA_WEB_FAKE_STORAGE"):

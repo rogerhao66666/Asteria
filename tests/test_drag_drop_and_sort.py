@@ -4,7 +4,7 @@ import pytest
 
 from asteria.core import Entity, Scene, Transform, world_position
 from asteria.editor import EditorDocument
-from asteria.editor.hierarchy import HierarchyEditError, drop_entities
+from asteria.editor.scene.hierarchy import HierarchyEditError, drop_entities
 from asteria.project import Project
 
 

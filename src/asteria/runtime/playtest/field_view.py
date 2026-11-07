@@ -6,26 +6,25 @@ from pathlib import Path
 
 from asteria.core import Transform
 from asteria.graphics.scaling import resized
-from asteria.presentation.motion_fx import EchoSettings, MotionEchoes
+from asteria.presentation.visuals.motion_fx import EchoSettings, MotionEchoes
 from asteria.reference_data import load_sprite_sheet
-from asteria.runtime.battle_visuals import vfx_content_center, vfx_rect
-from asteria.runtime.environment2d import MotionTrail2DComponent
-from asteria.runtime.field_ai import FieldAIComponent, VisibleEncounterComponent
-from asteria.runtime.field_camera import (
+from asteria.runtime.battle.visuals import vfx_content_center, vfx_rect
+from asteria.runtime.field.ai import FieldAIComponent, VisibleEncounterComponent
+from asteria.runtime.field.camera import (
     FieldViewCamera,
     scene_camera_follow,
 )
-from asteria.runtime.field_presentation import (
+from asteria.runtime.field.presentation import (
     FieldEffects,
 )
-from asteria.runtime.tile_scene_view import TileSceneView
-
-from .support import (
+from asteria.runtime.field.tile_scene_view import TileSceneView
+from asteria.runtime.playtest.support import (
     FIELD_BODY_HEIGHT,
     field_player_render_size,
     walking_pattern_index,
     walking_row_index,
 )
+from asteria.runtime.scene.environment import MotionTrail2DComponent
 
 FIELD_HINT_PANEL = 92  # screen pixels the play-test's hint panel covers at the field's foot
 
@@ -371,7 +370,7 @@ class FieldViewMixin:
         (CMP-01)."""
         cache = self._field_compositions
         if image_path not in cache:
-            from asteria.presentation.character_composition import CharacterComposition
+            from asteria.presentation.visuals.character_composition import CharacterComposition
 
             composition = None
             for asset in self.project.assets.snapshot():

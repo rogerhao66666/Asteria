@@ -8,16 +8,22 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import i18n
-from asteria.editor.behavior_tree_authoring import PARAMS, parse_points
-from asteria.editor.behavior_tree_words import (
+from asteria.editor.combat.behavior_tree_authoring import PARAMS, parse_points
+from asteria.editor.combat.behavior_tree_words import (
     KIND_NAMES,
     SETTING_CHOICES,
     describe,
     kind_name,
     param_label,
 )
-from asteria.rpg.behavior_tree import ACTIONS, CONDITIONS, NODE_KINDS, BehaviorNode, BehaviorTree
+from asteria.editor.ui import i18n
+from asteria.rpg.world.behavior_tree import (
+    ACTIONS,
+    CONDITIONS,
+    NODE_KINDS,
+    BehaviorNode,
+    BehaviorTree,
+)
 
 ROOT = Path(__file__).parents[1]
 DEMO = ROOT / "reference_projects/full_verification_demo/project.asteria.json"
@@ -127,8 +133,8 @@ def test_circling_the_player_turns_the_way_the_sentence_says():
     """The player stands at the middle; y grows down the screen. Standing on the player's right
     and moving up the screen goes counter-clockwise."""
     from asteria.core import Entity, Scene, Transform
-    from asteria.runtime.behavior_tree import BehaviorTreeSystem
-    from asteria.runtime.character_control import AIController2DComponent
+    from asteria.runtime.field.behavior_tree import BehaviorTreeSystem
+    from asteria.runtime.field.character_control import AIController2DComponent
 
     scene = Scene("Arena")
     player = scene.add_entity(Entity("Player"))
@@ -152,7 +158,7 @@ def page(monkeypatch):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.behavior_tree_widget import BehaviorTreeEditorWidget
+    from asteria.editor.combat.behavior_tree_widget import BehaviorTreeEditorWidget
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
@@ -215,8 +221,8 @@ def _on_a_new_node(page, kind):
 def test_a_new_node_works_as_it_is_and_every_setting_is_picked(page):
     from PySide6.QtWidgets import QLineEdit
 
-    from asteria.editor.behavior_tree_widget import PatrolPlaces
-    from asteria.editor.record_form import NumberBox
+    from asteria.editor.combat.behavior_tree_widget import PatrolPlaces
+    from asteria.editor.records.form_controls import NumberBox
 
     node = _on_a_new_node(page, "use_ability")
     assert node.params["ability"], "the project's first skill"
@@ -474,7 +480,7 @@ def test_a_broken_tree_is_a_problem_in_plain_words_in_both_languages(monkeypatch
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.problems_widget import ProblemsWidget
+    from asteria.editor.project.problems_widget import ProblemsWidget
 
     QApplication.instance() or QApplication([])
     panel = ProblemsWidget(_broken_tree_document())

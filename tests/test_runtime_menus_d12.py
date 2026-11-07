@@ -19,7 +19,7 @@ from asteria.rpg import (  # noqa: E402
     CompositionOutput,
     CompositionRecipeDefinition,
 )
-from asteria.runtime.game_menus import (
+from asteria.runtime.menus.game_menus import (
     CraftingScreen,
     GameSettings,
     achievement_rows,

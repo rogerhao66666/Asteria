@@ -8,7 +8,7 @@ from asteria.events.world_commands import WorldCommand
 from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS
+from asteria.runtime.session.world_commands import WORLD_COMMAND_ARGUMENTS
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
@@ -56,7 +56,7 @@ def test_timers_do_not_run_during_battle(game):
 
 
 def test_bad_commands_raise_world_command_errors(game):
-    from asteria.runtime.world_command_handlers import WorldCommandError
+    from asteria.runtime.session.world_commands import WorldCommandError
 
     with pytest.raises(WorldCommandError):
         _run(game, "TIMER_ADD", timer_id="ghost", seconds=1)

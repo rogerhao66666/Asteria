@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from .canonical import Kind
+from asteria.presentation.canonical import Kind
 
 
 @dataclass(frozen=True, slots=True)

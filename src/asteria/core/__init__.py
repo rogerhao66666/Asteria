@@ -1,12 +1,12 @@
-from .application import Application, ApplicationConfig
-from .component import Component
-from .entity import Entity
-from .events import EventBus
-from .lifecycle import LifecycleEvent, LifecycleHookBus, emit_hook
-from .metadata import ComponentSchema, Field, component_schema, get_component_schema
-from .registry import ComponentRegistry
-from .scene import Scene
-from .serialization import (
+from asteria.core.application import Application, ApplicationConfig
+from asteria.core.component import Component
+from asteria.core.entity import Entity
+from asteria.core.events import EventBus
+from asteria.core.lifecycle import LifecycleEvent, LifecycleHookBus, emit_hook
+from asteria.core.metadata import ComponentSchema, Field, component_schema, get_component_schema
+from asteria.core.registry import ComponentRegistry
+from asteria.core.scene import Scene
+from asteria.core.serialization import (
     deserialize_component,
     deserialize_entity,
     deserialize_scene,
@@ -14,11 +14,11 @@ from .serialization import (
     serialize_entity,
     serialize_scene,
 )
-from .services import ServiceRegistry
-from .system import System, SystemScheduler
-from .time import TimeState
-from .scene_transition import PersistentComponent, SceneTransition
-from .transform import (
+from asteria.core.services import ServiceRegistry
+from asteria.core.system import System, SystemScheduler
+from asteria.core.time import TimeState
+from asteria.core.scene_transition import PersistentComponent, SceneTransition
+from asteria.core.transform import (
     Transform,
     TransformHierarchyError,
     can_parent,

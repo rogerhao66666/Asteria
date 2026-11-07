@@ -15,18 +15,18 @@ import trial_content as tc
 
 from asteria.gameplay.states import StateDefinition
 from asteria.rpg import BattleStatePolicy, EquipmentDefinition
-from asteria.rpg.ability_build import AbilityEvolutionRule
-from asteria.rpg.battle_extensions import ResourceGain, StealEntry, StealTable
-from asteria.rpg.capture import CaptureRule
-from asteria.rpg.drop_tables import DropEntry, DropTable
-from asteria.rpg.enemies import RewardDefinition
-from asteria.rpg.enemy_levels import DifficultyLevel, EnemyLevelRules
-from asteria.rpg.interactions import InteractionRule
-from asteria.rpg.loot import AffixDefinition, AffixModifier, RarityDefinition
-from asteria.rpg.pets import PetEvolution, PetMove, PetSpeciesDefinition
-from asteria.rpg.progression import ProgressionMilestone, ProgressionTrackDefinition
-from asteria.rpg.quests import QuestDefinition, QuestObjective
-from asteria.rpg.world_record import AchievementDefinition
+from asteria.rpg.battle.capture import CaptureRule
+from asteria.rpg.battle.extensions import ResourceGain, StealEntry, StealTable
+from asteria.rpg.battle.interactions import InteractionRule
+from asteria.rpg.characters.abilities import AbilityEvolutionRule
+from asteria.rpg.characters.pets import PetEvolution, PetMove, PetSpeciesDefinition
+from asteria.rpg.characters.progression import ProgressionMilestone, ProgressionTrackDefinition
+from asteria.rpg.enemies.definitions import RewardDefinition
+from asteria.rpg.enemies.levels import DifficultyLevel, EnemyLevelRules
+from asteria.rpg.items.drop_tables import DropEntry, DropTable
+from asteria.rpg.items.loot import AffixDefinition, AffixModifier, RarityDefinition
+from asteria.rpg.world.quests import QuestDefinition, QuestObjective
+from asteria.rpg.world.record import AchievementDefinition
 
 HP, BP = tc.HP, tc.BP
 ability, op, damage, healing = tc.ability, tc.op, tc.damage, tc.healing

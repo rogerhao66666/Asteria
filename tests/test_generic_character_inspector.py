@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from asteria.assets.character_visual import CharacterVisualSet
+from asteria.assets.kinds.character_visual import CharacterVisualSet
 from asteria.core import Scene, Transform
 from asteria.editor import EditorDocument
-from asteria.editor.create_character_command import CreateCharacterCommand
+from asteria.editor.scene.create_character import CreateCharacterCommand
 from asteria.project import Project
 from asteria.runtime import ActorLinkComponent, Animator2DComponent, SpriteRenderer2D
 
@@ -60,7 +60,7 @@ def test_create_character_from_any_walking_sheet_links_entity_to_actor():
 
 
 def test_actor_appearance_updates_every_linked_entity_in_one_undo_step():
-    from asteria.editor.actor_appearance import apply_actor_appearance, get_actor_appearance
+    from asteria.editor.scene.actor_appearance import apply_actor_appearance, get_actor_appearance
 
     project = Project("Game")
     scene = project.add_scene(Scene("Map"))
@@ -89,7 +89,7 @@ def test_actor_appearance_updates_every_linked_entity_in_one_undo_step():
 
 
 def test_inspector_offers_actor_sprite_and_clip_choices():
-    from asteria.editor.inspector import build_inspector_fields, inspector_choices
+    from asteria.editor.scene.inspector import build_inspector_fields, inspector_choices
 
     project = Project("Game")
     scene = project.add_scene(Scene("Map"))
@@ -126,8 +126,8 @@ def test_editor_places_sheet_character_copies_it_and_lists_it_with_a_thumbnail(
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox
 
+    from asteria.editor.project.storage import save_document
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.storage import save_document
 
     app = QApplication.instance() or QApplication([])
     project = Project("Game")

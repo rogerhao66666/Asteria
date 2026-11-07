@@ -406,7 +406,7 @@ def test_the_iron_samurai_resists_swords_and_needs_a_spear(encounter):
 
 def test_field_enemies_wander_and_touching_one_starts_its_battle(encounter):
     from asteria.core import Transform
-    from asteria.runtime.field_ai import VisibleEncounterComponent
+    from asteria.runtime.field.ai import VisibleEncounterComponent
 
     runtime, game, _commands = encounter(None)
     foes = {e.name: e for e in game.scene.entities() if e.has(VisibleEncounterComponent)}
@@ -584,7 +584,7 @@ def test_capturing_an_enemy_gives_an_owned_pet_with_its_level_and_unlocks_its_at
 
 
 def test_pets_are_saved_and_loaded(demo):
-    from asteria.rpg.save_state import RpgRuntimeState
+    from asteria.rpg.data.save_state import RpgRuntimeState
 
     _runtime, game, _commands = demo
     game.add_pet("ember_hound", level=5, nickname="Cinder")
@@ -775,7 +775,7 @@ def test_all_four_divine_skills_wait_for_three_boost_points_then_spend_them(
 
 
 def test_the_pets_screen_lists_pets_chooses_the_active_one_and_renames(demo):
-    from asteria.runtime.pets_screen import PetsScreen
+    from asteria.runtime.menus.pets import PetsScreen
 
     runtime, game, _commands = demo
     game.add_pet("ember_hound", level=4)

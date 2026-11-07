@@ -143,7 +143,7 @@
 | Canonical SPEC | `ASTERIA_SPEC.md`、`ASTERIA_ASSET_SPEC.md`、`ASTERIA_ASSET_PIPELINE.md`、`ASTERIA_ART_DIRECTION.md`、`ASTERIA_PROGRESS.md`（`audit/FIVE_DOC_CONSISTENCY_AUDIT.md` 認定） | 功能需求最高依據；PROGRESS 只記錄狀態，不覆蓋其他四份 |
 
 **權威衝突（未解決，需要你確認）：**
-- `README.md` 指向 `docs/CANONICAL_SPEC.md`（2026-09-13），但它已經被 5 份 `ASTERIA_*.md`（2026-09-17 起）取代。
+- `README.md` 指向 `docs/history/batches/CANONICAL_SPEC.md`（2026-09-13），但它已經被 5 份 `ASTERIA_*.md`（2026-09-17 起）取代。
 - 本次 Audit 一開始找不到這些檔案，第一版報告是我推定的格式，現已依模板重整。
 
 ---
@@ -4455,3 +4455,32 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 **沒有選的路：** 選單背後的地圖做成快照（每幀省 3–4 ms，但動態圖塊和彈出字會停住，是看得到的行為改變）；一次把 runtime／editor／rpg 搬成子套件（檔案太多、牽動文件與測試路徑，應分批並留轉接模組）。
 
 **證據：** `CODE_REVIEW_2026-11-06.md`（量測表）；測試 `tests/test_reading_builds.py`、`tests/test_game_systems_undo_labels.py`、`tests/test_qt_texture_renderer.py`、`tests/test_dialogue_window_dialog.py` 和既有檔案裡新增的案例。
+
+## D104 — 程式碼與檔案分類（2026-11-07）
+
+**問題：** `rpg`、`runtime`、`presentation`、`assets`、`editor` 都是幾十到一百多個模組平放在同一層（`editor` 159 個、
+`runtime` 96 個）；十個類別超過 1000 行（編輯器主視窗 3326 行、生物戰鬥畫面 2370 行），遊戲主迴圈的
+`_frame` 是 425 行的 if/elif；`docs/` 根目錄有 221 份歷史批次文件和現行文件混在一起。
+
+**決定：**
+- **子套件：** 依主題分類（`rpg/battle`、`rpg/characters`、`runtime/field`、`runtime/menus`、`presentation/battle`、
+  `assets/kinds`、`editor/records`……，完整表在 `ARCHITECTURE.md` §2.1），每個子套件的 `__init__.py` 說明它管什麼。
+  套件層級的名字與手冊寫的模組路徑照舊；內部模組直接搬，repo 內所有 import 都改成新路徑，不留轉接檔。
+- **大類別用 mixin 拆：** `AsteriaEditorWindow`（`editor/window/`）、`CreatureBattleScreen`、`CanonicalBattleAdapter`、
+  `BattleUiComposer`、`FieldUiMixin`、`FieldPlayMixin`、`CreatureMenuScreen`；共用的常數與小函式放進一個
+  `*_style` ／ `*_parts` 模組，不在 mixin 之間互相 import。
+- **長函式：** `PlayableTestRuntime._frame` 交給 `frame_modes.SCREEN_FRAMES`（畫面 → 方法）；世界指令的註冊
+  分成五個主題函式（註冊結果與改之前逐一比對，84 個指令相同）；主視窗 `__init__` 分成五個建構函式。
+- **重複的程式：** `RpgDatabase` 的 28 種紀錄由 `RECORD_KINDS` 表驅動讀寫（28 個參考專案的資料庫來回讀寫結果
+  不變）；三份相同的 `_spin` 合成 `spin_box`；跨模組使用的私有函式改成公開名字。
+- **刪掉的：** 確認沒有任何地方使用的類別與函式（例如 `AuthoringHubWidget`、紀錄表單裡第二份 `FlowLayout`）。
+  保留所有預留介面（ABC、Protocol、adapter 基底、可覆寫的 hook）。
+- **文件：** 歷史批次文件搬到 `docs/history/batches/`，舊設計稿搬到 `docs/history/superpowers/`；
+  `docs/` 根目錄只剩現行文件。
+
+**沒有選的路：** 把 `getattr(self, "x", 預設)` 全部換成宣告的屬性：存檔還原（`cls.__new__`）與許多測試會在不跑
+`__init__` 的物件上呼叫這些方法，換掉會改變行為，所以保留。存檔與專案檔裡的 schema id（看起來像模組路徑）
+一律不動。
+
+**證據：** `CODE_REVIEW_2026-11-07.md`；完整測試、`ruff`、`scripts/manual_api_list.py --check`、
+`scripts/sync_templates.py --check`、每個模組在獨立直譯器裡都能匯入。

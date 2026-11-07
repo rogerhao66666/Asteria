@@ -8,10 +8,9 @@ import random
 from asteria.core.lifecycle import LifecycleHookBus
 from asteria.events import LifecycleEventBridge
 from asteria.events.scheduler import EventScheduleMode, ScheduledEventSpec
-from asteria.rpg.disassembly import disassemble
-from asteria.rpg.new_game_plus import carry_over
-
-from .support import (
+from asteria.rpg.items.disassembly import disassemble
+from asteria.rpg.world.new_game_plus import carry_over
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 

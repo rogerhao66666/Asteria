@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from asteria.presentation.creature_screens import creature_battle_on
-from asteria.runtime.battle_commands import BattleCommands
-from asteria.runtime.battle_extras import draw_blocks, extras_layout
-from asteria.runtime.skill_tree_screen import StatNames
-from asteria.runtime.victory_screen import VictoryScreen
+from asteria.presentation.screens.creature import creature_battle_on
+from asteria.runtime.battle.commands import BattleCommands
+from asteria.runtime.battle.extras import draw_blocks, extras_layout
+from asteria.runtime.battle.victory_screen import VictoryScreen
+from asteria.runtime.menus.skill_tree import StatNames
 
 
 class BattleFlowMixin:
@@ -156,7 +156,7 @@ class BattleFlowMixin:
 
     def _draw_battle_extras(self):
         """Shield and weaknesses under each enemy, boost points under each hero (unless the
-        party panel has them), the chosen boost level (runtime/battle_extras.py)."""
+        party panel has them), the chosen boost level (runtime/battle/extras.py)."""
         game, adapter = self.game, self._battle_presentation
         box = getattr(adapter, "member_screen_box", None)
         if game.battle is None or box is None or self._victory or self._defeat:
@@ -218,7 +218,7 @@ class BattleFlowMixin:
                 shown = self.game.name_of(definition) or active.state_id
                 names.append(shown.replace("_", " "))
             if names and not panel_has_bp:  # the side panel shows them as chips
-                from asteria.presentation.text_cells import cut
+                from asteria.presentation.text.cells import cut
 
                 label = cut(" ".join(names), 28)  # a Chinese name takes the room of two letters
                 self.text(label, x, y + 20, size=15, color=(220, 180, 255), center=True)

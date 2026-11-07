@@ -46,7 +46,7 @@ from asteria.rpg import (
     ProgressionGraphDefinition,
     SocketDefinition,
 )
-from asteria.rpg.ability_build import PassiveDefinition
+from asteria.rpg.characters.abilities import PassiveDefinition
 
 HP, SP = tc.HP, tc.SP
 ability, op, healing, _hits, _state = tc.ability, tc.op, tc.healing, tc._hits, tc._state
@@ -724,7 +724,7 @@ def family_chest(assets, home, maps):
     charms."""
     import trial_people as people
 
-    from asteria.runtime.collision import Collider2DComponent
+    from asteria.runtime.field.collision import Collider2DComponent
 
     chest = home.entity("Family Chest", 9 * 16.0 + 8.0, 4 * 16.0)
     picture = ("item", "Items/Treasure/LittleTreasureChest.png")
@@ -759,7 +759,7 @@ LEGEND = (1.35, 1.3, 3)  # the default difficulty: strength, rewards, levels abo
 def foes(c):
     """Every foe far stronger; wind and earth weaknesses on some; foes grow faster with their
     level and the default difficulty is Legend (Normal / Hard / Nightmare stay to pick)."""
-    from asteria.rpg.enemy_levels import DifficultyLevel
+    from asteria.rpg.enemies.levels import DifficultyLevel
 
     db = c.db
     for rules_id, rules in list(db.enemy_level_rules.items()):
@@ -854,9 +854,9 @@ def mechanics(c):
     shields (a weak critical blow chips two), a Break leaves them x2.5 and three turns out; some
     foes guard (x0.3) or dodge; foe blows leave states, and poison, burn and bleed take a share
     of the holder's maximum health; WEAK / CRITICAL / GUARD / MISS / BREAK show on the hits."""
-    from asteria.presentation.battle_feedback import BattleFeedbackProfile
-    from asteria.rpg.gauge_composition import GaugeImpactRule
-    from asteria.rpg.interactions import OutcomeCheckDefinition
+    from asteria.presentation.battle.feedback import BattleFeedbackProfile
+    from asteria.rpg.battle.gauges import GaugeImpactRule
+    from asteria.rpg.battle.interactions import OutcomeCheckDefinition
 
     db, library = c.db, c.abilities
     rules = db.interaction_rules

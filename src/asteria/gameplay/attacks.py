@@ -18,8 +18,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-from .formulas import ValueFormula
-from .tags import normalize_tag
+from asteria.gameplay.formulas import ValueFormula
+from asteria.gameplay.tags import normalize_tag
 
 KNOCKBACK_DIRECTIONS = ("away", "attacker_facing", "fixed")
 HITSTOP_SCOPES = ("participants", "global")

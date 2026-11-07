@@ -1,8 +1,9 @@
-"""Heights on a grid map: walls of height, one-way edges, bridges (runtime/grid_heights.py)."""
+"""Heights on a grid map: walls of height, one-way edges, bridges
+(runtime/field/grid_heights.py)."""
 
 from __future__ import annotations
 
-from asteria.runtime.grid_heights import GridHeights, compatible
+from asteria.runtime.field.grid_heights import GridHeights, compatible
 
 
 def heights_of(cells, over=()):

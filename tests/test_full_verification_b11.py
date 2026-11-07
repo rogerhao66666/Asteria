@@ -14,7 +14,7 @@ sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402
 
-from asteria.rpg.interactions import InteractionRule  # noqa: E402
+from asteria.rpg.battle.interactions import InteractionRule  # noqa: E402
 
 
 def smoke_tags():

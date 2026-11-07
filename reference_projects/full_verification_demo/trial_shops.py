@@ -70,7 +70,7 @@ SHOPS = {
 
 def entries(project):
     """``{shop id: (ShopEntry, ...)}``."""
-    from asteria.rpg.economy import ShopEntry
+    from asteria.rpg.items.shops import ShopEntry
 
     db = project.rpg_database
 
@@ -113,7 +113,7 @@ def apply(project, root):
     import trial_maps as maps
     import trial_people as people
 
-    from asteria.rpg.economy import ShopDefinition
+    from asteria.rpg.items.shops import ShopDefinition
 
     db = project.rpg_database
     made = entries(project)

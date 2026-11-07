@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from asteria.project import Project
-from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 

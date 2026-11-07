@@ -4,7 +4,7 @@ import random
 
 from asteria.gameplay import ResourcePool, StatBlock, TagSet
 from asteria.gameplay.conditions import GameplaySubject
-from asteria.rpg.interactions import InteractionResolver, OutcomeCheckDefinition
+from asteria.rpg.battle.interactions import InteractionResolver, OutcomeCheckDefinition
 
 
 def _Subject(*tags):
@@ -30,7 +30,7 @@ def test_a_blocked_target_tag_turns_the_check_off():
 
 
 def test_a_multiplier_can_grow_with_the_source_and_target_stats():
-    from asteria.rpg.interactions import InteractionRule
+    from asteria.rpg.battle.interactions import InteractionRule
 
     fire = InteractionRule(
         "fire",

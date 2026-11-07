@@ -8,11 +8,10 @@ import random
 from asteria.gameplay import ResourcePool, StatBlock, TagSet
 from asteria.gameplay.effects import apply_effect
 from asteria.rpg import PartyMember
-from asteria.rpg.built_in_text import Words
-from asteria.rpg.enemies import RewardDefinition
-from asteria.rpg.pets import PetRecord
-
-from .support import (
+from asteria.rpg.characters.pets import PetRecord
+from asteria.rpg.enemies.definitions import RewardDefinition
+from asteria.rpg.text.built_in_text import Words
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 
@@ -239,7 +238,7 @@ class PetsMixin:
         states it cures (``cures:<state>`` tags). A fallen creature takes only an item tagged
         ``revives``. Consumed only when it changed something; returns whether it did."""
 
-        from .ability_use import cure_states, self_context
+        from asteria.runtime.session.ability_use import cure_states, self_context
 
         item = self.project.rpg_database.items.get(str(item_id))
         species = self.pet_species(pet)

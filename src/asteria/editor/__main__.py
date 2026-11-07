@@ -1,3 +1,3 @@
-from .shell import launch_editor
+from asteria.editor.shell import launch_editor
 
 raise SystemExit(launch_editor())

@@ -8,7 +8,7 @@ from asteria.events.world_commands import WorldCommand
 from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.world_command_handlers import WORLD_COMMAND_ARGUMENTS, WorldCommandError
+from asteria.runtime.session.world_commands import WORLD_COMMAND_ARGUMENTS, WorldCommandError
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 IMAGE = "playable_assets/battle_background.png"

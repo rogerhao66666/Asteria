@@ -344,7 +344,7 @@ def gothic_ui(project, root):
 
     from PIL import Image
 
-    from asteria.presentation.ui_skin import NinePatch
+    from asteria.presentation.screens.ui_skin import NinePatch
 
     folder = Path(root) / "playable_assets" / "lucifer" / "ui"
     folder.mkdir(parents=True, exist_ok=True)

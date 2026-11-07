@@ -40,7 +40,7 @@ def test_swap_in_battle_changes_the_abilities_and_keeps_the_other_weapon():
 def test_swap_needs_an_actor_and_an_item():
     import pytest
 
-    from asteria.runtime.world_command_handlers import WorldCommandError
+    from asteria.runtime.session.world_commands import WorldCommandError
 
     game, hero, _boss = _battle(_project_with_staff())
     with pytest.raises(WorldCommandError):

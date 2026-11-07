@@ -8,7 +8,7 @@ import pytest
 
 from asteria.events import EventInstruction, EventProgram
 from asteria.events.dialogue import DialogueLine, DialogueRequest
-from asteria.rpg.localization import MessageSettings
+from asteria.rpg.text.localization import MessageSettings
 
 REPO = Path(__file__).resolve().parents[1]
 MAGENTA = (255, 0, 255)
@@ -169,7 +169,7 @@ def document(tmp_path):
 
 
 def test_the_portrait_list_has_portrait_folders_only_and_browse_copies_in(document, tmp_path):
-    from asteria.editor.image_tools import PortraitLibrary
+    from asteria.editor.assets.image_tools import PortraitLibrary
 
     library = PortraitLibrary(document)
     ids = [i for i, _ in library.choices()]
@@ -184,7 +184,7 @@ def test_the_portrait_list_has_portrait_folders_only_and_browse_copies_in(docume
 def test_the_dialogue_window_edits_speaker_text_portrait_and_side(document):
     from PySide6.QtWidgets import QDialogButtonBox
 
-    from asteria.editor.dialogue_command_dialog import DialogueCommandDialog
+    from asteria.editor.events.dialogue_dialog import DialogueCommandDialog
 
     dialog = DialogueCommandDialog({"speaker": "Hana", "text": "Hi", "note": 1}, document=document)
     assert dialog.result_args() == {"note": 1, "speaker": "Hana", "text": "Hi"}
@@ -214,8 +214,8 @@ def test_the_event_editor_adds_and_edits_a_dialogue_with_a_portrait(monkeypatch)
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
 
     ref = REPO / "reference_projects/complex_reference_rpg/project.asteria.json"
@@ -260,7 +260,7 @@ def test_sequence_dialogue_steps_keep_portrait_keys_only_when_set():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.event_flow_widget import SequenceEditorDialog
+    from asteria.editor.events.flow_widget import SequenceEditorDialog
 
     QApplication.instance() or QApplication([])
     dialog = SequenceEditorDialog()
@@ -279,7 +279,7 @@ def test_sequence_dialogue_steps_keep_portrait_keys_only_when_set():
 
 
 def test_the_message_settings_form_offers_the_portrait_options_in_both_languages():
-    from asteria.editor.game_systems_authoring import FORMS
+    from asteria.editor.rpg.game_systems_authoring import FORMS
 
     fields = {f.key: f for f in FORMS["message_settings"]}
     assert fields["portrait_style"].choices == ("face", "bust")
@@ -307,7 +307,7 @@ def test_the_preview_holds_its_dialog_weakly(document):
     import gc
     import weakref
 
-    from asteria.editor.dialogue_command_dialog import DialogueCommandDialog
+    from asteria.editor.events.dialogue_dialog import DialogueCommandDialog
 
     dialog = DialogueCommandDialog({"speaker": "Hana", "text": "Hi"}, document=document)
     assert dialog.preview.owner is dialog

@@ -5,7 +5,7 @@ import pytest
 from asteria.core import Entity, Transform
 from asteria.reference_world import build_reference_world
 from asteria.runtime import Camera2DComponent
-from asteria.runtime.reference_runtime import ReferenceRuntime, run_reference_runtime
+from asteria.runtime.tools.reference_runtime import ReferenceRuntime, run_reference_runtime
 
 
 class FakeTextureBackend:

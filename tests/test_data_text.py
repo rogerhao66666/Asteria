@@ -1,4 +1,4 @@
-"""Project data in the player's language (rpg/data_text.py, D60): record names and
+"""Project data in the player's language (rpg/text/data_text.py, D60): record names and
 descriptions, dialogue lines and choices, speakers and map names come from the locale tables
 under ``data.<kind>.<id>.<field>`` (and a line's ``text_key``); without such keys every screen
 draws the records' own text, as before."""
@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from asteria.events.dialogue import ChoiceRequest, DialogueChoice, DialogueLine
-from asteria.rpg import data_text
-from asteria.rpg.localization import LocaleTable, Localizer
+from asteria.rpg.text import data_text
+from asteria.rpg.text.localization import LocaleTable, Localizer
 
 REPO = Path(__file__).resolve().parents[1]
 SRC = REPO / "src" / "asteria"
@@ -65,7 +65,7 @@ def test_every_kind_names_a_real_record_class_and_its_id_field():
 
 
 def test_keys_and_lookups_fall_back_to_the_records_own_text():
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
 
     herb = ItemDefinition("healing_herb", "Healing Herb")
     assert data_text.kind_of(herb) == ("item", "healing_herb")
@@ -159,7 +159,7 @@ def host(monkeypatch):
 
 
 def test_names_follow_the_players_language(host):
-    from asteria.runtime.game_menus import achievement_rows, bestiary_rows
+    from asteria.runtime.menus.game_menus import achievement_rows, bestiary_rows
 
     game, db = host.game, host.project.rpg_database
     assert game.name_of(db.items["healing_herb"]) == "Healing Herb"  # English first
@@ -181,7 +181,7 @@ def test_names_follow_the_players_language(host):
 
 
 def test_the_shop_quest_log_and_messages_use_the_translation(host):
-    from asteria.runtime.game_menus import ShopScreen, quest_rows
+    from asteria.runtime.menus.game_menus import ShopScreen, quest_rows
 
     game = host.game
     game.set_locale("zh-TW")
@@ -245,14 +245,19 @@ ALLOWED = {
     "runtime/session/party.py",  # GameSessionError messages (developer errors)
     "runtime/session/builds.py",  # copies an actor definition
     "runtime/session/pets.py",  # the pet unit's own attribute
-    "runtime/creature_battle.py",  # another batch's screen (not part of D60)
+    # another batch's screen (not part of D60): the creature battle and its parts
+    "runtime/creature/battle.py",
+    "runtime/creature/battle_party.py",
+    "runtime/creature/battle_round.py",
+    "runtime/creature/battle_story.py",
     "runtime/playtest/multiplayer.py",  # network players' names
-    "presentation/rpg_character_screen.py",  # its own view model
-    "presentation/rpg_inventory_screen.py",  # profile default; the status menu translates
-    "presentation/retired_screens.py",  # D98: moves old names into the data, draws nothing
-    "presentation/battle_screen.py",  # the screen's names dict, filled translated
+    "presentation/screens/character.py",  # its own view model
+    "presentation/screens/inventory.py",  # profile default; the status menu translates
+    "presentation/screens/retired.py",  # D98: moves old names into the data, draws nothing
+    "presentation/battle/screen.py",  # the screen's names dict, filled translated
     "presentation/workspace.py",  # editor workspace search
-    "runtime/battle_presentation_adapters.py",  # assigns the translated names dict
+    "runtime/battle/presentation.py",  # assigns the translated names dict
+    "runtime/battle/generated_art.py",  # the same dict, set when the battle begins
 }
 
 
@@ -288,7 +293,7 @@ def _demo_project(plain=True):
 
 
 def test_the_data_groups_list_every_records_name_and_description():
-    from asteria.editor import data_translation as dt
+    from asteria.editor.project import data_translation as dt
 
     project = _demo_project()
     groups = dict(dt.data_groups(project))
@@ -313,7 +318,7 @@ def test_the_data_groups_list_every_records_name_and_description():
 
 def test_giving_dialogue_keys_is_one_undoable_step_and_keeps_existing_keys():
     from asteria.editor import EditorDocument
-    from asteria.editor import data_translation as dt
+    from asteria.editor.project import data_translation as dt
 
     project = _demo_project()
     programs = project.event_programs
@@ -332,7 +337,7 @@ def test_giving_dialogue_keys_is_one_undoable_step_and_keeps_existing_keys():
         i.args.get("text") for i in before.instructions
     ]  # the words themselves never change
     document = EditorDocument(project)
-    from asteria.editor.translation_table import TranslationTable
+    from asteria.editor.project.translation_table import TranslationTable
 
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
@@ -357,7 +362,7 @@ def test_the_page_lists_project_data_collapsed_and_finds_it_by_search():
 
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.translation_table import OWN_GROUP, TranslationTable
+    from asteria.editor.project.translation_table import OWN_GROUP, TranslationTable
 
     app = QApplication.instance() or QApplication([])
     page = TranslationTable(SimpleNamespace(project=_demo_project()))
@@ -392,8 +397,8 @@ def test_the_page_lists_project_data_collapsed_and_finds_it_by_search():
 def test_the_new_page_words_have_chinese():
     import json
 
-    from asteria.editor import data_translation as dt
-    from asteria.editor.i18n import translate
+    from asteria.editor.project import data_translation as dt
+    from asteria.editor.ui.i18n import translate
 
     zh = json.loads((SRC / "editor" / "translations" / "zh_TW.json").read_text("utf-8"))
     words = [t for t, _ in dt.DATA_GROUPS]
@@ -412,8 +417,8 @@ def test_the_page_follows_an_undo_of_the_dialogue_keys():
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor import data_translation as dt
-    from asteria.editor.translation_table import TranslationTable
+    from asteria.editor.project import data_translation as dt
+    from asteria.editor.project.translation_table import TranslationTable
 
     app = QApplication.instance() or QApplication([])
     document = EditorDocument(_demo_project())
@@ -431,7 +436,7 @@ def test_the_page_follows_an_undo_of_the_dialogue_keys():
 
 
 def test_lines_that_only_name_table_keys_need_no_key_of_their_own():
-    from asteria.editor import data_translation as dt
+    from asteria.editor.project import data_translation as dt
 
     assert not dt._translatable("\\T[area.bog]")
     assert not dt._translatable(" \\T[a] \\T[b] ")
@@ -453,7 +458,7 @@ def test_the_demo_translates_every_data_text_and_every_line_has_a_key():
     sys.path.insert(0, str(DEMO))
     import trial_zh_data
 
-    from asteria.editor import data_translation as dt
+    from asteria.editor.project import data_translation as dt
 
     project = _demo_project(plain=False)
     assert dt.dialogue_without_keys(project) == 0  # the build gave every line its key

@@ -16,15 +16,15 @@ import trial_world as stage_world
 from asteria.core import Transform
 from asteria.events.conditions import EventCondition
 from asteria.events.program import EventInstruction
-from asteria.rpg.battle_lifecycle import BattleObjectiveCondition, BattleObjectiveDefinition
-from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
-from asteria.rpg.enemies import RewardDefinition
-from asteria.rpg.interactions import InteractionRule
-from asteria.rpg.items import InventoryRules
-from asteria.rpg.quests import QuestDefinition, QuestObjective
-from asteria.rpg.world_interactions import WorldInteraction
-from asteria.rpg.world_record import AchievementDefinition, FactionDefinition
-from asteria.runtime.character_control import (
+from asteria.rpg.battle.interactions import InteractionRule
+from asteria.rpg.battle.lifecycle import BattleObjectiveCondition, BattleObjectiveDefinition
+from asteria.rpg.enemies.definitions import RewardDefinition
+from asteria.rpg.items.definitions import InventoryRules
+from asteria.rpg.world.behavior_tree import BehaviorNode, BehaviorTree
+from asteria.rpg.world.interactions import WorldInteraction
+from asteria.rpg.world.quests import QuestDefinition, QuestObjective
+from asteria.rpg.world.record import AchievementDefinition, FactionDefinition
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
 )
@@ -82,7 +82,7 @@ QUESTS = (
 def menu_pages():
     """Game Systems ▸ Menu Pages (D87): STR / DEX / INT / LUK / VIT raised on the Status page,
     the Items page's tabs and filters (by the items' tags; "equipment" is every piece of gear)."""
-    from asteria.rpg.menu_rules import ItemCategory, ItemFilter, MenuRules
+    from asteria.rpg.menus.rules import ItemCategory, ItemFilter, MenuRules
 
     return MenuRules(
         "trial_menu",
@@ -171,7 +171,7 @@ def systems(c):
         )
     )
     from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
-    from asteria.rpg.battle_scheduler import BattleSchedulerDefinition
+    from asteria.rpg.battle.scheduler import BattleSchedulerDefinition
 
     c.library.add_timeline(
         ActionTimeline(
@@ -545,7 +545,7 @@ def woods(builders, looks, places):
 
 
 def _identity(entity, npc_id, *, hidden=False):
-    from asteria.runtime.npc_state import NpcIdentity2DComponent
+    from asteria.runtime.field.npc_state import NpcIdentity2DComponent
 
     component = NpcIdentity2DComponent()
     component.npc_id, component.starts_hidden = npc_id, hidden

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from .registry import AssetRegistry
+from asteria.assets.registry import AssetRegistry
 
 
 @dataclass(frozen=True, slots=True)

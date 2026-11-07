@@ -41,7 +41,7 @@ def main(out):
     from PySide6.QtWidgets import QApplication
 
     from asteria import frozen
-    from asteria.editor.project_templates import TEMPLATES
+    from asteria.editor.project.templates import TEMPLATES
     from asteria.editor.shell import AsteriaEditorWindow
     from asteria.project import Project
 

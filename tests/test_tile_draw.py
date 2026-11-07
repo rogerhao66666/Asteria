@@ -1,5 +1,5 @@
 from asteria.assets import AssetRef
-from asteria.editor.viewport import ViewportCamera
+from asteria.editor.scene.viewport import ViewportCamera
 from asteria.graphics import (
     SpriteFrame,
     SpriteSheet,

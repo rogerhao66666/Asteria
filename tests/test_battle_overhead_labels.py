@@ -14,7 +14,7 @@ from asteria.presentation import (
     BattleUiLayoutProfile,
     BattleVisualAnchor,
 )
-from asteria.presentation.battle_ui import _category_strip
+from asteria.presentation.battle.ui_parts import _category_strip
 from asteria.runtime import Camera2D
 
 

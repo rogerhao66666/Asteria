@@ -19,7 +19,7 @@ from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.world_command_handlers import STANDARD_WORLD_COMMANDS, WorldCommandError
+from asteria.runtime.session.world_commands import STANDARD_WORLD_COMMANDS, WorldCommandError
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 BOSS_PROGRAM = "boss_interaction_event"
@@ -289,7 +289,7 @@ def test_legacy_flat_world_arguments_still_dispatch():
 
 
 def test_editor_world_argument_text_parses_to_typed_args():
-    from asteria.editor.event_editing import describe_instruction, parse_world_args
+    from asteria.editor.events.editing import describe_instruction, parse_world_args
 
     assert parse_world_args("encounter_id=boss_room, quantity=2, amount=1.5, loop=true") == {
         "encounter_id": "boss_room",

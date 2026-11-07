@@ -12,7 +12,7 @@ pygame = pytest.importorskip("pygame")
 
 from test_playable_battle_loop import _boss_runtime  # noqa: E402
 
-from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter  # noqa: E402
+from asteria.runtime.battle.presentation import CanonicalBattleAdapter  # noqa: E402
 
 
 @pytest.fixture
@@ -227,7 +227,7 @@ def test_using_a_skill_never_blocks_the_frame_loop(battle):
 
 
 def _frame(adapter):
-    from asteria.runtime.camera import Camera2D
+    from asteria.runtime.scene.camera import Camera2D
 
     layout = adapter.screen.composer.layout
     return layout, adapter.screen.build_frame(
@@ -343,7 +343,7 @@ def test_hit_stop_beat_freezes_the_action_at_the_impact(battle):
     """BTL-04: a timing/hit_stop beat holds the presentation clock and animation for its
     duration."""
     from asteria.editor import EditorDocument
-    from asteria.editor.action_timeline_authoring import ActionTimelineController
+    from asteria.editor.animation.timeline_authoring import ActionTimelineController
 
     runtime, adapter = battle
     baseline = _impact_time(runtime, adapter, "fire_arc")
@@ -387,7 +387,7 @@ def test_an_authored_state_machine_chooses_the_battle_clips(resource_root, monke
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from asteria.editor import EditorDocument
-    from asteria.editor.animation_state_machine_authoring import AnimationStateMachineAuthoring
+    from asteria.editor.animation.state_machine_authoring import AnimationStateMachineAuthoring
 
     runtime = _boss_runtime(resource_root)
     try:

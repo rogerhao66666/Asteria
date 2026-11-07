@@ -26,7 +26,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
 from asteria.graphics.character_placement import feet_pivot_y  # noqa: E402
-from asteria.rpg.built_in_text import engine_translations  # noqa: E402
+from asteria.rpg.text.built_in_text import engine_translations  # noqa: E402
 
 STRIDE = 24.0  # trial_maps.STRIDE
 BODY = 14.0  # trial_maps.BODY

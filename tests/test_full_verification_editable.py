@@ -13,12 +13,12 @@ DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verifi
 sys.path.insert(0, str(DEMO))
 
 from asteria.editor import EditorDocument  # noqa: E402
-from asteria.editor.game_systems_authoring import (  # noqa: E402
+from asteria.editor.rpg.game_systems_authoring import (  # noqa: E402
     FORMS,
     KINDS,
     GameSystemsAuthoringController,
 )
-from asteria.editor.integrated_authoring import IntegratedAuthoringControllers  # noqa: E402
+from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers  # noqa: E402
 from asteria.project import Project  # noqa: E402
 from asteria.runtime.component_registry import default_component_registry
 
@@ -82,7 +82,7 @@ def test_every_game_system_form_round_trips(opened):
 
 
 def test_every_motion_sequence_passes_the_timeline_editors_checks(opened):
-    from asteria.editor.action_timeline_authoring import ActionTimelineController
+    from asteria.editor.animation.timeline_authoring import ActionTimelineController
 
     document, _ = opened
     api = ActionTimelineController(document)
@@ -97,7 +97,7 @@ def test_every_motion_sequence_passes_the_timeline_editors_checks(opened):
 def test_the_editors_templates_for_new_skill_fields_make_valid_records():
     import dataclasses
 
-    from asteria.editor.authoring_hub_widget import StructuredRecordEditor
+    from asteria.editor.records.hub import StructuredRecordEditor
     from asteria.gameplay import AbilityDefinition
 
     project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())

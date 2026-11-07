@@ -18,7 +18,7 @@ import trial_content as tc
 from asteria.events.conditions import EventCondition
 from asteria.events.program import EventInstruction
 from asteria.rpg import ClassDefinition, ProgressionGraphDefinition
-from asteria.rpg.ability_build import PassiveDefinition
+from asteria.rpg.characters.abilities import PassiveDefinition
 
 HP, SP = tc.HP, tc.SP
 ability, op, damage, healing = tc.ability, tc.op, tc.damage, tc.healing

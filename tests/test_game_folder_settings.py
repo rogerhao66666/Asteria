@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor.game_folder_settings_dialog import sections, with_section
+from asteria.editor.tools.game_folder_settings_dialog import sections, with_section
 
 DEMOS = Path(__file__).resolve().parents[1] / "reference_projects"
 MANIFEST = {
@@ -37,7 +37,7 @@ def dialog_for(monkeypatch, tmp_path):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.game_folder_settings_dialog import GameFolderSettingsDialog
+    from asteria.editor.tools.game_folder_settings_dialog import GameFolderSettingsDialog
 
     QApplication.instance() or QApplication([])
 
@@ -79,7 +79,7 @@ def test_a_folder_without_the_file_is_left_without_it(monkeypatch, tmp_path):
     from PySide6.QtWidgets import QApplication, QMessageBox
 
     from asteria.editor import EditorDocument
-    from asteria.editor.menu_layout_widget import MenuLayoutWorkspace
+    from asteria.editor.menus.layout_widget import MenuLayoutWorkspace
 
     QApplication.instance() or QApplication([])
     document = EditorDocument()
@@ -109,8 +109,8 @@ def test_writing_the_file_is_one_undo_step(dialog_for, tmp_path):
 
 
 def test_the_section_names_have_chinese(monkeypatch):
-    from asteria.editor import i18n
-    from asteria.editor.game_folder_settings_dialog import TITLES, title_of
+    from asteria.editor.tools.game_folder_settings_dialog import TITLES, title_of
+    from asteria.editor.ui import i18n
 
     for section in TITLES:
         assert i18n.translate(title_of(section), "zh_TW") != title_of(section), section
@@ -121,7 +121,7 @@ def test_the_preview_starts_again_when_the_file_changes(monkeypatch, tmp_path):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.menu_layout_widget import MenuLayoutWorkspace
+    from asteria.editor.menus.layout_widget import MenuLayoutWorkspace
 
     QApplication.instance() or QApplication([])
     document = EditorDocument()

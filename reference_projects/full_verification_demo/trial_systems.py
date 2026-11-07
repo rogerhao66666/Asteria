@@ -32,16 +32,16 @@ def fill(c):
 
 # -- battle presentation --------------------------------------------------------------------------
 def presentation(c):
-    from asteria.presentation.battle_animation_timing import (
+    from asteria.presentation.battle.animation_timing import (
         BattleAnimationTimingProfile,
         BattleAnimationTimingRule,
     )
-    from asteria.presentation.battle_presentation_director import (
+    from asteria.presentation.battle.director import (
         BattlePresentationDirection,
         BattlePresentationDirectorProfile,
         BattlePresentationDirectorRule,
     )
-    from asteria.presentation.battle_presentation_layering import (
+    from asteria.presentation.battle.layering import (
         BattlePresentationChannelPolicy,
         BattlePresentationLayeringProfile,
     )
@@ -96,8 +96,8 @@ def presentation(c):
 
 # -- message settings, credits, battle options, a pause-menu entry ------------------------------
 def messages_and_extras(c):
-    from asteria.rpg.extras import BattleOptions, CreditsPage, MenuEntry
-    from asteria.rpg.localization import MessageSettings
+    from asteria.rpg.text.localization import MessageSettings
+    from asteria.rpg.world.extras import BattleOptions, CreditsPage, MenuEntry
 
     db = c.db
     icon = next((i.icon_id for i in db.items.values() if getattr(i, "icon_id", "")), "")
@@ -146,8 +146,8 @@ def doodads(c):
     import trial_lucifer as lucifer
     from PIL import Image
 
-    from asteria.editor.doodads import make_doodad_entity
-    from asteria.rpg.doodads import DoodadDefinition
+    from asteria.editor.scene.doodads import make_doodad_entity
+    from asteria.rpg.world.doodads import DoodadDefinition
 
     sheet = Image.open(
         lucifer.FREE_ASSETS
@@ -188,7 +188,7 @@ def _program(project, program_id, steps):
 def events(c):
     import trial_story as story
 
-    from asteria.editor.event_flow_authoring import battle_condition
+    from asteria.editor.events.flow_authoring import battle_condition
 
     project = c.project
     _program(

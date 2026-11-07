@@ -38,8 +38,8 @@ def check_gpu_window(out):
     import pygame
 
     from asteria.platform.moderngl_backend import ModernglRuntimeBackend
-    from asteria.runtime.draw import TextureDraw
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.scene.draw import TextureDraw
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     backend = ModernglRuntimeBackend()
     backend.open("Asteria GPU window validation", 640, 360)
@@ -175,7 +175,7 @@ def check_audio(out):
 
 def _runtime(battle_presentation="canonical", backend=None):
     from asteria.project import Project
-    from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
+    from asteria.runtime.battle.presentation import create_battle_presentation_adapter
     from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -191,7 +191,7 @@ def _runtime(battle_presentation="canonical", backend=None):
 def check_battle_frame_pacing(out):
     import pygame
 
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     runtime = _runtime()
     runtime.open()
@@ -367,8 +367,8 @@ def check_editor_tools(out):
     (nothing saved)."""
     from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 
@@ -482,8 +482,8 @@ def check_editor_d17(out):
 
     from PySide6.QtWidgets import QApplication, QGraphicsPixmapItem
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 
@@ -690,7 +690,7 @@ def check_cutscene(out):
     import pygame
 
     from asteria.core import Transform
-    from asteria.editor.event_flow_authoring import track
+    from asteria.editor.events.flow_authoring import track
     from asteria.events import EventInstruction, EventProgram
 
     runtime = _runtime()
@@ -761,7 +761,7 @@ def check_battle_features(out):
     import pygame
 
     from asteria.editor import EditorDocument
-    from asteria.editor.character_composition_authoring import CharacterCompositionAuthoring
+    from asteria.editor.animation.composition_authoring import CharacterCompositionAuthoring
 
     runtime = _runtime()
     document = EditorDocument()
@@ -794,7 +794,7 @@ def check_battle_features(out):
     _pump(runtime, 3.0, after=sample)
     pygame.image.save(runtime.screen, str(out / "battle_layered_characters.png"))
     shots.append("battle_layered_characters.png")
-    from asteria.runtime.camera import Camera2D
+    from asteria.runtime.scene.camera import Camera2D
 
     layout = adapter.screen.composer.layout
     frame = adapter.screen.animation.build_frame(
@@ -1010,7 +1010,7 @@ from asteria.core import Transform
 from asteria.platform.pygame_backend import PygameRuntimeBackend
 from asteria.project_tools import load_project
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.tilemap_field import TileMapField, run_tilemap_field
+from asteria.runtime.field.tilemap_field import TileMapField, run_tilemap_field
 
 root, out = Path(sys.argv[1]), Path(sys.argv[2])
 kind = sys.argv[3] if len(sys.argv) > 3 else "pygame"
@@ -1099,7 +1099,7 @@ def check_mv_import(out):
             "BLOCKED",
             "The local RPG Maker MV reference (parallax sample) is absent.",
         )
-    from asteria.assets.rpg_maker_mv_project import import_mv_project
+    from asteria.assets.rpg_maker_mv.project import import_mv_project
 
     with tempfile.TemporaryDirectory() as tmp:
         project_path, imported = import_mv_project(
@@ -1154,7 +1154,7 @@ def check_gpu_playable(out):
     (pygame)."""
     import pygame
 
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     runtime = _runtime(backend="moderngl")
     runtime.open()
@@ -1240,7 +1240,7 @@ def _vfx_scene(runtime, *, weather="rain", particles=400):
     """In-memory (never saved) environment on the reference field: lights, shadow, water, weather,
     post."""
     from asteria.core import Entity, Transform
-    from asteria.runtime.environment2d import (
+    from asteria.runtime.scene.environment import (
         Environment2DComponent,
         LightSource2DComponent,
         ShadowCaster2DComponent,
@@ -1281,7 +1281,7 @@ def check_vfx_environment(out):
     weather load."""
     import pygame
 
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     results = []
     for backend in ("moderngl", "pygame"):
@@ -1340,8 +1340,8 @@ def check_vfx_environment(out):
 
     # battle: bloom + afterimages from a motion_fx beat, on the GPU
     runtime = _runtime(backend="moderngl")
-    from asteria.editor.action_timeline_authoring import ActionTimelineController
-    from asteria.editor.model import EditorDocument
+    from asteria.editor.animation.timeline_authoring import ActionTimelineController
+    from asteria.editor.project.model import EditorDocument
 
     document = EditorDocument()
     document.set_project(runtime.game.project)
@@ -1432,10 +1432,10 @@ def check_mv_import_gpu(out):
             "BLOCKED",
             "The local RPG Maker MV reference (parallax sample) is absent.",
         )
-    from asteria.assets.rpg_maker_mv_project import import_mv_project
+    from asteria.assets.rpg_maker_mv.project import import_mv_project
     from asteria.core import Entity, Transform
     from asteria.project_tools import load_project
-    from asteria.runtime.environment2d import Environment2DComponent, LightSource2DComponent
+    from asteria.runtime.scene.environment import Environment2DComponent, LightSource2DComponent
 
     with tempfile.TemporaryDirectory() as tmp:
         project_path, _ = import_mv_project(
@@ -1563,8 +1563,8 @@ def check_game_menus_more(out):
 
     from asteria.gameplay.effects import Effect, EffectOperation, EffectOperationKind
     from asteria.rpg import QuestDefinition, QuestObjective, ShopDefinition, ShopEntry
-    from asteria.rpg.items import ItemDefinition
-    from asteria.runtime.game_menus import PAUSE_OPTIONS
+    from asteria.rpg.items.definitions import ItemDefinition
+    from asteria.runtime.menus.game_menus import PAUSE_OPTIONS
 
     runtime = _runtime()
     db = runtime.game.project.rpg_database  # in-memory content (nothing is saved)
@@ -1730,10 +1730,10 @@ def check_editor_workflows(out):
 
     from asteria.core import Transform
     from asteria.core.prefab import PrefabInstanceComponent
-    from asteria.editor.commands import SetAttributeCommand
-    from asteria.editor.hierarchy import drop_entities
+    from asteria.editor.project.commands import SetAttributeCommand
+    from asteria.editor.project.workspace import WorkspaceMode
+    from asteria.editor.scene.hierarchy import drop_entities
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
     from asteria.events import EventInstruction
     from asteria.project import Project
     from asteria.runtime import Interaction2DComponent
@@ -1910,7 +1910,7 @@ def check_battle_without_art(out):
     ModernGL)."""
     import pygame
 
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     results = []
     autosave = PROJECT / "saves" / "playtest_autosave.asteria-save.json"
@@ -2020,15 +2020,15 @@ def check_engine_systems(out):
         CollisionWorld,
         SpriteRenderer2D,
     )
-    from asteria.runtime.character_control import (
+    from asteria.runtime.field.character_control import (
         CharacterController2DComponent,
         CharacterControllerSystem,
         Hitbox2DComponent,
         HitboxSystem,
         Hurtbox2DComponent,
     )
-    from asteria.runtime.components2d import Camera2DComponent
-    from asteria.runtime.entity_actions import EntityActionSystem
+    from asteria.runtime.field.entity_actions import EntityActionSystem
+    from asteria.runtime.scene.components import Camera2DComponent
     from asteria.runtime.systems import CameraFollowSystem
 
     seen = {
@@ -2283,7 +2283,7 @@ def check_m10_compare(out):
     import pygame
     from PIL import Image, ImageChops, ImageStat
 
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     frames, soak, notes = {}, {}, {}
     for backend in ("moderngl", "pygame"):
@@ -2511,7 +2511,7 @@ def check_asset_categories(out):
     clip."""
     import pygame
 
-    from asteria.runtime.animation import AnimatorState
+    from asteria.runtime.scene.animation import AnimatorState
     from asteria.validation.golden import _clips_of, _sprite_source, _store
 
     root = REPO / "tests" / "golden" / "assets"
@@ -2614,8 +2614,8 @@ def check_editor_characters(out):
     from PIL import Image
     from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
     from asteria.project import Project
     from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
     from asteria.runtime.component_registry import default_component_registry
@@ -2789,10 +2789,10 @@ def check_icons_and_particles(out):
     import pygame
 
     from asteria.events import EventInstruction, EventProgram
-    from asteria.presentation.particles import particle_effect_asset, preset
+    from asteria.presentation.visuals.particles import particle_effect_asset, preset
     from asteria.rpg import ShopDefinition, ShopEntry
-    from asteria.runtime.environment2d import ParticleEmitter2DComponent
-    from asteria.runtime.profiler import RuntimeProfiler
+    from asteria.runtime.scene.environment import ParticleEmitter2DComponent
+    from asteria.runtime.tools.profiler import RuntimeProfiler
 
     results = []
     # -- AST-07: icons in the shop and the status menu --------------------------------------------
@@ -3015,12 +3015,12 @@ def check_editor_particles(out):
     usage."""
     from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
-    from asteria.presentation.particles import effect_definition
+    from asteria.presentation.visuals.particles import effect_definition
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+    from asteria.runtime.scene.environment import ParticleEmitter2DComponent
 
     app = QApplication.instance() or QApplication([])
     original = PROJECT_FILE.read_bytes()
@@ -3300,7 +3300,11 @@ def check_cjk_text(out):
     import pygame
 
     from asteria.platform.pygame_battle_ui import font_for_text
-    from asteria.presentation.message_codes import MessageContext, expand_message, parse_message
+    from asteria.presentation.text.message_codes import (
+        MessageContext,
+        expand_message,
+        parse_message,
+    )
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
@@ -3355,10 +3359,10 @@ def check_game_extras(out):
     import pygame
 
     from asteria.project import Project
-    from asteria.rpg.extras import CreditsPage, MusicTrack
-    from asteria.rpg.localization import MessageSettings
-    from asteria.runtime import extras_screens
+    from asteria.rpg.text.localization import MessageSettings
+    from asteria.rpg.world.extras import CreditsPage, MusicTrack
     from asteria.runtime.component_registry import default_component_registry
+    from asteria.runtime.menus import extras as extras_screens
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     root = REPO / "reference_projects" / "party_rpg_demo"
@@ -3415,7 +3419,7 @@ def check_map_rules_real_window(out):
     from asteria.core import Transform
     from asteria.gameplay import ResourcePool
     from asteria.project import Project
-    from asteria.rpg.map_rules import AreaRule, MapRuleSet
+    from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
     from asteria.runtime.component_registry import default_component_registry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
@@ -3490,13 +3494,13 @@ def check_editor_d30(out):
     """Drive the new Skeleton and region-rule authoring panels in the Cocoa editor."""
     from PySide6.QtWidgets import QApplication, QDockWidget
 
-    from asteria.editor.resource_resolver import resolve_project_resources
-    from asteria.editor.scene_render import render_source_for_scene
+    from asteria.editor.assets.resource_resolver import resolve_project_resources
+    from asteria.editor.scene.render import render_source_for_scene
+    from asteria.editor.scene.tile_edit import build_region_command, region_layer, tile_at
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.tile_edit import build_region_command, region_layer, tile_at
     from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip
     from asteria.project import Project
-    from asteria.rpg.map_rules import AreaRule, MapRuleSet
+    from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
     from asteria.runtime.component_registry import default_component_registry
 
     app = QApplication.instance() or QApplication([])

@@ -11,7 +11,7 @@ from asteria.runtime import (
     CollisionWorld,
     CombinedQuery,
 )
-from asteria.runtime.collision import SpatialHash, overlap, shape_of
+from asteria.runtime.field.collision import SpatialHash, overlap, shape_of
 
 
 def _body(scene, name, x, y, *, shape="box", size=16.0, layer=0, mask=0xFFFFFFFF, trigger=False):
@@ -161,7 +161,7 @@ def test_a_followed_world_answers_like_a_rebuilt_one():
     """``follow`` updates the snapshot in place (moved and resized colliders, each in its own
     grid cells) and gives up - so the caller rebuilds - on any change it cannot follow exactly;
     every query then answers as a world built from scratch."""
-    from asteria.runtime.collision import CollisionWorld
+    from asteria.runtime.field.collision import CollisionWorld
 
     rng = random.Random(7)
     scene = Scene("S")

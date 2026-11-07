@@ -50,7 +50,7 @@ def _project():
     import trial_creatures
 
     from asteria.project import Project
-    from asteria.rpg.enemies import EncounterDefinition, EncounterMember
+    from asteria.rpg.enemies.definitions import EncounterDefinition, EncounterMember
     from asteria.runtime.component_registry import default_component_registry
 
     project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
@@ -293,10 +293,10 @@ def _editor(out):
 
     from PySide6.QtWidgets import QApplication, QLabel, QWidget
 
-    from asteria.editor.i18n import install, set_language
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.theme import apply_asteria_theme
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.ui.i18n import install, set_language
+    from asteria.editor.ui.theme import apply_asteria_theme
 
     app = QApplication.instance() or QApplication(
         ["creature_party_live_check", "-ApplePersistenceIgnoreState", "YES"]

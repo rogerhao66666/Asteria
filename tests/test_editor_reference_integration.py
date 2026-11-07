@@ -1,9 +1,9 @@
 from asteria.core import ComponentRegistry, Transform
-from asteria.editor.model import EditorDocument
-from asteria.editor.resource_resolver import resolve_project_resources
-from asteria.editor.scene_render import render_source_for_scene
-from asteria.editor.storage import load_document, save_document
-from asteria.editor.tile_edit import build_paint_command, tile_at
+from asteria.editor.assets.resource_resolver import resolve_project_resources
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.storage import load_document, save_document
+from asteria.editor.scene.render import render_source_for_scene
+from asteria.editor.scene.tile_edit import build_paint_command, tile_at
 from asteria.project import Project
 from asteria.reference_ids import HERO_ANIMATION_ID, TILEMAP_ID
 from asteria.reference_world import write_reference_world

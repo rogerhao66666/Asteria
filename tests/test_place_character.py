@@ -28,7 +28,7 @@ def test_the_character_tool_places_a_player_lookalike_at_the_clicked_cell(monkey
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.place_character import default_appearance
+    from asteria.editor.scene.place_character import default_appearance
     from asteria.runtime import ActorLinkComponent, Animator2DComponent, SpriteRenderer2D
 
     app = QApplication.instance() or QApplication([])
@@ -78,9 +78,9 @@ def test_the_picture_box_changes_an_actor_look_and_a_fighter_sheet(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import actor_appearance
-    from asteria.editor.record_form import RecordForm
-    from asteria.editor.sprite_sheet_picker import PictureBox
+    from asteria.editor.records.form import RecordForm
+    from asteria.editor.records.sprite_sheet_picker import PictureBox
+    from asteria.editor.scene import actor_appearance
     from asteria.runtime import ActorLinkComponent, SpriteRenderer2D
 
     app = QApplication.instance() or QApplication([])
@@ -106,7 +106,7 @@ def test_the_picture_box_changes_an_actor_look_and_a_fighter_sheet(monkeypatch):
         assert "Double-click" in box.toolTip()
         asked = []
         monkeypatch.setattr(
-            "asteria.editor.sprite_sheet_picker.pick_sprite_sheet",
+            "asteria.editor.records.sprite_sheet_picker.pick_sprite_sheet",
             lambda document, parent=None, battle=False: asked.append(battle) or "another_sheet",
         )
         box.doubleClicked.emit()  # the double-click asks for a map sheet (the dialog, stubbed)
@@ -137,7 +137,7 @@ def test_the_picture_box_changes_an_actor_look_and_a_fighter_sheet(monkeypatch):
         box = form.widget().findChild(PictureBox)
         assert box is not None
         monkeypatch.setattr(
-            "asteria.editor.sprite_sheet_picker.pick_sprite_sheet",
+            "asteria.editor.records.sprite_sheet_picker.pick_sprite_sheet",
             lambda document, parent=None, battle=False: (
                 asked.append(battle) or "battle.combatant.hero_02"
             ),

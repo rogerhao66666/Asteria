@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from asteria.rpg import EquipmentDefinition, ItemDefinition
-from asteria.runtime.menu_icons import icon_source, record_icon_id
+from asteria.runtime.menus.icons import icon_source, record_icon_id
 
 REFERENCE = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 
@@ -115,9 +115,9 @@ def test_the_database_editor_offers_the_project_icons_and_applies_a_choice():
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
-    from asteria.editor.game_systems_widget import _IconPicker
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.records.hub import AdapterFamilyWidget
+    from asteria.editor.rpg.game_systems_widget import _IconPicker
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     QApplication.instance() or QApplication([])
     project = _reference()
@@ -144,7 +144,7 @@ def test_the_database_editor_offers_the_project_icons_and_applies_a_choice():
 @pytest.mark.mv_reference
 def test_an_mv_import_keeps_each_records_iconset_icon():
     from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
-    from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
+    from asteria.assets.rpg_maker_mv.project import RPGMakerMVProjectImporter
 
     repo = Path(__file__).resolve().parents[1]
     try:
@@ -165,7 +165,7 @@ def test_the_asset_list_thumbnail_of_an_icon_is_its_cell():
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.asset_thumbnails import ImageCache, canonical_asset_thumbnail
+    from asteria.editor.assets.thumbnails import ImageCache, canonical_asset_thumbnail
 
     QApplication.instance() or QApplication([])
     project = _reference()

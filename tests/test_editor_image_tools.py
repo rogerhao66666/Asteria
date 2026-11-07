@@ -29,8 +29,8 @@ def window(tmp_path):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project.storage import save_document
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.storage import save_document
 
     QApplication.instance() or QApplication([])
     _image(tmp_path / "assets" / "hero.png", (16, 16), (4, 4, 10, 12))

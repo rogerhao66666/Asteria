@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .support import (
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 

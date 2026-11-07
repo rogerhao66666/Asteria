@@ -8,8 +8,8 @@ from asteria.presentation import (
     BattlePresentationScene,
     BattleValueKind,
 )
-from asteria.rpg.gauge_composition import GaugeCompositionResult, GaugeThresholdResult
-from asteria.rpg.interactions import (
+from asteria.rpg.battle.gauges import GaugeCompositionResult, GaugeThresholdResult
+from asteria.rpg.battle.interactions import (
     InteractionDisposition,
     OutcomeCheckResult,
     OutcomeResolutionResult,

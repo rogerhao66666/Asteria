@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from asteria.runtime.enhance_screen import EnhanceScreen
-from asteria.runtime.equipment_screen import EquipmentScreen
+from asteria.runtime.menus.enhance import EnhanceScreen
+from asteria.runtime.menus.equipment import EquipmentScreen
 
 
 class WorkshopMixin:

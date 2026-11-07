@@ -14,7 +14,7 @@ from PySide6.QtTest import QTest
 pytest.importorskip("PySide6")
 from PySide6.QtWidgets import QApplication
 
-from asteria.editor.multiplayer_workspace import MultiplayerWorkspaceWidget
+from asteria.editor.tools.multiplayer_workspace import MultiplayerWorkspaceWidget
 
 
 @pytest.fixture(scope="module")
@@ -193,7 +193,7 @@ from types import SimpleNamespace
 from PySide6.QtCore import QCoreApplication, QEvent
 from PySide6.QtWidgets import QApplication, QWidget
 
-from asteria.editor.multiplayer_workspace import MultiplayerWorkspaceWidget
+from asteria.editor.tools.multiplayer_workspace import MultiplayerWorkspaceWidget
 
 app = QApplication([])
 window = QWidget()

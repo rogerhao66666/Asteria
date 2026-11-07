@@ -5,7 +5,7 @@ import random
 import pytest
 
 from asteria.gameplay import GameplaySubject, ResourcePool, StatBlock, TagSet
-from asteria.rpg.enemy_levels import DifficultyLevel, EnemyLevelRules
+from asteria.rpg.enemies.levels import DifficultyLevel, EnemyLevelRules
 
 
 def _enemy():

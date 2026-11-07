@@ -29,15 +29,15 @@ from asteria.rpg import (
     StealEntry,
     StealTable,
 )
-from asteria.rpg.battle_scheduler import BattleSchedulerDefinition
-from asteria.rpg.items import Inventory
-from asteria.rpg.targeting import (
+from asteria.rpg.battle.scheduler import BattleSchedulerDefinition
+from asteria.rpg.battle.targeting import (
     BattleFormationRuntime,
     BattleTargetingDefinition,
     FormationDefinition,
     FormationSlotDefinition,
     TargetSelectionMode,
 )
+from asteria.rpg.items.definitions import Inventory
 
 
 def _ability(ability_id, value, *, mode=AbilityTargetMode.SELECTED, maximum=1):
@@ -294,7 +294,7 @@ def test_extensions_work_with_a_continuous_scheduler():
 
 # ---- resource gains (TP-style modes) ---------------------------------------------------------
 from asteria.rpg import ResourceGain  # noqa: E402
-from asteria.rpg.battle_resources import BattleResourceDefinition  # noqa: E402
+from asteria.rpg.battle.resources import BattleResourceDefinition  # noqa: E402
 
 
 def _gain_battle(*gains):

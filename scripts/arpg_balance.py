@@ -25,9 +25,9 @@ import arpg_builds as builds  # noqa: E402
 
 from asteria.core import Entity, Transform  # noqa: E402
 from asteria.project import Project  # noqa: E402
-from asteria.runtime.character_control import Hurtbox2DComponent  # noqa: E402
-from asteria.runtime.combat import CombatantComponent  # noqa: E402
+from asteria.runtime.action.combat import CombatantComponent  # noqa: E402
 from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.character_control import Hurtbox2DComponent  # noqa: E402
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime  # noqa: E402
 
 DEMO = REPO / "reference_projects" / "arpg_demo"
@@ -101,7 +101,7 @@ RARE_SLOTS = ("helm", "armor", "gloves", "boots", "amulet", "ring")
 def _wear(game, branch, level):
     import random
 
-    from asteria.rpg.loot import roll_equipment
+    from asteria.rpg.items.loot import roll_equipment
 
     db = game.project.rpg_database
     rng = random.Random(branch)
@@ -154,7 +154,7 @@ def measure(class_id, branch, *, level, seconds, targets, gear=False):
     ids = set(_dummies(game, targets, level))
     for _ in range(10):
         runtime._frame([], 1 / 60)
-    from asteria.runtime.action_combat import ActionCombatComponent, parse_bindings
+    from asteria.runtime.action.abilities import ActionCombatComponent, parse_bindings
 
     bindings = parse_bindings(game.player.get(ActionCombatComponent).bindings)
     order = [b for k, b in bindings.items() if k.startswith("skill_")] + [bindings["attack"]]

@@ -239,8 +239,8 @@ def surfaces(window):
     """``(name, activate)`` for every workspace and sub-tab."""
     from PySide6.QtWidgets import QTabWidget
 
-    from asteria.editor.i18n import english
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
+    from asteria.editor.ui.i18n import english
 
     out = []
     for mode in WorkspaceMode:
@@ -273,7 +273,7 @@ def surfaces(window):
 
                 out.append(("scene_tiles", tiles))
     # every Game Systems kind and every database category (forms and tables differ per kind)
-    from asteria.editor.workspace import WorkspaceMode as WM
+    from asteria.editor.project.workspace import WorkspaceMode as WM
 
     systems = window.game_systems_editor
     for kind in systems.controller.kinds:
@@ -290,7 +290,7 @@ def surfaces(window):
     combat = (
         window.combat_editor
     )  # D22 A9: each Real-Time Combat kind has its own cards and preview
-    from asteria.editor.combat_authoring import KINDS
+    from asteria.editor.combat.authoring import KINDS
 
     for spec in KINDS:
         out.append(
@@ -333,7 +333,7 @@ def main(argv=None):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.theme import apply_asteria_theme
+    from asteria.editor.ui.theme import apply_asteria_theme
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 

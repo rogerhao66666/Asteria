@@ -6,9 +6,9 @@ import pytest
 
 from asteria.assets.types import AssetRef
 from asteria.core import Scene
-from asteria.editor.commands import CommandStack
-from asteria.editor.tile_edit import TileEditError, build_region_command, tile_at
-from asteria.editor.tile_palette import TileToolState, terrain_ids
+from asteria.editor.project.commands import CommandStack
+from asteria.editor.scene.tile_edit import TileEditError, build_region_command, tile_at
+from asteria.editor.scene.tile_palette import TileToolState, terrain_ids
 from asteria.graphics import EMPTY_TILE, TileChunk, TileLayer, TileMap
 from asteria.graphics.tiles import TileDef, Tileset
 
@@ -90,10 +90,10 @@ def app():
 
 
 def test_palette_offers_the_terrains_and_doodads_and_drives_the_viewport(app):
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.tile_palette_widget import TilePaletteWidget
-    from asteria.editor.viewport_widget import SceneViewportWidget as ViewportWidget
-    from asteria.rpg.doodads import DoodadDefinition
+    from asteria.editor.project.model import EditorDocument
+    from asteria.editor.scene.tile_palette_widget import TilePaletteWidget
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget as ViewportWidget
+    from asteria.rpg.world.doodads import DoodadDefinition
 
     document = EditorDocument()
     viewport = ViewportWidget(document)
@@ -128,10 +128,10 @@ def test_clicking_in_doodad_mode_places_one_undoable_entity(app):
     from PySide6.QtCore import QEvent, QPointF, Qt
     from PySide6.QtGui import QMouseEvent
 
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.viewport_widget import SceneViewportWidget as ViewportWidget
+    from asteria.editor.project.model import EditorDocument
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget as ViewportWidget
     from asteria.project import Project
-    from asteria.rpg.doodads import DoodadDefinition
+    from asteria.rpg.world.doodads import DoodadDefinition
 
     project = Project("G")
     scene = project.add_scene(Scene("Town"))
@@ -172,7 +172,7 @@ def _rig_file(tmp_path):
 
 
 def test_bone_segments_follow_the_clip_time(tmp_path):
-    from asteria.editor.skeleton_view import bone_segments, bounds, load_rig
+    from asteria.editor.animation.skeleton_view import bone_segments, bounds, load_rig
 
     skeleton, notes = load_rig(_rig_file(tmp_path))
     assert notes == () or isinstance(notes, tuple)
@@ -185,7 +185,7 @@ def test_bone_segments_follow_the_clip_time(tmp_path):
 
 
 def test_viewer_loads_a_rig_scrubs_and_reports_bad_files(app, tmp_path):
-    from asteria.editor.skeleton_widget import SkeletonViewerWidget
+    from asteria.editor.animation.skeleton_widget import SkeletonViewerWidget
 
     viewer = SkeletonViewerWidget()
     assert viewer.open_rig(_rig_file(tmp_path))

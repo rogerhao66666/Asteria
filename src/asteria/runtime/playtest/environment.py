@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from stat import S_ISREG
 
-from asteria.runtime.environment2d import resolve_environment
+from asteria.runtime.scene.environment import resolve_environment
 
 
 class EnvironmentMixin:
@@ -65,7 +65,7 @@ class EnvironmentMixin:
         if env is None or not env.active:
             return
         if env.weather != "none" or self._weather is not None:
-            from asteria.runtime.weather import WeatherSystem
+            from asteria.runtime.scene.weather import WeatherSystem
 
             if self._weather is None:
                 self._weather = WeatherSystem(

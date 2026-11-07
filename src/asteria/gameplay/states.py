@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
-from .effects import Effect, apply_effect
-from .formulas import FormulaContext
-from .modifiers import ModifierSet, StatModifier
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet
+from asteria.gameplay.effects import Effect, apply_effect
+from asteria.gameplay.formulas import FormulaContext
+from asteria.gameplay.modifiers import ModifierSet, StatModifier
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet
 
 
 def _duration(value):
