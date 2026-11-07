@@ -225,3 +225,53 @@ def test_the_shipped_table_loads_and_the_editor_window_switches_language_live():
         window.document.mark_saved()
         window.close()
         window.deleteLater()
+
+
+def test_reports_status_messages_and_built_card_titles_read_in_chinese(chinese):
+    """D107: a dialog's lines are translated one by one, the status bar is translated, and the
+    shipped table reads what the editor builds (Enemy AI cards, empty lists, the export
+    report) - while names of the project's own stay as they are."""
+    from PySide6.QtWidgets import QMainWindow
+
+    zh = "zh_TW"
+    report = "Game folder: /x/game\nGame app: /x/Game.app (needs Python)\nMissing: a.png"
+    assert i18n.translate_lines(report, zh) == (
+        "遊戲資料夾：/x/game\n遊戲 App：/x/Game.app（需要 Python）\n缺少：a.png"
+    )
+    when = "starts when HP % is at most 65 %"
+    card = f"<b>2.</b>  Boss Roar  <span style='color:#8b8e98'>{when}</span>"
+    assert i18n.translate(card, zh) == (
+        "<b>2.</b>  Boss Roar  <span style='color:#8b8e98'>HP % 不高於 65 % 時開始</span>"
+    )
+    for english, chinese in (
+        ("+ Add switch", "+ 新增開關"),
+        ("No switches yet.", "尚無開關。"),
+        ("New Affix", "新增詞綴"),
+        ("No loot affixes yet", "尚無戰利品詞綴"),
+        ("Name:", "名稱："),
+        ("Range 28 · must face it", "範圍 28 · 需面向它"),
+        ("Script failed line 3 — changes rolled back", "腳本失敗（第 3 行）— 變更已復原"),
+    ):
+        assert i18n.translate(english, zh) == chinese
+    i18n.set_language(zh)
+    window = QMainWindow()
+    window.statusBar().showMessage("Game closed")
+    assert window.statusBar().currentMessage() == "遊戲已關閉"
+
+
+def test_fixed_choices_show_words_and_keep_their_values(chinese):
+    """The VFX and particle pickers show words ("Feet", "Add (brighter)") and give back the
+    value they save; one an older project saved that the list lacks is kept."""
+    from asteria.editor.ui.fit import ValueCombo, WordCombo
+
+    i18n.set_language("zh_TW")
+    anchor = WordCombo()
+    anchor.addItems(("feet", "center", "head"))
+    anchor.setCurrentText("head")
+    assert (anchor.itemText(0), anchor.currentText()) == ("腳下", "head")
+    blend = ValueCombo()
+    blend.set_choices([("normal", "Normal"), ("add", "Add (brighter)")])
+    blend.setCurrentText("add")
+    assert (blend.itemText(1), blend.currentText()) == ("相加（變亮）", "add")
+    blend.setCurrentText("screen")  # not on the list: joins it rather than being lost
+    assert blend.currentText() == "screen"

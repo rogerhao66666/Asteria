@@ -800,6 +800,23 @@ def test_the_pets_screen_lists_pets_chooses_the_active_one_and_renames(demo):
     screen.handle(0.0, [pg.event.Event(pg.KEYDOWN, key=pg.K_RETURN, unicode="\r", mod=0)])
     assert screen.renaming is None
     assert game.active_pet().nickname == "Ash"
+    # an input method (注音): the half-made characters show, its own Enter and Backspace go
+    # to it, the finished characters arrive as TEXTINPUT (and the KEYDOWN letters are not text)
+    screen.handle(0.0, typed)
+    composing = pg.event.Event(pg.TEXTEDITING, text="ㄏㄨㄛˇ", start=0, length=4)
+    screen.handle(0.0, [composing])
+    assert screen.composing == "ㄏㄨㄛˇ"
+    screen.draw()
+    keys = [pg.event.Event(pg.KEYDOWN, key=k, unicode="", mod=0) for k in (pg.K_BACKSPACE,)]
+    screen.handle(0.0, [*keys, pg.event.Event(pg.KEYDOWN, key=pg.K_RETURN, unicode="", mod=0)])
+    assert screen.renaming == "Ash"  # the input method's keys: nothing typed or kept yet
+    done = [pg.event.Event(pg.TEXTEDITING, text="", start=0, length=0),
+            pg.event.Event(pg.KEYDOWN, key=ord("a"), unicode="a", mod=0),
+            pg.event.Event(pg.TEXTINPUT, text="火")]  # fmt: skip
+    screen.handle(0.0, done)
+    assert (screen.renaming, screen.composing) == ("Ash火", "")
+    screen.handle(0.0, [pg.event.Event(pg.KEYDOWN, key=pg.K_RETURN, unicode="\r", mod=0)])
+    assert game.active_pet().nickname == "Ash火"
     pressed.add("cancel")
     screen.handle(0.0, [])
     assert screen.closed

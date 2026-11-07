@@ -35,7 +35,8 @@ from asteria.editor.animation.authoring import (
     AnimationAuthoringError,
 )
 from asteria.editor.records.hub import free_id
-from asteria.editor.ui.fit import fit_list_to_width
+from asteria.editor.ui.fit import WordCombo, fit_list_to_width
+from asteria.runtime.battle.visuals import VFX_ANCHORS
 
 _CLIP_WORDS = {  # a clip name's first word, in plain words
     "idle": "Standing",
@@ -338,8 +339,8 @@ class AnimationEditorWidget(QWidget):
             "menus sit on this instead of on the empty room in the frame."
         )
         self.vfx_on = QCheckBox("Used as an effect")
-        self.vfx_anchor = QComboBox()
-        self.vfx_anchor.addItems(["feet", "center", "head"])
+        self.vfx_anchor = WordCombo()  # shown in words, read and set as the value
+        self.vfx_anchor.addItems(VFX_ANCHORS)
         self.vfx_x, self.vfx_y = QDoubleSpinBox(), QDoubleSpinBox()
         for spin in (self.vfx_x, self.vfx_y):
             spin.setRange(-512.0, 512.0)

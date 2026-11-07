@@ -61,7 +61,8 @@ class BattleStoryMixin:
 
     def move_name(self, ability_id):
         definition = self.game.project.gameplay_library.abilities.get(ability_id)
-        return getattr(definition, "display_name", "") or str(ability_id).replace("_", " ").title()
+        fallback = str(ability_id).replace("_", " ").title()
+        return self.game.name_of(definition, fallback) or fallback  # the player's language
 
     def player_name(self):
         db = self.game.project.rpg_database
@@ -72,7 +73,7 @@ class BattleStoryMixin:
         actor = db.actors.get(ids[0]) if ids else None
         if self.encounter.get("player_name"):  # someone else's battle (a tutorial)
             return self.game.expand_message(self.encounter["player_name"], plain=True)
-        name = getattr(actor, "display_name", "") or self.game.expand_message(
+        name = self.game.name_of(actor, "") or self.game.expand_message(
             self.settings.get("player_name", ""), plain=True
         )  # "\\V[player.name]": a name the player chose
         return name or self.tr("creature.you", "You")

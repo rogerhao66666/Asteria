@@ -43,7 +43,7 @@ from PySide6.QtWidgets import (
 from asteria.editor.project.empty_state import ProjectEmptyState
 from asteria.editor.records.form_chips import load_record_icon
 from asteria.editor.records.form_controls import ColorButton, Picker
-from asteria.editor.records.form_shapes import basic_first
+from asteria.editor.records.form_shapes import basic_first, entry_noun, singular
 from asteria.editor.records.hub import free_id
 from asteria.editor.records.sidebar import authoring_sidebar
 from asteria.editor.records.vocabulary import (
@@ -54,6 +54,7 @@ from asteria.editor.records.vocabulary import (
     words,
 )
 from asteria.editor.rpg.game_systems_authoring import (
+    CHOICE_WORDS,
     FORMS,
     KINDS,
     GameSystemsAuthoringError,
@@ -371,10 +372,10 @@ class _TableField(QGroupBox):
             if re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+", str(value)):
                 return words(value)
         if first.kind == "choice":  # a kind of thing (a menu block): in words, with its place
-            text = translate(_choice_words(value, words))
+            text = translate(_choice_words(value, words, first.key))
             second = self.fields[1] if len(self.fields) > 1 else None
             if second is not None and second.kind == "choice" and row.get(second.key):
-                text += f"  ·  {translate(_choice_words(row[second.key], words))}"
+                text += f"  ·  {translate(_choice_words(row[second.key], words, second.key))}"
             return text
         return str(value)
 
@@ -578,10 +579,12 @@ class _TextPicker(Picker):
         self.set_value(text)
 
 
-def _choice_words(choice, words):
-    """A fixed choice as players read it: "defeat_enemy" -> "Defeat Enemy"; operators and
-    symbols stay as they are (==, <=)."""
+def _choice_words(choice, words, key=""):
+    """A fixed choice as players read it: "defeat_enemy" -> "Defeat Enemy" (or its words in
+    ``CHOICE_WORDS`` for the field ``key``); operators and symbols stay as they are (==, <=)."""
     text = str(choice)
+    if text in CHOICE_WORDS.get(key, {}):
+        return CHOICE_WORDS[key][text]
     return words(text) if text[:1].isalpha() else text
 
 
@@ -1137,21 +1140,21 @@ class RecordForm(QWidget):
                  "abilities": "skill", "equipment": "equipment", "enemies": "enemy",
                  "factions": "faction", "states": "state", "classes": "job",
                  "actors": "character", "currencies": "currency"}  # fmt: skip
-        nouns.update({"progression_tracks": "track", "carry_parts": "part"})
+        nouns.update({"progression_tracks": "track", "carry_parts": "carry-over"})
         nouns.update({"stat_columns": "column"})
         if source in nouns:
             return nouns[source]
         by_key = {"bonuses": "stat", "growth": "stat", "stat_growth": "stat", "stats": "stat",
                   "terms": "stat", "resource_growth": "resource", "resources": "resource",
                   "capacity_by_level": "level", "thresholds": "level",
-                  "shared_gauges": "gauge", "required_capabilities": "capability"}  # fmt: skip
+                  "shared_gauges": "gauge", "required_capabilities": "capability",
+                  "gene_terms": "gene"}  # fmt: skip
         if f.key in by_key:
             return by_key[f.key]
         word = f.label.split("(")[0].strip().split(" ")[-1].lower()
-        for suffix, replacement in (("ies", "y"), ("ses", "s"), ("s", "")):
-            if word.endswith(suffix) and len(word) > 3:
-                return word[: -len(suffix)] + replacement
-        return word or "entry"
+        if not word.isalpha():  # "Gene ×": the label ends in a symbol, the key says it
+            return entry_noun(f.key)
+        return singular(word)
 
     def _text_choices(self, key):
         """A text field that names something in the project (a currency, a stat, an enemy, a
@@ -1298,7 +1301,7 @@ class RecordForm(QWidget):
         if f.kind == "choice":
             widget = QComboBox()
             for choice in f.choices:  # in words; the value written is the item's data
-                widget.addItem(_choice_words(choice, words), choice)
+                widget.addItem(_choice_words(choice, words, f.key), choice)
             return widget
         if f.kind in ("ref", "optional_ref"):
             widget = QComboBox()

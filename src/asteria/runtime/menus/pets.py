@@ -29,6 +29,8 @@ class PetsScreen:
         self.closed = False
         self.back = back
         self.renaming = None  # the text being typed, or None
+        self.composing = ""  # an input method's characters not chosen yet (注音, pinyin...)
+        self._text_events = False  # the window sends TEXTINPUT: KEYDOWN letters are not text
         self.message, self.message_left = "", 0.0
         self.column = "storage" if storage and self.two_columns() else "party"
 
@@ -86,7 +88,7 @@ class PetsScreen:
                 self._say(self.game.tr("pets.sent_out", "{name} will be sent out", name=name))
         for event in events:
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
-                self.renaming = pet.nickname
+                self._start_renaming(pet)
             if event.type == pg.KEYDOWN and event.key == pg.K_e:
                 self._evolve(pet)
 
@@ -122,12 +124,33 @@ class PetsScreen:
                 return
         self._say(game.tr("pets.not_ready", "Not ready to evolve"))
 
+    def _start_renaming(self, pet):
+        """R: type a new name. Text comes as TEXTINPUT, so an input method's characters
+        (Chinese, Japanese...) are typed too; its candidate window opens by the name."""
+        self.renaming, self.composing = pet.nickname, ""
+        key = getattr(self.rt.pg, "key", None)
+        try:
+            key.start_text_input()
+            key.set_text_input_rect((self.rt.width // 2 - 120, self.rt.height - 120, 240, 40))
+        except (AttributeError, RuntimeError):  # no window (a test) or no text input
+            pass
+
     def _typing(self, events):
         pg = self.rt.pg
         pet = self.selected()
+        text_input, editing = getattr(pg, "TEXTINPUT", None), getattr(pg, "TEXTEDITING", None)
+        if text_input is not None and any(e.type == text_input for e in events):
+            self._text_events = True
         for event in events:
-            if event.type != pg.KEYDOWN:
+            if editing is not None and event.type == editing:
+                self.composing = str(getattr(event, "text", "") or "")
                 continue
+            if text_input is not None and event.type == text_input:
+                self.composing = ""
+                self._type(str(getattr(event, "text", "") or ""))
+                continue
+            if event.type != pg.KEYDOWN or self.composing:
+                continue  # while composing, Enter and Backspace belong to the input method
             if event.key == pg.K_ESCAPE:
                 self.renaming = None
             elif event.key in (pg.K_RETURN, pg.K_KP_ENTER):
@@ -136,9 +159,12 @@ class PetsScreen:
                 self._say(self.game.tr("pets.renamed", "Renamed"))
             elif event.key == pg.K_BACKSPACE:
                 self.renaming = self.renaming[:-1]
-            elif getattr(event, "unicode", "") and event.unicode.isprintable():
-                if len(self.renaming) < 24:
-                    self.renaming += event.unicode
+            elif not self._text_events:  # a window without TEXTINPUT: the key's letter
+                self._type(getattr(event, "unicode", "") or "")
+
+    def _type(self, text):
+        text = "".join(c for c in text if c.isprintable())
+        self.renaming = (self.renaming + text)[:24]
 
     # -- drawing ---------------------------------------------------------------------------------
     def _move_names(self, pet):
@@ -260,7 +286,7 @@ class PetsScreen:
             )
         name = self.game.pet_display(pet)
         if self.renaming is not None and selected:
-            name = self.renaming + "_"
+            name = self.renaming + self.composing + "_"
         rt.text(name, rect.x + 76, y + 8, size=24, color=text_color)
         kind = self.game.name_of(species, pet.species_id)
         line = tr("pets.level", "{kind}   Lv {level}", kind=kind, level=pet.level)

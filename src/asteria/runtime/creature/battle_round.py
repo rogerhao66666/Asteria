@@ -69,7 +69,7 @@ class BattleRoundMixin:
                     "creature.used_item",
                     "{player} used {item}!",
                     player=self.player_name(),
-                    item=getattr(item, "display_name", choice[1]),
+                    item=game.name_of(item, choice[1]),
                 )
             )
             before = self._hp(actor)
@@ -410,7 +410,7 @@ class BattleRoundMixin:
         member = entry.member_id
         if data.get("applied"):
             definition = self.game.project.gameplay_library.states.get(state_id)
-            label = getattr(definition, "display_name", "") or state_id
+            label = self.game.name_of(definition, "") or state_id
             fallback = self.tr(
                 "creature.state_applied",
                 "{name} is now {state}!",
@@ -513,7 +513,7 @@ class BattleRoundMixin:
                 "creature.threw",
                 "{player} used {item}!",
                 player=self.player_name(),
-                item=getattr(item, "display_name", item_id),
+                item=game.name_of(item, item_id),
             ),
             wait=False,
         )

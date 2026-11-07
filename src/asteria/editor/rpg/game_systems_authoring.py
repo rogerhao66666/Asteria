@@ -88,6 +88,21 @@ class GameSystemsAuthoringError(RuntimeError):
     pass
 
 
+# Choices whose value alone reads unclearly, in words by field key (the rest read as their
+# value in words: "defeat_enemy" -> "Defeat Enemy").
+CHOICE_WORDS = {
+    "exp_share": {
+        "none": "Each species' own",
+        "split": "Split among fighters",
+        "each": "All to each fighter",
+        "party": "All to the whole party",
+    },
+    "level_up_heal": {"none": "Stays", "delta": "Rises by the growth", "full": "To full"},
+    "when": {"always": "Always (while it holds)", "enter": "Once on entering"},
+    "item_details": {"panel": "Panel beside the list", "button": "Details button", "off": "Off"},
+}
+
+
 @dataclass(slots=True)
 class _StepsCommand:
     """Commands as one undo step: a record, its note and its Players See It."""
@@ -317,7 +332,7 @@ _MENU_BLOCK = (  # a block of a menu page: its kind, place and that kind's setti
     ),
     F(
         "item_details",
-        "Item Details (panel: beside the list; button: Details / D opens it; off)",
+        "Item Details",
         "choice",
         choices=ITEM_DETAILS,
         default="panel",
@@ -1133,7 +1148,7 @@ _AREA_RULE = (
     F("on_leave", "Event on Leave", "optional_ref", source="event_programs", default=""),
     F("on_step", "Event on Each Step", "optional_ref", source="event_programs", default=""),
     F("switch", "Only While Switch Is On", "text", default=""),
-    F("battle_background", "Battle Background For Fights Here", "icon", default=""),
+    F("battle_background", "Battle Background (fights here)", "icon", default=""),
     F("music", "Music Here (audio asset)", "text", default=""),
     F(
         "weather",
@@ -2712,6 +2727,7 @@ class GameSystemsAuthoringController:
 
 
 __all__ = [
+    "CHOICE_WORDS",
     "FORMS",
     "FormField",
     "GameSystemsAuthoringController",

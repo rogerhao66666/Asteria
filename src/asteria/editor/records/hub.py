@@ -880,7 +880,8 @@ class AdapterFamilyWidget(QWidget):
             lambda _text: self.refresh(keep=self.selected_ids, same_data=True)
         )
         self.sort = QComboBox()
-        self.sort.addItems(["ID A→Z", "ID Z→A", "Name A→Z", "Name Z→A"])
+        for order in ("ID A→Z", "ID Z→A", "Name A→Z", "Name Z→A"):
+            self.sort.addItem(order, order)  # the English words are the order's value
         self.sort.currentIndexChanged.connect(
             lambda _i: self.refresh(keep=self.selected_ids, same_data=True)
         )
@@ -1041,7 +1042,7 @@ class AdapterFamilyWidget(QWidget):
         return str(data.get("display_name") or data.get("name") or key)
 
     def _sorted(self, ids):
-        mode = self.sort.currentText() if hasattr(self, "sort") else "ID A→Z"
+        mode = (self.sort.currentData() if hasattr(self, "sort") else None) or "ID A→Z"
         if mode.startswith("Name"):
             ids = sorted(ids, key=lambda k: (self._display_name(k).lower(), k))
         else:
