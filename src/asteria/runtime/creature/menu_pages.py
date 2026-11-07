@@ -8,6 +8,9 @@ import json
 class CreatureMenuPagesMixin:
     """The trainer card, options, the dex and its search, the navigator and the region map."""
 
+    # defaults until something sets them (code may read them first)
+    region_back = "start"
+
     # -- the trainer card, options, the dex ---------------------------------------------------
     def _input_card(self):
         if self._pressed("cancel") or self._pressed("confirm"):
@@ -191,7 +194,7 @@ class CreatureMenuPagesMixin:
         y += int(self._pressed("move_down")) - int(self._pressed("move_up"))
         self.region_cell = [max(0, min(columns - 1, x)), max(0, min(rows - 1, y))]
         if self._pressed("cancel"):
-            self.phase = getattr(self, "region_back", "start")
+            self.phase = self.region_back
             self.fly_mode = False
         elif self.fly_mode and self._pressed("confirm"):
             self._fly_to(self.region_cell)

@@ -45,6 +45,12 @@ SCREEN_FRAMES = {
 class FrameModesMixin:
     """The frame of each screen: menus, the creature battle, the battle and the field."""
 
+    # defaults until something sets them (code may read them first)
+    _bgm_override = None
+    _creature_menu_back = "field"
+    _last_player_xy = None
+    _network_event_busy = False
+
     def _screen_frame(self, events, dt):
         """Run the frame of the screen the player is on."""
         method = SCREEN_FRAMES.get(self._ui_mode)
@@ -153,7 +159,7 @@ class FrameModesMixin:
         menu.update(dt, events)
         if menu.done:
             self._creature_menu = None
-            self._ui_mode = getattr(self, "_creature_menu_back", "field")
+            self._ui_mode = self._creature_menu_back
             self._creature_menu_back = "field"
             if self._ui_mode == "field":
                 self._draw_field(False)
@@ -275,7 +281,7 @@ class FrameModesMixin:
     def _events_busy(self):
         """A story event still runs (in a network game, the host's)."""
         if self._multiplayer_connected():
-            return getattr(self, "_network_event_busy", False)
+            return self._network_event_busy
         return self.game.event_busy
 
     def _open_requested_screens(self):
@@ -343,7 +349,7 @@ class FrameModesMixin:
     def _update_field_view(self, dt):
         """The camera following the player, animated tiles, effects and skeletons."""
         pt = self.game.player.get(Transform)
-        last = getattr(self, "_last_player_xy", None)
+        last = self._last_player_xy
         velocity = (
             ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt) if last is not None and dt > 0 else None
         )
@@ -357,7 +363,7 @@ class FrameModesMixin:
 
     def _field_music(self):
         """A story event's track, else the map area's own music, else the field's."""
-        track = getattr(self, "_bgm_override", None)
+        track = self._bgm_override
         if track is None:
             ride = self._field_ride()
             track = (ride or {}).get("music") or self.game.area_music

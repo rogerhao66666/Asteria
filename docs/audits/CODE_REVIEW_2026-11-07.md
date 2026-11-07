@@ -18,7 +18,7 @@
 | 模組數 | 628 | 684 |
 | 套件數（有 `__init__.py` 的資料夾） | 18 | 54 |
 | 平放超過 15 個模組的套件 | 11 個（`editor` 159、`runtime` 96、`rpg` 65、`presentation` 61、`assets` 54…） | 7 個（都在 24 個以下） |
-| 超過 1000 行的類別 | 10 | 2 |
+| 超過 1000 行的類別 | 10 | 2（D106 後 0） |
 | 超過 1500 行的檔案 | 10 | 4 |
 | 總行數 | 186,393 | 約 184,600 |
 
@@ -65,13 +65,17 @@ mixin 之間不互相 import：共用的常數與小函式放在同一個 `*_sty
 
 ## 5. 看過但刻意不改的
 
-- **`getattr(self, "x", 預設)`（約 170 處）：** 試過全部換成宣告的屬性，完整測試出現 46 個失敗。原因是存檔還原
-  （`BattleRuntime.from_data` 用 `cls.__new__`）與很多測試會在沒跑 `__init__` 的物件上呼叫這些方法，
-  預設值是這些路徑要的行為。已經整批還原，保留原寫法。
+- **`getattr(self, "x", 預設)`（原本 171 處，D106 後剩 41 處）：** 第一次試著全部換掉，完整測試出現 46 個失敗：
+  存檔還原（`BattleRuntime.from_data` 用 `cls.__new__`）與一些測試會在沒跑 `__init__` 的物件上呼叫這些方法。
+  D106 改成只換安全的：預設值是固定的值（None、數字、字串、`()`），在類別上宣告這個預設、方法裡直接讀
+  `self.x`（`__new__` 出來的物件也讀得到類別上的值）；dataclass、有 `__slots__` 的類別、和方法同名的屬性不換。
+  剩下的是預設值要算出來的，或者測試會拿替身物件呼叫的方法（`PlayableTestRuntime` 的固定幀率、
+  編輯器的試玩監看）。
 - **`except …: pass`（66 處）：** 逐一看過，大多有明確的例外型別與註解。範圍最廣的六處（`except Exception`）
   是出錯後盡量回復（rollback）時用的，改成 `contextlib.suppress(Exception)` 並註明「回報第一個錯誤」。
-- **還超過 1000 行的類別：** `SceneViewportWidget`（1051 行，編輯器的地圖畫布；一個 Qt 事件處理器，
-  拆開要跨 mixin 共用很多狀態）與 `BattleRuntime`（1080 行，回合制核心；存檔還原不跑 `__init__`）。
+- **超過 1000 行的類別：** D106 把最後兩個也拆了：`BattleRuntime`（`runtime_roster`、`runtime_actions`、
+  `runtime_turns`，資料型別搬到 `runtime_types`）與 `SceneViewportWidget`（`viewport_tiles`、`viewport_framing`、
+  `viewport_painting`、`viewport_input`）。現在沒有超過 1000 行的類別。
 - **很長但是資料的函式：** `build_skills`（範本的技能表，715 行）、`rpg_categories`、`affixes`
   這類函式本身就是資料表，拆開不會比較好讀。
 

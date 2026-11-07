@@ -77,6 +77,9 @@ class CodeWorkspaceWidget(QWidget):
     API, including project/selection context and structured diagnostics.
     """
 
+    # defaults until something sets them (code may read them first)
+    _current_script = "main.py"
+
     if QT_AVAILABLE:
         saved = Signal(str)
         runRequested = Signal(str, str)
@@ -233,7 +236,7 @@ class CodeWorkspaceWidget(QWidget):
         folder = self.scripts_dir()
         if folder is None:
             return None
-        name = getattr(self, "_current_script", "main.py") or "main.py"
+        name = self._current_script or "main.py"
         return folder / name
 
     def refresh_project_context(self):
@@ -315,7 +318,7 @@ class CodeWorkspaceWidget(QWidget):
 
     # -- script files (EDT-09) --------------------------------------------------------
     def _refresh_script_list(self):
-        current = getattr(self, "_current_script", "main.py")
+        current = self._current_script
         self.script_list.blockSignals(True)
         self.script_list.clear()
         names = self.script_names()
@@ -331,7 +334,7 @@ class CodeWorkspaceWidget(QWidget):
         self._refresh_script_list()
 
     def _script_selected(self, name):
-        if name and name != getattr(self, "_current_script", "main.py"):
+        if name and name != self._current_script:
             self.open_script(name)
 
     def new_script(self, name):

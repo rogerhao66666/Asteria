@@ -10,8 +10,7 @@ pytest.importorskip("PySide6")
 
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from asteria.editor.scene.collision_overlay import CombatBox  # noqa: E402
-from asteria.editor.scene.viewport_widget import shown_combat_boxes  # noqa: E402
+from asteria.editor.scene.collision_overlay import CombatBox, shown_combat_boxes  # noqa: E402
 
 
 @pytest.fixture(scope="module")

@@ -998,6 +998,9 @@ class MenuThemeDialog(QDialog):
 class MenuLayoutWorkspace(QWidget):
     """The Layout page of Presentation ▸ Menu Screens."""
 
+    # defaults until something sets them (code may read them first)
+    unit = 1.0
+
     changed = Signal()
 
     def __init__(self, document, parent=None, *, open_in_game=None, open_pause_menu=None):
@@ -1362,7 +1365,7 @@ class MenuLayoutWorkspace(QWidget):
 
     def _moved(self, element_id, rect):
         element = self.controller.element(self.screen_id, element_id)
-        unit = getattr(self, "unit", 1.0)
+        unit = self.unit
         rect = tuple(round(v / unit) for v in rect)
         anchored = anchored_rect(rect, element.anchor, self.inspector.size)
         if element.rect is None and tuple(rect) == tuple(self.boxes.get(element_id, ())):

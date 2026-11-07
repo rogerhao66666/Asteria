@@ -13,6 +13,10 @@ from asteria.runtime.menus.icons import icon_source
 class DialogueUiMixin:
     """Dialogue on the field: portraits, the message and choice windows, emotes, the area name"""
 
+    # defaults until something sets them (code may read them first)
+    _choice_request = None
+    _network_dialogue = None
+
     def dialogue_portrait(self, portrait_id, width, height):
         """The picture ``portrait_id`` names (an image asset, a sheet cell or a project path)
         fitted inside ``width`` x ``height`` with its proportions kept, or ``None``. A picture
@@ -89,9 +93,7 @@ class DialogueUiMixin:
 
     def _draw_dialogue_request(self):
         request = (
-            getattr(self, "_network_dialogue", None)
-            if self._multiplayer_connected()
-            else self.game.pending_dialogue
+            self._network_dialogue if self._multiplayer_connected() else self.game.pending_dialogue
         )
         held = False
         if request is None and not self._multiplayer_connected():
@@ -122,7 +124,7 @@ class DialogueUiMixin:
 
     def _choice_index(self, request):
         """The choice under the cursor (arrow keys move it; a new one starts on its ``cursor``)."""
-        if getattr(self, "_choice_request", None) is not request:  # its own start (cursor)
+        if self._choice_request is not request:  # its own start (cursor)
             self._choice_request = request
             self._choice_cursor = getattr(request, "cursor", 0)
         return self._choice_cursor
@@ -438,9 +440,7 @@ class DialogueUiMixin:
     def _dialogue_input(self, events):
         """Route keys to a waiting dialogue/choice. Returns True when one is open."""
         request = (
-            getattr(self, "_network_dialogue", None)
-            if self._multiplayer_connected()
-            else self.game.pending_dialogue
+            self._network_dialogue if self._multiplayer_connected() else self.game.pending_dialogue
         )
         if request is None:
             return False

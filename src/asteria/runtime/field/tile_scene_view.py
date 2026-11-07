@@ -169,6 +169,11 @@ class _Animated:
 
 
 class TileSceneView:
+    # defaults until something sets them (code may read them first)
+    _below_shown = None
+    _covers = None
+    player_at = None
+
     def __init__(self, session, root, width, height, pygame):
         self.session = session
         self.pg = pygame
@@ -306,7 +311,7 @@ class TileSceneView:
         t = self.session.player.get(Transform)
         inset = max(0.0, min(float(self.inset_bottom), self.height / 2))
         view_w, view_h = self.width / self.camera.zoom, (self.height - inset) / self.camera.zoom
-        at = getattr(self, "player_at", None)
+        at = self.player_at
         if at is not None:  # a screen that wants the player at a spot of the view (a shop)
             self.camera.x, self.camera.y = t.x - at[0], t.y - at[1]
             return
@@ -779,7 +784,7 @@ class TileSceneView:
                     sprites.append((t.y, 1, entity, None, None, rig_draws))
         sprites.sort(key=lambda row: (row[0], row[1]))
         player = getattr(self.session, "player", None)
-        covers = getattr(self, "_covers", None)
+        covers = self._covers
         clip = screen.get_clip()
         drawn_rects = []
         over_ids = getattr(self.session, "sprites_over_above", None)
@@ -849,7 +854,7 @@ class TileSceneView:
     def _cover_with_walls(self, screen, rects):
         """Solid map tiles drawn again over the parts of these characters' pictures that reach
         into them: a sword swung at a wall stops at its face, feet stay on the floor's top."""
-        shown = getattr(self, "_below_shown", None)
+        shown = self._below_shown
         blocking = getattr(self, "blocking", None)
         if shown is None or blocking is None:
             return

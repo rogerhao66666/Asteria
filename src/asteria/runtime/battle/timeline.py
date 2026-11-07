@@ -5,15 +5,14 @@ from __future__ import annotations
 import heapq
 
 from asteria.rpg.text.data_text import key as data_key
-from asteria.runtime.scene.camera import (
-    CameraDirector,
-    CameraShot,
-    clamp_center_to_bounds,
-)
+from asteria.runtime.scene.camera import CameraDirector, CameraShot, clamp_center_to_bounds
 
 
 class BattleTimelineMixin:
     """The boss intro camera, the battle log in the game's words, and the presentation timeline."""
+
+    # defaults until something sets them (code may read them first)
+    _intro_until = 0.0
 
     def _start_boss_intro(self, game, layout):
         """Encounters tagged "boss" open with the camera on the boss, then ease back to the whole
@@ -125,7 +124,7 @@ class BattleTimelineMixin:
         """True while queued action choreography (or the boss intro) has not finished playing."""
         if self.screen is None:
             return False
-        intro = self._clock < getattr(self, "_intro_until", 0.0) - 1e-9
+        intro = self._clock < self._intro_until - 1e-9
         return intro or bool(self._schedule) or self._clock < self._cursor - 1e-9
 
     def particle_count(self):

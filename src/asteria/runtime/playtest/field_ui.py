@@ -22,6 +22,10 @@ from asteria.runtime.scene.movies import Movie, is_movie
 
 
 class FieldUiMixin(DialogueUiMixin, FieldInputMixin):
+    # defaults until something sets them (code may read them first)
+    popup_frame = ()
+    popups = None
+
     def _draw_field_overlays(self):
         """Everything drawn over the field's world: HUD, effects, popups, dialogue, help."""
         self._draw_multiplayer_world()
@@ -400,7 +404,7 @@ class FieldUiMixin(DialogueUiMixin, FieldInputMixin):
     POPUP_COLORS = {"item": (170, 240, 170), "warning": (255, 170, 150), "info": (230, 232, 240)}
 
     def _update_popups(self, dt):
-        if getattr(self, "popups", None) is None:
+        if self.popups is None:
             self.popups, self._popup_serial = AnimatedTextRuntime(), 0
         notices = self.game.drain_notices()
         if self.manifest.get("field", {}).get("notices", True) is False:
@@ -443,7 +447,7 @@ class FieldUiMixin(DialogueUiMixin, FieldInputMixin):
         return x, y - 48 * self.field_camera.zoom  # above the head
 
     def _draw_popups(self):
-        resolved = getattr(self, "popup_frame", ())
+        resolved = self.popup_frame
         if not resolved:
             return
         composer = AnimatedTextRenderComposer(anchor_resolver=self._popup_anchor)

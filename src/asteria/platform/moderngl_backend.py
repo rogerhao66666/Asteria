@@ -42,6 +42,10 @@ _MARKER_COLOR_SELECTED = (235 / 255, 183 / 255, 76 / 255)
 class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
     """Sprite-batch runtime backend over a moderngl GL context."""
 
+    # defaults until something sets them (code may read them first)
+    _capture_requested = False
+    _text_box = None
+
     def __init__(self, input_map=None):
         self.input_map = input_map or InputActionMap.default()
         self.input_source = None
@@ -205,9 +209,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             if self._pending_text is not None:
                 self.draw_text_box(self._pending_text, _now=True)
                 self._flush_batch()
-        if getattr(
-            self, "_capture_requested", False
-        ):  # read before the swap (the back buffer is then undefined)
+        if self._capture_requested:  # read before the swap (the back buffer is then undefined)
             self._capture_requested = False
             width, height = self.ctx.screen.size
             image = self.pg.image.frombytes(
@@ -277,7 +279,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             return
         width, height = self.screen_size
         key = (str(text), width)
-        cached = getattr(self, "_text_box", None)
+        cached = self._text_box
         if cached is None or cached[0] != key:
             from asteria.platform.pygame_backend import dialogue_font
             from asteria.platform.pygame_battle_ui import font_for_text, renderable_text

@@ -17,6 +17,9 @@ from asteria.runtime.menus.canvas import MenuCanvas
 
 
 class TextDrawMixin:
+    # defaults until something sets them (code may read them first)
+    _menu_last_mode = "field"
+
     def text_width(self, value, size=20):
         """The width in pixels of ``value`` drawn at ``size`` (the face ``text`` uses)."""
         return self.text_size(value, size)[0]
@@ -91,7 +94,7 @@ class TextDrawMixin:
         """The menu theme's sounds for this frame: ``open`` when a menu opens over the field,
         ``move`` / ``confirm`` / ``cancel`` for the keys pressed in a menu (the shop plays
         ``buy`` or ``fail`` itself). Nothing without a theme that names them."""
-        mode, last = self._ui_mode, getattr(self, "_menu_last_mode", "field")
+        mode, last = self._ui_mode, self._menu_last_mode
         self._menu_last_mode = mode
         theme = self.menu_theme()
         if theme is None or not theme.sounds or mode == "field":

@@ -92,6 +92,9 @@ def _spin(value, *, integer=False):
 
 
 class _ColorButton(QPushButton):
+    # defaults until something sets them (code may read them first)
+    changed = None
+
     def __init__(self, rgba, parent=None):
         super().__init__(parent)
         self.rgba = tuple(rgba)
@@ -114,7 +117,7 @@ class _ColorButton(QPushButton):
     def set_rgba(self, rgba):
         self.rgba = tuple(int(v) for v in rgba)
         self._show()
-        changed = getattr(self, "changed", None)
+        changed = self.changed
         if changed is not None:
             changed()
 

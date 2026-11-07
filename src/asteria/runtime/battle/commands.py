@@ -58,6 +58,10 @@ def _constant(formula):
 
 
 class BattleCommands:
+    # defaults until something sets them (code may read them first)
+    _costs = None
+    _labels = None
+
     def __init__(self, game, *, labels=None, style="categories", pages=None):
         self.game = game
         self.labels = dict(labels or {})  # ability id -> {"label": ...} (manifest skills)
@@ -166,7 +170,7 @@ class BattleCommands:
 
     def _short(self, resource_id):
         """A resource's short label: the battle HUD's (technique -> SP), else its first letters."""
-        labels = getattr(self, "_labels", None)
+        labels = self._labels
         if labels is None:
             labels = self._labels = {}
             library = self.game.project.battle_presentation_library
@@ -178,7 +182,7 @@ class BattleCommands:
     def _cost_text(self, definition):
         # Ability definitions are frozen, so each one's text is worked out once (the menu asks on
         # every frame); the definition is kept with it so a replaced one is worked out again.
-        cache = getattr(self, "_costs", None)
+        cache = self._costs
         if cache is None:
             cache = self._costs = {}
         known = cache.get(id(definition))

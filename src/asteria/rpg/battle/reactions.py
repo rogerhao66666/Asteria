@@ -256,7 +256,7 @@ class ReactionRuntime:
         raise KeyError(f"unknown target selector: {selector}")
 
     def resolve(self, battle, trigger, source_id, target_ids=(), *, tags=(), rng=None):
-        from asteria.rpg.battle.core import BattleAction
+        from asteria.rpg.battle.runtime_types import BattleAction
 
         event = ReactionEvent(
             required_id(trigger, "trigger"),

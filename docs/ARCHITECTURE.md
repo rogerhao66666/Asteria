@@ -47,7 +47,10 @@ Batch 94～119 時期的架構筆記保留在 [`history/ARCHITECTURE_BATCH94-119
 `PlayableTestRuntime`（`runtime/playtest/`，每一幀交給 `frame_modes.SCREEN_FRAMES` 裡該畫面的方法）、
 `AsteriaEditorWindow`（`editor/window/`）、`CreatureBattleScreen`（`runtime/creature/battle_*.py`）、
 `CanonicalBattleAdapter`（`runtime/battle/frame.py`、`generated_art.py`、`timeline.py`）、
-`BattleUiComposer`（`presentation/battle/ui_hud.py`、`ui_menu.py`、`ui_feedback.py`）。
+`BattleUiComposer`（`presentation/battle/ui_hud.py`、`ui_menu.py`、`ui_feedback.py`）、
+`BattleRuntime`（`rpg/battle/runtime_roster.py`、`runtime_actions.py`、`runtime_turns.py`；隊伍、回合佇列、
+行動與結果這些資料型別在 `runtime_types.py`）、`SceneViewportWidget`（`editor/scene/viewport_tiles.py`、
+`viewport_framing.py`、`viewport_painting.py`、`viewport_input.py`）。
 
 ## 3. 一個專案從檔案到畫面
 

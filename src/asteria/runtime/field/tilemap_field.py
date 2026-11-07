@@ -122,6 +122,9 @@ def can_play(project, root):
 
 
 class TileMapField:
+    # defaults until something sets them (code may read them first)
+    _bounds = None
+
     def __init__(self, session, root):
         self.session = session
         self._weather = None  # WeatherSystem once the map has weather
@@ -218,7 +221,7 @@ class TileMapField:
         self._follow_player(0.0)
 
     def world_bounds(self):
-        cached = getattr(self, "_bounds", None)
+        cached = self._bounds
         if cached is not None and cached[0] == self._scene_id:
             return cached[1]
         self._bounds = (self._scene_id, self._compute_bounds())

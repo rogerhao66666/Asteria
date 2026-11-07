@@ -15,6 +15,14 @@ from asteria.runtime.scene.components import Interaction2DComponent
 class FieldInputMixin:
     """The player's input on the field: walking, riding, pushing, clicking, grid steps."""
 
+    # defaults until something sets them (code may read them first)
+    _click_path = None
+    _grid_walker = None
+    _grid_walker_scene = None
+    _height_cell = None
+    _ledge_keys = None
+    _network_event_busy = False
+
     def _field_input(self, events, dt):
         for event in events:  # clicking a picture that has an event
             if event.type == self.pg.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
@@ -32,9 +40,7 @@ class FieldInputMixin:
         if self._equip_offer_input(events):
             return False
         if self._dialogue_input(events) or (
-            getattr(self, "_network_event_busy", False)
-            if self._multiplayer_connected()
-            else self.game.event_busy
+            self._network_event_busy if self._multiplayer_connected() else self.game.event_busy
         ):
             if self._multiplayer_connected():
                 self._send_multiplayer_input(0, 0, {})
@@ -140,7 +146,7 @@ class FieldInputMixin:
         view = self.tile_view
         if view is None:
             return None
-        cache = getattr(self, "_ledge_keys", None)
+        cache = self._ledge_keys
         if cache is None or cache[0] is not view.tilemap:
             from asteria.runtime.field.map_rules import tile_area_keys
 
@@ -279,7 +285,7 @@ class FieldInputMixin:
         """The movement of this frame: the keys' (they cancel a walk), else a step along the
         clicked path toward its next waypoint; a walk that stops getting closer ends. A walk
         to a figure ends in its talking range, facing it, with the interact press."""
-        walk = getattr(self, "_click_path", None)
+        walk = self._click_path
         if dx or dy or walk is None:
             self._click_path = None
             return dx, dy
@@ -335,11 +341,11 @@ class FieldInputMixin:
     def _grid_field_step(self, dx, dy, dt):
         """``field.movement: "grid"``: a whole cell a step (runtime/field/grid_walk.py)."""
 
-        walker = getattr(self, "_grid_walker", None)
+        walker = self._grid_walker
         moves = getattr(self.game, "player_story_moves", 0)  # an event moved / turned the player
         if (
             walker is None
-            or getattr(self, "_grid_walker_scene", None) != self.game.scene.id
+            or self._grid_walker_scene != self.game.scene.id
             or getattr(self, "_grid_walker_moves", moves) != moves
         ):
             walker = self._grid_walker = GridWalker(self.manifest.get("field", {}))
@@ -437,7 +443,7 @@ class FieldInputMixin:
         further (a door, an event) puts the player on the cell's own height."""
         game = self.game
         cell = heights.cell_of(transform.x, transform.y)
-        last = getattr(self, "_height_cell", None)
+        last = self._height_cell
         if last == (game.scene.id, cell):
             return
         self._height_cell = (game.scene.id, cell)
@@ -455,7 +461,7 @@ class FieldInputMixin:
         view = self.tile_view
         if view is None:
             return None
-        cache = getattr(self, "_ledge_keys", None)
+        cache = self._ledge_keys
         if cache is None or cache[0] is not view.tilemap:
             from asteria.runtime.field.map_rules import tile_area_keys
 

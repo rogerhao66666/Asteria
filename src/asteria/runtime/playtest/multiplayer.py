@@ -9,12 +9,18 @@ from asteria.graphics.scaling import resized
 
 
 class MultiplayerMixin:
+    # defaults until something sets them (code may read them first)
+    _authoritative_project_mode = False
+    _network_legacy_attack_injected = False
+    _network_prediction_sequence = 0
+    _network_predictor = None
+
     def _multiplayer_connected(self):
         return self.multiplayer_bridge is not None and self.multiplayer_bridge.connected
 
     def _enable_authoritative_project_controls(self):
         self._authoritative_project_mode = True
-        if getattr(self, "_network_legacy_attack_injected", False):
+        if self._network_legacy_attack_injected:
             from asteria.runtime.action.play import ARPG_ACTIONS
             from asteria.runtime.input_map import InputBinding
 
@@ -24,10 +30,7 @@ class MultiplayerMixin:
             self._network_legacy_attack_injected = False
 
     def _network_gameplay_frozen(self):
-        return (
-            getattr(self, "_authoritative_project_mode", False)
-            and not self._multiplayer_connected()
-        )
+        return self._authoritative_project_mode and not self._multiplayer_connected()
 
     def _server_save_command(self, command):
         self.multiplayer_bridge.send_command(command, {})
@@ -55,11 +58,11 @@ class MultiplayerMixin:
         changed = previous != input_state
         self._last_network_input = input_state
         sent = bridge.send_input(input_state, force=changed)
-        predictor = getattr(self, "_network_predictor", None)
+        predictor = self._network_predictor
         sequence = getattr(bridge, "last_input_sequence", 0)
         if sent and predictor is not None and sequence:
             mappings = getattr(self, "_network_input_prediction_sequences", {})
-            mappings[sequence] = getattr(self, "_network_prediction_sequence", 0)
+            mappings[sequence] = self._network_prediction_sequence
             self._network_input_prediction_sequences = mappings
         if sent and not self.message:
             self.message = (

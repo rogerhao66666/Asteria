@@ -100,6 +100,9 @@ from asteria.editor.ui.i18n import english
 class RecordForm(QScrollArea):
     """Edits one record's data with a form; ``record()`` gives the edited data back."""
 
+    # defaults until something sets them (code may read them first)
+    _unbuilt = False
+
     changed = Signal()
 
     def __init__(self, parent=None, *, document=None):
@@ -161,7 +164,7 @@ class RecordForm(QScrollArea):
 
     def showEvent(self, event):  # noqa: N802 - Qt API
         super().showEvent(event)
-        if getattr(self, "_unbuilt", False):
+        if self._unbuilt:
             self._unbuilt = False
             self._rebuild()
 

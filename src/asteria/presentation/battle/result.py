@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.core.values import finite
-from asteria.rpg.battle.core import BattleOutcome
 from asteria.rpg.battle.rewards import RewardApplicationResult
+from asteria.rpg.battle.runtime_types import BattleOutcome
 
 
 @dataclass(frozen=True, slots=True)

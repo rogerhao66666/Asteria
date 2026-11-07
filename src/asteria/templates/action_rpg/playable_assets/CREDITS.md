@@ -6,5 +6,6 @@
 * **Pixel Magic Effects** and **RPG UI Set 1** by Foozle - spell and strike effects, the
   ornate panels and the coin, bag and chest paintings. https://foozlecc.itch.io/
 
-The arrow is drawn by `lucifer_art.py`. The other images in this folder are cut from those packs
-by `build_project.py` (cropped, scaled, combined into sheets). No AI-generated art.
+The arrow is drawn by `lucifer_art.py` (in `reference_projects/arpg_demo`, with the builder). The
+other images in this folder are cut from those packs by `build_project.py` (cropped, scaled,
+combined into sheets). No AI-generated art.

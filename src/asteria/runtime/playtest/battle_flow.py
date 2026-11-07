@@ -10,6 +10,11 @@ from asteria.runtime.menus.skill_tree import StatNames
 
 
 class BattleFlowMixin:
+    # defaults until something sets them (code may read them first)
+    _battle_commands = None
+    _victory_audio_pending = False
+    _victory_screen = None
+
     def _creature_style(self):
         """The one-on-one creature battle screen: the project's Creature battle settings are
         on, or the manifest's ``battle.style`` is ``creature``."""
@@ -73,7 +78,7 @@ class BattleFlowMixin:
     def battle_commands(self):
         """The player's battle command menu for the current game (skills, items, concoct, boost,
         targets)."""
-        commands = getattr(self, "_battle_commands", None)
+        commands = self._battle_commands
         if commands is None or commands.game is not self.game:
             labels = self.manifest.get("battle", {}).get("skills", {})
             style = self.manifest.get("battle", {}).get("command_style", "categories")
@@ -84,7 +89,7 @@ class BattleFlowMixin:
 
     @property
     def _boost_level(self):
-        commands = getattr(self, "_battle_commands", None)
+        commands = self._battle_commands
         return commands.boost if commands is not None and commands.game is self.game else 0
 
     @_boost_level.setter
@@ -127,11 +132,7 @@ class BattleFlowMixin:
 
     def _flush_victory_audio(self):
         pending_cues = getattr(self._battle_presentation, "audio_cues", ())
-        if (
-            getattr(self, "_victory_audio_pending", False)
-            and not self._presentation_busy()
-            and not pending_cues
-        ):
+        if self._victory_audio_pending and not self._presentation_busy() and not pending_cues:
             self._victory_audio_pending = False
             self.audio.stop_music(fade_out=0.3)
             self._sound(self.manifest["battle"].get("victory_jingle"))
@@ -147,7 +148,7 @@ class BattleFlowMixin:
             self._draw_battle_extras()
             if self._switch_menu and self.game.mode == "battle" and not self._presentation_busy():
                 self._draw_switch_menu()
-            screen = getattr(self, "_victory_screen", None)
+            screen = self._victory_screen
             if screen is not None and self._victory and not self._presentation_busy():
                 screen.update(dt)
                 screen.draw(self)
@@ -223,7 +224,7 @@ class BattleFlowMixin:
                 label = cut(" ".join(names), 28)  # a Chinese name takes the room of two letters
                 self.text(label, x, y + 20, size=15, color=(220, 180, 255), center=True)
         actor = self._battle_actor()
-        commands = getattr(self, "_battle_commands", None)
+        commands = self._battle_commands
         if actor is not None and commands is not None and commands.game is game:
             where = box(actor)
             if where is not None and commands.boost:
@@ -319,7 +320,7 @@ class BattleFlowMixin:
                     self.pg.K_e,
                     self.pg.K_SPACE,
                 ):
-                    screen = getattr(self, "_victory_screen", None)
+                    screen = self._victory_screen
                     if screen is not None and not screen.confirm():
                         continue  # the next results page
                     self._victory_screen = None

@@ -4,22 +4,18 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from asteria.rpg import (
-    BattleAction,
-    RpgActorSnapshot,
-)
+from asteria.rpg import BattleAction, RpgActorSnapshot
 from asteria.rpg.battle.lifecycle import resolve_escape_chance
 from asteria.rpg.battle.move_choice import choose_move, move_rules_of
 from asteria.rpg.battle.targeting import TargetRelation
-from asteria.runtime.session.support import (
-    BattleLogEntry,
-    GameSessionError,
-    _base_relative,
-)
+from asteria.runtime.session.support import BattleLogEntry, GameSessionError, _base_relative
 
 
 class TurnsMixin:
     # -- running away -----------------------------------------------------------------------
+    # defaults until something sets them (code may read them first)
+    _turn_delay = 0.0
+
     def _escape_rule(self):
         """The escape rule an ``escape:<id>`` encounter tag names, else the first by id."""
         rules = self.battle.escape_rules if self.battle is not None else {}
@@ -134,7 +130,7 @@ class TurnsMixin:
         if self.mode != "battle":
             raise GameSessionError("no active battle")
         self._logged_turn = None
-        delay, self._turn_delay = getattr(self, "_turn_delay", 0.0), 0.0
+        delay, self._turn_delay = self._turn_delay, 0.0
         result = self.battle.advance_turn(recovery=delay)
         self.settle_objectives()
         if self.battle is not None and self.battle.benched:
@@ -332,9 +328,7 @@ class TurnsMixin:
         )
         if self.rules.action_timing == "timeline":
             recovery = self.battle.action_timing.definition_for(ability_id).recovery
-            self._turn_delay = max(
-                getattr(self, "_turn_delay", 0.0), recovery
-            )  # applied when the turn ends
+            self._turn_delay = max(self._turn_delay, recovery)  # applied when the turn ends
         return result
 
     def _begin_cast(self, actor_id, ability_id, targets, timing):
@@ -348,7 +342,7 @@ class TurnsMixin:
         if ready is not None and ready.member_id == action.actor_id:
             current = max(current, float(getattr(ready, "ready_time", current)))
         pending = battle.action_timing.begin(action, current_time=current)
-        self._turn_delay = max(getattr(self, "_turn_delay", 0.0), timing.windup + timing.recovery)
+        self._turn_delay = max(self._turn_delay, timing.windup + timing.recovery)
         self._log(
             "cast_started",
             member_id=str(actor_id),

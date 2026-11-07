@@ -129,6 +129,9 @@ class StatNames:
 class SkillTreeScreen:
     """Made when opened; each frame ``handle(dt)`` then ``draw()``; ``closed`` ends it."""
 
+    # defaults until something sets them (code may read them first)
+    canvas = None
+
     def __init__(self, runtime):
         self.rt = runtime
         self._layouts = {}  # graph id -> (graph, its laid-out node positions)
@@ -561,7 +564,7 @@ class SkillTreeScreen:
     def _draw_details(self, graph, allocation):
         rt = self.rt
         node = graph.node(self.node_id) if self.node_id else None
-        canvas = getattr(self, "canvas", None) or rt.menu_canvas("skill_tree")
+        canvas = self.canvas or rt.menu_canvas("skill_tree")
         if not canvas.shown("detail"):
             return
         default = (rt.width - 330, 100, 300, rt.height - 100 - 60)

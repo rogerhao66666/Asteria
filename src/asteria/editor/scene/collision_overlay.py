@@ -143,3 +143,8 @@ def build_combat_boxes(scene, camera):
             if component is not None and component.enabled:
                 boxes.append(CombatBox(kind, entity.id, corners(*facing_box(entity, component))))
     return tuple(boxes)
+
+
+def shown_combat_boxes(boxes, *, hit_and_hurt=False):
+    """The boxes the scene view draws: what blocks always, hit / hurt boxes only when asked."""
+    return tuple(b for b in boxes if hit_and_hurt or b.kind not in ("hurtbox", "hitbox"))

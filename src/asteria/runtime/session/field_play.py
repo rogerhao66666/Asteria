@@ -9,21 +9,23 @@ from dataclasses import replace
 from asteria.core import Transform
 from asteria.core.prefab import instantiate
 from asteria.gameplay import ResourcePool
-from asteria.rpg import (
-    RpgActorSnapshot,
-)
+from asteria.rpg import RpgActorSnapshot
 from asteria.rpg.world.map_rules import MapRulesRuntime
 from asteria.runtime.field.character_control import CharacterController2DComponent
 from asteria.runtime.field.collision import CombinedQuery
 from asteria.runtime.input_map import InputSnapshot
 from asteria.runtime.session.field_entities import FieldEntitiesMixin
 from asteria.runtime.session.field_sight import FieldSightMixin
-from asteria.runtime.session.support import (
-    GameSessionError,
-)
+from asteria.runtime.session.support import GameSessionError
 
 
 class FieldPlayMixin(FieldEntitiesMixin, FieldSightMixin):
+    # defaults until something sets them (code may read them first)
+    _grid_heights = None
+    _pending_tree_encounter = None
+    _story_scene = None
+    tile_keys_at = None
+
     def set_player_position(self, x, y):
         t = self.player.get(Transform)
         t.x = float(x)
@@ -364,7 +366,7 @@ class FieldPlayMixin(FieldEntitiesMixin, FieldSightMixin):
             context.set_variable(self.FACING_VARIABLE, self.facing)
         if self.mode == "field" and context.get_switch(self.BATTLE_RUNNING_SWITCH):
             context.set_switch(self.BATTLE_RUNNING_SWITCH, False)  # back from a battle
-        if getattr(self, "_story_scene", None) != self.scene.id:  # a scene just loaded
+        if self._story_scene != self.scene.id:  # a scene just loaded
             self._story_scene = self.scene.id
             self.route_hidden.clear()  # hidden by a route or SHOW_ENTITY: until the scene changes
             self._forget_tile_changes()  # SET_TILE without permanent: until the scene changes
@@ -526,10 +528,10 @@ class FieldPlayMixin(FieldEntitiesMixin, FieldSightMixin):
         """The current map's ``GridHeights`` (None while no tile map is bound)."""
         from asteria.runtime.field.grid_heights import GridHeights
 
-        keys_at = getattr(self, "tile_keys_at", None)
+        keys_at = self.tile_keys_at
         if keys_at is None:
             return None
-        known = getattr(self, "_grid_heights", None)
+        known = self._grid_heights
         if known is None or known.keys_at is not keys_at:
             known = self._grid_heights = GridHeights(keys_at, over=self.height_over)
         return known
@@ -705,7 +707,7 @@ class FieldPlayMixin(FieldEntitiesMixin, FieldSightMixin):
         with self.profiler.section("combat"):
             systems["combat"].update(self.scene, float(dt))
         systems["loot"].update(self.scene, float(dt))
-        pending = getattr(self, "_pending_tree_encounter", None)
+        pending = self._pending_tree_encounter
         if pending:
             self._pending_tree_encounter = None
             self.start_encounter(pending)

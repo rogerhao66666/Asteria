@@ -9,6 +9,10 @@ from asteria.runtime.scene.particle_draw import ParticleDrawer
 
 
 class ResourceMixin:
+    # defaults until something sets them (code may read them first)
+    _bgm_temporary = False
+    _particle_drawer = None
+
     def path(self, rel):
         return self.resource_root / str(rel)
 
@@ -94,7 +98,7 @@ class ResourceMixin:
 
     @property
     def particle_drawer(self):
-        drawer = getattr(self, "_particle_drawer", None)
+        drawer = self._particle_drawer
         if drawer is None:
             drawer = self._particle_drawer = ParticleDrawer(self.pg)
         return drawer
@@ -247,7 +251,7 @@ class ResourceMixin:
     def _end_temporary_music(self):
         """A battle began: a temporary track (``PLAY_BGM`` with ``temporary``) is over, the
         field goes back to its own music afterwards."""
-        if getattr(self, "_bgm_temporary", False):
+        if self._bgm_temporary:
             self._bgm_override = None
             self._bgm_temporary = False
 

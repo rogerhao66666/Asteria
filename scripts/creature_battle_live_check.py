@@ -1,6 +1,6 @@
 """Real-window check of the creature battle screen (``battle.style: "creature"``, D58).
 
-    python scripts/creature_battle_live_check.py OUTPUT_DIR [--art DIR] [--emerald DIR]
+    python scripts/creature_battle_live_check.py OUTPUT_DIR [--art DIR] [--skin FILE DIR]
 
 Opens the Full Verification demo in a real (Cocoa) window at 960 x 640 (the 240 x 160 screen
 four times) with the creature party laid over it in memory (``trial_creatures``) and plays,
@@ -12,9 +12,8 @@ a legendary encounter and the same wild battle in Traditional Chinese.
 
 Pictures: ``--art DIR`` reads ``DIR/front/<species>.png`` and ``DIR/back/<species>.png``
 (any project art); without it CC0 Foozle critters from ``asset_library/`` stand in (written to
-OUTPUT_DIR/art). ``--emerald DIR`` reads a private art folder made by AsteriaEmerald's
-``tools/import_pokeemerald.py`` (never part of this repository): the species, trainer,
-background, windows, info boxes, bars and font of that folder, with the creatures, moves and
+OUTPUT_DIR/art). ``--skin FILE DIR`` loads a project's own skin file (see ``_load_skin``)
+with its art folder ``DIR``: its pictures, windows, fonts, songs, and the creatures, moves and
 player renamed to match. Every step is saved as
 ``creature_<step>.png``; ``creature_results.json`` lists what each step showed.
 """
@@ -92,144 +91,14 @@ def _stand_in_art(out):
     return art
 
 
-EMERALD_SPECIES = {"cub": "treecko", "wolf": "poochyena", "titan": "rayquaza"}
-EMERALD_MOVES = {
-    "pet_shot": "TACKLE",
-    "pet_volley": "PECK",
-    "pet_bandage": "ABSORB",
-    "struggle": "STRUGGLE",
-}
-EMERALD_ITEMS = {
-    "pet_ball": ("poke_ball", "POKé BALL"),
-    "great_ball": ("great_ball", "GREAT BALL"),
-}
-EMERALD_MUSIC = {  # the battle screen's music keys -> the game's own songs
-    "wild": "mus_vs_wild",
-    "trainer": "mus_vs_trainer",
-    "legendary": "mus_vs_rayquaza",
-    "victory_wild": "mus_victory_wild",
-    "victory_trainer": "mus_victory_trainer",
-}
-EMERALD_WORDS = {  # the game's own words for the engine's (its English locale table)
-    "creature.cmd.party": "POKéMON",
-    "creature.choose": "Choose a POKéMON.",
-    "creature.out_of_creatures": "{player} is out of usable POKéMON!",
-    "creature.pocket.balls": "POKé BALLS",
-}
-
-
-def _potion_id(project):
-    """The demo's first item usable in battle (shown as the bag's POTION)."""
-    db = project.rpg_database
-    return next(
-        i for i in sorted(db.items) if db.items[i].battle_ability or db.items[i].use_effects
-    )
-
-
-def _emerald_art(source, out):
-    """Copy the private pictures the check needs under the demo's species ids."""
-    import shutil
-
-    art = out / "art_emerald"
-    for side in ("front", "back"):
-        (art / side).mkdir(parents=True, exist_ok=True)
-        for species, name in EMERALD_SPECIES.items():
-            shutil.copyfile(source / side / f"{name}.png", art / side / f"{species}.png")
-    shutil.copyfile(source / "trainers" / "youngster.png", art / "front" / "youngster.png")
-    (art / "icons").mkdir(exist_ok=True)
-    (art / "items").mkdir(exist_ok=True)
-    for species, name in EMERALD_SPECIES.items():
-        shutil.copyfile(source / "icons" / f"{name}.png", art / "icons" / f"{species}.png")
-    for item_id, (name, _label) in EMERALD_ITEMS.items():
-        shutil.copyfile(source / "items" / f"{name}.png", art / "items" / f"{item_id}.png")
-    return art
-
-
-def _emerald_potion(project, source, art):
-    import shutil
-
-    potion = _potion_id(project)
-    shutil.copyfile(source / "items" / "potion.png", art / "items" / f"{potion}.png")
-    item = project.rpg_database.items[potion]
-    object.__setattr__(item, "display_name", "POTION")
-    return potion
-
-
-def _emerald_offsets(source):
-    """The game's per-species picture offsets under the demo's species ids."""
-    import json
-
-    table = json.loads((source / "offsets.json").read_text(encoding="utf-8"))
-    return {species: table.get(name, {}) for species, name in EMERALD_SPECIES.items()}
-
-
-def _emerald_screen(source, art):
-    battle = source / "battle"
-    return {
-        "background": str(battle / "background_tall_grass.png"),
-        "window_message": str(battle / "window_message.png"),
-        "window_commands": str(battle / "window_commands.png"),
-        "window_moves": str(battle / "window_moves.png"),
-        "healthbox_foe": str(battle / "healthbox_foe.png"),
-        "healthbox_mine": str(battle / "healthbox_mine.png"),
-        "hp_label": str(battle / "hp_label.png"),
-        "hp_bar": {c: str(battle / f"hp_bar_{c}.png") for c in ("green", "yellow", "red")},
-        "exp_bar": str(battle / "exp_bar.png"),
-        "font": str(source / "font" / "latin_normal.json"),
-        "font_small": str(source / "font" / "latin_small.json"),
-        "sprite_offsets": _emerald_offsets(source),
-        "music": {key: f"emerald.{song}" for key, song in EMERALD_MUSIC.items()},
-        "currency_symbol": "¥",  # the game's money sign (its font draws it as its own glyph)
-        "icon": str(art / "icons" / "{species}.png"),
-        "item_icon": str(art / "items" / "{item}.png"),
-        "party": {
-            "background": str(source / "party" / "background.png"),
-            "slot_main": {
-                s: str(source / "party" / f"slot_main_{s}.png")
-                for s in ("normal", "selected", "fainted", "fainted_selected")
-            },
-            "slot_wide": {
-                s: str(source / "party" / f"slot_wide_{s}.png")
-                for s in ("normal", "selected", "fainted", "fainted_selected")
-            },
-            "slot_wide_empty": str(source / "party" / "slot_wide_empty.png"),
-            "ball_closed": str(source / "party" / "ball_closed.png"),
-            "ball_open": str(source / "party" / "ball_open.png"),
-            "cancel_normal": str(source / "party" / "cancel_normal.png"),
-            "cancel_selected": str(source / "party" / "cancel_selected.png"),
-            "message": str(source / "party" / "message.png"),
-        },
-        "bag": {
-            "background": str(source / "bag" / "background.png"),
-            "bag": str(source / "bag" / "bag_{pocket}.png"),
-            "arrow": str(source / "bag" / "arrow_a.png"),
-        },
-    }
-
-
-def _rename_for_emerald(project):
-    from asteria.gameplay.abilities import AbilityDefinition
-    from asteria.rpg.characters.pets import PetSpeciesDefinition
-
-    db = project.rpg_database
-    for species, name in EMERALD_SPECIES.items():
-        data = db.pet_species[species].to_data()
-        data["display_name"] = name.upper()
-        db.pet_species[species] = PetSpeciesDefinition.from_data(data)
-    library = project.gameplay_library.abilities
-    for ability_id, name in EMERALD_MOVES.items():
-        data = library.require(ability_id).to_data()
-        data["display_name"] = name
-        library._definitions[ability_id] = AbilityDefinition.from_data(data)
-    object.__setattr__(db.actors["hero_01"], "display_name", "BRENDAN")  # in memory only
-    for item_id, (_name, label) in EMERALD_ITEMS.items():
-        object.__setattr__(db.items[item_id], "display_name", label)
-    from asteria.rpg.text.localization import LocaleTable
-
-    english = db.locale_tables.get("en")
-    words = {**(dict(english.entries) if english else {}), **EMERALD_WORDS}
-    db.locale_tables["en"] = LocaleTable("en", words)
-    project.name = "AsteriaEmerald"  # the window's title: the demo is only the test bed
+def _load_skin(path):
+    """A skin file (``--skin FILE DIR``): ``art(source, out)``, ``apply(project, source, art)``
+    (``{item_id: count}`` to carry), ``screen(source, art)`` (over ``creature_screen``),
+    ``audio(source)``, ``TITLE`` and ``NICKNAME`` - all optional."""
+    spec = importlib.util.spec_from_file_location("creature_check_skin", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _project(art):
@@ -314,11 +183,12 @@ def main(argv=None):
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     argv = list(sys.argv[1:] if argv is None else argv)
-    art_dir = emerald = None
-    if "--emerald" in argv:
-        index = argv.index("--emerald")
-        emerald = Path(argv[index + 1]).expanduser()
-        del argv[index : index + 2]
+    art_dir = skin = source = None
+    if "--skin" in argv:
+        index = argv.index("--skin")
+        skin = _load_skin(Path(argv[index + 1]).expanduser())
+        source = Path(argv[index + 2]).expanduser()
+        del argv[index : index + 3]
     if "--art" in argv:
         index = argv.index("--art")
         art_dir = Path(argv[index + 1]).expanduser()
@@ -328,23 +198,24 @@ def main(argv=None):
     helper = _helpers()
     pump, key = helper._pump, helper._key
     pygame.init()
-    art = art_dir or (_emerald_art(emerald, out) if emerald else _stand_in_art(out))
+    if art_dir is None:
+        has_art = skin is not None and hasattr(skin, "art")
+        art_dir = skin.art(source, out) if has_art else _stand_in_art(out)
+    art = art_dir
     project = _project(art)
-    if emerald:
-        _rename_for_emerald(project)
-        potion = _emerald_potion(project, emerald, art)
+    carried = skin.apply(project, source, art) if hasattr(skin, "apply") else {}
     runtime = PlayableTestRuntime(
         project, project.game_start.instantiate(project), DEMO, width=960, height=640
     )
-    if emerald:
-        runtime.manifest["title"] = "AsteriaEmerald"  # the demo is only the test bed
+    if hasattr(skin, "TITLE"):
+        runtime.manifest["title"] = skin.TITLE
     runtime.open()
     runtime.manifest.setdefault("battle", {})["style"] = "creature"
     runtime.manifest["battle"]["creature_screen"] = {
         "front": str(art / "front" / "{species}.png"),
         "back": str(art / "back" / "{species}.png"),
         "trainer": str(art / "front" / "{trainer}.png"),
-        **(_emerald_screen(emerald, art) if emerald else {}),
+        **(skin.screen(source, art) if hasattr(skin, "screen") else {}),
         "trainers": {
             "trainer_youngster": {
                 "title": "YOUNGSTER",
@@ -354,24 +225,21 @@ def main(argv=None):
             }
         },
     }
-    if emerald:  # the songs rendered from the game's own score (tools/render_music.py)
-        music = emerald / "music"
-        runtime.manifest.setdefault("audio", {}).update(
-            {f"emerald.{song}": str(music / f"{song}.wav") for song in EMERALD_MUSIC.values()}
-        )
+    if hasattr(skin, "audio"):
+        runtime.manifest.setdefault("audio", {}).update(skin.audio(source))
     driver = pygame.display.get_driver()
     game = runtime.game
     steps = []
 
-    first = game.add_pet("cub", level=7, nickname="" if emerald else "MOCHI")
+    first = game.add_pet("cub", level=7, nickname=getattr(skin, "NICKNAME", "MOCHI"))
     first.moves = ["pet_shot", "pet_volley", "pet_bandage"]
     second = game.add_pet("wolf", level=6)
     second.moves = ["pet_shot", "pet_bandage"]
     inventory = game.save.rpg_state.inventory
     inventory.add("pet_ball", 5)
     inventory.add("great_ball", 2)
-    if emerald:
-        inventory.add(potion, 3)
+    for item_id, count in carried.items():
+        inventory.add(item_id, count)
     runtime._ui_mode = "title"
     pump(runtime, 0.3)
     key(pygame.K_n)
@@ -563,7 +431,32 @@ def main(argv=None):
     text("Go!")
     shot("21_sent_back_in")
     to_phase("command")
-    for _ in range(2):  # both of the trainer's creatures fall
+    asked = []
+
+    def advance_to(*fragments, seconds=12.0):
+        """Advance the story until a fully shown line has one of ``fragments`` (which is
+        returned); the trainer's "change creatures?" is answered NO (shown once)."""
+        deadline = time.perf_counter() + seconds
+        while time.perf_counter() < deadline:
+            current = screen()
+            if current is None:
+                return None
+            if current.phase == "yesno":
+                if not asked:
+                    asked.append(shot("22a_change_asked"))
+                press(pygame.K_DOWN, 0.1)
+                press(pygame.K_RETURN, 0.1)
+                continue
+            if typed():
+                found = next((f for f in fragments if f in current.message), None)
+                if found:
+                    return found
+                press(pygame.K_RETURN, 0.1)
+            else:
+                pump(runtime, 0.05)
+        return None
+
+    for _ in range(8):  # the trainer's creatures fall one by one (a blow may miss: again)
         if screen() is None or game.battle is None or not game.stage_ids("enemies"):
             break
         foe = game.stage_ids("enemies")[0]
@@ -576,11 +469,12 @@ def main(argv=None):
         game.battle.member(mine).subject.stats.set("speed", 999.0)
         fight()
         press(pygame.K_RETURN, 0.1)
-        text("fainted")
-        if _ == 0:
-            text("sent out")
-            shot("22_trainer_next")
-            to_phase("command")
+        if advance_to("fainted", "do?") != "fainted":
+            continue  # missed: the command menu again
+        if advance_to("sent out", "defeated") == "defeated":
+            break
+        shot("22_trainer_next")
+        to_phase("command")
     text("defeated")
     shot("23_defeated_trainer")
     text("for winning")
@@ -637,7 +531,7 @@ def main(argv=None):
         "driver": driver,
         "art": str(art),
         "steps": steps,
-        "pass": len(steps) == 31 and driver == "cocoa",
+        "pass": len(steps) == 32 and driver == "cocoa",  # 22a: the trainer asks to change
     }
     (out / "creature_results.json").write_text(
         json.dumps(report, indent=1, ensure_ascii=False, default=str) + "\n", encoding="utf-8"
