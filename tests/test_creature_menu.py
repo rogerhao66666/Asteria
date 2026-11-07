@@ -159,3 +159,19 @@ def test_the_clock_reads_the_time_played(monkeypatch, tmp_path, seconds, clock):
     menu, runtime, game = _menu(monkeypatch, tmp_path)
     game.world.add_counter("play.seconds", seconds)
     assert menu._clock() == clock
+
+
+@pytest.mark.parametrize("key, screen", [("navigator", "navigator"), ("pokenav", "pokenav")])
+def test_the_navigator_opens_its_rows_screens_under_its_old_name_too(
+    monkeypatch, tmp_path, key, screen
+):
+    """``navigator`` (``pokenav`` before D105: a project still saying so reads the same)."""
+    rows = [{"label": "MAP", "screen": "region"}, {"label": "CANCEL", "screen": "close"}]
+    menu, runtime, _game = _menu(monkeypatch, tmp_path)
+    menu.menu = {**menu.menu, key: {"rows": rows}}
+    menu.open(screen)
+    menu.draw()
+    assert menu.phase == "navigator"
+    assert [row["label"] for row in menu.navigator_rows()] == ["MAP", "CANCEL"]
+    _press(menu, runtime, "confirm")
+    assert menu.phase == "region"

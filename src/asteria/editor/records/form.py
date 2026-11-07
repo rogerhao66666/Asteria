@@ -96,20 +96,6 @@ from asteria.editor.records.vocabulary import (
 )
 from asteria.editor.ui.i18n import english
 
-"""The record form: one friendly editor for every database, battle and presentation record.
-
-It replaces the field / value tree. Each field gets the widget its data asks for - a check box,
-a number box (chances as percentages), a drop-down of the records it refers to (with icons, so
-nothing is typed by hand), tag chips with suggestions, a stat table whose stats come from a
-list, cards for lists of entries (add, duplicate, move, remove) and sections for nested parts.
-The name and icon head the form; internal ids and rarely used fields wait under *Advanced*.
-Every field's help shows on hover (an ⓘ marks the ones that have it; nothing is printed under
-the fields, so the form stays short). Edits are reported through
-``changed``; the host applies them (and shows a problem with ``set_error``).
-
-The form only edits plain record data; each record type's own decoder still validates it.
-"""
-
 
 class RecordForm(QScrollArea):
     """Edits one record's data with a form; ``record()`` gives the edited data back."""

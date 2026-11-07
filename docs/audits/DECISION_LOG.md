@@ -4484,3 +4484,29 @@ Kernel ABI 從 2 升到 5（`blocked_boxes` 3、不需 numpy 4、場上 AI 5）�
 
 **證據：** `CODE_REVIEW_2026-11-07.md`；完整測試、`ruff`、`scripts/manual_api_list.py --check`、
 `scripts/sync_templates.py --check`、每個模組在獨立直譯器裡都能匯入。
+
+## D105 — 引擎裡不放第三方遊戲的名字；ARPG 範例重新產生（2026-11-07）
+
+**問題：** 生物遊戲的程式是照一款市售遊戲的畫面做的，引擎裡留下了它的名字：玩家看得到的內建英文預設字
+（`creature.menu.teach_ask`「Teach {move} to a POKéMON?」、`teach_which`）、中文預設字（「寶可夢」）、
+manifest 的鍵與畫面名 `pokenav`，以及註解、說明文字、手冊裡的 `pokeemerald`、Hoenn、POKé BALLS、
+「Pokémon-style」。另外 `reference_projects/arpg_demo` 與 `arpg_multiplayer_demo` 的專案檔比產生器舊。
+
+**決定：**
+- 預設字改成通用的「creature」／「生物」；要原本說法的專案用自己的語系表蓋過（AsteriaEmerald 的
+  `EMERALD_WORDS` 加了這兩句）。
+- `pokenav` 改名 `navigator`（`field.creature_menu.navigator.rows`，開始選單的 `screen: "navigator"`）。
+  舊的鍵與畫面名照樣讀，存好的專案不用改。
+- 註解改成「原作」；手冊與範本說明改成「收集生物風格」。
+- 兩個 ARPG 範例用各自的 `build_project.py` 重新產生。存好的檔案裡 `r_aimed`（0.132 秒）與
+  `r_poison_arrow`（0.032 秒）的揮動時間是產生器做不出來的（連當時那版產生器也做不出來），重新產生會讓
+  `test_lucifer_art_rules` 失敗；所以 `arpg_builds.assign_animations` 現在也把留在第一條動畫的職業技能
+  對到出手的那一格（`on_the_strike`），產生的時間與存好的相同。
+- 順手修：D104 拆檔時四個模組留下第二份（被截斷的）模組說明；`rpg/battle/core.py` 兩個方法的說明寫在
+  第一行程式之後，Python 不把它當說明。
+
+**沒有選的路：** `scripts/creature_battle_live_check.py --emerald` 會讀私人專案的美術並套上原作的字詞，
+那是專案層的覆寫（作者自己的語系表），不是引擎預設，所以保留。
+
+**證據：** `tests/test_creature_menu.py::test_the_navigator_opens_its_rows_screens_under_its_old_name_too`
+（新鍵與舊鍵都測）、`tests/test_creature_screens_v5.py`（說明文字都有中文）、`docs/BUILT_IN_TEXT_KEYS.md` 重新產生。

@@ -1,4 +1,4 @@
-"""Pets: creatures the player owns, names, levels up and sends out (Pokemon-style).
+"""Pets: creatures the player owns, names, levels up and sends out (creature-collecting style).
 
 A **species** (:class:`PetSpeciesDefinition`, project data) gives base stats and growth per level;
 an **owned pet** (:class:`PetRecord`, save data) is one creature: its species, a nickname, a level

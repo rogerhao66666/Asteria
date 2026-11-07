@@ -691,7 +691,7 @@
   "creature.menu.learned_move": "{name}學會了\n{move}！",
   "creature.menu.not_able": "不能學",
   "creature.menu.not_compatible": "{name}和{move}\n不相容。",
-  "creature.menu.teach_ask": "要讓寶可夢學會\n{move}嗎？",
+  "creature.menu.teach_ask": "要讓生物學會\n{move}嗎？",
   "creature.menu.teach_which": "要讓哪一隻學？",
   "creature.menu.tm_booted": "啟動了招式學習器。",
   "creature.menu.tm_contained": "裡面記錄著\n{move}。",

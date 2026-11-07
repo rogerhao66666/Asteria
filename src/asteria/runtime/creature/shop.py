@@ -13,7 +13,7 @@ the bag. Drawn at the game's own resolution (240 x 160) like the start menu
   runtime moves the field's camera so; shop.c: 4 cells in from the top left);
   ``rows``: goods shown at once; ``currency``: the money's mark.
 * ``buy_sound`` (a purchase), ``bonus`` (``{"item", "every", "gift"}``: buying ``every`` of
-  ``item`` gives one ``gift``, as POKé BALLS bring a PREMIER BALL).
+  ``item`` gives one ``gift``, as ten balls bring a bonus ball).
 * ``words``: the shopkeeper's lines over the built-in ones (``creature.shop.*``).
 """
 

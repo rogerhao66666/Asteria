@@ -72,72 +72,6 @@ from asteria.runtime.creature.battle_round import BattleRoundMixin
 from asteria.runtime.creature.battle_story import BattleStoryMixin
 from asteria.runtime.creature.battle_style import H, W
 
-"""The creature battle screen: a one-on-one battle drawn the way handheld creature-collecting
-games of the GBA era draw it, at their own 240 x 160 resolution scaled up by whole pixels.
-
-The foe stands on its platform at the top right with an info box (name, level, health bar) at
-the top left; the player's creature stands at the bottom left, seen from behind, with an info
-box (name, level, health bar, health numbers, experience bar) at the right. The bottom of the
-screen is the message window; when it is the player's turn the right half shows four
-commands - fight, bag, party, run - and fight opens the creature's moves with their uses and
-type. Everything is told through messages that wait for the confirm key, while health bars
-drain and creatures appear, faint, switch and are caught in balls.
-
-A project turns it on with the playtest manifest's ``battle.style: "creature"``; the rules are
-the engine's creature party (``rpg.pets.PetRules``): the stage creature of each side fights,
-the bench comes in when one falls, capture items come from the capture rules. Nothing here
-names a game: every word goes through ``game.tr`` (``creature.*`` keys) and every picture is
-project art found by the paths in ``battle.creature_screen`` (``front``, ``back``, ``trainer``
-and ``background`` with ``{species}`` / ``{trainer}``); a missing picture is drawn as a plain
-shape of the same size, so the battle always plays.
-
-``battle.creature_screen.trainers`` maps an encounter id to a trainer: ``name``, ``title``
-(the class shown before the name), ``sprite`` (a ``{trainer}`` key) and ``prize`` (currency).
-An encounter tagged ``legendary`` opens with its own line. ``encounters`` maps an encounter id
-to its own words: ``no_running_text`` is said when running is refused there; ``player_name`` /
-``player_back`` stand for the player's (someone else's battle) and ``auto_choices`` (``["move",
-id]`` / ``["ball", item]`` in order, ``auto_delay`` seconds apart) are chosen by the game.
-
-``sprite_offsets`` (a JSON path or a table) moves each species' picture from its battle spot:
-``{species: {"front": dy, "back": dy, "lift": dy}}`` - the foe's picture is drawn ``front``
-pixels lower and ``lift`` higher (a flier), the player's ``back`` pixels lower.
-
-``music`` picks the tracks by the kind of battle: ``wild``, ``trainer``, ``legendary`` and
-``victory_wild`` / ``victory_trainer`` (a trainer may name its own ``music`` and
-``victory_music``; an encounter tag ``music:<key>`` picks any key of ``music``). A missing
-key keeps the manifest's battle track.
-
-Optional pictures replace the drawn parts one by one (paths in ``battle.creature_screen``):
-``background`` (240 x 160), ``window_message`` / ``window_commands`` / ``window_moves`` (the
-bottom 240 x 48 in its three states), ``healthbox_foe`` / ``healthbox_mine``, ``hp_label``
-(24 x 8, drawn before the bar), ``hp_bar`` (``{"green", "yellow", "red"}``: strips of nine 8 x 8
-tiles, 0 to 8 pixels filled), ``exp_bar`` (the same for experience) and ``font`` (a
-``graphics.bitmap_font`` JSON; text it cannot draw falls back to a system face). ``layout``
-moves any point of ``LAYOUT`` and ``colours`` any text colour pair of ``COLOURS``.
-
-The opening: the foe (or its trainer) slides in from the left while the player's back picture
-(``player_back``: frames of ``player_back_size`` under each other - standing, then throwing)
-slides in from the right; creatures come out of a ball (``ball``: square frames under each
-other - closed, opening, open) and grow from it, go back into it when called back, and their
-info boxes slide in from their edges. ``ball_spin``: the turns a thrown ball makes in flight (0:
-it does not spin). A switch's lines follow the foe's health as the
-handheld games do ("Go!" / "Do it!" / "Go for it" / "Your foe's weak!", "that's enough" /
-"come back" / "OK!" / "good!"); before a trainer's next creature the player is asked whether
-to change theirs, and after a faint in the wild whether to send the next one (no: run). The
-party screen lists the creatures in the battle's order (the one out first).
-
-The rules' words: ``miss_tag`` / ``crit_tag`` (the hit-check outcome tags told as a miss and a
-critical blow), ``effectiveness_rules`` (the id prefix of the interaction rules that count as
-effectiveness - the type chart, not a critical blow), ``counters`` (battle counters told as
-stat stages: ``{counter: name}``), ``state_messages`` (``{state: {applied, already, tick,
-prevented, expired, cured}}``, with ``{name}``) and ``status_icons`` (``{state: picture}``,
-drawn over the bar's HP label, or at ``status_at[side]`` from the info box's corner);
-``outcome_lines`` (``{outcome tag: line}``, with ``{name}``: a hit whose interaction gave that
-tag is told so - "protected itself!"). A trainer's ``defeat_text`` (a line or a list of pages)
-is said by the trainer, back on the screen, after the win.
-"""
-
-
 # every point a project can move (battle.creature_screen.layout): boxes are top-left corners,
 # names and bars start there, "level" and "hp_text" are right edges
 LAYOUT = {
@@ -255,8 +189,9 @@ class CreatureBattleScreen(
     }
 
     # -- the party screen --------------------------------------------------------------------
-    # where pokeemerald's single-battle party menu puts things: the big first slot and the five
-    # wide ones (top-left corners), the text and bar spots inside a slot, the icons and balls
+    # where the original game's single-battle party menu puts things: the big first slot and
+    # the five wide ones (top-left corners), the text and bar spots inside a slot, the icons
+    # and balls
     PARTY_SLOTS = ((8, 24, 80, 56),) + tuple((96, 8 + 24 * k, 144, 24) for k in range(5))
     PARTY_TEXT = {  # name, level, hp (right edge), max hp (right edge), bar
         "main": ((24, 11), (32, 20), (51, 37), (77, 37), (24, 35)),
@@ -267,7 +202,7 @@ class CreatureBattleScreen(
     PARTY_CANCEL, PARTY_MESSAGE = (184, 136), (0, 128)
 
     # -- the bag ----------------------------------------------------------------------------
-    # pokeemerald's bag: the bag picture's centre, the pocket name window and its arrows, the
+    # the original game's bag: the bag picture's centre, the pocket name window and its arrows, the
     # item list window (rows of 16 pixels), the description window and the item's icon
     BAG_CENTRE, BAG_POCKET_NAME, BAG_ARROWS = (68, 66), (64, 9), ((20, 8), (92, 8))
     BAG_LIST, BAG_DESCRIPTION, BAG_ICON = (112, 16, 120), (4, 106), (12, 76)

@@ -93,11 +93,10 @@ mixin 之間不互相 import：共用的常數與小函式放在同一個 `*_sty
 - ARPG 範例：HEAD 與現在的 `build_project.py` 產生的 `project.asteria.json` 完全相同。
 - 完整測試：3913 passed、1 skipped（依環境略過的那一個，例如沒建原生 kernel 或沒有 GL），12 分 37 秒。
 
-## 8. 順手發現
+## 8. 順手發現（已處理，D105）
 
-- `reference_projects/arpg_demo/project.asteria.json` 比它的產生器舊：缺少較新的元件欄位（`stride`、`fit`、
-  `walls_cover_characters`）與 `run` 動作。不是這次造成的（HEAD 的產生器輸出一樣），讀檔時會升級；
-  要不要重新產生由使用者決定。
-- 引擎程式裡還有第三方遊戲的名字：內建字詞的英文預設值（`creature.menu.teach_ask` 的「POKéMON」）、
-  manifest 的鍵 `pokenav`、註解裡的 `pokeemerald`。鍵是存好的資料格式，預設字是玩家看得到的字，
-  要不要改由使用者決定。
+- `reference_projects/arpg_demo` 與 `arpg_multiplayer_demo` 的 `project.asteria.json` 比產生器舊（缺 `stride`、
+  `fit`、`walls_cover_characters` 與 `run` 動作）：已用各自的 `build_project.py` 重新產生；產生器補上兩個技能
+  揮動時間的對齊（見 D105），重新產生後只多了新欄位。
+- 引擎程式裡的第三方遊戲名字：預設字改成通用說法，`pokenav` 改名 `navigator`（舊名照樣讀），
+  註解與說明改成「原作」。細節見 `DECISION_LOG` D105。

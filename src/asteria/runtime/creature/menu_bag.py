@@ -158,7 +158,7 @@ class CreatureMenuBagMixin:
                 else:
                     self.note = ""
                     self.teach_ask = self.tr(
-                        "creature.menu.teach_ask", "Teach {move}\nto a POKéMON?", move=move
+                        "creature.menu.teach_ask", "Teach {move}\nto a creature?", move=move
                     )
             return
         if self._pressed("move_up") or self._pressed("move_down"):
@@ -168,7 +168,7 @@ class CreatureMenuBagMixin:
         elif self._pressed("confirm"):
             self.phase, self.list_cursor = "bag_target", 0
             self.party_note = self.tr(
-                "creature.menu.teach_which", "Teach which POKéMON?", move=move
+                "creature.menu.teach_which", "Teach which creature?", move=move
             )
 
     def slot_label(self, pet):

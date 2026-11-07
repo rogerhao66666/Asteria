@@ -12753,6 +12753,26 @@
           "direction": 1,
           "threshold": 0.5
         }
+      ],
+      "run": [
+        {
+          "code": "left shift",
+          "device": "key",
+          "direction": 1,
+          "threshold": 0.5
+        },
+        {
+          "code": "right shift",
+          "device": "key",
+          "direction": 1,
+          "threshold": 0.5
+        },
+        {
+          "code": "1",
+          "device": "gamepad_button",
+          "direction": 1,
+          "threshold": 0.5
+        }
       ]
     },
     "schema": "asteria.input_action_map",
@@ -24670,7 +24690,8 @@
                 "player_life_resource": "",
                 "respawn_delay": 2.5,
                 "respawn_heal": true,
-                "view": "topdown"
+                "view": "topdown",
+                "walls_cover_characters": "auto"
               },
               "type": "asteria.CombatScene",
               "version": 1
@@ -24713,10 +24734,11 @@
                 "clip_set_id": "49b9b03a-2861-58c5-86d5-029320e5f3c3",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -24890,14 +24912,16 @@
                 "clip_set_id": "ce246768-58f8-51f6-9f7b-e938cb1e7c2e",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -24911,7 +24935,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -24963,14 +24987,16 @@
                 "clip_set_id": "9fd9b7c7-09f9-5e0e-b566-905f20438d3a",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -24984,7 +25010,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25036,14 +25062,16 @@
                 "clip_set_id": "52d54082-1248-55e9-8df4-7fad5919bb05",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25057,7 +25085,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25109,14 +25137,16 @@
                 "clip_set_id": "4d439532-223c-5c6a-80ab-ea59d11f6d0d",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25130,7 +25160,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25182,14 +25212,16 @@
                 "clip_set_id": "83b5c24a-9571-532e-9ac4-351b047d97a1",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25203,7 +25235,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25255,14 +25287,16 @@
                 "clip_set_id": "3b62c068-1d1b-5057-bdce-111981478314",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25276,7 +25310,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25328,14 +25362,16 @@
                 "clip_set_id": "7e2d35b9-5f98-558d-9e63-8492adb2f856",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25349,7 +25385,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25401,14 +25437,16 @@
                 "clip_set_id": "7e2d35b9-5f98-558d-9e63-8492adb2f856",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25422,7 +25460,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25474,14 +25512,16 @@
                 "clip_set_id": "7e2d35b9-5f98-558d-9e63-8492adb2f856",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 12.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -25495,7 +25535,7 @@
                 "width": 12.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             },
             {
               "fields": {
@@ -25650,7 +25690,8 @@
                 "player_life_resource": "",
                 "respawn_delay": 2.5,
                 "respawn_heal": true,
-                "view": "topdown"
+                "view": "topdown",
+                "walls_cover_characters": "auto"
               },
               "type": "asteria.CombatScene",
               "version": 1
@@ -25755,10 +25796,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -25893,10 +25935,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26031,10 +26074,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26169,10 +26213,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26307,10 +26352,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26445,10 +26491,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26583,10 +26630,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26721,10 +26769,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26859,10 +26908,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -26997,10 +27047,11 @@
                 "clip_set_id": "33d90c6a-2b52-5bd5-8f35-4625761052ff",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27135,10 +27186,11 @@
                 "clip_set_id": "17328d4d-791a-52c7-9076-8c30f88bfde9",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27273,10 +27325,11 @@
                 "clip_set_id": "17328d4d-791a-52c7-9076-8c30f88bfde9",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27411,10 +27464,11 @@
                 "clip_set_id": "17328d4d-791a-52c7-9076-8c30f88bfde9",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27549,10 +27603,11 @@
                 "clip_set_id": "17328d4d-791a-52c7-9076-8c30f88bfde9",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27687,10 +27742,11 @@
                 "clip_set_id": "17328d4d-791a-52c7-9076-8c30f88bfde9",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27825,10 +27881,11 @@
                 "clip_set_id": "5bb1f7fe-68d1-540b-91a0-bc4ba48769a5",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -27963,10 +28020,11 @@
                 "clip_set_id": "daff4455-d216-55f4-be1c-e8239be13e92",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -28101,10 +28159,11 @@
                 "clip_set_id": "daff4455-d216-55f4-be1c-e8239be13e92",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -28239,10 +28298,11 @@
                 "clip_set_id": "daff4455-d216-55f4-be1c-e8239be13e92",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -28377,10 +28437,11 @@
                 "clip_set_id": "6fe84ee1-7f8c-5246-b361-f0103817829e",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -28587,7 +28648,8 @@
                 "player_life_resource": "",
                 "respawn_delay": 2.5,
                 "respawn_heal": true,
-                "view": "side"
+                "view": "side",
+                "walls_cover_characters": "auto"
               },
               "type": "asteria.CombatScene",
               "version": 1
@@ -28713,6 +28775,7 @@
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 4.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -28726,7 +28789,7 @@
                 "width": 72.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -28750,6 +28813,7 @@
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 4.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -28763,7 +28827,7 @@
                 "width": 90.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -28787,6 +28851,7 @@
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 4.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -28800,7 +28865,7 @@
                 "width": 72.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -28824,6 +28889,7 @@
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 4.0,
                 "is_trigger": false,
                 "ladder": false,
@@ -28837,7 +28903,7 @@
                 "width": 72.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -28861,6 +28927,7 @@
             {
               "fields": {
                 "enabled": true,
+                "fit": "custom",
                 "height": 144.0,
                 "is_trigger": false,
                 "ladder": true,
@@ -28874,7 +28941,7 @@
                 "width": 10.0
               },
               "type": "asteria.Collider2D",
-              "version": 3
+              "version": 4
             }
           ],
           "enabled": true,
@@ -28914,10 +28981,11 @@
                 "clip_set_id": "68f038cf-53c8-5f28-bf9c-dbf9759664e5",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29052,10 +29120,11 @@
                 "clip_set_id": "68f038cf-53c8-5f28-bf9c-dbf9759664e5",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29190,10 +29259,11 @@
                 "clip_set_id": "68f038cf-53c8-5f28-bf9c-dbf9759664e5",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29328,10 +29398,11 @@
                 "clip_set_id": "68f038cf-53c8-5f28-bf9c-dbf9759664e5",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29466,10 +29537,11 @@
                 "clip_set_id": "68f038cf-53c8-5f28-bf9c-dbf9759664e5",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29604,10 +29676,11 @@
                 "clip_set_id": "3d81f616-81ac-5749-99f1-dd5a8d94a1a6",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29742,10 +29815,11 @@
                 "clip_set_id": "3d81f616-81ac-5749-99f1-dd5a8d94a1a6",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -29880,10 +29954,11 @@
                 "clip_set_id": "3d81f616-81ac-5749-99f1-dd5a8d94a1a6",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -30018,10 +30093,11 @@
                 "clip_set_id": "caa2d807-2049-5725-8964-7feee34efd17",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -30156,10 +30232,11 @@
                 "clip_set_id": "caa2d807-2049-5725-8964-7feee34efd17",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -30294,10 +30371,11 @@
                 "clip_set_id": "caa2d807-2049-5725-8964-7feee34efd17",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
@@ -30432,10 +30510,11 @@
                 "clip_set_id": "48fa654c-13dd-5702-864f-17cdd6a1abe7",
                 "default_clip": "idle_down",
                 "playing": true,
-                "speed": 1.0
+                "speed": 1.0,
+                "stride": 0.0
               },
               "type": "asteria.Animator2D",
-              "version": 1
+              "version": 2
             },
             {
               "fields": {
