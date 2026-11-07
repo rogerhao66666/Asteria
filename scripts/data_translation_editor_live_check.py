@@ -25,7 +25,7 @@ def _untranslated(project):
     """Take the demo's data translations and dialogue keys out (in memory only), so the page
     shows what an author meets first: data rows to fill and lines without keys."""
     from asteria.events.program import EventInstruction, EventProgram
-    from asteria.rpg.localization import LocaleTable
+    from asteria.rpg.text.localization import LocaleTable
 
     for locale, table in list(project.rpg_database.locale_tables.items()):
         kept = {
@@ -60,12 +60,12 @@ def _data_count(text):
 def main(argv=None):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor import data_translation as dt
-    from asteria.editor.i18n import install, set_language
+    from asteria.editor.project import data_translation as dt
+    from asteria.editor.project.translation_table import TranslationTable
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.theme import apply_asteria_theme
-    from asteria.editor.translation_table import TranslationTable
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.ui.i18n import install, set_language
+    from asteria.editor.ui.theme import apply_asteria_theme
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 

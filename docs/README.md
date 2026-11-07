@@ -31,8 +31,8 @@
 
 | 位置 | 內容 |
 | --- | --- |
-| `docs/` 根目錄的 `BATCH*`、`PHASE_*`、`*_CLOSURE_AUDIT*`、`*_v0.1xx.md` | v0.93～v0.159 各批次的設計與結案稽核 |
-| [`CANONICAL_SPEC.md`](CANONICAL_SPEC.md)、[`CONSISTENCY_AUDIT.md`](CONSISTENCY_AUDIT.md)、[`NEXT_PHASE_PLAN.md`](NEXT_PHASE_PLAN.md)、[`MAC_FIRST_RUN_TEST.md`](MAC_FIRST_RUN_TEST.md) | v0.94～v0.112 時期的「目前狀態」文件 |
-| [`history/`](history/) | 進度筆記、交接文件、舊版的稽核與審查、`ARCHITECTURE_BATCH94-119.md`（舊的架構筆記） |
+| [`history/batches/`](history/batches/) 的 `BATCH*`、`PHASE_*`、`*_CLOSURE_AUDIT*`、`*_v0.1xx.md` | v0.93～v0.159 各批次的設計與結案稽核（2026-11-07 從 `docs/` 根目錄搬來） |
+| [`CANONICAL_SPEC.md`](history/batches/CANONICAL_SPEC.md)、[`CONSISTENCY_AUDIT.md`](history/batches/CONSISTENCY_AUDIT.md)、[`NEXT_PHASE_PLAN.md`](history/batches/NEXT_PHASE_PLAN.md)、[`MAC_FIRST_RUN_TEST.md`](history/batches/MAC_FIRST_RUN_TEST.md) | v0.94～v0.112 時期的「目前狀態」文件 |
+| [`history/`](history/) 其餘的檔案 | 進度筆記、交接文件、舊版的稽核與審查、`ARCHITECTURE_BATCH94-119.md`（舊的架構筆記） |
 | [`audits/`](audits/) 裡其餘的檔案 | 2026-10 的缺口稽核、素材搜尋、UI 計畫與實機證據（`evidence/`） |
-| [`superpowers/`](superpowers/) | 個別功能當時的設計稿與執行計畫（其中角色產生器已取消） |
+| [`history/superpowers/`](history/superpowers/) | 個別功能當時的設計稿與執行計畫（其中角色產生器已取消） |

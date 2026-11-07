@@ -4,8 +4,7 @@ from dataclasses import dataclass
 
 from asteria.presentation import BattleActionWorkflowRuntime, BattleWorkflowOption
 from asteria.rpg import ItemDefinition
-
-from .playable_rpg import ReferenceActorScenario, build_reference_actor_scenario
+from asteria.validation.playable_rpg import ReferenceActorScenario, build_reference_actor_scenario
 
 
 @dataclass(frozen=True, slots=True)

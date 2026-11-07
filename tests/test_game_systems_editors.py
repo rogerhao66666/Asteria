@@ -8,7 +8,7 @@ import pytest
 from test_session_events import _project
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import (
+from asteria.editor.rpg.game_systems_authoring import (
     FORMS,
     KINDS,
     GameSystemsAuthoringController,
@@ -240,7 +240,7 @@ def test_apply_without_changes_round_trips_every_kind(window):
 
 
 def test_a_menu_kind_or_an_unknown_kind_never_leaves_the_page_without_a_kind(window):
-    from asteria.editor.game_systems_widget import MENU_KINDS, PAUSE_MENU
+    from asteria.editor.rpg.game_systems_widget import MENU_KINDS, PAUSE_MENU
 
     editor = window.game_systems_editor
     for kind_id in MENU_KINDS:  # merged into the Pause Menu page (D97): no row of their own
@@ -255,7 +255,7 @@ def test_a_menu_kind_or_an_unknown_kind_never_leaves_the_page_without_a_kind(win
 
 
 def test_ids_are_made_not_typed_and_rows_read_by_name(window):
-    from asteria.editor.game_systems_widget import _IdLine
+    from asteria.editor.rpg.game_systems_widget import _IdLine
 
     editor = window.game_systems_editor
     editor.set_kind("quests")
@@ -278,9 +278,9 @@ def test_the_form_shows_no_id_line_and_a_closed_list_is_picked_in_words(monkeypa
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_systems_authoring import FORMS
-    from asteria.editor.game_systems_widget import RecordForm
-    from asteria.editor.record_form import ChipList
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.rpg.game_systems_authoring import FORMS
+    from asteria.editor.rpg.game_systems_widget import RecordForm
 
     QApplication.instance() or QApplication([])
     _document, controller = _controller()

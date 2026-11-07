@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from .context import EventContext
-from .registry import EventProgramRegistry
-from .runner import EventRunner
-from .world_commands import WorldCommandRouter
+from asteria.events.context import EventContext
+from asteria.events.registry import EventProgramRegistry
+from asteria.events.runner import EventRunner
+from asteria.events.world_commands import WorldCommandRouter
 
 
 class EventScheduleMode(str, Enum):

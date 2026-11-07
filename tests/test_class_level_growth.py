@@ -92,7 +92,7 @@ def test_level_up_grants_any_named_points():
 def test_class_editor_api_keeps_growth_and_icon():
     from asteria.core import Scene
     from asteria.editor import EditorDocument
-    from asteria.editor.rpg_actor_class_authoring import RpgActorClassAuthoringController
+    from asteria.editor.rpg.actor_class_authoring import RpgActorClassAuthoringController
     from asteria.project import Project
 
     project = Project("Game")

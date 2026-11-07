@@ -10,12 +10,11 @@ from asteria.rpg import (
     ActorProgressionState,
     RpgActorSnapshot,
 )
-from asteria.runtime.world_command_handlers import (
-    move_entity_to_scene,
-)
-
-from .support import (
+from asteria.runtime.session.support import (
     GameSessionError,
+)
+from asteria.runtime.session.world_commands import (
+    move_entity_to_scene,
 )
 
 
@@ -41,7 +40,7 @@ class PartyMixin:
         if changed:
             self.interaction.reset()
             self._build_scene_events()
-            from asteria.runtime.npc_state import apply_npc_states
+            from asteria.runtime.field.npc_state import apply_npc_states
 
             apply_npc_states(destination, self.world, self.entity_facing)
         return destination

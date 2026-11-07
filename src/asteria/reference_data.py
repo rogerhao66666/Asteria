@@ -63,7 +63,7 @@ def load_animation_set(path):
         )
     machine = None
     if "state_machine" in data:
-        from asteria.runtime.animation_state_machine import AnimationStateMachineDefinition
+        from asteria.runtime.scene.animation_state_machine import AnimationStateMachineDefinition
 
         machine = AnimationStateMachineDefinition.from_data(data["state_machine"])
     return AnimationClipSet(clips, machine)

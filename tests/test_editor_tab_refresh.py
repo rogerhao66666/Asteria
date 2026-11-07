@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from asteria.rpg.localization import LocaleTable
+from asteria.rpg.text.localization import LocaleTable
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects/full_verification_demo"
 
@@ -66,13 +66,13 @@ def _open(window, mode, tabs, page):
 
 
 def _listed_trees(page):
-    from asteria.editor.ui_fit import named_id
+    from asteria.editor.ui.fit import named_id
 
     return [named_id(page.tree_list.item(i)) for i in range(page.tree_list.count())]
 
 
 def _on_behavior_trees(window):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     _open(window, WorkspaceMode.RPG, window.rpg_workspace, window.behavior_tree_editor)
     return window.behavior_tree_editor
@@ -92,7 +92,7 @@ def test_apply_parameters_rebuilds_only_the_page_it_is_on(window, rebuilt):
 
 
 def test_a_tab_is_rebuilt_when_opened_and_shows_what_changed_while_hidden(window, rebuilt):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     trees = window.behavior_tree_editor
     _open(window, WorkspaceMode.RPG, window.rpg_workspace, window.enemy_ai_editor)
@@ -106,7 +106,7 @@ def test_a_tab_is_rebuilt_when_opened_and_shows_what_changed_while_hidden(window
 
 
 def test_going_back_to_a_tab_with_nothing_changed_rebuilds_nothing(window, rebuilt):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     _open(window, WorkspaceMode.RPG, window.rpg_workspace, window.enemy_ai_editor)
     window.rpg_workspace.setCurrentWidget(window.behavior_tree_editor)
@@ -120,7 +120,7 @@ def test_going_back_to_a_tab_with_nothing_changed_rebuilds_nothing(window, rebui
 
 
 def test_an_undo_reaches_a_tab_hidden_at_the_time(window):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     trees = window.behavior_tree_editor
     _open(window, WorkspaceMode.RPG, window.rpg_workspace, trees)
@@ -134,7 +134,7 @@ def test_an_undo_reaches_a_tab_hidden_at_the_time(window):
 
 
 def test_a_tab_brought_forward_in_a_closed_workspace_waits_for_it(window, rebuilt):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     window.workspace.set_mode(WorkspaceMode.SCENE)
     window.refresh_all()  # everything in the other workspaces is out of date
@@ -153,7 +153,7 @@ def test_a_tab_brought_forward_in_a_closed_workspace_waits_for_it(window, rebuil
     ],
 )
 def test_the_other_workspaces_with_tabs_wait_too(window, rebuilt, mode, tabs, first, second):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     bar = getattr(window, tabs)
     _open(window, WorkspaceMode[mode], bar, getattr(window, first))
@@ -179,7 +179,7 @@ def test_another_project_reaches_every_tab_without_opening_them(window):
 @pytest.fixture
 def forms_built(window, monkeypatch):
     """The records whose form is built from here on (a form cleared is not counted)."""
-    from asteria.editor.record_form import RecordForm
+    from asteria.editor.records.form import RecordForm
 
     names = []
     original = RecordForm._rebuild
@@ -194,7 +194,7 @@ def forms_built(window, monkeypatch):
 
 
 def _on_enemy_ai(window, ai_id=None):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     page = window.enemy_ai_editor
     _open(window, WorkspaceMode.RPG, window.rpg_workspace, page)
@@ -246,7 +246,7 @@ def test_binding_an_enemy_shows_at_once_and_stays_chosen(window):
 
 
 def test_a_new_language_builds_the_form_again(window, forms_built, monkeypatch):
-    from asteria.editor.i18n import CURRENT
+    from asteria.editor.ui.i18n import CURRENT
 
     page, chosen = _on_enemy_ai(window)
     forms_built.clear()
@@ -267,7 +267,7 @@ def test_a_list_with_nothing_left_empties_the_form(window):
 
 
 def _on_game_data(window, rows=(3,)):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     _open(window, WorkspaceMode.RPG, window.rpg_workspace, window.rpg_authoring)
     family = window.rpg_authoring.child

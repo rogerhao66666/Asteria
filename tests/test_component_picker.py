@@ -1,5 +1,5 @@
 from asteria.core import ComponentRegistry, Entity, Transform
-from asteria.editor.component_picker import build_component_choices
+from asteria.editor.scene.component_picker import build_component_choices
 
 
 def test_picker_is_registry_driven():

@@ -2,8 +2,8 @@
 
 import pytest
 
-from asteria.presentation.attachment_runtime import AttachmentRuntime, AttachmentState
-from asteria.presentation.attachments import Attachment, Socket, SocketRig, Transform2D
+from asteria.presentation.visuals.attachment_runtime import AttachmentRuntime, AttachmentState
+from asteria.presentation.visuals.attachments import Attachment, Socket, SocketRig, Transform2D
 
 
 def _runtime():

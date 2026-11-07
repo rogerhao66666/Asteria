@@ -2,9 +2,9 @@
 
 from dataclasses import dataclass
 
-from .canonical import CanonicalAsset
-from .registry import AssetRegistry
-from .store import AssetStoreReport
+from asteria.assets.canonical import CanonicalAsset
+from asteria.assets.registry import AssetRegistry
+from asteria.assets.store import AssetStoreReport
 
 
 @dataclass(frozen=True, slots=True)

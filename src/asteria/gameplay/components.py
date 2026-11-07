@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from asteria.core import Component, Field, component_schema
-
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet
 
 
 @component_schema(

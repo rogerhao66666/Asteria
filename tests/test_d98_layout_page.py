@@ -21,8 +21,8 @@ def _page(monkeypatch, **links):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.menu_layout_widget import MenuLayoutWorkspace
-    from asteria.editor.storage import load_document
+    from asteria.editor.menus.layout_widget import MenuLayoutWorkspace
+    from asteria.editor.project.storage import load_document
 
     QApplication.instance() or QApplication([])
     document = EditorDocument()

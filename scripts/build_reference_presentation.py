@@ -19,8 +19,8 @@ sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
-from asteria.presentation.battle_hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
-from asteria.presentation.battle_motion_sequence import (  # noqa: E402
+from asteria.presentation.battle.hud import BattleHudProfile, BattleHudResourceStyle  # noqa: E402
+from asteria.presentation.battle.motion_sequence import (  # noqa: E402
     BattleMotionBeat,
     BattleMotionSequence,
 )

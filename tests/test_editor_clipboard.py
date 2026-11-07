@@ -1,10 +1,10 @@
 from asteria.core import ComponentRegistry, Entity, Scene, Transform
-from asteria.editor.clipboard import (
+from asteria.editor.project.clipboard import (
     EditorClipboard,
     build_duplicate_entity_command,
     build_paste_entity_command,
 )
-from asteria.editor.model import EditorDocument
+from asteria.editor.project.model import EditorDocument
 
 
 def registry():

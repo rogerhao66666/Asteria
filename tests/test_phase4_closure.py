@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from asteria.editor.model import EditorDocument
-from asteria.editor.tile_edit import build_paint_command, tile_at
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.tile_edit import build_paint_command, tile_at
 from asteria.reference_world import build_reference_world
 from asteria.runtime import ReferenceRuntime, TileMapQuery
 

@@ -6,10 +6,10 @@ from pathlib import Path
 from asteria.core import Transform
 from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
-from asteria.runtime.components2d import (
+from asteria.runtime.game_save import GameRuntimeSave
+from asteria.runtime.scene.components import (
     Camera2DComponent,
 )
-from asteria.runtime.game_save import GameRuntimeSave
 
 
 def build_preview_registry():
@@ -60,7 +60,7 @@ def run_preview(
     )
     runtime_save = GameRuntimeSave.load_json(save_path, project) if save_path else None
     if runtime_save is None and playtest_profile:
-        from asteria.editor.playtest_profiles import PlaytestProfileLibrary
+        from asteria.editor.project.playtest_profiles import PlaytestProfileLibrary
 
         runtime_save = PlaytestProfileLibrary(root).instantiate(playtest_profile, project)
     if runtime_save is None:
@@ -125,14 +125,14 @@ def run_preview(
                 spawn=spawn,
                 backend=backend_kind if backend_kind != "pygame" else None,
             )
-        from asteria.runtime.tilemap_field import can_play
+        from asteria.runtime.field.tilemap_field import can_play
 
         if can_play(project, root) and hasattr(backend, "load_texture"):
             # Canonical tile map scenes (imported RPG Maker MV projects, authored tile maps): the
             # normal
             # game session (events, transfers, saves) drawn from registry-resolved tile assets.
+            from asteria.runtime.field.tilemap_field import TileMapField, run_tilemap_field
             from asteria.runtime.game_session import GameSessionRuntime
-            from asteria.runtime.tilemap_field import TileMapField, run_tilemap_field
 
             field = TileMapField(GameSessionRuntime(project, runtime_save), root)
             run_tilemap_field(field, backend, width, height, target_fps, max_frames=max_frames)
@@ -141,7 +141,7 @@ def run_preview(
             and hasattr(backend, "load_texture")
             and hasattr(backend, "draw_texture")
         ):
-            from asteria.runtime.reference_runtime import (
+            from asteria.runtime.tools.reference_runtime import (
                 ReferenceRuntime,
                 run_reference_runtime,
             )

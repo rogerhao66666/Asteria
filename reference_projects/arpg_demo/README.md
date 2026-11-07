@@ -38,7 +38,7 @@ backdrops (`ParallaxBackground2D`); the camera looks ahead (`camera_look_ahead`)
 
 ## Engine features this demo needed (all generic)
 
-- Tile-map scenes in the playable runtime (`runtime/tile_scene_view.py`): layers below / above
+- Tile-map scenes in the playable runtime (`runtime/field/tile_scene_view.py`): layers below / above
   characters, directional `idle_* / walk_* / attack_*` clips, a camera that follows the player,
   tile walls that block controllers, AI and projectiles, projectile sprites.
 - Binding alternatives (`a|b|c`), the `SET_CLASSES` world command, the skill tree screen,

@@ -10,7 +10,7 @@ import pytest
 from test_break_battle import DAMAGE, _battle, _project
 
 from asteria.gameplay import AbilityDefinition
-from asteria.rpg.interactions import (
+from asteria.rpg.battle.interactions import (
     InteractionDisposition,
     InteractionRule,
     OutcomeCheckDefinition,
@@ -144,7 +144,7 @@ def test_hit_validation_and_round_trip():
 
 
 def test_blank_editor_template_adds_nothing():
-    from asteria.editor.authoring_hub_widget import StructuredRecordEditor
+    from asteria.editor.records.hub import StructuredRecordEditor
 
     template = StructuredRecordEditor.LIST_TEMPLATES["hits"]
     base = _project().gameplay_library.abilities.get("oct_sword")

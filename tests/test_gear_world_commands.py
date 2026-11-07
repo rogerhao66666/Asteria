@@ -6,8 +6,8 @@ from test_refine import RULES, _game
 from test_socket_items import _game as _socket_game
 
 from asteria.events.world_commands import WorldCommand
-from asteria.rpg.refine import RefineRules
-from asteria.runtime.world_command_handlers import (
+from asteria.rpg.items.refine import RefineRules
+from asteria.runtime.session.world_commands import (
     STANDARD_WORLD_COMMANDS,
     WORLD_COMMAND_ARGUMENTS,
     WorldCommandError,
@@ -72,7 +72,7 @@ def test_disassemble_command_breaks_an_item_down():
     from test_break_battle import _project
     from test_session_events import _session
 
-    from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
+    from asteria.rpg.items.disassembly import DisassemblyRecipe, DisassemblyYield
 
     project = _project()
     project.rpg_database.add_disassembly_recipe(

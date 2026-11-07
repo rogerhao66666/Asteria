@@ -19,7 +19,7 @@ SOURCE = lucifer.SOURCE
 
 def hero_and_boss_art(context):
     from asteria.assets.canonical import AssetSource, CanonicalAsset
-    from asteria.presentation.battle_combatant_visuals import (
+    from asteria.presentation.battle.combatant_visuals import (
         BattleCombatantVisualProfile,
         BattleVisualAssetSet,
         BattleVisualStateDefinition,

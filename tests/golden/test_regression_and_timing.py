@@ -8,7 +8,7 @@ import pytest
 
 pytest.importorskip("pygame")
 
-from asteria.runtime.profiler import SPEC_METRICS  # noqa: E402
+from asteria.runtime.tools.profiler import SPEC_METRICS  # noqa: E402
 from asteria.validation.benchmark import run_benchmark  # noqa: E402
 from asteria.validation.presentation_timing import measure_action_timing  # noqa: E402
 from asteria.validation.regression import regression_snapshot  # noqa: E402

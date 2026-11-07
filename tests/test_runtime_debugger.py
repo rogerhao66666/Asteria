@@ -11,7 +11,7 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
-from asteria.runtime.debug_server import DebugClient, DebugClientError  # noqa: E402
+from asteria.runtime.tools.debug_server import DebugClient, DebugClientError  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"
 
@@ -114,7 +114,7 @@ def test_requests_without_the_token_are_refused(runtime):
 def test_debugger_dock_attaches_inspects_and_executes(runtime):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.debugger_widget import DebuggerWidget
+    from asteria.editor.tools.debugger_widget import DebuggerWidget
 
     QApplication.instance() or QApplication([])
     server = runtime.enable_debugger(token="t")
@@ -179,8 +179,8 @@ def test_play_test_spawn_point_and_debug_channel_in_a_separate_process(tmp_path)
 def test_launcher_passes_debug_spawn_and_captures_the_log(tmp_path):
     from asteria.core import Scene
     from asteria.editor import EditorDocument
-    from asteria.editor.playmode import create_play_session
-    from asteria.editor.runtime_launcher import launch_play_session
+    from asteria.editor.project.playmode import create_play_session
+    from asteria.editor.project.runtime_launcher import launch_play_session
     from asteria.project import Project
 
     project = Project("P")
@@ -222,7 +222,8 @@ def test_shell_play_from_selection_restart_and_debugger_attach(monkeypatch, tmp_
 
     from asteria.core import Entity, Scene, Transform
     from asteria.editor import shell as shell_module
-    from asteria.editor.runtime_launcher import RuntimeProcess
+    from asteria.editor.project.runtime_launcher import RuntimeProcess
+    from asteria.editor.window import play as play_module
     from asteria.project import Project
 
     app = QApplication.instance() or QApplication([])
@@ -248,7 +249,7 @@ def test_shell_play_from_selection_restart_and_debugger_attach(monkeypatch, tmp_
         path.write_text("{}")
         return RuntimeProcess(Fake(), path, None, 50000 + len(calls), "tok")
 
-    monkeypatch.setattr(shell_module, "launch_play_session", fake_launch)
+    monkeypatch.setattr(play_module, "launch_play_session", fake_launch)
     window = shell_module.AsteriaEditorWindow(project)
     window.document.file_path = tmp_path / "p.asteria.json"
     window.document.selection.set_single("entity", hero)

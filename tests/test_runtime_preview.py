@@ -69,7 +69,7 @@ def test_preview_uses_active_camera_dimensions(tmp_path):
 
 
 def test_preview_resolves_reference_assets_from_explicit_resource_root(tmp_path, monkeypatch):
-    from asteria.runtime import reference_runtime
+    from asteria.runtime.tools import reference_runtime
 
     project = Project("Preview")
     scene = project.add_scene(Scene("Town"))

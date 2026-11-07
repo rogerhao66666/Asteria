@@ -9,14 +9,14 @@ import trial_content as tc
 
 from asteria.gameplay.states import StateDefinition
 from asteria.rpg import BattleStatePolicy, ItemDefinition
-from asteria.rpg.composition import (
+from asteria.rpg.battle.reactions import ReactionDefinition
+from asteria.rpg.items.crafting import (
     CompositionOutput,
     CompositionRecipeDefinition,
     CompositionSelection,
 )
-from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
-from asteria.rpg.economy import ShopDefinition, ShopEntry
-from asteria.rpg.reactions import ReactionDefinition
+from asteria.rpg.items.disassembly import DisassemblyRecipe, DisassemblyYield
+from asteria.rpg.items.shops import ShopDefinition, ShopEntry
 
 HP, SP = tc.HP, tc.SP
 ability, op, damage, healing = tc.ability, tc.op, tc.damage, tc.healing

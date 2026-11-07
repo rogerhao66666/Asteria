@@ -1,5 +1,5 @@
 from asteria.assets import AssetRef
-from asteria.editor.tile_palette import TileToolState, build_tile_palette
+from asteria.editor.scene.tile_palette import TileToolState, build_tile_palette
 from asteria.graphics import TileDef, Tileset
 
 A = "123e4567-e89b-12d3-a456-426614174001"

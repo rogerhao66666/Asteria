@@ -3,11 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from asteria.rpg import RewardRoll, RewardRuntime
-
-from .playable_battle_mechanics import PlayableBattleMechanicsHarness
-from .playable_battle_modes import PlayableBattleModeHarness
-from .playable_battle_summons import PlayableBattleSummonHarness
-from .rpg_validation_project import AsteriaRpgValidationProject
+from asteria.validation.playable_battle_mechanics import PlayableBattleMechanicsHarness
+from asteria.validation.playable_battle_modes import PlayableBattleModeHarness
+from asteria.validation.playable_battle_summons import PlayableBattleSummonHarness
+from asteria.validation.rpg_validation_project import AsteriaRpgValidationProject
 
 
 @dataclass(frozen=True, slots=True)

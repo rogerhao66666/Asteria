@@ -1,5 +1,5 @@
-"""Battle pictures decoded ahead in the field (runtime/image_preloader.py): the first battle frame
-no longer decodes every sheet, and what it draws is unchanged."""
+"""Battle pictures decoded ahead in the field (runtime/scene/image_preloader.py): the first
+battle frame no longer decodes every sheet, and what it draws is unchanged."""
 
 import random
 import time
@@ -10,7 +10,7 @@ pygame = pytest.importorskip("pygame")
 
 from test_playable_battle_loop import _boss_runtime  # noqa: E402
 
-from asteria.runtime.image_preloader import ImagePreloader  # noqa: E402
+from asteria.runtime.scene.image_preloader import ImagePreloader  # noqa: E402
 
 
 @pytest.fixture

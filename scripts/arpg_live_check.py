@@ -14,7 +14,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 from asteria.project import Project
-from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.action.combat import CombatantComponent
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 from asteria.validation.arpg_playground import build_playground

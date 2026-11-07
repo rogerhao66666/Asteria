@@ -3,8 +3,8 @@ saved."""
 
 from asteria.core import Entity, Scene, Transform
 from asteria.events import EventInstruction, EventProgram
-from asteria.rpg.world_record import WorldRecord
-from asteria.runtime.npc_state import NpcIdentity2DComponent
+from asteria.rpg.world.record import WorldRecord
+from asteria.runtime.field.npc_state import NpcIdentity2DComponent
 
 
 def _npc(scene, npc_id, x=10.0, y=0.0):

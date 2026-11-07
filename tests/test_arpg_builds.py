@@ -59,7 +59,7 @@ def test_a_keystone_closes_the_other_two(demo):  # noqa: F811
 
 
 def test_skill_slots_hold_what_the_player_chooses_and_the_bar_follows(demo):  # noqa: F811
-    from asteria.runtime.action_combat import ActionCombatComponent, parse_bindings
+    from asteria.runtime.action.abilities import ActionCombatComponent, parse_bindings
 
     game = demo.game
     game.set_classes("", ["warrior"])
@@ -91,7 +91,7 @@ def test_slot_capacity_grows_with_the_level(demo):  # noqa: F811
 
 
 def test_elemental_stats_raise_the_damage_of_their_element(demo):  # noqa: F811
-    from asteria.runtime.combat import CombatSystem  # noqa: F401
+    from asteria.runtime.action.combat import CombatSystem  # noqa: F401
 
     library = _project().gameplay_library
     attack = library.attacks.get("m_fireball")
@@ -103,8 +103,8 @@ def test_elemental_stats_raise_the_damage_of_their_element(demo):  # noqa: F811
 
 
 def _rolled(db, table_id, kills, level, luck, seed=5):
-    from asteria.rpg.drop_tables import roll_drop_table
-    from asteria.rpg.loot import roll_equipment
+    from asteria.rpg.items.drop_tables import roll_drop_table
+    from asteria.rpg.items.loot import roll_equipment
 
     rng = random.Random(seed)
     items, serial = [], 0
@@ -185,7 +185,7 @@ def test_every_gear_icon_is_a_real_picture():
 
 # -- the skill tree view: zoom, pan, and no two nodes ever overlap ----------------------------
 def _screen(demo):  # noqa: F811
-    from asteria.runtime.skill_tree_screen import SkillTreeScreen
+    from asteria.runtime.menus.skill_tree import SkillTreeScreen
 
     game = demo.game
     game.set_classes("", ["warrior"])
@@ -196,7 +196,7 @@ def _screen(demo):  # noqa: F811
 
 
 def _overlaps(screen, graph):
-    from asteria.runtime.skill_tree_screen import NODE_H, NODE_W
+    from asteria.runtime.menus.skill_tree import NODE_H, NODE_W
 
     points = [screen.node_point(graph, n.node_id) for n in graph.nodes]
     half_w, half_h = NODE_W * screen.zoom / 2, NODE_H * screen.zoom / 2
@@ -219,7 +219,7 @@ def test_nodes_never_overlap_at_any_zoom(demo):  # noqa: F811
 
 def test_a_long_tree_is_spread_instead_of_overlapping():
     from asteria.rpg import ProgressionGraphDefinition, ProgressionNodeDefinition
-    from asteria.runtime.skill_tree_screen import SkillTreeScreen
+    from asteria.runtime.menus.skill_tree import SkillTreeScreen
 
     nodes = [ProgressionNodeDefinition(f"n{i}", f"Node {i}") for i in range(40)]
     cramped = {n.node_id: (0.0, i * 5.0) for i, n in enumerate(nodes)}  # authored far too close
@@ -242,7 +242,7 @@ def test_the_tree_is_laid_out_once_not_per_node_and_frame(monkeypatch):
     """Drawing asks for every node's place (and twice per line): laying the whole tree out on
     each ask made a long tree without saved positions stutter. It is laid out once per graph,
     and again only for an edited graph (a new object)."""
-    import asteria.runtime.skill_tree_screen as tree
+    import asteria.runtime.menus.skill_tree as tree
     from asteria.rpg import ProgressionGraphDefinition, ProgressionNodeDefinition
 
     nodes = [ProgressionNodeDefinition(f"n{i}", f"Node {i}") for i in range(30)]
@@ -333,7 +333,7 @@ def test_every_effect_cue_names_a_real_sheet():
 # -- the editor reaches the new options -------------------------------------------------------
 def _category(project, group, name):
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     document = EditorDocument(project)
     controllers = IntegratedAuthoringControllers(document)
@@ -342,7 +342,7 @@ def _category(project, group, name):
 
 
 def test_the_layout_form_shows_every_option_even_at_its_default():
-    from asteria.presentation.battle_ui import BattleUiLayoutProfile
+    from asteria.presentation.battle.ui import BattleUiLayoutProfile
 
     project = _project()
     library = project.battle_presentation_library
@@ -370,7 +370,7 @@ def test_the_skill_tree_form_shows_each_nodes_icon_field():
 def test_every_skill_animation_exists_for_every_facing_of_every_class_look():
     import json
 
-    from asteria.runtime.actor_link import ClassAppearanceComponent
+    from asteria.runtime.field.actor_link import ClassAppearanceComponent
 
     project = _project()
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"

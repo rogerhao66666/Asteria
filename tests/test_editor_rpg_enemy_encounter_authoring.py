@@ -2,11 +2,10 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.rpg_enemy_encounter_authoring import (
+from asteria.editor.rpg.enemy_encounter_authoring import (
     RpgEnemyEncounterAuthoringController,
     RpgEnemyEncounterAuthoringError,
 )
-from asteria.editor.rpg_enemy_encounter_workspace import RpgEnemyEncounterWorkspaceModel
 from asteria.gameplay import AbilityDefinition
 from asteria.project import Project
 from asteria.rpg import (
@@ -210,20 +209,6 @@ def test_information_architecture_keeps_boss_complexity_contextual():
     assert ia.progressive_disclosure
     assert not ia.show_all_boss_logic_simultaneously
     assert not ia.show_all_details_simultaneously
-
-
-def test_workspace_rule_phase_focus_is_mutually_contextual():
-    _, _, c = make()
-    c.create_ai(ai())
-    w = RpgEnemyEncounterWorkspaceModel(c)
-    w.set_section("ai")
-    w.select("boss_ai")
-    w.select_rule("burn")
-    assert w.snapshot().selected_rule_id == "burn"
-    assert w.snapshot().selected_phase_id is None
-    w.select_phase("phase2")
-    assert w.snapshot().selected_phase_id == "phase2"
-    assert w.snapshot().selected_rule_id is None
 
 
 def test_project_validation_after_enemy_encounter_authoring():

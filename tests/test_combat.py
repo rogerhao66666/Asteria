@@ -24,8 +24,9 @@ from asteria.gameplay.formulas import (
     FormulaTerm,
     ValueFormula,
 )
-from asteria.rpg.drop_tables import DropEntry, DropTable
-from asteria.runtime.character_control import (
+from asteria.rpg.items.drop_tables import DropEntry, DropTable
+from asteria.runtime.action.combat import CombatantComponent, CombatSystem, parse_values
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     CharacterControllerSystem,
     Hitbox2DComponent,
@@ -34,9 +35,8 @@ from asteria.runtime.character_control import (
     facing_box,
     register_character_components,
 )
-from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.combat import CombatantComponent, CombatSystem, parse_values
-from asteria.runtime.entity_actions import EntityActionSystem
+from asteria.runtime.field.collision import Collider2DComponent
+from asteria.runtime.field.entity_actions import EntityActionSystem
 
 DT = 1 / 60
 
@@ -571,7 +571,7 @@ def test_combat_runs_in_the_game_session_field_update(runtime):
 
 def test_attacks_are_authored_in_the_editor_with_undo(runtime):
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     game = runtime.game
     document = EditorDocument()
@@ -607,7 +607,7 @@ def test_topdown_boxes_cannot_slip_through_walls_thinner_than_the_character():
 
 
 def test_batched_moves_match_one_by_one_checks_and_keep_the_shared_world_current():
-    from asteria.runtime.collision import CollisionWorld
+    from asteria.runtime.field.collision import CollisionWorld
 
     rng = random.Random(3)
     scene = Scene("S")

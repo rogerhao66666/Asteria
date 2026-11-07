@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
-from .skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
+from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
 
 
 class DragonBonesImportError(ValueError):

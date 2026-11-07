@@ -1,12 +1,12 @@
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.gizmo import (
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.gizmo import (
     GridSnap,
     SelectionRect,
     build_move_entities_command,
     entities_in_screen_rect,
 )
-from asteria.editor.model import EditorDocument
-from asteria.editor.viewport import ViewportCamera, scene_markers
+from asteria.editor.scene.viewport import ViewportCamera, scene_markers
 
 
 def test_grid_snap():

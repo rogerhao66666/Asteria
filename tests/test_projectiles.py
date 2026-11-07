@@ -14,16 +14,16 @@ from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
 from asteria.gameplay.attacks import AttackDefinition
 from asteria.gameplay.formulas import ValueFormula
 from asteria.gameplay.projectiles import ProjectileDefinition
-from asteria.runtime.character_control import (
+from asteria.runtime.action.combat import CombatantComponent, CombatSystem
+from asteria.runtime.action.projectiles import ProjectileSystem
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     CharacterControllerSystem,
     HitboxSystem,
     Hurtbox2DComponent,
 )
-from asteria.runtime.collision import Collider2DComponent, CollisionWorld
-from asteria.runtime.combat import CombatantComponent, CombatSystem
-from asteria.runtime.entity_actions import EntityActionSystem
-from asteria.runtime.projectiles import ProjectileSystem
+from asteria.runtime.field.collision import Collider2DComponent, CollisionWorld
+from asteria.runtime.field.entity_actions import EntityActionSystem
 
 DT = 1 / 60
 KERNEL_SETS = kernels.available()

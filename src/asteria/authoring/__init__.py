@@ -1,4 +1,4 @@
-from .api import (
+from asteria.authoring.api import (
     AuthoringEntity,
     AuthoringError,
     AuthoringEvent,
@@ -7,7 +7,7 @@ from .api import (
     AuthoringSession,
     AuthoringTransform,
 )
-from .runner import ScriptRunResult, run_authoring_script
+from asteria.authoring.runner import ScriptRunResult, run_authoring_script
 
 __all__ = [
     "AuthoringEntity",

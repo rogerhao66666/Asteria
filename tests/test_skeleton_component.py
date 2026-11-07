@@ -13,7 +13,7 @@ from asteria.graphics import SpriteFrame, SpriteSheet
 from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
 from asteria.graphics.skeleton_data import skeleton_to_data
 from asteria.runtime.component_registry import default_component_registry
-from asteria.runtime.skeleton_component import (
+from asteria.runtime.scene.skeleton_component import (
     SkeletonAnimation2DComponent,
     SkeletonSceneRuntime,
 )
@@ -90,8 +90,8 @@ def test_skeleton_scene_runtime_advances_and_draws_through_texture_adapter():
 def test_tile_scene_view_draws_component_slot_into_game_surface():
     pygame = pytest.importorskip("pygame")
 
-    from asteria.runtime.skeleton_component import SkeletonSceneRuntime
-    from asteria.runtime.tile_scene_view import TileSceneView
+    from asteria.runtime.field.tile_scene_view import TileSceneView
+    from asteria.runtime.scene.skeleton_component import SkeletonSceneRuntime
 
     scene, _ = make_scene()
     texture_id = new_id()
@@ -193,8 +193,8 @@ def test_editor_scene_viewport_advances_attached_skeleton_preview(app, tmp_path)
     from PySide6.QtTest import QTest
 
     from asteria.assets import AssetRecord
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.editor.project.model import EditorDocument
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget
     from asteria.project import Project
 
     project = Project("Scene animation")

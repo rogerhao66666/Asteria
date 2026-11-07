@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from asteria.editor import i18n
-from asteria.editor.behavior_tree_authoring import parse_points
+from asteria.editor.combat.behavior_tree_authoring import parse_points
+from asteria.editor.ui import i18n
 
 DEMO = (
     Path(__file__).resolve().parents[1]
@@ -24,8 +24,8 @@ def page(monkeypatch):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.behavior_tree_widget import BehaviorTreeEditorWidget
-    from asteria.editor.resource_resolver import resolve_project_resources
+    from asteria.editor.assets.resource_resolver import resolve_project_resources
+    from asteria.editor.combat.behavior_tree_widget import BehaviorTreeEditorWidget
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
@@ -43,7 +43,7 @@ def _on_a_new_node(page, kind):
 
 
 def _dialog(page, tree_id, places, many=True):
-    from asteria.editor.map_places_dialog import MapPlacesDialog
+    from asteria.editor.combat.map_places_dialog import MapPlacesDialog
 
     dialog = MapPlacesDialog(page.api.document, tree_id, places, many=many)
     dialog.resize(800, 600)
@@ -61,7 +61,7 @@ def _click_world(canvas, x, y):
 
 def _answering(monkeypatch, answer, *clicks):
     """The dialog opens, is clicked at world places as the author would, and is answered."""
-    from asteria.editor.map_places_dialog import MapPlacesDialog
+    from asteria.editor.combat.map_places_dialog import MapPlacesDialog
 
     seen = []
 
@@ -84,7 +84,7 @@ def _near(found, wanted):
 
 # -- which scene it opens on ---------------------------------------------------------------------
 def test_it_opens_on_a_scene_where_a_character_runs_the_tree(page):
-    from asteria.editor.map_places_dialog import scene_for_tree
+    from asteria.editor.combat.map_places_dialog import scene_for_tree
 
     project = page.api.document.project
     assert scene_for_tree(project, "foe_patrol").name == WOODS
@@ -92,7 +92,7 @@ def test_it_opens_on_a_scene_where_a_character_runs_the_tree(page):
 
 
 def test_a_tree_nobody_runs_opens_on_the_startup_scene(page):
-    from asteria.editor.map_places_dialog import scene_for_tree
+    from asteria.editor.combat.map_places_dialog import scene_for_tree
 
     project = page.api.document.project
     assert scene_for_tree(project, "every_kind").id == project.startup_scene_id
@@ -197,7 +197,7 @@ def test_one_place_has_nothing_to_take_back(page):
 def test_existing_places_are_numbered_markers_on_the_map(page):
     from PySide6.QtGui import QColor
 
-    from asteria.editor.map_point_picker import _CHOSEN
+    from asteria.editor.events.map_point_picker import _CHOSEN
 
     dialog = _dialog(page, "every_kind", [(200.0, 120.0), (400.0, 200.0)])
     canvas = dialog.canvas
@@ -220,7 +220,7 @@ def test_a_place_in_the_map_s_corner_shows_whole(page):
 
 
 def test_a_place_nobody_could_stand_on_is_said_and_not_refused(page, monkeypatch):
-    from asteria.editor.map_places_dialog import CHARACTER_STUCK
+    from asteria.editor.combat.map_places_dialog import CHARACTER_STUCK
 
     dialog = _dialog(page, "every_kind", [(99999.0, 99999.0)])
     assert 0 in dialog.canvas.blocked
@@ -233,7 +233,7 @@ def test_a_place_nobody_could_stand_on_is_said_and_not_refused(page, monkeypatch
 def test_a_character_does_not_block_a_place_with_its_own_body(page):
     """Goblin Slinger 1 runs the tree and is solid: its own spot is a place it can stand on."""
     from asteria.core import world_position
-    from asteria.editor.map_places_dialog import characters_running, scene_for_tree
+    from asteria.editor.combat.map_places_dialog import characters_running, scene_for_tree
 
     scene = scene_for_tree(page.api.document.project, "foe_patrol")
     x, y = world_position(characters_running(scene, "foe_patrol")[0])
@@ -243,7 +243,11 @@ def test_a_character_does_not_block_a_place_with_its_own_body(page):
 
 # -- the Game Start's map stays as it was ------------------------------------------------------
 def test_the_game_start_s_map_is_still_about_the_player(page):
-    from asteria.editor.map_point_picker import MapPointPicker, PlayerMapCanvas, spot_problem
+    from asteria.editor.events.map_point_picker import (
+        MapPointPicker,
+        PlayerMapCanvas,
+        spot_problem,
+    )
 
     picker = MapPointPicker(page.api.document)
     assert isinstance(picker.canvas, PlayerMapCanvas)

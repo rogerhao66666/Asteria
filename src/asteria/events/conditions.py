@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .context import EventContext
+from asteria.events.context import EventContext
 
 _COMPARATORS = {"==", "!=", "<", "<=", ">", ">="}
 

@@ -20,7 +20,7 @@ def test_shell_class_has_core_file_and_play_actions_as_methods():
 
 
 def test_project_tree_has_selection_callback_used_during_construction():
-    from asteria.editor.widgets import ProjectTreeWidget
+    from asteria.editor.ui.widgets import ProjectTreeWidget
 
     assert callable(getattr(ProjectTreeWidget, "_on_selection_changed", None))
 
@@ -33,8 +33,8 @@ def test_project_tree_refresh_preserves_canonical_selection():
     from PySide6.QtWidgets import QApplication
 
     from asteria.core import Entity, Scene
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.widgets import ProjectTreeWidget
+    from asteria.editor.project.model import EditorDocument
+    from asteria.editor.ui.widgets import ProjectTreeWidget
     from asteria.project import Project
 
     app = QApplication.instance() or QApplication([])
@@ -64,8 +64,8 @@ def test_scene_viewport_arrow_navigation_and_reset():
     from PySide6.QtWidgets import QApplication
 
     from asteria.core import Entity, Scene, Transform
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.editor.project.model import EditorDocument
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget
     from asteria.project import Project
 
     app = QApplication.instance() or QApplication([])
@@ -112,8 +112,8 @@ def test_scene_viewport_frames_active_camera_at_the_center():
     from PySide6.QtWidgets import QApplication
 
     from asteria.core import Entity, Scene, Transform
-    from asteria.editor.model import EditorDocument
-    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.editor.project.model import EditorDocument
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget
     from asteria.project import Project
     from asteria.runtime import Camera2DComponent
 

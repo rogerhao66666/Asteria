@@ -8,7 +8,7 @@ pygame = pytest.importorskip("pygame")
 
 from asteria.core import Transform  # noqa: E402
 from asteria.events import EventInstruction, EventProgram  # noqa: E402
-from asteria.rpg.items import InventoryRules  # noqa: E402
+from asteria.rpg.items.definitions import InventoryRules  # noqa: E402
 
 
 def _run(runtime, *instructions):

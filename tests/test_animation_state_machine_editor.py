@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.animation_state_machine_authoring import (
+from asteria.editor.animation.state_machine_authoring import (
     AnimationStateMachineAuthoring,
     StateMachineAuthoringError,
 )
@@ -70,8 +70,8 @@ def test_states_transitions_and_parameters_are_undoable_edits(api):
 
 def test_the_runtime_clip_set_carries_the_authored_machine(api):
     from asteria.core import Entity, Scene, Transform
-    from asteria.runtime.battle_visuals import BattleVisualResolver
-    from asteria.runtime.components2d import Animator2DComponent, SpriteRenderer2D
+    from asteria.runtime.battle.visuals import BattleVisualResolver
+    from asteria.runtime.scene.components import Animator2DComponent, SpriteRenderer2D
     from asteria.runtime.systems import AnimationSystem
 
     _build(api)
@@ -100,7 +100,7 @@ def test_graph_editor_builds_moves_and_previews(api):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.animation_state_machine_widget import AnimationStateMachineWidget
+    from asteria.editor.animation.state_machine_widget import AnimationStateMachineWidget
 
     QApplication.instance() or QApplication([])
     widget = AnimationStateMachineWidget(api.document)
@@ -130,7 +130,7 @@ def test_a_sheet_without_a_machine_shows_its_clips_and_starts_from_them(api):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.animation_state_machine_widget import AnimationStateMachineWidget
+    from asteria.editor.animation.state_machine_widget import AnimationStateMachineWidget
 
     QApplication.instance() or QApplication([])
     widget = AnimationStateMachineWidget(api.document)

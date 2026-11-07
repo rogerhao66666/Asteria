@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from asteria.runtime.character_control import CharacterController2DComponent
+from asteria.runtime.field.character_control import CharacterController2DComponent
 
 
 class ActionSceneMixin:
@@ -11,7 +11,7 @@ class ActionSceneMixin:
     def action_hud(self):
         hud = getattr(self, "_action_hud", None)
         if hud is None:
-            from asteria.runtime.action_play import ActionHud
+            from asteria.runtime.action.play import ActionHud
 
             hud = self._action_hud = ActionHud()
         return hud
@@ -47,24 +47,24 @@ class ActionSceneMixin:
         if self.input.just_pressed("pickup") and not self._multiplayer_connected():
             self.game.loot.pick_up_nearest(self.game.scene, self.game.player)
         if self.input.just_pressed("bag"):
-            from asteria.runtime.bag_screen import BagScreen
+            from asteria.runtime.menus.bag import BagScreen
 
             if (
                 self._multiplayer_connected()
                 and self.multiplayer_bridge.state.get("schema")
                 != "asteria.multiplayer.project_state"
             ):
-                from asteria.runtime.network_bag_screen import NetworkBagScreen
+                from asteria.runtime.menus.network_bag import NetworkBagScreen
 
                 self._bag_screen = NetworkBagScreen(self)
             else:
                 self._bag_screen = BagScreen(self)
             self._ui_mode = "bag"
         if self.input.just_pressed("menu"):  # the skill tree (D22 A10)
-            from asteria.runtime.skill_tree_screen import SkillTreeScreen
+            from asteria.runtime.menus.skill_tree import SkillTreeScreen
 
             if self._multiplayer_connected():
-                from asteria.runtime.network_bag_screen import NetworkSkillTreeScreen
+                from asteria.runtime.menus.network_bag import NetworkSkillTreeScreen
 
                 self._skill_tree = NetworkSkillTreeScreen(self)
             else:

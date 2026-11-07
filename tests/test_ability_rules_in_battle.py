@@ -6,7 +6,7 @@ import dataclasses
 import pytest
 from test_session_events import _session
 
-from asteria.rpg.battle_session_rules import BattleSessionRules
+from asteria.rpg.battle.session_rules import BattleSessionRules
 from asteria.runtime.game_session import GameSessionError
 
 

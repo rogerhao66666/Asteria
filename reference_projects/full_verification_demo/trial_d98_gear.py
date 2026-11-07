@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_start_authoring import GameStartAuthoringController
-from asteria.editor.storage import load_document
+from asteria.editor.project.storage import load_document
+from asteria.editor.rpg.game_start_authoring import GameStartAuthoringController
 
 path = Path("reference_projects/full_verification_demo/project.asteria.json")
 doc = EditorDocument()

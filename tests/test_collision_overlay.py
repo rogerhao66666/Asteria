@@ -1,8 +1,8 @@
 from asteria.assets import AssetRef
-from asteria.editor.collision_overlay import build_collision_cells
-from asteria.editor.model import EditorDocument
-from asteria.editor.tile_edit import build_paint_command
-from asteria.editor.viewport import ViewportCamera
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.collision_overlay import build_collision_cells
+from asteria.editor.scene.tile_edit import build_paint_command
+from asteria.editor.scene.viewport import ViewportCamera
 from asteria.graphics import TileLayer, TileMap
 
 A = "123e4567-e89b-12d3-a456-426614174002"

@@ -2,35 +2,41 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, is_dataclass
 
-from .battle_action_menu import BattleActionMenuPolicy
-from .battle_action_workflow import BattleActionWorkflowDefinition
-from .battle_animation_timing import BattleAnimationTimingProfile
-from .battle_combatant_visuals import (
+from asteria.presentation.battle.action_menu import BattleActionMenuPolicy
+from asteria.presentation.battle.action_workflow import BattleActionWorkflowDefinition
+from asteria.presentation.battle.animation_timing import BattleAnimationTimingProfile
+from asteria.presentation.battle.combatant_visuals import (
     BattleCombatantVisualProfile,
     BattleVisualAssetSet,
     BattleVisualStateDefinition,
     BattleVisualTransform,
 )
-from .battle_feedback import BattleFeedbackProfile
-from .battle_hud import BattleHudProfile
-from .battle_interaction import BattleInteractionLayer, BattleInteractionProfile
-from .battle_motion_sequence import BattleMotionBeat, BattleMotionSequence
-from .battle_party_layout import BattlePartyLayoutPolicy
-from .battle_portrait_party_template import (
+from asteria.presentation.battle.director import BattlePresentationDirectorProfile
+from asteria.presentation.battle.feedback import BattleFeedbackProfile
+from asteria.presentation.battle.hud import BattleHudProfile
+from asteria.presentation.battle.interaction import (
+    BattleInteractionLayer,
+    BattleInteractionProfile,
+)
+from asteria.presentation.battle.layering import BattlePresentationLayeringProfile
+from asteria.presentation.battle.motion_sequence import BattleMotionBeat, BattleMotionSequence
+from asteria.presentation.battle.party_layout import BattlePartyLayoutPolicy
+from asteria.presentation.battle.portrait_party_template import (
     BattlePortraitPartyTemplateProfile,
     BattlePortraitPartyZone,
 )
-from .battle_presentation_director import BattlePresentationDirectorProfile
-from .battle_presentation_layering import BattlePresentationLayeringProfile
-from .battle_result import BattleResultProfile
-from .battle_sideview_template import BattleSideviewTemplateProfile, BattleSideviewZone
-from .battle_ui import BattleUiLayoutProfile
-from .battle_ui_polish import BattleUiPolishProfile
-from .battle_ui_renderer import BattleUiTheme
-from .creature_screens import CreatureScreenSettings
-from .dialogue_window import DialogueWindowStyle
-from .menu_layout import MenuBitmapFont, MenuLayout, MenuTheme
-from .retired_screens import RETIRED_CATEGORIES
+from asteria.presentation.battle.result import BattleResultProfile
+from asteria.presentation.battle.sideview_template import (
+    BattleSideviewTemplateProfile,
+    BattleSideviewZone,
+)
+from asteria.presentation.battle.ui import BattleUiLayoutProfile
+from asteria.presentation.battle.ui_polish import BattleUiPolishProfile
+from asteria.presentation.battle.ui_renderer import BattleUiTheme
+from asteria.presentation.screens.creature import CreatureScreenSettings
+from asteria.presentation.screens.menu_layout import MenuBitmapFont, MenuLayout, MenuTheme
+from asteria.presentation.screens.retired import RETIRED_CATEGORIES
+from asteria.presentation.text.dialogue_window import DialogueWindowStyle
 
 
 @dataclass(frozen=True, slots=True)

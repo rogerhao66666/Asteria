@@ -209,7 +209,7 @@ def _emerald_screen(source, art):
 
 def _rename_for_emerald(project):
     from asteria.gameplay.abilities import AbilityDefinition
-    from asteria.rpg.pets import PetSpeciesDefinition
+    from asteria.rpg.characters.pets import PetSpeciesDefinition
 
     db = project.rpg_database
     for species, name in EMERALD_SPECIES.items():
@@ -224,7 +224,7 @@ def _rename_for_emerald(project):
     object.__setattr__(db.actors["hero_01"], "display_name", "BRENDAN")  # in memory only
     for item_id, (_name, label) in EMERALD_ITEMS.items():
         object.__setattr__(db.items[item_id], "display_name", label)
-    from asteria.rpg.localization import LocaleTable
+    from asteria.rpg.text.localization import LocaleTable
 
     english = db.locale_tables.get("en")
     words = {**(dict(english.entries) if english else {}), **EMERALD_WORDS}
@@ -238,8 +238,8 @@ def _project(art):
     from asteria.gameplay.abilities import AbilityDefinition
     from asteria.project import Project
     from asteria.rpg import InteractionRule
-    from asteria.rpg.enemies import EncounterDefinition, EncounterMember
-    from asteria.rpg.pets import PetExpCurve, PetMove, PetSpeciesDefinition
+    from asteria.rpg.characters.pets import PetExpCurve, PetMove, PetSpeciesDefinition
+    from asteria.rpg.enemies.definitions import EncounterDefinition, EncounterMember
     from asteria.runtime.component_registry import default_component_registry
 
     project = Project.load_json(DEMO / "project.asteria.json", default_component_registry())
@@ -310,7 +310,7 @@ def main(argv=None):
     import pygame
 
     from asteria.events import WorldCommand
-    from asteria.runtime.creature_battle import CreatureBattleScreen
+    from asteria.runtime.creature.battle import CreatureBattleScreen
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     argv = list(sys.argv[1:] if argv is None else argv)

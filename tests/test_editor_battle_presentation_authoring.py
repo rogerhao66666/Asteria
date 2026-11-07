@@ -2,11 +2,8 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.battle_presentation_authoring import (
+from asteria.editor.combat.battle_presentation_authoring import (
     BattlePresentationAuthoringController,
-)
-from asteria.editor.battle_presentation_workspace import (
-    BattlePresentationWorkspaceModel,
 )
 from asteria.presentation import (
     BattleActionMenuPolicy,
@@ -188,31 +185,6 @@ def test_information_architecture_separates_presentation_domains():
     assert not ia.show_all_details_simultaneously
     assert "motion_sequences" in ia.section("motion").categories
     assert "hud" in ia.section("hud").categories
-
-
-def test_workspace_only_exposes_current_category_and_context():
-    _, _, c = make()
-    c.create("combatant_visuals", "hero", profiles()["combatant_visuals"])
-    c.create("sideview_templates", "side", profiles()["sideview_templates"])
-    w = BattlePresentationWorkspaceModel(c)
-    assert w.snapshot().visible_ids == ("hero",)
-    w.select("hero")
-    w.focus_child("state:idle")
-    assert w.snapshot().focused_child_id == "state:idle"
-    w.set_category("sideview_templates")
-    assert w.snapshot().visible_ids == ("side",)
-    assert w.snapshot().focused_child_id is None
-
-
-def test_workspace_sections_reset_category_and_support_preview_modes():
-    _, _, c = make()
-    w = BattlePresentationWorkspaceModel(c)
-    w.set_section("motion")
-    assert w.snapshot().category == "motion_sequences"
-    w.set_preview_mode("timeline")
-    assert w.snapshot().preview_mode == "timeline"
-    with pytest.raises(ValueError):
-        w.set_preview_mode("all-at-once")
 
 
 def test_project_validation_includes_presentation_library():

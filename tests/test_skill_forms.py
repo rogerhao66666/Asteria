@@ -9,7 +9,7 @@ from test_break_battle import BP, DAMAGE, _battle, _project
 from asteria.gameplay import AbilityDefinition, Effect, EffectOperation, EffectOperationKind
 from asteria.gameplay.abilities import AbilityEffect
 from asteria.gameplay.formulas import FormulaTerm, ValueFormula
-from asteria.rpg.interactions import InteractionRule
+from asteria.rpg.battle.interactions import InteractionRule
 from asteria.runtime.game_session import GameSessionError
 
 SP = "technique"
@@ -123,7 +123,7 @@ def test_forms_round_trip_and_validate():
 
 
 def test_the_battle_menu_asks_which_form_before_the_target():
-    from asteria.runtime.battle_commands import BattleCommands
+    from asteria.runtime.battle.commands import BattleCommands
 
     game, hero, boss = _setup()
     commands = BattleCommands(game)

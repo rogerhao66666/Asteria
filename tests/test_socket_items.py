@@ -8,7 +8,7 @@ from test_break_battle import _project
 from test_session_events import _session
 
 from asteria.gameplay.modifiers import ModifierOperation, StatModifier
-from asteria.rpg.items import AttachmentDefinition, ItemDefinition, SocketDefinition
+from asteria.rpg.items.definitions import AttachmentDefinition, ItemDefinition, SocketDefinition
 
 
 def _game(*, destroyed_on_removal=False, accepted=("gem",)):

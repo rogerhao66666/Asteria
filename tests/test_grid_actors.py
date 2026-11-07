@@ -4,7 +4,7 @@ import random
 
 from asteria.core import Entity, Scene, Transform, deserialize_scene, serialize_scene
 from asteria.runtime.component_registry import default_component_registry
-from asteria.runtime.grid_actors import GridMover2DComponent, GridMoverSystem, parse_pauses
+from asteria.runtime.field.grid_actors import GridMover2DComponent, GridMoverSystem, parse_pauses
 
 
 def _scene(behaviour, *, cell=(5, 5), **fields):

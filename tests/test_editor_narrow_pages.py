@@ -18,23 +18,17 @@ from PySide6.QtWidgets import (  # noqa: E402
     QWidget,
 )
 
-from asteria.editor import i18n  # noqa: E402
-from asteria.editor.authoring_hub_widget import AdapterFamilyWidget  # noqa: E402
-from asteria.editor.record_form import (  # noqa: E402
-    ChipList,
-    EntryTable,
-    NumberBox,
-    Picker,
-    RecordForm,
-    Section,
-    _combo_text_width,
-    _ElidedLabel,
-)
-from asteria.editor.record_vocabulary import Choice  # noqa: E402
-from asteria.editor.responsive_form import ResponsiveForm, columns_that_fit  # noqa: E402
+from asteria.editor.project.workspace import WorkspaceMode  # noqa: E402
+from asteria.editor.records.form import RecordForm
+from asteria.editor.records.form_chips import ChipList
+from asteria.editor.records.form_controls import ElidedLabel, NumberBox, Picker, combo_text_width
+from asteria.editor.records.form_parts import EntryTable, Section
+from asteria.editor.records.hub import AdapterFamilyWidget  # noqa: E402
+from asteria.editor.records.vocabulary import Choice  # noqa: E402
 from asteria.editor.shell import AsteriaEditorWindow  # noqa: E402
-from asteria.editor.theme import apply_asteria_theme  # noqa: E402
-from asteria.editor.workspace import WorkspaceMode  # noqa: E402
+from asteria.editor.ui import i18n
+from asteria.editor.ui.responsive_form import ResponsiveForm, columns_that_fit  # noqa: E402
+from asteria.editor.ui.theme import apply_asteria_theme  # noqa: E402
 from asteria.project import Project  # noqa: E402
 from asteria.runtime.component_registry import default_component_registry
 
@@ -101,7 +95,7 @@ def _problems(root):
             least = child.minimumWidth() or child.minimumSizeHint().width()
             if least > child.width() + 1 and name != "QWidget":
                 found.append(("squeezed", name, least, child.width()))
-            if isinstance(child, QLabel) and not isinstance(child, _ElidedLabel):
+            if isinstance(child, QLabel) and not isinstance(child, ElidedLabel):
                 text = child.text()
                 if text and not child.wordWrap() and "<" not in text and "\n" not in text:
                     wanted = child.fontMetrics().horizontalAdvance(text.replace("&", ""))
@@ -334,9 +328,9 @@ def test_a_narrow_tag_list_shows_each_type_whole_and_its_words_on_hover(themed_a
         host.resize(330, 300)
         _settle(themed_app)
         kinds = [tags.table.cellWidget(row, 0) for row in range(tags.table.rowCount())]
-        need = max(_combo_text_width(box, box.currentText()) for box in kinds)
+        need = max(combo_text_width(box, box.currentText()) for box in kinds)
         assert tags.table.columnWidth(0) >= need  # "Weapon Blow" whole, not a share of width
-        said = tags.findChildren(_ElidedLabel)
+        said = tags.findChildren(ElidedLabel)
         assert said and not any(label.isVisible() for label in said)  # no room for words
         contents = [w for w in tags.findChildren(QWidget) if w.objectName() == "FormTagContent"]
         # on hover instead, after the drop-down's whole value
@@ -353,7 +347,7 @@ def test_a_narrow_tag_list_shows_each_type_whole_and_its_words_on_hover(themed_a
 
 def test_long_words_beside_a_tag_end_in_an_ellipsis_and_stay_whole_on_hover(themed_app):
     words = "What carrying this tag does, in a sentence longer than any cell of the table"
-    label = _ElidedLabel(words)
+    label = ElidedLabel(words)
     label.setToolTip(words)
     assert label.minimumSizeHint().width() == 0  # the drop-down beside it comes first
     assert label.text() == words and label.toolTip() == words

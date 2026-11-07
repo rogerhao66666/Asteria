@@ -1,24 +1,24 @@
-from .binding import (
+from asteria.events.binding import (
     EventBinding,
     EventTriggerCondition,
     EventTriggerKind,
     SceneEventBindings,
 )
-from .call_stack import EventCallFrame
-from .conditions import EventCondition
-from .context import EventContext
-from .dialogue import (
+from asteria.events.call_stack import EventCallFrame
+from asteria.events.conditions import EventCondition
+from asteria.events.context import EventContext
+from asteria.events.dialogue import (
     ChoiceRequest,
     DialogueChoice,
     DialogueLine,
     DialogueRequest,
     DialogueRuntimeState,
 )
-from .program import EventInstruction, EventProgram
-from .registry import EventProgramRegistry
-from .runner import ActiveEvent, EventRunner, EventRunnerError
-from .state import EventVMState, EventVMStatus
-from .vm import EventStepResult, EventVM, EventVMError
+from asteria.events.program import EventInstruction, EventProgram
+from asteria.events.registry import EventProgramRegistry
+from asteria.events.runner import ActiveEvent, EventRunner, EventRunnerError
+from asteria.events.state import EventVMState, EventVMStatus
+from asteria.events.vm import EventStepResult, EventVM, EventVMError
 
 __all__ = [
     "ActiveEvent",
@@ -53,12 +53,12 @@ __all__ = [
     "WorldCommandRouter",
 ]
 
-from .lifecycle_bridge import LifecycleEventBinding, LifecycleEventBridge
-from .scene_runtime import SceneEventRuntime
-from .scheduler import (
+from asteria.events.lifecycle_bridge import LifecycleEventBinding, LifecycleEventBridge
+from asteria.events.scene_runtime import SceneEventRuntime
+from asteria.events.scheduler import (
     EventScheduleMode,
     EventScheduler,
     ScheduledEventInstance,
     ScheduledEventSpec,
 )
-from .world_commands import WorldCommand, WorldCommandRouter
+from asteria.events.world_commands import WorldCommand, WorldCommandRouter

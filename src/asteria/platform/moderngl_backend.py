@@ -20,11 +20,10 @@ import math
 from array import array
 
 from asteria.assets import TextureResource
+from asteria.platform.backend import RuntimeBackend, TextureBackend
+from asteria.platform.moderngl_shaders import SPRITE_FRAGMENT_SHADER, SPRITE_VERTEX_SHADER
+from asteria.platform.pygame_input import PygameInputSource
 from asteria.runtime.input_map import InputActionMap
-
-from .backend import RuntimeBackend, TextureBackend
-from .moderngl_shaders import SPRITE_FRAGMENT_SHADER, SPRITE_VERTEX_SHADER
-from .pygame_input import PygameInputSource
 
 _VERTEX_LAYOUT = "2f 2f 4f"
 _VERTEX_ATTRS = ("in_position", "in_uv", "in_tint")
@@ -190,7 +189,7 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
             return
         self._flush_batch()
         if self._environment_active():
-            from .gpu_effects import EffectChain
+            from asteria.platform.gpu_effects import EffectChain
 
             if self._chain is None or self._chain.size != tuple(self.screen_size):
                 if self._chain is not None:
@@ -280,8 +279,8 @@ class ModernglRuntimeBackend(RuntimeBackend, TextureBackend):
         key = (str(text), width)
         cached = getattr(self, "_text_box", None)
         if cached is None or cached[0] != key:
-            from .pygame_backend import dialogue_font
-            from .pygame_battle_ui import font_for_text, renderable_text
+            from asteria.platform.pygame_backend import dialogue_font
+            from asteria.platform.pygame_battle_ui import font_for_text, renderable_text
 
             pg = self.pg
             if not hasattr(self, "_font"):

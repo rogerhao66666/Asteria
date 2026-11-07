@@ -9,11 +9,10 @@ from asteria.rpg import (
     RewardRuntime,
     roll_reward,
 )
-from asteria.rpg.data_text import key
-from asteria.rpg.loot import roll_equipment
-from asteria.rpg.victory import build_aftermath
-
-from .support import (
+from asteria.rpg.battle.victory import build_aftermath
+from asteria.rpg.items.loot import roll_equipment
+from asteria.rpg.text.data_text import key
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 
@@ -173,7 +172,7 @@ class RewardsMixin:
                 definition, rng, luck=self.loot_luck, switches=self.save.event_context.get_switch
             )
             if definition.drop_table_id:
-                from asteria.rpg.drop_tables import roll_drop_table
+                from asteria.rpg.items.drop_tables import roll_drop_table
 
                 extra = roll_drop_table(
                     db.drop_tables[definition.drop_table_id],
@@ -222,7 +221,7 @@ class RewardsMixin:
         self.save.player_facing = self.facing
         self.save.player_position = (t.x, t.y)
         self.save.active_event = self.events.snapshot()
-        from asteria.runtime.npc_state import npc_entities
+        from asteria.runtime.field.npc_state import npc_entities
 
         for npc_id, entity in npc_entities(self.scene).items():
             if entity.enabled and npc_id in self.world.npcs:

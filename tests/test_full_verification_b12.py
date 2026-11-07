@@ -145,7 +145,7 @@ def test_quests_achievements_and_enemy_levels():
 
 
 def test_drop_chances_follow_the_tables_weights():
-    from asteria.rpg.drop_tables import roll_drop_table
+    from asteria.rpg.items.drop_tables import roll_drop_table
 
     _project, game = smoke.load()
     tables = game.project.rpg_database.drop_tables

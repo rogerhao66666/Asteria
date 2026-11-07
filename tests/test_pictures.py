@@ -3,7 +3,7 @@
 import pytest
 
 from asteria.events.context import EventContext
-from asteria.runtime.pictures import PictureManager
+from asteria.runtime.scene.pictures import PictureManager
 
 SIZE = lambda picture: (64, 32)  # noqa: E731  (a 64x32 image for every picture)
 

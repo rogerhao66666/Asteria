@@ -11,11 +11,10 @@ from asteria.rpg import (
     RewardRuntime,
     roll_reward,
 )
-from asteria.rpg.economy import ShopRuntime
-from asteria.rpg.enemies import RewardDefinition
-from asteria.rpg.quests import QuestLog
-
-from .support import (
+from asteria.rpg.enemies.definitions import RewardDefinition
+from asteria.rpg.items.shops import ShopRuntime
+from asteria.rpg.world.quests import QuestLog
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 

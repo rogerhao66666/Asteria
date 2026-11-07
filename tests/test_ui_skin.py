@@ -5,8 +5,8 @@ import dataclasses
 import pytest
 
 from asteria.presentation import BattleUiLayoutProfile
-from asteria.presentation.battle_ui_renderer import BattleUiRenderer, BattleUiTheme
-from asteria.presentation.ui_skin import NinePatch, draw_nine_patch, skin_for
+from asteria.presentation.battle.ui_renderer import BattleUiRenderer, BattleUiTheme
+from asteria.presentation.screens.ui_skin import NinePatch, draw_nine_patch, skin_for
 
 
 def _pg():
@@ -47,7 +47,7 @@ def test_a_cached_panel_draws_exactly_the_pixels_of_drawing_it_piece_by_piece():
     over any background, at any size (also smaller than the corners) and scale."""
     import random
 
-    from asteria.presentation.ui_skin import _nine_patch
+    from asteria.presentation.screens.ui_skin import _nine_patch
 
     pg = _pg()
     rng = random.Random(3)
@@ -90,8 +90,9 @@ def test_skins_are_picked_by_role_pattern_and_round_trip_in_the_theme():
 
 
 def test_the_renderer_hands_a_matching_skin_to_the_backend():
-    from asteria.presentation.battle_ui import BattleUiFrame, BattleUiPanel
-    from asteria.presentation.battle_ui_renderer import HeadlessBattleUiBackend
+    from asteria.presentation.battle.ui import BattleUiFrame
+    from asteria.presentation.battle.ui_parts import BattleUiPanel
+    from asteria.presentation.battle.ui_renderer import HeadlessBattleUiBackend
 
     skin = NinePatch("ui.frame")
     theme = BattleUiTheme(panel_skins=(("hud:*", skin),))
@@ -127,7 +128,7 @@ def test_the_editor_keeps_skin_fields_when_a_theme_is_edited():
     from pathlib import Path
 
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 

@@ -2,8 +2,8 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
-from asteria.editor.workspace import WorkspaceMode
+from asteria.editor.project.workspace import WorkspaceMode
+from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 from asteria.project import Project
 from asteria.rpg import ClassDefinition
 
@@ -150,7 +150,7 @@ def test_real_qt_shell_starts_without_project_when_qt_is_available():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.project_empty_state import ProjectEmptyState
+    from asteria.editor.project.empty_state import ProjectEmptyState
     from asteria.editor.shell import AsteriaEditorWindow
 
     app = QApplication.instance() or QApplication([])

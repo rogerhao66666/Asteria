@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pygame
 import pytest
 
-from asteria.runtime.battle_presentation_adapters import PygameTextureDrawer
+from asteria.runtime.battle.presentation import PygameTextureDrawer
 
 
 def _old_blit(host, image, x, y, width, height, scale, flip_x, opacity, blend, rotation, tint):

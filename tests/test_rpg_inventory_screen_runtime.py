@@ -1,5 +1,5 @@
 from asteria.presentation import InventoryScreenProfile, InventoryScreenRuntime
-from asteria.rpg.items import Inventory, ItemDefinition
+from asteria.rpg.items.definitions import Inventory, ItemDefinition
 
 
 def _inventory():

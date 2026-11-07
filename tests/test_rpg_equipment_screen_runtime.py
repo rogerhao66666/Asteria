@@ -1,5 +1,5 @@
 from asteria.presentation import EquipmentScreenProfile, EquipmentScreenRuntime
-from asteria.rpg.items import (
+from asteria.rpg.items.definitions import (
     AttachmentDefinition,
     EquipmentDefinition,
     EquipmentLoadout,

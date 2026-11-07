@@ -83,7 +83,7 @@ def test_field_interaction_shows_dialogue_then_enters_battle(resource_root, monk
 
 # --- CB2: battle presentation adapters -------------------------------------
 
-from asteria.runtime.battle_presentation_adapters import (  # noqa: E402
+from asteria.runtime.battle.presentation import (  # noqa: E402
     CanonicalBattleAdapter,
     create_battle_presentation_adapter,
     entry_semantics,
@@ -290,7 +290,7 @@ def test_pygame_battle_ui_backend_scales_virtual_coordinates(monkeypatch):
 
 
 def _canonical_frame(resource_root, monkeypatch):
-    from asteria.runtime.camera import Camera2D
+    from asteria.runtime.scene.camera import Camera2D
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     runtime = _boss_runtime(resource_root)

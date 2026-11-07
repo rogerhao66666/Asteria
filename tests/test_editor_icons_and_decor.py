@@ -8,7 +8,7 @@ pytest.importorskip("PySide6")
 def test_every_icon_draws_something():
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.icons import DRAWINGS, icon, pixmap
+    from asteria.editor.ui.icons import DRAWINGS, icon, pixmap
 
     QApplication.instance() or QApplication([])
     for name in DRAWINGS:
@@ -25,7 +25,7 @@ def test_every_icon_draws_something():
 
 
 def test_button_and_label_rules():
-    from asteria.editor.decor import button_style, label_icon
+    from asteria.editor.ui.decor import button_style, label_icon
 
     assert button_style("Delete") == ("delete", "danger")
     assert button_style("Apply Changes") == ("apply", "primary")
@@ -41,10 +41,10 @@ def test_button_and_label_rules():
 def test_editor_has_icons_roles_and_titled_docks():
     from PySide6.QtWidgets import QApplication, QDockWidget, QPushButton
 
-    from asteria.editor.decor import decorate
-    from asteria.editor.dock_title import DockTitleBar
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.theme import apply_asteria_theme
+    from asteria.editor.ui.decor import decorate
+    from asteria.editor.ui.dock_title import DockTitleBar
+    from asteria.editor.ui.theme import apply_asteria_theme
 
     app = QApplication.instance() or QApplication([])
     apply_asteria_theme(app)
@@ -79,8 +79,8 @@ def test_compact_pass_keeps_panels_narrow():
         QWidget,
     )
 
-    from asteria.editor.decor import compact
-    from asteria.editor.flow_layout import FlowLayout
+    from asteria.editor.ui.decor import compact
+    from asteria.editor.ui.flow_layout import FlowLayout
 
     QApplication.instance() or QApplication([])
     page = QWidget()
@@ -124,9 +124,9 @@ def test_flowing_button_rows_leaves_no_layout_item_wrappers():
         QWidget,
     )
 
-    from asteria.editor.decor import compact
-    from asteria.editor.flow_layout import FlowLayout
-    from asteria.editor.ui_fit import layout_children, layout_widgets
+    from asteria.editor.ui.decor import compact
+    from asteria.editor.ui.fit import layout_children, layout_widgets
+    from asteria.editor.ui.flow_layout import FlowLayout
 
     QApplication.instance() or QApplication([])
     gc.collect()
@@ -170,9 +170,9 @@ def test_flowing_a_row_that_was_added_filled_frees_no_item_under_a_wrapper():
     from PySide6.QtCore import QCoreApplication, QEvent
     from PySide6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-    from asteria.editor.decor import compact
-    from asteria.editor.flow_layout import FlowLayout
-    from asteria.editor.ui_fit import layout_children, layout_widgets
+    from asteria.editor.ui.decor import compact
+    from asteria.editor.ui.fit import layout_children, layout_widgets
+    from asteria.editor.ui.flow_layout import FlowLayout
 
     QApplication.instance() or QApplication([])
     gc.collect()
@@ -211,7 +211,7 @@ def test_a_card_lists_first_line_is_measured_without_layout_item_wrappers():
 
     from PySide6.QtWidgets import QApplication, QLabel
 
-    from asteria.editor.record_form import CardList, _first_line_height
+    from asteria.editor.records.form_parts import CardList, first_line_height
 
     QApplication.instance() or QApplication([])
     form = SimpleNamespace(vocabulary=SimpleNamespace(names=dict))
@@ -220,7 +220,7 @@ def test_a_card_lists_first_line_is_measured_without_layout_item_wrappers():
     label.ensurePolished()
     gc.collect()
     before = {id(w) for w in _layout_item_wrappers()}
-    assert _first_line_height(cards) == label.fontMetrics().height()
+    assert first_line_height(cards) == label.fontMetrics().height()
     assert [w for w in _layout_item_wrappers() if id(w) not in before] == []
     cards.deleteLater()
 
@@ -228,7 +228,7 @@ def test_a_card_lists_first_line_is_measured_without_layout_item_wrappers():
 def test_record_editor_shows_readable_field_names_and_keeps_the_data():
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.authoring_hub_widget import StructuredRecordEditor, field_label
+    from asteria.editor.records.hub import StructuredRecordEditor, field_label
 
     QApplication.instance() or QApplication([])
     assert field_label("display_name") == "Display Name"
@@ -271,8 +271,8 @@ def test_tag_lists_are_editable_and_optional_dot_tags_show_in_the_editor():
     text)."""
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.authoring_hub_widget import StructuredRecordEditor, with_optional_fields
-    from asteria.rpg.battle_states import BattleStatePolicy
+    from asteria.editor.records.hub import StructuredRecordEditor, with_optional_fields
+    from asteria.rpg.battle.states import BattleStatePolicy
 
     QApplication.instance() or QApplication([])
     policy = BattleStatePolicy("scorch", tick_trigger="rpg.battle.turn_ended")

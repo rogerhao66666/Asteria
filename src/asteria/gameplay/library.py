@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .abilities import AbilityDefinition, AbilityRegistry
-from .action_timeline import ActionTimeline
-from .attacks import AttackDefinition
-from .formulas import ValueFormula
-from .projectiles import ProjectileDefinition
-from .states import StateDefinition, StateRegistry
-from .triggers import GameplayTrigger
+from asteria.gameplay.abilities import AbilityDefinition, AbilityRegistry
+from asteria.gameplay.action_timeline import ActionTimeline
+from asteria.gameplay.attacks import AttackDefinition
+from asteria.gameplay.formulas import ValueFormula
+from asteria.gameplay.projectiles import ProjectileDefinition
+from asteria.gameplay.states import StateDefinition, StateRegistry
+from asteria.gameplay.triggers import GameplayTrigger
 
 
 @dataclass(slots=True)

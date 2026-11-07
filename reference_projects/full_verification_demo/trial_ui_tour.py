@@ -111,11 +111,11 @@ def _row(runtime, equipment_id):
 def screens(runtime):
     """``[(name, setup)]`` for every screen (``setup()`` opens it)."""
     from asteria.events.world_commands import WorldCommand
-    from asteria.runtime import extras_screens
-    from asteria.runtime.bag_screen import BagScreen
-    from asteria.runtime.game_menus import ShopScreen
-    from asteria.runtime.pets_screen import PetsScreen
-    from asteria.runtime.skill_tree_screen import SkillTreeScreen
+    from asteria.runtime.menus import extras as extras_screens
+    from asteria.runtime.menus.bag import BagScreen
+    from asteria.runtime.menus.game_menus import ShopScreen
+    from asteria.runtime.menus.pets import PetsScreen
+    from asteria.runtime.menus.skill_tree import SkillTreeScreen
 
     game = runtime.game
     project = runtime.project
@@ -186,7 +186,7 @@ def screens(runtime):
 
     def service(kind, record_id, **state):  # the board, the guild office, the chest (U5)
         def setup():
-            from asteria.runtime.service_screens import open_service
+            from asteria.runtime.menus.services import open_service
 
             screen = open_service(runtime, kind, record_id)
             for name, value in state.items():
@@ -197,7 +197,7 @@ def screens(runtime):
     def pulled():  # ten pulls with a fixed seed, the prizes shown
         import random
 
-        from asteria.runtime.service_screens import open_service
+        from asteria.runtime.menus.services import open_service
 
         game.save.rpg_state.currencies["star_stones"] = 300.0
         screen = open_service(runtime, "gacha", "starfall")

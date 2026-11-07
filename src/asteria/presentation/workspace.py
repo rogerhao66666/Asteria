@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .canonical import Command, Kind, Node
-from .editor_model import PresentationEditorModel
+from asteria.presentation.canonical import Command, Kind, Node
+from asteria.presentation.editor_model import PresentationEditorModel
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,7 +99,7 @@ class PresentationWorkspaceModel:
             kw["sequence_ref"] = "sequence.id"
         # Branch condition intentionally requires explicit Inspector authoring; do not invent
         # semantics.
-        from .canonical import Expression
+        from asteria.presentation.canonical import Expression
 
         if kind == Kind.BRANCH:
             kw["condition"] = Expression("value", (True,))

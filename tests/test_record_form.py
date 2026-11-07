@@ -21,8 +21,8 @@ def app():
 
 def _family(category, key):
     from asteria.editor import EditorDocument
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.records.hub import AdapterFamilyWidget
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
 
@@ -37,7 +37,9 @@ def _family(category, key):
 
 
 def test_fields_get_friendly_widgets(app):
-    from asteria.editor.record_form import AmountTable, ChipList, NumberBox, Picker
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.records.form_controls import NumberBox, Picker
+    from asteria.editor.records.form_tables import AmountTable
 
     _project, _document, family = _family("actors", "hero_01")
     form = family.editor
@@ -52,7 +54,7 @@ def test_fields_get_friendly_widgets(app):
 
 
 def test_an_edit_applies_on_its_own_and_undoes(app):
-    from asteria.editor.record_form import AmountTable
+    from asteria.editor.records.form_tables import AmountTable
 
     project, document, family = _family("actors", "hero_01")
     (table,) = [t for t in family.editor.findChildren(AmountTable) if "str" in t.values]
@@ -77,7 +79,8 @@ def test_a_skill_tree_opens_as_its_graph_without_building_the_form(app):
     yet holds the record; long lists open one entry at a time; icon pickers fill on demand."""
     from PySide6.QtWidgets import QToolButton
 
-    from asteria.editor.record_form import CardList, NumberBox
+    from asteria.editor.records.form_controls import NumberBox
+    from asteria.editor.records.form_parts import CardList
 
     _project, _document, family = _family("graphs", "archmage_tree")
     assert family.detail_stack.currentWidget() is family.graph_view
@@ -101,7 +104,7 @@ def test_a_skill_tree_opens_as_its_graph_without_building_the_form(app):
 
 
 def test_an_icon_picker_fills_its_list_when_opened(app):
-    from asteria.editor.game_systems_widget import _IconPicker
+    from asteria.editor.rpg.game_systems_widget import _IconPicker
 
     _project, _document, family = _family("items", "ether_leaf")
     (picker,) = family.editor.findChildren(_IconPicker)
@@ -115,7 +118,7 @@ def test_an_icon_picker_fills_its_list_when_opened(app):
 def test_help_shows_on_hover_only(app):
     from PySide6.QtWidgets import QLabel
 
-    from asteria.editor.record_vocabulary import CATEGORY_HELP, HELP
+    from asteria.editor.records.vocabulary import CATEGORY_HELP, HELP
 
     _project, _document, family = _family("abilities", "add_mend")
     form = family.editor
@@ -136,7 +139,7 @@ def test_a_help_tooltip_opens_right_beside_its_mark(app):
     from PySide6.QtGui import QHelpEvent
     from PySide6.QtWidgets import QLabel
 
-    from asteria.editor.decor import HELP_GAP, HELP_MIN_WIDTH, _mark_span, help_box, install
+    from asteria.editor.ui.decor import HELP_GAP, HELP_MIN_WIDTH, _mark_span, help_box, install
 
     install(app)
     _project, _document, family = _family("actors", "hero_01")
@@ -182,11 +185,12 @@ def test_help_says_only_the_help_not_the_data_key(app):
 def test_a_card_of_lists_is_called_after_what_is_in_it(app):
     from PySide6.QtWidgets import QToolButton
 
-    from asteria.editor.record_form import Section, _lists_title
+    from asteria.editor.records.form_parts import Section
+    from asteria.editor.records.form_shapes import lists_title
 
-    assert _lists_title(["Properties"]) == "Properties"
-    assert _lists_title(["Properties", "Abilities"]) == "Properties and Abilities"
-    assert _lists_title(["Skills", "Properties", "Blocked Slots"]) == "Lists"
+    assert lists_title(["Properties"]) == "Properties"
+    assert lists_title(["Properties", "Abilities"]) == "Properties and Abilities"
+    assert lists_title(["Skills", "Properties", "Blocked Slots"]) == "Lists"
     _project, _document, family = _family("actors", "hero_01")
     titles = [section.toggle.text() for section in family.findChildren(Section)]
     assert "Properties and Abilities" in titles
@@ -198,7 +202,7 @@ def test_a_card_of_lists_is_called_after_what_is_in_it(app):
 def test_short_help_after_long_help_gets_a_short_box(app):
     from PySide6.QtWidgets import QLabel
 
-    from asteria.editor.decor import help_box, install, show_help_tip
+    from asteria.editor.ui.decor import help_box, install, show_help_tip
 
     install(app)
     label = QLabel("Basics ⓘ")
@@ -220,8 +224,8 @@ def test_long_help_wraps_to_the_room_on_the_right(app):
     from PySide6.QtGui import QHelpEvent
     from PySide6.QtWidgets import QLabel, QLineEdit, QWidget
 
-    from asteria.editor.decor import HELP_WIDTH, _mark_span, help_box, install
-    from asteria.editor.responsive_form import _field_cell
+    from asteria.editor.ui.decor import HELP_WIDTH, _mark_span, help_box, install
+    from asteria.editor.ui.responsive_form import _field_cell
 
     install(app)
     window = QWidget()
@@ -253,7 +257,7 @@ def test_a_job_shows_its_growth_curves_by_the_games_rules(app):
     """As RPG Maker's Parameter Curves: a chart per stat the job raises, its own share level
     by level (whoever takes it); an edit redraws them. An actor's page has none (its jobs
     change in play)."""
-    from asteria.editor.growth_curves import CurveChart, GrowthCurves
+    from asteria.editor.rpg.growth_curves import CurveChart, GrowthCurves
 
     project, _document, family = _family("classes", "archmage")
     form = family.editor
@@ -280,7 +284,8 @@ def test_a_job_shows_its_growth_curves_by_the_games_rules(app):
 
 
 def test_tags_are_a_table_and_resources_one_grid(app):
-    from asteria.editor.record_form import ChipList, NumberMatrix
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.records.form_tables import NumberMatrix
 
     _project, _document, family = _family("actors", "hero_01")
     form = family.editor
@@ -294,8 +299,8 @@ def test_tags_are_a_table_and_resources_one_grid(app):
 
 
 def test_hp_and_mp_are_stats_and_resources_are_the_special_ones(app):
-    from asteria.editor.growth_curves import StatBar, StatComparison
-    from asteria.editor.record_form import AmountTable, NumberMatrix
+    from asteria.editor.records.form_tables import AmountTable, NumberMatrix
+    from asteria.editor.rpg.growth_curves import StatBar, StatComparison
 
     _project, _document, family = _family("actors", "hero_01")
     form = family.editor
@@ -382,7 +387,7 @@ def test_hp_and_mp_are_stats_and_resources_are_the_special_ones(app):
 
 
 def test_each_side_is_compared_with_its_own_side_only(app):
-    from asteria.editor.growth_curves import StatBar, StatComparison
+    from asteria.editor.rpg.growth_curves import StatBar, StatComparison
 
     project, _document, family = _family("enemies", "vaelor")
     enemies = project.rpg_database.enemies
@@ -402,8 +407,9 @@ def test_each_side_is_compared_with_its_own_side_only(app):
 def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
     from PySide6.QtWidgets import QToolButton
 
-    from asteria.editor.growth_curves import StatBar, StatComparison
-    from asteria.editor.record_form import CardList, ChipList, EntryTable
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.records.form_parts import CardList, EntryTable
+    from asteria.editor.rpg.growth_curves import StatBar, StatComparison
 
     _project, _document, family = _family("equipment", "a_archon_robe")
     form = family.editor
@@ -429,8 +435,8 @@ def test_plain_entries_are_table_rows_and_numbers_are_compared(app):
 
 
 def test_slots_show_where_they_stand_and_their_tags_in_a_cell(app):
-    from asteria.editor.growth_curves import PositionsPreview
-    from asteria.editor.record_form import EntryTable, ListCell
+    from asteria.editor.records.form_parts import EntryTable, ListCell
+    from asteria.editor.rpg.growth_curves import PositionsPreview
 
     _project, _document, family = _family("formations", "standard_six")
     form = family.editor
@@ -443,8 +449,9 @@ def test_slots_show_where_they_stand_and_their_tags_in_a_cell(app):
 
 
 def test_stats_grow_with_level_by_a_switch_and_jobs_read_plainly(app):
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
-    from asteria.editor.record_form import EntryTable, Picker
+    from asteria.editor.records.form_controls import Picker
+    from asteria.editor.records.form_parts import EntryTable
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
 
     _project, document, family = _family("actors", "hero_01")
     systems = GameSystemsAuthoringController(document)
@@ -471,7 +478,7 @@ def test_stats_grow_with_level_by_a_switch_and_jobs_read_plainly(app):
 def test_a_tag_is_picked_by_its_type_then_from_a_list(app):
     from PySide6.QtWidgets import QComboBox
 
-    from asteria.editor.record_form import ChipList
+    from asteria.editor.records.form_chips import ChipList
 
     _project, _document, family = _family("actors", "hero_01")
     (tags,) = [c for c in family.editor.findChildren(ChipList) if "trait.cover" in c.values]
@@ -508,8 +515,8 @@ def test_a_tag_is_picked_by_its_type_then_from_a_list(app):
 def test_a_tag_row_says_what_the_tag_does(app):
     from PySide6.QtWidgets import QLabel
 
-    from asteria.editor.record_form import ChipList
-    from asteria.editor.record_vocabulary import tag_label, tag_meaning
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.records.vocabulary import tag_label, tag_meaning
 
     assert tag_label("capability.weapon.book") == "Weapon: Book"  # type, then content
     assert tag_meaning("capability.weapon.book") == "Can equip Book weapons"
@@ -522,14 +529,16 @@ def test_a_tag_row_says_what_the_tag_does(app):
 def test_an_enemy_ai_rule_picks_its_action_and_names_itself(app):
     from PySide6.QtWidgets import QToolButton
 
-    from asteria.editor.record_form import CardList, Picker, _entry_title
+    from asteria.editor.records.form_controls import Picker
+    from asteria.editor.records.form_parts import CardList
+    from asteria.editor.records.form_shapes import entry_title
 
     _project, _document, family = _family("ai", "goblin_beast_ai")
     form = family.editor
     (rules,) = [c for c in form.findChildren(CardList) if c.key == "rules"]
     first = rules.entries[0]
     assert first["payload"]["ability_id"] == "beast_maul"
-    assert _entry_title(first, "rule") == "Beast Maul"  # the skill, not the rule's id
+    assert entry_title(first, "rule") == "Beast Maul"  # the skill, not the rule's id
     kinds = [p for p in rules.findChildren(Picker) if p.value() == "ability"]
     assert kinds and kinds[0].currentText() == "Skill"  # an action in words, picked
     other = rules.entries[1]["payload"]["ability_id"]
@@ -548,12 +557,14 @@ def test_an_enemy_ai_rule_picks_its_action_and_names_itself(app):
 
 
 def test_an_enemy_ai_condition_is_picked_in_words_with_defaults(app):
-    from asteria.editor.record_form import CardList, Picker, _entry_title
+    from asteria.editor.records.form_controls import Picker
+    from asteria.editor.records.form_parts import CardList
+    from asteria.editor.records.form_shapes import entry_title
 
     _project, _document, family = _family("ai", "crimson_ai")
     form = family.editor
     rules = form._data["rules"]
-    assert _entry_title(rules[0]["conditions"][0], "condition") == "Round is 1"
+    assert entry_title(rules[0]["conditions"][0], "condition") == "Round is 1"
     (cards,) = [c for c in form.findChildren(CardList) if c.key == "rules"]
     cards._opened().add((id(cards.entries), 0))  # the first rule's card, open
     form.restructure()
@@ -563,20 +574,22 @@ def test_an_enemy_ai_condition_is_picked_in_words_with_defaults(app):
     conditions._ai_condition_kind(0, "resource_ratio")  # another check: works as it is
     condition = conditions.entries[0]
     assert condition["params"] == {"resource_id": "vitality", "op": "<=", "value": 0.5}
-    assert _entry_title(condition, "condition", {"vitality": "HP"}) == "HP % is at most 50 %"
+    assert entry_title(condition, "condition", {"vitality": "HP"}) == "HP % is at most 50 %"
 
 
 def test_boss_phases_read_plainly_and_pick_their_rules_by_name(app):
-    from asteria.editor.record_form import CardList, ChipList, _ai_context
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.records.form_parts import CardList
+    from asteria.editor.records.form_shapes import ai_context
 
     _project, _document, family = _family("ai", "crimson_ai")
     form = family.editor
     data = form._data
     (cards,) = [c for c in form.findChildren(CardList) if c.key == "phases"]
     last = data["phases"][2]
-    assert _ai_context(data, last, cards.names) == "starts when HP % is at most 30 %"
-    assert _ai_context(data, data["phases"][0], cards.names) == "at the start"
-    assert _ai_context(data, data["rules"][0], cards.names) == "Opening  ·  Round is 1"
+    assert ai_context(data, last, cards.names) == "starts when HP % is at most 30 %"
+    assert ai_context(data, data["phases"][0], cards.names) == "at the start"
+    assert ai_context(data, data["rules"][0], cards.names) == "Opening  ·  Round is 1"
     cards._opened().add((id(cards.entries), 0))
     form.restructure()
     (cards,) = [c for c in form.findChildren(CardList) if c.key == "phases"]
@@ -592,7 +605,7 @@ def test_boss_phases_read_plainly_and_pick_their_rules_by_name(app):
 def test_an_effect_step_picks_its_kind_in_words(app):
     from PySide6.QtCore import QCoreApplication
 
-    from asteria.editor.record_form import Picker
+    from asteria.editor.records.form_controls import Picker
 
     _project, _document, family = _family("abilities", "add_bite")
     form = family.editor
@@ -611,7 +624,8 @@ def test_an_effect_step_picks_its_kind_in_words(app):
 def test_ids_are_picked_by_name_or_made_and_folded(app):
     from PySide6.QtWidgets import QLineEdit
 
-    from asteria.editor.record_form import Picker, _own_id
+    from asteria.editor.records.form_controls import Picker
+    from asteria.editor.records.form_shapes import own_id
 
     _project, _document, family = _family("parties", "main_party")
     form = family.editor
@@ -621,15 +635,15 @@ def test_ids_are_picked_by_name_or_made_and_folded(app):
     assert slots and slots[0].currentText() == "Slot 1"  # where a member stands, in words
     typed = [e.text() for e in form.findChildren(QLineEdit) if e.isVisibleTo(form)]
     assert "slot_1" not in typed
-    assert _own_id("slots", "slot_id") and _own_id("nodes", "node_id")
-    assert not _own_id("slots", "actor_id")
+    assert own_id("slots", "slot_id") and own_id("nodes", "node_id")
+    assert not own_id("slots", "actor_id")
     assert family.heading.text() == family.category.currentText()  # no "· 1 record"
 
 
 def test_record_lists_show_names_and_icons_read_as_words(app):
-    from asteria.editor.icon_picker_dialog import icon_name
-    from asteria.editor.record_form import ChipList
-    from asteria.editor.record_vocabulary import Choice
+    from asteria.editor.records.form_chips import ChipList
+    from asteria.editor.records.icon_picker import icon_name
+    from asteria.editor.records.vocabulary import Choice
 
     assert icon_name("icon.alchemy_salt") == "Alchemy Salt"
     assert icon_name("asset_library/x/I_Clock.png") == "Clock"
@@ -651,10 +665,12 @@ def test_record_lists_show_names_and_icons_read_as_words(app):
 
 
 def test_a_needed_node_and_a_beat_cue_are_picked_in_words(app):
-    from asteria.editor.record_form import Picker, RecordForm, _node_pair
+    from asteria.editor.records.form import RecordForm
+    from asteria.editor.records.form_controls import Picker
+    from asteria.editor.records.form_shapes import node_pair
 
-    assert _node_pair("prerequisites", ["awaken", 1])
-    assert not _node_pair("tags", ["awaken", 1]) and not _node_pair("prerequisites", ["a"])
+    assert node_pair("prerequisites", ["awaken", 1])
+    assert not node_pair("tags", ["awaken", 1]) and not node_pair("prerequisites", ["a"])
     _project, _document, family = _family("growth", "sunbrand_growth")
     named = [p.currentText() for p in family.editor.findChildren(Picker) if p.value() == "awaken"]
     assert "Awaken" in named  # the node another needs, by its name

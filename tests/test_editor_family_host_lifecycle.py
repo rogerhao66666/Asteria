@@ -8,8 +8,8 @@ def test_visible_family_host_hides_old_placeholder_before_deferred_delete():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
     window = AsteriaEditorWindow()

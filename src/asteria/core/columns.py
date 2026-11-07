@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from array import array
 
-from .metadata import get_component_schema
+from asteria.core.metadata import get_component_schema
 
 TYPECODES = {float: "d", int: "q", bool: "b"}
 _DEFAULTS = {"d": 0.0, "q": 0, "b": False}

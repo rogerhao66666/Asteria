@@ -24,10 +24,10 @@ def main(argv=None):
     import run_trial_smoke as smoke
 
     from asteria.project import Project
-    from asteria.runtime.bag_screen import BagScreen
     from asteria.runtime.component_registry import default_component_registry
+    from asteria.runtime.menus.bag import BagScreen
+    from asteria.runtime.menus.skill_tree import SkillTreeScreen
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-    from asteria.runtime.skill_tree_screen import SkillTreeScreen
 
     argv = list(sys.argv[1:] if argv is None else argv)
     evidence = REPO / "docs" / "audits" / "evidence" / "full_verification"

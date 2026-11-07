@@ -20,7 +20,7 @@ def test_the_buttons_follow_and_run_the_window_actions(app):
     from PySide6.QtGui import QAction
     from PySide6.QtWidgets import QMainWindow
 
-    from asteria.editor.undo_buttons import UndoRedoButtons
+    from asteria.editor.ui.undo_buttons import UndoRedoButtons
 
     ran = []
 
@@ -56,7 +56,7 @@ def test_no_page_prints_the_undo_line_any_more(app):
     from PySide6.QtWidgets import QLabel
 
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.undo_buttons import UndoRedoButtons
+    from asteria.editor.ui.undo_buttons import UndoRedoButtons
 
     window = AsteriaEditorWindow(None)
     assert not [lb for lb in window.findChildren(QLabel) if "Ctrl+Z" in lb.text()]
@@ -65,7 +65,7 @@ def test_no_page_prints_the_undo_line_any_more(app):
     from pathlib import Path
 
     editor = Path(__file__).resolve().parents[1] / "src" / "asteria" / "editor"
-    for name in ("authoring_hub_widget.py", "game_systems_widget.py", "game_start_widget.py"):
+    for name in ("records/hub.py", "rpg/game_systems_widget.py", "rpg/game_start_widget.py"):
         text = (editor / name).read_text(encoding="utf-8")
         assert "Ctrl+Z undoes" not in text, name
         assert "UndoRedoButtons()" in text or "record_action_bar(" in text, name

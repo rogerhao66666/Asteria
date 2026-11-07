@@ -1,7 +1,7 @@
-from .columns import ColumnTable, column_spec
-from .events import EventBus
-from .ids import new_id, validate_id
-from .system import SystemScheduler
+from asteria.core.columns import ColumnTable, column_spec
+from asteria.core.events import EventBus
+from asteria.core.ids import new_id, validate_id
+from asteria.core.system import SystemScheduler
 
 
 def _order_key(entity):

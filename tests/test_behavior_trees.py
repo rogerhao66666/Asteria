@@ -3,10 +3,10 @@
 import pytest
 
 from asteria.core import Entity, Scene, Transform
-from asteria.rpg.behavior_tree import BehaviorNode as N
-from asteria.rpg.behavior_tree import BehaviorTree
-from asteria.runtime.behavior_tree import BehaviorTreeSystem
-from asteria.runtime.character_control import (
+from asteria.rpg.world.behavior_tree import BehaviorNode as N
+from asteria.rpg.world.behavior_tree import BehaviorTree
+from asteria.runtime.field.behavior_tree import BehaviorTreeSystem
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
     CharacterControllerSystem,
@@ -155,7 +155,7 @@ def test_editor_api_and_gui_edit_trees_with_undo():
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.behavior_tree_widget import BehaviorTreeEditorWidget
+    from asteria.editor.combat.behavior_tree_widget import BehaviorTreeEditorWidget
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])

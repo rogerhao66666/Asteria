@@ -5,13 +5,13 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.vfx_authoring import (
+from asteria.editor.combat.vfx_authoring import (
     PREVIEW_BODY_HEIGHT,
     VFXAuthoringController,
     VFXAuthoringError,
 )
 from asteria.project import Project
-from asteria.runtime.battle_visuals import (
+from asteria.runtime.battle.visuals import (
     VFX_DEFAULTS,
     vfx_content_center,
     vfx_keyframe,
@@ -167,7 +167,7 @@ def test_the_battle_renderer_draws_with_the_authored_placement(resource_root, mo
     from test_canonical_battle_presentation import _settle, _use
     from test_playable_battle_loop import _boss_runtime
 
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+    from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")

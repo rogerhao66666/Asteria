@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from asteria.gameplay.modifiers import StatModifier
 from asteria.rpg import EquipmentDefinition, EquipmentSetBonus, EquipmentSetDefinition
-from asteria.rpg.drop_tables import DropEntry, DropTable
-from asteria.rpg.loot import AffixDefinition, AffixModifier, RarityDefinition
+from asteria.rpg.items.drop_tables import DropEntry, DropTable
+from asteria.rpg.items.loot import AffixDefinition, AffixModifier, RarityDefinition
 
 SLOTS = ("weapon", "helm", "armor", "gloves", "boots", "amulet", "ring")
 

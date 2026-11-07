@@ -619,7 +619,7 @@ class Campaign:
         self.facts["embers_burn" if lit else "embers_out"] += 1
 
     def music_room(self):
-        from asteria.runtime.extras_screens import MusicRoomScreen
+        from asteria.runtime.menus.extras import MusicRoomScreen
 
         rows = MusicRoomScreen(self.rt).tracks()
         opened = [t.track_id for t, unlocked in rows if unlocked]
@@ -1217,7 +1217,7 @@ class Campaign:
         Bounty Board, won in the woods and handed in; Mira sent away at the Guild Office and
         hired again; ten pulls at the Starfall Chest (a fixed seed); a Hi-Potion brewed on the
         alchemy table's screen; a ring worn from the bag on the equipment doll."""
-        from asteria.runtime.equipment_screen import EquipmentScreen
+        from asteria.runtime.menus.equipment import EquipmentScreen
 
         game, rt = self.game, self.rt
         state = game.save.rpg_state
@@ -1297,7 +1297,7 @@ class Campaign:
     def enhance_on_screen(self, ring):
         """The enhance screen as a player works it: a ruby into the new ring's free socket
         (Enter on the ring, the socket, the ruby), then one refine of the ring (its own roll)."""
-        from asteria.runtime.enhance_screen import TABS, EnhanceScreen
+        from asteria.runtime.menus.enhance import TABS, EnhanceScreen
 
         game, rt = self.game, self.rt
         state = game.save.rpg_state

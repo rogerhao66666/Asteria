@@ -18,9 +18,9 @@ import ctypes
 from array import array
 from itertools import chain, compress, repeat
 
-from . import _python
-from ._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _turn_cosines
-from .build_native import ABI_VERSION, library_name
+from asteria.kernels import _python
+from asteria.kernels._python import FIELDS, PROJECTILE_FIELDS, WEATHER_FIELDS, _turn_cosines
+from asteria.kernels.build_native import ABI_VERSION, library_name
 
 NAME = "native"
 
@@ -43,7 +43,7 @@ except ImportError:  # a plain Python: the python reference fills in, the stores
     np = None
 
 if np is not None:
-    from . import _numpy as _fallback
+    from asteria.kernels import _numpy as _fallback
 else:
     _fallback = _python
 

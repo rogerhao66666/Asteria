@@ -21,10 +21,14 @@ from asteria.gameplay.modifiers import StatModifier
 from asteria.gameplay.projectiles import ProjectileDefinition
 from asteria.gameplay.states import StateDefinition, StateRegistry
 from asteria.kernels import _python
-from asteria.rpg.behavior_tree import BehaviorNode, BehaviorTree
-from asteria.runtime.action_combat import ActionCombatSystem
-from asteria.runtime.behavior_tree import BehaviorTreeSystem
-from asteria.runtime.character_control import (
+from asteria.rpg.world.behavior_tree import BehaviorNode, BehaviorTree
+from asteria.runtime.action.abilities import ActionCombatSystem
+from asteria.runtime.action.combat import CombatantComponent, CombatSystem
+from asteria.runtime.action.projectiles import ProjectileSystem
+from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.ai import FieldAIComponent, FieldAISystem
+from asteria.runtime.field.behavior_tree import BehaviorTreeSystem
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
     CharacterControllerSystem,
@@ -32,12 +36,8 @@ from asteria.runtime.character_control import (
     HitboxSystem,
     Hurtbox2DComponent,
 )
-from asteria.runtime.collision import Collider2DComponent, CollisionWorld
-from asteria.runtime.combat import CombatantComponent, CombatSystem
-from asteria.runtime.component_registry import default_component_registry
-from asteria.runtime.entity_actions import EntityActionSystem
-from asteria.runtime.field_ai import FieldAIComponent, FieldAISystem
-from asteria.runtime.projectiles import ProjectileSystem
+from asteria.runtime.field.collision import Collider2DComponent, CollisionWorld
+from asteria.runtime.field.entity_actions import EntityActionSystem
 
 DT = 1 / 60
 np_kernels = pytest.importorskip("asteria.kernels._numpy")
@@ -441,9 +441,9 @@ def test_summon_states_and_contact_damage():
 
 def test_new_nodes_are_authored_in_the_editor():
     from asteria.editor import EditorDocument
-    from asteria.editor.behavior_tree_authoring import PARAMS, BehaviorTreeAuthoring
+    from asteria.editor.combat.behavior_tree_authoring import PARAMS, BehaviorTreeAuthoring
     from asteria.project import Project
-    from asteria.rpg.behavior_tree import NODE_KINDS
+    from asteria.rpg.world.behavior_tree import NODE_KINDS
 
     assert set(NODE_KINDS) <= set(PARAMS)  # every kind has a form
     document = EditorDocument()

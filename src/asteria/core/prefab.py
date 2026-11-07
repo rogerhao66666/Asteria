@@ -13,10 +13,10 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 
-from .component import Component
-from .entity import Entity
-from .metadata import Field, component_schema, get_component_schema
-from .serialization import deserialize_component, serialize_component
+from asteria.core.component import Component
+from asteria.core.entity import Entity
+from asteria.core.metadata import Field, component_schema, get_component_schema
+from asteria.core.serialization import deserialize_component, serialize_component
 
 TRANSFORM_TYPE = "asteria.Transform"
 INSTANCE_TYPE = "asteria.PrefabInstance"

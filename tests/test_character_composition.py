@@ -6,11 +6,11 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.character_composition_authoring import (
+from asteria.editor.animation.composition_authoring import (
     CharacterCompositionAuthoring,
     CompositionAuthoringError,
 )
-from asteria.presentation.character_composition import CharacterComposition
+from asteria.presentation.visuals.character_composition import CharacterComposition
 from asteria.project import Project
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
@@ -95,7 +95,7 @@ def battle(resource_root, monkeypatch):
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from test_playable_battle_loop import _boss_runtime
 
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+    from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 
     runtime = _boss_runtime(resource_root)
     yield runtime, CanonicalBattleAdapter
@@ -112,7 +112,7 @@ def _start(runtime, adapter_type):
 
 
 def _draws(adapter):
-    from asteria.runtime.camera import Camera2D
+    from asteria.runtime.scene.camera import Camera2D
 
     layout = adapter.screen.composer.layout
     return adapter.screen.animation.build_frame(
@@ -184,7 +184,7 @@ def test_rotated_quads_turn_about_their_centre_on_the_gpu_backend():
 def test_rotated_parts_keep_their_centre_on_the_pygame_backend(resource_root, monkeypatch):
     pygame = pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    from asteria.runtime.battle_presentation_adapters import PygameTextureDrawer
+    from asteria.runtime.battle.presentation import PygameTextureDrawer
 
     pygame.init()
     screen = pygame.Surface((100, 100), pygame.SRCALPHA)
@@ -218,7 +218,7 @@ def test_composition_tab_authors_through_its_forms_and_previews_the_parts():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QGraphicsPixmapItem
 
-    from asteria.editor.character_composition_widget import CharacterCompositionWidget
+    from asteria.editor.animation.composition_widget import CharacterCompositionWidget
 
     QApplication.instance() or QApplication([])
     widget = CharacterCompositionWidget(_api().document)

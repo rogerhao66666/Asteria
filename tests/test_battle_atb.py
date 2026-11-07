@@ -4,7 +4,7 @@ import pytest
 
 from asteria.gameplay import GameplaySubject, ResourcePool, StatBlock, TagSet
 from asteria.rpg import PartyMember
-from asteria.rpg.battle_scheduler import (
+from asteria.rpg.battle.scheduler import (
     ATBClock,
     BattleScheduler,
     BattleSchedulerDefinition,

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .component import Component
-from .metadata import component_schema
+from asteria.core.component import Component
+from asteria.core.metadata import component_schema
 
 
 @component_schema(type_name="asteria.Persistent", version=1, fields=())

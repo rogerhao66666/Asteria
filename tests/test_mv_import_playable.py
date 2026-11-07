@@ -31,7 +31,7 @@ def _layout():
 
 @pytest.fixture(scope="module")
 def imported(tmp_path_factory):
-    from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
+    from asteria.assets.rpg_maker_mv.project import RPGMakerMVProjectImporter
 
     out = tmp_path_factory.mktemp("mv_project")
     result = RPGMakerMVProjectImporter.import_project(_layout(), map_ids=(1, 2), output_root=out)
@@ -41,8 +41,8 @@ def imported(tmp_path_factory):
 
 def _field(root):
     from asteria.project_tools import load_project
+    from asteria.runtime.field.tilemap_field import TileMapField
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.tilemap_field import TileMapField
 
     project = load_project(
         root / "project.asteria.json"
@@ -64,7 +64,7 @@ def test_maps_become_canonical_assets_that_survive_save_and_reload(imported):
     root, result = imported
     from asteria.project_tools import load_project
     from asteria.runtime import TileMap2DComponent
-    from asteria.runtime.tilemap_field import AssetResources
+    from asteria.runtime.field.tilemap_field import AssetResources
 
     project = load_project(root / "project.asteria.json")
     resources = AssetResources(project, root)
@@ -94,7 +94,7 @@ import sys
 from pathlib import Path
 from asteria.project_tools import load_project
 from asteria.runtime.game_session import GameSessionRuntime
-from asteria.runtime.tilemap_field import TileMapField
+from asteria.runtime.field.tilemap_field import TileMapField
 root = Path({str(root)!r})
 project = load_project(root / "project.asteria.json")
 field = TileMapField(GameSessionRuntime(project, project.game_start.instantiate(project)), root)
@@ -161,9 +161,9 @@ def test_save_and_reload_keep_the_transferred_position(imported, tmp_path):
     root, _ = imported
     from asteria.core import Transform
     from asteria.project_tools import load_project
+    from asteria.runtime.field.tilemap_field import TileMapField
     from asteria.runtime.game_save import GameRuntimeSave
     from asteria.runtime.game_session import GameSessionRuntime
-    from asteria.runtime.tilemap_field import TileMapField
 
     field = _field(root)
     for _ in range(900):
@@ -214,7 +214,7 @@ def test_unconverted_mv_content_is_reported_not_dropped(imported):
 
 
 def test_cli_and_editor_import_open_a_playable_project(tmp_path):
-    from asteria.assets.rpg_maker_mv_project import import_mv_main
+    from asteria.assets.rpg_maker_mv.project import import_mv_main
 
     source = _layout().root
     assert import_mv_main([str(source), str(tmp_path / "cli"), "--maps", "1", "2"]) == 0
@@ -223,7 +223,7 @@ def test_cli_and_editor_import_open_a_playable_project(tmp_path):
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.runtime.tilemap_field import can_play
+    from asteria.runtime.field.tilemap_field import can_play
 
     app = QApplication.instance() or QApplication([])
     window = AsteriaEditorWindow(None)

@@ -8,7 +8,7 @@ from asteria.events.world_commands import WorldCommand
 from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
-from asteria.runtime.world_command_handlers import WorldCommandError
+from asteria.runtime.session.world_commands import WorldCommandError
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 

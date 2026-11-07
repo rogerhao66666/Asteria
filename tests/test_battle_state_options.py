@@ -20,8 +20,8 @@ from asteria.gameplay import (
 )
 from asteria.gameplay.formulas import ValueFormula
 from asteria.gameplay.states import PeriodicEffect
-from asteria.rpg.battle_states import BattleStatePolicy, BattleStateRuntime
-from asteria.rpg.capture import CaptureRule
+from asteria.rpg.battle.capture import CaptureRule
+from asteria.rpg.battle.states import BattleStatePolicy, BattleStateRuntime
 
 READY, ENDED = "rpg.battle.turn_ready", "rpg.battle.turn_ended"
 

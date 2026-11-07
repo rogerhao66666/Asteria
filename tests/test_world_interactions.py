@@ -4,8 +4,8 @@ outcome."""
 import pytest
 
 from asteria.events import EventInstruction, EventProgram
-from asteria.rpg.world_interactions import WorldInteraction
-from asteria.rpg.world_record import FactionDefinition
+from asteria.rpg.world.interactions import WorldInteraction
+from asteria.rpg.world.record import FactionDefinition
 
 
 def _add(game, **fields):
@@ -146,7 +146,7 @@ def test_the_world_interactions_form_editor_creates_valid_records(tmp_path):
     from pathlib import Path
 
     from asteria.editor import EditorDocument
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
     from asteria.project import Project
 
     ref = (

@@ -14,7 +14,7 @@ rig into Asteria's y-down world.
 
 from __future__ import annotations
 
-from .skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
+from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
 
 SKIPPED = ("skins", "ik", "transform", "path", "events", "deform", "shear")
 

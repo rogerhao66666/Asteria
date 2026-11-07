@@ -6,8 +6,8 @@ import dataclasses
 import pytest
 from test_battle_extensions_session import _first_encounter, _session
 
-from asteria.rpg.battle_lifecycle import BattleEscapeRule
-from asteria.runtime.battle_commands import BattleCommands
+from asteria.rpg.battle.lifecycle import BattleEscapeRule
+from asteria.runtime.battle.commands import BattleCommands
 from asteria.runtime.game_session import GameSessionError
 
 

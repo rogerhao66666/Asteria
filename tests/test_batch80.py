@@ -1,7 +1,7 @@
 import pytest
 
-from asteria.presentation.animated_text import AnimatedTextRuntime, AnimatedTextSpec, TextTransform
-from asteria.presentation.text_render_integration import AnimatedTextRenderComposer, ResolvedText
+from asteria.presentation.text.animated import AnimatedTextRuntime, AnimatedTextSpec, TextTransform
+from asteria.presentation.text.render_integration import AnimatedTextRenderComposer, ResolvedText
 
 
 def resolved(**kw):

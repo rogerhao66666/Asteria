@@ -27,7 +27,7 @@ def test_an_actor_shows_its_battle_picture_in_the_list_and_the_form(monkeypatch)
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication, QLabel
 
-    from asteria.editor.record_pictures import record_picture
+    from asteria.editor.records.pictures import record_picture
 
     app = QApplication.instance() or QApplication([])
     window = _window(app)
@@ -37,7 +37,7 @@ def test_an_actor_shows_its_battle_picture_in_the_list_and_the_form(monkeypatch)
         assert max(picture.width(), picture.height()) <= 56
         assert record_picture(window.document, "no_such_record", 56) is None
         assert record_picture(window.document, "", 56) is None
-        from asteria.editor.record_form import RecordForm
+        from asteria.editor.records.form import RecordForm
 
         forms = [f for f in window.findChildren(RecordForm) if f.document is window.document]
         assert forms, "the Database pages build record forms"
@@ -57,7 +57,7 @@ def test_the_tile_palette_wraps_a_wide_tileset_into_strips(monkeypatch):
     from PySide6.QtCore import QPointF
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.tile_palette_widget import TileGrid
+    from asteria.editor.scene.tile_palette_widget import TileGrid
 
     QApplication.instance() or QApplication([])
     frames = [
@@ -94,7 +94,7 @@ def test_the_tile_palette_keeps_the_atlas_pages_whole(monkeypatch):
     from PySide6.QtCore import QPointF
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.tile_palette_widget import TileGrid
+    from asteria.editor.scene.tile_palette_widget import TileGrid
 
     QApplication.instance() or QApplication([])
     # two pages of 8 columns with two empty columns between, as a tileset is often drawn,
@@ -138,7 +138,7 @@ def test_the_tile_palette_reads_its_picture_again_only_when_the_file_changes(
     from PySide6.QtGui import QColor, QImage
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.tile_palette_widget import TileGrid
+    from asteria.editor.scene.tile_palette_widget import TileGrid
 
     QApplication.instance() or QApplication([])
     picture = QImage(48, 16, QImage.Format_ARGB32)
@@ -169,9 +169,9 @@ def test_a_fighter_picks_its_battlefield_sheet_and_icon_from_lists(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_systems_widget import _IconPicker
-    from asteria.editor.record_form import RecordForm
-    from asteria.editor.sprite_sheet_picker import SpriteSheetPicker
+    from asteria.editor.records.form import RecordForm
+    from asteria.editor.records.sprite_sheet_picker import SpriteSheetPicker
+    from asteria.editor.rpg.game_systems_widget import _IconPicker
 
     app = QApplication.instance() or QApplication([])
     window = _window(app)
@@ -188,7 +188,7 @@ def test_a_fighter_picks_its_battlefield_sheet_and_icon_from_lists(monkeypatch):
         assert not any(str(item).startswith("battle.fx.") for item in listed)  # no effects
         asked = []
         monkeypatch.setattr(  # a double-click opens the picture dialog (stubbed: a pick)
-            "asteria.editor.sprite_sheet_picker.pick_sprite_sheet",
+            "asteria.editor.records.sprite_sheet_picker.pick_sprite_sheet",
             lambda document, parent=None, battle=False: asked.append(battle) or "battle.fx.fire",
         )
         sheet.preview.doubleClicked.emit()

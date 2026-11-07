@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 
 from asteria.graphics import Light2D
-
-from .commands import LightCommand, ShadowCasterCommand
+from asteria.render.commands import LightCommand, ShadowCasterCommand
 
 
 @dataclass(frozen=True, slots=True)

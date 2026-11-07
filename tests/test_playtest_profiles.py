@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 
 from asteria.core import ComponentRegistry, Transform
-from asteria.editor.model import EditorDocument
-from asteria.editor.playmode import create_play_session
-from asteria.editor.playtest_profiles import PlaytestProfileLibrary
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.playmode import create_play_session
+from asteria.editor.project.playtest_profiles import PlaytestProfileLibrary
 from asteria.gameplay import GameplayAttributesComponent
 from asteria.project import Project
-from asteria.runtime.components2d import (
+from asteria.runtime.scene.components import (
     Animator2DComponent,
     Camera2DComponent,
     Interaction2DComponent,
@@ -84,7 +84,7 @@ def test_preview_accepts_playtest_profile_argument():
 
 
 def test_shell_normal_run_uses_project_game_start_not_profile_or_player_save():
-    text = (Path(__file__).parents[1] / "src/asteria/editor/shell.py").read_text()
+    text = (Path(__file__).parents[1] / "src/asteria/editor/window/play.py").read_text()
     body = text.split("def play_project", 1)[1].split("def play_current_scene", 1)[0]
     assert "from_start=True" in body
     assert "selected_playtest_profile_id" not in body

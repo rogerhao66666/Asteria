@@ -18,7 +18,7 @@ import ssl
 import time
 from dataclasses import dataclass
 
-from .protocol import clean_guest_id
+from asteria.multiplayer.protocol import clean_guest_id
 
 MAX_TTL = 365 * 24 * 3600
 

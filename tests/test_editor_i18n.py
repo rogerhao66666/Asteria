@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (  # noqa: E402
     QWidget,
 )
 
-from asteria.editor import i18n  # noqa: E402
+from asteria.editor.ui import i18n
 
 TABLE = (
     {
@@ -127,7 +127,7 @@ def test_editor_code_sets_widget_text_in_english():
     setters = {"setText", "setToolTip", "setTitle", "setWindowTitle", "setPlaceholderText"}
     widgets = {"QPushButton", "QLabel", "QCheckBox", "QRadioButton", "QGroupBox", "QToolButton"}
     found = []
-    for path in Path(asteria.editor.__file__).parent.glob("*.py"):
+    for path in Path(asteria.editor.__file__).parent.rglob("*.py"):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if not isinstance(node, ast.Call) or not node.args:
                 continue

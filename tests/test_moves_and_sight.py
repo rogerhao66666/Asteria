@@ -7,9 +7,9 @@ import pytest
 
 from asteria.core import Entity, Scene, Transform
 from asteria.gameplay.abilities import AbilityDefinition
-from asteria.rpg.battle_scheduler import BattleScheduler, BattleSchedulerDefinition
-from asteria.rpg.battle_states import BattleStatePolicy
-from asteria.runtime.grid_actors import (
+from asteria.rpg.battle.scheduler import BattleScheduler, BattleSchedulerDefinition
+from asteria.rpg.battle.states import BattleStatePolicy
+from asteria.runtime.field.grid_actors import (
     GridMover2DComponent,
     GridMoverSystem,
     SightTrigger2DComponent,
@@ -95,7 +95,7 @@ def _creature_battle(monkeypatch):
         library.register(AbilityDefinition.from_data({**shot, "ability_id": ability_id, **extra}))
         targeting = project.rpg_database.battle_targeting["pet_shot"].to_data()
         targeting["ability_id"] = ability_id
-        from asteria.rpg.targeting import BattleTargetingDefinition
+        from asteria.rpg.battle.targeting import BattleTargetingDefinition
 
         project.rpg_database.battle_targeting[ability_id] = BattleTargetingDefinition.from_data(
             targeting
@@ -147,7 +147,7 @@ def test_a_several_strike_move_strikes_its_count_and_says_so(monkeypatch):
 def test_foes_choose_at_the_round_start_and_priority_goes_first(monkeypatch):
     game = _creature_battle(monkeypatch)
     battle = game.start_encounter("wild_cubs")
-    from asteria.rpg.battle_scheduler import BattleSchedulerDefinition as Definition
+    from asteria.rpg.battle.scheduler import BattleSchedulerDefinition as Definition
 
     assert battle.scheduler is not None or Definition  # the demo has a scheduler
     me = game.stage_ids("heroes")[0]
@@ -239,7 +239,7 @@ def test_weather_counts_down_hurts_and_fails_when_it_is_on_already(monkeypatch):
 
 
 def test_trained_foes_score_their_moves(monkeypatch):
-    from asteria.rpg.move_choice import choose_move, move_rules_of, score_moves
+    from asteria.rpg.battle.move_choice import choose_move, move_rules_of, score_moves
 
     assert move_rules_of(("no_capture", "move_ai.finish", "move_ai.avoid_useless")) == (
         "avoid_useless",
@@ -274,8 +274,8 @@ def test_a_trainer_notices_walks_up_and_starts_its_event(monkeypatch):
     from asteria.events.program import EventInstruction
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
-    from asteria.runtime.components2d import Interaction2DComponent
     from asteria.runtime.game_session import GameSessionRuntime
+    from asteria.runtime.scene.components import Interaction2DComponent
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
     project = Project.load_json(root / "project.asteria.json", default_component_registry())

@@ -5,7 +5,7 @@ import io
 import traceback
 from dataclasses import dataclass
 
-from .api import AuthoringEntity, AuthoringScene, AuthoringSession
+from asteria.authoring.api import AuthoringEntity, AuthoringScene, AuthoringSession
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +65,7 @@ def script_namespace(
         entity = selected
         scene = selected._scene
     from asteria.authoring import api
-    from asteria.editor.event_flow_authoring import battle_condition
+    from asteria.editor.events.flow_authoring import battle_condition
 
     return {
         "__name__": "__asteria_authoring__",

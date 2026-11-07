@@ -9,12 +9,12 @@ import pytest
 from test_session_events import _project
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
+from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
 from asteria.gameplay.formulas import FormulaContext, FormulaTerm, ValueFormula
 from asteria.gameplay.stats import ResourcePool, StatBlock
 from asteria.gameplay.tags import TagSet
-from asteria.rpg.interactions import OutcomeCheckDefinition
-from asteria.rpg.menu_rules import MenuRules, StatGroup, StatLine
+from asteria.rpg.battle.interactions import OutcomeCheckDefinition
+from asteria.rpg.menus.rules import MenuRules, StatGroup, StatLine
 from asteria.runtime.component_registry import default_component_registry
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
@@ -58,7 +58,7 @@ def test_menu_pages_keep_their_groups_and_lines():
 
 def _page():
     """D96: the detail table is a Stat Details block of a menu page."""
-    from asteria.rpg.menu_pages import MenuBlock, MenuPage
+    from asteria.rpg.menus.pages import MenuBlock, MenuPage
 
     block = MenuBlock(
         "stat_details", "right", stat_groups=RULES.stat_groups, stat_lines=RULES.stat_lines
@@ -80,7 +80,7 @@ def test_the_detail_table_survives_the_editor_form():
 def test_the_editor_words_the_detail_table_in_chinese():
     import json
 
-    from asteria.editor.game_systems_authoring import _MENU_BLOCK
+    from asteria.editor.rpg.game_systems_authoring import _MENU_BLOCK
 
     path = Path(__file__).resolve().parents[1] / "src/asteria/editor/translations/zh_TW.json"
     words = json.loads(path.read_text(encoding="utf-8"))["exact"]
@@ -122,7 +122,7 @@ def test_penetration_takes_its_share_off_the_targets_stats():
 
 
 def test_battle_rules_name_the_penetration_stat():
-    from asteria.rpg.battle_session_rules import BattleSessionRules
+    from asteria.rpg.battle.session_rules import BattleSessionRules
 
     rules = BattleSessionRules("r", penetration_stat="penetration")
     assert rules.to_data()["penetration_stat"] == "penetration"

@@ -5,7 +5,7 @@ import pytest
 
 pygame = pytest.importorskip("pygame")
 
-from asteria.runtime.debug_server import DebugClient  # noqa: E402
+from asteria.runtime.tools.debug_server import DebugClient  # noqa: E402
 
 
 def _frames(runtime, count):
@@ -40,7 +40,7 @@ def test_profiler_dock_shows_the_live_profile(runtime):
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.profiler_widget import ProfilerWidget
+    from asteria.editor.tools.profiler_widget import ProfilerWidget
 
     QApplication.instance() or QApplication([])
     runtime._ui_mode = "field"
@@ -65,7 +65,7 @@ def test_profiler_tables_are_inside_individually_framed_cards():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication, QFrame
 
-    from asteria.editor.profiler_widget import ProfilerWidget
+    from asteria.editor.tools.profiler_widget import ProfilerWidget
 
     QApplication.instance() or QApplication([])
     widget = ProfilerWidget(lambda: None)

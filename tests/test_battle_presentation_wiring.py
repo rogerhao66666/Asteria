@@ -14,13 +14,16 @@ sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402
 
-from asteria.presentation.battle import BattleCombatantVisual, BattleVisualAnchor  # noqa: E402
-from asteria.presentation.battle_sideview_template import (  # noqa: E402
+from asteria.presentation.battle.scene import (  # noqa: E402
+    BattleCombatantVisual,
+    BattleVisualAnchor,
+)
+from asteria.presentation.battle.sideview_template import (  # noqa: E402
     BattleSideviewTemplateProfile,
     BattleSideviewTemplateRuntime,
     BattleSideviewZone,
 )
-from asteria.runtime.battle_commands import BattleCommands  # noqa: E402
+from asteria.runtime.battle.commands import BattleCommands  # noqa: E402
 from asteria.runtime.game_session import GameSessionError  # noqa: E402
 
 VESPER = "hero_03"

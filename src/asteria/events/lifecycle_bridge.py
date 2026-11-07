@@ -4,8 +4,7 @@ from collections import deque
 from dataclasses import dataclass
 
 from asteria.core.lifecycle import LifecycleHookBus
-
-from .runner import EventRunner
+from asteria.events.runner import EventRunner
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,7 +26,7 @@ class LifecycleEventBinding:
     def __init__(
         self, hook_name, event_program_id, *, source_entity_id="", conditions=(), once=False
     ):
-        from .conditions import EventCondition
+        from asteria.events.conditions import EventCondition
 
         hook_name = str(hook_name).strip()
         event_program_id = str(event_program_id).strip()
@@ -55,7 +54,7 @@ class LifecycleEventBinding:
 
     @classmethod
     def from_data(cls, data):
-        from .conditions import EventCondition
+        from asteria.events.conditions import EventCondition
 
         base = {"hook_name", "event_program_id", "source_entity_id"}
         if set(data) not in (base, base | {"conditions", "once"}):

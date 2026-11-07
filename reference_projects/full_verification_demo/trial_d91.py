@@ -991,7 +991,7 @@ def patch_words(data):
         tables["zh-TW"][f"data.stat.{stat}.name"] = zh
         tables["zh-TW"][f"data.stat.{stat}.short"] = zh_short
         tables["zh-TW"][f"data.stat.{stat}.description"] = zh_text
-    from asteria.rpg.built_in_text import engine_translations
+    from asteria.rpg.text.built_in_text import engine_translations
 
     for word, chinese in engine_translations("zh-TW").items():  # the engine's new words (D91)
         tables["zh-TW"].setdefault(word, chinese)

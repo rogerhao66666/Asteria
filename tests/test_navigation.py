@@ -2,7 +2,7 @@
 
 import pytest
 
-from asteria.runtime.navigation import NavGrid, PathFollower
+from asteria.runtime.field.navigation import NavGrid, PathFollower
 
 CELL = 10.0
 

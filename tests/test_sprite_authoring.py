@@ -7,8 +7,8 @@ from asteria.core import (
     deserialize_entity,
     serialize_entity,
 )
-from asteria.editor.entity_render import build_camera_frames, build_entity_sprite_draws
-from asteria.editor.viewport import ViewportCamera
+from asteria.editor.scene.entity_render import build_camera_frames, build_entity_sprite_draws
+from asteria.editor.scene.viewport import ViewportCamera
 from asteria.graphics import SpriteFrame, SpriteSheet
 from asteria.runtime import Camera2DComponent, SpriteRenderer2D
 

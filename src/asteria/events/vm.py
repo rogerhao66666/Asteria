@@ -3,10 +3,10 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
-from .conditions import EventCondition
-from .context import EventContext
-from .program import EventInstruction, EventProgram
-from .state import EventVMState, EventVMStatus
+from asteria.events.conditions import EventCondition
+from asteria.events.context import EventContext
+from asteria.events.program import EventInstruction, EventProgram
+from asteria.events.state import EventVMState, EventVMStatus
 
 
 class EventVMError(RuntimeError):

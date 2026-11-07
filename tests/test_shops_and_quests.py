@@ -17,8 +17,8 @@ from asteria.rpg import (
     ShopEntry,
     ShopError,
 )
-from asteria.rpg.enemies import LootEntry, RewardDefinition
-from asteria.rpg.items import Inventory
+from asteria.rpg.enemies.definitions import LootEntry, RewardDefinition
+from asteria.rpg.items.definitions import Inventory
 from asteria.runtime.game_save import GameRuntimeSave
 
 
@@ -187,7 +187,7 @@ def test_database_and_save_round_trip_shops_and_quests(tmp_path):
 def test_conditional_and_luck_scaled_loot():
     import random
 
-    from asteria.rpg.enemies import roll_reward
+    from asteria.rpg.enemies.definitions import roll_reward
 
     reward = RewardDefinition(
         loot=[
@@ -263,7 +263,7 @@ def test_crafting_station_chance_quality_and_experience():
         CompositionRecipeDefinition,
         CompositionRuntime,
     )
-    from asteria.rpg.progression import ProgressionRuntime
+    from asteria.rpg.characters.progression import ProgressionRuntime
 
     project, game = _session()
     track = next(iter(project.rpg_database.progression_tracks))
@@ -329,7 +329,7 @@ def test_crafting_station_chance_quality_and_experience():
 
 
 def test_conditional_prices_and_entries():
-    from asteria.rpg.economy import PriceRule, ShopRuntime
+    from asteria.rpg.items.shops import PriceRule, ShopRuntime
 
     shop = ShopDefinition(
         "bazaar",
@@ -375,7 +375,7 @@ def test_conditional_prices_and_entries():
 
 
 def test_shop_conditions_round_trip_through_the_form_rows():
-    from asteria.editor.game_systems_authoring import _decode_shop, _encode_shop
+    from asteria.editor.rpg.game_systems_authoring import _decode_shop, _encode_shop
 
     shop = ShopDefinition(
         "bazaar",

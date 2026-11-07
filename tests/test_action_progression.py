@@ -14,17 +14,17 @@ from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
 from asteria.gameplay.attacks import AttackDefinition
 from asteria.gameplay.formulas import FormulaTerm, ValueFormula
 from asteria.gameplay.projectiles import ProjectileDefinition
-from asteria.rpg.loot import RolledAffix
-from asteria.runtime.action_combat import ActionCombatComponent
-from asteria.runtime.actor_link import ActorLinkComponent
-from asteria.runtime.character_control import (
+from asteria.rpg.items.loot import RolledAffix
+from asteria.runtime.action.abilities import ActionCombatComponent
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.field.actor_link import ActorLinkComponent
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     Hitbox2DComponent,
     HitEvent,
     Hurtbox2DComponent,
     PlayerInput2DComponent,
 )
-from asteria.runtime.combat import CombatantComponent
 
 HERO = "hero_01"
 
@@ -138,7 +138,7 @@ def test_kills_give_experience_and_level_ups_raise_the_fight(runtime):
 
 
 def test_rolled_equipment_from_the_bag_changes_the_fight(runtime):
-    from asteria.rpg.items import EquipmentDefinition, EquippedItem
+    from asteria.rpg.items.definitions import EquipmentDefinition, EquippedItem
 
     game = runtime.game
     player = _linked_player(game)

@@ -6,7 +6,7 @@ import dataclasses
 
 import pytest
 
-from asteria.presentation.particles import (
+from asteria.presentation.visuals.particles import (
     PRESETS,
     ParticleEffectDefinition,
     ParticleSystem,
@@ -99,7 +99,7 @@ def test_an_effect_is_a_project_asset_that_survives_save_and_load(tmp_path):
 
 
 def _field_emitter(runtime, effect, entity_name="Astral Tyrant", **fields):
-    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+    from asteria.runtime.scene.environment import ParticleEmitter2DComponent
 
     runtime.project.assets.register(particle_effect_asset(effect), replace=True)
     entity = next(e for e in runtime.game.scene.entities() if e.name == entity_name)
@@ -165,7 +165,7 @@ def test_a_battle_timeline_beat_can_cue_a_particle_effect(resource_root, monkeyp
     from test_canonical_battle_presentation import _settle, _use
     from test_playable_battle_loop import _boss_runtime
 
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+    from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 
     runtime = _boss_runtime(resource_root)
     try:
@@ -217,10 +217,10 @@ def test_the_editor_creates_edits_previews_and_undoes_particle_effects():
 
     from asteria.core import Entity, Scene
     from asteria.editor import EditorDocument
-    from asteria.editor.inspector import build_inspector_fields, inspector_choices
-    from asteria.editor.particle_effect_widget import ParticleEffectWidget
+    from asteria.editor.combat.particle_effect_widget import ParticleEffectWidget
+    from asteria.editor.scene.inspector import build_inspector_fields, inspector_choices
     from asteria.project import Project
-    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+    from asteria.runtime.scene.environment import ParticleEmitter2DComponent
 
     QApplication.instance() or QApplication([])
     project = Project("P")
@@ -264,9 +264,9 @@ def test_the_editor_creates_edits_previews_and_undoes_particle_effects():
 def test_problems_warn_about_an_emitter_without_its_effect():
     from asteria.core import Entity, Scene
     from asteria.editor import EditorDocument
-    from asteria.editor.problems import collect_problems
+    from asteria.editor.project.problems import collect_problems
     from asteria.project import Project
-    from asteria.runtime.environment2d import ParticleEmitter2DComponent
+    from asteria.runtime.scene.environment import ParticleEmitter2DComponent
 
     project = Project("P")
     scene = project.add_scene(Scene("Map"))

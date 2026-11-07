@@ -83,8 +83,8 @@ OBJECTS = {
 
 
 def quests():
-    from asteria.rpg.enemies import LootEntry, RewardDefinition
-    from asteria.rpg.quests import QuestDefinition, QuestObjective
+    from asteria.rpg.enemies.definitions import LootEntry, RewardDefinition
+    from asteria.rpg.world.quests import QuestDefinition, QuestObjective
 
     out = {}
     for quest_id, value in BOUNTIES.items():
@@ -111,7 +111,7 @@ def quests():
 
 
 def board():
-    from asteria.rpg.boards import QuestBoardDefinition
+    from asteria.rpg.world.boards import QuestBoardDefinition
 
     return QuestBoardDefinition(
         "hearthfold_board",
@@ -124,7 +124,7 @@ def board():
 
 
 def office():
-    from asteria.rpg.boards import RecruitCandidate, RecruitOfficeDefinition
+    from asteria.rpg.world.boards import RecruitCandidate, RecruitOfficeDefinition
 
     def hire(actor_id, cost, low, high, note, currency="gold"):
         return RecruitCandidate(
@@ -148,7 +148,7 @@ def office():
 
 
 def banner():
-    from asteria.rpg.gacha import GachaBanner, GachaPrize, GachaRarity
+    from asteria.rpg.world.gacha import GachaBanner, GachaPrize, GachaRarity
 
     def prize(prize_id, rarity, weight, kind="item", target="", amount=1, **more):
         return GachaPrize(prize_id, kind, target or prize_id, amount, weight, rarity, **more)

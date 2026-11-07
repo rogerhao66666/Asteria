@@ -16,9 +16,9 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 from asteria.core import Transform
 from asteria.project import Project
-from asteria.runtime.character_control import CharacterController2DComponent
-from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.action.combat import CombatantComponent
 from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.character_control import CharacterController2DComponent
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
 cls = sys.argv[1]
@@ -105,7 +105,7 @@ shot("field_skills")
 for _ in range(60):
     tap(pg.K_j, 3)
 shot("field_late")
-from asteria.runtime.loot import LootComponent  # noqa: E402
+from asteria.runtime.action.ground_loot import LootComponent  # noqa: E402
 
 # step onto each equipment drop and press F (pick up)
 for entity, loot in list(game.scene.query(LootComponent)):

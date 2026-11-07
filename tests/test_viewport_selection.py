@@ -1,6 +1,6 @@
 from asteria.core import Entity, Scene
-from asteria.editor.model import EditorDocument
-from asteria.editor.viewport import selected_scene
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.viewport import selected_scene
 from asteria.project import Project
 
 
@@ -28,7 +28,7 @@ def test_the_project_tree_marks_every_entity_of_a_box_selection(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.widgets import ProjectTreeWidget
+    from asteria.editor.ui.widgets import ProjectTreeWidget
 
     QApplication.instance() or QApplication([])
     p = Project("G")

@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from .conditions import (
+from asteria.gameplay.conditions import (
     ConditionGroup,
     GameplayCondition,
     GameplayConditionContext,
 )
-from .effects import Effect, EffectApplicationResult, apply_effect
+from asteria.gameplay.effects import Effect, EffectApplicationResult, apply_effect
 
 
 class TriggerEvent(str, Enum):
@@ -57,7 +57,7 @@ class GameplayTrigger:
         object.__setattr__(self, "effects", effects)
 
     def to_data(self):
-        from .conditions import serialize_condition
+        from asteria.gameplay.conditions import serialize_condition
 
         return {
             "schema": "asteria.gameplay_trigger",
@@ -70,7 +70,7 @@ class GameplayTrigger:
 
     @classmethod
     def from_data(cls, data):
-        from .conditions import deserialize_condition
+        from asteria.gameplay.conditions import deserialize_condition
 
         expected = {"schema", "version", "trigger_id", "event", "conditions", "effects"}
         if set(data) != expected:

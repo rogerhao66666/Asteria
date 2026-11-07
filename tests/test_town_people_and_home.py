@@ -9,8 +9,8 @@ sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402
 
-from asteria.runtime.components2d import SpriteRenderer2D  # noqa: E402
-from asteria.runtime.field_ai import VisibleEncounterComponent  # noqa: E402
+from asteria.runtime.field.ai import VisibleEncounterComponent  # noqa: E402
+from asteria.runtime.scene.components import SpriteRenderer2D  # noqa: E402
 
 PARTY = {"Player", "Mira", "Vesper", "Cael"}
 

@@ -6,7 +6,7 @@ import pytest
 
 from asteria.project import Project
 from asteria.rpg import BattleExtensionRules, StealEntry, StealTable
-from asteria.rpg.enemy_levels import DifficultyLevel, EnemyLevelRules
+from asteria.rpg.enemies.levels import DifficultyLevel, EnemyLevelRules
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 

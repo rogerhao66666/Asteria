@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
-from .abilities import AbilityRuntime, AbilityTarget
+from asteria.gameplay.abilities import AbilityRuntime, AbilityTarget
 
 
 class ActionCueKind(str, Enum):

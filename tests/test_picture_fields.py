@@ -44,8 +44,8 @@ def _form_fields(fields, path=()):
 
 
 def test_every_picture_field_of_the_game_systems_forms_is_a_picker():
-    from asteria.editor.game_systems_authoring import FORMS
-    from asteria.editor.game_systems_widget import _TEXT_SOURCES
+    from asteria.editor.rpg.game_systems_authoring import FORMS
+    from asteria.editor.rpg.game_systems_widget import _TEXT_SOURCES
 
     wrong = []
     for kind_id, fields in FORMS.items():
@@ -71,7 +71,7 @@ def _picture_keys(data, out, path=()):
 
 
 def test_every_key_holding_a_picture_in_the_bundled_projects_gets_a_picker():
-    from asteria.editor.image_tools import picture_field
+    from asteria.editor.assets.image_tools import picture_field
 
     found = {}
     for path in sorted((REPO / "reference_projects").glob("*/project.asteria.json")):
@@ -104,9 +104,9 @@ def document(tmp_path):
 
 
 def test_the_record_tree_makes_every_picture_key_a_picture_box(document):
-    from asteria.editor.authoring_hub_widget import StructuredRecordEditor
-    from asteria.editor.game_systems_widget import _IconPicker
-    from asteria.editor.image_tools import IconLibrary
+    from asteria.editor.assets.image_tools import IconLibrary
+    from asteria.editor.records.hub import StructuredRecordEditor
+    from asteria.editor.rpg.game_systems_widget import _IconPicker
 
     editor = StructuredRecordEditor()
     editor.icon_library = IconLibrary(document)
@@ -124,7 +124,7 @@ def test_the_record_tree_makes_every_picture_key_a_picture_box(document):
 
 
 def test_the_layout_inspector_chooses_every_picture_from_a_file(document):
-    from asteria.editor.menu_layout_widget import AssetField, ElementInspector, PatchField
+    from asteria.editor.menus.layout_widget import AssetField, ElementInspector, PatchField
 
     inspector = ElementInspector(document)
     assert isinstance(inspector.image, AssetField) and inspector.image.kind == "image"
@@ -137,7 +137,7 @@ def test_the_layout_inspector_chooses_every_picture_from_a_file(document):
 
 
 def test_a_doll_place_picture_is_chosen_not_typed(document):
-    from asteria.editor.menu_layout_widget import SlotsField
+    from asteria.editor.menus.layout_widget import SlotsField
 
     field = SlotsField(document)
     field._add()

@@ -14,7 +14,7 @@ from asteria.core import (
     serialize_component,
 )
 from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
-from asteria.runtime.character_control import (
+from asteria.runtime.field.character_control import (
     AIController2DComponent,
     CharacterController2DComponent,
     CharacterControllerSystem,
@@ -25,10 +25,10 @@ from asteria.runtime.character_control import (
     PlayerInputSystem,
     register_character_components,
 )
-from asteria.runtime.collision import Collider2DComponent
-from asteria.runtime.components2d import Animator2DComponent
-from asteria.runtime.entity_actions import EntityActionSystem
-from asteria.runtime.input import InputSnapshot
+from asteria.runtime.field.collision import Collider2DComponent
+from asteria.runtime.field.entity_actions import EntityActionSystem
+from asteria.runtime.input_map import InputSnapshot
+from asteria.runtime.scene.components import Animator2DComponent
 
 
 def _entity(scene, name, x, y, *components):
@@ -108,7 +108,7 @@ def test_one_way_platform_lets_you_jump_through_and_land_on_top():
 
 
 def test_player_input_and_ai_controllers_drive_the_same_controller():
-    from asteria.runtime.field_ai import FieldAIComponent, FieldAISystem
+    from asteria.runtime.field.ai import FieldAIComponent, FieldAISystem
 
     snapshot = {"value": InputSnapshot({"move_right": 1.0})}
     scene = Scene("S")
@@ -236,7 +236,7 @@ def test_new_components_serialize_and_old_collider_records_still_load():
 
 
 def test_controllers_actions_and_hits_run_in_the_game_session_field_update(runtime):
-    from asteria.runtime.field_ai import FieldAIComponent
+    from asteria.runtime.field.ai import FieldAIComponent
 
     game = runtime.game
     game.set_player_position(0.0, 0.0)
@@ -266,7 +266,7 @@ def test_controllers_actions_and_hits_run_in_the_game_session_field_update(runti
 
 def test_project_action_timelines_are_authored_as_records_and_played_from_events(runtime):
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
     from asteria.events import EventInstruction, EventProgram
 
     game = runtime.game

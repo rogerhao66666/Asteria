@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from asteria.runtime.collision import box_blocked
+from asteria.runtime.field.collision import box_blocked
 from asteria.runtime.playtest.menu_fit import MenuFitMixin, fitted_size
 from asteria.runtime.pointer import Hotspot
 
@@ -77,7 +77,7 @@ def test_a_feet_box_blocks_where_a_point_would_slip_in():
 
 
 def test_a_walk_plays_as_far_as_the_figure_moves():
-    from asteria.runtime.tile_scene_view import _Animated
+    from asteria.runtime.field.tile_scene_view import _Animated
 
     keys = [SimpleNamespace(duration=0.1, frame_index=i) for i in range(8)]
     walk = SimpleNamespace(keyframes=keys, loop=True)

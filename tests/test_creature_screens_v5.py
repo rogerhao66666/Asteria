@@ -9,14 +9,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from asteria.presentation.creature_screens import (
+from asteria.presentation.library import BattlePresentationLibrary
+from asteria.presentation.screens.creature import (
     CreatureScreenSettings,
     creature_battle_on,
     creature_settings,
     from_manifest,
     manifest_part,
 )
-from asteria.presentation.library import BattlePresentationLibrary
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -104,8 +104,8 @@ def test_the_manifest_turns_into_one_record_a_screen():
 
 def test_the_editor_converts_the_manifest_and_undoes_a_screen(tmp_path):
     from asteria.editor import EditorDocument
-    from asteria.editor.menu_layout_authoring import MenuLayoutAuthoringController
-    from asteria.editor.storage import load_document
+    from asteria.editor.menus.layout_authoring import MenuLayoutAuthoringController
+    from asteria.editor.project.storage import load_document
 
     document = EditorDocument()
     load_document(document, str(DEMO / "project.asteria.json"))
@@ -134,7 +134,7 @@ def test_the_settings_tree_lists_places_and_keeps_only_what_differs(monkeypatch)
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.creature_screens_dialog import (
+    from asteria.editor.menus.creature_screens_dialog import (
         CreatureScreensDialog,
         engine_defaults,
         is_colour,
@@ -185,7 +185,7 @@ def test_the_start_menu_draws_the_same_from_a_record_as_from_the_manifest(monkey
     import run_trial_smoke as smoke
     import trial_creatures
 
-    from asteria.runtime.creature_menu import CreatureMenuScreen
+    from asteria.runtime.creature.menu import CreatureMenuScreen
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
@@ -230,8 +230,8 @@ def test_a_shop_set_up_only_in_the_project_opens_from_an_event(monkeypatch):
     import run_trial_smoke as smoke
     import trial_creatures
 
-    from asteria.rpg.economy import ShopDefinition, ShopEntry
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
+    from asteria.rpg.items.shops import ShopDefinition, ShopEntry
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
 
     project, game = smoke.load()
@@ -258,7 +258,7 @@ def test_a_shop_set_up_only_in_the_project_opens_from_an_event(monkeypatch):
 
 
 def test_every_screen_lists_its_engine_places_and_explains_its_settings():
-    from asteria.editor.creature_screens_dialog import engine_defaults, help_for, is_point
+    from asteria.editor.menus.creature_screens_dialog import engine_defaults, help_for, is_point
 
     assert engine_defaults("field.creature_shop")["places"]["list"] == [112, 16, 120, 128]
     assert "places" in engine_defaults("field.creature_menu")["summary"]
@@ -280,7 +280,7 @@ def test_the_preview_draws_a_creature_screen_with_lent_settings(monkeypatch):
     import run_trial_smoke as smoke
     import trial_creatures
 
-    from asteria.runtime.menu_preview import MenuPreview
+    from asteria.runtime.menus.preview import MenuPreview
 
     project, _game = smoke.load()
     trial_creatures.install(project, party_size=3)
@@ -314,8 +314,8 @@ def test_every_setting_help_sentence_has_chinese():
     import importlib
     import re
 
-    from asteria.editor import i18n
-    from asteria.editor.creature_screens_dialog import MODULES, help_for
+    from asteria.editor.menus.creature_screens_dialog import MODULES, help_for
+    from asteria.editor.ui import i18n
 
     missing = []
     for module in MODULES.values():
@@ -336,8 +336,9 @@ def test_every_setting_help_sentence_has_chinese():
 
 def test_a_thrown_ball_spins_in_flight_by_the_screens_ball_spin():
     pygame = pytest.importorskip("pygame")
-    from asteria.editor.creature_screens_dialog import engine_defaults, help_for
-    from asteria.runtime.creature_battle import BALL_SPIN, CreatureBattleScreen
+    from asteria.editor.menus.creature_screens_dialog import engine_defaults, help_for
+    from asteria.runtime.creature.battle import CreatureBattleScreen
+    from asteria.runtime.creature.battle_style import BALL_SPIN
 
     screen = object.__new__(CreatureBattleScreen)  # only its ball, no battle around it
     screen.pg, screen.settings = pygame, {}

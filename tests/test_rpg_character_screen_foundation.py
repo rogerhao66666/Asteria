@@ -3,19 +3,19 @@ from asteria.presentation import (
     CharacterScreenProfile,
     CharacterScreenRuntime,
 )
-from asteria.rpg.ability_build import AbilityGrant
-from asteria.rpg.items import (
+from asteria.rpg.characters.abilities import AbilityGrant
+from asteria.rpg.characters.build import ResolvedActorBuild
+from asteria.rpg.characters.progression import (
+    ProgressionMilestone,
+    ProgressionRuntime,
+    ProgressionTrackDefinition,
+)
+from asteria.rpg.items.definitions import (
     EquipmentDefinition,
     EquipmentLoadout,
     EquipmentSlotDefinition,
     EquippedItem,
 )
-from asteria.rpg.progression import (
-    ProgressionMilestone,
-    ProgressionRuntime,
-    ProgressionTrackDefinition,
-)
-from asteria.rpg.resolved_build import ResolvedActorBuild
 
 
 def _build():

@@ -12,12 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from asteria.rpg.composition import (
+from asteria.rpg.items.crafting import (
     CompositionOutput,
     CompositionRecipeDefinition,
     CompositionSelection,
 )
-from asteria.rpg.workstations import WorkstationCategory, WorkstationDefinition
+from asteria.rpg.items.workstations import WorkstationCategory, WorkstationDefinition
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 sys.path.insert(0, str(DEMO))
@@ -155,7 +155,7 @@ def test_the_forge_limits_how_many_and_a_station_without_data_still_opens(host):
     screen.tab = 2
     assert all(not r.known for r in screen.rows())  # both orbs wait to be discovered
     host._crafting_screen.close()
-    from asteria.runtime.crafting_screen import CraftingScreen
+    from asteria.runtime.menus.crafting import CraftingScreen
 
     bare = CraftingScreen(game, "nowhere")
     assert [t for t, _w in bare.tabs()] == [""]  # one tab of every recipe it can make
@@ -170,10 +170,10 @@ def CraftingRows(screen, tab):  # noqa: N802 - reads like the rows of a tab
 def test_the_editor_lists_workstations_and_each_has_its_own_layout(monkeypatch):
     monkeypatch.setenv("ASTERIA_MUTE", "1")
     from asteria.editor import EditorDocument
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
-    from asteria.editor.menu_layout_authoring import MenuLayoutAuthoringController
-    from asteria.editor.storage import load_document
-    from asteria.runtime.menu_preview import MenuPreview
+    from asteria.editor.menus.layout_authoring import MenuLayoutAuthoringController
+    from asteria.editor.project.storage import load_document
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.runtime.menus.preview import MenuPreview
 
     document = EditorDocument()
     load_document(document, str(DEMO / "project.asteria.json"))

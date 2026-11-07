@@ -131,8 +131,8 @@ def test_the_field_draws_a_picture_scrolled_round(monkeypatch):
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     import pygame
 
-    from asteria.runtime.pictures import Picture
     from asteria.runtime.playtest.field_ui import FieldUiMixin
+    from asteria.runtime.scene.pictures import Picture
 
     class Host(FieldUiMixin):
         pg = pygame
@@ -150,7 +150,7 @@ def test_the_field_draws_a_picture_scrolled_round(monkeypatch):
 def test_the_choice_editor_adds_hover_commands_by_form():
     widgets = pytest.importorskip("PySide6.QtWidgets")
     _app = widgets.QApplication.instance() or widgets.QApplication([])
-    from asteria.editor.choice_command_dialog import ChoiceCommandDialog
+    from asteria.editor.events.choice_dialog import ChoiceCommandDialog
 
     girl = {"picture_id": "girl", "x": 148, "duration": 0.25}
     two = [{"text": "A", "value": 0}, {"text": "B", "value": 1}]

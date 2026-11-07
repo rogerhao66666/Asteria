@@ -2,12 +2,9 @@ import pytest
 
 from asteria.core import Scene
 from asteria.editor import EditorDocument
-from asteria.editor.rpg_party_formation_authoring import (
+from asteria.editor.rpg.party_formation_authoring import (
     RpgPartyFormationAuthoringController,
     RpgPartyFormationAuthoringError,
-)
-from asteria.editor.rpg_party_formation_workspace import (
-    RpgPartyFormationWorkspaceModel,
 )
 from asteria.project import Project
 from asteria.rpg import (
@@ -232,23 +229,6 @@ def test_information_architecture_avoids_large_party_visual_sprawl():
     assert ia.progressive_disclosure
     assert not ia.show_all_members_as_full_cards
     assert not ia.show_all_details_simultaneously
-
-
-def test_workspace_focus_is_contextual():
-    _, _, c = make()
-    c.create_formation(formation())
-    c.create_party(
-        PartySetupDefinition("main", roster_actor_ids=("a", "b"), active_actor_ids=("a",))
-    )
-    w = RpgPartyFormationWorkspaceModel(c)
-    w.select("main")
-    w.focus_actor("b")
-    assert w.snapshot().focused_actor_id == "b"
-    w.set_section("formations")
-    assert w.snapshot().focused_actor_id is None
-    w.select("line")
-    w.focus_slot("front_r")
-    assert w.snapshot().focused_slot_id == "front_r"
 
 
 def test_project_validation_after_party_authoring():

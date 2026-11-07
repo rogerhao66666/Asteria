@@ -92,8 +92,8 @@ def test_the_left_panel_always_opens_on_project(tmp_path):
 def test_the_starter_map_has_no_stray_rock_fragments(tmp_path):
     import json
 
-    from asteria.editor.basic_rpg_map import ROCK_TILES
-    from asteria.editor.project_templates import create_from_template
+    from asteria.editor.project.basic_rpg_map import ROCK_TILES
+    from asteria.editor.project.templates import create_from_template
 
     folder = tmp_path / "Starter"
     create_from_template("basic_rpg", "Basic RPG", folder)
@@ -107,7 +107,7 @@ def test_a_scene_opens_with_room_around_the_game_camera():
 
     from asteria.core import Entity, Scene, Transform
     from asteria.editor import EditorDocument
-    from asteria.editor.viewport_widget import SceneViewportWidget
+    from asteria.editor.scene.viewport_widget import SceneViewportWidget
     from asteria.project import Project
     from asteria.runtime import Camera2DComponent
 
@@ -129,8 +129,8 @@ def test_a_scene_opens_with_room_around_the_game_camera():
 def test_the_start_scene_is_picked_by_name_and_new_scenes_get_unique_names():
     from asteria.core import Scene
     from asteria.editor import EditorDocument
-    from asteria.editor.game_start_authoring import GameStartAuthoringController
-    from asteria.editor.scenes import build_add_scene_command
+    from asteria.editor.project.scenes import build_add_scene_command
+    from asteria.editor.rpg.game_start_authoring import GameStartAuthoringController
     from asteria.project import Project
 
     project = Project("Game")
@@ -149,8 +149,8 @@ def test_the_start_scene_is_picked_by_name_and_new_scenes_get_unique_names():
 def test_a_reference_dropdown_shows_names_and_keeps_ids(tmp_path):
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_systems_authoring import F
-    from asteria.editor.game_systems_widget import RecordForm
+    from asteria.editor.rpg.game_systems_authoring import F
+    from asteria.editor.rpg.game_systems_widget import RecordForm
 
     QApplication.instance() or QApplication([])
     field = F("scene_id", "Start Scene", "optional_ref", source="scenes", empty_label="(startup)")
@@ -165,8 +165,8 @@ def test_a_reference_dropdown_shows_names_and_keeps_ids(tmp_path):
 def test_the_party_list_shows_names_and_the_position_toggle_says_what_it_does():
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.game_start_authoring import GAME_START_FORM
-    from asteria.editor.game_systems_widget import RecordForm
+    from asteria.editor.rpg.game_start_authoring import GAME_START_FORM
+    from asteria.editor.rpg.game_systems_widget import RecordForm
 
     QApplication.instance() or QApplication([])
     refs = {"actors": (("hero_01", "Aldric (hero_01)"), ("hero_02", "Mira (hero_02)"))}
@@ -182,7 +182,7 @@ def test_the_party_list_shows_names_and_the_position_toggle_says_what_it_does():
 
 
 def test_cameras_follow_the_player_and_the_players_place_is_the_start():
-    from asteria.editor.scene_cameras import center
+    from asteria.editor.scene.cameras import center
 
     def entity(eid, x, y, camera=False):
         components = [{"type": "asteria.Transform", "fields": {"x": x, "y": y}}]
@@ -217,8 +217,8 @@ def test_cameras_follow_the_player_and_the_players_place_is_the_start():
 
 def test_a_picture_field_follows_the_scene_camera_as_authored():
     from asteria.core import Entity, Scene, Transform
-    from asteria.runtime.components2d import Camera2DComponent
-    from asteria.runtime.field_camera import scene_camera_follow
+    from asteria.runtime.field.camera import scene_camera_follow
+    from asteria.runtime.scene.components import Camera2DComponent
 
     scene = Scene("Field")
     hero = scene.add_entity(Entity("Player"))

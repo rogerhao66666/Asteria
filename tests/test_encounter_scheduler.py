@@ -4,7 +4,7 @@ import dataclasses
 
 from test_battle_extensions_session import _first_encounter, _session
 
-from asteria.rpg.battle_scheduler import BattleSchedulerDefinition
+from asteria.rpg.battle.scheduler import BattleSchedulerDefinition
 
 
 def test_the_encounter_tag_picks_the_scheduler():

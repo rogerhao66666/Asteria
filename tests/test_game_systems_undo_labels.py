@@ -4,7 +4,7 @@ letter made "Add Music Roo" and "Delete Pet Rules (creature party"."""
 from pathlib import Path
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import KINDS, GameSystemsAuthoringController
+from asteria.editor.rpg.game_systems_authoring import KINDS, GameSystemsAuthoringController
 from asteria.project import Project
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"

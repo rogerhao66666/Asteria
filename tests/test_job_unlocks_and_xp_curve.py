@@ -7,13 +7,13 @@ import pytest
 from test_battle_extensions_session import _session
 
 from asteria.rpg import ClassDefinition
-from asteria.rpg.progression import ProgressionMilestone, ProgressionTrackDefinition
+from asteria.rpg.characters.progression import ProgressionMilestone, ProgressionTrackDefinition
 from asteria.runtime.game_session import GameSessionError
 
 
 def _reset(game, actor):
     """The actor at level 1 with no experience."""
-    from asteria.rpg.save_state import ActorProgressionState
+    from asteria.rpg.data.save_state import ActorProgressionState
 
     state = game.ensure_actor_progression(actor)
     game.save.rpg_state.actor_progression[actor] = ActorProgressionState(

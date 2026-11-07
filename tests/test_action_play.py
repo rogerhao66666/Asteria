@@ -6,8 +6,8 @@ respawns; side view jumps."""
 import pytest
 
 from asteria.core import Transform
-from asteria.runtime.action_play import ARPG_ACTIONS, CombatSceneComponent, missing_action_bindings
-from asteria.runtime.combat import CombatantComponent
+from asteria.runtime.action.combat import CombatantComponent
+from asteria.runtime.action.play import ARPG_ACTIONS, CombatSceneComponent, missing_action_bindings
 from asteria.runtime.input_map import InputActionMap
 from asteria.validation.arpg_playground import build_playground
 
@@ -89,7 +89,7 @@ def test_loot_pickup_bag_and_respawn_through_the_runtime(runtime):
     life = player.get(CombatantComponent).life_resource
     state.resources.set_current(life, 1)
     game.set_player_position(x + 40, y + 10)
-    from asteria.runtime.character_control import HitEvent
+    from asteria.runtime.field.character_control import HitEvent
 
     game.combat.pending.append(HitEvent("", player.id, "pg_slam", "foe"))
     _run(rt, 2)
@@ -107,7 +107,7 @@ def test_side_view_jumps_on_the_block_out_course(runtime):
     assert game.combat_scene.view == "side" and game.combat_scene.draw_colliders
     _run(rt, 30)
     player = game.player
-    from asteria.runtime.character_control import CharacterController2DComponent
+    from asteria.runtime.field.character_control import CharacterController2DComponent
 
     assert (
         player.get(CharacterController2DComponent).mode == "side"

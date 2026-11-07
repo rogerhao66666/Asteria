@@ -17,7 +17,7 @@ from __future__ import annotations
 import time
 from array import array
 
-from .gpu_effects import EffectChain
+from asteria.platform.gpu_effects import EffectChain
 
 QUAD_VERTEX = """
 #version 330

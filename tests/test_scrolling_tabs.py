@@ -7,7 +7,7 @@ def test_overflow_buttons_are_separate_and_scroll_in_their_arrow_direction():
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QLabel, QToolButton, QVBoxLayout, QWidget
 
-    from asteria.editor.scrolling_tabs import ScrollingTabWidget
+    from asteria.editor.ui.scrolling_tabs import ScrollingTabWidget
 
     app = QApplication.instance() or QApplication([])
     window = QWidget()

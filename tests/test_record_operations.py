@@ -6,8 +6,7 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
-from asteria.editor.record_operations import (
+from asteria.editor.records.operations import (
     MIXED,
     RecordOperationError,
     batch_set,
@@ -18,6 +17,7 @@ from asteria.editor.record_operations import (
     get_path,
     paste_records,
 )
+from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 from asteria.project import Project
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "complex_reference_rpg"

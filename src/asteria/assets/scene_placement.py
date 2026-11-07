@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from asteria.assets.browser_workspace import AssetDragPayload
 from asteria.graphics.character_placement import standing_point_for_cell
-
-from .browser_workspace import AssetDragPayload
 
 
 def character_cell_position(column, row, tile_size=(48, 48)):

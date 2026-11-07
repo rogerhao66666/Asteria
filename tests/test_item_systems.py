@@ -5,14 +5,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from asteria.rpg.disassembly import (
+from asteria.rpg.characters.job_points import JobPointRules
+from asteria.rpg.items.definitions import Inventory
+from asteria.rpg.items.disassembly import (
     DisassemblyRecipe,
     DisassemblyYield,
     disassemble,
 )
-from asteria.rpg.items import Inventory
-from asteria.rpg.job_points import JobPointRules
-from asteria.rpg.new_game_plus import NewGamePlusRules, carry_over
+from asteria.rpg.world.new_game_plus import NewGamePlusRules, carry_over
 
 
 def _recipe(**extra):

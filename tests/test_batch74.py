@@ -1,6 +1,6 @@
 import pytest
 
-from asteria.presentation.animated_text import (
+from asteria.presentation.text.animated import (
     AnimatedTextRuntime,
     AnimatedTextSpec,
     TextKey,

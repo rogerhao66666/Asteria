@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from asteria.editor.project_templates import (
+from asteria.editor.project.templates import (
     TEMPLATES,
     available_templates,
     create_from_template,
@@ -125,6 +125,6 @@ def test_the_packaged_templates_match_the_reference_projects_and_carry_a_guide(t
     path = create_from_template("action_rpg", "Guided", tmp_path / "guided")
     guide = path.parent / "START_HERE.md"
     assert guide.is_file() and "Where each rule lives" in guide.read_text()
-    from asteria.editor.project_templates import PACKAGE
+    from asteria.editor.project.templates import PACKAGE
 
     assert (PACKAGE / "party_rpg" / "START_HERE.md").is_file()

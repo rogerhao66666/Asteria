@@ -11,8 +11,7 @@ from asteria.rpg import (
     RpgActorRuntime,
     resolve_actor_build,
 )
-
-from .support import (
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 

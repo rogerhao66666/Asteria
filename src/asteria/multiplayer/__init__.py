@@ -1,14 +1,14 @@
 """Optional, game-agnostic multiplayer building blocks for Asteria projects."""
 
-from .adapter import (
+from asteria.multiplayer.adapter import (
     AdapterUpdate,
     GameNetworkAdapter,
     InputGameNetworkAdapter,
     TickableGameNetworkAdapter,
 )
-from .client import MultiplayerClient, MultiplayerClientError
-from .protocol import PROTOCOL_VERSION, ProtocolError
-from .persistence import SQLiteMultiplayerStore
+from asteria.multiplayer.client import MultiplayerClient, MultiplayerClientError
+from asteria.multiplayer.protocol import PROTOCOL_VERSION, ProtocolError
+from asteria.multiplayer.persistence import SQLiteMultiplayerStore
 
 __all__ = [
     "AdapterUpdate",
@@ -29,14 +29,14 @@ __all__ = [
 
 def __getattr__(name):
     if name in {"CooperativeBossAdapter", "build_boss_adapter"}:
-        from .boss_demo import CooperativeBossAdapter, build_boss_adapter
+        from asteria.multiplayer.boss_demo import CooperativeBossAdapter, build_boss_adapter
 
         return {
             "CooperativeBossAdapter": CooperativeBossAdapter,
             "build_boss_adapter": build_boss_adapter,
         }[name]
     if name in {"MultiplayerServer", "create_server"}:
-        from .server import MultiplayerServer, create_server
+        from asteria.multiplayer.server import MultiplayerServer, create_server
 
         return {"MultiplayerServer": MultiplayerServer, "create_server": create_server}[name]
     raise AttributeError(name)

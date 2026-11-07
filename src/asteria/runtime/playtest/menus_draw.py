@@ -3,16 +3,15 @@ screens as drawn."""
 
 from __future__ import annotations
 
-from asteria.runtime.game_menus import (
+from asteria.runtime.input_map import InputActionTracker, InputBinding
+from asteria.runtime.input_rebinding import effective_input_map
+from asteria.runtime.menus.game_menus import (
     achievement_rows,
     bestiary_rows,
     quest_rows,
 )
-from asteria.runtime.input_map import InputActionTracker, InputBinding
-from asteria.runtime.input_rebinding import effective_input_map
-from asteria.runtime.menu_icons import record_icon_id
-
-from .support import (
+from asteria.runtime.menus.icons import record_icon_id
+from asteria.runtime.playtest.support import (
     BESTIARY_TAG_KINDS,
 )
 
@@ -222,7 +221,7 @@ class MenusDrawMixin:
             )
         ]
         if about:
-            from asteria.runtime.crafting_screen import wrap
+            from asteria.runtime.menus.crafting import wrap
 
             lines += wrap(self, about, 17, self.width - 240)
         if defeated:

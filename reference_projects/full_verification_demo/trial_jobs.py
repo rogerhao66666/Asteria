@@ -13,7 +13,7 @@ import trial_content as tc
 
 from asteria.gameplay.conditions import ConditionGroup, TagCondition
 from asteria.rpg import ClassDefinition, ProgressionGraphDefinition
-from asteria.rpg.ability_build import PassiveDefinition
+from asteria.rpg.characters.abilities import PassiveDefinition
 
 HP, SP, BP = tc.HP, tc.SP, tc.BP
 CRIT = tc.CRIT

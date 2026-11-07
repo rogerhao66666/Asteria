@@ -25,24 +25,24 @@ import trial_content as tc
 from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
 from asteria.gameplay.attacks import AttackDefinition
 from asteria.gameplay.projectiles import ProjectileDefinition
-from asteria.presentation.battle_action_workflow import (
+from asteria.presentation.battle.action_workflow import (
     BattleActionWorkflowDefinition,
     BattleWorkflowOption,
     BattleWorkflowStep,
 )
-from asteria.presentation.battle_interaction import (
+from asteria.presentation.battle.interaction import (
     BattleInteractionLayer,
     BattleInteractionProfile,
 )
-from asteria.presentation.battle_portrait_party_template import (
+from asteria.presentation.battle.portrait_party_template import (
     BattlePortraitPartyTemplateProfile,
     BattlePortraitPartyZone,
 )
-from asteria.presentation.battle_sideview_template import (
+from asteria.presentation.battle.sideview_template import (
     BattleSideviewTemplateProfile,
     BattleSideviewZone,
 )
-from asteria.rpg.ability_loadout import AbilityLoadoutRules
+from asteria.rpg.characters.ability_slots import AbilityLoadoutRules
 
 SP = tc.SP
 ability, op, damage = tc.ability, tc.op, tc.damage
@@ -208,13 +208,13 @@ def field_strike(c):
 def arm_the_field(builders):
     """The hero swings and slings on the map; foes in view can be struck (they carry a hurtbox,
     and a hit first opens their fight preemptive)."""
-    from asteria.runtime.action_combat import ActionCombatComponent
-    from asteria.runtime.character_control import (
+    from asteria.runtime.action.abilities import ActionCombatComponent
+    from asteria.runtime.field.ai import VisibleEncounterComponent
+    from asteria.runtime.field.character_control import (
         CharacterController2DComponent,
         Hitbox2DComponent,
         Hurtbox2DComponent,
     )
-    from asteria.runtime.field_ai import VisibleEncounterComponent
 
     hero = builders["town"].find_entity("Player")
     combat = hero.add_component(ActionCombatComponent())

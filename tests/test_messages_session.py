@@ -6,11 +6,11 @@ import pytest
 
 from asteria.events.dialogue import DialogueLine
 from asteria.project import Project
-from asteria.rpg.extras import CreditsPage, MusicTrack
-from asteria.rpg.localization import LocaleTable, Localizer, MessageSettings
-from asteria.runtime.backlog import MessageBacklog
+from asteria.rpg.text.localization import LocaleTable, Localizer, MessageSettings
+from asteria.rpg.world.extras import CreditsPage, MusicTrack
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
+from asteria.runtime.menus.backlog import MessageBacklog
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 
@@ -140,7 +140,7 @@ def test_pause_menu_lists_the_extras_only_when_the_project_has_them(monkeypatch)
 
 
 def test_extra_screens_draw_and_close(monkeypatch):
-    from asteria.runtime import extras_screens
+    from asteria.runtime.menus import extras as extras_screens
 
     runtime = _runtime(
         monkeypatch,

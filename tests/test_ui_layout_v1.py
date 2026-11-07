@@ -5,7 +5,7 @@ tree's pieces as pictures of the author's own."""
 import pytest
 
 from asteria.presentation.library import BattlePresentationLibrary
-from asteria.presentation.menu_layout import (
+from asteria.presentation.screens.menu_layout import (
     EMPTY_CELL,
     MenuBitmapFont,
     MenuElement,
@@ -166,7 +166,7 @@ def test_a_strip_shows_the_frame_the_screen_asks_for_or_the_clocks(runtime):
 
 
 def test_the_skill_tree_takes_the_authors_node_frames_and_line_colours(runtime):
-    from asteria.runtime.skill_tree_screen import SkillTreeScreen
+    from asteria.runtime.menus.skill_tree import SkillTreeScreen
 
     screen = SkillTreeScreen(runtime)
     if screen.graph() is None:

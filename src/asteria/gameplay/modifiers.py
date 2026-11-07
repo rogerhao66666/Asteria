@@ -2,17 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from math import isfinite
 
-from .stats import StatBlock
-from .tags import TagSet, normalize_tag
-
-
-def _number(value, *, name="value"):
-    value = float(value)
-    if not isfinite(value):
-        raise ValueError(f"{name} must be finite")
-    return value
+from asteria.core.values import finite
+from asteria.gameplay.stats import StatBlock
+from asteria.gameplay.tags import TagSet, normalize_tag
 
 
 class ModifierOperation(str, Enum):
@@ -62,7 +55,7 @@ class StatModifier:
         object.__setattr__(self, "modifier_id", modifier_id)
         object.__setattr__(self, "stat", stat)
         object.__setattr__(self, "operation", ModifierOperation(operation))
-        object.__setattr__(self, "value", _number(value))
+        object.__setattr__(self, "value", finite(value, "value"))
         object.__setattr__(self, "priority", int(priority))
         object.__setattr__(
             self,
@@ -221,7 +214,7 @@ class ModifierSet:
         return tuple(m for m in by_stat.get(stat, ()) if m.applies(tags))
 
     def evaluate(self, stat, base_value, *, tags=None):
-        value = _number(base_value, name=str(stat))
+        value = finite(base_value, str(stat))
         modifiers = self.for_stat(stat, tags=tags)
 
         for modifier in modifiers:
@@ -236,7 +229,7 @@ class ModifierSet:
         if overrides:
             value = overrides[-1].value
 
-        return _number(value, name=str(stat))
+        return finite(value, str(stat))
 
     def evaluate_block(self, base: StatBlock, *, tags=None):
         if not isinstance(base, StatBlock):

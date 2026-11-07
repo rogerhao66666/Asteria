@@ -14,9 +14,9 @@ from asteria.gameplay.expressions import (
     evaluate,
 )
 from asteria.gameplay.formulas import FormulaContext, ValueFormula
-from asteria.rpg.battle_lifecycle import BattleEscapeRule
-from asteria.rpg.battle_session_rules import BattleSessionRules
-from asteria.rpg.interactions import InteractionResolver, OutcomeCheckDefinition
+from asteria.rpg.battle.interactions import InteractionResolver, OutcomeCheckDefinition
+from asteria.rpg.battle.lifecycle import BattleEscapeRule
+from asteria.rpg.battle.session_rules import BattleSessionRules
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "party_rpg_demo"
 

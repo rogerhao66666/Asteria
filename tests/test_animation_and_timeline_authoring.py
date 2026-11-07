@@ -6,10 +6,13 @@ import pytest
 from PIL import Image
 
 from asteria.editor import EditorDocument
-from asteria.editor.action_timeline_authoring import ActionTimelineController, ActionTimelineError
-from asteria.editor.animation_authoring import (
+from asteria.editor.animation.authoring import (
     AnimationAuthoringController,
     AnimationAuthoringError,
+)
+from asteria.editor.animation.timeline_authoring import (
+    ActionTimelineController,
+    ActionTimelineError,
 )
 from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
@@ -25,7 +28,7 @@ def document():
 
 
 def _resolver(project):
-    from asteria.runtime.battle_visuals import BattleVisualResolver
+    from asteria.runtime.battle.visuals import BattleVisualResolver
 
     return BattleVisualResolver(project, lambda uri: Image.open(ROOT / uri).size)
 
@@ -72,7 +75,7 @@ def test_timeline_edits_are_undoable_and_drive_the_battle_choreography(document)
     api = ActionTimelineController(document)
     assert "fire_arc" in api.sequences()
     api.move_beat("fire_arc", "impact", 0.5)
-    from asteria.runtime.battle_visuals import BattleVisualResolver  # noqa: F401
+    from asteria.runtime.battle.visuals import BattleVisualResolver  # noqa: F401
 
     sequence = _resolver(document.project).motion_sequence("fire_arc")
     assert next(b.at for b in sequence.beats if b.beat_id == "impact") == 0.5
@@ -108,7 +111,7 @@ def test_battle_use_fields_are_editable_undoable_and_validated(document):
     assert api.data(SHEET)["body_height"] == 40
     api.set_vfx(SHEET, anchor="head", offset=(2.0, -3.0), scale=0.8)
     assert api.data(SHEET)["vfx"] == {"anchor": "head", "offset": [2.0, -3.0], "scale": 0.8}
-    from asteria.runtime.battle_visuals import member_body_height, vfx_placement
+    from asteria.runtime.battle.visuals import member_body_height, vfx_placement
 
     meta = document.project.assets.resolve(SHEET).meta()
     assert member_body_height(meta, 64, 1.0) == 40.0
@@ -133,7 +136,7 @@ def test_the_animation_editor_shows_and_applies_the_battle_use_fields(document):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.animation_editor_widget import AnimationEditorWidget
+    from asteria.editor.animation.editor_widget import AnimationEditorWidget
 
     QApplication.instance() or QApplication([])
     widget = AnimationEditorWidget(document, resource_root=ROOT)

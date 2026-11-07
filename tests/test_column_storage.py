@@ -11,9 +11,12 @@ from asteria.core import Entity, Scene, Transform, deserialize_component, serial
 from asteria.core.columns import column_spec
 from asteria.core.scene_transition import carry_persistent_entities
 from asteria.kernels import _python
-from asteria.runtime.character_control import CharacterController2DComponent, Hitbox2DComponent
-from asteria.runtime.collision import Collider2DComponent, CollisionWorld
 from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.character_control import (
+    CharacterController2DComponent,
+    Hitbox2DComponent,
+)
+from asteria.runtime.field.collision import Collider2DComponent, CollisionWorld
 
 np_kernels = pytest.importorskip("asteria.kernels._numpy")
 
@@ -129,7 +132,7 @@ def test_persistent_entities_carry_their_values_to_the_next_scene():
 
 
 def test_collision_world_from_columns_matches_the_shapes_built_one_by_one():
-    from asteria.runtime.collision import shape_of
+    from asteria.runtime.field.collision import shape_of
 
     rng = random.Random(5)
     scene = Scene("S")

@@ -10,37 +10,35 @@ from asteria.core import Transform
 from asteria.graphics.scaling import ScaledImageCache
 from asteria.platform.pygame_audio import open_audio_device
 from asteria.platform.pygame_input import PygameInputSource
-from asteria.runtime.action_play import missing_action_bindings
+from asteria.runtime.action.play import missing_action_bindings
 from asteria.runtime.audio_mixer import AudioMixer
-from asteria.runtime.battle_presentation_adapters import create_battle_presentation_adapter
-from asteria.runtime.creature_shop import MAP_PHASES
-from asteria.runtime.debug_server import DebugServer
-from asteria.runtime.debugger import RuntimeDebugger
-from asteria.runtime.field_camera import (
+from asteria.runtime.battle.presentation import create_battle_presentation_adapter
+from asteria.runtime.creature.shop import MAP_PHASES
+from asteria.runtime.field.camera import (
     CAMERA_COMMANDS,
     FieldCameraError,
 )
-from asteria.runtime.field_presentation import (
+from asteria.runtime.field.presentation import (
     FIELD_EFFECT_COMMANDS,
     FieldEffectError,
-)
-from asteria.runtime.game_menus import (
-    GAME_OVER_OPTIONS,
-    GameSettings,
-    MenuCursor,
-    ShopScreen,
-    text_keys,
 )
 from asteria.runtime.game_save import GameRuntimeSave
 from asteria.runtime.game_session import GameSessionRuntime
 from asteria.runtime.input_map import InputActionTracker
 from asteria.runtime.input_rebinding import effective_input_map
+from asteria.runtime.menus.game_menus import (
+    GAME_OVER_OPTIONS,
+    GameSettings,
+    MenuCursor,
+    text_keys,
+)
 from asteria.runtime.playtest.action_scenes import ActionSceneMixin
 from asteria.runtime.playtest.battle_flow import BattleFlowMixin
 from asteria.runtime.playtest.capture import CaptureMixin
 from asteria.runtime.playtest.environment import EnvironmentMixin
 from asteria.runtime.playtest.field_ui import FieldUiMixin
 from asteria.runtime.playtest.field_view import FieldViewMixin
+from asteria.runtime.playtest.frame_modes import FrameModesMixin
 from asteria.runtime.playtest.menu_fit import MenuFitMixin
 from asteria.runtime.playtest.menu_pages import MenuPagesMixin
 from asteria.runtime.playtest.menus_draw import MenusDrawMixin
@@ -62,8 +60,10 @@ from asteria.runtime.playtest.text_draw import TextDrawMixin
 from asteria.runtime.playtest.title_build import TitleBuildMixin
 from asteria.runtime.playtest.workshop import WorkshopMixin
 from asteria.runtime.pointer import PointerLayer
-from asteria.runtime.profiler import NullProfiler, RuntimeProfiler
-from asteria.runtime.skeleton_component import SkeletonSceneRuntime
+from asteria.runtime.scene.skeleton_component import SkeletonSceneRuntime
+from asteria.runtime.tools.debug_server import DebugServer
+from asteria.runtime.tools.debugger import RuntimeDebugger
+from asteria.runtime.tools.profiler import NullProfiler, RuntimeProfiler
 
 
 class PlayableTestRuntime(
@@ -73,6 +73,7 @@ class PlayableTestRuntime(
     FieldViewMixin,
     MultiplayerMixin,
     FieldUiMixin,
+    FrameModesMixin,
     ActionSceneMixin,
     TitleBuildMixin,
     WorkshopMixin,
@@ -109,7 +110,7 @@ class PlayableTestRuntime(
         self.multiplayer_profile_error = ""
         self.multiplayer_profile = self.multiplayer_bridge = None
         try:
-            from asteria.runtime.multiplayer_preview import (
+            from asteria.runtime.tools.multiplayer_preview import (
                 MultiplayerPreviewBridge,
                 load_runtime_multiplayer_profile,
             )
@@ -391,18 +392,18 @@ class PlayableTestRuntime(
 
     # modules the field imports on first use; open() imports them before the first frame
     FIELD_MODULES = (
-        "asteria.presentation.animated_text",
-        "asteria.presentation.text_render_integration",
-        "asteria.runtime.behavior_tree",
-        "asteria.runtime.entity_actions",
-        "asteria.runtime.hud_bottom",
-        "asteria.runtime.image_preloader",
-        "asteria.runtime.map_rules_field",
-        "asteria.runtime.menu_icons",
+        "asteria.presentation.text.animated",
+        "asteria.presentation.text.render_integration",
+        "asteria.runtime.field.behavior_tree",
+        "asteria.runtime.field.entity_actions",
+        "asteria.runtime.action.hud",
+        "asteria.runtime.scene.image_preloader",
+        "asteria.runtime.field.map_rules",
+        "asteria.runtime.menus.icons",
         "asteria.runtime.preview",
-        "asteria.runtime.projectiles",
-        "asteria.runtime.tile_scene_view",
-        "asteria.runtime.tilemap_field",
+        "asteria.runtime.action.projectiles",
+        "asteria.runtime.field.tile_scene_view",
+        "asteria.runtime.field.tilemap_field",
     )
 
     def _warm_start(self):
@@ -434,7 +435,7 @@ class PlayableTestRuntime(
                 self.environment_errors = list(self.gpu.post.errors)
         else:
             if env is not None and env.active:
-                from asteria.runtime.environment_fallback import (
+                from asteria.runtime.scene.environment_fallback import (
                     PygameEnvironmentRenderer,
                     unsupported,
                 )
@@ -515,7 +516,7 @@ class PlayableTestRuntime(
         # the editor's "Open in game" (Menu Screens ▸ Layout): start on that menu screen
         start_menu = os.environ.pop("ASTERIA_OPEN_MENU", "")
         if start_menu:
-            from asteria.runtime.menu_preview import open_menu_screen
+            from asteria.runtime.menus.preview import open_menu_screen
 
             open_menu_screen(self, start_menu)
         if profile_path is not None:
@@ -534,7 +535,7 @@ class PlayableTestRuntime(
             self.close()
         return 0
 
-    def _creature_shop_frame(self, dt, events):
+    def _creature_shop_frame(self, events, dt):
         """``field.creature_shop``: the screen over the field; on its buy screen the field's
         camera puts the cell the player faces at ``map_front_at`` (the map beside the goods)."""
 
@@ -716,316 +717,7 @@ class PlayableTestRuntime(
                 self.save_playtest()
 
         self.menu_sounds()  # the menu theme's open / move / confirm / cancel sounds (U2)
-        if self._ui_mode == "title" and self._title_program():
-            self._title_program_frame(events, dt, self._title_program())
-        elif self._ui_mode == "title":
-            for event in events:
-                if event.type == self.pg.KEYDOWN and event.key == self.pg.K_n:
-                    self._ui_mode = "field"
-                elif event.type == self.pg.KEYDOWN and event.key == self.pg.K_l:
-                    self.open_slots("load", back="title")
-            self._draw_title()
-        elif self._ui_mode == "build":
-            self._build_menu_input(events)
-            self._draw_build_menu()
-        elif self._ui_mode in ("equipment", "enhance"):
-            screen = self._gear_screen
-            screen.handle(dt, events)
-            if screen.closed:
-                self._ui_mode = screen.back
-            else:
-                with self.menu_fit():
-                    screen.draw()
-        elif self._ui_mode == "pause":
-            self._pause_input()
-            self._draw_overlay_menu(self.game.tr("pause.heading", "Paused"), self._pause_menu)
-        elif self._ui_mode == "slots":
-            self._slots_input(events)
-            self._draw_slots()
-        elif self._ui_mode == "controls":
-            self._controls_input(events)
-            self._draw_controls()
-        elif self._ui_mode == "status":
-            self._status_input(events)
-            with self.menu_fit():
-                self._draw_status_menu()
-        elif self._ui_mode == "quests":
-            self._quests_input()
-            with self.menu_fit():
-                self._draw_quests()
-        elif self._ui_mode == "shop":
-            self._shop_input()
-            with self.menu_fit():
-                self._draw_shop()
-        elif self._ui_mode == "crafting":
-            self._crafting_input(events)
-            with self.menu_fit():
-                self._draw_crafting()
-        elif self._ui_mode == "service":  # a quest board, recruiting office or gacha (U5)
-            screen = self._service_screen
-            screen.handle(dt, events)
-            if screen.closed:
-                self._service_screen = None
-                self._ui_mode = screen.back
-            else:
-                with self.menu_fit():
-                    screen.draw()
-        elif self._ui_mode in ("achievements", "bestiary"):
-            self._list_screen_input()
-            with self.menu_fit():
-                self._draw_list_screen(self._ui_mode)
-        elif self._ui_mode == "settings":
-            self._settings_input()
-            self._draw_settings()
-        elif self._ui_mode == "bag":
-            self._bag_screen.handle(dt)
-            if self._bag_screen.closed:
-                self._ui_mode = "field"
-            else:
-                with self.menu_fit():
-                    self._bag_screen.draw()
-        elif self._ui_mode == "extra":
-            self._extra_screen.handle(dt, events)
-            if self._extra_screen.closed:
-                self._ui_mode = "pause"
-            else:
-                with self.menu_fit():
-                    self._extra_screen.draw()
-        elif self._ui_mode == "creature_menu":  # the start menu in the game's own art
-            menu = self._creature_menu
-            menu.update(dt, events)
-            if menu.done:
-                self._creature_menu = None
-                self._ui_mode = getattr(self, "_creature_menu_back", "field")
-                self._creature_menu_back = "field"
-                if self._ui_mode == "field":
-                    self._draw_field(False)
-            else:
-                from asteria.runtime.creature_menu import OVERLAY_PHASES
-
-                if menu.phase in OVERLAY_PHASES:
-                    self._draw_field(False)
-                menu.draw()
-        elif self._ui_mode == "name_input":  # NAME_INPUT: entering a name
-            self._name_input.update(dt, events)
-            if self._name_input.done:
-                self._name_input = None
-                self._ui_mode = "field"
-                self._draw_field(False)
-            else:
-                self._name_input.draw()
-        elif self._ui_mode == "picture_choice":  # PICTURE_CHOICE: pictured options
-            self._picture_choice.update(dt, events)
-            if self._picture_choice.done:
-                self._picture_choice = None
-                self._ui_mode = "field"
-                self._draw_field(False)
-            else:
-                self._picture_choice.draw()
-        elif self._ui_mode == "creature_shop":  # a shop in the game's own art
-            self._creature_shop_frame(dt, events)
-        elif self._ui_mode == "pets":
-            self._pets_screen.handle(dt, events)
-            if self._pets_screen.closed:
-                self._ui_mode = getattr(self._pets_screen, "back", "pause")
-            else:
-                with self.menu_fit():
-                    self._pets_screen.draw()
-        elif self._ui_mode == "learn":  # a creature learned a move past its limit
-            self._learn_input(events)
-            self._draw_field(False)
-            self._draw_learn_prompt()
-        elif self._ui_mode == "skills":
-            self._skill_tree.handle(dt, events)
-            if self._skill_tree.closed:
-                self._ui_mode = getattr(self._skill_tree, "back", "field")
-            else:
-                self._skill_tree.draw()
-        elif self._ui_mode == "game_over":
-            self._game_over_input()
-            title = self.game.tr("game_over.heading", "Game Over")
-            self._draw_overlay_menu(
-                title, self._game_over_menu, base="battle", screen_id="game_over"
-            )
-        elif self._creature_battle is not None:  # the creature battle screen (one on one)
-            screen = self._creature_battle
-            if not self._dialogue_input(events):
-                screen.update(dt, events)
-            screen.draw()
-            self._draw_dialogue()
-            if screen.done:
-                self._creature_battle = None
-                if screen.weather_rules:
-                    self.game.set_battle_weather("none")
-                if screen.defeated and "defeat_continues" in screen.tags:
-                    self.game.mode = "field"  # a battle the story goes on after, lost or won
-                    self.game.battle = None
-                elif screen.defeated and self.game.rules.defeat == "respawn":
-                    self.game.respawn_after_defeat()  # healed at the last respawn point
-                elif screen.defeated:
-                    self.game.mode = "field"
-                    self.game.battle = None
-                    self._game_over_menu.index = 0
-                    self._ui_mode = "game_over"
-                    self.audio.stop_music(fade_out=0.5)
-                else:
-                    self.game.mode = "field"
-        elif (
-            self.game.mode == "battle" and self._creature_style() and not self._victory
-        ):  # a creature battle started outside the field (an event, a test): its own screen
-            from asteria.runtime.creature_battle import CreatureBattleScreen
-
-            self._creature_battle = CreatureBattleScreen(self)
-            self._end_temporary_music()
-            self._music(
-                self._creature_battle.music("start") or self.manifest.get("battle", {}).get("bgm")
-            )
-            self._creature_battle.draw()
-        elif self.game.mode == "battle" or self._victory:
-            if self.game.mode == "battle":
-                with self.profiler.section("events"):
-                    self.game.update_events(dt)  # battle events (EVT-03)
-            if not (
-                self._dialogue_input(events)
-                or (self.game.mode == "battle" and self.game.event_busy)
-            ):
-                self._battle_input(events)
-            self._present_battle(dt)
-            self._draw_dialogue()
-            if self._defeat:
-                self._game_over_menu.index = 0
-                self._ui_mode = "game_over"
-                self.audio.stop_music(fade_out=0.5)
-        elif self.game.mode == "field":
-            moving = self._field_input(events, dt)
-            if not self._multiplayer_connected():
-                with self.profiler.section("events"):
-                    self.game.update_events(dt)
-            if (  # NAME_INPUT: the name screen (the event waits for the name)
-                self._ui_mode == "field"
-                and self.game.name_input_request
-                and self.game.pending_dialogue is None
-            ):
-                from asteria.runtime.name_input import NameInputScreen
-
-                self._name_input = NameInputScreen(self, self.game.name_input_request)
-                self._ui_mode = "name_input"
-            if (  # PICTURE_CHOICE: the pictured options (the event waits for the choice)
-                self._ui_mode == "field"
-                and self.game.picture_choice_request
-                and self.game.pending_dialogue is None
-            ):
-                from asteria.runtime.picture_choice import PictureChoiceScreen
-
-                self._picture_choice = PictureChoiceScreen(self, self.game.picture_choice_request)
-                self._ui_mode = "picture_choice"
-            from asteria.presentation.creature_screens import creature_settings
-
-            if (  # a shop in the game's own art opens at once: the event waits for it
-                self._ui_mode == "field"
-                and self.game.open_shop_id
-                and creature_settings(self, "field.creature_shop")
-                and self.game.pending_dialogue is None
-            ):
-                from asteria.runtime.creature_shop import CreatureShopScreen
-
-                self._creature_shop = CreatureShopScreen(self)
-                self._ui_mode = "creature_shop"
-            if (
-                self._ui_mode == "field"
-                and self.game.open_shop_id
-                and not (
-                    getattr(self, "_network_event_busy", False)
-                    if self._multiplayer_connected()
-                    else self.game.event_busy
-                )
-            ):
-                self._shop_screen = ShopScreen(self.game)
-                self._ui_mode = "shop"
-            busy = (
-                getattr(self, "_network_event_busy", False)
-                if self._multiplayer_connected()
-                else self.game.event_busy
-            )
-            if self._ui_mode == "field" and self.game.pet_storage_requested and not busy:
-                from asteria.runtime.pets_screen import PetsScreen
-
-                self.game.pet_storage_requested = False
-                self._pets_screen = PetsScreen(self, back="field", storage=True)
-                self._ui_mode = "pets"
-            if self._ui_mode == "field" and self.game.pending_pet_moves() and not busy:
-                self._ui_mode = "learn"
-            if (
-                self._ui_mode == "field"
-                and self.game.open_crafting_station is not None
-                and not (
-                    getattr(self, "_network_event_busy", False)
-                    if self._multiplayer_connected()
-                    else self.game.event_busy
-                )
-            ):
-                self._open_crafting(self.game.open_crafting_station, back="field")
-            service = getattr(self.game, "open_service", None)
-            if self._ui_mode == "field" and service and not busy:
-                from asteria.runtime.service_screens import open_service
-
-                self.game.open_service = None
-                open_service(self, *service, back="field")
-            if self.game.mode == "field" and self._ui_mode == "field":
-                if not self._multiplayer_connected():
-                    with self.profiler.section("update"):
-                        self.game.field_update(dt)
-                self._sync_multiplayer_player()
-                if self.game.action_scene:
-                    self.action_hud.observe(self.game, dt)
-                    if self._multiplayer_connected():
-                        self.game.combat.events = ()
-                    if getattr(self.game, "player_defeated", False):
-                        self.game.player_defeated = False
-                        self._game_over_menu.index = 0
-                        self._ui_mode = "game_over"
-            pt = self.game.player.get(Transform)
-            last = getattr(self, "_last_player_xy", None)
-            velocity = (
-                ((pt.x - last[0]) / dt, (pt.y - last[1]) / dt)
-                if last is not None and dt > 0
-                else None
-            )
-            self._last_player_xy = (pt.x, pt.y)
-            self.field_camera.update(dt, (pt.x, pt.y), velocity)
-            tiles = self.tile_view
-            if tiles is not None:
-                tiles.update(dt)
-            self.field_effects.sync_emitters(
-                self.game.scene, self.game.project.assets
-            )  # VFX-01 emitters
-            self.field_effects.update(dt)
-            self._skeleton_scene_runtime.update(self.game.scene, dt)
-            if self.game.mode == "battle" and self._creature_style():
-                from asteria.runtime.creature_battle import CreatureBattleScreen
-
-                self._creature_battle = CreatureBattleScreen(self)
-                self._end_temporary_music()
-                self._music(
-                    self._creature_battle.music("start")
-                    or self.manifest.get("battle", {}).get("bgm")
-                )
-                self._creature_battle.draw()
-            elif self.game.mode == "battle":
-                self._turn_actor = None
-                self._battle_presentation.begin()
-                self._music(self.manifest.get("battle", {}).get("bgm"))
-                self._advance_to_hero_turn()
-                self._present_battle(dt)
-            else:
-                override = getattr(self, "_bgm_override", None)  # a story event chose the track
-                if override is None:  # else the map area's own music, else the field's
-                    ride = self._field_ride()
-                    override = (ride or {}).get("music") or self.game.area_music
-                    override = override or self.manifest["field"].get("bgm")
-                self._music(override)
-                self._preload_battle_images()
-                self._draw_field(moving)
+        self._screen_frame(events, dt)
 
 
 def run_playable_test_runtime(

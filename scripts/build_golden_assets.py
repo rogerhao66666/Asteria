@@ -23,15 +23,15 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset  # noqa: E402
-from asteria.assets.icon import IconVariant, icon_asset  # noqa: E402
-from asteria.assets.monster import MonsterAnimation, MonsterAsset  # noqa: E402
-from asteria.assets.prop import (  # noqa: E402
+from asteria.assets.kinds.icon import IconVariant, icon_asset  # noqa: E402
+from asteria.assets.kinds.monster import MonsterAnimation, MonsterAsset  # noqa: E402
+from asteria.assets.kinds.prop import (  # noqa: E402
     CollisionShape,
     InteractionPoint,
     PropVisual,
     prop_asset,
 )
-from asteria.assets.sprite_kinds import (  # noqa: E402
+from asteria.assets.kinds.sprite_sheets import (  # noqa: E402
     CharacterAsset,
     NpcAsset,
     ProjectileAsset,
@@ -44,9 +44,9 @@ from asteria.assets.sprite_kinds import (  # noqa: E402
     UiAsset,
     standard_asset_codecs,
 )
-from asteria.assets.tileset import TileCollision, TileDef, tileset_asset  # noqa: E402
-from asteria.assets.vfx import VFXAnchor, VFXAsset, VFXVariant  # noqa: E402
-from asteria.presentation.fidelity import FrameTiming, HighFidelityClip  # noqa: E402
+from asteria.assets.kinds.tileset import TileCollision, TileDef, tileset_asset  # noqa: E402
+from asteria.assets.kinds.vfx import VFXAnchor, VFXAsset, VFXVariant  # noqa: E402
+from asteria.presentation.visuals.fidelity import FrameTiming, HighFidelityClip  # noqa: E402
 
 PLAYABLE = REPO / "reference_projects" / "complex_reference_rpg" / "playable_assets"
 OUT = REPO / "tests" / "golden" / "assets"

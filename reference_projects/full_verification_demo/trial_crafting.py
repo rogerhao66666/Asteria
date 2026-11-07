@@ -70,8 +70,8 @@ OBJECTS = {
 
 def stations():
     """``{station id: WorkstationDefinition}``."""
-    from asteria.rpg.workstations import WorkstationCategory as Tab
-    from asteria.rpg.workstations import WorkstationDefinition
+    from asteria.rpg.items.workstations import WorkstationCategory as Tab
+    from asteria.rpg.items.workstations import WorkstationDefinition
 
     return {
         "alchemy": WorkstationDefinition(
@@ -107,7 +107,7 @@ def stations():
 
 
 def _recipe(recipe_id, station, name, base, catalyst, output, options):
-    from asteria.rpg.composition import (
+    from asteria.rpg.items.crafting import (
         CompositionOutput,
         CompositionQualityTier,
         CompositionRecipeDefinition,

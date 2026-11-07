@@ -6,14 +6,26 @@ from __future__ import annotations
 from asteria.core import ComponentRegistry, PersistentComponent, Transform
 from asteria.core.prefab import PrefabInstanceComponent
 from asteria.gameplay import GameplayAttributesComponent
-
-from .action_combat import register_action_combat_components
-from .action_play import register_action_play_components
-from .actor_link import ActorLinkComponent, ClassAppearanceComponent
-from .character_control import register_character_components
-from .collision import Collider2DComponent
-from .combat import register_combat_components
-from .components2d import (
+from asteria.runtime.action.abilities import register_action_combat_components
+from asteria.runtime.action.combat import register_combat_components
+from asteria.runtime.action.ground_loot import register_loot_components
+from asteria.runtime.action.play import register_action_play_components
+from asteria.runtime.field.actor_link import ActorLinkComponent, ClassAppearanceComponent
+from asteria.runtime.field.ai import (
+    FieldAIComponent,
+    SpawnZoneComponent,
+    VisibleEncounterComponent,
+)
+from asteria.runtime.field.character_control import register_character_components
+from asteria.runtime.field.collision import Collider2DComponent
+from asteria.runtime.field.grid_actors import (
+    GridMover2DComponent,
+    LookByVariable2DComponent,
+    SightTrigger2DComponent,
+    SwitchVisibility2DComponent,
+)
+from asteria.runtime.field.npc_state import NpcIdentity2DComponent
+from asteria.runtime.scene.components import (
     Animator2DComponent,
     Camera2DComponent,
     Interaction2DComponent,
@@ -21,17 +33,8 @@ from .components2d import (
     SpriteRenderer2D,
     TileMap2DComponent,
 )
-from .environment2d import register_environment_components
-from .field_ai import FieldAIComponent, SpawnZoneComponent, VisibleEncounterComponent
-from .grid_actors import (
-    GridMover2DComponent,
-    LookByVariable2DComponent,
-    SightTrigger2DComponent,
-    SwitchVisibility2DComponent,
-)
-from .loot import register_loot_components
-from .npc_state import NpcIdentity2DComponent
-from .skeleton_component import SkeletonAnimation2DComponent
+from asteria.runtime.scene.environment import register_environment_components
+from asteria.runtime.scene.skeleton_component import SkeletonAnimation2DComponent
 
 
 def default_component_registry():

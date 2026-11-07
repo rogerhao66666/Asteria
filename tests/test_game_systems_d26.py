@@ -4,27 +4,27 @@ import pytest
 from test_session_events import _project
 
 from asteria.editor import EditorDocument
-from asteria.editor.game_systems_authoring import (
+from asteria.editor.rpg.game_systems_authoring import (
     FORMS,
     GameSystemsAuthoringController,
     GameSystemsAuthoringError,
 )
-from asteria.rpg.battle_extensions import (
+from asteria.rpg.battle.extensions import (
     BattleExtensionRules,
     ResourceGain,
     StealEntry,
     StealTable,
 )
-from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
-from asteria.rpg.doodads import DoodadDefinition
-from asteria.rpg.durability import DurabilityRules, WearEvent
-from asteria.rpg.enemy_levels import DifficultyLevel, EnemyLevelRules
-from asteria.rpg.extras import CreditsPage, MusicTrack
-from asteria.rpg.job_points import JobPointRules
-from asteria.rpg.localization import LocaleTable, MessageSettings
-from asteria.rpg.map_rules import AreaRule, MapRuleSet
-from asteria.rpg.new_game_plus import NewGamePlusRules
-from asteria.rpg.refine import RefineRules
+from asteria.rpg.characters.job_points import JobPointRules
+from asteria.rpg.enemies.levels import DifficultyLevel, EnemyLevelRules
+from asteria.rpg.items.disassembly import DisassemblyRecipe, DisassemblyYield
+from asteria.rpg.items.durability import DurabilityRules, WearEvent
+from asteria.rpg.items.refine import RefineRules
+from asteria.rpg.text.localization import LocaleTable, MessageSettings
+from asteria.rpg.world.doodads import DoodadDefinition
+from asteria.rpg.world.extras import CreditsPage, MusicTrack
+from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
+from asteria.rpg.world.new_game_plus import NewGamePlusRules
 
 SHEET = "sheet"
 RICH = {
@@ -157,7 +157,7 @@ def test_every_new_kind_is_in_the_picker_and_the_database_round_trips():
     document, api = _controller()
     for kind_id, record in RICH.items():
         api.create(kind_id, record)
-    from asteria.rpg.actors import RpgDatabase
+    from asteria.rpg.data.database import RpgDatabase
 
     restored = RpgDatabase.from_data(document.project.rpg_database.to_data())
     for kind_id, record in RICH.items():

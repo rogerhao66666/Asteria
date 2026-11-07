@@ -8,14 +8,11 @@ binding one action to several devices.
 
 Backends report raw device state as ``RawInputState`` using portable names:
 keys by their lower-case name ("a", "left", "return", "space"), gamepad
-buttons by index, axes by index with values in [-1, 1].
-"""
+buttons by index, axes by index with values in [-1, 1]. Also the input snapshot one frame reads."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-
-from .input import InputSnapshot
 
 DEVICES = ("key", "gamepad_button", "gamepad_axis", "gamepad_hat")
 
@@ -215,3 +212,17 @@ class InputActionTracker:
 
     def just_released(self, action_id) -> bool:
         return not self.held(action_id) and self.previous.actions.get(action_id, 0.0) > 0.0
+
+
+@dataclass(slots=True)
+class InputSnapshot:
+    actions: dict[str, float]
+
+    def axis(self, negative, positive):
+        return float(self.actions.get(positive, 0.0)) - float(self.actions.get(negative, 0.0))
+
+    def movement_vector(self):
+        return (
+            self.axis("move_left", "move_right"),
+            self.axis("move_up", "move_down"),
+        )

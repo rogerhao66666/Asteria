@@ -5,9 +5,9 @@ import random
 from asteria.core import Transform
 from asteria.events import EventRunner, EventScheduler, WorldCommandRouter
 from asteria.events.timers import EventTimers
-from asteria.runtime.backlog import MessageBacklog
-from asteria.runtime.interaction import InteractionController
-from asteria.runtime.pictures import PictureManager
+from asteria.runtime.field.interaction import InteractionController
+from asteria.runtime.menus.backlog import MessageBacklog
+from asteria.runtime.scene.pictures import PictureManager
 from asteria.runtime.session.ability_use import AbilityUseMixin
 from asteria.runtime.session.action_play import ActionPlayMixin
 from asteria.runtime.session.battle_events import BattleEventsMixin
@@ -35,7 +35,7 @@ from asteria.runtime.session.support import (  # noqa: F401 - re-exported
     describe_condition,
 )
 from asteria.runtime.session.turns import TurnsMixin
-from asteria.runtime.world_command_handlers import (
+from asteria.runtime.session.world_commands import (
     move_entity_to_scene,
     register_standard_world_commands,
 )
@@ -96,7 +96,7 @@ class GameSessionRuntime(
             transform = self.player.get(Transform)
             transform.x, transform.y = runtime_save.player_position
         self.interaction = InteractionController(action="interact")
-        from .interaction import TouchTriggerController
+        from asteria.runtime.field.interaction import TouchTriggerController
 
         self.touch = TouchTriggerController()
         self.struck_encounters = 0  # fights a field attack started (they open preemptive)
@@ -161,7 +161,7 @@ class GameSessionRuntime(
         self.open_crafting_station = None
         self._field_simulation = {}
         self._grid_movers = {}  # scene id -> GridMoverSystem (grid characters)
-        self.player_height = 0  # how high the player stands (runtime/grid_heights.py)
+        self.player_height = 0  # how high the player stands (runtime/field/grid_heights.py)
         self.player_drawn_height = 0  # the last height that was not 0: how the player is drawn
         self.height_over = frozenset()  # field.height_over: drawn over the layers above people
         self.grid_reserved = ()  # cells the player's grid walk holds (column, row)
@@ -170,7 +170,7 @@ class GameSessionRuntime(
         self.area_title_shown = ""  # the last area name shown (reset by a scene change)
         self.area_title_requests = []  # area names to show (the field draws and clears them)
         self.sighting = None  # a character that noticed the player: walking up (SightTrigger2D)
-        from asteria.runtime.grid_actors import RouteRunner
+        from asteria.runtime.field.grid_actors import RouteRunner
 
         self.routes = RouteRunner()  # scripted grid routes (GRID_ROUTE)
         self.route_hidden = set()  # entities a route hid (until shown or the scene changes)
@@ -187,7 +187,7 @@ class GameSessionRuntime(
         self._step_rng = random.Random(f"{self.project.id}:steps")
         self._tile_blocking = {}  # scene id -> tile map walls (set_tile_blocking)
         self._frame_collision_world = None
-        from asteria.runtime.profiler import NullProfiler
+        from asteria.runtime.tools.profiler import NullProfiler
 
         self.profiler = NullProfiler()
         self.field_input = None  # InputSnapshot for real-time control this frame (set_field_input)
@@ -213,6 +213,6 @@ class GameSessionRuntime(
         self._tile_changes = {}  # scene id -> {"layer|x|y": tile} (SET_TILE, this visit)
         self.light = {}  # SET_LIGHT: the lit circle of a dark place (and its scene)
         self.tile_changes_version = 0
-        from asteria.runtime.npc_state import apply_npc_states
+        from asteria.runtime.field.npc_state import apply_npc_states
 
         apply_npc_states(self.scene, self.world, self.entity_facing)

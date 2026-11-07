@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Any
 
-from .browser import AssetBrowserModel, AssetBrowserQuery, AssetInspector
+from asteria.assets.browser import AssetBrowserModel, AssetBrowserQuery, AssetInspector
 
 
 @dataclass(frozen=True, slots=True)

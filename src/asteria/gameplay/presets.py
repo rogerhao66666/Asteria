@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .abilities import (
+from asteria.gameplay.abilities import (
     AbilityCost,
     AbilityDefinition,
     AbilityEffect,
     TargetingRule,
 )
-from .action_timeline import ActionCue, ActionTimeline
-from .effects import Effect, EffectOperation
-from .formulas import FormulaBuilder, ValueFormula
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet
+from asteria.gameplay.action_timeline import ActionCue, ActionTimeline
+from asteria.gameplay.effects import Effect, EffectOperation
+from asteria.gameplay.formulas import FormulaBuilder, ValueFormula
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet
 
 
 @dataclass(frozen=True, slots=True)

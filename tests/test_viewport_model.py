@@ -1,7 +1,7 @@
 import math
 
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.viewport import ViewportCamera, pick_entity, scene_markers
+from asteria.editor.scene.viewport import ViewportCamera, pick_entity, scene_markers
 
 
 def test_camera_roundtrip_and_anchor_zoom():

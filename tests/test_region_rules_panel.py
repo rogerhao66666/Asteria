@@ -2,8 +2,8 @@
 
 import pytest
 
-from asteria.editor.tile_palette_widget import TilePaletteWidget
-from asteria.rpg.map_rules import AreaRule, MapRuleSet
+from asteria.editor.scene.tile_palette_widget import TilePaletteWidget
+from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
 
 
 @pytest.fixture(scope="module")

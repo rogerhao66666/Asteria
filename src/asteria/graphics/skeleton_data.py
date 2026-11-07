@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
+from asteria.graphics.skeleton import Bone, Key, Skeleton, SkeletonClip, Slot
 
 
 def skeleton_to_data(skeleton):

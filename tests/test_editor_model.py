@@ -1,5 +1,5 @@
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.model import EditorDocument
+from asteria.editor.project.model import EditorDocument
 
 
 def test_editor_document_uses_runtime_objects_directly():

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from asteria.presentation.message_codes import MessageContext, expand_message, plain_message
-from asteria.rpg import data_text
-from asteria.rpg.effect_text import amount, modifier_lines
-from asteria.rpg.tag_definitions import definition_for
-
-from .support import (
+from asteria.presentation.text.message_codes import MessageContext, expand_message, plain_message
+from asteria.rpg.data.tag_definitions import definition_for
+from asteria.rpg.text import data_text
+from asteria.rpg.text.effect_text import amount, modifier_lines
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 
@@ -30,7 +29,7 @@ class MessagesMixin:
         """The project's translations (``rpg.localization``) at the player's chosen locale."""
         localizer = self._localizer
         if localizer is None:  # made once: the screens ask for their words every frame
-            from asteria.rpg.localization import Localizer
+            from asteria.rpg.text.localization import Localizer
 
             settings = self.message_settings
             localizer = self._localizer = Localizer(
@@ -49,7 +48,7 @@ class MessagesMixin:
         return localizer.lookup if localizer.tables else None
 
     def name_of(self, record, fallback=None):
-        """A project record's name in the player's language (``rpg/data_text.py``, D60)."""
+        """A project record's name in the player's language (``rpg/text/data_text.py``, D60)."""
 
         return data_text.name_of(self.data_lookup, record, fallback)
 
@@ -389,7 +388,7 @@ class MessagesMixin:
         Every fighter carries the tag ``weather.<kind>`` while it lasts, so interaction rules can
         react to it (rain strengthens lightning, snow slows...). ``turns``: it ends by itself
         after that many rounds of a creature battle (0: it stays)."""
-        from asteria.runtime.environment2d import WEATHER_KINDS
+        from asteria.runtime.scene.environment import WEATHER_KINDS
 
         kind = str(kind or "none")
         if kind not in WEATHER_KINDS:

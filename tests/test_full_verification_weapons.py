@@ -11,7 +11,7 @@ sys.path.insert(0, str(DEMO))
 
 import run_trial_smoke as smoke  # noqa: E402
 
-from asteria.rpg.items import EquipmentDefinition  # noqa: E402
+from asteria.rpg.items.definitions import EquipmentDefinition  # noqa: E402
 
 LUCIFER = DEMO / "playable_assets" / "lucifer" / "icons"
 

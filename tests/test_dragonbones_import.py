@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from asteria.editor.skeleton_view import load_rig
+from asteria.editor.animation.skeleton_view import load_rig
 from asteria.graphics.dragonbones_import import (
     DragonBonesImportError,
     import_dragonbones_json,

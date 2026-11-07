@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from asteria.presentation.menu_layout import MenuElement, MenuLayout, MenuTheme
+from asteria.presentation.screens.menu_layout import MenuElement, MenuLayout, MenuTheme
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "arpg_demo"
 MAGENTA, CYAN, GREEN = (255, 0, 255), (0, 255, 255), (0, 200, 0)
@@ -79,7 +79,7 @@ def test_the_orb_moves_takes_the_authors_pictures_or_turns_into_a_bar(demo, tmp_
         MenuElement("orb_life_fill", "image", image=fill),
     )
     state = demo.game.combat.state(demo.game.player)
-    life = demo.game.player.get(__import__("asteria.runtime.combat", fromlist=["x"])
+    life = demo.game.player.get(__import__("asteria.runtime.action.combat", fromlist=["x"])
                                 .CombatantComponent).life_resource  # fmt: skip
     pool = state.resources.get(life)
     state.resources.set_current(life, pool.maximum / 2)
@@ -136,7 +136,7 @@ def test_a_cooldown_strip_shows_the_frame_for_the_time_left(demo, tmp_path):
 
 
 def test_the_theme_colours_a_resource_over_the_guess_from_its_name(demo):
-    from asteria.runtime.hud_bottom import resource_color
+    from asteria.runtime.action.hud import resource_color
 
     assert resource_color("mana") == ((18, 38, 120), (66, 128, 245))
     theme = MenuTheme(resource_colors={"mana": (200, 100, 0)})

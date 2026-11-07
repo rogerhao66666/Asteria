@@ -1,4 +1,4 @@
-from asteria.editor.commands import CommandStack, SetAttributeCommand
+from asteria.editor.project.commands import CommandStack, SetAttributeCommand
 
 
 class X:

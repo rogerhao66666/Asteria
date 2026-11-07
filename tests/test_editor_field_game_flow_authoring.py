@@ -2,14 +2,13 @@ import pytest
 
 from asteria.core import Entity, Scene, Transform
 from asteria.editor import EditorDocument
-from asteria.editor.field_game_flow_authoring import (
+from asteria.editor.rpg.field_game_flow_authoring import (
     FieldGameFlowAuthoringController,
     FieldGameFlowAuthoringError,
 )
-from asteria.editor.field_game_flow_workspace import FieldGameFlowWorkspaceModel
 from asteria.events import EventBinding, EventInstruction, EventProgram, EventTriggerKind
 from asteria.project import Project
-from asteria.runtime.components2d import Interaction2DComponent
+from asteria.runtime.scene.components import Interaction2DComponent
 
 
 def make():
@@ -147,18 +146,3 @@ def test_information_architecture_keeps_flow_contextual():
         "Battle Transition",
         "Return Flow",
     )
-
-
-def test_workspace_scene_entity_and_command_focus():
-    _, s, _, boss, _, c = make()
-    c.create_program("boss_event", encounter_program())
-    c.create_binding(s.id, EventBinding("boss_interact", boss.id, "boss_event"))
-    c.configure_interaction(s.id, boss.id, binding_id="boss_interact")
-    w = FieldGameFlowWorkspaceModel(c)
-    w.select_scene(s.id)
-    w.select_entity(boss.id)
-    assert w.snapshot().binding_id == "boss_interact"
-    assert w.snapshot().program_id == "boss_event"
-    w.set_section("encounter")
-    w.focus_command(1)
-    assert w.snapshot().focused_command_index == 1

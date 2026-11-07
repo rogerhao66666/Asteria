@@ -6,11 +6,19 @@ Add them to ``Scene.scheduler``; ``Scene.update`` then runs them in ``order``.
 from __future__ import annotations
 
 from asteria.core import System, Transform
-
-from .animation_binding import Animator2DBinding
-from .animation_state_machine import AnimationStateMachine
-from .camera import Camera2D, CameraDirector, CameraFollow2D, CameraTargetGroup
-from .components2d import Animator2DComponent, Camera2DComponent, SpriteRenderer2D
+from asteria.runtime.scene.animation import Animator2DBinding
+from asteria.runtime.scene.animation_state_machine import AnimationStateMachine
+from asteria.runtime.scene.camera import (
+    Camera2D,
+    CameraDirector,
+    CameraFollow2D,
+    CameraTargetGroup,
+)
+from asteria.runtime.scene.components import (
+    Animator2DComponent,
+    Camera2DComponent,
+    SpriteRenderer2D,
+)
 
 
 class AnimationSystem(System):

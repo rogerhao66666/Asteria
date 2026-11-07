@@ -1,4 +1,4 @@
-from .metadata import get_component_schema
+from asteria.core.metadata import get_component_schema
 
 
 class ComponentRegistry:

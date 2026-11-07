@@ -85,7 +85,7 @@ def picture(assets, key, file, box, name):
 
 def furnish(assets, town, home, home_places):
     """The house on the town map with its door, the room's way out, and the bed."""
-    from asteria.runtime.collision import Collider2DComponent
+    from asteria.runtime.field.collision import Collider2DComponent
 
     x0, y0, x1, y1 = LOT
     house = town.entity("Roger's House", (x0 + x1) * 8.0, y1 * 16.0)  # stands on its lot

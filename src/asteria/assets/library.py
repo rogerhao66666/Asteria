@@ -15,7 +15,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from .types import AssetRecord
+from asteria.assets.types import AssetRecord
 
 IMAGE_SUFFIXES = (".png",)
 PROJECT_FOLDER = "playable_assets/library"

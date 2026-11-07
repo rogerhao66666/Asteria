@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .canonical import Command, Context, Kind, Library, bind
+from asteria.presentation.canonical import Command, Context, Kind, Library, bind
 
 
 @dataclass(frozen=True, slots=True)

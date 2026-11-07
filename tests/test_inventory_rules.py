@@ -8,8 +8,8 @@ from test_session_events import BOSS_PROGRAM, _interact, _replace_program, _sess
 
 from asteria.events import EventInstruction
 from asteria.rpg import ShopDefinition, ShopEntry
-from asteria.rpg.actors import RpgDatabase
-from asteria.rpg.items import Inventory, InventoryRules, ItemDefinition
+from asteria.rpg.data.database import RpgDatabase
+from asteria.rpg.items.definitions import Inventory, InventoryRules, ItemDefinition
 
 ITEMS = {
     "potion": ItemDefinition("potion", "Potion", stack_limit=3),

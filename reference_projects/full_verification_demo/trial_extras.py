@@ -9,7 +9,7 @@ import trial_content as tc
 
 from asteria.gameplay.states import StateDefinition
 from asteria.rpg import BattleStatePolicy
-from asteria.rpg.battle_extensions import ResourceGain
+from asteria.rpg.battle.extensions import ResourceGain
 
 ability, op, damage = tc.ability, tc.op, tc.damage
 _hits, _state = tc._hits, tc._state

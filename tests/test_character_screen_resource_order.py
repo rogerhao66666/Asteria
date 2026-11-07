@@ -1,7 +1,7 @@
 """The status screen lists HP first (the game's knockout resource) unless the project sets its
 own resource order; the order is saved only when set."""
 
-from asteria.presentation.rpg_character_screen import CharacterScreenProfile
+from asteria.presentation.screens.character import CharacterScreenProfile
 
 
 def test_resources_follow_the_profile_order_else_the_lead_resource_then_names():
@@ -32,8 +32,8 @@ def test_the_status_screen_shows_hp_above_mp(monkeypatch):
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
     from asteria.project import Project
     from asteria.runtime.component_registry import default_component_registry
+    from asteria.runtime.menus.status import StatusMenu
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-    from asteria.runtime.status_menu import StatusMenu
 
     root = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
     project = Project.load_json(root / "project.asteria.json", default_component_registry())

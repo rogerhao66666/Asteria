@@ -11,10 +11,10 @@ import json
 from pathlib import Path
 
 from asteria.presentation.library import BattlePresentationLibrary
-from asteria.presentation.retired_screens import RETIRED_CATEGORIES, move_retired
-from asteria.rpg.actors import RpgDatabase
-from asteria.rpg.items import EquipmentSlotDefinition
-from asteria.rpg.stat_definitions import SET_ON, StatDefinition
+from asteria.presentation.screens.retired import RETIRED_CATEGORIES, move_retired
+from asteria.rpg.data.database import RpgDatabase
+from asteria.rpg.data.stat_definitions import SET_ON, StatDefinition
+from asteria.rpg.items.definitions import EquipmentSlotDefinition
 
 ROOT = Path(__file__).resolve().parents[1]
 

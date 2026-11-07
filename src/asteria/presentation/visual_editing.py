@@ -3,8 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 
-from .canonical import Node
-from .editor_model import PresentationEditorModel, _find
+from asteria.presentation.canonical import Node
+from asteria.presentation.editor_model import PresentationEditorModel, _find
 
 
 def _clone(node: Node, suffix: str) -> Node:

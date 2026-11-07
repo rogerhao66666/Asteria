@@ -2,8 +2,8 @@ import math
 
 import pytest
 
-from asteria.presentation.attachment_runtime import AttachmentRuntime
-from asteria.presentation.attachments import (
+from asteria.presentation.visuals.attachment_runtime import AttachmentRuntime
+from asteria.presentation.visuals.attachments import (
     Attachment,
     GripTransform,
     Socket,

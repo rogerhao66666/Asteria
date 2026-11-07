@@ -67,7 +67,7 @@ def test_parent_id_round_trips_and_old_scenes_without_it_still_load():
 
 
 def test_inspector_reparent_keeps_position_and_undoes_in_one_step():
-    from asteria.editor.editing import EditError, build_set_component_field_command
+    from asteria.editor.project.editing import EditError, build_set_component_field_command
 
     scene = Scene("S")
     parent = _entity(scene, "Parent", 100, 0)
@@ -84,7 +84,7 @@ def test_inspector_reparent_keeps_position_and_undoes_in_one_step():
 
 def test_interaction_distance_uses_world_position():
     from asteria.runtime import Interaction2DComponent
-    from asteria.runtime.interaction import InteractionQuery
+    from asteria.runtime.field.interaction import InteractionQuery
 
     scene = Scene("S")
     hero = _entity(scene, "Hero", 0, 0)

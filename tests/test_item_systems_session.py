@@ -6,11 +6,11 @@ import pytest
 
 from asteria.project import Project
 from asteria.rpg import BattleAction
-from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
-from asteria.rpg.durability import DurabilityRules, WearEvent
-from asteria.rpg.job_points import JobPointRules
-from asteria.rpg.new_game_plus import NewGamePlusRules
-from asteria.rpg.progression_graph import ProgressionAllocationRuntime
+from asteria.rpg.characters.job_points import JobPointRules
+from asteria.rpg.characters.progression_graph import ProgressionAllocationRuntime
+from asteria.rpg.items.disassembly import DisassemblyRecipe, DisassemblyYield
+from asteria.rpg.items.durability import DurabilityRules, WearEvent
+from asteria.rpg.world.new_game_plus import NewGamePlusRules
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 
@@ -148,7 +148,7 @@ def test_a_weapon_that_breaks_mid_battle_blocks_its_ability_at_once():
 
 def test_a_stat_giving_item_that_breaks_mid_battle_takes_its_bonus_off():
     from asteria.gameplay import ModifierOperation, StatModifier
-    from asteria.rpg.items import EquipmentDefinition
+    from asteria.rpg.items.definitions import EquipmentDefinition
 
     project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     project.rpg_database.add_equipment(

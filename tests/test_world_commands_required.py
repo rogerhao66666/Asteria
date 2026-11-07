@@ -4,7 +4,7 @@ says."""
 from unittest.mock import MagicMock
 
 from asteria.events.world_commands import WorldCommand
-from asteria.runtime.world_command_handlers import (
+from asteria.runtime.session.world_commands import (
     WORLD_COMMAND_ARGUMENTS,
     WORLD_COMMAND_REQUIRED,
     WorldCommandError,

@@ -1,7 +1,7 @@
-from .cache import ImportArtifact, ImportCache
-from .canonical import AssetSource, CanonicalAsset
-from .registry import AssetRegistry
-from .types import AssetRecord
+from asteria.assets.cache import ImportArtifact, ImportCache
+from asteria.assets.canonical import AssetSource, CanonicalAsset
+from asteria.assets.registry import AssetRegistry
+from asteria.assets.types import AssetRecord
 
 
 def serialize_asset(record):

@@ -12,9 +12,9 @@ import run_trial_smoke as smoke  # noqa: E402
 
 from asteria.core import Entity, Scene, Transform  # noqa: E402
 from asteria.events.world_commands import WorldCommand  # noqa: E402
-from asteria.rpg.behavior_tree import BehaviorNode as N  # noqa: E402
-from asteria.rpg.behavior_tree import BehaviorTree  # noqa: E402
-from asteria.runtime.behavior_tree import BehaviorTreeSystem  # noqa: E402
+from asteria.rpg.world.behavior_tree import BehaviorNode as N  # noqa: E402
+from asteria.rpg.world.behavior_tree import BehaviorTree  # noqa: E402
+from asteria.runtime.field.behavior_tree import BehaviorTreeSystem  # noqa: E402
 
 
 def _game():
@@ -67,7 +67,7 @@ def test_a_behaviour_tree_foe_sees_less_far_when_the_area_says_so():
     hero = scene.add_entity(Entity("Hero"))
     hero.add_component(Transform(30.0, 0.0))
     system.target_id = hero.id
-    from asteria.runtime.character_control import AIController2DComponent
+    from asteria.runtime.field.character_control import AIController2DComponent
 
     guard = scene.add_entity(Entity("Guard"))
     guard.add_component(Transform(0.0, 0.0))

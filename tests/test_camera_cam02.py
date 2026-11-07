@@ -4,7 +4,7 @@ transitions, shake."""
 import pytest
 
 from asteria.core import Entity, Scene, Transform
-from asteria.runtime.camera import (
+from asteria.runtime.scene.camera import (
     Camera2D,
     CameraDirector,
     CameraFollow2D,
@@ -12,7 +12,7 @@ from asteria.runtime.camera import (
     CameraTargetGroup,
     clamp_center_to_bounds,
 )
-from asteria.runtime.components2d import Camera2DComponent
+from asteria.runtime.scene.components import Camera2DComponent
 from asteria.runtime.systems import CameraFollowSystem
 
 
@@ -159,7 +159,7 @@ def test_version_1_camera_records_load_with_v2_defaults():
 
 
 def test_camera_world_commands_are_registered_for_events_and_the_event_editor():
-    from asteria.runtime.world_command_handlers import (
+    from asteria.runtime.session.world_commands import (
         PRESENTATION_COMMANDS,
         STANDARD_WORLD_COMMANDS,
         WORLD_COMMAND_ARGUMENTS,
@@ -171,7 +171,7 @@ def test_camera_world_commands_are_registered_for_events_and_the_event_editor():
 
 
 def test_field_camera_is_identity_by_default_and_never_shows_past_the_map():
-    from asteria.runtime.field_camera import FieldViewCamera
+    from asteria.runtime.field.camera import FieldViewCamera
 
     camera = FieldViewCamera(960, 540, 3.0)
     camera.update(0.016)
@@ -239,7 +239,7 @@ def _canonical_battle(resource_root, monkeypatch, encounter="boss_room", **prese
     pytest.importorskip("pygame")
     from test_playable_battle_loop import _boss_runtime
 
-    from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+    from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
@@ -291,7 +291,7 @@ def test_boss_intro_can_be_switched_off(resource_root, monkeypatch):
 
 
 def test_field_follow_camera_follows_the_player_inside_the_map(runtime):
-    from asteria.runtime.field_camera import FieldViewCamera
+    from asteria.runtime.field.camera import FieldViewCamera
 
     camera = FieldViewCamera(
         960, 540, 3.0, follow={"zoom": 2.0, "smoothing": 0, "deadzone": (5, 5)}

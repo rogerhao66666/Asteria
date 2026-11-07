@@ -34,7 +34,7 @@ def test_status_menu_opens_from_the_field_and_shows_every_tab(runtime):
 
 def test_using_a_consumable_changes_the_party_member_and_the_bag(runtime):
     from asteria.gameplay.effects import Effect, EffectOperation, EffectOperationKind
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
 
     game = runtime.game
     potion = ItemDefinition(

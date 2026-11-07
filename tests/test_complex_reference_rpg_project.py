@@ -1,9 +1,9 @@
 from pathlib import Path
 
 from asteria.editor import EditorDocument
-from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 from asteria.project import Project
-from asteria.runtime.components2d import Interaction2DComponent
+from asteria.runtime.scene.components import Interaction2DComponent
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
 

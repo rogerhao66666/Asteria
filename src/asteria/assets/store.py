@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .canonical import CanonicalAsset
-from .codecs import AssetCodecRegistry
-from .package import AssetManifest, manifest_from_dict
-from .registry import AssetRegistry
+from asteria.assets.canonical import CanonicalAsset
+from asteria.assets.codecs.registry import AssetCodecRegistry
+from asteria.assets.packages.manifest import AssetManifest, manifest_from_dict
+from asteria.assets.registry import AssetRegistry
 
 
 @dataclass(frozen=True, slots=True)

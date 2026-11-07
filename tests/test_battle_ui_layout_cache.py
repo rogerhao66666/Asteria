@@ -15,7 +15,7 @@ from asteria.presentation import (
     BattleUiLayoutProfile,
     BattleVisualAnchor,
 )
-from asteria.presentation.battle_action_menu import BattleActionMenuView
+from asteria.presentation.battle.action_menu import BattleActionMenuView
 from asteria.project import Project
 from asteria.runtime import Camera2D
 from asteria.runtime.component_registry import default_component_registry

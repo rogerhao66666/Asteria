@@ -1,4 +1,4 @@
-from .ids import new_id, validate_id
+from asteria.core.ids import new_id, validate_id
 
 
 class Entity:

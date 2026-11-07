@@ -264,7 +264,7 @@ def test_debugger_actions_card_keeps_content_inside_its_frame():
 def test_debug_actions_frame_stays_in_view_and_scrolls_its_own_content():
     from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
-    from asteria.editor.debugger_widget import DebuggerWidget
+    from asteria.editor.tools.debugger_widget import DebuggerWidget
 
     app = QApplication.instance() or QApplication([])
     widget = DebuggerWidget()
@@ -380,8 +380,8 @@ def test_non_scene_saved_layout_does_not_hide_scene_docks(tmp_path, saved_mode):
     from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import QApplication, QDockWidget
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
     settings = QSettings(str(tmp_path / "layout.ini"), QSettings.IniFormat)
@@ -423,8 +423,8 @@ def test_non_scene_saved_layout_does_not_hide_scene_docks(tmp_path, saved_mode):
 def test_each_workspace_keeps_its_own_panels():
     from PySide6.QtWidgets import QApplication, QDockWidget
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
     window = AsteriaEditorWindow()
@@ -462,8 +462,8 @@ def test_each_workspace_layout_is_kept_between_sessions(tmp_path):
     from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import QApplication, QDockWidget
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
     settings = QSettings(str(tmp_path / "layout.ini"), QSettings.IniFormat)

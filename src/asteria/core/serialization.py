@@ -1,6 +1,6 @@
-from .entity import Entity
-from .metadata import get_component_schema
-from .scene import Scene
+from asteria.core.entity import Entity
+from asteria.core.metadata import get_component_schema
+from asteria.core.scene import Scene
 
 
 def serialize_component(component):
@@ -27,7 +27,7 @@ def deserialize_component(data, registry):
     if not isinstance(incoming, dict):
         raise TypeError("Component fields must be an object")
     if data["version"] != schema.version:
-        from .migration import MigrationError, migrate_component_fields
+        from asteria.core.migration import MigrationError, migrate_component_fields
 
         try:
             incoming = migrate_component_fields(

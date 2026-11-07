@@ -64,7 +64,7 @@ def test_filter_multi_select_copy_paste_and_undo_in_the_record_list(window):
 
 
 def test_window_shortcuts_act_on_the_focused_record_list(window):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     family = _items_family(window)
     window.show()
@@ -102,8 +102,8 @@ def test_batch_edit_applies_to_every_selected_record(window):
 
 
 def test_batch_edit_dialog_shows_mixed_and_shared_values(window):
-    from asteria.editor.authoring_hub_widget import BatchEditDialog
-    from asteria.editor.record_operations import MIXED
+    from asteria.editor.records.hub import BatchEditDialog
+    from asteria.editor.records.operations import MIXED
 
     dialog = BatchEditDialog({"stats.power": MIXED, "tags": ["boss"]}, 2)
     assert dialog.current.text() == "(differs between records)" and dialog.value == ""

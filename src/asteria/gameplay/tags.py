@@ -12,6 +12,11 @@ def normalize_tag(value):
     return tag
 
 
+def sorted_tags(values):
+    """Normalized tags, sorted and without repeats."""
+    return tuple(sorted({normalize_tag(x) for x in values}))
+
+
 @dataclass(slots=True)
 class TagSet:
     """Small deterministic capability/classification tag set."""

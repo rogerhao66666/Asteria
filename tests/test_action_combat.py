@@ -15,8 +15,14 @@ from asteria.gameplay.formulas import FormulaTerm, ValueFormula
 from asteria.gameplay.modifiers import StatModifier
 from asteria.gameplay.projectiles import ProjectileDefinition
 from asteria.gameplay.states import PeriodicEffect, StateDefinition, StateRegistry
-from asteria.runtime.action_combat import ActionCombatComponent, ActionCombatSystem, parse_bindings
-from asteria.runtime.character_control import (
+from asteria.runtime.action.abilities import (
+    ActionCombatComponent,
+    ActionCombatSystem,
+    parse_bindings,
+)
+from asteria.runtime.action.combat import CombatantComponent, CombatSystem
+from asteria.runtime.action.projectiles import ProjectileSystem
+from asteria.runtime.field.character_control import (
     CharacterController2DComponent,
     CharacterControllerSystem,
     Hitbox2DComponent,
@@ -25,10 +31,8 @@ from asteria.runtime.character_control import (
     PlayerInput2DComponent,
     PlayerInputSystem,
 )
-from asteria.runtime.combat import CombatantComponent, CombatSystem
-from asteria.runtime.entity_actions import EntityActionSystem
-from asteria.runtime.input import InputSnapshot
-from asteria.runtime.projectiles import ProjectileSystem
+from asteria.runtime.field.entity_actions import EntityActionSystem
+from asteria.runtime.input_map import InputSnapshot
 
 DT = 1 / 60
 

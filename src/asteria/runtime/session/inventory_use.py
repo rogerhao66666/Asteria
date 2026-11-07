@@ -10,9 +10,8 @@ from asteria.rpg import (
     EquippedItem,
     RpgActorSnapshot,
 )
-from asteria.rpg.items import use_inventory_item
-
-from .support import (
+from asteria.rpg.items.definitions import use_inventory_item
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 

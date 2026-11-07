@@ -65,7 +65,7 @@ if len(sys.argv) == 4:
                 import math
 
                 from asteria.core import Transform
-                from asteria.runtime.loot import LootComponent, LooterComponent
+                from asteria.runtime.action.ground_loot import LootComponent, LooterComponent
 
                 movement_keys = {"a": rt.pg.K_a, "d": rt.pg.K_d, "w": rt.pg.K_w, "s": rt.pg.K_s}
                 held = set()

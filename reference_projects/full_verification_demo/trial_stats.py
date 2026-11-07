@@ -41,7 +41,7 @@ import trial_content as tc
 
 from asteria.gameplay.formulas import ValueFormula
 from asteria.rpg import InteractionRule
-from asteria.rpg.derived_stats import DerivedStatRule
+from asteria.rpg.characters.derived_stats import DerivedStatRule
 
 HP, SP = tc.HP, tc.SP
 ELEMENTS = tuple(brave.ELEMENTS)
@@ -193,7 +193,7 @@ def _titan_cleaver(c):
     """A Mythic axe (the Lucifer Mythic Battleaxe): STR, power, crit and earth; three sockets;
     the Ancient Skeleton of the crypt always leaves it."""
     from asteria.rpg import EquipmentDefinition, SocketDefinition
-    from asteria.rpg.drop_tables import DropEntry
+    from asteria.rpg.items.drop_tables import DropEntry
 
     db = c.db
     war_axe = db.equipment["w_war_axe"]

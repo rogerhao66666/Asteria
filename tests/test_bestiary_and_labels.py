@@ -8,8 +8,8 @@ import pytest
 
 from asteria.project import Project
 from asteria.runtime.component_registry import default_component_registry
-from asteria.runtime.game_menus import bestiary_rows
 from asteria.runtime.game_session import GameSessionRuntime
+from asteria.runtime.menus.game_menus import bestiary_rows
 
 ROOT = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -56,8 +56,8 @@ def test_a_battle_won_records_only_what_really_dropped():
 def test_overhead_names_never_cover_a_combatant_or_each_other(monkeypatch):
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     monkeypatch.setenv("SDL_AUDIODRIVER", "dummy")
-    from asteria.runtime.camera import Camera2D
     from asteria.runtime.playable_test_runtime import PlayableTestRuntime
+    from asteria.runtime.scene.camera import Camera2D
 
     project = Project.load_json(ROOT / "project.asteria.json", default_component_registry())
     runtime = PlayableTestRuntime(
@@ -107,7 +107,7 @@ def test_overhead_names_never_cover_a_combatant_or_each_other(monkeypatch):
 
 def test_a_companion_waits_hidden_at_the_guild_until_met():
     game = _session()
-    from asteria.runtime.npc_state import apply_npc_states
+    from asteria.runtime.field.npc_state import apply_npc_states
 
     town = game.scene
     by_name = {e.name: e for e in town.entities()}
@@ -122,8 +122,8 @@ def test_a_companion_waits_hidden_at_the_guild_until_met():
 def test_top_level_commands_show_no_numbers_unless_the_layout_asks():
     from dataclasses import replace
 
-    from asteria.presentation.battle_action_menu import BattleActionEntry, BattleActionMenuView
-    from asteria.presentation.battle_ui import BattleUiLayoutProfile
+    from asteria.presentation.battle.action_menu import BattleActionEntry, BattleActionMenuView
+    from asteria.presentation.battle.ui import BattleUiLayoutProfile
 
     assert BattleUiLayoutProfile().command_counts is False  # the default: names alone
     entries = (
@@ -131,8 +131,8 @@ def test_top_level_commands_show_no_numbers_unless_the_layout_asks():
         BattleActionEntry("fire", "Fire", category="Skills", cost_text="4 SP"),
     )
     menu = BattleActionMenuView(("Command",), "Command", "", entries, 0, 1, 2, 0, 0)
-    from asteria.presentation.battle import BattlePresentationScene
-    from asteria.presentation.battle_ui import BattleUiComposer
+    from asteria.presentation.battle.scene import BattlePresentationScene
+    from asteria.presentation.battle.ui import BattleUiComposer
 
     composer = BattleUiComposer(BattlePresentationScene("s", "bg"))
     _p, texts, _i = composer._action_menu_commands(menu)

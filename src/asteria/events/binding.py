@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from .conditions import EventCondition
-from .scheduler import EventScheduleMode, ScheduledEventSpec
+from asteria.events.conditions import EventCondition
+from asteria.events.scheduler import EventScheduleMode, ScheduledEventSpec
 
 
 class EventTriggerKind(str, Enum):

@@ -1,6 +1,6 @@
 """Message text codes: data codes expand, formatting codes parse into spans."""
 
-from asteria.presentation.message_codes import (
+from asteria.presentation.text.message_codes import (
     DEFAULT_PALETTE,
     MessageContext,
     Span,

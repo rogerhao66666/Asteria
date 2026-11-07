@@ -3,7 +3,7 @@ creature to send out when a slot empties, which move to forget for a new one."""
 
 from __future__ import annotations
 
-from asteria.rpg.built_in_text import translated
+from asteria.rpg.text.built_in_text import translated
 
 _PANEL_FILL, _PANEL_BORDER, _TITLE = (12, 18, 28, 240), (130, 200, 255), (175, 235, 255)
 

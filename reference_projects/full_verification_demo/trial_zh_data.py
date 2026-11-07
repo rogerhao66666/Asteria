@@ -182,7 +182,7 @@ def translate(key, english):
 
 
 def rows(project):
-    from asteria.editor.data_translation import data_groups
+    from asteria.editor.project.data_translation import data_groups
 
     return [row for _title, group in data_groups(project) for row in group]
 
@@ -194,8 +194,8 @@ def missing(project):
 
 def apply(project):
     """Dialogue keys on the events, and the zh-TW table filled with the data's Chinese."""
-    from asteria.editor.data_translation import keyed_programs
-    from asteria.rpg.localization import LocaleTable
+    from asteria.editor.project.data_translation import keyed_programs
+    from asteria.rpg.text.localization import LocaleTable
 
     for program_id, new, _old in keyed_programs(project):
         project.event_programs.replace(program_id, new)
@@ -211,7 +211,7 @@ def apply(project):
         if chinese and entries.get(key) != chinese:
             added += key not in entries
             entries[key] = chinese  # a changed English (a fixed description) is made again
-    from asteria.rpg.built_in_text import engine_translations
+    from asteria.rpg.text.built_in_text import engine_translations
 
     for key, chinese in engine_translations("zh-TW").items():  # engine words added since
         if key not in entries:  # the table was built (a word set by the game stays)

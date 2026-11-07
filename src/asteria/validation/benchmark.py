@@ -17,10 +17,10 @@ from asteria.core import Entity, Transform
 from asteria.core.prefab import prefab_from_entity
 from asteria.project import Project
 from asteria.runtime import Collider2DComponent, FieldAIComponent, SpawnZoneComponent
-from asteria.runtime.battle_presentation_adapters import CanonicalBattleAdapter
+from asteria.runtime.battle.presentation import CanonicalBattleAdapter
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.playable_test_runtime import PlayableTestRuntime
-from asteria.runtime.profiler import RuntimeProfiler
+from asteria.runtime.tools.profiler import RuntimeProfiler
 
 
 def _install_enemies(game, count):

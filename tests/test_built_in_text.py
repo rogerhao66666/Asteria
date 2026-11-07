@@ -1,4 +1,4 @@
-"""The engine's own words go through the project's translation tables (rpg/built_in_text.py):
+"""The engine's own words go through the project's translation tables (rpg/text/built_in_text.py):
 every word a runtime screen draws is listed with the English it draws, a table entry changes the
 word drawn, a project without one draws the English it always did, and Chinese text gets the
 room and the line it needs."""
@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from asteria.presentation.text_cells import cells, cut, wrap
-from asteria.rpg.built_in_text import (
+from asteria.presentation.text.cells import cells, cut, wrap
+from asteria.rpg.text.built_in_text import (
     BUILT_IN_TEXT,
     GROUPS,
     Words,
@@ -21,7 +21,7 @@ from asteria.rpg.built_in_text import (
     group_of,
     translated,
 )
-from asteria.rpg.localization import LocaleTable, MessageSettings
+from asteria.rpg.text.localization import LocaleTable, MessageSettings
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src" / "asteria"
@@ -62,11 +62,11 @@ def _drawn_words():
 
 def _keyed_tables():
     """The words drawn from a table of ids (menu options, statuses...): ``{key: english}``."""
-    from asteria.runtime.battle_commands import COMMAND_WORDS
-    from asteria.runtime.game_menus import GAME_OVER_OPTIONS, PAUSE_OPTIONS, GameSettings
+    from asteria.runtime.battle.commands import COMMAND_WORDS
+    from asteria.runtime.menus.game_menus import GAME_OVER_OPTIONS, PAUSE_OPTIONS, GameSettings
+    from asteria.runtime.menus.skill_tree import STATUS_WORDS
+    from asteria.runtime.menus.status import TAB_WORDS, USE_REASONS
     from asteria.runtime.playable_test_runtime import BESTIARY_TAG_KINDS
-    from asteria.runtime.skill_tree_screen import STATUS_WORDS
-    from asteria.runtime.status_menu import TAB_WORDS, USE_REASONS
 
     words = {f"pause.{k}": v for k, v in PAUSE_OPTIONS}
     words.update({f"game_over.{k}": v for k, v in GAME_OVER_OPTIONS})
@@ -98,7 +98,7 @@ def test_every_drawn_word_is_listed_with_the_english_it_draws():
     found = _drawn_words()
     assert len(found) > 250
     for key, uses in found.items():
-        assert key in BUILT_IN_TEXT, f"{key} ({uses[0][1]}) is not in rpg/built_in_text.py"
+        assert key in BUILT_IN_TEXT, f"{key} ({uses[0][1]}) is not in rpg/text/built_in_text.py"
         for english, where in uses:
             assert BUILT_IN_TEXT[key] == english, (key, where)
     for key, english in _keyed_tables().items():
@@ -153,7 +153,7 @@ def _battle(tables=None, default_locale="en"):
 
 
 def _root_rows(game):
-    from asteria.runtime.battle_commands import BattleCommands
+    from asteria.runtime.battle.commands import BattleCommands
 
     commands = BattleCommands(game, style="root")
     hero = game.active_hero_ids()[0]
@@ -198,7 +198,7 @@ def test_a_default_locale_table_renames_a_word():
 
 
 def test_command_menu_page_names_and_skill_groups_follow_the_table():
-    from asteria.runtime.battle_commands import BattleCommands
+    from asteria.runtime.battle.commands import BattleCommands
 
     def rows(game):
         pages = game.project.battle_presentation_library.require("interaction", "trial_commands")
@@ -226,8 +226,8 @@ def test_command_menu_page_names_and_skill_groups_follow_the_table():
 
 
 def test_victory_pages_and_settings_values_follow_the_table():
-    from asteria.rpg.victory import ActorAftermath, VictoryAftermath
-    from asteria.runtime.game_menus import GameSettings
+    from asteria.rpg.battle.victory import ActorAftermath, VictoryAftermath
+    from asteria.runtime.menus.game_menus import GameSettings
 
     aftermath = VictoryAftermath(
         currencies=(("gold", 30.0),),
@@ -254,7 +254,7 @@ def test_victory_pages_and_settings_values_follow_the_table():
 
 
 def test_a_refused_deal_is_english_text_that_a_shop_can_translate():
-    from asteria.rpg.economy import ShopError
+    from asteria.rpg.items.shops import ShopError
 
     error = ShopError(
         Words("shop.error.afford", "cannot afford {count} {item}", count=2, item="x")
@@ -367,12 +367,9 @@ def test_full_width_characters_take_two_cells_and_english_keeps_its_count():
 
 
 def test_the_battle_menu_gives_a_chinese_row_the_room_of_two_letters_a_character():
-    from asteria.presentation.battle_action_menu import BattleActionEntry, BattleActionMenuView
-    from asteria.presentation.battle_ui import (
-        BattleUiComposer,
-        BattleUiLayoutProfile,
-        _category_strip,
-    )
+    from asteria.presentation.battle.action_menu import BattleActionEntry, BattleActionMenuView
+    from asteria.presentation.battle.ui import BattleUiComposer, BattleUiLayoutProfile
+    from asteria.presentation.battle.ui_parts import _category_strip
 
     def width(label):  # the side-list menu is as wide as its longest row needs
         entry = BattleActionEntry("a", label, category="Skills")
@@ -393,7 +390,7 @@ def test_the_battle_menu_gives_a_chinese_row_the_room_of_two_letters_a_character
 
 
 def _scene():
-    from asteria.presentation.battle import BattlePresentationScene
+    from asteria.presentation.battle.scene import BattlePresentationScene
 
     return BattlePresentationScene("scene", "background", (), None)
 
@@ -441,7 +438,7 @@ def test_the_battle_screen_draws_chinese_at_its_face_size_level_with_the_cursor(
     pygame = pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     from asteria.platform.pygame_battle_ui import PygameBattleUiBackend, cjk_font_path
-    from asteria.presentation.battle_ui import BattleUiText
+    from asteria.presentation.battle.ui_parts import BattleUiText
 
     pygame.init()
     if cjk_font_path(pygame) is None:
@@ -475,7 +472,7 @@ def test_the_translations_page_lists_every_engine_word_and_fills_from_the_engine
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.translation_table import TranslationTable
+    from asteria.editor.project.translation_table import TranslationTable
 
     app = QApplication.instance() or QApplication([])
     table = TranslationTable()
@@ -515,7 +512,7 @@ def test_the_translations_page_speaks_the_editor_language():
     table = json.loads(
         (SRC / "editor" / "translations" / "zh_TW.json").read_text(encoding="utf-8")
     )["exact"]
-    from asteria.editor.translation_table import (
+    from asteria.editor.project.translation_table import (
         ACTIONS_GROUP,
         ENTRIES_GROUP,
         LAYERS_GROUP,
@@ -554,7 +551,11 @@ def test_the_translations_page_lists_the_names_the_battle_menu_draws():
     import run_trial_smoke as smoke
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.translation_table import LAYERS_GROUP, SKILL_GROUPS, TranslationTable
+    from asteria.editor.project.translation_table import (
+        LAYERS_GROUP,
+        SKILL_GROUPS,
+        TranslationTable,
+    )
 
     app = QApplication.instance() or QApplication([])
     project, _game = smoke.load()
@@ -592,7 +593,7 @@ def test_a_skin_face_with_chinese_characters_draws_them_itself(monkeypatch):
     pygame = pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
     from asteria.platform.pygame_battle_ui import PygameBattleUiBackend, cjk_font_path
-    from asteria.presentation.battle_ui import BattleUiText
+    from asteria.presentation.battle.ui_parts import BattleUiText
 
     pygame.init()
     face = cjk_font_path(pygame)  # a face with Chinese in it, chosen as the skin's own

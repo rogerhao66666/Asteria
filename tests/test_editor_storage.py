@@ -1,6 +1,6 @@
 from asteria.core import Entity, Scene, Transform
-from asteria.editor.model import EditorDocument
-from asteria.editor.storage import load_document, save_document
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.project.storage import load_document, save_document
 from asteria.project import Project
 
 
@@ -32,7 +32,7 @@ def test_save_and_load_document_roundtrip(tmp_path):
 def test_save_marks_exact_current_history_state(tmp_path):
     doc = EditorDocument(make_project())
     old = doc.project.name
-    from asteria.editor.commands import RenameCommand
+    from asteria.editor.project.commands import RenameCommand
 
     doc.execute(RenameCommand(doc.project, "Renamed", old))
     assert doc.dirty

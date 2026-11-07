@@ -9,9 +9,9 @@ from types import SimpleNamespace
 import pytest
 
 from asteria.presentation import BattleSideviewTemplateProfile, BattleSideviewZone
-from asteria.presentation.battle_ui import BattleUiLayoutProfile
+from asteria.presentation.battle.ui import BattleUiLayoutProfile
 from asteria.presentation.library import BattlePresentationLibrary
-from asteria.runtime.battle_visuals import BattleVisualResolver
+from asteria.runtime.battle.visuals import BattleVisualResolver
 
 REPO = Path(__file__).resolve().parents[1]
 DEMO = REPO / "reference_projects" / "full_verification_demo"
@@ -187,7 +187,7 @@ def test_the_layout_writes_the_options_only_when_set():
 
 
 def test_the_editor_shows_every_option_and_the_right_spacing_follows_until_changed():
-    from asteria.editor.record_vocabulary import HELP, words
+    from asteria.editor.records.vocabulary import HELP, words
 
     library = BattlePresentationLibrary()
     shown = library.encode_for_editor("ui_layout", BattleUiLayoutProfile(column_spacing=24.0))

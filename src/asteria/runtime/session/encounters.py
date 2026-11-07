@@ -13,9 +13,8 @@ from asteria.rpg import (
     Party,
     PartyMember,
 )
-from asteria.rpg.derived_stats import apply_derived_stats
-
-from .support import (
+from asteria.rpg.characters.derived_stats import apply_derived_stats
+from asteria.runtime.session.support import (
     GameSessionError,
 )
 
@@ -334,7 +333,7 @@ class EncountersMixin:
         if extensions is not None:
             extensions.apply_opening(self.battle, self.opening, "heroes")
         else:
-            from asteria.rpg.battle_extensions import apply_opening
+            from asteria.rpg.battle.extensions import apply_opening
 
             apply_opening(self.battle, self.opening, "heroes")
         if pet_rules is None or not pet_rules.pets_decide_outcome:

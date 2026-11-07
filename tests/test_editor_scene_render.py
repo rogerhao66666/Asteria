@@ -1,7 +1,7 @@
 from asteria.assets import AssetRecord
 from asteria.core import Scene
-from asteria.editor.model import EditorDocument
-from asteria.editor.scene_render import resolve_texture_source
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.render import resolve_texture_source
 from asteria.project import Project
 
 

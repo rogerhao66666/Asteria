@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.runtime.collision import Collider2DComponent
 from asteria.runtime.component_registry import default_component_registry
+from asteria.runtime.field.collision import Collider2DComponent
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -61,7 +61,7 @@ def test_picture_box_covers_every_opaque_pixel_of_every_frame_from_the_pivot():
 
 # -- the editor's Passability --------------------------------------------------------------------
 def test_the_demo_objects_block_their_picture_and_people_their_feet():
-    from asteria.editor.passability import passability, picture_box
+    from asteria.editor.scene.passability import passability, picture_box
 
     project = _demo()
     chest = _entity(project, "Starfall Chest")
@@ -75,7 +75,11 @@ def test_the_demo_objects_block_their_picture_and_people_their_feet():
 
 
 def test_passability_is_one_undo_step_each_way():
-    from asteria.editor.passability import build_passability_command, passability, picture_box
+    from asteria.editor.scene.passability import (
+        build_passability_command,
+        passability,
+        picture_box,
+    )
 
     project = _demo()
     document = EditorDocument(project)
@@ -96,7 +100,7 @@ def test_passability_is_one_undo_step_each_way():
 
 def test_a_new_feet_box_is_added_for_an_object_with_only_a_picture():
     from asteria.core import Entity
-    from asteria.editor.passability import build_passability_command, passability
+    from asteria.editor.scene.passability import build_passability_command, passability
 
     entity = Entity("bush")
     assert passability(entity) == "through"
@@ -109,7 +113,7 @@ def test_a_new_feet_box_is_added_for_an_object_with_only_a_picture():
 
 
 def test_the_passability_preview_marks_the_blocking_box_in_red():
-    from asteria.editor.passability import passability_preview
+    from asteria.editor.scene.passability import passability_preview
 
     project = _demo()
     image = passability_preview(project, DEMO, _entity(project, "Starfall Chest"))
@@ -153,8 +157,8 @@ def test_the_inspector_sets_and_previews_passability(window):
 
 
 def test_the_editor_words_passability_in_chinese():
-    from asteria.editor.menu_layout_widget import SlotsField
-    from asteria.editor.passability import MODE_LABELS
+    from asteria.editor.menus.layout_widget import SlotsField
+    from asteria.editor.scene.passability import MODE_LABELS
 
     table = json.loads(
         (
@@ -219,7 +223,7 @@ def test_the_player_cannot_walk_into_the_chest_but_still_enters_the_house(runtim
 
 # -- doll icons ---------------------------------------------------------------------------------
 def test_a_slot_place_keeps_its_icon_settings():
-    from asteria.presentation.menu_layout import MenuSlotPlace
+    from asteria.presentation.screens.menu_layout import MenuSlotPlace
 
     place = MenuSlotPlace("weapon", (0, 0, 10, 10))
     assert "icon_scale" not in place.to_data()  # defaults are not written
@@ -255,8 +259,8 @@ def test_the_slots_table_reads_the_icon_columns():
     pytest.importorskip("PySide6")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.menu_layout_widget import SlotsField
-    from asteria.presentation.menu_layout import MenuSlotPlace
+    from asteria.editor.menus.layout_widget import SlotsField
+    from asteria.presentation.screens.menu_layout import MenuSlotPlace
 
     QApplication.instance() or QApplication([])
     field = SlotsField()
@@ -266,7 +270,7 @@ def test_the_slots_table_reads_the_icon_columns():
 
 
 def test_the_layout_preview_dresses_its_member(runtime):
-    from asteria.runtime.menu_preview import MenuPreview
+    from asteria.runtime.menus.preview import MenuPreview
 
     game = runtime.game
     actor = game.save.rpg_state.party_active_actor_ids[0]
@@ -308,7 +312,7 @@ def test_an_item_with_no_menu_use_says_so_and_a_potion_works(runtime):
 
 
 def test_item_details_can_be_a_panel_a_button_or_off(runtime):
-    from asteria.rpg.menu_rules import MenuRules
+    from asteria.rpg.menus.rules import MenuRules
 
     assert MenuRules.from_data({"rules_id": "m", "item_details": "button"}).item_details == (
         "button"
@@ -322,7 +326,7 @@ def test_item_details_can_be_a_panel_a_button_or_off(runtime):
     with runtime.menu_fit():
         runtime._draw_status_menu()
     assert menu.details_mode == "panel"
-    from asteria.rpg.menu_pages import MenuBlock, MenuPage
+    from asteria.rpg.menus.pages import MenuBlock, MenuPage
 
     pages = runtime.project.rpg_database.menu_pages  # D96: the Items page's Item List block
     block = pages["items"].blocks[0]

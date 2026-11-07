@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.problems import collect_problems, locate_record_message
+from asteria.editor.project.problems import collect_problems, locate_record_message
 from asteria.project import Project
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
@@ -95,7 +95,7 @@ def window():
 
 
 def test_problems_dock_lists_filters_and_navigates(window):
-    from asteria.editor.workspace import WorkspaceMode
+    from asteria.editor.project.workspace import WorkspaceMode
 
     panel = window.problems_widget
     assert panel.refresh() == [] and "No problems" in panel.summary.text()
@@ -119,7 +119,7 @@ def test_problems_dock_lists_filters_and_navigates(window):
 
 
 def test_navigation_to_sprites_timelines_scripts_and_game_systems(window):
-    from asteria.editor.problems import Problem
+    from asteria.editor.project.problems import Problem
 
     sheet = window.animation_editor.api.sheets()[-1]
     assert window.navigate_to_problem(Problem("error", "Sprites", "x", ("sprite", sheet)))

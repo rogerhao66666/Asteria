@@ -12,7 +12,7 @@ DEMO = Path(__file__).resolve().parents[1] / "reference_projects/complex_referen
 
 def _document():
     from asteria.editor import EditorDocument
-    from asteria.editor.storage import load_document
+    from asteria.editor.project.storage import load_document
 
     document = EditorDocument()
     load_document(document, str(DEMO / "project.asteria.json"))
@@ -20,8 +20,8 @@ def _document():
 
 
 def _family(document):
-    from asteria.editor.authoring_hub_widget import AdapterFamilyWidget
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
+    from asteria.editor.records.hub import AdapterFamilyWidget
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     return AdapterFamilyWidget(
         "Game Data", IntegratedAuthoringControllers(document).rpg_categories(), document=document
@@ -29,7 +29,7 @@ def _family(document):
 
 
 def test_suggested_ids_come_from_names():
-    from asteria.editor.record_blank import suggest_id
+    from asteria.editor.records.blank import suggest_id
 
     assert suggest_id("Fire Bolt!") == "fire_bolt"
     assert suggest_id("  Hero 13 ") == "hero_13"
@@ -69,7 +69,7 @@ def test_a_kind_with_no_record_yet_cannot_be_started_from(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.authoring_hub_widget import AuthoringHubError
+    from asteria.editor.records.hub import AuthoringHubError
 
     QApplication.instance() or QApplication([])
     family = _family(_document())
@@ -83,7 +83,7 @@ def test_new_makes_a_named_record_at_once_without_asking(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.authoring_hub_widget import _new_name
+    from asteria.editor.records.hub import _new_name
 
     QApplication.instance() or QApplication([])
     document = _document()
@@ -108,9 +108,9 @@ DEMOS = ("complex_reference_rpg", "full_verification_demo", "arpg_demo", "party_
 @pytest.mark.parametrize("demo", DEMOS)
 def test_a_new_record_of_every_kind_leaves_the_project_valid(demo):
     from asteria.editor import EditorDocument
-    from asteria.editor.integrated_authoring import IntegratedAuthoringControllers
-    from asteria.editor.record_blank import blank_record
-    from asteria.editor.storage import load_document
+    from asteria.editor.project.storage import load_document
+    from asteria.editor.records.blank import blank_record
+    from asteria.editor.rpg.integrated_authoring import IntegratedAuthoringControllers
 
     document = EditorDocument()
     path = DEMO.parent / demo / "project.asteria.json"
@@ -128,7 +128,7 @@ def test_new_then_delete_on_the_combat_page(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.combat_workspace import CombatWorkspace
+    from asteria.editor.combat.workspace import CombatWorkspace
 
     QApplication.instance() or QApplication([])
     document = _document()
@@ -154,9 +154,9 @@ def test_new_then_delete_on_behavior_trees_and_event_programs(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.behavior_tree_widget import BehaviorTreeEditorWidget
-    from asteria.editor.event_flow_authoring import EventFlowError
-    from asteria.editor.event_flow_widget import EventFlowWidget
+    from asteria.editor.combat.behavior_tree_widget import BehaviorTreeEditorWidget
+    from asteria.editor.events.flow_authoring import EventFlowError
+    from asteria.editor.events.flow_widget import EventFlowWidget
 
     QApplication.instance() or QApplication([])
     document = _document()

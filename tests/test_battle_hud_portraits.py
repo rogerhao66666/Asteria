@@ -22,11 +22,11 @@ from asteria.presentation import (
     BattleUiPortrait,
     BattleVisualAnchor,
 )
-from asteria.presentation.battle_action_menu import BattleActionMenuView
-from asteria.presentation.battle_hud import BattleHudStatusIcon
-from asteria.presentation.battle_ui import PORTRAIT_LARGE, bottom_row_height
+from asteria.presentation.battle.action_menu import BattleActionMenuView
+from asteria.presentation.battle.hud import BattleHudStatusIcon
+from asteria.presentation.battle.ui import PORTRAIT_LARGE, bottom_row_height
 from asteria.presentation.library import BattlePresentationLibrary
-from asteria.presentation.text_cells import cells
+from asteria.presentation.text.cells import cells
 from asteria.runtime import Camera2D
 
 REPO = Path(__file__).resolve().parents[1]
@@ -188,7 +188,7 @@ def test_the_layout_writes_the_portrait_options_only_when_set():
 
 
 def test_the_editor_offers_the_portrait_options_in_both_languages():
-    from asteria.editor.record_vocabulary import HELP, engine_enums, words
+    from asteria.editor.records.vocabulary import HELP, engine_enums, words
 
     assert engine_enums()["hud_portraits"] == ("above", "left", "off", "right")
     shown = BattlePresentationLibrary().encode_for_editor("ui_layout", BattleUiLayoutProfile())
@@ -208,8 +208,8 @@ def test_the_combatant_sprites_form_picks_portraits_from_the_portrait_pictures(t
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.image_tools import IconLibrary
-    from asteria.editor.record_form import RecordForm
+    from asteria.editor.assets.image_tools import IconLibrary
+    from asteria.editor.records.form import RecordForm
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])
@@ -428,7 +428,7 @@ def test_the_command_menu_and_its_boxes_never_cover_a_portrait(layout, focus):
 
 
 def _workflow():
-    from asteria.presentation.battle_action_workflow import (
+    from asteria.presentation.battle.action_workflow import (
         BattleActionWorkflowDefinition,
         BattleActionWorkflowRuntime,
         BattleWorkflowOption,
@@ -466,7 +466,7 @@ def test_the_kept_layout_is_laid_out_again_when_the_portraits_change(monkeypatch
 
 
 def test_the_renderer_draws_each_portrait_over_its_card_before_the_rows():
-    from asteria.presentation.battle_ui_renderer import BattleUiRenderer, HeadlessBattleUiBackend
+    from asteria.presentation.battle.ui_renderer import BattleUiRenderer, HeadlessBattleUiBackend
 
     _, frame = _compose(_layout("side_list"), portraits=PORTRAITS)
     backend = HeadlessBattleUiBackend()

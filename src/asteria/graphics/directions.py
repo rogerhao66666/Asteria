@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .sprites import SpriteClip, SpriteKeyframe, SpriteSheet
+from asteria.graphics.sprites import SpriteClip, SpriteKeyframe, SpriteSheet
 
 VALID_DIRECTIONS = ("down", "left", "right", "up")
 

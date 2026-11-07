@@ -90,7 +90,7 @@ def _set_tile_game():
 
 
 def test_set_tile_lasts_for_the_visit_or_for_good():
-    from asteria.rpg.world_record import WorldRecord
+    from asteria.rpg.world.record import WorldRecord
 
     game = _set_tile_game()
     here = game.scene.id
@@ -195,7 +195,7 @@ def test_a_choice_starts_on_its_option_and_answers_the_cancel_key():
 def test_the_choice_editor_writes_options_start_cancel_and_place():
     widgets = pytest.importorskip("PySide6.QtWidgets")
     _app = widgets.QApplication.instance() or widgets.QApplication([])
-    from asteria.editor.choice_command_dialog import ChoiceCommandDialog
+    from asteria.editor.events.choice_dialog import ChoiceCommandDialog
 
     dialog = ChoiceCommandDialog({"prompt": "Go?", "choices": [{"text": "Y", "value": 1}],
                                   "variable_name": "v", "prompt_key": "k"})  # fmt: skip
@@ -222,7 +222,7 @@ def test_the_choice_editor_writes_options_start_cancel_and_place():
 def test_the_wait_editor_writes_seconds_or_a_condition_of_any_source():
     widgets = pytest.importorskip("PySide6.QtWidgets")
     _app = widgets.QApplication.instance() or widgets.QApplication([])
-    from asteria.editor.wait_command_dialog import SOURCES, WaitCommandDialog
+    from asteria.editor.events.wait_dialog import SOURCES, WaitCommandDialog
 
     assert "audio" in SOURCES and "rpg" in SOURCES
     until = {"source": "audio", "name": "me", "operator": "==", "value": False, "scope_id": None}

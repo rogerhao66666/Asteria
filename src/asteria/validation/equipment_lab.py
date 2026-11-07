@@ -11,8 +11,7 @@ from asteria.rpg import (
     EquipmentSlotDefinition,
     EquippedItem,
 )
-
-from .playable_rpg import ReferenceActorScenario, build_reference_actor_scenario
+from asteria.validation.playable_rpg import ReferenceActorScenario, build_reference_actor_scenario
 
 
 @dataclass(frozen=True, slots=True)

@@ -100,7 +100,7 @@ def main(argv=None):
         parts["present"].append(end - mid)
         parts["simulate"].append(timing.get("simulate", 0.0))
         parts["draw"].append(timing.get("draw", 0.0))
-    from asteria.runtime.combat import CombatantComponent
+    from asteria.runtime.action.combat import CombatantComponent
 
     report = {
         "driver": pg.display.get_driver(),

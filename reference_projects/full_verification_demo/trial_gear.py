@@ -27,21 +27,21 @@ from asteria.rpg import (
     ItemDefinition,
     SocketDefinition,
 )
-from asteria.rpg.composition import (
+from asteria.rpg.items.crafting import (
     CompositionOutput,
     CompositionRecipeDefinition,
     CompositionSelection,
 )
-from asteria.rpg.disassembly import DisassemblyRecipe, DisassemblyYield
-from asteria.rpg.drop_tables import DropEntry
-from asteria.rpg.economy import ShopEntry
-from asteria.rpg.equipment_growth import (
+from asteria.rpg.items.disassembly import DisassemblyRecipe, DisassemblyYield
+from asteria.rpg.items.drop_tables import DropEntry
+from asteria.rpg.items.growth import (
     EquipmentGrowthDefinition,
     EquipmentGrowthNodeDefinition,
     EquipmentGrowthReward,
 )
-from asteria.rpg.loot import AffixDefinition, AffixModifier
-from asteria.rpg.refine import RefineRules
+from asteria.rpg.items.loot import AffixDefinition, AffixModifier
+from asteria.rpg.items.refine import RefineRules
+from asteria.rpg.items.shops import ShopEntry
 
 HP, SP = tc.HP, tc.SP
 mod = tc._modifier

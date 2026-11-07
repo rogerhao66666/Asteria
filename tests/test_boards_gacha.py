@@ -13,9 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from asteria.rpg.boards import QuestBoardDefinition, RecruitCandidate, RecruitOfficeDefinition
-from asteria.rpg.gacha import GachaBanner, GachaPrize, GachaRarity, GachaRuntime, GachaState
-from asteria.rpg.quests import QuestDefinition, QuestObjective
+from asteria.rpg.world.boards import (
+    QuestBoardDefinition,
+    RecruitCandidate,
+    RecruitOfficeDefinition,
+)
+from asteria.rpg.world.gacha import GachaBanner, GachaPrize, GachaRarity, GachaRuntime, GachaState
+from asteria.rpg.world.quests import QuestDefinition, QuestObjective
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 sys.path.insert(0, str(DEMO))
@@ -130,7 +134,7 @@ def _world(game, name, **args):
 
 
 def test_the_bounty_board_takes_hands_in_times_out_and_repeats(host):
-    from asteria.runtime.boards_play import QuestBoard
+    from asteria.runtime.menus.boards import QuestBoard
 
     game = host.game
     _world(game, "OPEN_QUEST_BOARD", board_id="hearthfold_board")
@@ -206,7 +210,7 @@ def test_the_guild_office_hires_at_a_rolled_level_and_sends_away(host):
 
 
 def test_the_starfall_chest_pays_pulls_gives_and_turns_duplicates(host):
-    from asteria.runtime.boards_play import Gacha
+    from asteria.runtime.menus.boards import Gacha
 
     game = host.game
     _world(game, "OPEN_GACHA", banner_id="starfall")
@@ -240,7 +244,7 @@ def test_the_starfall_chest_pays_pulls_gives_and_turns_duplicates(host):
 
 
 def test_the_rates_page_is_always_there_and_shows_every_rarity(host):
-    from asteria.runtime.service_screens import GachaScreen
+    from asteria.runtime.menus.services import GachaScreen
 
     screen = GachaScreen(host, "starfall")
     host._service_screen, host._ui_mode = screen, "service"
@@ -257,10 +261,10 @@ def test_the_rates_page_is_always_there_and_shows_every_rarity(host):
 def test_the_editor_edits_the_three_kinds_and_simulates_a_banner(monkeypatch):
     monkeypatch.setenv("ASTERIA_MUTE", "1")
     from asteria.editor import EditorDocument
-    from asteria.editor.game_systems_authoring import GameSystemsAuthoringController
-    from asteria.editor.menu_layout_authoring import MenuLayoutAuthoringController
-    from asteria.editor.storage import load_document
-    from asteria.runtime.menu_preview import MenuPreview
+    from asteria.editor.menus.layout_authoring import MenuLayoutAuthoringController
+    from asteria.editor.project.storage import load_document
+    from asteria.editor.rpg.game_systems_authoring import GameSystemsAuthoringController
+    from asteria.runtime.menus.preview import MenuPreview
 
     document = EditorDocument()
     load_document(document, str(DEMO / "project.asteria.json"))

@@ -6,8 +6,8 @@ import dataclasses
 from test_battle_extensions_session import _first_encounter, _session
 
 from asteria.rpg import BattleExtensionRules, StealEntry, StealTable
-from asteria.rpg.drop_tables import DropEntry, DropTable
-from asteria.rpg.loot import AffixDefinition, AffixModifier, RarityDefinition
+from asteria.rpg.items.drop_tables import DropEntry, DropTable
+from asteria.rpg.items.loot import AffixDefinition, AffixModifier, RarityDefinition
 
 
 def _win(game, encounter):

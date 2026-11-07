@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from asteria.editor.commands import CommandTransaction
-from asteria.editor.model import EditorDocument
+from asteria.editor.project.commands import CommandTransaction
+from asteria.editor.project.model import EditorDocument
 
 
 @dataclass

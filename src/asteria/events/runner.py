@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .call_stack import EventCallFrame
-from .context import EventContext
-from .dialogue import (
+from asteria.events.call_stack import EventCallFrame
+from asteria.events.context import EventContext
+from asteria.events.dialogue import (
     PORTRAIT_SIDES,
     ChoiceRequest,
     DialogueChoice,
@@ -12,10 +12,10 @@ from .dialogue import (
     DialogueRequest,
     DialogueRuntimeState,
 )
-from .registry import EventProgramRegistry
-from .state import EventVMStatus
-from .vm import EventVM
-from .world_commands import WorldCommand, WorldCommandRouter
+from asteria.events.registry import EventProgramRegistry
+from asteria.events.state import EventVMStatus
+from asteria.events.vm import EventVM
+from asteria.events.world_commands import WorldCommand, WorldCommandRouter
 
 
 class EventRunnerError(RuntimeError):
@@ -243,7 +243,7 @@ class EventRunner:
                 continue
 
             if instruction.opcode == "SEQUENCE":
-                from .sequencer import EventSequence
+                from asteria.events.sequencer import EventSequence
 
                 sequence = EventSequence.start(instruction, self, result.pc_before)
                 self.sequences.append((self.active.program_id, sequence))
@@ -548,7 +548,7 @@ class EventRunner:
         self.sequences = []
         self.background_tweens = []
         if version >= 4:
-            from .sequencer import EventSequence, _Tween
+            from asteria.events.sequencer import EventSequence, _Tween
 
             for saved in data["sequences"]:
                 program = self.registry.require(saved["program_id"])

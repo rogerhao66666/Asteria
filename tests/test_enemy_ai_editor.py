@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from asteria.editor import EditorDocument
-from asteria.editor.enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
+from asteria.editor.combat.enemy_ai_authoring import AIScenario, EnemyAIEditor, EnemyAIEditorError
 from asteria.project import Project
 
 REF = Path(__file__).parents[1] / "reference_projects/complex_reference_rpg/project.asteria.json"
@@ -169,7 +169,7 @@ def window():
 
 def test_gui_shows_rules_phases_and_previews_the_boss(window):
     """The tab edits with Game Data's own form (names, words, picks) and previews in words."""
-    from asteria.editor.record_form import _ai_context
+    from asteria.editor.records.form_shapes import ai_context
 
     widget = window.enemy_ai_editor
     assert window.rpg_workspace.tabText(window.rpg_workspace.indexOf(widget)) == "Enemy AI"
@@ -179,7 +179,7 @@ def test_gui_shows_rules_phases_and_previews_the_boss(window):
     assert widget.used_by.text() == "Astral Tyrant"  # by name, not id
     assert widget.problem_list.item(0).text() == "No problems"
     names = widget._names()
-    assert _ai_context(data, data["phases"][1], names) == "starts when HP % is at most 65 %"
+    assert ai_context(data, data["phases"][1], names) == "starts when HP % is at most 65 %"
     assert widget.run_preview().phase_id == "phase_1"
     assert widget.decision.item(0).text() == "1. Boss Cleave  100%"
     assert widget.curve.text() == "Phase 1 ≤100%  →  Phase 2 ≤65%  →  Phase 3 ≤30%"

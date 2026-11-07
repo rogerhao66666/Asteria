@@ -15,7 +15,7 @@ def _entity(*component_types):
 
 
 def test_an_entity_kind_follows_its_components():
-    from asteria.editor.entity_kinds import KINDS, kind_of
+    from asteria.editor.scene.entity_kinds import KINDS, kind_of
 
     assert kind_of(_entity("Transform", "Camera2DComponent")) is KINDS["camera"]
     assert kind_of(_entity("Transform", "TileMap2DComponent")) is KINDS["map"]
@@ -35,8 +35,8 @@ def test_an_entity_kind_follows_its_components():
 
 
 def test_the_theme_colours_kind_badges_and_panel_switch_buttons():
-    from asteria.editor.entity_kinds import KINDS
-    from asteria.editor.theme import ASTERIA_DARK_QSS
+    from asteria.editor.scene.entity_kinds import KINDS
+    from asteria.editor.ui.theme import ASTERIA_DARK_QSS
 
     for kind in KINDS.values():
         assert f'QLabel#KindBadge[entityKind="{kind.kind}"]' in ASTERIA_DARK_QSS
@@ -50,7 +50,7 @@ def test_layer_rows_have_an_eye_that_shows_or_hides_the_layer(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from asteria.editor.tile_layers_widget import TileLayersWidget, layer_colour
+    from asteria.editor.scene.tile_layers_widget import TileLayersWidget, layer_colour
 
     QApplication.instance() or QApplication([])
     ground = SimpleNamespace(name="Ground", visible=True, collision_enabled=False)
@@ -72,8 +72,8 @@ def test_the_panel_switch_and_its_keys_open_the_left_panels(monkeypatch):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication, QDockWidget
 
+    from asteria.editor.project.workspace import WorkspaceMode
     from asteria.editor.shell import AsteriaEditorWindow
-    from asteria.editor.workspace import WorkspaceMode
 
     app = QApplication.instance() or QApplication([])
     window = AsteriaEditorWindow()

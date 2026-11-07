@@ -63,7 +63,7 @@ if len(sys.argv) > 1:
                 runtime.pg.image.save(
                     runtime.pg.display.get_surface(), str(folder / f"{player}.png")
                 )
-                from asteria.runtime.network_bag_screen import NetworkBagScreen
+                from asteria.runtime.menus.network_bag import NetworkBagScreen
 
                 NetworkBagScreen(runtime).draw()
                 runtime.pg.display.flip()

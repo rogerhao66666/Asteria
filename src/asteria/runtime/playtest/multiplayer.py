@@ -15,7 +15,7 @@ class MultiplayerMixin:
     def _enable_authoritative_project_controls(self):
         self._authoritative_project_mode = True
         if getattr(self, "_network_legacy_attack_injected", False):
-            from asteria.runtime.action_play import ARPG_ACTIONS
+            from asteria.runtime.action.play import ARPG_ACTIONS
             from asteria.runtime.input_map import InputBinding
 
             self.input.input_map.set_bindings(
@@ -113,7 +113,7 @@ class MultiplayerMixin:
             max(-1.0, min(1.0, float(move_y))),
             max(0.0, min(0.1, float(dt))),
         )
-        from asteria.runtime.multiplayer_preview import map_network_position
+        from asteria.runtime.tools.multiplayer_preview import map_network_position
 
         if self._network_origin is None:
             transform = self.game.player.get(Transform)
@@ -134,14 +134,14 @@ class MultiplayerMixin:
         if bridge is None or not bridge.connected:
             return
         from asteria.core import Transform
-        from asteria.runtime.multiplayer_preview import map_network_position
+        from asteria.runtime.tools.multiplayer_preview import map_network_position
 
         state, network_events, network_revision = bridge.snapshot()
         if state.get("schema") == "asteria.multiplayer.project_state":
             self._network_predictor = None
             self._network_input_prediction_sequences.clear()
             self._enable_authoritative_project_controls()
-            from asteria.runtime.multiplayer_preview import (
+            from asteria.runtime.tools.multiplayer_preview import (
                 apply_project_snapshot,
                 install_authoritative_commands,
             )
@@ -151,7 +151,7 @@ class MultiplayerMixin:
                 try:
                     if apply_project_snapshot(self, state, bridge.player_id):
                         self._network_revision = network_revision
-                        from asteria.runtime.combat import CombatEvent
+                        from asteria.runtime.action.combat import CombatEvent
 
                         self.game.combat.events = tuple(
                             CombatEvent(
@@ -271,7 +271,7 @@ class MultiplayerMixin:
             )
             return
 
-        from asteria.runtime.multiplayer_preview import map_network_position
+        from asteria.runtime.tools.multiplayer_preview import map_network_position
 
         state = bridge.state
         if state.get("schema") == "asteria.multiplayer.project_state":

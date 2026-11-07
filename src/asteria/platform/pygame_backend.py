@@ -1,8 +1,7 @@
 from asteria.assets import TextureResource
 from asteria.graphics.scaling import resized
+from asteria.platform.backend import RuntimeBackend, TextureBackend
 from asteria.runtime.input_map import InputActionMap
-
-from .backend import RuntimeBackend, TextureBackend
 
 # System fonts that also cover CJK text (imported projects are often Japanese); the default font is
 # the fallback.
@@ -52,7 +51,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         self.pg.display.set_caption(str(title))
         self.clock = self.pg.time.Clock()
         self._close = False
-        from .pygame_input import PygameInputSource
+        from asteria.platform.pygame_input import PygameInputSource
 
         self.input_source = PygameInputSource(self.pg)
 
@@ -141,7 +140,7 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
         if env is not None and env.active and not _now:
             self._pending_text = text  # UI goes on top of the environment effects
             return
-        from .pygame_battle_ui import font_for_text, renderable_text
+        from asteria.platform.pygame_battle_ui import font_for_text, renderable_text
 
         width, height = self.screen.get_size()
         box = self.pg.Rect(16, height - 132, width - 32, 116)
@@ -163,7 +162,10 @@ class PygameRuntimeBackend(RuntimeBackend, TextureBackend):
             return
         env = getattr(self, "environment", None)
         if env is not None and env.active:
-            from asteria.runtime.environment_fallback import PygameEnvironmentRenderer, unsupported
+            from asteria.runtime.scene.environment_fallback import (
+                PygameEnvironmentRenderer,
+                unsupported,
+            )
 
             if getattr(self, "_l0", None) is None:
                 self._l0 = PygameEnvironmentRenderer(self.pg)

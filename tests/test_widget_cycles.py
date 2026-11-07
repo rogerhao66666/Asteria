@@ -27,7 +27,7 @@ def _freed_without_the_collector(make):
 
 
 def test_an_icon_picker_is_freed_without_the_cycle_collector(app):
-    from asteria.editor.game_systems_widget import _IconPicker
+    from asteria.editor.rpg.game_systems_widget import _IconPicker
 
     def make():
         picker = _IconPicker(None)
@@ -39,7 +39,7 @@ def test_an_icon_picker_is_freed_without_the_cycle_collector(app):
 
 def test_the_project_tree_is_freed_without_the_cycle_collector(app):
     from asteria.editor import EditorDocument
-    from asteria.editor.widgets import ProjectTreeWidget
+    from asteria.editor.ui.widgets import ProjectTreeWidget
 
     document = EditorDocument()
 
@@ -52,7 +52,8 @@ def test_the_project_tree_is_freed_without_the_cycle_collector(app):
 
 
 def test_a_section_with_columns_is_freed_without_the_cycle_collector(app):
-    from asteria.editor.record_form import NumberBox, Section
+    from asteria.editor.records.form_controls import NumberBox
+    from asteria.editor.records.form_parts import Section
 
     def make():
         section = Section("Numbers", columns=3)

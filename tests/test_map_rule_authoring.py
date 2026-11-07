@@ -2,13 +2,13 @@
 
 import pytest
 
-from asteria.editor.map_rule_authoring import (
+from asteria.editor.project.model import EditorDocument
+from asteria.editor.scene.map_rule_authoring import (
     MapRuleAuthoringController,
     MapRuleAuthoringError,
 )
-from asteria.editor.model import EditorDocument
 from asteria.project import Project
-from asteria.rpg.map_rules import AreaRule, MapRuleSet
+from asteria.rpg.world.map_rules import AreaRule, MapRuleSet
 
 
 def test_region_rule_edit_and_remove_are_undoable_and_preserve_ruleset_settings():

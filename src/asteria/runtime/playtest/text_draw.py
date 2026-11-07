@@ -12,8 +12,8 @@ from asteria.platform.pygame_battle_ui import (
     render_with_fallback,
     renderable_text,
 )
-from asteria.presentation.ui_skin import draw_nine_patch
-from asteria.runtime.menu_canvas import MenuCanvas
+from asteria.presentation.screens.ui_skin import draw_nine_patch
+from asteria.runtime.menus.canvas import MenuCanvas
 
 
 class TextDrawMixin:

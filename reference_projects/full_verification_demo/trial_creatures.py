@@ -15,16 +15,16 @@ from __future__ import annotations
 import copy
 
 from asteria.gameplay.abilities import AbilityDefinition
-from asteria.rpg.capture import CaptureRule
-from asteria.rpg.enemies import EncounterDefinition, EncounterMember
-from asteria.rpg.items import ItemDefinition
-from asteria.rpg.pets import (
+from asteria.rpg.battle.capture import CaptureRule
+from asteria.rpg.characters.pets import (
     PetExpCurve,
     PetMove,
     PetRules,
     PetSpeciesDefinition,
     PetStatFormula,
 )
+from asteria.rpg.enemies.definitions import EncounterDefinition, EncounterMember
+from asteria.rpg.items.definitions import ItemDefinition
 
 HP = "vitality"
 FORMULA = PetStatFormula(gene_terms={"iv": 1.0}, multiplier_gene="nature")
@@ -39,7 +39,7 @@ ITEMS = ("pet_ball", "great_ball")
 def struggle(project):
     """Struggle: Sling Shot's hit plus a self-targeted loss of a quarter of the user's top
     health. Ordinary data: the engine has no such move of its own."""
-    from asteria.rpg.targeting import BattleTargetingDefinition
+    from asteria.rpg.battle.targeting import BattleTargetingDefinition
 
     library = project.gameplay_library.abilities
     if library.get("struggle") is not None:

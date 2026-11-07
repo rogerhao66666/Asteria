@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 from math import isfinite
 
-from .conditions import (
+from asteria.gameplay.conditions import (
     ConditionGroup,
     GameplayCondition,
     GameplayConditionContext,
@@ -13,10 +13,10 @@ from .conditions import (
     deserialize_condition,
     serialize_condition,
 )
-from .effects import Effect, EffectApplicationResult, apply_effect
-from .formulas import FormulaContext, ValueFormula
-from .stats import ResourcePool, StatBlock
-from .tags import TagSet, normalize_tag
+from asteria.gameplay.effects import Effect, EffectApplicationResult, apply_effect
+from asteria.gameplay.formulas import FormulaContext, ValueFormula
+from asteria.gameplay.stats import ResourcePool, StatBlock
+from asteria.gameplay.tags import TagSet, normalize_tag
 
 
 def _clean_kill(value):

@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from asteria.runtime.profiler import SPEC_METRICS, NullProfiler, RuntimeProfiler
+from asteria.runtime.tools.profiler import SPEC_METRICS, NullProfiler, RuntimeProfiler
 
 
 class FakeClock:

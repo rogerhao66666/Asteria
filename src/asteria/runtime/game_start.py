@@ -4,8 +4,7 @@ from dataclasses import dataclass
 
 from asteria.events import EventContext
 from asteria.rpg import ProgressionRuntime, RpgRuntimeState
-
-from .game_save import GameRuntimeSave
+from asteria.runtime.game_save import GameRuntimeSave
 
 
 @dataclass(slots=True)

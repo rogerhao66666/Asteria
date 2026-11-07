@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from asteria.project import Project
-from asteria.rpg.refine import RefineRules
+from asteria.rpg.items.refine import RefineRules
 from asteria.runtime.component_registry import default_component_registry
 from asteria.runtime.game_session import GameSessionError, GameSessionRuntime
 

@@ -9,7 +9,10 @@ pytest.importorskip("PySide6")
 
 from PySide6.QtGui import QColor, QImage, QPainter  # noqa: E402
 
-from asteria.editor.qt_texture_renderer import QtTextureCache, paint_texture_draws  # noqa: E402
+from asteria.editor.assets.qt_texture_renderer import (  # noqa: E402
+    QtTextureCache,
+    paint_texture_draws,
+)
 
 
 def _draw(asset, x, opacity=1.0):

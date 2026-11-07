@@ -12,7 +12,7 @@ from asteria.core.prefab import (
     instantiate,
     prefab_from_entity,
 )
-from asteria.editor.prefab_commands import (
+from asteria.editor.scene.prefab_commands import (
     InstantiatePrefabCommand,
     ReplacePrefabsCommand,
     RevertInstanceCommand,

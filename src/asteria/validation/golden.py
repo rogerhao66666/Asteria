@@ -30,16 +30,20 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from asteria.assets.asset_package import package_assets
-from asteria.assets.monster import MonsterValidator
-from asteria.assets.prop import PropValidator
-from asteria.assets.sprite_kinds import SpriteData, sprite_kind_validators, standard_asset_codecs
+from asteria.assets.kinds.monster import MonsterValidator
+from asteria.assets.kinds.prop import PropValidator
+from asteria.assets.kinds.sprite_sheets import (
+    SpriteData,
+    sprite_kind_validators,
+    standard_asset_codecs,
+)
+from asteria.assets.kinds.tileset import TilesetValidator
+from asteria.assets.kinds.vfx import VFXValidator
+from asteria.assets.packages.bundle import package_assets
 from asteria.assets.store import AssetStore
-from asteria.assets.tileset import TilesetValidator
-from asteria.assets.vfx import VFXValidator
 from asteria.graphics import SpriteClip, SpriteKeyframe
-from asteria.presentation.fidelity import HighFidelityClip
-from asteria.runtime.animation import AnimatorState
+from asteria.presentation.visuals.fidelity import HighFidelityClip
+from asteria.runtime.scene.animation import AnimatorState
 
 GOLDEN_CATEGORIES = (
     "golden_character",
@@ -312,7 +316,7 @@ def run_golden_suite(root):
         try:
             clips = _clips_of(asset)
             if source is not None and clips:
-                from asteria.runtime.animation_library import AnimationClipSet
+                from asteria.runtime.scene.animation import AnimationClipSet
 
                 uri, frame = source
                 sheet = _grid_sheet(asset_id, image_size(uri), frame)

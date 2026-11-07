@@ -1,8 +1,8 @@
 from math import cos, radians, sin
 
-from .columns import column_storage
-from .component import Component
-from .metadata import Field, component_schema
+from asteria.core.columns import column_storage
+from asteria.core.component import Component
+from asteria.core.metadata import Field, component_schema
 
 
 @column_storage()

@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from asteria.assets.local_reference import discover_mv_projects, resolve_rpg_maker_mv_root
-from asteria.assets.rpg_maker_mv_project import RPGMakerMVProjectImporter
+from asteria.assets.rpg_maker_mv.project import RPGMakerMVProjectImporter
 from asteria.project import Project
 from asteria.runtime.preview import build_preview_registry
 

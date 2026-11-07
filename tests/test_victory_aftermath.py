@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from asteria.rpg.victory import ActorAftermath, VictoryAftermath, build_aftermath
+from asteria.rpg.battle.victory import ActorAftermath, VictoryAftermath, build_aftermath
 
 
 def _applied(currencies=None, items=None):

@@ -1,9 +1,13 @@
 from dataclasses import dataclass
 
-from .events import EventBus
-from .scene_transition import SceneTransition, _ActiveTransition, carry_persistent_entities
-from .services import ServiceRegistry
-from .time import TimeState
+from asteria.core.events import EventBus
+from asteria.core.scene_transition import (
+    SceneTransition,
+    _ActiveTransition,
+    carry_persistent_entities,
+)
+from asteria.core.services import ServiceRegistry
+from asteria.core.time import TimeState
 
 
 @dataclass(slots=True)

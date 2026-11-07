@@ -29,7 +29,7 @@ COUNT = re.compile(r"^x\d+$")  # "x3" in a quantity column
 
 
 def _ids(project):
-    from asteria.editor.data_translation import stat_ids
+    from asteria.editor.project.data_translation import stat_ids
 
     db = project.rpg_database
     ids = set(db.actors) | set(db.classes) | set(db.quests) | set(db.enemies)

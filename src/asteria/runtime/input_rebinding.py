@@ -9,7 +9,8 @@ player (``GameSettings.input_overrides``), never in the project, and
 
 from __future__ import annotations
 
-from .input_map import InputActionMap, InputBinding
+from asteria.rpg.text.built_in_text import english
+from asteria.runtime.input_map import InputActionMap, InputBinding
 
 
 def effective_input_map(base, overrides):
@@ -21,14 +22,10 @@ def effective_input_map(base, overrides):
     return result
 
 
-def _english(key, english, **params):
-    return english.format(**params) if params else english
-
-
 def describe_binding(binding, tr=None):
     """A binding as the Controls screen shows it; ``tr`` (``GameSessionRuntime.tr``) words
     the pad in the player's language."""
-    tr = tr or _english
+    tr = tr or english
     if binding.device == "key":
         return binding.code.upper() if len(binding.code) == 1 else binding.code.title()
     if binding.device == "gamepad_button":
@@ -50,7 +47,7 @@ class ControlsMenu:
         self.row = 0
         self.capturing = None  # action id waiting for an input
         self.message = ""
-        self.tr = tr or _english  # GameSessionRuntime.tr: the screen's words
+        self.tr = tr or english  # GameSessionRuntime.tr: the screen's words
 
     def action_name(self, action):
         """An input action as the player reads it: ``controls.action.<id>`` in the project's

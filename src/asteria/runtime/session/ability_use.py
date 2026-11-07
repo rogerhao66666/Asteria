@@ -10,9 +10,8 @@ from asteria.gameplay.conditions import GameplayConditionContext
 from asteria.gameplay.effects import apply_effect
 from asteria.gameplay.formulas import FormulaContext
 from asteria.rpg import CompositionRuntime
-from asteria.rpg.targeting import TargetRelation
-
-from .support import (
+from asteria.rpg.battle.targeting import TargetRelation
+from asteria.runtime.session.support import (
     GameSessionError,
     _merge_casts,
     describe_condition,

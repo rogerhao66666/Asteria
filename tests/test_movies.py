@@ -11,7 +11,7 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
 import pygame  # noqa: E402
 
-from asteria.runtime.movies import Movie, is_movie  # noqa: E402
+from asteria.runtime.scene.movies import Movie, is_movie  # noqa: E402
 
 
 @pytest.fixture()
@@ -109,7 +109,7 @@ def test_a_held_line_stays_until_a_line_without_words():
 def test_a_fade_says_what_it_covers(over):
     from types import SimpleNamespace
 
-    from asteria.runtime.field_presentation import FieldEffects
+    from asteria.runtime.field.presentation import FieldEffects
 
     effects = FieldEffects.__new__(FieldEffects)
     effects.fade_alpha = 0.0
@@ -121,7 +121,7 @@ def test_a_fade_says_what_it_covers(over):
 def test_a_fade_covers_the_world_unless_told():
     from types import SimpleNamespace
 
-    from asteria.runtime.field_presentation import FieldEffects
+    from asteria.runtime.field.presentation import FieldEffects
 
     effects = FieldEffects.__new__(FieldEffects)
     effects.fade_alpha = 0.0

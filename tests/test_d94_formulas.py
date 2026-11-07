@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from asteria.gameplay.expressions import FORMULA_FIELDS, undeclared, variables
 from asteria.gameplay.stats import StatBlock
-from asteria.rpg.derived_stats import DerivedStatRule, apply_derived_stats
+from asteria.rpg.characters.derived_stats import DerivedStatRule, apply_derived_stats
 
 DEMO = Path(__file__).resolve().parents[1] / "reference_projects" / "full_verification_demo"
 
@@ -50,7 +50,7 @@ def test_every_formula_field_names_its_variables():
 
 
 def test_an_undeclared_stat_is_an_error_only_where_stats_are_defined():
-    from asteria.editor.formula_field import formula_problem
+    from asteria.editor.records.formula_field import formula_problem
 
     names = ("source", "target")
     assert formula_problem("", names, ["dex"], [], True) == ""  # empty: the fields count
@@ -72,7 +72,7 @@ def project():
 
 def test_the_demo_formulas_give_the_numbers_the_fields_gave(project):
     from asteria.gameplay import GameplaySubject, ResourcePool, TagSet
-    from asteria.rpg.interactions import InteractionResolver, OutcomeCheckDefinition
+    from asteria.rpg.battle.interactions import InteractionResolver, OutcomeCheckDefinition
 
     db = project.rpg_database
     rule = db.derived_stats["accuracy"]
@@ -105,7 +105,7 @@ def test_the_demo_formulas_give_the_numbers_the_fields_gave(project):
 def test_the_problems_list_names_a_formula_reading_an_undeclared_stat(project):
     import dataclasses
 
-    from asteria.editor.problems import _formulas
+    from asteria.editor.project.problems import _formulas
 
     db = project.rpg_database
     found = []
@@ -133,8 +133,8 @@ def app():
 def test_the_buttons_insert_declared_stats_and_functions(app, project):
     from PySide6.QtWidgets import QToolButton
 
-    from asteria.editor.formula_field import FormulaField
-    from asteria.editor.record_vocabulary import ProjectVocabulary
+    from asteria.editor.records.formula_field import FormulaField
+    from asteria.editor.records.vocabulary import ProjectVocabulary
 
     field = FormulaField(("source", "target"), ProjectVocabulary(project))
     assert field.strict
@@ -156,9 +156,9 @@ def test_the_buttons_insert_declared_stats_and_functions(app, project):
 
 
 def test_a_chance_check_takes_its_formula_from_the_field_only_when_valid(app, project):
-    from asteria.editor.formula_field import FormulaField
-    from asteria.editor.record_form import RecordForm
-    from asteria.editor.record_vocabulary import ProjectVocabulary
+    from asteria.editor.records.form import RecordForm
+    from asteria.editor.records.formula_field import FormulaField
+    from asteria.editor.records.vocabulary import ProjectVocabulary
 
     editor = RecordForm()
     editor.vocabulary = ProjectVocabulary(project)
@@ -172,7 +172,7 @@ def test_a_chance_check_takes_its_formula_from_the_field_only_when_valid(app, pr
 
 
 def test_a_skill_formula_shows_while_empty():
-    from asteria.editor.authoring_hub_widget import _with_formula_fields
+    from asteria.editor.records.hub import _with_formula_fields
 
     data = {"effects": [{"amount": {"schema": "asteria.value_formula", "terms": []}}]}
     shown = _with_formula_fields(data)
@@ -181,12 +181,12 @@ def test_a_skill_formula_shows_while_empty():
 
 def test_the_stat_formula_page_has_a_formula_field_and_refuses_a_bad_one(app, project):
     from asteria.editor import EditorDocument
-    from asteria.editor.formula_field import FormulaField
-    from asteria.editor.game_systems_authoring import (
+    from asteria.editor.records.formula_field import FormulaField
+    from asteria.editor.rpg.game_systems_authoring import (
         GameSystemsAuthoringController,
         GameSystemsAuthoringError,
     )
-    from asteria.editor.game_systems_widget import GameSystemsEditorWidget
+    from asteria.editor.rpg.game_systems_widget import GameSystemsEditorWidget
 
     widget = GameSystemsEditorWidget(GameSystemsAuthoringController(EditorDocument(project)))
     from PySide6.QtCore import Qt
@@ -207,8 +207,8 @@ def test_the_stat_formula_page_has_a_formula_field_and_refuses_a_bad_one(app, pr
 def test_the_status_pages_chance_lines_read_a_checks_formula():
     """A detail line written as a chance (Status page: ACC, EVA through the land check) reads
     the check's formula as it read its terms: the same numbers."""
-    from asteria.rpg.interactions import OutcomeCheckDefinition
-    from asteria.rpg.menu_rules import StatLine
+    from asteria.rpg.battle.interactions import OutcomeCheckDefinition
+    from asteria.rpg.menus.rules import StatLine
 
     terms = OutcomeCheckDefinition(
         "land",

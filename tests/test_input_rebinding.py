@@ -4,9 +4,9 @@
 import pygame
 import pytest
 
-from asteria.runtime.game_menus import GameSettings
 from asteria.runtime.input_map import InputActionMap, InputBinding, RawInputState
 from asteria.runtime.input_rebinding import ControlsMenu, effective_input_map
+from asteria.runtime.menus.game_menus import GameSettings
 
 
 def test_capture_rebinds_exclusively_and_reset_restores_defaults():
@@ -81,7 +81,7 @@ def test_editor_input_map_tab_edits_project_defaults_with_undo():
     from PySide6.QtWidgets import QApplication
 
     from asteria.editor import EditorDocument
-    from asteria.editor.input_map_widget import InputMapWidget
+    from asteria.editor.rpg.input_map_widget import InputMapWidget
     from asteria.project import Project
 
     QApplication.instance() or QApplication([])

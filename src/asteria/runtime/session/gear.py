@@ -6,9 +6,8 @@ from asteria.rpg import (
     EquipmentGrowthRuntime,
     EquippedItem,
 )
-from asteria.rpg.built_in_text import Words
-
-from .support import (
+from asteria.rpg.text.built_in_text import Words
+from asteria.runtime.session.support import (
     EquipOffer,
     GameSessionError,
 )

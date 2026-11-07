@@ -23,7 +23,7 @@ def _game(monkeypatch, max_moves=0):
 def _teacher(project, game, *tags):
     from dataclasses import replace
 
-    from asteria.rpg.items import ItemDefinition
+    from asteria.rpg.items.definitions import ItemDefinition
 
     pet = game.add_pet("cub", level=5)
     known = set(game.pet_moves(pet))
@@ -36,7 +36,7 @@ def _teacher(project, game, *tags):
 
 
 def test_a_teaching_item_teaches_able_species_and_is_used_up(monkeypatch):
-    from asteria.rpg.pets import PetSpeciesDefinition as PetSpecies
+    from asteria.rpg.characters.pets import PetSpeciesDefinition as PetSpecies
 
     project, game = _game(monkeypatch, max_moves=4)
     pet, move = _teacher(project, game)

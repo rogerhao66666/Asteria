@@ -69,13 +69,13 @@ GitHub Actions（`.github/workflows/tests.yml`）：每次 push 與 PR 跑 lint 
 | `src/asteria/kernels` | 計算核心：`python`（基準）／`numpy`／`native`（C++ via ctypes）三組，結果逐位元相同 |
 | `src/asteria/events` | 事件程式（VM、排程、對話、世界指令、綁定） |
 | `src/asteria/gameplay` | 數值、資源、公式、標籤、效果、狀態、技能（Ability）、攻擊、投射物、動作時間軸 |
-| `src/asteria/rpg` | 角色、職業、技能樹、裝備與詞綴與套裝、掉落、任務、經濟、回合制戰鬥核心、捕獲、調合 |
-| `src/asteria/runtime` | 可玩的執行環境：場景、地圖、角色控制、碰撞、即時戰鬥（`action_*`）、遊戲選單、存檔、HUD |
+| `src/asteria/rpg` | 角色、職業、技能樹、裝備與詞綴與套裝、掉落、任務、經濟、回合制戰鬥核心、捕獲、調合；子套件 `battle`、`characters`、`data`、`enemies`、`items`、`menus`、`text`、`world` |
+| `src/asteria/runtime` | 可玩的執行環境：場景、地圖、角色控制、碰撞、即時戰鬥、遊戲選單、存檔、HUD；子套件 `action`、`battle`、`creature`、`field`、`menus`、`scene`、`session`、`playtest`、`tools` |
 | `src/asteria/multiplayer` | 通用多人連線原型：TCP session/lobby、client API、遊戲 adapter、命令／狀態／事件、即時輸入同步與合作 Boss 範例 |
-| `src/asteria/presentation` | 回合制戰鬥呈現：動畫、特效、HUD、選單、鏡頭、角色／隊伍／裝備／技能畫面 |
+| `src/asteria/presentation` | 回合制戰鬥呈現：動畫、特效、HUD、選單、鏡頭、角色／隊伍／裝備／技能畫面；子套件 `battle`、`screens`、`text`、`visuals` |
 | `src/asteria/graphics`、`render`、`platform` | 精靈、地圖、光照、後製；pygame 與 ModernGL 兩種後端 |
-| `src/asteria/assets` | 素材管線：匯入、圖集、自動修正、品質門檻、RPG Maker MV 匯入 |
-| `src/asteria/editor` | PySide6 編輯器（約 100 個模組） |
+| `src/asteria/assets` | 素材管線：匯入、圖集、自動修正、品質門檻、RPG Maker MV 匯入；子套件 `kinds`、`codecs`、`packages`、`loading`、`rpg_maker_mv` |
+| `src/asteria/editor` | PySide6 編輯器（約 170 個模組），子套件 `window`（主視窗）、`project`、`records`、`rpg`、`combat`、`events`、`menus`、`animation`、`scene`、`assets`、`tools`、`ui` |
 | `src/asteria/validation` | 壓力測試與實驗場景 |
 | `reference_projects/` | `party_rpg_demo`、`arpg_demo` 以及其他參考專案 |
 | `src/asteria/templates` | 隨套件發布的 Party RPG 與 Action RPG 範本（由 `scripts/sync_templates.py` 複製） |
@@ -86,7 +86,7 @@ GitHub Actions（`.github/workflows/tests.yml`）：每次 push 與 PR 跑 lint 
 | `docs/manual/` | 給遊戲作者的使用手冊（中英文） |
 | `docs/spec/` | 產品與素材規格 |
 | `docs/audits/` | 決策紀錄、稽核、實機證據（`evidence/`） |
-| `docs/history/` | 歷史紀錄（舊版的進度、交接、稽核），不代表現狀 |
+| `docs/history/` | 歷史紀錄（舊版的進度、交接、稽核；`batches/` 是 v0.93～v0.159 的批次文件），不代表現狀 |
 
 ---
 
@@ -122,7 +122,7 @@ GitHub Actions（`.github/workflows/tests.yml`）：每次 push 與 PR 跑 lint 
 ### 3.3 RPG 系統（`rpg`）
 
 職業與副職、技能樹（等級上限、花費、前置、互斥）、裝備（欄位、鑲嵌、套裝、成長、隨機詞綴、可自訂稀有度）、
-掉落表、任務、商店、聲望、成就、**寵物**（`rpg/pets.py`：物種＝基礎數值與每級成長、經驗曲線；持有的寵物＝
+掉落表、任務、商店、聲望、成就、**寵物**（`rpg/characters/pets.py`：物種＝基礎數值與每級成長、經驗曲線；持有的寵物＝
 物種、暱稱、等級、經驗，存在存檔；派出參戰後贏得戰鬥會得到經驗並升級；暫停選單的 Pets 畫面可選擇出戰
 寵物與改名）、**捕獲**（`CaptureRule`：加入隊伍、變成寵物道具，或成為持有的寵物並指定起始等級）、**調合**
 （配方＋站點）、
@@ -140,7 +140,7 @@ GitHub Actions（`.github/workflows/tests.yml`）：每次 push 與 PR 跑 lint 
 
 ### 3.5 即時戰鬥的畫面（HUD）
 
-- **底部 HUD**（`runtime/hud_bottom.py`）：左紅右藍的資源球（依資源名稱選色；護盾是淺藍條）、快捷列
+- **底部 HUD**（`runtime/action/hud.py`）：左紅右藍的資源球（依資源名稱選色；護盾是淺藍條）、快捷列
   （鍵帽從專案輸入表讀、技能圖示、**冷卻時鐘：變暗後亮扇形順時針轉一圈，轉滿閃一下**、魔力不足變暗、
   道具數量方塊徽章在右下、資源消耗在左下用資源色小圓珠加數字）、狀態列（圖示或縮寫、增益綠框／減益紅框、
   剩餘時間遮罩與秒數、疊層徽章）、經驗條、淡出的操作提示。
@@ -158,7 +158,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   （含美術與授權文件）後改名開啟，Console 會顯示專案裡的 `START_HERE.md`（每個規則在編輯器哪裡改）。
   Party 與 Action 範本隨套件發布（`src/asteria/templates/`），改了 demo 之後執行 `scripts/sync_templates.py`，
   測試會檢查兩邊一致；Full Verification 與 Basic RPG 從原始碼裡的 `reference_projects/` 複製。
-- **紀錄表單（`editor/record_form.py`，2026-10-19）**：Game Data、Battle Rules、Battle Screen、Runtime UI
+- **紀錄表單（`editor/records/form.py`，2026-10-19）**：Game Data、Battle Rules、Battle Screen、Runtime UI
   的每一筆紀錄不再是 Field／Value 樹，而是表單：名稱與圖示在上方，ID 固定顯示；數字框（機率以 %
   顯示）、開關、**下拉選單挑參照**（技能、狀態、職業、物品、資源、能力值…附圖示，從專案讀出，
   `record_vocabulary.py`）、標籤用 chips（附專案內所有標籤的建議）、能力值表（兩欄、能力值從清單選）、
@@ -185,7 +185,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - **Presentation ▸ Menu Screens** 現在只有版面（D98）：舊的「選單資料」分頁拿掉了，屬性名稱改在
   Game Systems ▸ Stats，欄位名稱改在 Equipment Slots。
 - **介面語言**（D50）：English（預設）／繁體中文，View ▸ Language 即時切換，記在 QSettings `editor/language`
-  （`editor/i18n.py`、`editor/translations/zh_TW.json`）；只翻介面文字，名稱、id、描述等作者的資料不翻。
+  （`editor/ui/i18n.py`、`editor/translations/zh_TW.json`）；只翻介面文字，名稱、id、描述等作者的資料不翻。
 - **畫地圖**（D42）：Tiles 面板顯示整張圖塊集，點一格或拖曳選一塊來畫（整塊無縫重複）；筆刷大小 `[`／`]`、
   右鍵從地圖吸取、B／G／R／E／S 切換工具；按住時就畫在地圖上，放開算一步復原。
 - **素材庫**（D44）：File > Import from Asset Library… 從 `asset_library/`（CC0 的 Foozle 包與弓）挑圖匯入
@@ -210,7 +210,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   任務／商店／製作／成就／圖鑑／訊息紀錄／音樂室／製作人員／技能欄／寵物選單、背包與技能樹（動作遊戲）、
   動作 HUD、戰鬥指令與提示、指令不能用的原因、破防與捕獲、勝利結算與標題、遊戲結束、連線合作的訊息。
   畫的時候都經過 `GameSessionRuntime.tr(鍵, 英文)`。
-- **鍵的清單**：`src/asteria/rpg/built_in_text.py`（`GROUPS`：709 個鍵、依畫面分 29 組，每個鍵附畫出的英文），
+- **鍵的清單**：`src/asteria/rpg/text/built_in_text.py`（`GROUPS`：709 個鍵、依畫面分 29 組，每個鍵附畫出的英文），
   逐條列在 [`BUILT_IN_TEXT_KEYS.md`](BUILT_IN_TEXT_KEYS.md)（`scripts/built_in_text_keys.py` 產生）。
   `tests/test_built_in_text.py` 掃描原始碼：畫面用到的每個鍵都在清單裡、英文一致，清單裡的鍵都有畫面在用。
 - **翻譯表**：Database ▸ Game Systems ▸ Translations。每個 locale 一張表，頁面列出全部內建字（英文在旁邊），
@@ -220,20 +220,20 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
 - **沒有翻譯表的專案畫面完全不變**：新舊引擎各畫 12 個畫面（標題、野外、暫停、設定、任務、成就、圖鑑、
   遊戲結束、存檔、狀態、戰鬥指令、技能清單），Party RPG、Complex Reference（沒有表）與英文的 Full
   Verification 共 36 張逐像素相同。
-- **引擎附的繁體中文**：`rpg/built_in_text/zh-TW.json`（每個鍵都有，`{...}` 與英文一致）。Translations 頁的
+- **引擎附的繁體中文**：`rpg/text/built_in_text/zh-TW.json`（每個鍵都有，`{...}` 與英文一致）。Translations 頁的
   「填入空白列」把它填進 zh-TW 表（專案名稱剛好是內建字的，例如指令頁的「Skills」，也一起填）。
 - **專案自己的名稱也能翻**（頁面依專案列出，沒寫就照專案寫的顯示）：`battle.layer.<指令 id>`（Command
   Menu Pages 的名稱，例如 Fight）、`battle.group.<分組>`（技能的 `menu_category`）、`pause.entry.<id>`
   （暫停選單自訂項目）、`controls.action.<動作 id>`（按鍵設定畫面的動作名稱）。
 - **規則拒絕的訊息**（買不起、庫存不夠、背包放不下）用 `Words` 帶著鍵丟出：`str(錯誤)` 還是英文，商店畫面用
   `translated(錯誤, game.tr)` 顯示譯文。
-- **中文排版**：戰鬥版面用 `presentation/text_cells.py` 算寬度：中日韓全形字算 2 格，ASCII 長度不變
+- **中文排版**：戰鬥版面用 `presentation/text/cells.py` 算寬度：中日韓全形字算 2 格，ASCII 長度不變
   （所以英文版面和以前一樣）；技能說明在字與字之間換行、句讀不放行首。中文用系統的 CJK 字型畫
   （macOS 的 STHeiti）：戰鬥畫面的字級等於 UI 字型實際的 em（`point_size`，含 skin 的 `font_scale`），
   選單等主畫面是英文字型行高的 1.25 倍（以前同字級時中文大了約 45%）；並且垂直置中在英文大寫字母的
   中線（`glyph_shift`），選單游標和中文標籤同高；置中的標題與提示不超出英文那一行的上緣。skin 字型本身有
   中文字時直接用它。
-- **專案資料也能翻（D60）**：同一張表裡寫 `data.<種類>.<id>.name`／`.description`（種類由紀錄類別決定，見 `rpg/data_text.py` 的 `KINDS`）、`data.map.<場景 id>.name`、`data.speaker.<名字>.name`、`data.currency.<id>.name`；對話與選項用選填的 `text_key`（選項提示 `prompt_key`）。畫面一律經 `game.name_of(record)`／`description_of`／`line_text`，沒寫就照紀錄自己的字。
+- **專案資料也能翻（D60）**：同一張表裡寫 `data.<種類>.<id>.name`／`.description`（種類由紀錄類別決定，見 `rpg/text/data_text.py` 的 `KINDS`）、`data.map.<場景 id>.name`、`data.speaker.<名字>.name`、`data.currency.<id>.name`；對話與選項用選填的 `text_key`（選項提示 `prompt_key`）。畫面一律經 `game.name_of(record)`／`description_of`／`line_text`，沒寫就照紀錄自己的字。
 - **Full Verification（D60 T3）**：資料的繁中由 `trial_zh_data.py`（詞彙表 `trial_zh_words.py` 加句型）在建置時產生，1,923 列全有；真實視窗證據 `audits/evidence/data_translation/`（`scripts/data_translation_live_check.py`）。
 - **編輯器（D60 T2）**：Translations 頁在引擎字詞之後列出專案資料（每種紀錄一組，加上地圖、貨幣、說話者、台詞；預設收合、搜尋時展開；「顯示 ▸ 專案資料」）；「替對話產生鍵」一次替所有沒有鍵的台詞、選項與提示加上 `dlg.*` 鍵（可復原）。
 - **還不能翻的**：（D60 之前）專案資料的名稱和說明照作者寫的顯示；
@@ -296,30 +296,30 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | --- | --- |
 | `StateDefinition.display_name`、`icon_id` | `gameplay/states.py` |
 | `AbilityDefinition.display_name`、`icon_id`、`requires_items` | `gameplay/abilities.py` |
-| `CaptureRule.actor_id` 可為空，新增 `pet_item_id`、`pet_species_id`、`pet_level`（至少要有 actor、寵物道具或寵物物種其中一個） | `rpg/capture.py` |
+| `CaptureRule.actor_id` 可為空，新增 `pet_item_id`、`pet_species_id`、`pet_level`（至少要有 actor、寵物道具或寵物物種其中一個） | `rpg/battle/capture.py` |
 | `AbilityDefinition.requires_pet` | `gameplay/abilities.py` |
-| 資料庫新增 `pet_species`；存檔的 RPG 狀態新增選填的 `pets`、`active_pet_id`（沒有寵物就不寫入，不改版本） | `rpg/pets.py`、`rpg/actors.py`、`rpg/save_state.py` |
+| 資料庫新增 `pet_species`；存檔的 RPG 狀態新增選填的 `pets`、`active_pet_id`（沒有寵物就不寫入，不改版本） | `rpg/characters/pets.py`、`rpg/characters/actors.py`、`rpg/data/save_state.py` |
 | `ActionCombat` 綁定替代、`item:<id>` 消耗；`CombatantComponent.defeat_switch`；`ClassAppearance`；`ParallaxBackground2D` | `runtime/` |
-| `ActionCombat` 綁定 `slot:N`（技能欄第 N 格）、`vfx` 提示（世界裡的圖片特效：`effect` 精靈表 id、位移、縮放、`rotate`、`follow`）；技能欄規則 `AbilityLoadoutRules.limited_sources` 可含 `allocation`（技能樹給的技能），技能樹學到新技能會自動放進空格 | `runtime/action_combat.py`、`runtime/action_play.py`、`runtime/session/action_play.py` |
-| 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/progression_graph.py` |
-| 專案資料翻譯（D60）：`DialogueLine.text_key`、`DialogueChoice.text_key`、`ChoiceRequest.prompt_key`（只在有設定時寫入）；翻譯放在既有的語系表 `data.*` 鍵，紀錄本身不變 | `rpg/data_text.py`、`events/dialogue.py`、`events/runner.py`、`runtime/session/messages.py` |
-| 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/localization.py`、`runtime/playtest/field_ui.py`、`editor/dialogue_command_dialog.py` |
-| 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle_ui.py`、`presentation/library.py`、`editor/integrated_authoring.py` |
-| 戰鬥版面 `command_counts`（頂層指令旁的數量，預設關，D42）；戰鬥 HUD 資源樣式 `color`（空白＝主題色，D47） | `presentation/battle_ui.py`、`presentation/battle_hud.py` |
-| 戰鬥 HUD 隊伍肖像（D53）：戰鬥版面 `hud_portraits`（`left` 預設／`right`／`above`／`off`）、`hud_portrait_size`（0 = 和卡片的列一樣高），只在有設定時寫入；肖像取自戰鬥角色圖的 `portrait_asset_id`（32 單位以上）／`small_portrait_asset_id`；繪製指令 `BattleUiPortrait`、`BattleUiFrame.portraits`（預設空）；後端選填 `draw_portrait` | `presentation/battle_ui.py`、`presentation/library.py`、`presentation/battle_ui_renderer.py`、`platform/pygame_battle_ui.py`、`runtime/battle_presentation_adapters.py` |
-| 戰鬥站位（D54）：戰鬥版面 `column_spacing`（同一方相鄰兩欄的中心距離，0 = 自動：整張圖不重疊；有 Boss 的那一欄一律自動）、`column_spacing_right`（右側那一方另設，空白 = 跟著 `column_spacing`）、`feet_on_ground`（預設開：側視站位與肖像隊伍版面給的位置也夾在地面帶 `stage_top`～舞台底之內，角色圖的偏移 Y 照樣能讓飛行單位離地），只在不是預設值時寫入；`stage_front_right` = 0 讓整方貼著自己的邊緣 | `presentation/battle_ui.py`、`presentation/library.py`、`runtime/battle_visuals.py` |
-| `InventoryRules.equip_offer`（never／empty_slot／always）與世界指令 `GIVE_EQUIPMENT`（D44） | `rpg/items.py`、`runtime/session/gear.py` |
-| `ClassDefinition.resource_growth`（每級加資源）；`EquipmentDefinition.rarity`（選填，背包依它上色與命名） | `rpg/actors.py`、`rpg/items.py` |
-| `DerivedStatRule`（Game Systems > Stat Formulas：stat += base + Σ 係數×stat，順序、下限、上限、對象）；`CharacterScreenProfile.stat_order`、`resource_order`（沒設時倒地資源 HP 排第一，D51） | `rpg/derived_stats.py`、`presentation/rpg_character_screen.py` |
-| `InteractionRule.multiplier_source_terms`／`multiplier_target_terms`；`OutcomeCheckDefinition.blocked_source_tags`／`blocked_target_tags` | `rpg/interactions.py` |
-| `AbilityDefinition.description`（戰鬥選單上方的說明）；技能進化 `AbilityEvolutionRule.required_tags` | `gameplay/abilities.py`、`rpg/ability_build.py` |
-| `RefineRules.materials`、`protect_item`；裝備相關世界指令可寫 `slot:<部位>` | `rpg/refine.py`、`runtime/world_command_handlers.py` |
-| 世界指令 `LEARN_ABILITY`、`NEW_GAME_PLUS`、`SET_LOCALE`；技能可用 `BATTLE_SEQUENCE` 叫出序列 | `runtime/world_command_handlers.py`、`runtime/session/party.py`（LEARN_ABILITY）、`session/battle_events.py`（NEW_GAME_PLUS）、`session/messages.py`（SET_LOCALE） |
-| manifest `battle.preload_mb`（預先解碼戰鬥圖的記憶體上限，預設 64，0 關閉） | `runtime/playtest/resources.py`、`runtime/image_preloader.py` |
-| 資料庫新增 `tag_definitions`（D91）、`equipment_slots` 的名稱／排序／說明／`stowed`／`required_capabilities`（D92）、`menu_pages`（D96）；各類紀錄的 `description`（D91）；`EquipmentDefinition.blocks_slots`（D92） | `rpg/tag_definitions.py`、`rpg/items.py`、`rpg/menu_pages.py` |
-| 公式欄位：`DerivedStatRule.expression`、`OutcomeCheckDefinition.chance_expression`、逃跑規則的 `chance_expression`、戰鬥規則的 `initiative_expression`／`final_damage_expression`（D94） | `gameplay/expressions.py`、`rpg/derived_stats.py`、`rpg/battle_lifecycle.py` |
-| `MenuRules` v2：`pause_entries` 改成排序、新增 `pause_hidden`（v1 讀進來時，沒列的內建項目轉成隱藏，D97）；舊的六類選單資料讀進來時搬到 Stats 與 Equipment Slots（D98） | `rpg/menu_rules.py`、`rpg/menu_pages.py`、`presentation/retired_screens.py` |
-| `RpgDatabase.author_notes`、`hidden_descriptions`（只在有內容時寫入） | `rpg/actors.py` |
+| `ActionCombat` 綁定 `slot:N`（技能欄第 N 格）、`vfx` 提示（世界裡的圖片特效：`effect` 精靈表 id、位移、縮放、`rotate`、`follow`）；技能欄規則 `AbilityLoadoutRules.limited_sources` 可含 `allocation`（技能樹給的技能），技能樹學到新技能會自動放進空格 | `runtime/action/abilities.py`、`runtime/action/play.py`、`runtime/session/action_play.py` |
+| 技能樹節點選填 `icon_id`（沒設就用它給的第一個技能的圖示；空的不寫入） | `rpg/characters/progression_graph.py` |
+| 專案資料翻譯（D60）：`DialogueLine.text_key`、`DialogueChoice.text_key`、`ChoiceRequest.prompt_key`（只在有設定時寫入）；翻譯放在既有的語系表 `data.*` 鍵，紀錄本身不變 | `rpg/text/data_text.py`、`events/dialogue.py`、`events/runner.py`、`runtime/session/messages.py` |
+| 對話肖像（D41）：`DialogueLine.portrait_side`（`left`／`right`）；`MessageSettings.portrait_style`（`face` 訊息框內／`bust` 站在訊息框上）、`portrait_size`（0 = 自動）；DIALOGUE 指令的 `portrait_asset_id`、`portrait_side` 都只在有設定時寫入 | `events/dialogue.py`、`rpg/text/localization.py`、`runtime/playtest/field_ui.py`、`editor/events/dialogue_dialog.py` |
+| 戰鬥版面選填 `menu_over_stage`、`row_buttons`、`column_size`、`front_large_zones`、`overhead_below`（預設 True：敵人名稱與血條放腳下）、`stage_front_right`；`BattleUiTheme` 的 `panel_skins`、`font_asset_id`、`font_scale`（九宮格面板、字型）；編輯器的版面表單永遠列出全部欄位 | `presentation/battle/ui.py`、`presentation/library.py`、`editor/rpg/integrated_authoring.py` |
+| 戰鬥版面 `command_counts`（頂層指令旁的數量，預設關，D42）；戰鬥 HUD 資源樣式 `color`（空白＝主題色，D47） | `presentation/battle/ui.py`、`presentation/battle/hud.py` |
+| 戰鬥 HUD 隊伍肖像（D53）：戰鬥版面 `hud_portraits`（`left` 預設／`right`／`above`／`off`）、`hud_portrait_size`（0 = 和卡片的列一樣高），只在有設定時寫入；肖像取自戰鬥角色圖的 `portrait_asset_id`（32 單位以上）／`small_portrait_asset_id`；繪製指令 `BattleUiPortrait`、`BattleUiFrame.portraits`（預設空）；後端選填 `draw_portrait` | `presentation/battle/ui.py`、`presentation/library.py`、`presentation/battle/ui_renderer.py`、`platform/pygame_battle_ui.py`、`runtime/battle/presentation.py` |
+| 戰鬥站位（D54）：戰鬥版面 `column_spacing`（同一方相鄰兩欄的中心距離，0 = 自動：整張圖不重疊；有 Boss 的那一欄一律自動）、`column_spacing_right`（右側那一方另設，空白 = 跟著 `column_spacing`）、`feet_on_ground`（預設開：側視站位與肖像隊伍版面給的位置也夾在地面帶 `stage_top`～舞台底之內，角色圖的偏移 Y 照樣能讓飛行單位離地），只在不是預設值時寫入；`stage_front_right` = 0 讓整方貼著自己的邊緣 | `presentation/battle/ui.py`、`presentation/library.py`、`runtime/battle/visuals.py` |
+| `InventoryRules.equip_offer`（never／empty_slot／always）與世界指令 `GIVE_EQUIPMENT`（D44） | `rpg/items/definitions.py`、`runtime/session/gear.py` |
+| `ClassDefinition.resource_growth`（每級加資源）；`EquipmentDefinition.rarity`（選填，背包依它上色與命名） | `rpg/characters/actors.py`、`rpg/items/definitions.py` |
+| `DerivedStatRule`（Game Systems > Stat Formulas：stat += base + Σ 係數×stat，順序、下限、上限、對象）；`CharacterScreenProfile.stat_order`、`resource_order`（沒設時倒地資源 HP 排第一，D51） | `rpg/characters/derived_stats.py`、`presentation/screens/character.py` |
+| `InteractionRule.multiplier_source_terms`／`multiplier_target_terms`；`OutcomeCheckDefinition.blocked_source_tags`／`blocked_target_tags` | `rpg/battle/interactions.py` |
+| `AbilityDefinition.description`（戰鬥選單上方的說明）；技能進化 `AbilityEvolutionRule.required_tags` | `gameplay/abilities.py`、`rpg/characters/abilities.py` |
+| `RefineRules.materials`、`protect_item`；裝備相關世界指令可寫 `slot:<部位>` | `rpg/items/refine.py`、`runtime/session/world_commands.py` |
+| 世界指令 `LEARN_ABILITY`、`NEW_GAME_PLUS`、`SET_LOCALE`；技能可用 `BATTLE_SEQUENCE` 叫出序列 | `runtime/session/world_commands.py`、`runtime/session/party.py`（LEARN_ABILITY）、`session/battle_events.py`（NEW_GAME_PLUS）、`session/messages.py`（SET_LOCALE） |
+| manifest `battle.preload_mb`（預先解碼戰鬥圖的記憶體上限，預設 64，0 關閉） | `runtime/playtest/resources.py`、`runtime/scene/image_preloader.py` |
+| 資料庫新增 `tag_definitions`（D91）、`equipment_slots` 的名稱／排序／說明／`stowed`／`required_capabilities`（D92）、`menu_pages`（D96）；各類紀錄的 `description`（D91）；`EquipmentDefinition.blocks_slots`（D92） | `rpg/data/tag_definitions.py`、`rpg/items/definitions.py`、`rpg/menus/pages.py` |
+| 公式欄位：`DerivedStatRule.expression`、`OutcomeCheckDefinition.chance_expression`、逃跑規則的 `chance_expression`、戰鬥規則的 `initiative_expression`／`final_damage_expression`（D94） | `gameplay/expressions.py`、`rpg/characters/derived_stats.py`、`rpg/battle/lifecycle.py` |
+| `MenuRules` v2：`pause_entries` 改成排序、新增 `pause_hidden`（v1 讀進來時，沒列的內建項目轉成隱藏，D97）；舊的六類選單資料讀進來時搬到 Stats 與 Equipment Slots（D98） | `rpg/menus/rules.py`、`rpg/menus/pages.py`、`presentation/screens/retired.py` |
+| `RpgDatabase.author_notes`、`hidden_descriptions`（只在有內容時寫入） | `rpg/characters/actors.py` |
 
 另有一個修正：**道具的 `battle_ability` 現在也會套用狀態、資源增益和世界指令**（原本被忽略，Storm Flask 的
 降防禦從來沒生效）。
@@ -430,7 +430,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 匯出 | `asteria.export_web`：專案＋精簡引擎＋Noto Sans TC＋async `main.py` → pygbag 打包成 `build/web/`；`--serve` 用自己的靜態伺服器；`runtime/web_persistence.py` 把 `saves/` 鏡像到 localStorage；引擎在瀏覽器裡不開執行緒、不碰 `resource`／`tracemalloc`／`statistics`；`PlayableTestRuntime.step()` |
+| 匯出 | `asteria.export_web`：專案＋精簡引擎＋Noto Sans TC＋async `main.py` → pygbag 打包成 `build/web/`；`--serve` 用自己的靜態伺服器；`runtime/tools/web_persistence.py` 把 `saves/` 鏡像到 localStorage；引擎在瀏覽器裡不開執行緒、不碰 `resource`／`tracemalloc`／`statistics`；`PlayableTestRuntime.step()` |
 | 素材 | `asset_library/fonts/noto_sans_tc/`（OFL）；素材庫列圖包時略過沒有圖片的資料夾 |
 
 ### D61 新增（2026-10-24；細節見 DECISION_LOG）
@@ -449,8 +449,8 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 生物 | Pet Rules（隊伍、上場數、倉庫、能力公式、基因、經驗曲線、招式上限、掙扎）；捕獲 rate 模式；遭遇的物種成員與預備；換人 |
-| 戰鬥畫面 | `runtime/creature_battle.py`（`battle.style: "creature"`，圖與座標都在 manifest 的 `battle.creature_screen`）；`graphics/bitmap_font.py` 點陣字型 |
-| 地圖 | `runtime/grid_walk.py` 格子行走與跳台階（`ledge_<方向>` 標籤、`field.jump_shadow`）；`runtime/grid_actors.py` 的 `GridMover2D` 格子角色；tile 的 `animation`／`frame_ms` 動畫；`cover` 標籤的遮蓋格（高草遮腳） |
+| 戰鬥畫面 | `runtime/creature/battle.py`（`battle.style: "creature"`，圖與座標都在 manifest 的 `battle.creature_screen`）；`graphics/bitmap_font.py` 點陣字型 |
+| 地圖 | `runtime/field/grid_walk.py` 格子行走與跳台階（`ledge_<方向>` 標籤、`field.jump_shadow`）；`runtime/field/grid_actors.py` 的 `GridMover2D` 格子角色；tile 的 `animation`／`frame_ms` 動畫；`cover` 標籤的遮蓋格（高草遮腳） |
 | 地圖區域 | `AreaRule` 的 `music`、`title`（`field.area_name` 地名牌）、`encounters`／`encounter_chance`／`encounter_first_step`（每走一格的隨機遇敵） |
 | 對話 | `dialogue.window`：遊戲自己的訊息窗圖、點陣字型、打字速度、翻頁箭頭 |
 
@@ -495,16 +495,16 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 翻譯 | `stat_name`、`slot_name`、`game.tag_name`（`data.tag.<標籤>.name`）；`SocketDefinition.label`；任務目標顯示名稱；`test_full_verification_ui_words.py` 檢查中文畫面沒有 id 與英文 |
-| 選單版面 | `presentation/menu_layout.py`（`MenuLayout`／`MenuElement`／`MenuSlotPlace`／`MenuTheme`，演出庫類別 `menu_layout`、`menu_theme`）；`runtime/menu_canvas.py` 依版面畫；沒有版面時逐像素和以前一樣 |
-| 預覽 | `runtime/menu_preview.py`：`MenuPreview` 在畫面外畫任一個畫面；`open_menu_screen`；`ASTERIA_OPEN_MENU` 讓試玩一開始就打開某個畫面 |
-| 編輯器 | 演出 ▸ 選單畫面 ▸ 版面（`editor/menu_layout_widget.py`）：畫布拖曳與縮放、屬性欄、紙娃娃部位表、主題、在遊戲中開啟；選單資料移到同一頁的第二個子頁 |
+| 選單版面 | `presentation/screens/menu_layout.py`（`MenuLayout`／`MenuElement`／`MenuSlotPlace`／`MenuTheme`，演出庫類別 `menu_layout`、`menu_theme`）；`runtime/menus/canvas.py` 依版面畫；沒有版面時逐像素和以前一樣 |
+| 預覽 | `runtime/menus/preview.py`：`MenuPreview` 在畫面外畫任一個畫面；`open_menu_screen`；`ASTERIA_OPEN_MENU` 讓試玩一開始就打開某個畫面 |
+| 編輯器 | 演出 ▸ 選單畫面 ▸ 版面（`editor/menus/layout_widget.py`）：畫布拖曳與縮放、屬性欄、紙娃娃部位表、主題、在遊戲中開啟；選單資料移到同一頁的第二個子頁 |
 | 設定 | `GameSettings.developer_menu`：C 鍵的養成驗收選單只在開啟時出現 |
 
 ### D68 新增（2026-10-24；細節見 DECISION_LOG）
 
 | 類別 | 內容 |
 |---|---|
-| 畫面 | `runtime/equipment_screen.py` 紙娃娃（只列能穿的、比較、穿上後的數值）；`runtime/enhance_screen.py` 精煉、鑲嵌、卡片、成長四頁；工坊移除 |
+| 畫面 | `runtime/menus/equipment.py` 紙娃娃（只列能穿的、比較、穿上後的數值）；`runtime/menus/enhance.py` 精煉、鑲嵌、卡片、成長四頁；工坊移除 |
 | 遊戲 | `game.wear_from_bag(actor, instance, slot, index)`；暫停選單的「裝備」「強化」依專案內容出現 |
 | Demo | `trial_doll.py`：頭、腿、腳部位，14 件 Lucifer 圖示裝備，Lucifer 紙娃娃版面與石頭面板；證據 `audits/evidence/ui_u3/` |
 
@@ -512,7 +512,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 畫面 | `runtime/creature_menu.py`：生物遊戲自己的開始選單（`field.creature_menu`），暫停鍵打開；圖鑑（清單、項目）、隊伍（能力三頁、替換）、背包（依標籤分袋、使用／丟掉）、訓練家卡片、設定、記錄 |
+| 畫面 | `runtime/creature/menu.py`：生物遊戲自己的開始選單（`field.creature_menu`），暫停鍵打開；圖鑑（清單、項目）、隊伍（能力三頁、替換）、背包（依標籤分袋、使用／丟掉）、訓練家卡片、設定、記錄 |
 | 設定 | 各列可用開關隱藏、標籤可用 `\V[...]`；設定存在 `option.<id>`；`dialogue.speeds` 依 `option.text_speed` 改文字速度 |
 | 遊戲 | 世界計數器 `play.seconds`（遊玩時間）；記錄寫到存檔欄 `save_slot` |
 
@@ -520,8 +520,8 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 資料 | `rpg/workstations.py`：工作台（分頁依配方標籤、未發現顯示 ???、一次上限、分解頁、音效、成功圖、音樂、版面），`rpg_database.workstations` |
-| 畫面 | `runtime/crafting_screen.py`：分頁、成品圖示、材料持有／需要、成功率、品質、數量、分解；每個工作台可有自己的版面 `crafting.<id>` |
+| 資料 | `rpg/items/workstations.py`：工作台（分頁依配方標籤、未發現顯示 ???、一次上限、分解頁、音效、成功圖、音樂、版面），`rpg_database.workstations` |
+| 畫面 | `runtime/menus/crafting.py`：分頁、成品圖示、材料持有／需要、成功率、品質、數量、分解；每個工作台可有自己的版面 `crafting.<id>` |
 | 翻譯 | `data.workstation.*`、`data.workstation_category.*`、`data.quality.<名稱>.name`；20 個 `crafting.*` 鍵 |
 | Demo | `trial_crafting.py`：爐心鎮的煉金台與鍛造爐、12 條新配方；證據 `audits/evidence/ui_u4/` |
 
@@ -529,9 +529,9 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 資料 | `rpg/boards.py`：任務告示板、招募事務所；`rpg/gacha.py`：抽獎卡池（稀有度、獎品、主打、硬／軟保底、多連抽保證）；任務的卡片欄位 `card_image`／`rank`／`category`／`repeatable`／`time_limit` |
+| 資料 | `rpg/world/boards.py`：任務告示板、招募事務所；`rpg/world/gacha.py`：抽獎卡池（稀有度、獎品、主打、硬／軟保底、多連抽保證）；任務的卡片欄位 `card_image`／`rank`／`category`／`repeatable`／`time_limit` |
 | 事件 | `OPEN_QUEST_BOARD`、`OPEN_RECRUIT`、`OPEN_GACHA` |
-| 規則與畫面 | `runtime/boards_play.py`（狀態存在 `world.systems`）、`runtime/service_screens.py`（卡片翻面、肖像、寶箱出現／搖晃／打開）；版面 `quest_board`／`recruit`／`gacha` 與 `<畫面>.<id>` |
+| 規則與畫面 | `runtime/menus/boards.py`（狀態存在 `world.systems`）、`runtime/menus/services.py`（卡片翻面、肖像、寶箱出現／搖晃／打開）；版面 `quest_board`／`recruit`／`gacha` 與 `<畫面>.<id>` |
 | 編輯器 | 遊戲系統三頁；抽獎卡池「模擬 10,000 抽」 |
 | 翻譯 | 75 個 `board.*`／`recruit.*`／`gacha.*` 鍵；資料鍵 `data.quest_board.*`、`data.recruit_office.*`、`data.gacha_banner.*`、`data.gacha_rarity.*`、`data.quest_category.*`、招募備註 |
 | Demo | `trial_boards.py`：星石、懸賞告示板、公會職員、星落寶箱；證據 `audits/evidence/ui_u5/` |
@@ -570,10 +570,10 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 對話 | `DIALOGUE` 的 `wait: false`（字留著、事件繼續；`game.held_dialogue`）；沒提示的 `CHOICE` 用這句當提示 |
-| 取名字 | 世界指令 `NAME_INPUT`（`target` `variable:<x>` / `pet:last`、`max_length`、`title`、`default`）；畫面 `runtime/name_input.py`、`field.name_input`；條件 `rpg` `name_input` |
-| 圖片選擇 | 世界指令 `PICTURE_CHOICE`（`layout`、`variable`）；畫面 `runtime/picture_choice.py`、`field.picture_choices.<layout>`；條件 `rpg` `picture_choice` |
+| 取名字 | 世界指令 `NAME_INPUT`（`target` `variable:<x>` / `pet:last`、`max_length`、`title`、`default`）；畫面 `runtime/menus/name_input.py`、`field.name_input`；條件 `rpg` `name_input` |
+| 圖片選擇 | 世界指令 `PICTURE_CHOICE`（`layout`、`variable`）；畫面 `runtime/menus/picture_choice.py`、`field.picture_choices.<layout>`；條件 `rpg` `picture_choice` |
 | 道具 | 標籤 `teaches:<能力>`、`reusable`；種族 `teachable`；`game.teaching_check`；`ItemDefinition.description` |
-| 商店 | `field.creature_shop`：`runtime/creature_shop.py`（BUY／SELL／QUIT、購買畫面、數量、YES／NO、`buy_sound`、`bonus`、`map_front_at`）；條件 `rpg` `shop` |
+| 商店 | `field.creature_shop`：`runtime/creature/shop.py`（BUY／SELL／QUIT、購買畫面、數量、YES／NO、`buy_sound`、`bonus`、`map_front_at`）；條件 `rpg` `shop` |
 
 ### D76 新增（2026-10-25；細節見 DECISION_LOG）
 
@@ -581,7 +581,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 |---|---|
 | 版面基礎 | `ScreenSpec.size`（畫面自己的解析度）與 `group`（`menu`／`game`，編輯器清單的「遊戲進行中」標題）；`MenuElement.frames`／`frame_axis`／`fps`（動畫條）、`bitmap_font`；`MenuCanvas(size=, target=)`、`picture()`、`strip_frame()`、`font_of()` |
 | 點陣字 | `MenuBitmapFont`（演出庫類別 `bitmap_font`）：字圖、格子大小、每列的字（`⬚` 空格）、字距、空白寬、行高、等寬、個別字寬、顏色（`tint`／`keep`／`two_tone`）、像素倍率；`graphics/bitmap_font.SheetFont`；`rt.text(font="bitmap:<id>")`，主題 `MenuTheme.bitmap_font`；字圖沒有的字改用一般字型 |
-| 對話框 | 畫面 `dialogue`（視窗、名字、名字框、頭像、台詞、繼續提示、箭頭）與 `dialogue_choice`（框、提問、選項）；`runtime/dialogue_screen.py`；圖片視窗 `presentation/dialogue_window.DialogueWindowStyle`（演出庫類別 `dialogue_window`，`default`），`rt.dialogue_settings()` 先讀專案再讀 manifest；編輯器一鍵從 manifest 轉入（逐像素相同） |
+| 對話框 | 畫面 `dialogue`（視窗、名字、名字框、頭像、台詞、繼續提示、箭頭）與 `dialogue_choice`（框、提問、選項）；`runtime/menus/dialogue.py`；圖片視窗 `presentation/dialogue_window.DialogueWindowStyle`（演出庫類別 `dialogue_window`，`default`），`rt.dialogue_settings()` 先讀專案再讀 manifest；編輯器一鍵從 manifest 轉入（逐像素相同） |
 | 動作 RPG HUD | 畫面 `hud_action`（30 個元件：兩顆球的外框／液體／空球／名稱／數值、改成條、底板、技能格、按鍵帽、冷卻動畫條、徽章、消耗、經驗、等級、狀態格、其他資源條、提示、鎖定框、橫幅、倒下）；`MenuTheme.resource_colors` 取代依名稱猜的顏色 |
 | 戰鬥畫面 | 畫面 `battle`：`presentation/battle_layout.BattleScreenLayout` 把排好的指令依組（`party_hud`、`overhead`、`menu`、`help`、`workflow`、`timeline`、`numbers`、`result`、`target`）整組移動、縮放（0＝引擎大小）、換外觀、改字色字級、隱藏，加作者自己的元件；單位是戰鬥虛擬座標，編輯器依 `MenuPreview.unit` 換算；沒有版面時不跑 |
 | 技能樹 | `node_locked`／`node_available`／`node_learned`／`node_maxed`／`node_selected` 的圖、`link_met`／`link_unmet` 的顏色與線寬、`points_icon` |
@@ -593,7 +593,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 生物畫面 | 演出庫類別 `creature_screen`（記錄 id＝manifest 路徑：`battle.creature_screen`、`field.creature_menu`、`field.creature_shop`、`field.name_input`、`field.picture_choices`）；`presentation/creature_screens.CreatureScreenSettings`；`creature_settings(runtime, 畫面)` 先讀專案再讀 manifest；`creature_battle_on(runtime)` |
-| 編輯器 | 版面頁「生物畫面…」（`editor/creature_screens_dialog.py`）：設定樹（圖片、音效、字型、顏色、位置、數字、是／否、文字、表格、清單；右鍵新增／複製／移除）、240 × 160 位置預覽可拖曳、一鍵從 manifest 轉入；控制器 `set_creature_screen`、`read_creature_manifest`、`import_creature_manifest` |
+| 編輯器 | 版面頁「生物畫面…」（`editor/menus/creature_screens_dialog.py`）：設定樹（圖片、音效、字型、顏色、位置、數字、是／否、文字、表格、清單；右鍵新增／複製／移除）、240 × 160 位置預覽可拖曳、一鍵從 manifest 轉入；控制器 `set_creature_screen`、`read_creature_manifest`、`import_creature_manifest` |
 
 ### D78 新增（2026-10-25；細節見 DECISION_LOG）
 
@@ -602,7 +602,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 選項框 | 沒有被作者放置的 `dialogue_choice.box` 會長到包住提問與每一列（`dialogue_screen._grown`） |
 | 戰鬥版面 | `party_hud.<n>`、`overhead.<n>`：單張卡片在整組之後單獨移動、縮放、換外觀、隱藏（`battle_layout.PER_MEMBER`）；`layout_boxes` 有每張卡的外框 |
 | 生物畫面頁 | `MenuPreview.render_creature(畫面, 設定)`（借設定畫一次再還原）；`creature_screens_dialog.help_for`（說明取自畫面模組的 docstring）；開始選單、商店、輸入名字的 `engine_defaults`；`[x, y, w, h]` 位置 |
-| 遊戲資料夾設定 | `editor/game_folder_settings_dialog.py`：`playable_test_manifest.json` 的每個分區用設定樹編輯，確定才寫回（格式不變，不會建立新檔）；執行 ▸ 遊戲資料夾設定…、版面頁按鈕 |
+| 遊戲資料夾設定 | `editor/tools/game_folder_settings_dialog.py`：`playable_test_manifest.json` 的每個分區用設定樹編輯，確定才寫回（格式不變，不會建立新檔）；執行 ▸ 遊戲資料夾設定…、版面頁按鈕 |
 
 ### D79 新增（2026-10-25；細節見 DECISION_LOG）
 
@@ -628,7 +628,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 圖片 | `tint`／`tint_color`、`MOVE_PICTURE` 的 `delay`、`frame_rate`／`frame_loop`、`scroll_x`／`scroll_y`、`wave_*`、`blend`（`add`）、文字圖片 `text`／`font`／`text_color`／`shadow_color`／`text_align`（`runtime/pictures.py`，畫在 `field_ui._draw_pictures`、`_picture_motion`、`_text_picture`） |
+| 圖片 | `tint`／`tint_color`、`MOVE_PICTURE` 的 `delay`、`frame_rate`／`frame_loop`、`scroll_x`／`scroll_y`、`wave_*`、`blend`（`add`）、文字圖片 `text`／`font`／`text_color`／`shadow_color`／`text_align`（`runtime/scene/pictures.py`，畫在 `field_ui._draw_pictures`、`_picture_motion`、`_text_picture`） |
 | 選項 | `CHOICE` 選項的 `hover`（`DialogueChoice.hover`、`runner.hover_choice`）；選項框等提問打完（`dialogue.choice_after_text`、`field_ui._choice_ready`）；超過兩行往上捲；同一句不重打 |
 | 標題畫面 | 遊戲資料夾的 `title_screen.program`（`playtest/title_build.py` 的 `_title_program_frame`）；`TITLE_COMMAND`（`session.request_title`）；`CreatureMenuScreen.open_alone` |
 | 條件／等待 | `rpg` `pressed:`／`held:`（`a|b`）、`rpg` `saves`；`WAIT` 的 `until`＋`seconds`（`events/vm.py`） |
@@ -644,7 +644,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 資料表單 | 說明提示固定在 ⓘ 右邊（`record_form._HelpTip`）；`OWN_VIEW_KEYS`（`node_positions` 只由技能樹圖表檢視寫入）；清單欄位的標籤對齊清單第一行 |
+| 資料表單 | 說明提示固定在 ⓘ 右邊（`records/form_controls.py` 的 `_HelpTip`）；`OWN_VIEW_KEYS`（`node_positions` 只由技能樹圖表檢視寫入）；清單欄位的標籤對齊清單第一行 |
 | 頁面底部 | `editor/undo_buttons.UndoRedoButtons`：跟著視窗的 `undo_action`／`redo_action`；圖示 `undo`、`redo` |
 | 標籤 | 全域 `QLabel { qproperty-indent: 0; }`：樣式表的 padding 不再讓 Qt 自動內縮 |
 
@@ -673,7 +673,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 碰撞 | `collision.feet_box(entity)`／`box_blocked(query, x, y, box)`：用實心 Collider2D 的框擋路（地圖行走） |
 | 走路 | `Animator2D.stride`（v2）：走一個步幅播完走路動畫，0＝照時間；`field.walk_speed`（遊戲資料夾設定）；`character_placement.feet_pivot_y` 算腳底樞紐 |
 | 鏡頭 | `TileSceneView.inset_bottom`：底部被蓋住的像素（試玩提示框 `FIELD_HINT_PANEL` = 92） |
-| 暫停選單 | `rpg/menu_rules.py` `MenuRules`（遊戲系統 ▸ Menu Pages）：`pause_entries`（`PAUSE_ENTRIES` 的順序）、`stat_graph`、`stat_rows`、`item_categories`、`item_filters`；`runtime/playtest/menu_pages.py` 組暫停選單、開各頁、畫狀態頁表格與道具分類列 |
+| 暫停選單 | `rpg/menus/rules.py` `MenuRules`（遊戲系統 ▸ Menu Pages）：`pause_entries`（`PAUSE_ENTRIES` 的順序）、`stat_graph`、`stat_rows`、`item_categories`、`item_filters`；`runtime/playtest/menu_pages.py` 組暫停選單、開各頁、畫狀態頁表格與道具分類列 |
 | 狀態選單 | `StatusMenu(game, page)`：`single` 單頁；`stat_rows()`／`allocate_stat()`／`detail_rows()`；`categories()`／`filters()`／`next_category()`／`next_filter()`；道具隱含標籤 `item`／`equipment` |
 | FV 示範 | `trial_d87.py` 修補現有資料（可重跑）；`trial_story.menu_pages()` |
 
@@ -681,7 +681,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 通行設定 | `editor/passability.py`：`passability(entity)` 是 `through`／`feet`／`picture`；`picture_box`、`passability_preview`、`build_passability_command`（一次復原）；Inspector 的 Passability 區塊與 `shell.edit_passability` |
+| 通行設定 | `editor/scene/passability.py`：`passability(entity)` 是 `through`／`feet`／`picture`；`picture_box`、`passability_preview`、`build_passability_command`（一次復原）；Inspector 的 Passability 區塊與 `shell.edit_passability` |
 | 碰撞 | `Collider2D.fit`（v4）：`custom`／`picture`；`character_placement.picture_box(image, frames)` 算整張圖的框 |
 | 裝備格圖示 | `MenuSlotPlace.icon_scale`／`icon_rotate`／`icon_trim`／`icon_fit`；`resources.fitted_icon(icon, box, …)`；選單版面預覽用 `MenuPreview._dress` 幫成員穿上範例裝備 |
 | 道具詳細 | `MenuRules.item_details`（`panel`／`button`／`off`）；`StatusMenu.detail()` → `ItemDetail`；`menu_pages._draw_item_detail`；背包裡的裝備是 `piece` 列 |
@@ -702,10 +702,10 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 下拉列表 | `editor/theme.py` 的 style：清單掛在格子下緣、左邊對齊，不再蓋住格子（D90） |
+| 下拉列表 | `editor/ui/theme.py` 的 style：清單掛在格子下緣、左邊對齊，不再蓋住格子（D90） |
 | 能力值表的欄位 | `MenuRules.stat_columns`：`rank`、`total`、`base`、`points`、`gear`、`gain`，勾選＋排序（D90；D96 起放在選單頁的「能力點表」區塊） |
-| 標籤定義 | `rpg/tag_definitions.py` `TagDefinition`：單一標籤或 `rune.*` 家族；`BUILT_IN` 寫明引擎自己讀的標籤；專案有定義時，用到但沒定義的標籤列為問題（D91） |
-| 說明欄位 | 被動、狀態、職業、角色、敵人、裝備、寶石都有 `description`；`rpg/effect_text.py` 依屬性的顯示方式寫效果（D91） |
+| 標籤定義 | `rpg/data/tag_definitions.py` `TagDefinition`：單一標籤或 `rune.*` 家族；`BUILT_IN` 寫明引擎自己讀的標籤；專案有定義時，用到但沒定義的標籤列為問題（D91） |
+| 說明欄位 | 被動、狀態、職業、角色、敵人、裝備、寶石都有 `description`；`rpg/text/effect_text.py` 依屬性的顯示方式寫效果（D91） |
 | 裝備欄位 | `EquipmentSlotDefinition`：名稱、排序、說明、`stowed`（攜帶格）、`required_capabilities`；裝備的 `blocks_slots`（雙手）；戰鬥指令「換武器」，背包規則決定換武器花不花回合（D92） |
 
 ### D93–D95 新增（2026-10-27；細節見 DECISION_LOG）
@@ -713,16 +713,16 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 說明框 | `decor.show_help_tip`：編輯器自己的說明框，緊貼 ⓘ、半透明（D93、D95） |
-| 公式 | `gameplay/expressions.FORMULA_FIELDS` 列出每個公式欄位能用的名字；`derived_stat.expression`；`variables()`／`undeclared()`；`editor/formula_field.py`；問題面板的「公式」區域（D94） |
-| 屬性用途卡片 | `editor/stat_usage.py`：來源照遊戲相加的順序一步一行，作用寫出公式與所在頁面（D95） |
+| 公式 | `gameplay/expressions.FORMULA_FIELDS` 列出每個公式欄位能用的名字；`derived_stat.expression`；`variables()`／`undeclared()`；`editor/records/formula_field.py`；問題面板的「公式」區域（D94） |
+| 屬性用途卡片 | `editor/rpg/stat_usage.py`：來源照遊戲相加的順序一步一行，作用寫出公式與所在頁面（D95） |
 
 ### D96–D99 新增（2026-10-27～28；細節見 DECISION_LOG）
 
 | 類別 | 內容 |
 |---|---|
-| 選單頁 | `rpg/menu_pages.py`：`MenuPage`（ID、名稱、圖示、`blocks`）、`MenuBlock`（`profile`／`stat_points`／`stat_details`／`item_list`，左欄／右欄／整排）；`menu_pages(db)` 沒有的頁面用引擎的狀態頁、物品頁補上（D96） |
+| 選單頁 | `rpg/menus/pages.py`：`MenuPage`（ID、名稱、圖示、`blocks`）、`MenuBlock`（`profile`／`stat_points`／`stat_details`／`item_list`，左欄／右欄／整排）；`menu_pages(db)` 沒有的頁面用引擎的狀態頁、物品頁補上（D96） |
 | 暫停選單 | `MenuRules` v2：`pause_entries` 是排序、`pause_hidden` 是隱藏；`engine_pause_order`、`usable_pause_entries`、`pause_menu`；`PAUSE_NEEDS`／`PAUSE_OPENS`；編輯器 `pause_menu_widget.py`（D97） |
-| 版面分頁 | Menu Screens 只剩版面；`presentation/retired_screens.py` 把舊專案的六類選單資料搬到 Stats 與 Equipment Slots（D98） |
+| 版面分頁 | Menu Screens 只剩版面；`presentation/screens/retired.py` 把舊專案的六類選單資料搬到 Stats 與 Equipment Slots（D98） |
 | 資源卡片 | HP／MP 的卡片標題是自己的名稱，來源列出角色、職業與每級加到上限的數值（D99） |
 
 ### D100 新增（2026-10-28；細節見 DECISION_LOG 與 [`STANDALONE_APP.zh-TW.md`](STANDALONE_APP.zh-TW.md)）
@@ -738,7 +738,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 備註 | `RpgDatabase.author_notes`（作者備註，不進遊戲）、`RpgDatabase.hidden_descriptions`（「Players See It」沒勾的說明）；`editor/author_note_box.py`、`editor/record_notes.py`；遊戲現在會顯示屬性、標籤、裝備欄位、敵人（圖鑑）與職業的說明 |
+| 備註 | `RpgDatabase.author_notes`（作者備註，不進遊戲）、`RpgDatabase.hidden_descriptions`（「Players See It」沒勾的說明）；`editor/records/note_box.py`、`editor/records/notes.py`；遊戲現在會顯示屬性、標籤、裝備欄位、敵人（圖鑑）與職業的說明 |
 | 效能 | 野外系統從場景索引讀元件、碰撞世界每幀共用、編輯器只重畫看得到的圖塊、多人伺服器每個基準只編碼一次（PR #1） |
 | CI | GitHub Actions 的 Linux 與 macOS 全套測試；`pyproject.toml` 限制 `PySide6<6.11.3`：6.11.3 和 6.12.0 的數字框套上主題樣式後，輸入區從邊框貼左邊開始，沒有箭頭的只剩 1 px（看不到數字），`tests/test_editor_narrow_pages.py` 會抓到。6.12 回收 widget ↔ 子部件循環參照會當掉的問題已改成弱參照（`tests/test_widget_cycles.py`） |
 | 開源前整理 | MIT 授權；範例改名 `party_rpg_demo`、`arpg_demo`；根目錄文件搬進 `docs/` |
@@ -748,18 +748,27 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 
 | 類別 | 內容 |
 |---|---|
-| 影片 | 資產種類 `movie`（PNG 影格的 zip，`runtime/movies.py`），用 `SHOW_PICTURE` 的 `frame_rate` 播放 |
+| 影片 | 資產種類 `movie`（PNG 影格的 zip，`runtime/scene/movies.py`），用 `SHOW_PICTURE` 的 `frame_rate` 播放 |
 | 事件 | `SCREEN_FADE over`（`world`／`message_window`／`everything`）、`DIALOGUE wait:false`、`SET_VARIABLE random`、`SET_WEATHER`、`SET_BATTLE_WEATHER turns`；`rpg` 條件 `party_move:`、`scene`、`battle_outcome` |
 | 野外 | manifest `field.rides`、`field.tile_actions`、`field.push`、`field.repel`；路線步驟 `clip:`、`until_off:`、`jump_ahead`、`face_original`、`lock_facing` |
-| 戰鬥 | `BattleStatePolicy.prevent_resource`／`prevent_amount`／`blocks_leaving`；`rpg/move_choice.py`（特徵 `move_ai.*`）；生物戰畫面的 `weather`、`sounds`；只有回合第一位能開新回合 |
+| 戰鬥 | `BattleStatePolicy.prevent_resource`／`prevent_amount`／`blocks_leaving`；`rpg/battle/move_choice.py`（特徵 `move_ai.*`）；生物戰畫面的 `weather`、`sounds`；只有回合第一位能開新回合 |
 | 選單 | `bag.use_programs`、`party.field_moves`、`pokenav.rows`、`region_map`（含 `fly`）、圖鑑 AREA 頁與 `dex.search` |
 
 ### D102 新增（2026-11-06；細節見 DECISION_LOG）
 
 | 類別 | 內容 |
 |---|---|
-| 地圖規則 | `runtime/grid_heights.py`：特徵 `height_<n>`、`block_<方向>`；玩家、走動角色、視線都遵守；manifest `field.height_over` 決定誰畫在上層圖塊之上；`GridMover2D.height` |
+| 地圖規則 | `runtime/field/grid_heights.py`：特徵 `height_<n>`、`block_<方向>`；玩家、走動角色、視線都遵守；manifest `field.height_over` 決定誰畫在上層圖塊之上；`GridMover2D.height` |
 | 躲藏 | `SightTrigger2D.reveal_variable`／`reveal_seconds`／`every_way`，配合 `LookByVariable2D` 換圖 |
+
+### D104（2026-11-07；細節見 DECISION_LOG 與 [`audits/CODE_REVIEW_2026-11-07.md`](audits/CODE_REVIEW_2026-11-07.md)）
+
+| 類別 | 內容 |
+|---|---|
+| 程式結構 | 大套件依主題分子套件（表在 [`ARCHITECTURE.md`](ARCHITECTURE.md) §2.1）；本手冊前面各節寫的舊模組路徑，現在在對應的子套件裡（例如 `runtime/creature_battle.py` → `runtime/creature/battle.py`） |
+| 大類別 | 編輯器主視窗、生物戰鬥畫面、戰鬥呈現 adapter、戰鬥 UI composer、野外 UI、野外規則、生物選單都拆成 mixin；共用常數在 `*_style`／`*_parts` 模組 |
+| 主迴圈 | `PlayableTestRuntime._frame` 依 `runtime/playtest/frame_modes.SCREEN_FRAMES` 把每一幀交給該畫面的方法 |
+| 文件 | 歷史批次文件在 `docs/history/batches/`，`docs/` 根目錄只放現行文件 |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 
@@ -794,8 +803,8 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 - 編輯器要好看：有顏色、有圖示、版面密但不擠；稽核腳本要乾淨。
 - 編輯器的新介面文字要在 `src/asteria/editor/translations/zh_TW.json` 加翻譯（或樣板）；依標題挑圖示、樣式或
   面板的程式碼比對 `i18n.english(text)`，不要比對畫面上的字。
-- 遊戲畫面的新文字要寫成 `game.tr("<鍵>", "<英文>")`，並在 `rpg/built_in_text.py` 的 `GROUPS` 與
-  `rpg/built_in_text/zh-TW.json` 各加一條，再跑 `scripts/built_in_text_keys.py`（測試會抓漏）；版面量字寬用
+- 遊戲畫面的新文字要寫成 `game.tr("<鍵>", "<英文>")`，並在 `rpg/text/built_in_text.py` 的 `GROUPS` 與
+  `rpg/text/built_in_text/zh-TW.json` 各加一條，再跑 `scripts/built_in_text_keys.py`（測試會抓漏）；版面量字寬用
   `presentation/text_cells.cells`（全形字算 2 格），不要用 `len()`。
 - 效能量測不開 tracemalloc（`RuntimeProfiler(track_python_heap=False)`）；真實視窗的時間會被合成器的 vsync
   吃掉，比較新舊要在同一個程序裡交替跑。

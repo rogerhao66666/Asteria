@@ -14,14 +14,15 @@ import threading
 import time
 import uuid
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from socketserver import StreamRequestHandler, ThreadingTCPServer
 from typing import Any
 
-from .adapter import AdapterUpdate, GameNetworkAdapter
-from .delta import diff
-from .metrics import ServerMetrics
-from .protocol import (
+from asteria.multiplayer.adapter import AdapterUpdate, GameNetworkAdapter
+from asteria.multiplayer.delta import diff
+from asteria.multiplayer.metrics import ServerMetrics
+from asteria.multiplayer.protocol import (
     MAX_COMMAND_NAME,
     MAX_FRAME_BYTES,
     ProtocolError,
@@ -31,7 +32,13 @@ from .protocol import (
     encode_frame,
     message,
 )
-from .security import AuthError, TlsSettings, TokenAuthenticator, check_exposure, load_secret
+from asteria.multiplayer.security import (
+    AuthError,
+    TlsSettings,
+    TokenAuthenticator,
+    check_exposure,
+    load_secret,
+)
 
 
 class RoomFullError(ValueError):
@@ -101,7 +108,7 @@ class MultiplayerServer(ThreadingTCPServer):
         self.adapter = adapter
         self._owns_store = store is None and store_path is not None
         if self._owns_store:
-            from .persistence import SQLiteMultiplayerStore
+            from asteria.multiplayer.persistence import SQLiteMultiplayerStore
 
             store = SQLiteMultiplayerStore(store_path)
         self.store = store
@@ -305,10 +312,8 @@ class MultiplayerServer(ThreadingTCPServer):
             except Exception as exc:
                 self._peers.pop(peer.player_id, None)
                 if self.adapter is not None:
-                    try:
+                    with suppress(Exception):  # best effort: the first error is the one reported
                         self.adapter.on_player_left(peer.player_id)
-                    except Exception:
-                        pass
                 if isinstance(exc, ProtocolError):
                     raise ValueError(f"adapter join state is not serializable: {exc}") from exc
                 raise
@@ -866,12 +871,12 @@ def main(argv=None):
     store = None
     try:
         if args.database:
-            from .persistence import SQLiteMultiplayerStore
+            from asteria.multiplayer.persistence import SQLiteMultiplayerStore
 
             store = SQLiteMultiplayerStore(args.database)
         rules = None
         if args.rules:
-            from .rules import load_rules
+            from asteria.multiplayer.rules import load_rules
 
             rules = load_rules(args.rules)
         adapter = _load_adapter(

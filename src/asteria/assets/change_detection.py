@@ -1,8 +1,8 @@
 import hashlib
 from dataclasses import dataclass
 
-from .cache import canonical_settings
-from .fingerprint import fast_unchanged, fingerprint_file
+from asteria.assets.cache import canonical_settings
+from asteria.assets.fingerprint import fast_unchanged, fingerprint_file
 
 
 @dataclass(frozen=True, slots=True)
