@@ -1,0 +1,30 @@
+#!/bin/sh
+# Refuse to push commits that carry a Co-Authored-By trailer.
+# commit-msg only sees commits made in this checkout; this also catches commits made
+# elsewhere (a cloud session, another clone) and merged or fast-forwarded in here.
+set -eu
+
+bad=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+    case "$local_sha" in *[!0]*) ;; *) continue ;; esac  # deleting a remote ref
+    case "$remote_sha" in
+        *[!0]*) range="$remote_sha..$local_sha" ;;
+        *) range="$local_sha --not --remotes" ;;  # new branch or tag
+    esac
+    # shellcheck disable=SC2086
+    for commit in $(git rev-list $range); do
+        if git show -s --format=%B "$commit" |
+            grep -Eiq '^[[:space:]]*Co-Authored-By[[:space:]]*:'; then
+            bad="$bad $commit"
+        fi
+    done
+done
+
+if [ -n "$bad" ]; then
+    echo "Asteria: push refused - these commits carry a Co-Authored-By trailer:" >&2
+    for commit in $bad; do
+        git show -s --format='  %h %s' "$commit" >&2
+    done
+    echo "Reword them (no AI attribution) before pushing." >&2
+    exit 1
+fi
