@@ -229,8 +229,15 @@ class WorkspaceSwitchMixin:
         QTimer.singleShot(0, self.viewport, self.viewport.frame_initial)
 
     def navigate_to_problem(self, problem):
-        """Open the editor that owns ``problem.target`` and select the offending item (EDT-15)."""
+        """Open the editor that owns ``problem.target`` and select the offending item (EDT-15);
+        where the editor was is kept for View ▸ Back (D108)."""
+        target = tuple(problem.target)
+        if target and self.document.project is not None:
+            self.remember_place(target)
+        return self.open_target(problem)
 
+    def open_target(self, problem):
+        """Shows ``problem.target`` (the jump itself, no history step)."""
         target = tuple(problem.target)
         if not target or self.document.project is None:
             return False

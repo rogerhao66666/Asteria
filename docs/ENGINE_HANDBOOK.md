@@ -175,7 +175,7 @@ Inspector、Assets／Console／Debugger／Profiler／Problems。重點：
   New Game Plus（`editor/game_systems_authoring.KINDS`）。
   - **Pause Menu**（D97）一頁編輯暫停選單的順序、選單頁（D96 的區塊）和事件項目，取代原本的三個分類。
   - **Tags**（D91）與 **Stats**（D91、D99）：每個標籤和屬性的意思，下方的卡片列出誰帶著它、誰讀它、
-    數值從哪裡來（D95）。
+    數值從哪裡來（D95）；D108 起是摘要加表格列，每筆紀錄都能點開。
   - **公式欄位**（D94）：只能用 Stats 宣告過的名字；可以打字，也可以按按鈕插入。
   - **Equipment Slots**（D92）：欄位名稱、排序、攜帶格、需要的能力標籤；雙手武器在裝備紀錄的
     「同時佔用（雙手）」。
@@ -769,6 +769,13 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 大類別 | 編輯器主視窗、生物戰鬥畫面、戰鬥呈現 adapter、戰鬥 UI composer、野外 UI、野外規則、生物選單都拆成 mixin；共用常數在 `*_style`／`*_parts` 模組 |
 | 主迴圈 | `PlayableTestRuntime._frame` 依 `runtime/playtest/frame_modes.SCREEN_FRAMES` 把每一幀交給該畫面的方法 |
 | 文件 | 歷史批次文件在 `docs/history/batches/`，`docs/` 根目錄只放現行文件 |
+
+### D108（2026-11-08；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 用途卡片 | Stats 與 Properties 的「用途」改成卡片：`editor/rpg/usage_model.py`（不用 Qt 的 `Usage`／`UsageSection`／`UsageRow`／`Link`）由 `stat_usage`、`tag_usage` 建出，`editor/rpg/usage_panel.UsagePanel` 畫出：摘要、每種來源一列（筆數、數值範圍、開啟、紀錄），點紀錄經 `navigate_to_problem` 跳過去；`Usage.text()` 是同內容的純文字 |
+| 返回／前進 | `window/history.NavigationHistoryMixin`：每次 `navigate_to_problem` 先記下 `current_place()`；檢視 ▸ 返回（Ctrl+[）／前進（Ctrl+]），工具列兩個箭頭 |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 

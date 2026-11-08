@@ -619,6 +619,16 @@ def _chevron_down(p, c):
     p.drawPolyline([QPointF(6, 9), QPointF(12, 15), QPointF(18, 9)])
 
 
+def _back(p, c):  # an arrow to the left: where you came from
+    p.drawLine(QPointF(19, 12), QPointF(5, 12))
+    p.drawPolyline([QPointF(11, 6), QPointF(5, 12), QPointF(11, 18)])
+
+
+def _forward(p, c):  # the same arrow, to the right
+    p.drawLine(QPointF(5, 12), QPointF(19, 12))
+    p.drawPolyline([QPointF(13, 6), QPointF(19, 12), QPointF(13, 18)])
+
+
 def _dialogue(p, c):
     path = QPainterPath(QPointF(5, 4))
     path.lineTo(19, 4)
@@ -867,6 +877,8 @@ DRAWINGS = {
     "presentation": _palette,
     "list": _list,
     "up": _chevron_up,
+    "back": _back,
+    "forward": _forward,
     "down": _chevron_down,
     "dialogue": _dialogue,
     "quest": _quest,

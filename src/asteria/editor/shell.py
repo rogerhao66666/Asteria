@@ -52,6 +52,7 @@ from asteria.editor.window.actions import WindowActionsMixin
 from asteria.editor.window.assets import AssetPanelMixin
 from asteria.editor.window.events import EventEditingMixin
 from asteria.editor.window.files import ProjectFilesMixin
+from asteria.editor.window.history import NavigationHistoryMixin
 from asteria.editor.window.layout import WindowLayoutMixin
 from asteria.editor.window.placement import PlacementMixin
 from asteria.editor.window.play import PlayTestMixin
@@ -63,6 +64,7 @@ from asteria.editor.window.workspaces import WorkspaceSwitchMixin
 class AsteriaEditorWindow(
     WindowLayoutMixin,
     WorkspaceSwitchMixin,
+    NavigationHistoryMixin,
     WindowActionsMixin,
     PlacementMixin,
     SceneEditingMixin,

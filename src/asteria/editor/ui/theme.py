@@ -635,6 +635,14 @@ QLabel#FieldLabel { color: $text_dim; font-size: 11px; font-weight: 600; padding
 QLabel#FormInfo {
     background: $raised; color: $text; border: 1px solid $border; border-radius: 6px;
 }
+QFrame#UsageSection { background: $raised; border: 1px solid $border; border-radius: 6px; }
+QFrame#UsageSection QLabel { background: transparent; }
+QLabel#UsageStep { color: $primary; font-weight: 800; }
+QToolButton#UsageRecord {
+    background: $hover; color: $text; border: 1px solid $border; border-radius: 8px;
+    padding: 2px 8px;
+}
+QToolButton#UsageRecord:hover { border-color: $primary; }
 QLabel#EmptyStateTitle { color: $text_dim; font-size: 14px; font-weight: 700; }
 QLabel#EmptyStateHint { color: $text_muted; }
 QLabel#ErrorLabel { color: $error; }

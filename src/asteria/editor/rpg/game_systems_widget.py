@@ -1257,15 +1257,10 @@ class RecordForm(QWidget):
         return next(f for f in self.fields if f.key == key)
 
     def _build(self, f):
-        if f.kind == "info":  # worked out by the controller: read, never edited (D91)
-            widget = QLabel()
-            widget.setObjectName("FormInfo")
-            widget.setWordWrap(True)
-            # the inset as margins, not stylesheet padding: Qt counts margins when it works out
-            # how tall the wrapped text is, so no line is cut off
-            widget.setContentsMargins(10, 8, 10, 8)
-            widget.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            return widget
+        if f.kind == "info":  # worked out by the controller: read, never edited (D91, D108)
+            from asteria.editor.rpg.usage_panel import UsagePanel
+
+            return UsagePanel()
         if f.kind == "id":  # the record's id: kept with the form, not shown
             widget = _IdLine()
             widget.hide()
@@ -1409,7 +1404,9 @@ class RecordForm(QWidget):
     def _fill_fields(self, data):
         for f in self.fields:
             widget, value = self.widgets[f.key], data.get(f.key, f.default)
-            if f.kind in ("id", "row_id", "rgb", "text", "icon", "info", "formula"):
+            if f.kind == "info":  # a Usage card (D108), or nothing yet
+                widget.set_usage(value)
+            elif f.kind in ("id", "row_id", "rgb", "text", "icon", "formula"):
                 widget.setText("" if value is None else str(value))
             elif f.kind == "multiline":
                 widget.setPlainText(str(value or ""))

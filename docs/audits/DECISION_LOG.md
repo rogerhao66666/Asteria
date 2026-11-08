@@ -4572,3 +4572,41 @@ TEXTINPUT）。中文稽核（Complex Reference 與 Full Verification，每個�
 Cocoa 真實視窗截圖：Enemy AI、Pet Rules、戰鬥特效、範本清單都是中文。`ruff`、`sync_templates --check`。
 
 **限制：** 注音輸入法在真的遊戲視窗裡打字沒有人實際試過（測試送的是模擬事件）。
+
+## D108 — Game Systems 用途卡片看得懂：摘要、一種來源一列、紀錄點了就開（2026-11-08）
+
+**問題：** Stats 和 Properties 的「用途」是一大段字：Physical Attack 一口氣列出 60 多個技能樹節點、38 件裝備、
+32 個被動，沒有摘要；「(× level − 1)」「worked out last」「98 skills read the user's … 18x」看不懂；特徵卡片寫
+id 與表名（「Abilities arsenal_barrage」）和欄位名（「(Source tags all)」）；縮寫和全名混用；頁面路徑不能點。
+HP 卡片「它會影響什麼」寫「沒有東西讀它」（NEXT_STEPS 的 D99 項目）。
+
+**決定：**
+- **模型與畫面分開：** `editor/rpg/usage_model.py`（不用 Qt）：`Usage`（摘要＋區段）、`UsageSection`（標題、
+  列、空的時候說的話、是否編號）、`UsageRow`（是什麼、所在頁面、紀錄、計數名詞、數值範圍、摘要用的短名、
+  開啟目標）、`Link`（名稱、數值、用來算範圍的數、開啟目標）。`target_for(表, id)` 把資料表對到
+  `navigate_to_problem` 的目標（資料庫紀錄、戰鬥規則、`lib.attacks`、Game Systems 種類依 `store`）。
+- **Stats：** 摘要是兩句話「力量 來自起始值、升級、技能樹、裝備和附件。」「它會影響：暴擊傷害 %、物理防禦和
+  物理攻擊。」（數字細節在下面的列）；來源照遊戲相加的順序
+  編號，每種一列（5 個角色 · 12 – 32），數值 0 的紀錄不列；作用用全名寫成句子（「Physical Attack +2 for each
+  point of Strength」），技能公式合成一列（每個技能 ×N）；資源（角色有 `base_resources` 的）多一列「傷害與治療
+  改變剩下的量；不會超過這個上限」。名稱都經過 `translate`（專案的中文名）。
+- **Properties：** 一列是「表：這個欄位做什麼」的句子（「裝備：需要這個或列出的其他能力之一」「選單頁面：它的
+  分頁或分類收納有它的東西」），`CARRY`／`READS` 對照欄位的意思，紀錄用名稱。`project_tags` 的值改成
+  `(carries, 欄位, 表, id, 名稱)`，鍵不變（Problems 只用鍵）。
+- **一組特徵（`capability.weapon.*`）：** 摘要只說「可裝備武器 是一組 10 個特徵」；下面每個成員一列：「斧 · 帶著的：
+  勇者、鍛造大師、守護者…（6 筆紀錄） · 讀取的：手斧、戰鬥斧、嗜血斧…（5 筆紀錄）」，完整 id 在滑過提示；展開後
+  每筆紀錄標出它的表（勇者（職業）、手斧（裝備）），點了就開。沒人帶或沒人讀的成員寫「沒有」，一眼看得出漏設。
+  列的「開啟」只在紀錄都在同一頁時出現（`UsageRow.opens`）。
+- **畫面：** `editor/rpg/usage_panel.UsagePanel` 取代原本的 `FormInfo` 標籤：摘要框、每個區段一個框、每列
+  圖示或步驟編號＋句子（滑過看頁面路徑），筆數與範圍用灰字接在句子後面（窄視窗會換行，不撐寬卡片）＋
+  「紀錄」（第一次展開才建按鈕）＋「開啟」兩個圖示按鈕（說明在滑過提示）；每筆紀錄是
+  按鈕，點了跳到那筆。表單的 `info` 欄直接收 `Usage`，`data()` 照舊不存。
+- **返回／前進：** 跳轉（用途卡片的紀錄、Problems、全域搜尋）都經過 `navigate_to_problem`，它先記下目前的位置
+  （`window/history.NavigationHistoryMixin.current_place`：顯示中的紀錄，沒有選紀錄就是工作區與分頁），跳轉本身改名
+  `open_target`。檢視 ▸ 返回（Ctrl+[）／前進（Ctrl+]），工具列搜尋按鈕左邊兩個箭頭；各留 50 步，換專案就清空。
+- `UsagePanel.set_usage` 清舊元件時只向 layout 項目要一次元件（在 VS Code 偵錯執行時第二次拿到 None）。
+- 中文樣板與字加在 `zh_TW.json` 後面（照原檔的排列）。
+
+**不改的：** 戰鬥判定與傷害規則沒有顯示名稱，句子裡用它們的 id 轉成的字（「Foe dodge 機率」）；屬性定義本身
+的說明欄照舊是作者寫的字。
+

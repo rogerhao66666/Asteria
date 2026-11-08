@@ -92,11 +92,14 @@ def test_the_demo_defines_every_stat_and_tag_it_uses(demo):
 def test_the_tag_page_lists_who_carries_and_what_reads(demo):
     from asteria.editor.rpg.tag_usage import tag_usage
 
-    text = tag_usage(demo, "capability.weapon.*")
-    assert "Classes brave" in text and "Any capabilities" in text
-    assert "Engine:" in tag_usage(demo, "no_escape")
-    groups = tag_usage(demo, "consumable")  # a menu category reads it, it carries nothing
-    assert "Menu pages items (Category)" in groups  # D96: the Items page's tab
+    text = tag_usage(demo, "capability.weapon.*").text()  # D108: plain words, names
+    assert "Can Wield is a group of 10 properties" in text  # D108: a row per member
+    axe = "Axe · carried by: Brave, Forgemaster, Guardian… (6 records) · read by: Hand Axe"
+    assert axe in text
+    assert "The engine:" in tag_usage(demo, "no_escape").text()
+    groups = tag_usage(demo, "consumable").text()  # a menu category reads it
+    assert "Menu pages: its tab or category holds what has it · 1 record: Items" in groups
+    assert "Items: has it · 16 records" in groups  # D96: the Items page's tab
 
 
 def test_an_undefined_tag_is_a_problem_once_tags_are_defined(demo):

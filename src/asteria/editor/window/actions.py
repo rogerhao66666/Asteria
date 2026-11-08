@@ -152,6 +152,15 @@ class WindowActionsMixin:
         self.search_action.setToolTip("Find a page, a record, a scene or an entity by name or id")
         self.search_action.triggered.connect(self.open_global_search)
         view_menu.addAction(self.search_action)
+        # back and forward through the jumps (a usage card's record, a problem, a search) (D108)
+        self.back_action = QAction("Back", self)
+        self.back_action.setShortcut("Ctrl+[")
+        self.back_action.triggered.connect(self.go_back)
+        self.forward_action = QAction("Forward", self)
+        self.forward_action.setShortcut("Ctrl+]")
+        self.forward_action.triggered.connect(self.go_forward)
+        view_menu.addActions([self.back_action, self.forward_action])
+        self._refresh_history_actions()
         # attack reach and hit areas of real-time combat: a debug view, off by default
         self.combat_boxes_action = QAction("Show Hit && Hurt Boxes", self, checkable=True)
         self.combat_boxes_action.setChecked(self.viewport.show_combat_boxes)
@@ -299,6 +308,12 @@ class WindowActionsMixin:
 
         self.search_action.setIcon(_icon("search", "#c9ccd4"))
         self.search_action.setToolTip("Search Everything (Ctrl+K)")
+        self.back_action.setIcon(_icon("back", "#c9ccd4"))
+        self.forward_action.setIcon(_icon("forward", "#c9ccd4"))
+        self.back_action.setToolTip("Back to where you jumped from (Ctrl+[)")
+        self.forward_action.setToolTip("Forward again (Ctrl+])")
+        toolbar.addAction(self.back_action)
+        toolbar.addAction(self.forward_action)
         toolbar.addAction(self.search_action)
         toolbar.addAction(self.reset_view_action)
         toolbar.addSeparator()
@@ -309,6 +324,8 @@ class WindowActionsMixin:
             (self.stop_action, "StopButton"),
             (self.reset_view_action, "ResetViewButton"),
             (self.search_action, "SearchButton"),
+            (self.back_action, "BackButton"),
+            (self.forward_action, "ForwardButton"),
         ):  # icon only: the tool tip names them
             button = toolbar.widgetForAction(action)
             button.setObjectName(name)
