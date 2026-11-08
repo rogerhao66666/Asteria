@@ -28,7 +28,9 @@ def test_the_tag_list_is_named_without_the_usage_cards(monkeypatch):
     widget = GameSystemsEditorWidget(controller)
     calls = []
     original = tag_usage.tag_usage
-    monkeypatch.setattr(tag_usage, "tag_usage", lambda p, t: calls.append(t) or original(p, t))
+    monkeypatch.setattr(
+        tag_usage, "tag_usage", lambda p, t, *index: calls.append(t) or original(p, t, *index)
+    )
     widget.set_kind("tag_definitions")
     assert widget.browser.count() > 100
     assert len(calls) <= 1  # the shown record's card at most, not one a row

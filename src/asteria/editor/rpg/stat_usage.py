@@ -13,9 +13,9 @@ Every sentence is a template the editor's language table translates (``{0}`` the
 
 from __future__ import annotations
 
-import re
 from dataclasses import fields
 
+from asteria.editor.rpg.usage_index import named_in, usage_index
 from asteria.editor.rpg.usage_model import (
     Link,
     Usage,
@@ -66,39 +66,10 @@ def _full_name(db, stat_id):
     return _name(db, stat_id)
 
 
-def _terms(value, stat_id, found):
-    """``(side or None, coefficient or words)`` for every formula term (``{"source":
-    "source_stat", "key": id, "coefficient": c}``) and rules field naming ``stat_id`` inside
-    ``value``."""
-    if isinstance(value, dict):
-        if value.get("key") == stat_id and value.get("source") in ("source_stat", "target_stat"):
-            side = SIDES[0] if value["source"] == "source_stat" else SIDES[1]
-            found.append((side, float(value.get("coefficient", 1.0))))
-        for k, v in value.items():
-            if isinstance(v, str) and v == stat_id and k in RULE_FIELDS:
-                found.append((None, t(RULE_FIELDS[k])))
-            elif isinstance(v, str) and k.endswith("expression") and _mentions(v, stat_id):
-                found.append((None, t("Read by a formula ({0})", words(k))))
-            else:
-                _terms(v, stat_id, found)
-    elif isinstance(value, list):
-        for v in value:
-            _terms(v, stat_id, found)
-
-
 def _mentions(text, stat_id):
     """Whether a formula reads ``stat_id`` (``source.dex``, ``self.current("hp")``), or names it
     as a word."""
-    from asteria.gameplay.expressions import ExpressionError, variables
-
-    try:
-        stats, resources = variables(text)
-    except ExpressionError:
-        stats, resources = (), ()
-    if stat_id in stats or stat_id in resources:
-        return True
-    pattern = rf"(?<![\w.]){re.escape(stat_id)}(?!\w)|['\"]{re.escape(stat_id)}['\"]"
-    return re.search(pattern, text) is not None
+    return stat_id in named_in(text)
 
 
 def _record_id(record):
@@ -323,7 +294,7 @@ def _formula_row(db, rule):
     )
 
 
-def _effects(project, db, data, stat_id):
+def _effects(db, index, stat_id):
     """Rows of what reads the stat: formulas, chance checks, battle rules, damage rules,
     states, skills."""
     name = _full_name(db, stat_id)
@@ -357,10 +328,9 @@ def _effects(project, db, data, stat_id):
     for record in db.battle_session_rules.values() or (BattleSessionRules("default"),):
         if record.initiative_stat == stat_id and not record.initiative_expression:
             rules.append((None, t(RULE_FIELDS["initiative_stat"])))
-    tables = ("battle_session_rules", "battle_extension_rules", "battle_options", "reactions")
-    for table in (*tables, "interaction_rules"):
-        for record in data.get(table, ()):
-            _terms(record, stat_id, rules)
+    rules += [
+        (None, _fact_words(fact)) for fact in index.rules.get(stat_id, ()) if fact[0] != "term"
+    ]
     shorts = {t(v): t(RULE_SHORT[k]) for k, v in RULE_FIELDS.items()}
     for what in dict.fromkeys(what for _side, what in rules):
         rows.append(UsageRow(what, short=shorts.get(what, t("a formula"))))
@@ -382,30 +352,34 @@ def _effects(project, db, data, stat_id):
                     short=words(policy.state_id),
                 )
             )
-    rows += _other_terms(data, stat_id)
-    rows += _skills(project, stat_id, name)
+    rows += _other_terms(index, stat_id)
+    rows += _skills(index, stat_id, name)
     if any(stat_id in a.base_resources for a in db.actors.values()):  # a pool: HP, MP (D99)
         what = t("Damage and healing change what is left of it; it never goes above this maximum")
         rows.insert(0, UsageRow(what, short=RESOURCE))
     return rows
 
 
-def _skills(project, stat_id, name):
+def _fact_words(fact):
+    """A rules field or formula naming the stat (``usage_index.scan``), in the card's words."""
+    kind, key = fact
+    return t(RULE_FIELDS[key]) if kind == "rule" else t("Read by a formula ({0})", words(key))
+
+
+def _skills(index, stat_id, name):
     """A row per side (the user's, the target's) of the skills whose formulas read the stat,
     each skill with how many times the stat counts (×18); other uses each a row."""
     rows, skills = [], {side: [] for side in SIDES}
-    library = project.gameplay_library
-    for ability_id in sorted(library.abilities.ids()):
-        ability = library.abilities.get(ability_id)
-        title = translate(getattr(ability, "display_name", "") or ability_id)
+    for ability_id, title, fact in index.skills.get(stat_id, ()):
+        title = translate(title)
         target = target_for("lib.abilities", ability_id)
-        terms = []
-        _terms(ability.to_data(), stat_id, terms)
-        for side, what in terms:
-            if side is None:
-                rows.append(UsageRow(f"{title}: {what}", short=title, target=target))
-            elif all(link.name != title for link in skills[side]):
-                skills[side].append(Link(title, f"×{abs(what):g}", abs(what), target))
+        if fact[0] != "term":
+            rows.append(UsageRow(f"{title}: {_fact_words(fact)}", short=title, target=target))
+            continue
+        side = SIDES[fact[1]]
+        if all(link.name != title for link in skills[side]):
+            amount = abs(fact[2])
+            skills[side].append(Link(title, f"×{amount:g}", amount, target))
     for side, links in skills.items():
         if links:
             what = t("Skill formulas use {0} {1}", t(side), name)
@@ -414,12 +388,6 @@ def _skills(project, stat_id, name):
                 UsageRow(what, where, tuple(links), "skill", mark="×", short=t("skill damage"))
             )
     return rows
-
-
-TERM_TABLES_DONE = {  # tables the rows above word on their own; the rest: ``_other_terms``
-    "derived_stats", "outcome_checks", "interaction_rules", "battle_state_policies",
-    "actors", "enemies", "classes", "equipment", "attachments", "passives",
-}  # fmt: skip
 
 
 def _damage_rules(db, stat_id, name):
@@ -461,37 +429,18 @@ def _damage_rules(db, stat_id, name):
     return rows
 
 
-def _other_terms(data, stat_id):
+def _other_terms(index, stat_id):
     """Any other record with a ``…terms`` map naming the stat (D91: nothing goes unlisted)."""
     rows = []
-    for table, records in data.items():
-        if table in TERM_TABLES_DONE or not isinstance(records, list):
-            continue
-        for record in records:
-            keys = []
-            _term_keys(record, stat_id, keys)
-            if keys:
-                record_id = next((v for k, v in record.items() if k.endswith("_id")), "")
-                name = translate(record.get("display_name") or record_id)
-                what = t(
-                    "{0} {1} reads it ({2})", words(table), name, ", ".join(dict.fromkeys(keys))
-                )
-                rows.append(
-                    UsageRow(what, short=words(table), target=target_for(table, record_id))
-                )
+    for table, record_id, name, keys in index.other.get(stat_id, ()):
+        what = t(
+            "{0} {1} reads it ({2})",
+            words(table),
+            translate(name),
+            ", ".join(dict.fromkeys(keys)),
+        )
+        rows.append(UsageRow(what, short=words(table), target=target_for(table, record_id)))
     return rows
-
-
-def _term_keys(value, stat_id, keys):
-    if isinstance(value, dict):
-        for k, v in value.items():
-            if "terms" in k and isinstance(v, dict) and stat_id in v:
-                keys.append(words(k))
-            else:
-                _term_keys(v, stat_id, keys)
-    elif isinstance(value, list):
-        for v in value:
-            _term_keys(v, stat_id, keys)
 
 
 def _shown(db, stat_id):
@@ -540,16 +489,17 @@ def _summary(name, sources, effects):
     return tuple(lines)
 
 
-def stat_usage(project, stat_id):
+def stat_usage(project, stat_id, index=None):
     """The ``Usage`` card of ``stat_id``: a summary, where its number comes from (in the order
-    the game adds it up), what it changes, and where it is shown."""
+    the game adds it up), what it changes, and where it is shown. ``index``: the project's
+    ``usage_index`` (built here when not given)."""
     db = project.rpg_database
     stat_id = str(stat_id)
-    data = db.to_data()
+    index = index if index is not None else usage_index(project)
     name = _full_name(db, stat_id)
     sources = _sources(db, stat_id)
     enemies = _starting(db.enemies, "enemies", lambda r: r.stats, stat_id)
-    effects = _effects(project, db, data, stat_id)
+    effects = _effects(db, index, stat_id)
     sections = [
         UsageSection(
             t("Where {0} comes from (added up in this order)", name),

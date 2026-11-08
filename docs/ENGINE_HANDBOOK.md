@@ -775,6 +775,7 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 類別 | 內容 |
 |---|---|
 | 用途卡片 | Stats 與 Properties 的「用途」改成卡片：`editor/rpg/usage_model.py`（不用 Qt 的 `Usage`／`UsageSection`／`UsageRow`／`Link`）由 `stat_usage`、`tag_usage` 建出，`editor/rpg/usage_panel.UsagePanel` 畫出：摘要、每種來源一列（筆數、數值範圍、開啟、紀錄），點紀錄經 `navigate_to_problem` 跳過去；`Usage.text()` 是同內容的純文字 |
+| 用途索引 | `editor/rpg/usage_index.usage_index(project, document.revision)`：一次走完專案，記下誰讀每個屬性、誰帶著或讀每個特徵；卡片直接查表，編輯後才重建 |
 | 返回／前進 | `window/history.NavigationHistoryMixin`：每次 `navigate_to_problem` 先記下 `current_place()`；檢視 ▸ 返回（Ctrl+[）／前進（Ctrl+]），工具列兩個箭頭 |
 
 ### 下一步的候選（沒有排序，要使用者決定）

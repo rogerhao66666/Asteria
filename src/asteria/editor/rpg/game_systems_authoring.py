@@ -2496,16 +2496,20 @@ class GameSystemsAuthoringController:
         return note_of(self.project, self.kind(kind_id).store, key)
 
     def info(self, kind_id, key):
-        """The words of a record's read-only ``info`` field."""
+        """A record's read-only ``info`` field: its Usage card (D108), from the project's usage
+        index, kept until the next edit (the document's revision)."""
+        if kind_id not in ("stat_definitions", "tag_definitions"):
+            return ""
+        from asteria.editor.rpg.usage_index import usage_index
+
+        index = usage_index(self.project, self.document.revision)
         if kind_id == "stat_definitions":
             from asteria.editor.rpg.stat_usage import stat_usage
 
-            return stat_usage(self.project, key)
-        if kind_id == "tag_definitions":
-            from asteria.editor.rpg.tag_usage import tag_usage
+            return stat_usage(self.project, key, index)
+        from asteria.editor.rpg.tag_usage import tag_usage
 
-            return tag_usage(self.project, key)
-        return ""
+        return tag_usage(self.project, key, index)
 
     def decode(self, kind_id, data):
         if isinstance(data, dict) and (NOTE in data or SHOWN in data):  # kept beside the record

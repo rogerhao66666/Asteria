@@ -4604,6 +4604,12 @@ HP 卡片「它會影響什麼」寫「沒有東西讀它」（NEXT_STEPS 的 D9
 - **返回／前進：** 跳轉（用途卡片的紀錄、Problems、全域搜尋）都經過 `navigate_to_problem`，它先記下目前的位置
   （`window/history.NavigationHistoryMixin.current_place`：顯示中的紀錄，沒有選紀錄就是工作區與分頁），跳轉本身改名
   `open_target`。檢視 ▸ 返回（Ctrl+[）／前進（Ctrl+]），工具列搜尋按鈕左邊兩個箭頭；各留 50 步，換專案就清空。
+- **用途索引（`editor/rpg/usage_index.py`）：** 卡片不再每張都把整個專案走一遍（技能公式、規則表、每筆紀錄的特徵）。
+  `UsageIndex.build` 走一次，記下每個屬性被哪些規則／技能／其他紀錄讀、每個特徵被誰帶著或讀；只存 id、原始名稱與
+  欄位鍵，換語言不用重建。`usage_index(project, stamp)` 以文件的 revision 為鍵保留最後一份（每次編輯、復原、
+  編寫腳本都會改變它），沒有 stamp 就每次重建。Full Verification：建索引 29 ms（每次編輯後一次），算一張卡片
+  從 16–20 ms 變 0.1–1.4 ms，開一筆屬性從 56–66 ms 變 39–51 ms。改前改後 711 張卡片（所有參考專案的屬性與
+  特徵）的文字與跳轉目標逐一比對完全相同。
 - `UsagePanel.set_usage` 清舊元件時只向 layout 項目要一次元件（在 VS Code 偵錯執行時第二次拿到 None）。
 - 中文樣板與字加在 `zh_TW.json` 後面（照原檔的排列）。
 

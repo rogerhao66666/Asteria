@@ -168,12 +168,15 @@ def _member(family, tag, uses):
     return UsageRow(what, page=tag, links=tuple(links.values()))
 
 
-def tag_usage(project, tag_id):
+def tag_usage(project, tag_id, index=None):
     """The ``Usage`` card of ``tag_id``: what the engine does with it, who carries it and what
-    reads it; a group (``rune.*``) gets a row per member instead."""
+    reads it; a group (``rune.*``) gets a row per member instead. ``index``: the project's
+    ``usage_index`` (built here when not given)."""
+    from asteria.editor.rpg.usage_index import usage_index
+
     tag_id = str(tag_id).lower()
     family = tag_id[:-1] if tag_id.endswith("*") else None
-    every = project_tags(project)
+    every = (index if index is not None else usage_index(project)).tags
     tags = sorted(x for x in every if x.startswith(family)) if family is not None else [tag_id]
     engine = built_in(tag_id if family is None else (tags[0] if tags else tag_id))
     summary = [t("The engine: {0}", t(engine))] if engine else []
