@@ -191,6 +191,7 @@ class FormField:
     # this other ``amounts`` field, which then lists only the mechanics (a shield)
     pools_key: str = ""
     with_pools: bool = False  # an ``amounts`` of stats that offers HP, MP and the like too
+    grid: bool = False  # a ``table`` of picks shown as one grid, a line per row (D109)
 
 
 def F(key, label, kind, **values):  # noqa: N802 - short spec constructor

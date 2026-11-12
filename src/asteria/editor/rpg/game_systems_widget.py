@@ -1187,6 +1187,16 @@ class RecordForm(QWidget):
             return [Choice(v, words(v.rsplit("/", 1)[-1])) for v in sorted(used) if v]
         return []
 
+    def _grid_choices(self, f):
+        """``(value, words, icon or None)`` a grid table's drop-down offers for field ``f``."""
+        if f.kind == "choice":
+            return [(c, _choice_words(c, words, f.key), None) for c in f.choices]
+        document = self.document or getattr(self.icons, "document", None)
+        return [
+            (c.value, c.label, load_record_icon(document, c.icon) if c.icon else None)
+            for c in self._reference_choices(f)
+        ]
+
     def _reference_choices(self, f):
         vocabulary = self._vocabulary()
         known = ("items", "actors", "enemies", "equipment", "classes", "abilities", "states",
@@ -1377,6 +1387,12 @@ class RecordForm(QWidget):
             layout.addWidget(box.form)
             return box
         if f.kind == "table":
+            from asteria.editor.rpg.grid_table import GridTable, fits_grid
+
+            if getattr(f, "grid", False) and fits_grid(f.fields):  # a line per row (D109)
+                return GridTable(
+                    f.label, f.fields, self._grid_choices, lambda rows: _fresh_row(f.fields, rows)
+                )
             kind = _InlineTable if _flat(f.fields) else _TableField
             return kind(f.label, f.fields, self.references, icons=self.icons)
         if f.kind == "translations":

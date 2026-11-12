@@ -37,6 +37,7 @@ from asteria.runtime.session.world_commands import (
 )
 
 NOT_SET = "Not set"
+KEPT_KEYS = ("text_key",)  # a popup's key for its translation (D109): kept, never shown
 FACINGS = ("down", "up", "left", "right")
 EASES = ("linear", "smooth", "ease_in", "ease_out", "cut")
 DIRECTIONS = (("up", "↑"), ("down", "↓"), ("left", "←"), ("right", "→"))
@@ -621,7 +622,7 @@ class WorldCommandForm(QWidget):
         self.fields = {}
         self.grid = ResponsiveForm(column_width=190, max_columns=3)
         self.body_layout.insertWidget(0, self.grid)
-        known = WORLD_COMMAND_ARGUMENTS.get(command, ())
+        known = [k for k in WORLD_COMMAND_ARGUMENTS.get(command, ()) if k not in KEPT_KEYS]
         for key in known:
             field = self._field(command, key)
             field.changed.connect(lambda *_a: self.changed.emit())
@@ -630,6 +631,10 @@ class WorldCommandForm(QWidget):
             self.grid.add_row(argument_label(key), field, span=wide)
         extras, self.kept = {}, {}
         for key, value in dict(args or {}).items():
+            if key in KEPT_KEYS:  # the Translations page's: kept as it is, not shown
+                self.kept[key] = value
+                self._kept_text = dict(args).get("text")
+                continue
             field = self.fields.get(key)
             if field is None or not field.set_value(value):
                 written = format_world_args({key: value})
@@ -651,6 +656,8 @@ class WorldCommandForm(QWidget):
             if value is not None:
                 args[key] = value
         args.update(self.kept)
+        if "text_key" in self.kept and args.get("text") != getattr(self, "_kept_text", None):
+            del args["text_key"]  # its translation was of the old words (as a choice's is)
         args.update(parse_world_args(self.other.text()))
         return args
 

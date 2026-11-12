@@ -63,6 +63,7 @@ GAME_START_FORM: tuple[FormField, ...] = (
         "table",
         fields=_WORN,
         default=(),
+        grid=True,
         help="What each hero wears when a new game starts: a row per piece, in its slot.",
     ),
     F("currencies", "Starting Currencies", "amounts", default={}),

@@ -99,7 +99,9 @@ def _game_start():
     from asteria.editor import EditorDocument
     from asteria.editor.rpg.game_start_authoring import GameStartAuthoringController
 
-    return GameStartAuthoringController(EditorDocument(_project()))
+    document = EditorDocument(_project())
+    document.file_path = DEMO / "project.asteria.json"  # pictures are read beside it
+    return GameStartAuthoringController(document)
 
 
 def test_roger_starts_wearing_the_ring_and_the_chest_holds_charms_only():
@@ -154,3 +156,74 @@ def test_slot_names_read_in_the_projects_chinese():
 
     words = project_words(_project(), "zh_TW")
     assert (words["Body"], words["Carried Weapons"]) == ("身體", "攜帶武器")
+
+
+def test_starting_equipment_is_one_grid_a_line_per_piece(app):
+    from PySide6.QtWidgets import QApplication, QComboBox
+
+    from asteria.editor.rpg.game_start_widget import GameStartEditorWidget
+    from asteria.editor.rpg.grid_table import GridTable
+
+    controller = _game_start()
+    page = GameStartEditorWidget(controller)
+    page.resize(1200, 800)
+    page.show()
+    QApplication.processEvents()
+    try:
+        grid = page.form.widgets["worn"]
+        assert isinstance(grid, GridTable)
+        rows = len(controller.form_data()["worn"])
+        assert grid.table.rowCount() == rows and grid.table.height() < 40 * (rows + 1)
+        gear = grid.table.cellWidget(0, 2)
+        assert isinstance(gear, QComboBox) and gear.currentText() == "Warden Charm"
+        assert not gear.itemIcon(gear.currentIndex()).isNull()  # its picture beside its name
+        at = gear.findData("w_staff")
+        gear.setCurrentIndex(at)
+        gear.activated.emit(at)  # another piece, picked
+        assert page.form.data()["worn"][0]["equipment_id"] == "w_staff"
+        grid.table.cellWidget(0, 3).click()  # ✕ removes the line
+        assert len(page.form.data()["worn"]) == rows - 1
+    finally:
+        page.hide()
+        page.deleteLater()
+
+
+def test_a_popup_has_a_key_and_shows_in_the_players_language():
+    import sys
+
+    sys.path.insert(0, str(DEMO))
+    import run_trial_smoke as smoke
+
+    from asteria.editor.project import data_translation as dt
+
+    project, game = smoke.load()
+    assert dt.dialogue_without_keys(project) == 0  # the popups have their keys too
+    shown = []
+    game.notify = lambda text, **_k: shown.append(text)
+    smoke.world(game, "SET_LOCALE", locale="zh-TW")
+    smoke.world(game, "SHOW_POPUP", text="Six charms!", text_key="dlg.home_che.8")
+    smoke.world(game, "SHOW_POPUP", text="Words of my own")  # no key: as written
+    assert shown == ["六個護符！", "Words of my own"]
+
+
+def test_the_popup_form_keeps_its_key_without_showing_it(app):
+    from asteria.editor.events.world_command_form import WorldCommandForm
+
+    form = WorldCommandForm()
+    form.set_command("SHOW_POPUP", {"text": "Six charms!", "text_key": "dlg.home_che.8"})
+    assert "text_key" not in form.fields and not form.other.isVisible()
+    assert form.result_args()["text_key"] == "dlg.home_che.8"
+
+
+def test_new_popup_words_drop_the_old_translation_and_the_line_hides_the_key(app):
+    from asteria.editor.events.editing import describe_instruction
+    from asteria.editor.events.world_command_form import WorldCommandForm
+    from asteria.events.program import EventInstruction
+
+    args = {"text": "Six charms!", "text_key": "dlg.home_che.8"}
+    form = WorldCommandForm()
+    form.set_command("SHOW_POPUP", args)
+    form.fields["text"].set_value("Seven charms!")
+    assert "text_key" not in form.result_args()  # the old Chinese was of the old words
+    line = describe_instruction(EventInstruction("WORLD", {"command": "SHOW_POPUP", "args": args}))
+    assert "Six charms!" in line and "dlg." not in line

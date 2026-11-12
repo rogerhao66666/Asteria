@@ -37381,7 +37381,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "The party is rested."
+              "text": "The party is rested.",
+              "text_key": "dlg.common_c.3"
             },
             "command": "SHOW_POPUP"
           },
@@ -37904,7 +37905,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "You feel rested."
+              "text": "You feel rested.",
+              "text_key": "dlg.home_bed.8"
             },
             "command": "SHOW_POPUP"
           },
@@ -38019,7 +38021,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Six charms!"
+              "text": "Six charms!",
+              "text_key": "dlg.home_che.8"
             },
             "command": "SHOW_POPUP"
           },
@@ -38143,7 +38146,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "The Trial is won."
+              "text": "The Trial is won.",
+              "text_key": "dlg.story_ba.10"
             },
             "command": "SHOW_POPUP"
           },
@@ -38352,7 +38356,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Cael heads for the guild."
+              "text": "Cael heads for the guild.",
+              "text_key": "dlg.story_ca.7"
             },
             "command": "SHOW_POPUP"
           },
@@ -38442,7 +38447,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Cael joins the party!"
+              "text": "Cael joins the party!",
+              "text_key": "dlg.story_ca.7_2"
             },
             "command": "SHOW_POPUP"
           },
@@ -39221,7 +39227,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Mira is now a Priest!"
+              "text": "Mira is now a Priest!",
+              "text_key": "dlg.story_jo.26"
             },
             "command": "SHOW_POPUP"
           },
@@ -39368,7 +39375,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Mira is now a Bishop!"
+              "text": "Mira is now a Bishop!",
+              "text_key": "dlg.story_jo.45"
             },
             "command": "SHOW_POPUP"
           },
@@ -39594,7 +39602,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Vesper is now a Lich!"
+              "text": "Vesper is now a Lich!",
+              "text_key": "dlg.story_jo.74"
             },
             "command": "SHOW_POPUP"
           },
@@ -39741,7 +39750,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Vesper is now a Death Lord!"
+              "text": "Vesper is now a Death Lord!",
+              "text_key": "dlg.story_jo.93"
             },
             "command": "SHOW_POPUP"
           },
@@ -39967,7 +39977,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Cael is now a Zealot!"
+              "text": "Cael is now a Zealot!",
+              "text_key": "dlg.story_jo.122"
             },
             "command": "SHOW_POPUP"
           },
@@ -40114,7 +40125,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Cael is now a Heretic!"
+              "text": "Cael is now a Heretic!",
+              "text_key": "dlg.story_jo.141"
             },
             "command": "SHOW_POPUP"
           },
@@ -40301,7 +40313,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Mira joins the party!"
+              "text": "Mira joins the party!",
+              "text_key": "dlg.story_mi.5"
             },
             "command": "SHOW_POPUP"
           },
@@ -40440,7 +40453,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Learned four secret arts"
+              "text": "Learned four secret arts",
+              "text_key": "dlg.story_ol.9"
             },
             "command": "SHOW_POPUP"
           },
@@ -41890,7 +41904,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Vesper heads for the guild."
+              "text": "Vesper heads for the guild.",
+              "text_key": "dlg.story_ve.7"
             },
             "command": "SHOW_POPUP"
           },
@@ -41973,7 +41988,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Vesper joins the party!"
+              "text": "Vesper joins the party!",
+              "text_key": "dlg.story_ve.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -43111,7 +43127,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Duelist"
+              "text": "Job: Duelist",
+              "text_key": "dlg.town_due.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -43205,7 +43222,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Forgemaster"
+              "text": "Job: Forgemaster",
+              "text_key": "dlg.town_for.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -43299,7 +43317,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Guardian"
+              "text": "Job: Guardian",
+              "text_key": "dlg.town_gua.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -43601,7 +43620,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Mystic"
+              "text": "Job: Mystic",
+              "text_key": "dlg.town_mys.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -43703,7 +43723,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Rogue"
+              "text": "Job: Rogue",
+              "text_key": "dlg.town_rog.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -43777,7 +43798,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Sage"
+              "text": "Job: Sage",
+              "text_key": "dlg.town_sag.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -44213,7 +44235,8 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "Job: Weapon Master"
+              "text": "Job: Weapon Master",
+              "text_key": "dlg.town_wea.6"
             },
             "command": "SHOW_POPUP"
           },
@@ -104811,7 +104834,30 @@
           "data.music_track.town_theme.name": "\u7210\u5fc3\u93ae",
           "data.music_track.town_theme.description": "Foozle\uff0cCC0",
           "data.music_track.woods_theme.name": "\u4f4e\u8a9e\u68ee\u6797",
-          "data.music_track.woods_theme.description": "Foozle\uff0cCC0"
+          "data.music_track.woods_theme.description": "Foozle\uff0cCC0",
+          "dlg.common_c.3": "\u968a\u4f0d\u4f11\u606f\u597d\u4e86\u3002",
+          "dlg.home_bed.8": "\u4f60\u89ba\u5f97\u7cbe\u795e\u98fd\u6eff\u3002",
+          "dlg.home_che.8": "\u516d\u500b\u8b77\u7b26\uff01",
+          "dlg.story_ba.10": "\u8a66\u7149\u52dd\u5229\u3002",
+          "dlg.story_ca.7": "\u51f1\u723e\u524d\u5f80\u516c\u6703\u3002",
+          "dlg.story_ca.7_2": "\u51f1\u723e\u52a0\u5165\u968a\u4f0d\uff01",
+          "dlg.story_jo.122": "\u51f1\u723e\u6210\u70ba\u72c2\u4fe1\u8005\uff01",
+          "dlg.story_jo.141": "\u51f1\u723e\u6210\u70ba\u7570\u7aef\u8005\uff01",
+          "dlg.story_jo.26": "\u7c73\u83c8\u6210\u70ba\u796d\u53f8\uff01",
+          "dlg.story_jo.45": "\u7c73\u83c8\u6210\u70ba\u4e3b\u6559\uff01",
+          "dlg.story_jo.74": "\u8587\u7d72\u73c0\u6210\u70ba\u5deb\u5996\uff01",
+          "dlg.story_jo.93": "\u8587\u7d72\u73c0\u6210\u70ba\u6b7b\u4ea1\u9818\u4e3b\uff01",
+          "dlg.story_mi.5": "\u7c73\u83c8\u52a0\u5165\u968a\u4f0d\uff01",
+          "dlg.story_ol.9": "\u5b78\u6703\u4e86\u56db\u7a2e\u79d8\u6280",
+          "dlg.story_ve.6": "\u8587\u7d72\u73c0\u52a0\u5165\u968a\u4f0d\uff01",
+          "dlg.story_ve.7": "\u8587\u7d72\u73c0\u524d\u5f80\u516c\u6703\u3002",
+          "dlg.town_due.6": "\u8077\u696d\uff1a\u6c7a\u9b25\u8005",
+          "dlg.town_for.6": "\u8077\u696d\uff1a\u935b\u9020\u5927\u5e2b",
+          "dlg.town_gua.6": "\u8077\u696d\uff1a\u5b88\u8b77\u8005",
+          "dlg.town_mys.6": "\u8077\u696d\uff1a\u79d8\u8853\u5e2b",
+          "dlg.town_rog.6": "\u8077\u696d\uff1a\u76dc\u8cca",
+          "dlg.town_sag.6": "\u8077\u696d\uff1a\u8ce2\u8005",
+          "dlg.town_wea.6": "\u8077\u696d\uff1a\u6b66\u5668\u5927\u5e2b"
         },
         "locale": "zh-TW"
       }

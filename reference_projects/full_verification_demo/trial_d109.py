@@ -6,6 +6,8 @@
   (besides a job that wields rings). The gear page says who can wear it.
 * **Roger starts wearing it** in his free hand (Game Start ▸ Starting Equipment); the family
   chest holds the six charms only.
+* **Popups in Chinese:** every SHOW_POPUP gets a key (``dlg.<program>.<n>``) and its words in
+  the zh-TW table, as dialogue lines have.
 
 Re-runnable over ``project.asteria.json``.
 """
@@ -68,5 +70,32 @@ def main():
     PATH.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
 
 
+def popups():
+    """Keys on the popups and the zh-TW table filled again (``trial_zh_data.apply``), written
+    into the file's own event programs and table."""
+    import trial_zh_data
+
+    from asteria.project import Project
+    from asteria.runtime.component_registry import default_component_registry
+
+    project = Project.load_json(PATH, default_component_registry())
+    trial_zh_data.apply(project)
+    raw = json.loads(PATH.read_text(encoding="utf-8"))
+    keys = set()
+    for program_id in project.event_programs.ids():  # only the popups' keys: the rest as written
+        steps = raw["event_programs"][program_id]["instructions"]
+        for index, step in enumerate(project.event_programs.require(program_id).instructions):
+            inner = step.args.get("args") if step.opcode == "WORLD" else None
+            if step.args.get("command") == "SHOW_POPUP" and inner.get("text_key"):
+                steps[index]["args"]["args"]["text_key"] = inner["text_key"]
+                keys.add(inner["text_key"])
+    (zh,) = [t for t in raw["rpg_database"]["locale_tables"] if t["locale"] == "zh-TW"]
+    made = dict(project.rpg_database.locale_tables["zh-TW"].entries)
+    zh["entries"].update({k: made[k] for k in sorted(keys) if k in made})  # their words only
+    PATH.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+
+
 if __name__ == "__main__":
+    sys.path.insert(0, str(HERE))
     main()
+    popups()

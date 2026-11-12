@@ -105,7 +105,7 @@ def test_dialogue_keys_are_written_only_when_set_and_old_data_still_reads():
 
 def _plain(project):
     """The demo as it was before its own Chinese (T3): no data keys in the tables, no keys on
-    the dialogue, so the tests below start from an untranslated project."""
+    the dialogue or popups, so the tests below start from an untranslated project."""
     from asteria.events.program import EventInstruction, EventProgram
 
     for locale, table in list(project.rpg_database.locale_tables.items()):
@@ -121,6 +121,8 @@ def _plain(project):
             args = {
                 k: v for k, v in instruction.args.items() if k not in ("text_key", "prompt_key")
             }
+            if isinstance(args.get("args"), dict):  # a popup's own key (D109)
+                args["args"] = {k: v for k, v in args["args"].items() if k != "text_key"}
             if isinstance(args.get("choices"), list):
                 args["choices"] = [
                     {k: v for k, v in c.items() if k != "text_key"} if isinstance(c, dict) else c

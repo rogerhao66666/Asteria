@@ -423,13 +423,17 @@ def test_conditions_read_in_words_and_are_picked(window):
 
 
 def test_a_world_command_is_a_form_of_its_own_fields_and_loses_nothing(window):
-    from asteria.editor.events.world_command_form import WorldCommandDialog, WorldCommandForm
+    from asteria.editor.events.world_command_form import (
+        KEPT_KEYS,
+        WorldCommandDialog,
+        WorldCommandForm,
+    )
     from asteria.runtime.session.world_commands import WORLD_COMMAND_ARGUMENTS
 
     form = WorldCommandForm(window.document)
     for command, keys in WORLD_COMMAND_ARGUMENTS.items():
         form.set_command(command)
-        assert set(form.fields) == set(keys), command
+        assert set(form.fields) == set(keys) - set(KEPT_KEYS), command  # a key: kept, unshown
     # records by their names, numbers unset until used, what no field holds still kept
     args = {"item_id": "x_not_listed", "quantity": 3, "their_own": "kept", "shaped": [1, 2]}
     form.set_command("GIVE_ITEM", args)

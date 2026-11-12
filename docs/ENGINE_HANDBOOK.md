@@ -784,7 +784,8 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 |---|---|
 | 特徵名稱 | `tag_label` 先用專案特徵定義的名字（`vocabulary.names()` 的 `DEFINED` 鍵）：角色頁的種類和 Game Systems ▸ Properties 一致 |
 | 誰能穿 | `editor/rpg/wearers.who_can_wear`＋裝備頁的 `records/wearers_line.WearersLine`：角色與職業的特徵符合裝備條件的人，點了就開 |
-| 初始裝備 | Game Start ▸ Starting Equipment（`worn` 表格）讀寫 `rpg_state.loadouts`；放不進的欄位會被拒絕 |
+| 初始裝備 | Game Start ▸ Starting Equipment（`worn`，`grid=True` 的 `GridTable`：一件一行）讀寫 `rpg_state.loadouts`；放不進的欄位會被拒絕 |
+| 彈出訊息翻譯 | `SHOW_POPUP` 的 `text_key`：遊戲用玩家的語言顯示；Translations 頁會幫它加 key；事件編輯器不顯示、只保留 |
 | 示範 | `trial_d109.py`：掩護屬於 Knight、魔戒只有 Roger（`trait.ring_bearer`）而且一開始就戴著 |
 
 ### 下一步的候選（沒有排序，要使用者決定）

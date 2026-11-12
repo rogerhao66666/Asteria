@@ -193,6 +193,7 @@ def describe_instruction(instruction, names=None):
         return head + str(a.get("value"))
     if op == "WORLD":
         from asteria.editor.events.world_command_form import (
+            KEPT_KEYS,
             argument_label,
             command_words,
             value_words,
@@ -201,6 +202,7 @@ def describe_instruction(instruction, names=None):
         details = ", ".join(
             f"{translate(argument_label(k))}: {value_words(v, k, names)}"
             for k, v in (a.get("args") or {}).items()
+            if k not in KEPT_KEYS  # a popup's translation key: not the author's words
         )
         said = translate(command_words(a.get("command", "")))
         return f"{translate('World')}  {said}" + (f"  ({details})" if details else "")

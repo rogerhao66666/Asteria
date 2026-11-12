@@ -1186,7 +1186,7 @@ GPU 繪圖與 C++ 加速；除非傳入 `--cdn`，頁面會從 pygame-web 的 CD
 | `SHOW_BALLOON` | entity, balloon, duration_ms |
 | `SHOW_ENTITY` | entity, shown |
 | `SHOW_PICTURE` | picture_id, asset_id, x, y, scale, opacity, frame, columns, rows, layer, click_event, tint, tint_color, frame_rate, frame_loop, scroll_x, scroll_y, wave_amplitude, wave_length, wave_speed, blend, text, font, text_color, shadow_color, text_align |
-| `SHOW_POPUP` | text, entity, duration_ms, kind |
+| `SHOW_POPUP` | text, entity, duration_ms, kind, text_key |
 | `SOCKET_ITEM` | actor_id, instance_id, socket_id, item_id |
 | `SPAWN_ENTITY` | prefab_id, x, y, name |
 | `START_ENCOUNTER` | encounter_id |

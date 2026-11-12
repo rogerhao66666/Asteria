@@ -326,6 +326,9 @@ def data_groups(project):
     speakers, lines = {}, {}
     for _program_id, _index, instruction in _instructions(project):
         args = instruction.args
+        popup = _popup(instruction)
+        if popup is not None and popup.get("text_key"):  # a popup's words (D109)
+            lines.setdefault(str(popup["text_key"]), str(popup.get("text", "")))
         if instruction.opcode == "DIALOGUE":
             speaker = str(args.get("speaker", "") or "")
             if speaker:
@@ -345,8 +348,20 @@ def data_groups(project):
     return groups
 
 
+def _popup(instruction):
+    """A SHOW_POPUP world command's own arguments (its text and key), else None (D109)."""
+    args = instruction.args
+    if instruction.opcode == "WORLD" and args.get("command") == "SHOW_POPUP":
+        inner = args.get("args")
+        return inner if isinstance(inner, dict) else None
+    return None
+
+
 def _needs_keys(instruction):
     args = instruction.args
+    popup = _popup(instruction)
+    if popup is not None:
+        return _translatable(popup.get("text")) and not popup.get("text_key")
     if instruction.opcode == "SEQUENCE":
         return any(_needs_keys(line) for _t, _n, line in _track_lines(instruction))
     if instruction.opcode == "DIALOGUE":
@@ -391,6 +406,9 @@ def keyed_programs(project):
     for _program_id, _index, instruction in _instructions(project):
         args = instruction.args
         used.update(str(args[k]) for k in ("text_key", "prompt_key") if args.get(k))
+        popup = _popup(instruction)
+        if popup is not None and popup.get("text_key"):
+            used.add(str(popup["text_key"]))
         for choice in args.get("choices") or ():
             if isinstance(choice, dict) and choice.get("text_key"):
                 used.add(str(choice["text_key"]))
@@ -415,7 +433,9 @@ def keyed_programs(project):
                 continue
             args = dict(instruction.args)
             base = f"dlg.{short}.{index}"
-            if instruction.opcode == "SEQUENCE":
+            if _popup(instruction) is not None:
+                args["args"] = {**args["args"], "text_key": fresh(base)}
+            elif instruction.opcode == "SEQUENCE":
                 args["tracks"] = _keyed_tracks(args.get("tracks") or (), base, fresh)
             elif instruction.opcode == "DIALOGUE":
                 args["text_key"] = fresh(base)

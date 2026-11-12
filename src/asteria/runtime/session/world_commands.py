@@ -116,7 +116,7 @@ WORLD_COMMAND_ARGUMENTS = {
     "CAMERA_RELEASE": ("blend", "ease"),
     "CAMERA_SHAKE": ("intensity", "duration"),
     "SUMMON": ("enemy_id", "actor_id", "count", "owner_id"),
-    "SHOW_POPUP": ("text", "entity", "duration_ms", "kind"),
+    "SHOW_POPUP": ("text", "entity", "duration_ms", "kind", "text_key"),
     "SET_CLASSES": ("actor_id", "class_ids", "unlock"),
     "JOIN_PARTY": ("actor_id", "active"),
     "BATTLE_SEQUENCE": ("sequence_id", "actor_id", "target_id"),
@@ -389,8 +389,13 @@ def _register_world_and_items(router, session):
         return inventory.count(item_id)
 
     def show_popup(command):
+        from asteria.rpg.text import data_text
+
+        text = str(_required(command, "text"))
+        lookup = getattr(session, "data_lookup", None)
+        key = str(command.args.get("text_key") or "")
         session.notify(
-            str(_required(command, "text")),
+            data_text.text_by_key(lookup, key, text) if key else text,  # the player's language
             entity=command.args.get("entity") or None,
             duration_ms=float(command.args.get("duration_ms") or 1100.0),
             kind=str(command.args.get("kind") or "info"),
