@@ -4746,7 +4746,15 @@
   "Back": "返回",
   "Forward": "前進",
   "Back to where you jumped from (Ctrl+[)": "回到跳過來之前的地方（Ctrl+[）",
-  "Forward again (Ctrl+])": "再前進一次（Ctrl+]）"
+  "Forward again (Ctrl+])": "再前進一次（Ctrl+]）",
+  "Who can wear it": "誰能裝備",
+  "Everyone (it needs nothing)": "所有人（沒有條件）",
+  "Nobody yet: no character has what it needs": "目前沒人能裝備：沒有角色符合條件",
+  "The characters whose own properties and jobs give what this gear needs (Needs, Needs one of, Forbidden). What they gain later (skill trees, level rewards, other gear) may let more wear it.": "自身特徵與職業符合這件裝備條件（需要、需要其一、禁止）的角色。之後獲得的（技能樹、等級獎勵、其他裝備）可能讓更多人能裝備。",
+  "Starting Equipment": "初始裝備",
+  "Hero": "角色",
+  "What each hero wears when a new game starts: a row per piece, in its slot.": "新遊戲開始時每個角色穿戴的裝備：每件一列，放在它的欄位。",
+  "Spare pieces in the bag. What a hero wears: Starting Equipment.": "背包裡的備用裝備。角色身上穿的：見初始裝備。"
  },
  "patterns": [
   [
@@ -5256,6 +5264,18 @@
   [
    "Script failed line (?P<l>\\d+) — changes rolled back",
    "腳本失敗（第 {l} 行）— 變更已復原"
+  ],
+  [
+   "Open (?P<n>.+)'s page",
+   "開啟{n!t}的頁面"
+  ],
+  [
+   "Click to pick: (?P<k>.+)",
+   "點擊選擇：{k!t}"
+  ],
+  [
+   "(?P<n>.+) does not go in the (?P<s>.+) slot",
+   "{n!t} 不能放在「{s!t}」欄位"
   ]
  ]
 }

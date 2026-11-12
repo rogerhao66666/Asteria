@@ -804,6 +804,17 @@ QToolButton#FormChip:hover {{ background: {p.danger_bg}; border-color: {p.danger
 QToolButton#FormRowRemove {{ background: transparent; color: {p.text_muted}; border: none;
     padding: 0 6px; }}
 QToolButton#FormRowRemove:hover {{ color: {p.danger_text}; }}
+QFrame#WearersLine {{ background: {p.panel}; border: 1px solid {p.border};
+    border-radius: 8px; }}
+QLabel#WearersTitle {{ color: {p.text_dim}; font-weight: 600; padding-right: 4px; }}
+QLabel#WearersNobody {{ color: {p.danger_text}; }}
+QToolButton#WearersActor {{ background: {p.raised}; border: 1px solid {p.border_strong};
+    border-radius: 11px; padding: 1px 8px; color: {p.text}; }}
+QToolButton#WearersActor:hover {{ border-color: {p.primary_hi}; color: {p.primary_hi}; }}
+QToolButton#FormListCell {{ background: {p.raised}; color: {p.text};
+    border: 1px solid {p.border_strong}; border-radius: 6px; padding: 2px 8px; }}
+QToolButton#FormListCell:hover {{ border-color: {p.primary_hi}; color: {p.primary_hi}; }}
+QToolButton#FormListCell[empty="true"] {{ color: {p.text_dim}; border-style: dashed; }}
 QToolButton#FormAddChip {{ background: transparent; color: {p.text_dim};
     border: 1px dashed {p.border_strong}; border-radius: 11px; padding: 2px 8px; }}
 QToolButton#FormAddChip:hover {{ color: {p.text}; border-color: {p.text_muted}; }}

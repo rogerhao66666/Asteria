@@ -4616,3 +4616,33 @@ HP 卡片「它會影響什麼」寫「沒有東西讀它」（NEXT_STEPS 的 D9
 **不改的：** 戰鬥判定與傷害規則沒有顯示名稱，句子裡用它們的 id 轉成的字（「Foe dodge 機率」）；屬性定義本身
 的說明欄照舊是作者寫的字。
 
+## D109 — 特徵用定義的名字、裝備頁顯示誰能穿、初始裝備可在編輯器設定（2026-11-12）
+
+**問題：** 角色的特徵表「種類」寫 Category、Party Slot，Game Systems ▸ Properties 卻叫 Actor Kind、Roster，
+兩邊名字不一致。插槽的「接受的特徵」只是一行字，看不出可以點。魔戒誰能裝看不到：它只要求會用戒指的職業，
+任何轉成大魔導士的人都能裝。Game Start 的說明寫「角色身上穿的在角色那裡設定」，但沒有任何畫面能設定，只能改 JSON。
+示範裡掩護寫在 Roger 身上，可是它更像是職業的能力。
+
+**決定：**
+- **名字跟定義走：** `vocabulary.names()` 加上專案的特徵定義名稱（鍵是 `DEFINED + 特徵 id`，例如 `#roster.*`）。
+  `tag_label` 先找最長的一組（`roster.*` → 「Roster: 01」），再找單獨定義的特徵（`consumable` → 「Consumable」），
+  兩者都沒有才用編輯器自己的字。沒有專案時照舊。
+- **插槽格子是按鈕：** `form_parts.ListCell` 有特徵圖示（`icons` 新的 `tag`）、外框、手形游標，空的時候是虛線；
+  滑過提示「Click to pick: Accepted Properties」。
+- **誰能穿：** `editor/rpg/wearers.who_can_wear(project, data)` 用角色自己加上職業的特徵
+  （`build_actor(...).tags`），套用遊戲裝備時同一套 `EquipmentDefinition.eligibility`。裝備頁標題下多一行
+  `records/wearers_line.WearersLine`：每個能穿的角色一個按鈕，點了跳過去（經過 `navigate_to_problem`，可以返回）。
+  沒有條件就寫「所有人」，條件都不符合就寫「目前沒人能裝備」。表單一改就重算。技能樹、等級獎勵這些之後才拿到的
+  特徵不算（滑過提示有寫）。
+- **初始裝備（Game Start ▸ Starting Equipment）：** 新的表格欄 `worn`，每件一列（角色、欄位、裝備）。
+  讀寫的是 `rpg_state.loadouts`：已經穿著的那件照原樣保留（成長、插槽）；新加的照撿到裝備的方式產生
+  （`裝備:角色` 的 instance id）。還沒有 loadout 的角色會拿到專案的全部欄位；欄位留空就放到裝備自己的欄位；
+  放不進該欄位的裝備會被拒絕（「Oak Staff does not go in the Head slot」）。Game Start 的參照下拉選單顯示裝備名稱
+  與欄位名稱；`project_words` 加上欄位名稱（Body → 身體）。
+- **示範（`trial_d109.py`，可重跑）：** Knight 職業給 `trait.cover`（Roger 的拿掉了；作者仍然可以把它寫在角色上）；
+  Roger 有 `trait.ring_bearer`，魔戒的 Needs 要這個；Roger 一開始就把魔戒戴在副手；家裡的箱子只剩六個護符
+  （「Six charms!」「空了。」）。`run_campaign` 的回家那段改成確認魔戒已經戴著。
+
+**不改的：** 引擎不分「角色特徵」或「職業特徵」：裝備、反應、判定讀的是角色身上合起來的全部特徵（角色、職業、
+狀態、裝備）。寶箱的 SHOW_POPUP 文字本來就沒有翻譯（不是這次造成的）。
+

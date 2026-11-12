@@ -45,7 +45,7 @@ def test_fields_get_friendly_widgets(app):
     form = family.editor
     stats = [t for t in form.findChildren(AmountTable) if "str" in t.values]
     assert stats and stats[0].values["str"] == 32  # the base stats, as a table of numbers
-    chips = [c for c in form.findChildren(ChipList) if "trait.cover" in c.values]
+    chips = [c for c in form.findChildren(ChipList) if "actor.playable" in c.values]
     assert chips  # tags as chips
     pickers = [p for p in form.findChildren(Picker) if p.value() == "brave"]
     assert pickers  # the job is picked from the jobs, not typed
@@ -287,13 +287,14 @@ def test_tags_are_a_table_and_resources_one_grid(app):
     from asteria.editor.records.form_chips import ChipList
     from asteria.editor.records.form_tables import NumberMatrix
 
-    _project, _document, family = _family("actors", "hero_01")
+    _project, _document, family = _family("actors", "hero_04")
     form = family.editor
-    (tags,) = [c for c in form.findChildren(ChipList) if "trait.cover" in c.values]
-    row = tags.values.index("trait.cover")
-    assert (tags.table.item(row, 0).text(), tags.table.item(row, 1).text()) == ("Trait", "Cover")
+    (tags,) = [c for c in form.findChildren(ChipList) if "trait.follow_up" in c.values]
+    row = tags.values.index("trait.follow_up")
+    shown = (tags.table.item(row, 0).text(), tags.table.item(row, 1).text())
+    assert shown == ("Trait", "Follow Up")
     tags.table.cellWidget(row, 2).click()  # ✕ removes the row
-    assert "trait.cover" not in tags.values and tags.table.rowCount() == len(tags.values)
+    assert "trait.follow_up" not in tags.values and tags.table.rowCount() == len(tags.values)
     (matrix,) = form.findChildren(NumberMatrix)
     assert matrix.columns == ["maximum", "current", "minimum"]
 
@@ -445,7 +446,7 @@ def test_slots_show_where_they_stand_and_their_tags_in_a_cell(app):
     (slots,) = form.findChildren(EntryTable)
     assert "tags" in slots.columns
     cells = slots.findChildren(ListCell)
-    assert len(cells) == len(slots.entries) and cells[0].text() == "Front"
+    assert len(cells) == len(slots.entries) and cells[0].text() == "Front Row"  # its name
 
 
 def test_stats_grow_with_level_by_a_switch_and_jobs_read_plainly(app):
@@ -480,9 +481,9 @@ def test_a_tag_is_picked_by_its_type_then_from_a_list(app):
 
     from asteria.editor.records.form_chips import ChipList
 
-    _project, _document, family = _family("actors", "hero_01")
-    (tags,) = [c for c in family.editor.findChildren(ChipList) if "trait.cover" in c.values]
-    row = tags.values.index("trait.cover")
+    _project, _document, family = _family("actors", "hero_04")
+    (tags,) = [c for c in family.editor.findChildren(ChipList) if "trait.follow_up" in c.values]
+    row = tags.values.index("trait.follow_up")
 
     def pick(at):  # the content drop-down, beside what the tag does when that is known
         cell = tags.table.cellWidget(at, 1)
@@ -491,12 +492,12 @@ def test_a_tag_is_picked_by_its_type_then_from_a_list(app):
     kind = tags.table.cellWidget(row, 0)
     content = pick(row)
     assert isinstance(kind, QComboBox) and kind.currentText() == "Trait"
-    assert content.currentData() == "trait.cover"
-    other = next(i for i in range(content.count()) if content.itemData(i) != "trait.cover")
+    assert content.currentData() == "trait.follow_up"
+    other = next(i for i in range(content.count()) if content.itemData(i) != "trait.follow_up")
     picked = content.itemData(other)
     content.setCurrentIndex(other)
     content.activated.emit(other)  # another trait, picked from the list
-    assert picked in tags.values and "trait.cover" not in tags.values
+    assert picked in tags.values and "trait.follow_up" not in tags.values
     before = list(tags.values)
     tags._add()  # "+ Add tag": a new row, nothing added until a tag is picked
     assert tags.values == before and tags.table.rowCount() == len(before) + 1

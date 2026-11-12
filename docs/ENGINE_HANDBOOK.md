@@ -778,6 +778,15 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | 用途索引 | `editor/rpg/usage_index.usage_index(project, document.revision)`：一次走完專案，記下誰讀每個屬性、誰帶著或讀每個特徵；卡片直接查表，編輯後才重建 |
 | 返回／前進 | `window/history.NavigationHistoryMixin`：每次 `navigate_to_problem` 先記下 `current_place()`；檢視 ▸ 返回（Ctrl+[）／前進（Ctrl+]），工具列兩個箭頭 |
 
+### D109（2026-11-12；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 特徵名稱 | `tag_label` 先用專案特徵定義的名字（`vocabulary.names()` 的 `DEFINED` 鍵）：角色頁的種類和 Game Systems ▸ Properties 一致 |
+| 誰能穿 | `editor/rpg/wearers.who_can_wear`＋裝備頁的 `records/wearers_line.WearersLine`：角色與職業的特徵符合裝備條件的人，點了就開 |
+| 初始裝備 | Game Start ▸ Starting Equipment（`worn` 表格）讀寫 `rpg_state.loadouts`；放不進的欄位會被拒絕 |
+| 示範 | `trial_d109.py`：掩護屬於 Knight、魔戒只有 Roger（`trait.ring_bearer`）而且一開始就戴著 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

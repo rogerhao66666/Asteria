@@ -251,6 +251,11 @@ def project_words(project, language):
                     if row_key.startswith("data.currency."):  # its id: shown in words
                         found.setdefault(words(str(english)), str(text))
                         found.setdefault(str(english).replace("_", " ").title(), str(text))
+    slots = getattr(getattr(project, "rpg_database", None), "equipment_slots", None) or {}
+    for slot_id, record in slots.items():  # a slot's name ("Body"), its row keyed by its id
+        text, name = table.get(key("slot", slot_id)), getattr(record, "display_name", "")
+        if text and name:
+            found.setdefault(str(name), str(text))
     return found
 
 

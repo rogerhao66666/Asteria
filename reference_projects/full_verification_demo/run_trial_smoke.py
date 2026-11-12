@@ -52,6 +52,9 @@ def prepare(game, facts, sub="duelist", tier=0):
     companion fights in (every job of every line gets a turn across the fights)."""
     import trial_classes
 
+    hand = game.save.rpg_state.loadouts[HERO]
+    while hand.equipped("sub_weapon"):  # D109: the Demon Ring is worn from the start; these
+        hand.unequip("sub_weapon")  # fights check every boss system, and with it they end early
     if "hero_02" not in game.save.rpg_state.party_actor_ids:  # hire Mira at the guild
         world(game, "JOIN_PARTY", actor_id="hero_02")
     for actor_id, (_name, line, companion_sub) in trial_classes.LINES.items():

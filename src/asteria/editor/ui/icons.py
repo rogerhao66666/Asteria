@@ -629,6 +629,13 @@ def _forward(p, c):  # the same arrow, to the right
     p.drawPolyline([QPointF(13, 6), QPointF(19, 12), QPointF(13, 18)])
 
 
+def _tag(p, c):  # a property: a price label with its hole
+    p.setBrush(_fill(c))
+    p.drawPath(_poly([(4, 12), (10, 5), (20, 5), (20, 19), (10, 19), (4, 12)]))
+    p.setBrush(Qt.NoBrush)
+    p.drawEllipse(QPointF(11, 12), 1.6, 1.6)
+
+
 def _dialogue(p, c):
     path = QPainterPath(QPointF(5, 4))
     path.lineTo(19, 4)
@@ -879,6 +886,7 @@ DRAWINGS = {
     "up": _chevron_up,
     "back": _back,
     "forward": _forward,
+    "tag": _tag,
     "down": _chevron_down,
     "dialogue": _dialogue,
     "quest": _quest,
@@ -949,6 +957,7 @@ DEFAULT_COLOR = {
     "flow": "events",
     "presentation": "battle",
     "list": "muted",
+    "tag": "#9a84e0",
     "up": "muted",
     "down": "muted",
     "dialogue": "events",

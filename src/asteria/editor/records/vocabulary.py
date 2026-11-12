@@ -815,6 +815,10 @@ class ProjectVocabulary:
             for source in sources:
                 for choice in self.choices(source):
                     names.setdefault(choice.value, choice.label)
+            if self.project is not None:  # "#roster.*" -> "Roster": the properties' own names
+                for tag_id, record in self.project.rpg_database.tag_definitions.items():
+                    if record.display_name:
+                        names[DEFINED + str(tag_id).lower()] = record.display_name
             self._cache["__names"] = names
         return self._cache["__names"]
 
@@ -1148,11 +1152,32 @@ _PLAIN_TAGS = {
 }
 
 
+DEFINED = "#"  # ``names`` key start of a property definition's name ("#roster.*": "Roster")
+
+
+def _defined(tag, names):
+    """``(group name, rest)`` when the project names the group the tag is in (Game Systems ▸
+    Properties: ``roster.*`` "Roster"), the longest group first; ``("", name)`` for a tag
+    defined on its own; None when no definition names it."""
+    for at in range(len(tag) - 1, 0, -1):
+        if tag[at] in ".:" and DEFINED + tag[: at + 1] + "*" in names:
+            rest = tag[at + 1 :]
+            word = names.get(DEFINED + tag) or names.get(rest)
+            return names[DEFINED + tag[: at + 1] + "*"], word or words(rest.replace(".", " · "))
+    if DEFINED + tag in names:
+        return "", names[DEFINED + tag]
+    return None
+
+
 def tag_label(tag, names=None):
     """A tag in words: ``capability.weapon.ring`` -> "Weapon: Ring", ``class.brave``
-    -> "Job: Brave" (``names`` gives records' display names by id)."""
+    -> "Job: Brave" (``names`` gives records' display names by id and, under ``DEFINED``, the
+    names of the project's property definitions, which come first)."""
     tag = str(tag)
     names = names or {}
+    defined = _defined(tag, names)
+    if defined is not None:
+        return f"{defined[0]}: {defined[1]}" if defined[0] else defined[1]
     if tag in _OUTCOMES:
         return _OUTCOMES[tag]
     if tag in _PLAIN_TAGS:

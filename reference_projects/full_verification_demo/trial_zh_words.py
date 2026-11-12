@@ -954,6 +954,8 @@ LINES = {
     "Sleep": "睡覺",
     "Not now": "現在不要",
     "Empty. The ring is yours.": "空了。戒指是你的了。",
+    "Empty.": "空了。",  # D109: the ring is worn from the start
+    "Six charms!": "六個護符！",
     "A tattered banner. The king still sits his throne.": "一面破舊的旗幟。國王仍坐在他的王座上。",
     "Victory Banner: New Game+?": "勝利旗幟：開始新遊戲＋？",
     "Begin New Game+": "開始新遊戲＋",

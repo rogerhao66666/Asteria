@@ -77,7 +77,7 @@ def test_starting_gear_goes_into_the_equipment_bag(controller):
     """D98: Game Start ▸ Starting Gear: spare pieces in the bag, kept when written again; an
     older start state gains the bag's keys and keeps the rest as written."""
     before = dict(controller.project.game_start.rpg_state_data)
-    gear = sorted(controller.references("equipment"))[:2]
+    gear = [k for k, _name in controller.references("equipment")][:2]  # by name, kept by id
     data = controller.form_data()
     assert data["gear"] == {}
     data["gear"] = {gear[0]: 2, gear[1]: 1}
@@ -164,6 +164,7 @@ def test_the_page_is_cards_and_one_switch_sets_the_whole_position(controller):
         "Party",
         "Starting Currencies",
         "Starting Items",
+        "Starting Equipment",  # D109: what each hero wears
         "Starting Gear",
         "Starting Pets",
     ]

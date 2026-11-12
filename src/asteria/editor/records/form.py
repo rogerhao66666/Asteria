@@ -133,6 +133,8 @@ class RecordForm(QScrollArea):
         self.error.setObjectName("FormError")
         self.error.setWordWrap(True)
         self.error.hide()
+        self.wearers = None  # gear: the "Who can wear it" line, following the page's edits
+        self.changed.connect(self._refresh_wearers)
         self._apply_style()
 
     # -- public API ---------------------------------------------------------------------------
@@ -240,6 +242,12 @@ class RecordForm(QScrollArea):
             self._layout.addWidget(section)
             return
         self._header(data)
+        self.wearers = None
+        if self.category == "equipment" and getattr(self.document, "project", None) is not None:
+            from asteria.editor.records.wearers_line import WearersLine
+
+            self.wearers = WearersLine(self.document.project, data)
+            self._layout.addWidget(self.wearers)
         record_id_key = self._id_key(data)
         name_key = next((k for k in NAME_KEYS if isinstance(data.get(k), str)), None)
         # small fields three to a row, labels above them: a lone number no longer owns a row
@@ -858,6 +866,11 @@ class RecordForm(QScrollArea):
         """A list gained or lost an entry: rebuild the form (the data is already changed)."""
         self._rebuild()
         self.changed.emit()
+
+    def _refresh_wearers(self):
+        if self.wearers is not None and self._data is not None:
+            self.wearers.data = self._data
+            self.wearers.refresh()
 
     def _apply_style(self):
         """The look comes from the editor theme (theme._form_rules), shared by every page."""

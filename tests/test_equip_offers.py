@@ -23,6 +23,9 @@ def _game(mode):
     inventory = game.save.rpg_state.inventory
     inventory.rules = dataclasses.replace(inventory.rules, equip_offer=mode)
     game.save.rpg_state.equipment_bag.clear()  # D98: the demo starts with spare gear
+    loadout = game.save.rpg_state.loadouts[HERO]
+    while loadout.equipped("sub_weapon"):  # D109: Roger starts with the Demon Ring there
+        loadout.unequip("sub_weapon")
     return game
 
 

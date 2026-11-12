@@ -554,13 +554,10 @@ class Campaign:
         full = game.save.rpg_state.actor_snapshots[HERO].resources["values"]["vitality"]
         assert self.hp() == full["maximum"] > hurt, (hurt, self.hp())
         self.facts["home_sleeps"] += 1
-        self.talk("Family Chest")  # the Demon Ring and six charms
-        offer = game.equip_offers[0]
-        assert offer.instance_id.startswith("w_demon_ring") and not offer.replaces, offer
-        game.answer_equip_offer(True)  # wear it in the free hand
-        self.facts["equip_offers"] += 1
+        self.talk("Family Chest")  # six charms (D109: Roger starts wearing the Demon Ring)
+        assert not game.equip_offers, game.equip_offers
         ring = self.demon_ring()
-        assert ring is not None, "the Demon Ring is not worn"
+        assert ring is not None, "the Demon Ring is not worn from the start"
         for socket, charm in (("h1", "charm_serpent"), ("h2", "charm_lion")):
             game.socket_item(HERO, ring.instance_id, socket, f"{charm}_item")
         self.facts["ring_sockets"] = len(self.demon_ring().attachments)

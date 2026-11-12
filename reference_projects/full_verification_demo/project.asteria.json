@@ -37958,15 +37958,6 @@
         {
           "args": {
             "args": {
-              "equipment_id": "w_demon_ring"
-            },
-            "command": "GIVE_EQUIPMENT"
-          },
-          "opcode": "WORLD"
-        },
-        {
-          "args": {
-            "args": {
               "item_id": "charm_lion_item",
               "quantity": 1
             },
@@ -38028,7 +38019,7 @@
           "args": {
             "args": {
               "kind": "item",
-              "text": "The Demon Ring and six charms!"
+              "text": "Six charms!"
             },
             "command": "SHOW_POPUP"
           },
@@ -38047,7 +38038,7 @@
         {
           "args": {
             "speaker": "Family Chest",
-            "text": "Empty. The ring is yours.",
+            "text": "Empty.",
             "text_key": "dlg.home_che.12"
           },
           "opcode": "DIALOGUE"
@@ -44455,7 +44446,16 @@
                 "version": 2
               }
             ],
-            "sub_weapon": [],
+            "sub_weapon": [
+              {
+                "schema": "asteria.rpg.equipment_instance",
+                "version": 2,
+                "instance_id": "w_demon_ring:hero_01",
+                "equipment_id": "w_demon_ring",
+                "attachments": {},
+                "growth": null
+              }
+            ],
             "weapon": [
               {
                 "attachments": {},
@@ -77279,7 +77279,7 @@
         "tags": [
           "actor.playable",
           "roster.01",
-          "trait.cover"
+          "trait.ring_bearer"
         ],
         "version": 2
       },
@@ -86187,7 +86187,8 @@
           "capability.weapon.axe",
           "capability.weapon.spear",
           "capability.weapon.sword",
-          "class.knight"
+          "class.knight",
+          "trait.cover"
         ],
         "icon_id": "playable_assets/icons_7soul/S_Buff03.png",
         "level_growth": {
@@ -93958,7 +93959,9 @@
           }
         ],
         "rarity": "mythic",
-        "required_capabilities": [],
+        "required_capabilities": [
+          "trait.ring_bearer"
+        ],
         "schema": "asteria.rpg.equipment",
         "slot": "weapon",
         "sockets": [
@@ -103855,7 +103858,7 @@
           "dlg.home_bed.0.1": "\u7761\u89ba",
           "dlg.home_bed.0.2": "\u73fe\u5728\u4e0d\u8981",
           "dlg.home_bed.0.prompt": "\u5e8a\uff1a\u6eab\u6696\u7684\u5e8a\u3002\u7761\u5230\u65e9\u4e0a\u55ce\uff1f",
-          "dlg.home_che.12": "\u7a7a\u4e86\u3002\u6212\u6307\u662f\u4f60\u7684\u4e86\u3002",
+          "dlg.home_che.12": "\u7a7a\u4e86\u3002",
           "dlg.story_ba.13.1": "\u958b\u59cb\u65b0\u904a\u6232\uff0b",
           "dlg.story_ba.13.2": "\u9084\u4e0d\u8981",
           "dlg.story_ba.13.prompt": "\u52dd\u5229\u65d7\u5e5f\uff1a\u958b\u59cb\u65b0\u904a\u6232\uff0b\uff1f",

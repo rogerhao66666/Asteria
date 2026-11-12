@@ -77,6 +77,7 @@ from asteria.editor.records.vocabulary import (
 )
 from asteria.editor.ui.fit import layout_widgets
 from asteria.editor.ui.i18n import translate
+from asteria.editor.ui.icons import icon
 from asteria.editor.ui.responsive_form import columns_that_fit
 from asteria.rpg.enemies.ai import CONDITION_PARAMS
 
@@ -749,7 +750,10 @@ class ListCell(QToolButton):
         super().__init__()
         self.form, self.entry, self.key = form, entry, key
         self.setObjectName("FormListCell")
-        self.setToolTip(f"Edit the {label_for(key).lower()}")
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setIcon(icon("tag"))  # a button to pick, not words in the row
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip(f"Click to pick: {label_for(key)}")
         self.clicked.connect(self.edit)
         self._show()
 
@@ -758,6 +762,7 @@ class ListCell(QToolButton):
         labels = {**self.form.vocabulary.names()}
         labels.update({c.value: c.label for c in self.form.vocabulary_tags()})
         words = [translate(str(labels.get(str(v), v))) for v in values]
+        self.setProperty("empty", not words)
         self.setText(", ".join(words) if words else translate("(none)"))
 
     def edit(self):
