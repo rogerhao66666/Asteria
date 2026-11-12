@@ -6666,10 +6666,8 @@
           "tags": {
             "schema": "asteria.tag_set",
             "values": [
-              "actor.playable",
               "job.vanguard",
-              "job.warden",
-              "roster.01"
+              "job.warden"
             ],
             "version": 1
           },
@@ -6728,10 +6726,8 @@
           "tags": {
             "schema": "asteria.tag_set",
             "values": [
-              "actor.playable",
               "job.arcanist",
-              "job.ranger",
-              "roster.02"
+              "job.ranger"
             ],
             "version": 1
           },
@@ -6790,10 +6786,8 @@
           "tags": {
             "schema": "asteria.tag_set",
             "values": [
-              "actor.playable",
               "job.alchemist",
-              "job.oracle",
-              "roster.03"
+              "job.oracle"
             ],
             "version": 1
           },
@@ -6852,10 +6846,8 @@
           "tags": {
             "schema": "asteria.tag_set",
             "values": [
-              "actor.playable",
               "job.duelist",
-              "job.warden",
-              "roster.04"
+              "job.warden"
             ],
             "version": 1
           },
@@ -6914,10 +6906,8 @@
           "tags": {
             "schema": "asteria.tag_set",
             "values": [
-              "actor.playable",
               "job.mystic",
-              "job.ranger",
-              "roster.05"
+              "job.ranger"
             ],
             "version": 1
           },
@@ -6976,10 +6966,8 @@
           "tags": {
             "schema": "asteria.tag_set",
             "values": [
-              "actor.playable",
               "job.oracle",
-              "job.vanguard",
-              "roster.06"
+              "job.vanguard"
             ],
             "version": 1
           },
@@ -9549,10 +9537,7 @@
         ],
         "display_name": "Hero 01",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.01"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -9614,10 +9599,7 @@
         ],
         "display_name": "Hero 02",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.02"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -9679,10 +9661,7 @@
         ],
         "display_name": "Hero 03",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.03"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -9744,10 +9723,7 @@
         ],
         "display_name": "Hero 04",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.04"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -9809,10 +9785,7 @@
         ],
         "display_name": "Hero 05",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.05"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -9874,10 +9847,7 @@
         ],
         "display_name": "Hero 06",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.06"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -9939,10 +9909,7 @@
         ],
         "display_name": "Hero 07",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.07"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -10004,10 +9971,7 @@
         ],
         "display_name": "Hero 08",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.08"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -10069,10 +10033,7 @@
         ],
         "display_name": "Hero 09",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.09"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -10134,10 +10095,7 @@
         ],
         "display_name": "Hero 10",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.10"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -10199,10 +10157,7 @@
         ],
         "display_name": "Hero 11",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.11"
-        ],
+        "tags": [],
         "version": 2
       },
       {
@@ -10264,10 +10219,7 @@
         ],
         "display_name": "Hero 12",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.12"
-        ],
+        "tags": [],
         "version": 2
       }
     ],

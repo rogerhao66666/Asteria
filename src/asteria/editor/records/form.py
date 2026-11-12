@@ -134,6 +134,7 @@ class RecordForm(QScrollArea):
         self.error.setWordWrap(True)
         self.error.hide()
         self.wearers = None  # gear: the "Who can wear it" line, following the page's edits
+        self.starting_party = None  # a character: the "In the starting party" switch (D111)
         self.changed.connect(self._refresh_wearers)
         self._apply_style()
 
@@ -154,6 +155,8 @@ class RecordForm(QScrollArea):
             and (category or self.category) == self.category
         )
         if same:  # already showing exactly this (a refresh after an edit elsewhere): keep it
+            if self.starting_party is not None:  # Game Start may have changed (an undo)
+                self.starting_party.refresh()
             return
         self._data = deepcopy(data)
         self._title = title
@@ -248,6 +251,12 @@ class RecordForm(QScrollArea):
 
             self.wearers = WearersLine(self.document.project, data)
             self._layout.addWidget(self.wearers)
+        self.starting_party = None
+        if self.category == "actors" and getattr(self.document, "project", None) is not None:
+            from asteria.editor.records.starting_party_line import StartingPartyLine
+
+            self.starting_party = StartingPartyLine(self.document, data)
+            self._layout.addWidget(self.starting_party)
         record_id_key = self._id_key(data)
         name_key = next((k for k in NAME_KEYS if isinstance(data.get(k), str)), None)
         # small fields three to a row, labels above them: a lone number no longer owns a row
@@ -871,6 +880,8 @@ class RecordForm(QScrollArea):
         if self.wearers is not None and self._data is not None:
             self.wearers.data = self._data
             self.wearers.refresh()
+        if self.starting_party is not None and self._data is not None:
+            self.starting_party.data = self._data
 
     def _apply_style(self):
         """The look comes from the editor theme (theme._form_rules), shared by every page."""

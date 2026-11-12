@@ -796,6 +796,15 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 | Game Start 總覽 | Starting Equipment 是唯讀的 `starting_wear_view.StartingWearView`：點角色開角色頁，點裝備開裝備頁；舊專案 Game Start 的 loadouts 照原樣保留並標示 |
 | 清掉的標籤 | 示範專案與 Party RPG 範本拿掉 `actor.*`／`roster.*` 和它們的定義；範本的欄位變成 `equipment_slots` 紀錄（`trial_d110.py`） |
 
+### D111（2026-11-12；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 在初始隊伍 | 角色頁上方的 `records/starting_party_line.StartingPartyLine`：勾選直接改 Game Start 的 `party_actor_ids`（可復原）；按鈕跳到 `("game_start", "Party")` |
+| 跳轉目標 | `("game_start", 卡片標題)` → `GameStartEditorWidget.show_card` |
+| 站位 | 移出隊伍的角色，`party_placements` 也一起拿掉（以前會被拒絕） |
+| 清掉的標籤 | `complex_reference_rpg` 的角色、存檔、playtest profile（`trial_d111.py`）；`build_project.py` 不再寫 |
+
 ### 下一步的候選（沒有排序，要使用者決定）
 
 1. 頭上名字太長時怎麼顯示（現在縮成「GS2」）。

@@ -413,7 +413,7 @@ def build_project():
                     "magic": 35 + (i % 5) * 5,
                 },
                 base_resources={"vitality": 1500 + i * 80, "technique": 140 + i * 4, "focus": 3},
-                tags=("actor.playable", f"roster.{i + 1:02d}"),
+                tags=(),  # D111: no labels that only labelled
                 abilities=("strike", "guard"),
             )
         )

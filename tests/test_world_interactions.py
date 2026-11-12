@@ -1,6 +1,8 @@
 """RPG-07 (ASTERIA_SPEC §24): generic world interactions — capability, requirements, cost, check,
 outcome."""
 
+import dataclasses
+
 import pytest
 
 from asteria.events import EventInstruction, EventProgram
@@ -17,6 +19,11 @@ def _add(game, **fields):
 def test_refusals_cost_success_rewards_and_one_time_use(runtime):
     game = runtime.game
     state, ctx = game.save.rpg_state, game.save.event_context
+    actors = game.project.rpg_database.actors
+    leader = state.party_actor_ids[0]  # the one with what the vault asks for
+    actors[leader] = dataclasses.replace(
+        actors[leader], tags=(*actors[leader].tags, "trait.locksmith")
+    )
     game.project.rpg_database.add_faction(FactionDefinition("guild", "Guild"))
     game.project.event_programs.register(
         "thanks",
@@ -26,7 +33,7 @@ def test_refusals_cost_success_rewards_and_one_time_use(runtime):
         game,
         interaction_id="open_vault",
         verb="open",
-        actor_tag="roster.01",
+        actor_tag="trait.locksmith",
         required_item="ether_leaf",
         requirements=(
             {"source": "switch", "name": "vault_found", "operator": "==", "value": "true"},

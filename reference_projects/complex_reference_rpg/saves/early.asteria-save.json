@@ -202,10 +202,8 @@
         "tags": {
           "schema": "asteria.tag_set",
           "values": [
-            "actor.playable",
             "job.vanguard",
-            "job.warden",
-            "roster.01"
+            "job.warden"
           ],
           "version": 1
         },
@@ -264,10 +262,8 @@
         "tags": {
           "schema": "asteria.tag_set",
           "values": [
-            "actor.playable",
             "job.arcanist",
-            "job.ranger",
-            "roster.02"
+            "job.ranger"
           ],
           "version": 1
         },
@@ -326,10 +322,8 @@
         "tags": {
           "schema": "asteria.tag_set",
           "values": [
-            "actor.playable",
             "job.alchemist",
-            "job.oracle",
-            "roster.03"
+            "job.oracle"
           ],
           "version": 1
         },
@@ -388,10 +382,8 @@
         "tags": {
           "schema": "asteria.tag_set",
           "values": [
-            "actor.playable",
             "job.duelist",
-            "job.warden",
-            "roster.04"
+            "job.warden"
           ],
           "version": 1
         },
@@ -450,10 +442,8 @@
         "tags": {
           "schema": "asteria.tag_set",
           "values": [
-            "actor.playable",
             "job.mystic",
-            "job.ranger",
-            "roster.05"
+            "job.ranger"
           ],
           "version": 1
         },
@@ -512,10 +502,8 @@
         "tags": {
           "schema": "asteria.tag_set",
           "values": [
-            "actor.playable",
             "job.oracle",
-            "job.vanguard",
-            "roster.06"
+            "job.vanguard"
           ],
           "version": 1
         },

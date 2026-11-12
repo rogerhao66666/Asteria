@@ -262,6 +262,10 @@ class WorkspaceSwitchMixin:
             child.search.clear()
             child.select_ids([record_id])
             return child.selected_ids == [record_id]
+        if kind == "game_start":  # one of Game Start's cards, opened and scrolled to (D111)
+            self.workspace.set_mode(WorkspaceMode.RPG)
+            self.rpg_workspace.setCurrentWidget(self.game_start_editor)
+            return self.game_start_editor.show_card(target[1])
         if kind == "game_system":
             _, kind_id, record_id = target
             self.workspace.set_mode(WorkspaceMode.RPG)

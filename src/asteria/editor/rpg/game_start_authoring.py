@@ -182,6 +182,9 @@ class GameStartAuthoringController:
         state["party_active_actor_ids"] = [
             x for x in state.get("party_active_actor_ids", party) if x in party
         ] or party
+        placements = state.get("party_placements")
+        if placements:  # one who left the party has no place in it (D111)
+            state["party_placements"] = {a: s for a, s in placements.items() if a in party}
         state["currencies"] = {str(k): v for k, v in dict(data.get("currencies", {})).items() if v}
         state["inventory"] = _with_items(state.get("inventory", {}), data.get("items", {}))
         gear = {str(k): int(v) for k, v in dict(data.get("gear", {})).items() if int(v) > 0}

@@ -804,8 +804,8 @@ QToolButton#FormChip:hover {{ background: {p.danger_bg}; border-color: {p.danger
 QToolButton#FormRowRemove {{ background: transparent; color: {p.text_muted}; border: none;
     padding: 0 6px; }}
 QToolButton#FormRowRemove:hover {{ color: {p.danger_text}; }}
-QFrame#WearersLine {{ background: {p.panel}; border: 1px solid {p.border};
-    border-radius: 8px; }}
+QFrame#WearersLine, QFrame#StartingPartyLine {{ background: {p.panel};
+    border: 1px solid {p.border}; border-radius: 8px; }}
 QLabel#WearersTitle {{ color: {p.text_dim}; font-weight: 600; padding-right: 4px; }}
 QLabel#WearersNobody {{ color: {p.danger_text}; }}
 QToolButton#WearersActor {{ background: {p.raised}; border: 1px solid {p.border_strong};

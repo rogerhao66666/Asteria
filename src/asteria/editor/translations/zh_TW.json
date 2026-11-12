@@ -4759,7 +4759,11 @@
   "What each character wears when a new game starts, a character who joins later too. Set it on the character's page (Starting Equipment); click a character to go there.": "新遊戲開始時每位角色身上的裝備，之後才加入的角色也一樣。在角色頁面（初始裝備）設定；點擊角色即可前往。",
   "Kept in Game Start (an older project)": "保留在遊戲開始（舊專案）",
   "This project's Game Start still holds what this character wears; it is used as it is. Their page's Starting Equipment counts once it is gone.": "此專案的遊戲開始仍保存這位角色的穿戴，會照原樣使用；移除後才會改用角色頁面的初始裝備。",
-  "Nothing worn": "未穿戴"
+  "Nothing worn": "未穿戴",
+  "In the starting party": "在初始隊伍",
+  "Ticked: this character is in the party when a new game starts (Game Start ▸ Party, where the order is set). Unticked: they join later, through an event.": "勾選：新遊戲開始時，這個角色就在隊伍裡（遊戲開始 ▸ 隊伍，在那裡排順序）。不勾選：之後由事件加入。",
+  "Game Start ▸ Party": "遊戲開始 ▸ 隊伍",
+  "Open Game Start ▸ Party: who starts, in which order": "打開遊戲開始 ▸ 隊伍：誰在初始隊伍、順序如何"
  },
  "patterns": [
   [

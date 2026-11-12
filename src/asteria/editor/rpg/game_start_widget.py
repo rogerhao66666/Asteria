@@ -261,6 +261,16 @@ class GameStartEditorWidget(QWidget):
         self.form.changed.connect(self._timer.start)
         self.scroll.setWidget(self.form)
 
+    def show_card(self, title):
+        """Open the card ``title`` and scroll to it (a jump from another page)."""
+        self.refresh()
+        card = None if self.form is None else self.form.cards.get(title)
+        if card is None:
+            return False
+        card.set_open(True)
+        QTimer.singleShot(0, self.scroll, lambda: self.scroll.ensureWidgetVisible(card))
+        return True
+
     def auto_apply(self):
         if self.form is None:
             return False

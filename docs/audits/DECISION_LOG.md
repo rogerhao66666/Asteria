@@ -4676,7 +4676,7 @@ HP 卡片「它會影響什麼」寫「沒有東西讀它」（NEXT_STEPS 的 D9
   `GridTable`／`FormField.grid` 保留，給之後的表格用（有測試）。
 - **拿掉 Actor Kind／Roster：** 示範專案、Party RPG 範本與它的示範副本都拿掉角色身上的 `actor.*`／`roster.*`，
   以及這兩個特徵定義和它們的中文。新專案範本（`basic_rpg_template`）的主角不再帶 `actor.playable`。
-  `complex_reference_rpg` 有存檔和 playtest profile 也帶著這些標籤，所以沒動。
+  `complex_reference_rpg` 有存檔和 playtest profile 也帶著這些標籤，所以沒動（D111 也拿掉了）。
 - **範本的欄位變成紀錄：** Party RPG 範本原本的欄位只存在 loadouts 裡（武器、飾品，各 2 格），現在是專案自己的
   `equipment_slots` 紀錄，角色新建的 loadout 才會有這些欄位。
 - **遷移（`trial_d110.py`，可重跑）：** 只搬沒有插槽、成長、詞綴、耐久的裝備，這種裝備可以重新產生而完全一樣；
@@ -4687,4 +4687,29 @@ HP 卡片「它會影響什麼」寫「沒有東西讀它」（NEXT_STEPS 的 D9
 角色頁的 `edit_actor` 原本會把角色的 `description` 弄丟，這次一併修好，現在 `starting_equipment` 和 `description` 都會保留。
 Cocoa 實機截圖：`docs/audits/evidence/real_machine/d110_starting_equipment/`。
 
-**沒做：** 角色頁的「在初始隊伍」勾選（初始隊伍仍在 Game Start ▸ Party），等使用者看過再決定。
+**沒做：** 角色頁的「在初始隊伍」勾選（初始隊伍仍在 Game Start ▸ Party），等使用者看過再決定。後來在 D111 做了。
+
+## D111 — 角色頁的「在初始隊伍」、complex_reference_rpg 也拿掉 Actor Kind／Roster（2026-11-12）
+
+**問題：** 初始隊伍只能到 Game Start ▸ Party 設定，在角色頁看不出這個角色一開始在不在隊伍裡。
+`complex_reference_rpg` 的角色、存檔和 playtest profile 還帶著 D110 拿掉的 `actor.playable`／`roster.NN`。
+
+**決定：**
+- **角色頁的勾選**（`editor/records/starting_party_line.StartingPartyLine`，在 `RecordForm` 的角色頁上方）：
+  「在初始隊伍」直接讀寫 Game Start 的 `party_actor_ids`，一次勾選是一個可復原的步驟。隊伍資料只存在一個地方，
+  兩頁顯示的一定一致。勾選的角色排在最後，順序仍在 Game Start ▸ Party 排。復原後角色頁會重新讀取
+  （`set_record` 資料相同時也會刷新）。Game Start 拒絕時，勾選會退回並顯示原因。
+- **跳到 Game Start ▸ Party：** 勾選旁的按鈕。新的跳轉目標 `("game_start", 卡片標題)`
+  （`open_target` → `GameStartEditorWidget.show_card`，打開那張卡並捲過去）。
+- **修好：** 把有戰鬥站位（`party_placements`）的角色移出隊伍會被拒絕（「party placement actor must belong to
+  party roster」），Game Start ▸ Party 本身也一樣。現在移出隊伍的角色，站位也一起拿掉。
+- **complex_reference_rpg：** `trial_d111.py`（可重跑）把角色、Game Start 的角色快照、4 個存檔、5 個 playtest profile
+  裡的 `actor.*`／`roster.*` 拿掉；`build_project.py` 不再寫這兩個標籤。這個專案沒有它們的特徵定義或中文。
+  `test_world_interactions` 原本拿 `roster.01` 當「隊伍裡要有人帶這個特徵」的條件，現在測試自己給隊長加上
+  `trait.locksmith`。編輯器內建的「Party Slot」「Playable character」說法保留，給自己用這些標籤的專案。
+
+`tests/golden/baselines/regression.json` 用 `update_golden_baselines.py` 更新：4 個存檔的摘要和 RPG 資料庫摘要因為拿掉標籤而改變；
+固定種子的頭目戰結果（勝方、行動數、紀錄摘要、最後 HP）完全沒變，證明這些標籤沒有作用。
+
+**證據：** `tests/test_d111_starting_party.py`（7 項）。Cocoa 實機：Cael 勾上後 Game Start ▸ Party 變成 Roger、Cael，按鈕打開那張卡；
+截圖在 `docs/audits/evidence/real_machine/d111_starting_party/`（actor_page_en、game_start_party_en、actor_page_zh）。
