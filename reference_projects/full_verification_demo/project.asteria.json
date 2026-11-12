@@ -44389,418 +44389,7 @@
         "schema": "asteria.rpg.inventory",
         "version": 1
       },
-      "loadouts": {
-        "hero_01": {
-          "equipped": {
-            "accessory": [
-              {
-                "attachments": {},
-                "equipment_id": "a_warden_charm",
-                "growth": null,
-                "instance_id": "a_warden_charm:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "armor": [
-              {
-                "attachments": {},
-                "equipment_id": "a_warden_plate",
-                "growth": null,
-                "instance_id": "a_warden_plate:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "arsenal": [
-              {
-                "attachments": {},
-                "equipment_id": "w_bow",
-                "growth": null,
-                "instance_id": "w_bow:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_axe",
-                "growth": null,
-                "instance_id": "w_axe:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_book_of_prayers",
-                "growth": null,
-                "instance_id": "w_book_of_prayers:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_brawler_gloves",
-                "growth": null,
-                "instance_id": "w_brawler_gloves:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "feet": [],
-            "form": [
-              {
-                "attachments": {},
-                "equipment_id": "f_normal",
-                "growth": null,
-                "instance_id": "f_normal:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "head": [],
-            "legs": [],
-            "special": [
-              {
-                "attachments": {},
-                "equipment_id": "a_warden_ring",
-                "growth": null,
-                "instance_id": "a_warden_ring:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "sub_weapon": [
-              {
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2,
-                "instance_id": "w_demon_ring:hero_01",
-                "equipment_id": "w_demon_ring",
-                "attachments": {},
-                "growth": null
-              }
-            ],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_sunbrand",
-                "growth": null,
-                "instance_id": "w_sunbrand:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ]
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "arsenal",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 6
-            },
-            {
-              "slot_id": "feet",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "form",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "head",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "legs",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "special",
-              "accepted_tags": [
-                "special"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "sub_weapon",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
-          ],
-          "version": 1
-        },
-        "hero_02": {
-          "equipped": {
-            "accessory": [],
-            "armor": [],
-            "feet": [],
-            "head": [],
-            "legs": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_staff",
-                "growth": null,
-                "instance_id": "w_staff:hero_02",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "special": [],
-            "sub_weapon": [],
-            "form": [],
-            "arsenal": []
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "arsenal",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 6
-            },
-            {
-              "slot_id": "feet",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "form",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "head",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "legs",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "special",
-              "accepted_tags": [
-                "special"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "sub_weapon",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
-          ],
-          "version": 1
-        },
-        "hero_03": {
-          "equipped": {
-            "accessory": [],
-            "armor": [],
-            "feet": [],
-            "head": [],
-            "legs": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_staff",
-                "growth": null,
-                "instance_id": "w_staff:hero_03",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "special": [],
-            "sub_weapon": [],
-            "form": [],
-            "arsenal": []
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "arsenal",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 6
-            },
-            {
-              "slot_id": "feet",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "form",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "head",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "legs",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "special",
-              "accepted_tags": [
-                "special"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "sub_weapon",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
-          ],
-          "version": 1
-        },
-        "hero_04": {
-          "equipped": {
-            "accessory": [],
-            "armor": [],
-            "feet": [],
-            "head": [],
-            "legs": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_dagger",
-                "growth": null,
-                "instance_id": "w_dagger:hero_04",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ],
-            "special": [],
-            "sub_weapon": [],
-            "form": [],
-            "arsenal": []
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "slot_id": "accessory",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "armor",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "arsenal",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 6
-            },
-            {
-              "slot_id": "feet",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "form",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "head",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "legs",
-              "accepted_tags": [],
-              "capacity": 1
-            },
-            {
-              "slot_id": "special",
-              "accepted_tags": [
-                "special"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "sub_weapon",
-              "accepted_tags": [
-                "weapon"
-              ],
-              "capacity": 1
-            },
-            {
-              "slot_id": "weapon",
-              "accepted_tags": [],
-              "capacity": 1
-            }
-          ],
-          "version": 1
-        }
-      },
+      "loadouts": {},
       "party_active_actor_ids": [
         "hero_01"
       ],
@@ -77300,11 +76889,51 @@
         "display_name": "Roger",
         "schema": "asteria.rpg.actor",
         "tags": [
-          "actor.playable",
-          "roster.01",
           "trait.ring_bearer"
         ],
-        "version": 2
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "armor",
+            "equipment_id": "a_warden_plate"
+          },
+          {
+            "slot_id": "special",
+            "equipment_id": "a_warden_ring"
+          },
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_sunbrand"
+          },
+          {
+            "slot_id": "sub_weapon",
+            "equipment_id": "w_demon_ring"
+          },
+          {
+            "slot_id": "accessory",
+            "equipment_id": "a_warden_charm"
+          },
+          {
+            "slot_id": "form",
+            "equipment_id": "f_normal"
+          },
+          {
+            "slot_id": "arsenal",
+            "equipment_id": "w_bow"
+          },
+          {
+            "slot_id": "arsenal",
+            "equipment_id": "w_axe"
+          },
+          {
+            "slot_id": "arsenal",
+            "equipment_id": "w_book_of_prayers"
+          },
+          {
+            "slot_id": "arsenal",
+            "equipment_id": "w_brawler_gloves"
+          }
+        ]
       },
       {
         "abilities": [
@@ -77357,11 +76986,14 @@
         ],
         "display_name": "Mira",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.01"
-        ],
-        "version": 2
+        "tags": [],
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_staff"
+          }
+        ]
       },
       {
         "abilities": [
@@ -77416,11 +77048,14 @@
         ],
         "display_name": "Vesper",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.01"
-        ],
-        "version": 2
+        "tags": [],
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_staff"
+          }
+        ]
       },
       {
         "abilities": [
@@ -77475,11 +77110,15 @@
         "display_name": "Cael",
         "schema": "asteria.rpg.actor",
         "tags": [
-          "actor.playable",
-          "roster.01",
           "trait.follow_up"
         ],
-        "version": 2
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_dagger"
+          }
+        ]
       },
       {
         "abilities": [],
@@ -77514,10 +77153,7 @@
         ],
         "display_name": "Spirit Rider",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.01"
-        ],
+        "tags": [],
         "version": 2
       }
     ],
@@ -104777,8 +104413,6 @@
           "data.tag.decor.description": "\u7d14\u88dd\u98fe\u7684\u64fa\u8a2d\u3002",
           "data.tag.action.*.name": "\u884c\u52d5",
           "data.tag.action.*.description": "\u7279\u6b8a\u6230\u9b25\u884c\u52d5\uff08\u5077\u7aca\uff09\u3002",
-          "data.tag.actor.*.name": "\u89d2\u8272\u7a2e\u985e",
-          "data.tag.actor.*.description": "\u89d2\u8272\u662f\u8ab0\uff08\u53ef\u64cd\u4f5c\uff09\u3002",
           "data.tag.item.*.name": "\u9053\u5177\u7a2e\u985e",
           "data.tag.item.*.description": "\u9053\u5177\u662f\u4ec0\u9ebc\uff08\u9470\u5319\uff09\u3002",
           "data.tag.combatant.name": "\u6230\u9b25\u8005",
@@ -104793,8 +104427,6 @@
           "data.tag.vfx.description": "\u8996\u89ba\u6548\u679c\uff08\u5206\u985e\u7528\uff09\u3002",
           "data.tag.reference.*.name": "\u53c3\u8003",
           "data.tag.reference.*.description": "\u53c3\u8003\u7528\u7684\u8cc7\u6599\uff08\u5206\u985e\u7528\uff09\u3002",
-          "data.tag.roster.*.name": "\u540d\u55ae",
-          "data.tag.roster.*.description": "\u968a\u4f0d\u540d\u55ae\uff08\u5206\u985e\u7528\uff09\u3002",
           "effect.when": "\uff08{tags} \u6642\uff09",
           "data.slot.head.description": "\u982d\u76d4\u548c\u5e3d\u5b50\u3002",
           "data.slot.armor.description": "\u93a7\u7532\u548c\u9577\u888d\u3002",
@@ -144597,14 +144229,6 @@
       {
         "schema": "asteria.rpg.tag_definition",
         "version": 1,
-        "tag_id": "actor.*",
-        "display_name": "Actor Kind",
-        "description": "Who an actor is (playable).",
-        "order": 96
-      },
-      {
-        "schema": "asteria.rpg.tag_definition",
-        "version": 1,
         "tag_id": "item.*",
         "display_name": "Item Kind",
         "description": "What an item is (a key).",
@@ -144657,14 +144281,6 @@
         "display_name": "Reference",
         "description": "A reference record (a label).",
         "order": 103
-      },
-      {
-        "schema": "asteria.rpg.tag_definition",
-        "version": 1,
-        "tag_id": "roster.*",
-        "display_name": "Roster",
-        "description": "A party roster (a label).",
-        "order": 104
       },
       {
         "schema": "asteria.rpg.tag_definition",

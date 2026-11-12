@@ -12560,156 +12560,7 @@
         "schema": "asteria.rpg.inventory",
         "version": 1
       },
-      "loadouts": {
-        "hero_01": {
-          "equipped": {
-            "accessory": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_sword",
-                "growth": null,
-                "instance_id": "w_sword:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_spear",
-                "growth": null,
-                "instance_id": "w_spear:hero_01",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ]
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "weapon"
-            }
-          ],
-          "version": 1
-        },
-        "hero_02": {
-          "equipped": {
-            "accessory": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_bow",
-                "growth": null,
-                "instance_id": "w_bow:hero_02",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_dagger",
-                "growth": null,
-                "instance_id": "w_dagger:hero_02",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ]
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "weapon"
-            }
-          ],
-          "version": 1
-        },
-        "hero_03": {
-          "equipped": {
-            "accessory": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_axe",
-                "growth": null,
-                "instance_id": "w_axe:hero_03",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_staff",
-                "growth": null,
-                "instance_id": "w_staff:hero_03",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ]
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "weapon"
-            }
-          ],
-          "version": 1
-        },
-        "hero_04": {
-          "equipped": {
-            "accessory": [],
-            "weapon": [
-              {
-                "attachments": {},
-                "equipment_id": "w_staff",
-                "growth": null,
-                "instance_id": "w_staff:hero_04",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              },
-              {
-                "attachments": {},
-                "equipment_id": "w_dagger",
-                "growth": null,
-                "instance_id": "w_dagger:hero_04",
-                "schema": "asteria.rpg.equipment_instance",
-                "version": 2
-              }
-            ]
-          },
-          "schema": "asteria.rpg.equipment_loadout",
-          "slots": [
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "accessory"
-            },
-            {
-              "accepted_tags": [],
-              "capacity": 2,
-              "slot_id": "weapon"
-            }
-          ],
-          "version": 1
-        }
-      },
+      "loadouts": {},
       "party_active_actor_ids": [
         "hero_01",
         "hero_02",
@@ -17645,11 +17496,18 @@
         ],
         "display_name": "Garrick",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.01"
-        ],
-        "version": 2
+        "tags": [],
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_sword"
+          },
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_spear"
+          }
+        ]
       },
       {
         "abilities": [],
@@ -17703,11 +17561,18 @@
         ],
         "display_name": "Sera",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.02"
-        ],
-        "version": 2
+        "tags": [],
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_bow"
+          },
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_dagger"
+          }
+        ]
       },
       {
         "abilities": [],
@@ -17761,11 +17626,18 @@
         ],
         "display_name": "Bram",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.03"
-        ],
-        "version": 2
+        "tags": [],
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_axe"
+          },
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_staff"
+          }
+        ]
       },
       {
         "abilities": [],
@@ -17819,11 +17691,18 @@
         ],
         "display_name": "Ione",
         "schema": "asteria.rpg.actor",
-        "tags": [
-          "actor.playable",
-          "roster.04"
-        ],
-        "version": 2
+        "tags": [],
+        "version": 2,
+        "starting_equipment": [
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_staff"
+          },
+          {
+            "slot_id": "weapon",
+            "equipment_id": "w_dagger"
+          }
+        ]
       }
     ],
     "affixes": [],
@@ -21753,7 +21632,23 @@
     "schema": "asteria.rpg.database",
     "shops": [],
     "version": 30,
-    "world_interactions": []
+    "world_interactions": [],
+    "equipment_slots": [
+      {
+        "slot_id": "accessory",
+        "display_name": "Accessory",
+        "order": 10,
+        "capacity": 2,
+        "accepted_tags": []
+      },
+      {
+        "slot_id": "weapon",
+        "display_name": "Weapon",
+        "order": 20,
+        "capacity": 2,
+        "accepted_tags": []
+      }
+    ]
   },
   "scene_event_bindings": {
     "2175c138-7eed-4ab6-91c7-0b912611c1a0": {

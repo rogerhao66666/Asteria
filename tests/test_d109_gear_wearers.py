@@ -44,8 +44,7 @@ def test_a_property_reads_by_the_name_its_definition_gives():
     from asteria.editor.records.vocabulary import tag_label, vocabulary_for
 
     names = vocabulary_for(EditorDocument(_project())).names()
-    assert tag_label("roster.01", names) == "Roster: 01"  # not "Party Slot"
-    assert tag_label("actor.playable", names) == "Actor Kind: Playable"
+    assert tag_label("trait.cover", names) == "Trait: Cover"
     assert tag_label("capability.weapon.ring", names) == "Can Wield: Ring"
     assert tag_label("consumable", names) == "Consumable"
     assert tag_label("roster.01") == "Party Slot: 01"  # no project: the editor's own words
@@ -106,42 +105,17 @@ def _game_start():
 
 def test_roger_starts_wearing_the_ring_and_the_chest_holds_charms_only():
     controller = _game_start()
-    worn = controller.form_data()["worn"]
-    ring = {"actor_id": "hero_01", "slot_id": "sub_weapon", "equipment_id": "w_demon_ring"}
-    assert ring in worn
+    roger = controller.project.rpg_database.actors["hero_01"]
+    assert ("sub_weapon", "w_demon_ring") in roger.starting_equipment  # his own (D110)
     chest = controller.project.event_programs.require("home.chest").to_data()
     assert "w_demon_ring" not in str(chest)
-
-
-def test_starting_equipment_is_a_table_that_keeps_what_it_does_not_change():
-    import copy
-
-    from asteria.editor.rpg.game_start_authoring import GameStartAuthoringError
-
-    controller = _game_start()
-    before = controller.project.game_start.to_data()
-    data = controller.form_data()
-    controller.apply(copy.deepcopy(data))
-    assert controller.project.game_start.to_data() == before  # nothing changed: kept as it was
-    data["worn"].append({"actor_id": "spirit_knight", "slot_id": "", "equipment_id": "w_staff"})
-    controller.apply(data)  # a hero with no loadout yet; no slot: the gear's own
-    loadouts = controller.project.game_start.rpg_state_data["loadouts"]
-    assert [p["instance_id"] for p in loadouts["spirit_knight"]["equipped"]["weapon"]] == [
-        "w_staff:spirit_knight"
-    ]
-    controller.document.undo()
-    assert controller.project.game_start.to_data() == before
-    data = controller.form_data()
-    data["worn"].append({"actor_id": "hero_02", "slot_id": "head", "equipment_id": "w_staff"})
-    with pytest.raises(GameStartAuthoringError, match="does not go in the Head slot"):
-        controller.apply(data)
 
 
 def test_the_starting_equipment_card_and_its_words_in_chinese(app):
     from asteria.editor.rpg.game_start_authoring import GAME_START_CARDS
     from asteria.editor.ui.i18n import set_language, translate
 
-    assert ("Starting Equipment", "weapon", ("worn",)) in GAME_START_CARDS
+    assert ("Starting Equipment", "weapon", ()) in GAME_START_CARDS  # shown, not edited (D110)
     set_language("zh_TW")
     try:
         assert translate("Starting Equipment") == "初始裝備"
@@ -158,34 +132,32 @@ def test_slot_names_read_in_the_projects_chinese():
     assert (words["Body"], words["Carried Weapons"]) == ("身體", "攜帶武器")
 
 
-def test_starting_equipment_is_one_grid_a_line_per_piece(app):
-    from PySide6.QtWidgets import QApplication, QComboBox
+def test_a_grid_table_is_a_line_per_row_of_picks(app):
+    from PySide6.QtWidgets import QComboBox
 
-    from asteria.editor.rpg.game_start_widget import GameStartEditorWidget
+    from asteria.editor.rpg.game_systems_authoring import F
+    from asteria.editor.rpg.game_systems_widget import RecordForm
     from asteria.editor.rpg.grid_table import GridTable
 
     controller = _game_start()
-    page = GameStartEditorWidget(controller)
-    page.resize(1200, 800)
-    page.show()
-    QApplication.processEvents()
-    try:
-        grid = page.form.widgets["worn"]
-        assert isinstance(grid, GridTable)
-        rows = len(controller.form_data()["worn"])
-        assert grid.table.rowCount() == rows and grid.table.height() < 40 * (rows + 1)
-        gear = grid.table.cellWidget(0, 2)
-        assert isinstance(gear, QComboBox) and gear.currentText() == "Warden Charm"
-        assert not gear.itemIcon(gear.currentIndex()).isNull()  # its picture beside its name
-        at = gear.findData("w_staff")
-        gear.setCurrentIndex(at)
-        gear.activated.emit(at)  # another piece, picked
-        assert page.form.data()["worn"][0]["equipment_id"] == "w_staff"
-        grid.table.cellWidget(0, 3).click()  # ✕ removes the line
-        assert len(page.form.data()["worn"]) == rows - 1
-    finally:
-        page.hide()
-        page.deleteLater()
+    rows = (F("slot_id", "Slot", "ref", source="equipment_slots"),
+            F("equipment_id", "Gear", "ref", source="equipment"))  # fmt: skip
+    field = F("worn", "Worn", "table", fields=rows, default=(), grid=True)
+    form = RecordForm((field,), controller.references, document=controller.document)
+    worn = [{"slot_id": "weapon", "equipment_id": "w_sunbrand"},
+            {"slot_id": "head", "equipment_id": "w_staff"}]  # fmt: skip
+    form.set_data({"worn": worn})
+    grid = form.widgets["worn"]
+    assert isinstance(grid, GridTable) and grid.table.rowCount() == 2
+    gear = grid.table.cellWidget(0, 1)
+    assert isinstance(gear, QComboBox) and gear.currentText() == "Sunbrand"
+    assert not gear.itemIcon(gear.currentIndex()).isNull()  # its picture beside its name
+    at = gear.findData("w_staff")
+    gear.setCurrentIndex(at)
+    gear.activated.emit(at)  # another piece, picked
+    assert form.data()["worn"][0]["equipment_id"] == "w_staff"
+    grid.table.cellWidget(0, 2).click()  # ✕ removes the line
+    assert len(form.data()["worn"]) == 1
 
 
 def test_a_popup_has_a_key_and_shows_in_the_players_language():

@@ -45,7 +45,7 @@ def test_fields_get_friendly_widgets(app):
     form = family.editor
     stats = [t for t in form.findChildren(AmountTable) if "str" in t.values]
     assert stats and stats[0].values["str"] == 32  # the base stats, as a table of numbers
-    chips = [c for c in form.findChildren(ChipList) if "actor.playable" in c.values]
+    chips = [c for c in form.findChildren(ChipList) if "trait.ring_bearer" in c.values]
     assert chips  # tags as chips
     pickers = [p for p in form.findChildren(Picker) if p.value() == "brave"]
     assert pickers  # the job is picked from the jobs, not typed

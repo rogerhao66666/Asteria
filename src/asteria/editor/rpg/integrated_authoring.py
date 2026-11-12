@@ -108,6 +108,8 @@ class IntegratedAuthoringControllers:
                 base_resources=v.base_resources,
                 tags=v.tags,
                 abilities=v.abilities,
+                description=v.description,
+                starting_equipment=v.starting_equipment,
             )
 
         def edit_class(key, v):

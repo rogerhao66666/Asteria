@@ -784,9 +784,17 @@ Roger's House 出發，在 Hearthfold 的公會雇用 Mira、Vesper、Cael；四
 |---|---|
 | 特徵名稱 | `tag_label` 先用專案特徵定義的名字（`vocabulary.names()` 的 `DEFINED` 鍵）：角色頁的種類和 Game Systems ▸ Properties 一致 |
 | 誰能穿 | `editor/rpg/wearers.who_can_wear`＋裝備頁的 `records/wearers_line.WearersLine`：角色與職業的特徵符合裝備條件的人，點了就開 |
-| 初始裝備 | Game Start ▸ Starting Equipment（`worn`，`grid=True` 的 `GridTable`：一件一行）讀寫 `rpg_state.loadouts`；放不進的欄位會被拒絕 |
+| 初始裝備 | Game Start ▸ Starting Equipment（`worn`，`grid=True` 的 `GridTable`：一件一行）讀寫 `rpg_state.loadouts`；D110 改成角色自己的欄位 |
 | 彈出訊息翻譯 | `SHOW_POPUP` 的 `text_key`：遊戲用玩家的語言顯示；Translations 頁會幫它加 key；事件編輯器不顯示、只保留 |
 | 示範 | `trial_d109.py`：掩護屬於 Knight、魔戒只有 Roger（`trait.ring_bearer`）而且一開始就戴著 |
+
+### D110（2026-11-12；細節見 DECISION_LOG）
+
+| 類別 | 內容 |
+|---|---|
+| 初始裝備 | 角色欄位 `ActorDefinition.starting_equipment`（欄位、裝備）；`rpg/items/starting_gear`：New Game 替每位角色穿上，加入隊伍時沒有 loadout 的也會穿上；`starting_gear_errors` 會出現在 Problems |
+| Game Start 總覽 | Starting Equipment 是唯讀的 `starting_wear_view.StartingWearView`：點角色開角色頁，點裝備開裝備頁；舊專案 Game Start 的 loadouts 照原樣保留並標示 |
+| 清掉的標籤 | 示範專案與 Party RPG 範本拿掉 `actor.*`／`roster.*` 和它們的定義；範本的欄位變成 `equipment_slots` 紀錄（`trial_d110.py`） |
 
 ### 下一步的候選（沒有排序，要使用者決定）
 

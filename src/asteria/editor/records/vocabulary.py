@@ -209,6 +209,7 @@ LABELS = {
     "penetration_stat": "Penetration Stat",
     "display_name": "Name",
     "class_assignments": "Jobs",
+    "starting_equipment": "Starting Equipment",
     "base_stats": "Base Stats",
     "base_resources": "Resources",
     "granted_tags": "Properties",
@@ -508,6 +509,9 @@ HELP = {
     "them higher or lower. A sprite's own Offset Y still lifts a flyer. Off = a record's "
     "positions are used as written.",
     "class_assignments": "The jobs this character has; the first is the main job.",
+    "starting_equipment": "What this character wears when they first come in: put on at New "
+    "Game, for a character who joins later too. No slot = the gear's own slot. Game Start ▸ "
+    "Starting Equipment shows every character's.",
     "base_stats": "Starting numbers before jobs, levels, gear and points. The list offers the "
     "stats Game Systems ▸ Stats sets on this kind of record (an actor: STR, DEX, INT, LUK, VIT, "
     "SPD).",

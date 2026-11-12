@@ -811,6 +811,10 @@ QLabel#WearersNobody {{ color: {p.danger_text}; }}
 QToolButton#WearersActor {{ background: {p.raised}; border: 1px solid {p.border_strong};
     border-radius: 11px; padding: 1px 8px; color: {p.text}; }}
 QToolButton#WearersActor:hover {{ border-color: {p.primary_hi}; color: {p.primary_hi}; }}
+QToolButton#StartingPiece {{ background: transparent; border: 1px solid {p.border};
+    border-radius: 6px; padding: 1px 8px; color: {p.text}; }}
+QLabel#StartingNote {{ color: {p.text_dim}; padding: 3px 2px; }}
+QToolButton#StartingPiece:hover {{ border-color: {p.primary_hi}; color: {p.primary_hi}; }}
 QToolButton#FormListCell {{ background: {p.raised}; color: {p.text};
     border: 1px solid {p.border_strong}; border-radius: 6px; padding: 2px 8px; }}
 QToolButton#FormListCell:hover {{ border-color: {p.primary_hi}; color: {p.primary_hi}; }}

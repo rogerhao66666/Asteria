@@ -4655,3 +4655,36 @@ HP 卡片「它會影響什麼」寫「沒有東西讀它」（NEXT_STEPS 的 D9
 **不改的：** 引擎不分「角色特徵」或「職業特徵」：裝備、反應、判定讀的是角色身上合起來的全部特徵（角色、職業、
 狀態、裝備）。
 
+## D110 — 初始裝備改成角色自己的欄位、拿掉沒有作用的 Actor Kind／Roster（2026-11-12）
+
+**問題：** D109 的初始裝備放在 Game Start 的 `loadouts`，作者要到另一頁替角色設定穿著。後來才加入的角色
+（Mira、Vesper、Cael）不在初始隊伍，卻也在那張表上，容易讓人以為他們一開始就在隊伍裡。
+`actor.playable` 和 `roster.01`–`04` 只是標籤，沒有任何規則讀它們，留著容易讓人誤會。
+
+**決定：**
+- **初始裝備是角色的欄位**（像 RPG Maker 的角色初始裝備）：`ActorDefinition.starting_equipment`，
+  內容是 `(slot_id, equipment_id)` 的列表。欄位留空就放到裝備自己的欄位。只有設定了才寫進檔案；
+  `OPTIONAL_DATA` 讓角色頁在它還是空的時候也會顯示。角色頁上是一張欄位／裝備的下拉表。
+- **何時穿上：** `rpg/items/starting_gear.put_on_starting_gear`。New Game 時替每位角色穿上（`GameStartDefinition.instantiate`），
+  包括之後才加入的，和舊的 Game Start loadouts 效果一樣。`join_party` 時，還沒有 loadout 的角色也會穿上
+  （D110 以前的存檔）。已經有 loadout 的角色保留原本的。instance id 是 `裝備:角色`，和以前一樣。
+- **檢查：** `starting_gear_errors` 併入 `reference_errors`（Problems 面板）。會抓出不存在的裝備、不存在的欄位，
+  以及放不進該欄位的裝備。
+- **Game Start ▸ Starting Equipment 改成唯讀總覽**（`editor/rpg/starting_wear_view.StartingWearView`，
+  資料來自 `wearers.starting_wear`）：每位角色一列。點角色開角色頁，點裝備開裝備頁。沒有裝備的寫「未穿戴」；
+  Game Start 還留著 loadout 的舊專案會標「保留在遊戲開始」，並照原樣使用。D109 的 `worn` 欄位和 `_with_worn` 都拿掉了；
+  `GridTable`／`FormField.grid` 保留，給之後的表格用（有測試）。
+- **拿掉 Actor Kind／Roster：** 示範專案、Party RPG 範本與它的示範副本都拿掉角色身上的 `actor.*`／`roster.*`，
+  以及這兩個特徵定義和它們的中文。新專案範本（`basic_rpg_template`）的主角不再帶 `actor.playable`。
+  `complex_reference_rpg` 有存檔和 playtest profile 也帶著這些標籤，所以沒動。
+- **範本的欄位變成紀錄：** Party RPG 範本原本的欄位只存在 loadouts 裡（武器、飾品，各 2 格），現在是專案自己的
+  `equipment_slots` 紀錄，角色新建的 loadout 才會有這些欄位。
+- **遷移（`trial_d110.py`，可重跑）：** 只搬沒有插槽、成長、詞綴、耐久的裝備，這種裝備可以重新產生而完全一樣；
+  其他留在 Game Start。各列照欄位的 `order` 排序。
+
+**證據：** 示範專案和範本在 New Game 後的 loadouts 和遷移前逐件相同（8 位角色的已穿戴裝備與欄位清單）。
+`tests/test_d110_starting_equipment.py`（13 項）。全套測試 3960 項通過。
+角色頁的 `edit_actor` 原本會把角色的 `description` 弄丟，這次一併修好，現在 `starting_equipment` 和 `description` 都會保留。
+Cocoa 實機截圖：`docs/audits/evidence/real_machine/d110_starting_equipment/`。
+
+**沒做：** 角色頁的「在初始隊伍」勾選（初始隊伍仍在 Game Start ▸ Party），等使用者看過再決定。

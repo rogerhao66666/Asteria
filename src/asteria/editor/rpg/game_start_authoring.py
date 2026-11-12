@@ -23,11 +23,6 @@ _PET = (
     F("level", "Level", "int", default=1),
     F("affinity", "Affinity", "float", default=0.0),
 )
-_WORN = (  # D109: a row per piece a hero wears when a new game starts
-    F("actor_id", "Hero", "ref", source="actors"),
-    F("slot_id", "Slot", "ref", source="equipment_slots"),
-    F("equipment_id", "Gear", "ref", source="equipment"),
-)
 GAME_START_FORM: tuple[FormField, ...] = (
     F(
         "scene_id",
@@ -57,26 +52,18 @@ GAME_START_FORM: tuple[FormField, ...] = (
         default={},
         help="Spare pieces in the bag. What a hero wears: Starting Equipment.",
     ),
-    F(
-        "worn",
-        "Starting Equipment",
-        "table",
-        fields=_WORN,
-        default=(),
-        grid=True,
-        help="What each hero wears when a new game starts: a row per piece, in its slot.",
-    ),
     F("currencies", "Starting Currencies", "amounts", default={}),
     F("pets", "Starting Pets", "table", fields=_PET, default=()),
     F("active_pet", "Pet Sent Out First", "row_pick", source="pets", default=0),
 )
-# the page's cards: (title, icon, the fields in it); a card of one field is named after it
+# the page's cards: (title, icon, the fields in it); a card of one field is named after it,
+# a card of none shows what the page does not edit (Starting Equipment: each character's own)
 GAME_START_CARDS = (
     ("Starting Place", "flag", ("scene_id", "player_facing", "position")),
     ("Party", "actor", ("party_actor_ids",)),
     ("Starting Currencies", "chest", ("currencies",)),
     ("Starting Items", "item", ("items",)),
-    ("Starting Equipment", "weapon", ("worn",)),
+    ("Starting Equipment", "weapon", ()),
     ("Starting Gear", "armor", ("gear",)),
     ("Starting Pets", "paw", ("pets", "active_pet")),
 )
@@ -165,7 +152,6 @@ class GameStartAuthoringController:
             "party_actor_ids": list(state.get("party_actor_ids", ())),
             "items": items,
             "gear": _gear_counts(state.get("equipment_bag", ())),
-            "worn": _worn_rows(state.get("loadouts", {})),
             "currencies": dict(state.get("currencies", {})),
             "pets": pets,
             "active_pet": order.index(active) + 1 if active in order else 0,
@@ -198,9 +184,6 @@ class GameStartAuthoringController:
         ] or party
         state["currencies"] = {str(k): v for k, v in dict(data.get("currencies", {})).items() if v}
         state["inventory"] = _with_items(state.get("inventory", {}), data.get("items", {}))
-        worn = [r for r in data.get("worn", ()) if r.get("actor_id") and r.get("equipment_id")]
-        if worn != _worn_rows(state.get("loadouts", {})):
-            state["loadouts"] = self._with_worn(state.get("loadouts", {}), worn)
         gear = {str(k): int(v) for k, v in dict(data.get("gear", {})).items() if int(v) > 0}
         if gear != _gear_counts(state.get("equipment_bag", ())):
             state = self._with_gear(state, gear)
@@ -271,57 +254,6 @@ class GameStartAuthoringController:
                 kept.append(piece.to_data())
         state["equipment_bag"] = kept
         return state
-
-    def _with_worn(self, loadouts, rows):
-        """The heroes' loadouts holding ``rows`` (``actor_id``, ``slot_id``, ``equipment_id``)
-        as worn: a piece worn already is kept as it is (its growth, its sockets); a new one is
-        made as found gear is; a hero with no loadout yet gets the project's slots. A row
-        with no slot goes in the gear's own slot."""
-        from asteria.rpg.items.definitions import EquipmentLoadout, EquipmentSlotDefinition
-
-        db = self.project.rpg_database
-        slots = tuple(getattr(db, "equipment_slots", {}).values())
-        result = copy.deepcopy(dict(loadouts))
-        old = {a: copy.deepcopy(dict(l.get("equipped", {}))) for a, l in result.items()}
-        for loadout in result.values():
-            loadout["equipped"] = {k: [] for k in loadout.get("equipped", {})}
-        for row in rows:
-            actor_id, equipment_id = str(row["actor_id"]), str(row["equipment_id"])
-            gear = db.equipment[equipment_id]
-            slot_id = str(row.get("slot_id") or gear.slot)
-            if actor_id not in result:
-                result[actor_id] = EquipmentLoadout(slots).to_data()
-                old[actor_id] = {}
-            fits = [x for x in result[actor_id].get("slots", ()) if x["slot_id"] == slot_id]
-            if not fits or not EquipmentSlotDefinition.from_data(fits[0]).takes(gear):
-                name = gear.display_name or equipment_id
-                record = getattr(db, "equipment_slots", {}).get(slot_id)
-                slot = getattr(record, "display_name", "") or slot_id
-                raise GameStartAuthoringError(f"{name} does not go in the {slot} slot")
-            equipped = result[actor_id]["equipped"]
-            pool = old[actor_id].get(slot_id, [])
-            same = next((p for p in pool if p["equipment_id"] == equipment_id), None)
-            if same is not None:
-                pool.remove(same)
-            else:
-                taken = {p["instance_id"] for pieces in equipped.values() for p in pieces}
-                serial, instance_id = 1, f"{equipment_id}:{actor_id}"
-                while instance_id in taken:
-                    serial += 1
-                    instance_id = f"{equipment_id}:{actor_id}{serial}"
-                same = EquippedItem(gear, instance_id=instance_id).to_data()
-            equipped.setdefault(slot_id, []).append(same)
-        return result
-
-
-def _worn_rows(loadouts):
-    """A row per piece the heroes wear at the start, by hero, then slot."""
-    return [
-        {"actor_id": actor_id, "slot_id": slot_id, "equipment_id": piece["equipment_id"]}
-        for actor_id, loadout in sorted(dict(loadouts).items())
-        for slot_id, pieces in sorted(dict(loadout.get("equipped", {})).items())
-        for piece in pieces
-    ]
 
 
 def _gear_counts(bag):

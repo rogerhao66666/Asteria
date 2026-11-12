@@ -258,6 +258,20 @@ class ClassAssignment:
         )
 
 
+def _starting(rows):
+    """``(slot_id, equipment_id)`` pairs from rows (``{"slot_id", "equipment_id"}`` or pairs);
+    an empty slot means the gear's own, a row with no gear is left out."""
+    pairs = []
+    for row in rows or ():
+        if isinstance(row, dict):
+            slot_id, equipment_id = row.get("slot_id") or "", row.get("equipment_id") or ""
+        else:
+            slot_id, equipment_id = row
+        if str(equipment_id).strip():
+            pairs.append((str(slot_id or "").strip(), required_id(equipment_id, "equipment_id")))
+    return tuple(pairs)
+
+
 @dataclass(frozen=True, slots=True)
 class ActorDefinition:
     actor_id: str
@@ -268,7 +282,10 @@ class ActorDefinition:
     tags: tuple[str, ...]
     abilities: tuple[str, ...]
     description: str = ""  # who they are, in the author's words (D91); written only when set
-    OPTIONAL_DATA = {"description": ""}  # shown in the editor while empty
+    # what they wear when they first come in (D110): ``(slot_id, equipment_id)`` pairs (no
+    # slot: the gear's own), put on at New Game (rpg.items.starting_gear); written when set
+    starting_equipment: tuple[tuple[str, str], ...] = ()
+    OPTIONAL_DATA = {"description": "", "starting_equipment": []}  # shown while empty
 
     def __init__(
         self,
@@ -282,6 +299,7 @@ class ActorDefinition:
         tags=(),
         abilities=(),
         description="",
+        starting_equipment=(),
     ):
         actor_id = required_id(actor_id, "actor_id")
         if class_assignments is not None and class_id is not None:
@@ -310,6 +328,7 @@ class ActorDefinition:
             tuple(dict.fromkeys(required_id(x, "ability_id") for x in abilities)),
         )
         object.__setattr__(self, "description", str(description or ""))
+        object.__setattr__(self, "starting_equipment", _starting(starting_equipment))
 
     @property
     def class_id(self):
@@ -341,6 +360,15 @@ class ActorDefinition:
             "tags": list(self.tags),
             "abilities": list(self.abilities),
             **({"description": self.description} if self.description else {}),
+            **(
+                {
+                    "starting_equipment": [
+                        {"slot_id": s, "equipment_id": e} for s, e in self.starting_equipment
+                    ]
+                }
+                if self.starting_equipment
+                else {}
+            ),
         }
 
     @classmethod
@@ -366,6 +394,7 @@ class ActorDefinition:
             tags=data["tags"],
             abilities=data["abilities"],
             description=data.get("description", ""),
+            starting_equipment=data.get("starting_equipment", ()),
         )
 
 

@@ -279,6 +279,8 @@ class RpgActorClassAuthoringController:
         base_resources=None,
         tags=None,
         abilities=None,
+        description=None,
+        starting_equipment=None,
     ):
         old = self.database.actors.get(str(actor_id))
         if old is None:
@@ -296,6 +298,10 @@ class RpgActorClassAuthoringController:
             base_resources=(old.base_resources if base_resources is None else base_resources),
             tags=old.tags if tags is None else tags,
             abilities=(old.abilities if abilities is None else self._check_abilities(abilities)),
+            description=old.description if description is None else description,
+            starting_equipment=(
+                old.starting_equipment if starting_equipment is None else starting_equipment
+            ),
         )
         self._execute(
             _DefinitionCommand(

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from asteria.events import EventContext
 from asteria.rpg import ProgressionRuntime, RpgRuntimeState
+from asteria.rpg.items.starting_gear import put_on_starting_gear
 from asteria.runtime.game_save import GameRuntimeSave
 
 
@@ -44,6 +45,7 @@ class GameStartDefinition:
             )
         else:
             rpg = RpgRuntimeState.from_data(self.rpg_state_data, project.rpg_database)
+        put_on_starting_gear(rpg, project.rpg_database, project.rpg_database.actors)  # D110
         ctx = (
             EventContext()
             if self.event_context_data is None

@@ -60,7 +60,8 @@ def simplify_basic_rpg(folder):
     hero = old["actors"][0]
     hero["display_name"] = "Hero"
     hero["abilities"] = list(selected[:3])
-    hero["tags"] = ["actor.playable"]
+    hero["tags"] = []
+    hero.pop("starting_equipment", None)  # the template's gear is gone (D110)
     hero["base_stats"] = {"power": 12, "magic": 12, "defense": 5, "speed": 12}
     hero["base_resources"] = {
         rid: {"minimum": 0.0, "maximum": amount, "current": amount}

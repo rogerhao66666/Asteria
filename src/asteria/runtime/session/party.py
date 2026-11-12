@@ -102,7 +102,8 @@ class PartyMixin:
 
     def join_party(self, actor_id, *, active=True):
         """A story event brings ``actor_id`` into the party: the roster, and the active party
-        (with the next free formation slot) while there is room."""
+        (with the next free formation slot) while there is room. One with no loadout yet puts
+        on their starting equipment."""
         actor_id = str(actor_id)
         db = self.project.rpg_database
         if actor_id not in db.actors:
@@ -111,6 +112,9 @@ class PartyMixin:
         if actor_id not in state.party_actor_ids:
             state.party_actor_ids = (*state.party_actor_ids, actor_id)
         self.ensure_actor_progression(actor_id)
+        from asteria.rpg.items.starting_gear import put_on_starting_gear
+
+        put_on_starting_gear(state, db, (actor_id,))  # what they come in wearing (D110)
         if not active or actor_id in state.party_active_actor_ids:
             return actor_id
         setup = next(iter(db.party_setups.values()), None)

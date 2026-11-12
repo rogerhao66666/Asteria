@@ -38,9 +38,38 @@ def who_can_wear(project, data):
     )
 
 
+def starting_wear(project):
+    """What every character wears when a new game starts, for Game Start's overview (D110):
+    ``(actor_id, name, pieces, kept)`` in the project's order, ``pieces`` as ``(slot_id,
+    slot name, equipment_id)`` by the slots' order. ``kept``: the pieces come from a loadout
+    Game Start itself holds (an older project), which stays as it is."""
+    from asteria.rpg.items.starting_gear import starting_slot
+
+    db = project.rpg_database
+    slots = getattr(db, "equipment_slots", {})
+    order = {slot_id: (getattr(s, "order", 0), i) for i, (slot_id, s) in enumerate(slots.items())}
+    state = project.game_start.rpg_state_data or {}
+    loadouts = state.get("loadouts", {}) if isinstance(state, dict) else {}
+    out = []
+    for actor_id, actor in db.actors.items():
+        kept = actor_id in loadouts
+        if kept:
+            equipped = loadouts[actor_id].get("equipped", {})
+            pairs = [(s, p["equipment_id"]) for s, ps in equipped.items() for p in ps]
+        else:
+            pairs = [
+                (starting_slot(db, s, e) if e in db.equipment else s, e)
+                for s, e in actor.starting_equipment
+            ]
+        pairs.sort(key=lambda pair: order.get(pair[0], (1 << 30, 0)))
+        pieces = tuple((s, getattr(slots.get(s), "display_name", "") or s, e) for s, e in pairs)
+        out.append((actor_id, actor.display_name or actor_id, pieces, kept))
+    return tuple(out)
+
+
 def needs_anything(data):
     return any(data.get(k) for k in ("required_capabilities", "any_capabilities",
                                      "forbidden_capabilities"))  # fmt: skip
 
 
-__all__ = ["actor_capabilities", "needs_anything", "who_can_wear"]
+__all__ = ["actor_capabilities", "needs_anything", "starting_wear", "who_can_wear"]

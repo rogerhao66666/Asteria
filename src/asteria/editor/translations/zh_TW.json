@@ -4754,7 +4754,12 @@
   "Starting Equipment": "初始裝備",
   "Hero": "角色",
   "What each hero wears when a new game starts: a row per piece, in its slot.": "新遊戲開始時每個角色穿戴的裝備：每件一列，放在它的欄位。",
-  "Spare pieces in the bag. What a hero wears: Starting Equipment.": "背包裡的備用裝備。角色身上穿的：見初始裝備。"
+  "Spare pieces in the bag. What a hero wears: Starting Equipment.": "背包裡的備用裝備。角色身上穿的：見初始裝備。",
+  "What this character wears when they first come in: put on at New Game, for a character who joins later too. No slot = the gear's own slot. Game Start ▸ Starting Equipment shows every character's.": "角色剛登場時身上的裝備：新遊戲時穿上，之後才加入的角色也一樣。未選欄位＝裝備本身的欄位。遊戲開始 ▸ 初始裝備會列出所有角色的。",
+  "What each character wears when a new game starts, a character who joins later too. Set it on the character's page (Starting Equipment); click a character to go there.": "新遊戲開始時每位角色身上的裝備，之後才加入的角色也一樣。在角色頁面（初始裝備）設定；點擊角色即可前往。",
+  "Kept in Game Start (an older project)": "保留在遊戲開始（舊專案）",
+  "This project's Game Start still holds what this character wears; it is used as it is. Their page's Starting Equipment counts once it is gone.": "此專案的遊戲開始仍保存這位角色的穿戴，會照原樣使用；移除後才會改用角色頁面的初始裝備。",
+  "Nothing worn": "未穿戴"
  },
  "patterns": [
   [

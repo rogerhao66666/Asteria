@@ -104,6 +104,12 @@ class GameStartForm(QWidget):
         self.widgets = {}
         self.cards = {}
         for title, icon_name, keys in GAME_START_CARDS:
+            if not keys:  # shown, not edited here: each character's own (D110)
+                from asteria.editor.rpg.starting_wear_view import HELP, StartingWearView
+
+                self.starting_wear = StartingWearView(document)
+                self.cards[title] = _Card(title, icon_name, self.starting_wear, HELP)
+                continue
             own = [by_key[key] for key in keys]
             # a field named as its card: the title is its caption, the ⓘ moves up beside it
             shown = [dataclasses.replace(f, label="") if f.label == title else f for f in own]
@@ -194,6 +200,8 @@ class GameStartForm(QWidget):
     def set_data(self, data):
         for form in self.forms:
             form.set_data(data)
+        if hasattr(self, "starting_wear"):
+            self.starting_wear.refresh()
         self._line_up()
         self._show_place()
 

@@ -260,4 +260,7 @@ def reference_errors(db):
                     f"enemy {enemy.enemy_id} reward references unknown progression track "
                     f"{track_id}"
                 )
+    from asteria.rpg.items.starting_gear import starting_gear_errors
+
+    errors += starting_gear_errors(db)
     return sorted(errors)
