@@ -102,6 +102,7 @@ class EventFlowWidget(QWidget):
         self.common_switch.setProperty("i18n_choices", True)
         self.common_switch.offer_new("New Switch", "new_switch")
         common_box = QGroupBox()
+        common_box.setProperty("untitled", True)  # its heading is inside, not on the frame
         form = QFormLayout()
         form.addRow("Program", self.common_program)
         form.addRow("Trigger", self.common_trigger)
@@ -170,6 +171,7 @@ class EventFlowWidget(QWidget):
             cond_buttons.addWidget(button)
         cond_buttons.addStretch(1)
         battle_box = QGroupBox()
+        battle_box.setProperty("untitled", True)  # its heading is inside, not on the frame
         bform = QFormLayout()
         bform.addRow("When", self.battle_hook)
         bform.addRow("Program", self.battle_program)
@@ -285,8 +287,11 @@ class EventFlowWidget(QWidget):
             for col, text in enumerate(values):
                 self.battle.setItem(row, col, QTableWidgetItem(text))
             self._battle_index.append(index)
-        self.common.resizeColumnsToContents()
-        self.battle.resizeColumnsToContents()
+        for table in (self.common, self.battle):
+            table.resizeColumnsToContents()
+            header = table.horizontalHeader()  # sizing to contents undoes the stretch: again
+            header.setStretchLastSection(False)
+            header.setStretchLastSection(True)
 
     # -- common -----------------------------------------------------------------------------------
     def _common_selected(self):
