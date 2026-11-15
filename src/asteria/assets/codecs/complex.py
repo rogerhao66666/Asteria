@@ -4,7 +4,7 @@ from asteria.assets.codecs.registry import AssetCodec
 from asteria.assets.kinds.monster import MonsterAnimation, MonsterAsset
 from asteria.assets.kinds.tileset import TileCollision, TileDef, TilesetAsset
 from asteria.assets.kinds.vfx import VFXAnchor, VFXAsset, VFXVariant
-from asteria.presentation.visuals.fidelity import FrameTiming, HighFidelityClip, VisualLayer
+from asteria.core.visual_types import FrameTiming, HighFidelityClip, VisualLayer
 
 
 def _pairs(d):

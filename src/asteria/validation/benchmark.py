@@ -1,4 +1,4 @@
-"""Runtime benchmark (CB13): profile a field scene full of AI enemies and a choreographed battle.
+"""Runtime benchmark (CB13): profile AI field scenes and a choreographed battle.
 
 ``run_benchmark(repo, field_frames, battle_frames, enemies, real_window)``
 drives ``PlayableTestRuntime`` frame by frame with the runtime profiler and
@@ -88,6 +88,13 @@ def run_benchmark(
         game = runtime.game
         _install_enemies(game, enemies)
         phase("field", field_frames)
+
+        # Patrol: exercise waypoint parsing and movement at the same entity count.
+        for entity, ai in game.scene.query(FieldAIComponent):
+            if entity.name == "Benchmark Slime":
+                ai.behaviour = "patrol"
+                ai.patrol_path = "-60,20; 60,20; 60,80; -60,80"
+        phase("patrol", field_frames)
 
         # Battle: a hero skill whenever the screen is idle; enemies answer through their AI.
         game.start_encounter("boss_room")

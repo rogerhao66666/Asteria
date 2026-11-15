@@ -11,7 +11,7 @@ from pathlib import Path
 from asteria.assets.local_reference import RPGMakerMVProjectLayout
 from asteria.assets.rpg_maker_mv.catalog import RPGMakerMVCatalog
 from asteria.assets.rpg_maker_mv.map import RPGMakerMVMap
-from asteria.runtime.scene.draw import TextureDraw
+from asteria.graphics.draw import TextureDraw
 
 
 @dataclass(frozen=True, slots=True)

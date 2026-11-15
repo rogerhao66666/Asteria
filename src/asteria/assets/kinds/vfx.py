@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from asteria.assets.canonical import AssetSource, CanonicalAsset, ValidationIssue, ValidationReport
-from asteria.presentation.visuals.fidelity import HighFidelityClip
+from asteria.core.visual_types import HighFidelityClip
 
 
 @dataclass(frozen=True, slots=True)

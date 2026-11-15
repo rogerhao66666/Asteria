@@ -36,7 +36,7 @@ from asteria.assets.codecs.registry import (
 )
 from asteria.core.values import required_id
 from asteria.graphics import SpriteClip, SpriteFrame, SpriteKeyframe, SpriteSheet
-from asteria.runtime.scene.animation import AnimationClipSet
+from asteria.graphics.animation import AnimationClipSet
 
 SPRITE_KINDS = ("character", "npc", "projectile", "skill", "ui", "scene")
 NPC_BEHAVIOURS = ("idle", "patrol", "wander")

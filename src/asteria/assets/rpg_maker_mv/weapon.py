@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 
-from asteria.presentation import CombatantOverlay
+from asteria.graphics.combat import CombatantOverlay
 
 MV_WEAPON_TYPE_TAG = "mv-weapon-type:"
 

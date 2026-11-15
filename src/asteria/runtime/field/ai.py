@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
+from functools import lru_cache
 from math import cos, hypot, pi, sin
 
 from asteria import kernels
@@ -36,8 +37,13 @@ MODES = (
 
 def parse_path(text):
     """``"x1,y1; x2,y2"`` -> ``((x1, y1), (x2, y2))``."""
+    return _parse_path_text(str(text or ""))
+
+
+@lru_cache(maxsize=256)
+def _parse_path_text(text):
     points = []
-    for chunk in str(text or "").split(";"):
+    for chunk in text.split(";"):
         if chunk.strip():
             x, y = chunk.split(",")
             points.append((float(x), float(y)))

@@ -1,26 +1,9 @@
 """Texture draw commands: what to draw where (TextureDraw), and the renderer that sends them to a
 backend."""
 
-from dataclasses import dataclass
-
 from asteria.graphics.character_placement import CharacterPlacement, frame_rect_at_standing_point
+from asteria.graphics.draw import TextureDraw
 from asteria.graphics.placement import RenderPlacement2D
-
-
-@dataclass(frozen=True, slots=True)
-class TextureDraw:
-    texture_asset_id: str
-    source: tuple[int, int, int, int]
-    screen_x: float
-    screen_y: float
-    width: float
-    height: float
-    layer: int = 0
-    depth: float = 0.0
-    opacity: float = 1.0
-    flip_x: bool = False
-    rotation_deg: float = 0.0  # clockwise on screen, about the quad centre
-    tint: tuple | None = None  # (r, g, b) the texture is multiplied by, e.g. a state's colour
 
 
 def sprite_draw(

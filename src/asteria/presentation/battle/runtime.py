@@ -6,6 +6,7 @@ from enum import Enum
 from math import isfinite
 
 from asteria.gameplay.action_timeline import ActionCueKind
+from asteria.graphics.combat import CombatantOverlay
 from asteria.presentation.battle.animation_timing import BattleAnimationTimingProfile, easing_value
 from asteria.presentation.battle.scene import (
     BattleCombatantVisual,
@@ -26,29 +27,6 @@ class BattleAnimationRole(str, Enum):
 # A fighter stays in these until told otherwise; anything else a move plays (attack, attack2, a
 # clip of the author's own) goes back to rest when it has played.
 _RESTING_ROLE_NAMES = {"idle", "ko", "weak"}
-
-
-@dataclass(frozen=True, slots=True)
-class CombatantOverlay:
-    """Frame-cycled texture drawn over a combatant while it plays one role.
-
-    Overlays are generic presentation layers (held props, weapons, effects);
-    source-format adapters translate their own data into this shape.
-    """
-
-    texture_asset_id: str
-    frames: tuple[tuple[int, int, int, int], ...]
-    role: str = BattleAnimationRole.ATTACK.value
-    offset: tuple[float, float] = (-64.0, 0.0)
-
-    def __post_init__(self):
-        if not str(self.texture_asset_id).strip():
-            raise ValueError("texture_asset_id is required")
-        if not self.frames:
-            raise ValueError("overlay requires at least one frame")
-        object.__setattr__(self, "frames", tuple(tuple(int(v) for v in f) for f in self.frames))
-        object.__setattr__(self, "role", _role_name(self.role))
-        object.__setattr__(self, "offset", (float(self.offset[0]), float(self.offset[1])))
 
 
 def _mirrored(visual):
