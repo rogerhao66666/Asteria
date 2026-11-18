@@ -34,9 +34,15 @@ def test_every_weapon_has_a_whole_picture_and_a_rarity():
         / "Downloads/free_assets/Foozle_2DS0005_Lucifer_Equipment_Pixel_Art/Equipment"
         / "Weapons/Png/Rare Greatsword.png"
     )
-    if rare.exists():  # the picture Roger's sword wears (the packs live outside the repo)
+    # The picture Roger's sword wears. The packs live outside the repo: they may be
+    # missing, or out of reach of a sandboxed check.
+    try:
+        original = Image.open(rare).convert("RGBA")
+    except (FileNotFoundError, PermissionError):
+        original = None
+    if original is not None:
         mine = Image.open(DEMO / sunbrand.icon_id).convert("RGBA")
-        assert mine.tobytes() == Image.open(rare).convert("RGBA").tobytes()
+        assert mine.tobytes() == original.tobytes()
     assert sunbrand.rarity == "rare" and db.equipment["w_bone_scepter"].rarity == "mythic"
 
 
