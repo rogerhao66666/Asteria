@@ -12,9 +12,29 @@ _REPO = Path(__file__).resolve().parents[1]
 _MV_REFERENCE_AVAILABLE = resolve_rpg_maker_mv_root(_REPO) is not None
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--quick",
+        action="store_true",
+        help="run the fast core tests only, headless and silent (see tests/quick_tests.py)",
+    )
+
+
+def pytest_ignore_collect(collection_path, config):
+    if not config.getoption("--quick"):
+        return None
+    import quick_tests
+
+    return True if quick_tests.left_out(Path(collection_path)) else None
+
+
 def pytest_configure(config):
     import real_window
 
+    if config.getoption("--quick"):
+        import quick_tests
+
+        quick_tests.quiet()
     if real_window.enabled():
         real_window.install()
     config.addinivalue_line(

@@ -126,9 +126,15 @@ def test_the_pygbag_command_keeps_pixels_and_wav_and_names_the_page(tmp_path):
 
 
 def test_serve_web_answers_with_the_page_and_wasm_headers(tmp_path):
+    import socket
     import threading
     import urllib.request
 
+    try:
+        with socket.create_server(("127.0.0.1", 0)):
+            pass
+    except PermissionError:
+        pytest.skip("this machine allows no local server (a sandboxed check)")
     web = tmp_path / "web"
     web.mkdir()
     (web / "index.html").write_text("<html>hi</html>")

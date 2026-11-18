@@ -23,6 +23,8 @@ python -m pytest -q
 
 測試在無頭環境跑（SDL dummy driver、Qt offscreen），和 CI 一樣。要不出聲，執行前設 `ASTERIA_MUTE=1`。
 
+只跑快速的核心測試（不含 Qt 編輯器、多人連線模擬和批次壓力測試，約一分鐘，無頭且不出聲）：`python -m pytest --quick`。送 PR 前仍要跑完整測試。
+
 `.githooks/` 是維護者自己的提交檢查（只接受維護者的作者身分），**不要**用 `core.hooksPath` 啟用它。
 程式結構、每個系統怎麼運作，看 [`docs/ENGINE_HANDBOOK.md`](docs/ENGINE_HANDBOOK.md) 和
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)；文件索引在 [`docs/README.md`](docs/README.md)。
